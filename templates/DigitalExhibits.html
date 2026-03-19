@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Digital Exhibits | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-figma.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-20">
+          <a href="/" class="flex items-center space-x-3">
+            <img src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" alt="Museum logo" class="museum-logo" />
+            <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+          </a>
+          <nav class="hidden lg:flex items-center space-x-8">
+            <a href="/" class="text-gray-700 hover:text-amber-800 transition">Home</a>
+            <a href="/digital-exhibits" class="text-amber-800">Digital Exhibits</a>
+            <a href="/accessibility" class="text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+            <a href="/interactive" class="text-gray-700 hover:text-amber-800 transition">Interactive</a>
+            <a href="/participation" class="text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+            <a href="/news" class="text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+          </nav>
+          <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+            <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+          </button>
+        </div>
+        <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+          <a href="/" class="block text-gray-700 hover:text-amber-800 transition">Home</a>
+          <a href="/digital-exhibits" class="block text-amber-800">Digital Exhibits</a>
+          <a href="/accessibility" class="block text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+          <a href="/interactive" class="block text-gray-700 hover:text-amber-800 transition">Interactive</a>
+          <a href="/participation" class="block text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+          <a href="/news" class="block text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20">
+      <section class="bg-gradient-to-br from-amber-600 to-amber-800 text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="text-5xl font-serif mb-4">Digital Exhibits &amp; Resources</h1>
+          <p class="text-xl max-w-2xl mx-auto">
+            Access our comprehensive digital collection of historical materials, virtual tours, and educational resources.
+          </p>
+        </div>
+      </section>
+
+      <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+          <div class="max-w-5xl mx-auto">
+            <h2 class="text-3xl font-serif text-amber-900 mb-8 text-center">Featured: Virtual Tour</h2>
+            <div class="bg-gradient-to-br from-stone-300 to-stone-400 rounded-lg aspect-video flex items-center justify-center mb-6">
+              <div class="text-center text-white">
+                <i data-lucide="video" class="w-16 h-16 mx-auto mb-4"></i>
+                <p class="text-xl">360° Virtual Tour Experience</p>
+                <button class="mt-4 bg-amber-600 hover:bg-amber-700 px-8 py-3 rounded-lg transition">Launch Virtual Tour</button>
+              </div>
+            </div>
+            <p class="text-gray-700 text-center">
+              Experience the underground cemetery from anywhere in the world with our immersive virtual tour.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-16 bg-stone-50">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-serif text-amber-900 mb-12 text-center">Digital Collection</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <div class="h-48 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center"><i data-lucide="video" class="w-16 h-16 text-amber-700"></i></div>
+              <div class="p-6"><div class="text-sm text-amber-700 mb-2">Virtual Tour</div><h3 class="text-xl font-serif text-gray-900 mb-2">Virtual 360° Tour</h3><p class="text-gray-700 mb-4">Explore every corner of the underground cemetery with our immersive virtual tour.</p><button class="text-amber-700 hover:text-amber-900">Explore →</button></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <div class="h-48 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center"><i data-lucide="image" class="w-16 h-16 text-amber-700"></i></div>
+              <div class="p-6"><div class="text-sm text-amber-700 mb-2">Photo Gallery</div><h3 class="text-xl font-serif text-gray-900 mb-2">Historical Photographs</h3><p class="text-gray-700 mb-4">Rare photographs documenting the cemetery from the 1900s to present day.</p><button class="text-amber-700 hover:text-amber-900">Explore →</button></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <div class="h-48 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center"><i data-lucide="file-text" class="w-16 h-16 text-amber-700"></i></div>
+              <div class="p-6"><div class="text-sm text-amber-700 mb-2">Documents</div><h3 class="text-xl font-serif text-gray-900 mb-2">Architectural Drawings</h3><p class="text-gray-700 mb-4">Original construction plans and architectural documentation.</p><button class="text-amber-700 hover:text-amber-900">Explore →</button></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <div class="h-48 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center"><i data-lucide="video" class="w-16 h-16 text-amber-700"></i></div>
+              <div class="p-6"><div class="text-sm text-amber-700 mb-2">Video Collection</div><h3 class="text-xl font-serif text-gray-900 mb-2">Oral Histories</h3><p class="text-gray-700 mb-4">Video interviews with local historians and descendants of families interred here.</p><button class="text-amber-700 hover:text-amber-900">Explore →</button></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <div class="h-48 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center"><i data-lucide="image" class="w-16 h-16 text-amber-700"></i></div>
+              <div class="p-6"><div class="text-sm text-amber-700 mb-2">3D Models</div><h3 class="text-xl font-serif text-gray-900 mb-2">Artifact Collection</h3><p class="text-gray-700 mb-4">3D scans of artifacts and historical items preserved from the site.</p><button class="text-amber-700 hover:text-amber-900">Explore →</button></div>
+            </div>
+            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
+              <div class="h-48 bg-gradient-to-br from-amber-100 to-amber-200 flex items-center justify-center"><i data-lucide="download" class="w-16 h-16 text-amber-700"></i></div>
+              <div class="p-6"><div class="text-sm text-amber-700 mb-2">Resources</div><h3 class="text-xl font-serif text-gray-900 mb-2">Research Papers</h3><p class="text-gray-700 mb-4">Academic research and historical documentation available for download.</p><button class="text-amber-700 hover:text-amber-900">Explore →</button></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-serif text-amber-900 mb-12 text-center">Educational Resources</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+            <div class="bg-amber-50 p-6 rounded-lg">
+              <h3 class="text-xl font-serif text-gray-900 mb-4">For Teachers</h3>
+              <ul class="space-y-2 text-gray-700">
+                <li>• Lesson plans and teaching guides</li>
+                <li>• Curriculum-aligned materials</li>
+                <li>• Student worksheets and activities</li>
+                <li>• Virtual field trip resources</li>
+              </ul>
+              <button class="mt-4 text-amber-700 hover:text-amber-900">Download Resources →</button>
+            </div>
+            <div class="bg-amber-50 p-6 rounded-lg">
+              <h3 class="text-xl font-serif text-gray-900 mb-4">For Researchers</h3>
+              <ul class="space-y-2 text-gray-700">
+                <li>• Historical archives and documents</li>
+                <li>• Academic papers and publications</li>
+                <li>• High-resolution images</li>
+                <li>• Research request forms</li>
+              </ul>
+              <button class="mt-4 text-amber-700 hover:text-amber-900">Access Research Portal →</button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-300 py-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3><p class="text-sm leading-relaxed">Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino ingenuity and cultural preservation.</p></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li><li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li><li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3><ul class="space-y-3 text-sm"><li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li><li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li><li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3><div class="flex items-start space-x-2 text-sm"><i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i><div><p>Tuesday - Sunday</p><p>8:00 AM - 5:00 PM</p><p class="mt-2 text-amber-400">Closed on Mondays</p></div></div></div>
+        </div>
+        <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center"><p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p></div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>

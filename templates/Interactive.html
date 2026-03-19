@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Interactive | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-figma.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-20">
+          <a href="/" class="flex items-center space-x-3">
+            <img src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" alt="Museum logo" class="museum-logo" />
+            <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+          </a>
+          <nav class="hidden lg:flex items-center space-x-8">
+            <a href="/" class="text-gray-700 hover:text-amber-800 transition">Home</a>
+            <a href="/digital-exhibits" class="text-gray-700 hover:text-amber-800 transition">Digital Exhibits</a>
+            <a href="/accessibility" class="text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+            <a href="/interactive" class="text-amber-800">Interactive</a>
+            <a href="/participation" class="text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+            <a href="/news" class="text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+          </nav>
+          <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+            <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+          </button>
+        </div>
+        <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+          <a href="/" class="block text-gray-700 hover:text-amber-800 transition">Home</a>
+          <a href="/digital-exhibits" class="block text-gray-700 hover:text-amber-800 transition">Digital Exhibits</a>
+          <a href="/accessibility" class="block text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+          <a href="/interactive" class="block text-amber-800">Interactive</a>
+          <a href="/participation" class="block text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+          <a href="/news" class="block text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20">
+      <section class="bg-gradient-to-br from-purple-600 to-purple-800 text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+          <h1 class="text-5xl font-serif mb-4">Interactive &amp; Immersive Experiences</h1>
+          <p class="text-xl max-w-2xl mx-auto">Step into history with cutting-edge interactive experiences that bring the past to life.</p>
+        </div>
+      </section>
+
+      <section class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-serif text-purple-900 mb-12 text-center">Immersive Experiences</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg hover:shadow-lg transition"><i data-lucide="camera" class="text-purple-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Augmented Reality Tour</h3><p class="text-gray-700 mb-4">Use your smartphone to see historical overlays and virtual reconstructions of the cemetery as it appeared in different time periods.</p><button class="text-purple-700 hover:text-purple-900">Launch AR Experience →</button></div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg hover:shadow-lg transition"><i data-lucide="globe" class="text-purple-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">360° Virtual Reality</h3><p class="text-gray-700 mb-4">Explore the underground crypts in stunning 360° VR. Compatible with VR headsets or view on your browser.</p><button class="text-purple-700 hover:text-purple-900">Start VR Tour →</button></div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg hover:shadow-lg transition"><i data-lucide="map" class="text-purple-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Interactive Map</h3><p class="text-gray-700 mb-4">Navigate through the cemetery with our detailed interactive map, complete with historical points of interest and stories.</p><button class="text-purple-700 hover:text-purple-900">Explore Map →</button></div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg hover:shadow-lg transition"><i data-lucide="headphones" class="text-purple-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Audio Walking Tour</h3><p class="text-gray-700 mb-4">Listen to expert narration as you explore, with stories about the architecture, history, and people connected to this site.</p><button class="text-purple-700 hover:text-purple-900">Get Audio Guide →</button></div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg hover:shadow-lg transition"><i data-lucide="gamepad-2" class="text-purple-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Educational Games</h3><p class="text-gray-700 mb-4">Learn through play with interactive quizzes, puzzles, and games designed for all ages.</p><button class="text-purple-700 hover:text-purple-900">Play Games →</button></div>
+            <div class="bg-gradient-to-br from-purple-50 to-purple-100 p-8 rounded-lg hover:shadow-lg transition"><i data-lucide="sparkles" class="text-purple-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Time Travel Experience</h3><p class="text-gray-700 mb-4">Witness key historical moments through immersive multimedia experiences and reconstructions.</p><button class="text-purple-700 hover:text-purple-900">Travel Through Time →</button></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-16 bg-gradient-to-br from-purple-900 to-indigo-900 text-white">
+        <div class="container mx-auto px-4">
+          <div class="max-w-4xl mx-auto text-center">
+            <h2 class="text-4xl font-serif mb-6">Featured: AR Time Portal</h2>
+            <p class="text-xl mb-8">Point your camera at historical markers to unlock AR experiences that show the cemetery during different eras - from construction in 1845 to its role in the Philippine Revolution.</p>
+            <div class="bg-white/10 backdrop-blur-sm rounded-lg p-8 mb-8">
+              <div class="aspect-video bg-gradient-to-br from-purple-400 to-purple-600 rounded-lg flex items-center justify-center mb-4"><i data-lucide="camera" class="w-20 h-20"></i></div>
+              <p class="text-lg">Download our mobile app to unlock the full AR experience</p>
+            </div>
+            <div class="flex flex-wrap justify-center gap-4">
+              <button class="bg-white text-purple-900 px-8 py-3 rounded-lg hover:bg-purple-50 transition">Download for iOS</button>
+              <button class="bg-white text-purple-900 px-8 py-3 rounded-lg hover:bg-purple-50 transition">Download for Android</button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-16 bg-stone-50">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-serif text-purple-900 mb-12 text-center">Educational Games &amp; Activities</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div class="bg-white p-6 rounded-lg shadow-md"><div class="bg-gradient-to-br from-amber-200 to-amber-300 h-48 rounded-lg mb-4 flex items-center justify-center"><i data-lucide="gamepad-2" class="w-16 h-16 text-amber-800"></i></div><h3 class="text-xl font-serif text-gray-900 mb-2">Architecture Puzzle</h3><p class="text-gray-700 mb-4">Reconstruct the underground cemetery's floor plan while learning about Spanish colonial architecture.</p><button class="text-purple-700 hover:text-purple-900">Play Now →</button></div>
+            <div class="bg-white p-6 rounded-lg shadow-md"><div class="bg-gradient-to-br from-blue-200 to-blue-300 h-48 rounded-lg mb-4 flex items-center justify-center"><i data-lucide="gamepad-2" class="w-16 h-16 text-blue-800"></i></div><h3 class="text-xl font-serif text-gray-900 mb-2">History Quest</h3><p class="text-gray-700 mb-4">Follow clues and answer questions about the cemetery's role in Philippine history to unlock achievements.</p><button class="text-purple-700 hover:text-purple-900">Start Quest →</button></div>
+            <div class="bg-white p-6 rounded-lg shadow-md"><div class="bg-gradient-to-br from-green-200 to-green-300 h-48 rounded-lg mb-4 flex items-center justify-center"><i data-lucide="gamepad-2" class="w-16 h-16 text-green-800"></i></div><h3 class="text-xl font-serif text-gray-900 mb-2">Memory Match</h3><p class="text-gray-700 mb-4">Match historical photos, artifacts, and facts to learn about the cemetery's rich heritage.</p><button class="text-purple-700 hover:text-purple-900">Play Game →</button></div>
+            <div class="bg-white p-6 rounded-lg shadow-md"><div class="bg-gradient-to-br from-purple-200 to-purple-300 h-48 rounded-lg mb-4 flex items-center justify-center"><i data-lucide="gamepad-2" class="w-16 h-16 text-purple-800"></i></div><h3 class="text-xl font-serif text-gray-900 mb-2">Timeline Builder</h3><p class="text-gray-700 mb-4">Create an interactive timeline of significant events in the cemetery's history and share with friends.</p><button class="text-purple-700 hover:text-purple-900">Build Timeline →</button></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-300 py-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3><p class="text-sm leading-relaxed">Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino ingenuity and cultural preservation.</p></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li><li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li><li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3><ul class="space-y-3 text-sm"><li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li><li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li><li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3><div class="flex items-start space-x-2 text-sm"><i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i><div><p>Tuesday - Sunday</p><p>8:00 AM - 5:00 PM</p><p class="mt-2 text-amber-400">Closed on Mondays</p></div></div></div>
+        </div>
+        <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center"><p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p></div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>
