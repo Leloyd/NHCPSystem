@@ -43,29 +43,45 @@
       <section class="bg-gradient-to-br from-green-600 to-green-800 text-white py-20">
         <div class="container mx-auto px-4 text-center">
           <h1 class="text-5xl font-serif mb-4">E-Participation &amp; Feedback</h1>
-          <p class="text-xl max-w-2xl mx-auto">Your voice matters. Share your experiences, contribute stories, and help shape the future of our museum.</p>
+          <p class="text-xl max-w-3xl mx-auto">
+            Limited to structured participation channels for visitors, teachers, and community story contributors.
+          </p>
         </div>
       </section>
 
       <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-green-900 mb-12 text-center">Get Involved</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div class="bg-green-50 p-6 rounded-lg"><i data-lucide="message-square" class="text-green-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Share Your Story</h3><p class="text-gray-700 mb-4">Do you have a family connection to the cemetery? Share your stories and memories to enrich our collective heritage.</p><button class="text-green-700 hover:text-green-900">Submit Your Story →</button></div>
-            <div class="bg-green-50 p-6 rounded-lg"><i data-lucide="star" class="text-green-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Rate Your Visit</h3><p class="text-gray-700 mb-4">Help us improve by sharing your experience and rating different aspects of your visit.</p><button class="text-green-700 hover:text-green-900">Leave a Review →</button></div>
-            <div class="bg-green-50 p-6 rounded-lg"><i data-lucide="share-2" class="text-green-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Share Photos</h3><p class="text-gray-700 mb-4">Contribute to our community gallery by sharing your photos and perspectives of the site.</p><button class="text-green-700 hover:text-green-900">Upload Photos →</button></div>
-            <div class="bg-green-50 p-6 rounded-lg"><i data-lucide="pen-tool" class="text-green-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Suggest Improvements</h3><p class="text-gray-700 mb-4">Have ideas for exhibits, accessibility, or visitor services? We'd love to hear your suggestions.</p><button class="text-green-700 hover:text-green-900">Submit Ideas →</button></div>
-            <div class="bg-green-50 p-6 rounded-lg"><i data-lucide="users" class="text-green-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Join Discussions</h3><p class="text-gray-700 mb-4">Connect with other heritage enthusiasts in our community forums and discussion boards.</p><button class="text-green-700 hover:text-green-900">Join Community →</button></div>
-            <div class="bg-green-50 p-6 rounded-lg"><i data-lucide="heart" class="text-green-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-3">Volunteer</h3><p class="text-gray-700 mb-4">Become a volunteer guide, researcher, or support our preservation efforts. Make a real difference.</p><button class="text-green-700 hover:text-green-900">Volunteer Info →</button></div>
+          <h2 class="text-3xl font-serif text-green-900 mb-12 text-center">Features in Scope</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
+            <div class="bg-green-50 p-6 rounded-lg">
+              <i data-lucide="message-square" class="text-green-700 mb-4 w-10 h-10"></i>
+              <h3 class="text-xl font-serif text-gray-900 mb-3">Visitor Feedback</h3>
+              <p class="text-gray-700">Collect quick ratings and comments about on-site and digital experiences.</p>
+            </div>
+            <div class="bg-green-50 p-6 rounded-lg">
+              <i data-lucide="book-open-text" class="text-green-700 mb-4 w-10 h-10"></i>
+              <h3 class="text-xl font-serif text-gray-900 mb-3">Teacher Corner</h3>
+              <p class="text-gray-700">Dedicated channel for educator feedback and classroom resource requests.</p>
+            </div>
+            <div class="bg-green-50 p-6 rounded-lg">
+              <i data-lucide="notebook-pen" class="text-green-700 mb-4 w-10 h-10"></i>
+              <h3 class="text-xl font-serif text-gray-900 mb-3">Stories Submit</h3>
+              <p class="text-gray-700">Allow community members to share family or local heritage narratives.</p>
+            </div>
+            <div class="bg-green-50 p-6 rounded-lg">
+              <i data-lucide="send" class="text-green-700 mb-4 w-10 h-10"></i>
+              <h3 class="text-xl font-serif text-gray-900 mb-3">General Submit</h3>
+              <p class="text-gray-700">Single intake form for ideas, requests, and other public submissions.</p>
+            </div>
           </div>
         </div>
       </section>
 
       <section class="py-16 bg-stone-50">
         <div class="container mx-auto px-4">
-          <div class="max-w-3xl mx-auto">
-            <h2 class="text-3xl font-serif text-green-900 mb-8 text-center">Quick Feedback</h2>
+          <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 max-w-6xl mx-auto">
             <div class="bg-white p-8 rounded-lg shadow-md">
+              <h2 class="text-2xl font-serif text-green-900 mb-6">Visitor Feedback Form</h2>
               <div class="mb-6">
                 <label class="block text-gray-900 mb-2">How was your experience?</label>
                 <div class="flex gap-2" id="ratingStars">
@@ -77,18 +93,31 @@
                 </div>
               </div>
               <div class="mb-6">
-                <label class="block text-gray-900 mb-2">What did you visit?</label>
-                <select class="w-full p-3 border border-gray-300 rounded-lg"><option>Select an option</option><option>Physical Site Visit</option><option>Virtual Tour</option><option>Digital Exhibits</option><option>Educational Resources</option><option>Interactive Experiences</option></select>
+                <label class="block text-gray-900 mb-2">Module visited</label>
+                <select class="w-full p-3 border border-gray-300 rounded-lg"><option>Select module</option><option>Core Information</option><option>Digital Exhibits</option><option>Accessibility</option><option>Interactive</option><option>News &amp; Community</option></select>
               </div>
               <div class="mb-6">
-                <label class="block text-gray-900 mb-2">Share your feedback</label>
-                <textarea class="w-full p-3 border border-gray-300 rounded-lg" rows="5" placeholder="Tell us about your experience, suggestions for improvement, or stories you'd like to share..."></textarea>
+                <label class="block text-gray-900 mb-2">Feedback</label>
+                <textarea class="w-full p-3 border border-gray-300 rounded-lg" rows="4" placeholder="Share your comments..."></textarea>
+              </div>
+              <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Submit Feedback</button>
+            </div>
+
+            <div class="bg-white p-8 rounded-lg shadow-md">
+              <h2 class="text-2xl font-serif text-green-900 mb-6">Stories Submit Form</h2>
+              <div class="mb-6">
+                <label class="block text-gray-900 mb-2">Story title</label>
+                <input type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Enter story title" />
+              </div>
+              <div class="mb-6">
+                <label class="block text-gray-900 mb-2">Your story</label>
+                <textarea class="w-full p-3 border border-gray-300 rounded-lg" rows="5" placeholder="Share your family or community story..."></textarea>
               </div>
               <div class="mb-6">
                 <label class="block text-gray-900 mb-2">Email (optional)</label>
                 <input type="email" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="your.email@example.com" />
               </div>
-              <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Submit Feedback</button>
+              <button class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Submit Story</button>
             </div>
           </div>
         </div>
@@ -96,11 +125,14 @@
 
       <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-green-900 mb-12 text-center">Recent Community Contributions</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div class="bg-stone-50 p-6 rounded-lg"><div class="flex items-center mb-4"><div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white mr-3">MA</div><div><div class="font-serif text-gray-900">Maria A.</div><div class="text-sm text-gray-600">March 15, 2026</div></div></div><p class="text-gray-700 mb-2">"My great-grandfather helped build this cemetery. Thank you for preserving this important piece of our family history."</p><div class="flex text-amber-400">★★★★★</div></div>
-            <div class="bg-stone-50 p-6 rounded-lg"><div class="flex items-center mb-4"><div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white mr-3">JR</div><div><div class="font-serif text-gray-900">Juan R.</div><div class="text-sm text-gray-600">March 12, 2026</div></div></div><p class="text-gray-700 mb-2">"The virtual tour is amazing! I live abroad and this lets me show my children our heritage. Salamat!"</p><div class="flex text-amber-400">★★★★★</div></div>
-            <div class="bg-stone-50 p-6 rounded-lg"><div class="flex items-center mb-4"><div class="w-12 h-12 bg-green-600 rounded-full flex items-center justify-center text-white mr-3">SC</div><div><div class="font-serif text-gray-900">Sofia C.</div><div class="text-sm text-gray-600">March 8, 2026</div></div></div><p class="text-gray-700 mb-2">"Excellent educational resources for teachers. My students loved learning about Philippine history through this site."</p><div class="flex text-amber-400">★★★★★</div></div>
+          <div class="max-w-4xl mx-auto bg-green-50 p-8 rounded-lg">
+            <h2 class="text-3xl font-serif text-green-900 mb-6 text-center">Teacher Corner</h2>
+            <p class="text-gray-700 text-center mb-6">A focused space for educators to coordinate resource needs and classroom integration.</p>
+            <ul class="space-y-3 text-gray-700 max-w-2xl mx-auto">
+              <li>• Request worksheet updates and classroom guides</li>
+              <li>• Submit feedback on quiz and activity difficulty</li>
+              <li>• Ask for recommended lesson flow by grade level</li>
+            </ul>
           </div>
         </div>
       </section>
