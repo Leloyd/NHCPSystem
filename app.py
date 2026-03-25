@@ -23,6 +23,11 @@ def virtual_tour():
     return render_template("VirtualTour.html")
 
 
+@app.route("/ar-content")
+def ar_content():
+    return render_template("ARContent.html")
+
+
 @app.route("/accessibility")
 def accessibility():
     return render_template("Accessibility.html")

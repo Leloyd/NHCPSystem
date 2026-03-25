@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AR Content | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-20">
+          <a href="/" class="flex items-center space-x-3">
+            <img src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" alt="Museum logo" class="museum-logo" />
+            <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+          </a>
+          <nav class="hidden lg:flex items-center space-x-8">
+            <a href="/" class="text-gray-700 hover:text-amber-800 transition">Home</a>
+            <a href="/digital-exhibits" class="text-amber-800">Digital Exhibits</a>
+            <a href="/accessibility" class="text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+            <a href="/interactive" class="text-gray-700 hover:text-amber-800 transition">Interactive</a>
+            <a href="/participation" class="text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+            <a href="/news" class="text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+            <a href="/support" class="text-gray-700 hover:text-amber-800 transition">Support</a>
+          </nav>
+          <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+            <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+          </button>
+        </div>
+        <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+          <a href="/" class="block text-gray-700 hover:text-amber-800 transition">Home</a>
+          <a href="/digital-exhibits" class="block text-amber-800">Digital Exhibits</a>
+          <a href="/accessibility" class="block text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+          <a href="/interactive" class="block text-gray-700 hover:text-amber-800 transition">Interactive</a>
+          <a href="/participation" class="block text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+          <a href="/news" class="block text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+          <a href="/support" class="block text-gray-700 hover:text-amber-800 transition">Support</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20">
+      <section class="bg-gradient-to-br from-amber-700 via-amber-800 to-stone-900 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+          <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Digital Exhibits</p>
+          <h1 class="text-5xl font-serif mb-4">AR Content Preview</h1>
+          <p class="text-lg max-w-3xl mx-auto text-amber-50">
+            Marker-based overlays that connect physical site points to short cultural context, archival visuals, and teaching prompts.
+          </p>
+        </div>
+      </section>
+
+      <section class="py-14 bg-stone-50">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <article class="lg:col-span-8 bg-white border border-stone-200 rounded-xl shadow-sm p-6">
+              <div class="rounded-xl h-72 md:h-80 bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center text-center text-white mb-6">
+                <div>
+                  <i data-lucide="scan-search" class="w-16 h-16 mx-auto mb-3"></i>
+                  <p class="text-lg font-semibold">AR Marker Demo Frame</p>
+                  <p class="text-sm text-stone-200 mt-1">Live camera + overlay will be connected in next phase</p>
+                </div>
+              </div>
+
+              <div class="flex flex-wrap gap-3">
+                <button type="button" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white">Simulate Marker Scan</button>
+                <button type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">Open Marker Guide</button>
+                <button type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">View Accessibility Notes</button>
+              </div>
+            </article>
+
+            <aside class="lg:col-span-4 space-y-4">
+              <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
+                <h2 class="text-xl font-serif text-amber-900 mb-3">How It Works</h2>
+                <ol class="space-y-2 text-sm text-gray-700">
+                  <li>1. Open this page on your mobile device.</li>
+                  <li>2. Point your camera at a supported site marker.</li>
+                  <li>3. Tap overlays to read context and artifact notes.</li>
+                  <li>4. Save your reflections for class discussion.</li>
+                </ol>
+              </article>
+
+              <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
+                <h2 class="text-xl font-serif text-amber-900 mb-3">Device Checklist</h2>
+                <ul class="space-y-2 text-sm text-gray-700">
+                  <li>• Android Chrome / iOS Safari (latest)</li>
+                  <li>• Camera permission enabled</li>
+                  <li>• Good lighting on marker surface</li>
+                  <li>• Stable internet for overlay assets</li>
+                </ul>
+              </article>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-14 bg-white">
+        <div class="container mx-auto px-4">
+          <h2 class="text-3xl font-serif text-amber-900 mb-8 text-center">Featured Marker Experiences</h2>
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <article class="bg-stone-50 border border-stone-200 rounded-xl p-5">
+              <p class="text-xs uppercase tracking-wide text-amber-700 mb-2">Marker A1</p>
+              <h3 class="text-xl font-serif text-gray-900 mb-2">Chapel Facade Details</h3>
+              <p class="text-sm text-gray-700 mb-3">Shows reconstruction overlay of facade elements and key architectural annotations.</p>
+              <p class="text-sm text-amber-800">Teaching prompt: What details remained unchanged after restoration?</p>
+            </article>
+            <article class="bg-stone-50 border border-stone-200 rounded-xl p-5">
+              <p class="text-xs uppercase tracking-wide text-amber-700 mb-2">Marker B2</p>
+              <h3 class="text-xl font-serif text-gray-900 mb-2">Crypt Corridor Layers</h3>
+              <p class="text-sm text-gray-700 mb-3">Compares present-day corridor views with historical references and airflow notes.</p>
+              <p class="text-sm text-amber-800">Teaching prompt: How does design affect ritual movement?</p>
+            </article>
+            <article class="bg-stone-50 border border-stone-200 rounded-xl p-5">
+              <p class="text-xs uppercase tracking-wide text-amber-700 mb-2">Marker C3</p>
+              <h3 class="text-xl font-serif text-gray-900 mb-2">Historic Marker Text</h3>
+              <p class="text-sm text-gray-700 mb-3">Highlights inscription terms with glossary support and bilingual label placeholders.</p>
+              <p class="text-sm text-amber-800">Teaching prompt: Why do word choices matter in public history?</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-14 bg-amber-50 border-y border-amber-100">
+        <div class="container mx-auto px-4 max-w-4xl text-center">
+          <h2 class="text-3xl font-serif text-amber-900 mb-4">Implementation Note</h2>
+          <p class="text-gray-700">
+            This page is the UI scaffold for marker-based AR. In the next phase, connect WebAR libraries and marker assets to activate camera scanning and live overlays.
+          </p>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-300 py-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3><p class="text-sm leading-relaxed">Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino ingenuity and cultural preservation.</p></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/online-gallery" class="hover:text-amber-500 transition">Online Gallery</a></li><li><a href="/virtual-tour" class="hover:text-amber-500 transition">Virtual Tour</a></li><li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li><li><a href="/support" class="hover:text-amber-500 transition">Support &amp; Governance</a></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3><ul class="space-y-3 text-sm"><li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li><li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li><li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3><div class="flex items-start space-x-2 text-sm"><i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i><div><p>Tuesday - Sunday</p><p>8:00 AM - 5:00 PM</p><p class="mt-2 text-amber-400">Closed on Mondays</p></div></div></div>
+        </div>
+        <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center"><p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p></div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>
