@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Virtual Tour | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/virtual-tour.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-20">
+          <a href="/" class="flex items-center space-x-3">
+            <img src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" alt="Museum logo" class="museum-logo" />
+            <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+          </a>
+          <nav class="hidden lg:flex items-center space-x-8">
+            <a href="/" class="text-gray-700 hover:text-amber-800 transition">Home</a>
+            <a href="/digital-exhibits" class="text-amber-800">Digital Exhibits</a>
+            <a href="/accessibility" class="text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+            <a href="/interactive" class="text-gray-700 hover:text-amber-800 transition">Interactive</a>
+            <a href="/participation" class="text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+            <a href="/news" class="text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+            <a href="/support" class="text-gray-700 hover:text-amber-800 transition">Support</a>
+          </nav>
+          <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+            <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+          </button>
+        </div>
+        <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+          <a href="/" class="block text-gray-700 hover:text-amber-800 transition">Home</a>
+          <a href="/digital-exhibits" class="block text-amber-800">Digital Exhibits</a>
+          <a href="/accessibility" class="block text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+          <a href="/interactive" class="block text-gray-700 hover:text-amber-800 transition">Interactive</a>
+          <a href="/participation" class="block text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+          <a href="/news" class="block text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+          <a href="/support" class="block text-gray-700 hover:text-amber-800 transition">Support</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20">
+      <section class="bg-gradient-to-br from-amber-700 to-stone-900 text-white py-16">
+        <div class="container mx-auto px-4 text-center">
+          <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Digital Exhibits</p>
+          <h1 class="text-5xl font-serif mb-4">Guided Site Walkthrough</h1>
+          <p class="text-lg max-w-3xl mx-auto text-amber-50">
+            Follow a structured virtual route through key heritage zones with stop-by-stop context, teaching prompts, and accessibility-friendly controls.
+          </p>
+        </div>
+      </section>
+
+      <section class="py-12 bg-stone-50">
+        <div class="container mx-auto px-4">
+          <div class="tour-layout grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <article class="lg:col-span-8 tour-panel p-5 md:p-6">
+              <div class="tour-scene" id="tourScene" aria-live="polite">
+                <div class="tour-scene-overlay">
+                  <p id="tourStopCount" class="text-sm text-amber-100">Stop 1 of 4</p>
+                  <h2 id="tourTitle" class="text-3xl md:text-4xl font-serif text-white">Site Entrance Arch</h2>
+                  <p id="tourSubtitle" class="text-sm md:text-base text-stone-100">Gateway and orientation point</p>
+                </div>
+              </div>
+
+              <div class="mt-5 flex flex-wrap gap-3">
+                <button id="prevStop" type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">← Previous Stop</button>
+                <button id="nextStop" type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">Next Stop →</button>
+                <button id="autoWalkBtn" type="button" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white">Start Auto Walkthrough</button>
+              </div>
+            </article>
+
+            <aside class="lg:col-span-4 space-y-4">
+              <article class="tour-panel p-5">
+                <h3 class="text-xl font-serif text-amber-900 mb-3">Stop Information</h3>
+                <p id="tourDescription" class="text-sm text-gray-700 mb-4"></p>
+                <div class="rounded-lg border border-amber-200 bg-amber-50 p-3">
+                  <h4 class="text-sm font-semibold text-amber-900 mb-1">Teaching Prompt</h4>
+                  <p id="tourTeaching" class="text-sm text-gray-700"></p>
+                </div>
+              </article>
+
+              <article class="tour-panel p-5">
+                <h3 class="text-xl font-serif text-amber-900 mb-3">Walkthrough Stops</h3>
+                <ol id="tourStopsList" class="space-y-2 text-sm"></ol>
+              </article>
+
+              <article class="tour-panel p-5">
+                <h3 class="text-xl font-serif text-amber-900 mb-3">Accessibility</h3>
+                <ul class="space-y-2 text-sm text-gray-700">
+                  <li>• Keyboard support: Left/Right arrows to switch stops</li>
+                  <li>• Text-first guidance for low-bandwidth users</li>
+                  <li>• Structured stop sequence for classroom pacing</li>
+                </ul>
+              </article>
+            </aside>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-300 py-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3><p class="text-sm leading-relaxed">Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino ingenuity and cultural preservation.</p></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/online-gallery" class="hover:text-amber-500 transition">Online Gallery</a></li><li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li><li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li><li><a href="/support" class="hover:text-amber-500 transition">Support &amp; Governance</a></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3><ul class="space-y-3 text-sm"><li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li><li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li><li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3><div class="flex items-start space-x-2 text-sm"><i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i><div><p>Tuesday - Sunday</p><p>8:00 AM - 5:00 PM</p><p class="mt-2 text-amber-400">Closed on Mondays</p></div></div></div>
+        </div>
+        <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center"><p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p></div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/virtual-tour.js') }}"></script>
+  </body>
+</html>
