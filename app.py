@@ -33,5 +33,10 @@ def news():
     return render_template("News.html")
 
 
+@app.route("/support")
+def support():
+    return render_template("Support.html")
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5000, debug=True)
