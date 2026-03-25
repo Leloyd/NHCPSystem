@@ -13,6 +13,11 @@ def digital_exhibits():
     return render_template("DigitalExhibits.html")
 
 
+@app.route("/online-gallery")
+def online_gallery():
+    return render_template("OnlineGallery.html")
+
+
 @app.route("/accessibility")
 def accessibility():
     return render_template("Accessibility.html")
