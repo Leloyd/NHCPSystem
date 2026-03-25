@@ -85,55 +85,6 @@
         </div>
       </section>
 
-      <section class="py-16 bg-stone-100">
-        <div class="container mx-auto px-4">
-          <div class="max-w-5xl mx-auto bg-white rounded-xl shadow-md p-8">
-            <div class="flex flex-wrap items-center justify-between gap-4 mb-6">
-              <div>
-                <h2 class="text-3xl font-serif text-purple-900">WebXR Prototype Access</h2>
-                <p class="text-gray-700 mt-2">Launch the browser-based immersive mode if supported, or use the fallback experience.</p>
-              </div>
-              <span id="webxrStatusBadge" class="px-4 py-2 rounded-full text-sm font-medium bg-stone-200 text-stone-700">Checking device support...</span>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-              <div class="bg-purple-50 rounded-lg p-5">
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Immersive Launch</h3>
-                <p class="text-gray-700 mb-4">Uses WebXR on compatible browsers/devices. Recommended on updated Android Chrome.</p>
-                <button id="startWebxrButton" type="button" class="w-full bg-purple-700 hover:bg-purple-800 text-white py-3 rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed">Start WebXR Prototype</button>
-              </div>
-              <div class="bg-blue-50 rounded-lg p-5">
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Fallback Experience</h3>
-                <p class="text-gray-700 mb-4">Accessible non-XR walkthrough with the same hotspot content and learning sequence.</p>
-                <button id="openFallbackButton" type="button" class="w-full bg-blue-700 hover:bg-blue-800 text-white py-3 rounded-lg transition">Open 2D Fallback</button>
-              </div>
-            </div>
-
-            <p id="webxrStatusText" class="text-sm text-gray-700 mb-4">Preparing compatibility check...</p>
-
-            <div id="webxrCanvasArea" class="hidden bg-gradient-to-br from-purple-100 to-indigo-100 rounded-lg p-6 border border-purple-200 mb-4">
-              <h4 class="text-lg font-serif text-gray-900 mb-2">WebXR Prototype Session</h4>
-              <p class="text-gray-700 mb-3">Prototype mode initialized. Replace this panel with your actual 3D WebXR scene container in the next build iteration.</p>
-              <ul class="text-sm text-gray-700 space-y-1">
-                <li>- Hotspot 1: Main chapel overview</li>
-                <li>- Hotspot 2: Underground crypt access</li>
-                <li>- Hotspot 3: Historical resistance narrative</li>
-              </ul>
-            </div>
-
-            <div id="fallbackExperienceArea" class="hidden bg-gradient-to-br from-blue-100 to-cyan-100 rounded-lg p-6 border border-blue-200">
-              <h4 class="text-lg font-serif text-gray-900 mb-2">2D Fallback Walkthrough</h4>
-              <p class="text-gray-700 mb-3">This fallback preserves the same learning sequence for devices without WebXR support.</p>
-              <ol class="list-decimal list-inside text-sm text-gray-700 space-y-1">
-                <li>View site overview and key landmarks.</li>
-                <li>Read hotspot descriptions with historical context.</li>
-                <li>Continue to quiz and reflection prompts.</li>
-              </ol>
-            </div>
-          </div>
-        </div>
-      </section>
-
       <section class="py-16 bg-stone-50">
         <div class="container mx-auto px-4">
           <div class="max-w-5xl mx-auto">
@@ -170,7 +121,7 @@
       <div class="container mx-auto px-4">
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
           <div><h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3><p class="text-sm leading-relaxed">Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino ingenuity and cultural preservation.</p></div>
-          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li><li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li><li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li><li><a href="/support" class="hover:text-amber-500 transition">Support &amp; Governance</a></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li><li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li><li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li></ul></div>
           <div><h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3><ul class="space-y-3 text-sm"><li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li><li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li><li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li></ul></div>
           <div><h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3><div class="flex items-start space-x-2 text-sm"><i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i><div><p>Tuesday - Sunday</p><p>8:00 AM - 5:00 PM</p><p class="mt-2 text-amber-400">Closed on Mondays</p></div></div></div>
         </div>
@@ -180,6 +131,5 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/interactive-webxr.js') }}"></script>
   </body>
 </html>
