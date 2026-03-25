@@ -18,6 +18,11 @@ def online_gallery():
     return render_template("OnlineGallery.html")
 
 
+@app.route("/virtual-tour")
+def virtual_tour():
+    return render_template("VirtualTour.html")
+
+
 @app.route("/accessibility")
 def accessibility():
     return render_template("Accessibility.html")
