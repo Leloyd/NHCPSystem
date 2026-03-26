@@ -6,6 +6,7 @@
     <title>AR Content | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
   </head>
   <body class="min-h-screen bg-stone-50 text-gray-900">
     <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
@@ -42,92 +43,161 @@
     </header>
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-amber-700 via-amber-800 to-stone-900 text-white py-16">
+      <section class="bg-gradient-to-br from-amber-700 to-amber-900 text-white py-16">
         <div class="container mx-auto px-4 text-center">
           <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Digital Exhibits</p>
-          <h1 class="text-5xl font-serif mb-4">AR Content Preview</h1>
+          <h1 class="text-5xl font-serif mb-4">AR Artifact Selector</h1>
           <p class="text-lg max-w-3xl mx-auto text-amber-50">
-            Marker-based overlays that connect physical site points to short cultural context, archival visuals, and teaching prompts.
+            Choose which artifact you want to preview in AR. This view uses a gallery-style result design so you can scan and pick quickly.
           </p>
         </div>
       </section>
 
-      <section class="py-14 bg-stone-50">
+      <section class="py-16 bg-stone-50" id="ar-artifact-selector">
         <div class="container mx-auto px-4">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <article class="lg:col-span-8 bg-white border border-stone-200 rounded-xl shadow-sm p-6">
-              <div class="rounded-xl h-72 md:h-80 bg-gradient-to-br from-stone-700 to-stone-900 flex items-center justify-center text-center text-white mb-6">
-                <div>
-                  <i data-lucide="scan-search" class="w-16 h-16 mx-auto mb-3"></i>
-                  <p class="text-lg font-semibold">AR Marker Demo Frame</p>
-                  <p class="text-sm text-stone-200 mt-1">Live camera + overlay will be connected in next phase</p>
+          <div class="gallery-filter-card p-6 mb-8">
+            <div class="flex flex-col lg:flex-row lg:items-end gap-4">
+              <div class="w-full lg:w-2/5">
+                <label for="arSearch" class="block text-sm font-medium text-gray-900 mb-1">Search artifacts</label>
+                <input id="arSearch" class="gallery-search" type="text" placeholder="Search title, marker, or tag" />
+              </div>
+              <div class="w-full sm:w-1/2 lg:w-1/5">
+                <label for="arPeriodFilter" class="block text-sm font-medium text-gray-900 mb-1">Period</label>
+                <select id="arPeriodFilter" class="gallery-select">
+                  <option value="all">All periods</option>
+                  <option value="Spanish Period">Spanish Period</option>
+                  <option value="American Period">American Period</option>
+                  <option value="Modern Restoration">Modern Restoration</option>
+                </select>
+              </div>
+              <div class="w-full sm:w-1/2 lg:w-1/5">
+                <label for="arMarkerFilter" class="block text-sm font-medium text-gray-900 mb-1">Marker</label>
+                <select id="arMarkerFilter" class="gallery-select">
+                  <option value="all">All markers</option>
+                  <option value="A1">A1</option>
+                  <option value="B2">B2</option>
+                  <option value="C3">C3</option>
+                  <option value="D4">D4</option>
+                  <option value="E5">E5</option>
+                  <option value="F6">F6</option>
+                </select>
+              </div>
+              <div class="w-full sm:w-1/2 lg:w-1/5">
+                <label for="arSortFilter" class="block text-sm font-medium text-gray-900 mb-1">Sort</label>
+                <select id="arSortFilter" class="gallery-select">
+                  <option value="curated">Curated</option>
+                  <option value="az">A to Z</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3 mb-5">
+            <h3 class="text-2xl font-serif text-amber-900">AR Artifact Results</h3>
+            <div class="text-sm text-gray-700">
+              <span id="arResultCount">6 items</span>
+              <span class="mx-2">•</span>
+              <span id="arSelectedLabel">Selected: Chapel Facade Details</span>
+            </div>
+          </div>
+
+          <div id="arArtifactGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <article class="gallery-card" data-artifact-id="facade" data-period="Spanish Period" data-marker="A1" data-tags="facade architecture restoration marker a1" data-title="Chapel Facade Details">
+              <div class="gallery-thumb" style="background: linear-gradient(135deg, #f59e0b, #b45309)">
+                <div class="text-center p-4 text-white">
+                  <i data-lucide="landmark" class="w-12 h-12 mx-auto mb-2"></i>
+                  <p class="font-semibold">Marker A1</p>
                 </div>
               </div>
-
-              <div class="flex flex-wrap gap-3">
-                <button type="button" class="px-4 py-2 rounded-lg bg-amber-600 hover:bg-amber-700 text-white">Simulate Marker Scan</button>
-                <button type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">Open Marker Guide</button>
-                <button type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">View Accessibility Notes</button>
+              <div class="p-5">
+                <p class="text-xs text-amber-700 mb-1">Spanish Period • Marker A1</p>
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Chapel Facade Details</h3>
+                <p class="text-sm text-gray-700 mb-3">Reconstruction overlay of facade elements and architectural annotations.</p>
+                <div class="mb-3"><span class="gallery-tag">Architecture</span><span class="gallery-tag">Facade</span><span class="gallery-tag">Restoration</span></div>
+                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="facade">Choose for AR →</button>
               </div>
             </article>
 
-            <aside class="lg:col-span-4 space-y-4">
-              <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
-                <h2 class="text-xl font-serif text-amber-900 mb-3">How It Works</h2>
-                <ol class="space-y-2 text-sm text-gray-700">
-                  <li>1. Open this page on your mobile device.</li>
-                  <li>2. Point your camera at a supported site marker.</li>
-                  <li>3. Tap overlays to read context and artifact notes.</li>
-                  <li>4. Save your reflections for class discussion.</li>
-                </ol>
-              </article>
+            <article class="gallery-card" data-artifact-id="corridor" data-period="Spanish Period" data-marker="B2" data-tags="corridor crypt airflow marker b2" data-title="Crypt Corridor Layers">
+              <div class="gallery-thumb" style="background: linear-gradient(135deg, #7c3aed, #4c1d95)">
+                <div class="text-center p-4 text-white">
+                  <i data-lucide="building-2" class="w-12 h-12 mx-auto mb-2"></i>
+                  <p class="font-semibold">Marker B2</p>
+                </div>
+              </div>
+              <div class="p-5">
+                <p class="text-xs text-amber-700 mb-1">Spanish Period • Marker B2</p>
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Crypt Corridor Layers</h3>
+                <p class="text-sm text-gray-700 mb-3">Present-day corridor compared with historical references and airflow notes.</p>
+                <div class="mb-3"><span class="gallery-tag">Crypt</span><span class="gallery-tag">Interior</span><span class="gallery-tag">Engineering</span></div>
+                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="corridor">Choose for AR →</button>
+              </div>
+            </article>
 
-              <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-5">
-                <h2 class="text-xl font-serif text-amber-900 mb-3">Device Checklist</h2>
-                <ul class="space-y-2 text-sm text-gray-700">
-                  <li>• Android Chrome / iOS Safari (latest)</li>
-                  <li>• Camera permission enabled</li>
-                  <li>• Good lighting on marker surface</li>
-                  <li>• Stable internet for overlay assets</li>
-                </ul>
-              </article>
-            </aside>
+            <article class="gallery-card" data-artifact-id="marker-text" data-period="Modern Restoration" data-marker="C3" data-tags="inscription text interpretation marker c3" data-title="Historic Marker Text">
+              <div class="gallery-thumb" style="background: linear-gradient(135deg, #f97316, #c2410c)">
+                <div class="text-center p-4 text-white">
+                  <i data-lucide="scroll-text" class="w-12 h-12 mx-auto mb-2"></i>
+                  <p class="font-semibold">Marker C3</p>
+                </div>
+              </div>
+              <div class="p-5">
+                <p class="text-xs text-amber-700 mb-1">Modern Restoration • Marker C3</p>
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Historic Marker Text</h3>
+                <p class="text-sm text-gray-700 mb-3">Inscription terms with glossary support and bilingual label placeholders.</p>
+                <div class="mb-3"><span class="gallery-tag">Inscription</span><span class="gallery-tag">Language</span><span class="gallery-tag">Interpretation</span></div>
+                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="marker-text">Choose for AR →</button>
+              </div>
+            </article>
+
+            <article class="gallery-card" data-artifact-id="candle-stand" data-period="Spanish Period" data-marker="D4" data-tags="liturgical candle stand artifact marker d4" data-title="Cast-Iron Candle Stand">
+              <div class="gallery-thumb" style="background: linear-gradient(135deg, #b45309, #78350f)">
+                <div class="text-center p-4 text-white">
+                  <i data-lucide="candlestick-chart" class="w-12 h-12 mx-auto mb-2"></i>
+                  <p class="font-semibold">Marker D4</p>
+                </div>
+              </div>
+              <div class="p-5">
+                <p class="text-xs text-amber-700 mb-1">Spanish Period • Marker D4</p>
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Cast-Iron Candle Stand</h3>
+                <p class="text-sm text-gray-700 mb-3">Liturgical artifact showing material details and devotional context notes.</p>
+                <div class="mb-3"><span class="gallery-tag">Liturgical</span><span class="gallery-tag">Ironwork</span><span class="gallery-tag">Artifact</span></div>
+                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="candle-stand">Choose for AR →</button>
+              </div>
+            </article>
+
+            <article class="gallery-card" data-artifact-id="ledger" data-period="American Period" data-marker="E5" data-tags="ledger archive governance marker e5" data-title="Historic Registry Ledger Copy">
+              <div class="gallery-thumb" style="background: linear-gradient(135deg, #0f766e, #134e4a)">
+                <div class="text-center p-4 text-white">
+                  <i data-lucide="book-copy" class="w-12 h-12 mx-auto mb-2"></i>
+                  <p class="font-semibold">Marker E5</p>
+                </div>
+              </div>
+              <div class="p-5">
+                <p class="text-xs text-amber-700 mb-1">American Period • Marker E5</p>
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Historic Registry Ledger Copy</h3>
+                <p class="text-sm text-gray-700 mb-3">Document-focused overlay with highlighted entries and governance timeline.</p>
+                <div class="mb-3"><span class="gallery-tag">Archive</span><span class="gallery-tag">Records</span><span class="gallery-tag">Governance</span></div>
+                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="ledger">Choose for AR →</button>
+              </div>
+            </article>
+
+            <article class="gallery-card" data-artifact-id="hinge" data-period="Spanish Period" data-marker="F6" data-tags="hinge hardware conservation marker f6" data-title="Chapel Door Hinge Fragment">
+              <div class="gallery-thumb" style="background: linear-gradient(135deg, #475569, #1e293b)">
+                <div class="text-center p-4 text-white">
+                  <i data-lucide="wrench" class="w-12 h-12 mx-auto mb-2"></i>
+                  <p class="font-semibold">Marker F6</p>
+                </div>
+              </div>
+              <div class="p-5">
+                <p class="text-xs text-amber-700 mb-1">Spanish Period • Marker F6</p>
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Chapel Door Hinge Fragment</h3>
+                <p class="text-sm text-gray-700 mb-3">Hardware fragment used to explain restoration and structural conservation.</p>
+                <div class="mb-3"><span class="gallery-tag">Hardware</span><span class="gallery-tag">Conservation</span><span class="gallery-tag">Architecture</span></div>
+                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="hinge">Choose for AR →</button>
+              </div>
+            </article>
           </div>
-        </div>
-      </section>
-
-      <section class="py-14 bg-white">
-        <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-amber-900 mb-8 text-center">Featured Marker Experiences</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <article class="bg-stone-50 border border-stone-200 rounded-xl p-5">
-              <p class="text-xs uppercase tracking-wide text-amber-700 mb-2">Marker A1</p>
-              <h3 class="text-xl font-serif text-gray-900 mb-2">Chapel Facade Details</h3>
-              <p class="text-sm text-gray-700 mb-3">Shows reconstruction overlay of facade elements and key architectural annotations.</p>
-              <p class="text-sm text-amber-800">Teaching prompt: What details remained unchanged after restoration?</p>
-            </article>
-            <article class="bg-stone-50 border border-stone-200 rounded-xl p-5">
-              <p class="text-xs uppercase tracking-wide text-amber-700 mb-2">Marker B2</p>
-              <h3 class="text-xl font-serif text-gray-900 mb-2">Crypt Corridor Layers</h3>
-              <p class="text-sm text-gray-700 mb-3">Compares present-day corridor views with historical references and airflow notes.</p>
-              <p class="text-sm text-amber-800">Teaching prompt: How does design affect ritual movement?</p>
-            </article>
-            <article class="bg-stone-50 border border-stone-200 rounded-xl p-5">
-              <p class="text-xs uppercase tracking-wide text-amber-700 mb-2">Marker C3</p>
-              <h3 class="text-xl font-serif text-gray-900 mb-2">Historic Marker Text</h3>
-              <p class="text-sm text-gray-700 mb-3">Highlights inscription terms with glossary support and bilingual label placeholders.</p>
-              <p class="text-sm text-amber-800">Teaching prompt: Why do word choices matter in public history?</p>
-            </article>
-          </div>
-        </div>
-      </section>
-
-      <section class="py-14 bg-amber-50 border-y border-amber-100">
-        <div class="container mx-auto px-4 max-w-4xl text-center">
-          <h2 class="text-3xl font-serif text-amber-900 mb-4">Implementation Note</h2>
-          <p class="text-gray-700">
-            This page is the UI scaffold for marker-based AR. In the next phase, connect WebAR libraries and marker assets to activate camera scanning and live overlays.
-          </p>
         </div>
       </section>
     </main>
@@ -146,5 +216,6 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/ar-content.js') }}"></script>
   </body>
 </html>
