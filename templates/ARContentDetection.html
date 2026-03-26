@@ -89,11 +89,11 @@
   <body>
     <div class="ar-overlay">
       <a href="/digital-exhibits" class="ar-back">← Back to Digital Exhibits</a>
-      <div>Balanghay • Hiro Marker</div>
+      <div>Balanghay &amp; Kabaong • Marker Cards</div>
     </div>
 
     <div class="ar-note">
-      Point your camera to a <strong>Hiro marker</strong>. Once detected, the Balanghay 3D model appears on top of the marker.
+      Point your camera to a <strong>Balanghay</strong> or <strong>Kabaong</strong> marker card. The matching 3D model will appear on top of the detected marker.
     </div>
 
     <a-scene
@@ -104,10 +104,15 @@
     >
       <a-assets>
         <a-asset-item id="balanghayModel" src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.glb') }}"></a-asset-item>
+        <a-asset-item id="kabaongModel" src="{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong.glb') }}"></a-asset-item>
       </a-assets>
 
-      <a-marker preset="hiro">
-        <a-entity gltf-model="#balanghayModel" position="0 0 0" rotation="0 0 0" scale="1 1 1"></a-entity>
+      <a-marker type="pattern" url="{{ url_for('static', filename='AR-Artifacts/Balanghay/balanghay.patt') }}">
+        <a-entity gltf-model="#balanghayModel" position="0 0 0" rotation="0 0 0" scale="4 4 4"></a-entity>
+      </a-marker>
+
+      <a-marker type="pattern" url="{{ url_for('static', filename='AR-Artifacts/Kabaong/kabaong.patt') }}">
+        <a-entity gltf-model="#kabaongModel" position="0 0 0" rotation="0 0 0" scale="4 4 4"></a-entity>
       </a-marker>
 
       <a-entity camera></a-entity>
