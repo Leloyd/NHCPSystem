@@ -23,14 +23,9 @@ def virtual_tour():
     return render_template("VirtualTour.html")
 
 
-@app.route("/ar-content")
-def ar_content():
-    return render_template("ARContent.html")
-
-
-@app.route("/ar-balanghay")
-def ar_balanghay():
-    return render_template("ARBalanghay.html")
+@app.route("/ar-content-detection")
+def ar_content_detection():
+    return render_template("ARContentDetection.html")
 
 
 @app.route("/accessibility")
