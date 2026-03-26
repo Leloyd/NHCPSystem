@@ -28,6 +28,11 @@ def ar_content():
     return render_template("ARContent.html")
 
 
+@app.route("/ar-balanghay")
+def ar_balanghay():
+    return render_template("ARBalanghay.html")
+
+
 @app.route("/accessibility")
 def accessibility():
     return render_template("Accessibility.html")

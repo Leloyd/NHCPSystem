@@ -6,7 +6,7 @@
     <title>AR Content | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/ar-content.css') }}" />
   </head>
   <body class="min-h-screen bg-stone-50 text-gray-900">
     <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
@@ -65,6 +65,7 @@
                 <label for="arPeriodFilter" class="block text-sm font-medium text-gray-900 mb-1">Period</label>
                 <select id="arPeriodFilter" class="gallery-select">
                   <option value="all">All periods</option>
+                  <option value="Precolonial">Precolonial</option>
                   <option value="Spanish Period">Spanish Period</option>
                   <option value="American Period">American Period</option>
                   <option value="Modern Restoration">Modern Restoration</option>
@@ -97,24 +98,23 @@
             <div class="text-sm text-gray-700">
               <span id="arResultCount">6 items</span>
               <span class="mx-2">•</span>
-              <span id="arSelectedLabel">Selected: Chapel Facade Details</span>
+              <span id="arSelectedLabel">Selected: Balanghay</span>
             </div>
           </div>
 
           <div id="arArtifactGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            <article class="gallery-card" data-artifact-id="facade" data-period="Spanish Period" data-marker="A1" data-tags="facade architecture restoration marker a1" data-title="Chapel Facade Details">
-              <div class="gallery-thumb" style="background: linear-gradient(135deg, #f59e0b, #b45309)">
-                <div class="text-center p-4 text-white">
-                  <i data-lucide="landmark" class="w-12 h-12 mx-auto mb-2"></i>
-                  <p class="font-semibold">Marker A1</p>
-                </div>
+            <article class="gallery-card" data-artifact-id="balanghay" data-period="Precolonial" data-marker="A1" data-tags="balanghay boat precolonial maritime marker a1" data-title="Balanghay">
+              <div class="gallery-thumb relative overflow-hidden">
+                <img src="{{ url_for('static', filename='AR-Artifacts/Balanghay/IMG_2490.jpg') }}" alt="Balanghay artifact" class="absolute inset-0 w-full h-full object-cover" />
+                <div class="absolute inset-0 bg-black/30"></div>
+            
               </div>
               <div class="p-5">
-                <p class="text-xs text-amber-700 mb-1">Spanish Period • Marker A1</p>
-                <h3 class="text-lg font-serif text-gray-900 mb-2">Chapel Facade Details</h3>
-                <p class="text-sm text-gray-700 mb-3">Reconstruction overlay of facade elements and architectural annotations.</p>
-                <div class="mb-3"><span class="gallery-tag">Architecture</span><span class="gallery-tag">Facade</span><span class="gallery-tag">Restoration</span></div>
-                <button type="button" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="facade">Choose for AR →</button>
+                
+                <h3 class="text-lg font-serif text-gray-900 mb-2">Balanghay</h3>
+                <p class="text-sm text-gray-700 mb-3">Ang Balanghay isang sasakyang-pandagat na ginamit noon pang 320 A.D. na kumakatawan sa kakayahang pandagat at paniniwalang espirituwal ng mga ng mga sinaunang Pilipino.</p>
+                
+                <a href="/ar-balanghay" class="choose-ar-btn text-amber-700 hover:text-amber-900 text-sm font-semibold" data-choose-id="balanghay">Choose for AR →</a>
               </div>
             </article>
 
