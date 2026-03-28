@@ -58,7 +58,7 @@
         embedded
         vr-mode-ui="enabled: false"
         renderer="alpha: true; antialias: false; precision: mediump; colorManagement: true; logarithmicDepthBuffer: false"
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; maxDetectionRate: 30; imageSmoothingEnabled: true; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720;"
+        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 30; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720;"
       >
         <a-assets id="arAssets" timeout="20000"></a-assets>
         <a-entity light="type: ambient; color: #ffffff; intensity: 0.72"></a-entity>
@@ -85,24 +85,20 @@
           {
             "name": "balanghay",
             "label": "Balanghay",
-            "patternUrl": "...",
-            "modelUrl": "...",
-            "position": "0 0.01 0",
+            "patternUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/balanghay.patt') }}",
+            "modelUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.glb') }}",
+            "position": "0 0 0",
             "rotation": "0 0 0",
-            "scale": "1 1 1",
-            "fitTarget": 0.6,
-            "size": 1
+            "scale": "0.6 0.6 0.6"
           },
           {
             "name": "kabaong",
             "label": "Kabaong",
-            "patternUrl": "...",
-            "modelUrl": "...",
-            "position": "0 0.01 0",
+            "patternUrl": "{{ url_for('static', filename='AR-Artifacts/Kabaong/kabaong.patt') }}",
+            "modelUrl": "{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong.glb') }}",
+            "position": "0 0 0",
             "rotation": "0 0 0",
-            "scale": "1 1 1",
-            "fitTarget": 0.6,
-            "size": 1
+            "scale": "0.55 0.55 0.55"
           }
         ]
       }
