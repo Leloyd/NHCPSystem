@@ -11,20 +11,11 @@
     return;
   }
 
-  var stateCardEl = document.getElementById("arStateCard");
-  var stateTitleEl = document.getElementById("arStateTitle");
-  var stateMessageEl = document.getElementById("arStateMessage");
-  var spinnerEl = document.getElementById("arSpinner");
-  var statusTextEl = document.getElementById("arStatusText");
-  var debugPanelEl = document.getElementById("arDebugPanel");
-  var retryCameraButtonEl = document.getElementById("retryCameraButton");
-
   var THREE_NS = window.THREE || (window.AFRAME && window.AFRAME.THREE);
   var IS_MOBILE = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
 
   var CONFIG = {
     markerFilter: "all",
-    debug: false,
     analyticsEndpoint: body.dataset.arAnalyticsEndpoint || "",
     models: {
       balanghay: {
@@ -43,13 +34,10 @@
   var runtime = {
     cameraReady: false,
     cameraError: false,
-    activeMarkers: new Set(),
-    debugLines: [],
     lastVideoWidth: 0,
     lastVideoHeight: 0,
     viewportKey: "",
     resizeRafId: 0,
-    cameraWaitTimeoutId: 0,
     videoScanIntervalId: 0,
   };
 
@@ -63,83 +51,6 @@
       next = Math.min(max, next);
     }
     return next;
-  }
-
-  function toFixedNumber(value, precision) {
-    return Number(clampNumber(value, 0, -Infinity, Infinity).toFixed(precision));
-  }
-
-  function safeStringify(value) {
-    try {
-      return JSON.stringify(value);
-    } catch (error) {
-      return String(value);
-    }
-  }
-
-  function debugLog(label, details) {
-    if (!CONFIG.debug) {
-      return;
-    }
-
-    var now = new Date();
-    var stamp = now.toISOString().slice(11, 23);
-    var line = "[" + stamp + "] " + label;
-
-    if (typeof details !== "undefined") {
-      line += " " + safeStringify(details);
-    }
-
-    runtime.debugLines.push(line);
-    if (runtime.debugLines.length > 80) {
-      runtime.debugLines.shift();
-    }
-
-    if (debugPanelEl) {
-      debugPanelEl.textContent = runtime.debugLines.join("\n");
-    }
-
-    if (typeof details !== "undefined") {
-      console.log("[AR DEBUG]", label, details);
-      return;
-    }
-
-    console.log("[AR DEBUG]", label);
-  }
-
-  function setStatusText(message, tone) {
-    if (!statusTextEl) {
-      return;
-    }
-
-    statusTextEl.textContent = message;
-    statusTextEl.dataset.tone = tone || "info";
-  }
-
-  function updateStateCard(options) {
-    if (!stateCardEl) {
-      return;
-    }
-
-    if (Object.prototype.hasOwnProperty.call(options, "showCard")) {
-      stateCardEl.classList.toggle("is-hidden", !options.showCard);
-    }
-
-    if (Object.prototype.hasOwnProperty.call(options, "isError")) {
-      stateCardEl.classList.toggle("is-error", Boolean(options.isError));
-    }
-
-    if (typeof options.title === "string" && stateTitleEl) {
-      stateTitleEl.textContent = options.title;
-    }
-
-    if (typeof options.message === "string" && stateMessageEl) {
-      stateMessageEl.textContent = options.message;
-    }
-
-    if (spinnerEl && Object.prototype.hasOwnProperty.call(options, "showSpinner")) {
-      spinnerEl.classList.toggle("is-hidden", !options.showSpinner);
-    }
   }
 
   function getSafePixelRatio() {
@@ -267,20 +178,6 @@
     if (typeof sceneEl.resize === "function") {
       sceneEl.resize();
     }
-
-    debugLog("viewport", {
-      reason: reason,
-      width: metrics.width,
-      height: metrics.height,
-      devicePixelRatio: toFixedNumber(metrics.dpr, 2),
-      rendererPixelRatio: toFixedNumber(getSafePixelRatio(), 2),
-      sourceWidth: sourceDimensions.width,
-      sourceHeight: sourceDimensions.height,
-      frameWidth: frame.width,
-      frameHeight: frame.height,
-      frameLeft: frame.left,
-      frameTop: frame.top,
-    });
   }
 
   function requestViewportSync(reason, force) {
@@ -349,25 +246,9 @@
   }
 
   function showCameraError(rawError) {
-    runtime.cameraError = true;
-
-    if (runtime.cameraWaitTimeoutId) {
-      window.clearTimeout(runtime.cameraWaitTimeoutId);
-      runtime.cameraWaitTimeoutId = 0;
-    }
-
     var errorMessage = parseErrorMessage(rawError);
-    updateStateCard({
-      showCard: true,
-      showSpinner: false,
-      isError: true,
-      title: "Camera Access Error",
-      message:
-        errorMessage + " Open this page on HTTPS or localhost, then grant camera permission and retry.",
-    });
-    setStatusText("Camera access failed. Use Retry Camera after granting permission.", "error");
-
-    debugLog("camera-error", { message: errorMessage });
+    runtime.cameraError = true;
+    console.error("[AR] Camera error:", errorMessage);
     sendAnalytics("camera_error", { error: errorMessage });
   }
 
@@ -377,26 +258,6 @@
     }
 
     runtime.cameraReady = true;
-
-    if (runtime.cameraWaitTimeoutId) {
-      window.clearTimeout(runtime.cameraWaitTimeoutId);
-      runtime.cameraWaitTimeoutId = 0;
-    }
-
-    updateStateCard({
-      showCard: true,
-      showSpinner: false,
-      isError: false,
-      title: "Camera Ready",
-      message: "Camera stream is active. Point at a marker card to place the artifact.",
-    });
-    setStatusText("Camera ready. Point at a marker card.", "success");
-
-    window.setTimeout(function () {
-      updateStateCard({ showCard: false });
-    }, 1300);
-
-    debugLog("camera-ready", { source: source });
     sendAnalytics("camera_ready", { source: source });
   }
 
@@ -455,22 +316,12 @@
       modelEl.dataset.modelNormalized = "1";
       modelEl.setAttribute("visible", "true");
 
-      debugLog("model-loaded", {
-        model: modelKey,
-        size: {
-          x: toFixedNumber(size.x, 3),
-          y: toFixedNumber(size.y, 3),
-          z: toFixedNumber(size.z, 3),
-        },
-        scale: toFixedNumber(fitScale, 4),
-      });
-
       sendAnalytics("model_loaded", { model: modelKey });
     } catch (error) {
-      var message = parseErrorMessage(error);
-      debugLog("model-normalize-error", { model: modelKey, error: message });
-      setStatusText("Model failed to normalize. Check debug logs.", "warn");
-      sendAnalytics("model_error", { model: modelKey, error: message });
+      sendAnalytics("model_error", {
+        model: modelKey,
+        error: parseErrorMessage(error),
+      });
     }
   }
 
@@ -481,28 +332,10 @@
       var markerKey = markerEl.dataset.markerKey || "unknown";
 
       markerEl.addEventListener("markerFound", function () {
-        runtime.activeMarkers.add(markerKey);
-        setStatusText(markerKey + " marker detected.", "success");
-        debugLog("marker-found", {
-          marker: markerKey,
-          activeCount: runtime.activeMarkers.size,
-        });
         sendAnalytics("marker_found", { marker: markerKey });
       });
 
       markerEl.addEventListener("markerLost", function () {
-        runtime.activeMarkers.delete(markerKey);
-
-        if (runtime.activeMarkers.size > 0) {
-          setStatusText("Marker tracking active.", "info");
-        } else {
-          setStatusText("Marker lost. Keep the full marker in frame.", "warn");
-        }
-
-        debugLog("marker-lost", {
-          marker: markerKey,
-          activeCount: runtime.activeMarkers.size,
-        });
         sendAnalytics("marker_lost", { marker: markerKey });
       });
     });
@@ -519,13 +352,10 @@
       });
 
       modelEl.addEventListener("model-error", function (event) {
-        var message = parseErrorMessage(event && event.detail);
-        debugLog("model-error", {
+        sendAnalytics("model_error", {
           model: modelKey,
-          error: message,
+          error: parseErrorMessage(event && event.detail),
         });
-        setStatusText(modelKey + " model failed to load.", "error");
-        sendAnalytics("model_error", { model: modelKey, error: message });
       });
 
       if (modelEl.getObject3D("mesh")) {
@@ -544,10 +374,6 @@
     videoEl.addEventListener("loadedmetadata", function () {
       runtime.lastVideoWidth = videoEl.videoWidth || runtime.lastVideoWidth;
       runtime.lastVideoHeight = videoEl.videoHeight || runtime.lastVideoHeight;
-      debugLog("video-metadata", {
-        videoWidth: videoEl.videoWidth,
-        videoHeight: videoEl.videoHeight,
-      });
       requestViewportSync("video-loadedmetadata", true);
     });
 
@@ -594,39 +420,16 @@
     }, 20000);
   }
 
-  function setupRetryButton() {
-    if (!retryCameraButtonEl) {
-      return;
-    }
-
-    retryCameraButtonEl.addEventListener("click", function () {
-      var videoEl = getArVideoElement();
-      if (videoEl && videoEl.srcObject && typeof videoEl.srcObject.getTracks === "function") {
-        videoEl.srcObject.getTracks().forEach(function (track) {
-          track.stop();
-        });
-      }
-
-      window.location.reload();
-    });
-  }
-
   function setupSceneEvents() {
     sceneEl.addEventListener("loaded", function () {
-      debugLog("scene-loaded");
       requestViewportSync("scene-loaded", true);
     });
 
     sceneEl.addEventListener("renderstart", function () {
-      debugLog("renderstart");
       requestViewportSync("renderstart", true);
     });
 
-    sceneEl.addEventListener("camera-init", function (event) {
-      var stream = event && event.detail && event.detail.stream;
-      debugLog("camera-init", {
-        hasStream: Boolean(stream),
-      });
+    sceneEl.addEventListener("camera-init", function () {
       markCameraReady("camera-init-event");
     });
 
@@ -702,47 +505,15 @@
   }
 
   function init() {
-    updateStateCard({
-      showCard: true,
-      showSpinner: true,
-      isError: false,
-      title: "Camera Permission Required",
-      message: "Allow camera access when prompted. For best stability, keep the marker flat and fully visible.",
-    });
-    setStatusText("Waiting for camera permission...", "info");
-
-    debugLog("init", {
-      markerFilter: CONFIG.markerFilter,
-      debug: CONFIG.debug,
-      userAgent: navigator.userAgent,
-    });
-
     if (!validateEnvironment()) {
       return;
     }
 
-    setupRetryButton();
     setupSceneEvents();
     setupMarkerEvents();
     setupModelEvents();
     setupViewportListeners();
     startVideoWatcher();
-
-    runtime.cameraWaitTimeoutId = window.setTimeout(function () {
-      if (runtime.cameraReady || runtime.cameraError) {
-        return;
-      }
-
-      updateStateCard({
-        showCard: true,
-        showSpinner: true,
-        isError: false,
-        title: "Still waiting for camera",
-        message: "If no camera prompt appears, check browser camera permissions and verify you are on HTTPS or localhost.",
-      });
-      setStatusText("Still waiting for camera permission...", "warn");
-      debugLog("camera-wait-timeout");
-    }, 8500);
 
     requestViewportSync("init", true);
     sendAnalytics("session_start", { marker: CONFIG.markerFilter });
