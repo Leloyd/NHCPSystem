@@ -1,4 +1,4 @@
-from flask import Flask, render_template
+from flask import Flask, jsonify, redirect, render_template, request, url_for
 
 app = Flask(__name__)
 
@@ -25,7 +25,30 @@ def virtual_tour():
 
 @app.route("/ar-content-detection")
 def ar_content_detection():
-    return render_template("ARContentDetection.html")
+    return render_template("ARContentDetection.html", analytics_endpoint=url_for("ar_analytics"))
+
+
+@app.route("/ar-launch/<artifact_key>")
+def ar_launch(artifact_key):
+    return redirect(url_for("ar_content_detection"))
+
+
+@app.post("/api/ar/analytics")
+def ar_analytics():
+    payload = request.get_json(silent=True) or {}
+    event = str(payload.get("event", "unknown"))[:120]
+    marker = str(payload.get("marker", ""))[:120]
+    model = str(payload.get("model", ""))[:120]
+
+    app.logger.info(
+        "ar_analytics event=%s marker=%s model=%s ua=%s",
+        event,
+        marker,
+        model,
+        request.headers.get("User-Agent", ""),
+    )
+
+    return jsonify({"ok": True})
 
 
 @app.route("/accessibility")
