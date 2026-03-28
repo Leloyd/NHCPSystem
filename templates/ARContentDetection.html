@@ -6,103 +6,121 @@
     <title>AR Content Detection</title>
     <script src="https://aframe.io/releases/1.4.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/aframe/build/aframe-ar.js"></script>
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/ar.css') }}" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+        font-family: Georgia, serif;
+      }
+
+      .ar-overlay {
+        position: fixed;
+        left: 0;
+        right: 0;
+        top: 0;
+        z-index: 20;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        padding: calc(env(safe-area-inset-top, 0px) + 8px) calc(env(safe-area-inset-right, 0px) + 10px) 10px calc(env(safe-area-inset-left, 0px) + 10px);
+        background: transparent;
+        color: #fff;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      }
+
+      .ar-back {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 8px;
+        background: rgba(217, 119, 6, 0.95);
+        color: #fff;
+        text-decoration: none;
+        font-size: 14px;
+      }
+
+      .ar-note {
+        position: fixed;
+        left: calc(env(safe-area-inset-left, 0px) + 8px);
+        right: calc(env(safe-area-inset-right, 0px) + 8px);
+        bottom: calc(env(safe-area-inset-bottom, 0px) + 8px);
+        z-index: 20;
+        border-radius: 10px;
+        padding: 10px 12px;
+        background: transparent;
+        color: #f5f5f4;
+        font-size: 13px;
+        line-height: 1.45;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+      }
+
+      #arjs-video,
+      a-scene video {
+        position: fixed !important;
+        top: 50% !important;
+        left: 50% !important;
+        width: auto !important;
+        height: auto !important;
+        min-width: 100% !important;
+        min-height: 100% !important;
+        max-width: none !important;
+        max-height: none !important;
+        transform: translate(-50%, -50%) !important;
+        object-fit: cover !important;
+        object-position: center center !important;
+        z-index: 0 !important;
+        background: transparent !important;
+      }
+
+      a-scene,
+      .a-canvas {
+        position: fixed !important;
+        inset: 0 !important;
+        width: 100vw !important;
+        height: 100vh !important;
+        max-width: none !important;
+        max-height: none !important;
+        z-index: 1 !important;
+        background: transparent !important;
+        overflow: hidden !important;
+      }
+    </style>
   </head>
-  <body class="ar-page">
+  <body>
     <div class="ar-overlay">
       <a href="/digital-exhibits" class="ar-back">← Back to Digital Exhibits</a>
-      <div class="ar-overlay-right">
-        <div class="ar-title">Balanghay &amp; Kabaong • Marker Cards</div>
-        <div id="arStatusChip" class="ar-status-chip">Ready to detect marker</div>
-      </div>
-      <button id="arDebugToggle" class="ar-debug-toggle" type="button" aria-pressed="false">Debug</button>
+      <div>Balanghay &amp; Kabaong • Marker Cards</div>
     </div>
 
-    <div class="ar-note" id="arNoteText">
-      Point your camera to a Balanghay or Kabaong marker card. The matching 3D model will appear on top of the detected marker.
+    <div class="ar-note">
+      Point your camera to a <strong>Balanghay</strong> or <strong>Kabaong</strong> marker card. The matching 3D model will appear on top of the detected marker.
     </div>
 
-    <div class="ar-loading" id="arLoading">
-      <div class="ar-panel">
-        <h2>Preparing AR camera</h2>
-        <p>Loading rendering engine and waiting for camera stream.</p>
-      </div>
-    </div>
+    <a-scene
+      embedded
+      vr-mode-ui="enabled: false"
+      renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono_and_matrix; matrixCodeType: 3x3;"
+    >
+      <a-assets>
+        <a-asset-item id="balanghayModel" src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.glb') }}"></a-asset-item>
+        <a-asset-item id="kabaongModel" src="{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong.glb') }}"></a-asset-item>
+      </a-assets>
 
-    <div class="ar-permission" id="arPermission" hidden>
-      <div class="ar-panel">
-        <h2>Camera access required</h2>
-        <p>Tap Start AR and allow camera access so marker detection can begin.</p>
-        <div class="ar-panel-actions">
-          <button class="ar-btn ar-btn-primary" id="arStartButton" type="button">Start AR</button>
-        </div>
-      </div>
-    </div>
+      <a-marker type="pattern" url="{{ url_for('static', filename='AR-Artifacts/Balanghay/balanghay.patt') }}">
+        <a-entity gltf-model="#balanghayModel" position="0 0 0" rotation="0 0 0" scale="4 4 4"></a-entity>
+      </a-marker>
 
-    <div class="ar-error" id="arError" hidden>
-      <div class="ar-panel">
-        <h2>Camera unavailable</h2>
-        <p id="arErrorMessage">Please enable camera permission and retry.</p>
-        <div class="ar-panel-actions">
-          <button class="ar-btn ar-btn-primary" id="arRetryButton" type="button">Retry</button>
-          <a class="ar-btn ar-btn-secondary" href="/digital-exhibits">Exit AR</a>
-        </div>
-      </div>
-    </div>
+      <a-marker type="pattern" url="{{ url_for('static', filename='AR-Artifacts/Kabaong/kabaong.patt') }}">
+        <a-entity gltf-model="#kabaongModel" position="0 0 0" rotation="0 0 0" scale="4 4 4"></a-entity>
+      </a-marker>
 
-    <pre id="arDebugPanel" class="ar-debug" hidden></pre>
-
-    <div class="ar-stage">
-      <a-scene
-        id="arScene"
-        embedded
-        vr-mode-ui="enabled: false"
-        renderer="alpha: true; antialias: false; precision: mediump; colorManagement: true; logarithmicDepthBuffer: false"
-        arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; trackingMethod: best; maxDetectionRate: 30; sourceWidth: 1280; sourceHeight: 720; displayWidth: 1280; displayHeight: 720;"
-      >
-        <a-assets id="arAssets" timeout="20000"></a-assets>
-        <a-entity light="type: ambient; color: #ffffff; intensity: 0.72"></a-entity>
-        <a-entity light="type: directional; color: #ffffff; intensity: 0.68" position="1.2 2.2 0.8"></a-entity>
-        <a-entity id="arCamera" camera="active: true"></a-entity>
-      </a-scene>
-    </div>
-
-    <script id="arPageConfig" type="application/json">
-      {
-        "smoothing": {
-          "count": 10,
-          "tolerance": 0.02,
-          "threshold": 5
-        },
-        "ui": {
-          "bootStatus": "Starting camera...",
-          "idleStatus": "Ready to detect marker",
-          "searchingStatus": "Searching for marker...",
-          "defaultNote": "Point your camera to a Balanghay or Kabaong marker card. Hold steady for stable detection.",
-          "foundNotePrefix": "Tracking marker"
-        },
-        "markers": [
-          {
-            "name": "balanghay",
-            "label": "Balanghay",
-            "patternUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/balanghay.patt') }}",
-            "modelUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.glb') }}",
-            "position": "0 0 0",
-            "rotation": "0 0 0",
-            "scale": "0.6 0.6 0.6"
-          },
-          {
-            "name": "kabaong",
-            "label": "Kabaong",
-            "patternUrl": "{{ url_for('static', filename='AR-Artifacts/Kabaong/kabaong.patt') }}",
-            "modelUrl": "{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong.glb') }}",
-            "position": "0 0 0",
-            "rotation": "0 0 0",
-            "scale": "0.55 0.55 0.55"
-          }
-        ]
-      }
-    </script>
-    <script src="{{ url_for('static', filename='js/ar-page.js') }}"></script>
+      <a-entity camera></a-entity>
+    </a-scene>
   </body>
 </html>
