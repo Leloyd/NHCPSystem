@@ -46,6 +46,11 @@
         scaleMultiplier: 3,
         rotation: [0, 0, 0],
       },
+      banga: {
+        targetSize: 0.8,
+        scaleMultiplier: 3,
+        rotation: [0, 0, 0],
+      },
     },
   };
 

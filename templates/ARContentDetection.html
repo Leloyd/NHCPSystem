@@ -28,6 +28,7 @@
       <a-assets timeout="20000">
         <a-asset-item id="balanghayModel" src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512.glb') }}"></a-asset-item>
         <a-asset-item id="kabaongModel" src="{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong-512.glb') }}"></a-asset-item>
+        <a-asset-item id="bangaModel" src="{{ url_for('static', filename='AR-Artifacts/Banga/Banga-1k.glb') }}"></a-asset-item>
       </a-assets>
 
       <a-marker
@@ -63,6 +64,25 @@
           id="model-kabaong"
           data-model-key="kabaong"
           gltf-model="#kabaongModel"
+          visible="false"
+        ></a-entity>
+        <a-entity light="type: ambient; intensity: 0.62; color: #ffffff"></a-entity>
+        <a-entity light="type: directional; intensity: 0.84; color: #fff7ed" position="1.1 2.1 1.2"></a-entity>
+      </a-marker>
+      <a-marker
+        id="marker-banga"
+        data-marker-key="banga"
+        type="pattern"
+        url="{{ url_for('static', filename='AR-Artifacts/Banga/banga.patt') }}"
+        smooth="true"
+        smooth-count="8"
+        smooth-tolerance="0.01"
+        smooth-threshold="2"
+      >
+        <a-entity
+          id="model-banga"
+          data-model-key="banga"
+          gltf-model="#bangaModel"
           visible="false"
         ></a-entity>
         <a-entity light="type: ambient; intensity: 0.62; color: #ffffff"></a-entity>
