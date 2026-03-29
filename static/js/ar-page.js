@@ -17,6 +17,24 @@
   var CONFIG = {
     markerFilter: "all",
     analyticsEndpoint: body.dataset.arAnalyticsEndpoint || "",
+    markerLostDebounceMs: 320,
+    markerVisibilityHoldMs: 220,
+    poseFilter: {
+      enabled: true,
+      posDeadzone: 0.0025,
+      rotDeadzoneDeg: 1,
+      posSnap: 0.065,
+      rotSnapDeg: 12,
+      posBaseLerp: 0.24,
+      rotBaseLerp: 0.22,
+      reacquireBoostMs: 280,
+      reacquireLerpBoost: 0.2,
+    },
+    renderer: {
+      mobilePixelRatioCap: 2,
+      desktopPixelRatioCap: 2,
+      maxAnisotropy: 8,
+    },
     models: {
       balanghay: {
         targetSize: 0.76,
@@ -39,6 +57,11 @@
     viewportKey: "",
     resizeRafId: 0,
     videoScanIntervalId: 0,
+    pendingViewportForce: false,
+    viewportSettleTimeoutIds: [],
+    rendererConfigured: false,
+    markerPoseRafId: 0,
+    markerStates: {},
   };
 
   function clampNumber(value, fallback, min, max) {
@@ -53,21 +76,70 @@
     return next;
   }
 
+  function clampUnit(value) {
+    return clampNumber(value, 0, 0, 1);
+  }
+
+  function degToRad(value) {
+    return (clampNumber(value, 0, -1080, 1080) * Math.PI) / 180;
+  }
+
+  function getUniformScale(vector3) {
+    if (!vector3) {
+      return 1;
+    }
+
+    var x = clampNumber(vector3.x, 1, 0.0001, 1000);
+    var y = clampNumber(vector3.y, 1, 0.0001, 1000);
+    var z = clampNumber(vector3.z, 1, 0.0001, 1000);
+    return clampNumber((x + y + z) / 3, 1, 0.0001, 1000);
+  }
+
   function getSafePixelRatio() {
     var raw = clampNumber(window.devicePixelRatio, 1, 1, 4);
-    var cap = IS_MOBILE ? 1.5 : 2;
+    var cap = IS_MOBILE ? CONFIG.renderer.mobilePixelRatioCap : CONFIG.renderer.desktopPixelRatioCap;
     return Math.min(raw, cap);
+  }
+
+  function configureRendererQuality() {
+    if (!sceneEl.renderer) {
+      return;
+    }
+
+    if (!runtime.rendererConfigured) {
+      if (THREE_NS && "outputColorSpace" in sceneEl.renderer && THREE_NS.SRGBColorSpace) {
+        sceneEl.renderer.outputColorSpace = THREE_NS.SRGBColorSpace;
+      } else if (THREE_NS && "outputEncoding" in sceneEl.renderer && THREE_NS.sRGBEncoding) {
+        sceneEl.renderer.outputEncoding = THREE_NS.sRGBEncoding;
+      }
+
+      if (typeof sceneEl.renderer.physicallyCorrectLights === "boolean") {
+        sceneEl.renderer.physicallyCorrectLights = false;
+      }
+
+      if (typeof sceneEl.renderer.sortObjects === "boolean") {
+        sceneEl.renderer.sortObjects = true;
+      }
+
+      runtime.rendererConfigured = true;
+    }
+
+    sceneEl.renderer.setPixelRatio(getSafePixelRatio());
   }
 
   function getViewportMetrics() {
     var viewport = window.visualViewport;
-    var width = Math.round((viewport && viewport.width) || window.innerWidth || document.documentElement.clientWidth || 0);
-    var height = Math.round((viewport && viewport.height) || window.innerHeight || document.documentElement.clientHeight || 0);
+    var viewportScale = clampNumber((viewport && viewport.scale) || 1, 1, 0.25, 4);
+    var rawWidth = (viewport && viewport.width) || window.innerWidth || document.documentElement.clientWidth || 0;
+    var rawHeight = (viewport && viewport.height) || window.innerHeight || document.documentElement.clientHeight || 0;
+    var width = Math.round(rawWidth * viewportScale);
+    var height = Math.round(rawHeight * viewportScale);
 
     return {
       width: Math.max(width, 1),
       height: Math.max(height, 1),
       dpr: clampNumber(window.devicePixelRatio, 1, 1, 4),
+      scale: viewportScale,
     };
   }
 
@@ -144,6 +216,8 @@
       metrics.height +
       "@" +
       metrics.dpr.toFixed(2) +
+      "|scale:" +
+      metrics.scale.toFixed(2) +
       "|src:" +
       sourceDimensions.width +
       "x" +
@@ -167,28 +241,172 @@
     document.documentElement.style.setProperty("--app-height", metrics.height + "px");
 
     applyElementBounds(sceneEl, metrics.width, metrics.height, 0, 0);
-    applyElementBounds(sceneEl.canvas, frame.width, frame.height, frame.left, frame.top);
-    applyElementBounds(videoEl, frame.width, frame.height, frame.left, frame.top);
-
-    if (sceneEl.renderer) {
-      sceneEl.renderer.setPixelRatio(getSafePixelRatio());
-      sceneEl.renderer.setSize(frame.width, frame.height, false);
-    }
 
     if (typeof sceneEl.resize === "function") {
       sceneEl.resize();
     }
+
+    if (sceneEl.renderer) {
+      configureRendererQuality();
+      sceneEl.renderer.setSize(frame.width, frame.height, false);
+      if (typeof sceneEl.renderer.setViewport === "function") {
+        sceneEl.renderer.setViewport(0, 0, frame.width, frame.height);
+      }
+    }
+
+    applyElementBounds(sceneEl.canvas, frame.width, frame.height, frame.left, frame.top);
+    applyElementBounds(videoEl, frame.width, frame.height, frame.left, frame.top);
   }
 
   function requestViewportSync(reason, force) {
+    runtime.pendingViewportForce = runtime.pendingViewportForce || Boolean(force);
+
     if (runtime.resizeRafId) {
       return;
     }
 
     runtime.resizeRafId = window.requestAnimationFrame(function () {
       runtime.resizeRafId = 0;
-      syncViewport(reason, Boolean(force));
+      var shouldForce = runtime.pendingViewportForce;
+      runtime.pendingViewportForce = false;
+      syncViewport(reason, shouldForce);
     });
+  }
+
+  function clearViewportSettleTimers() {
+    while (runtime.viewportSettleTimeoutIds.length) {
+      var timeoutId = runtime.viewportSettleTimeoutIds.pop();
+      window.clearTimeout(timeoutId);
+    }
+  }
+
+  function scheduleViewportSettle(reason) {
+    clearViewportSettleTimers();
+
+    [0, 120, 280, 520].forEach(function (delay) {
+      var timeoutId = window.setTimeout(function () {
+        requestViewportSync(reason + "-settle-" + delay, true);
+      }, delay);
+
+      runtime.viewportSettleTimeoutIds.push(timeoutId);
+    });
+  }
+
+  function getMarkerState(markerKey) {
+    if (runtime.markerStates[markerKey]) {
+      return runtime.markerStates[markerKey];
+    }
+
+    runtime.markerStates[markerKey] = {
+      markerKey: markerKey,
+      markerEl: null,
+      lostTimerId: 0,
+      isVisibleStable: false,
+      lastSeenAt: 0,
+      justFoundAt: 0,
+      hasFilteredPose: false,
+      fixedScale: 1,
+      filteredPosition: new THREE_NS.Vector3(),
+      filteredQuaternion: new THREE_NS.Quaternion(),
+    };
+
+    return runtime.markerStates[markerKey];
+  }
+
+  function clearMarkerLostTimer(markerState) {
+    if (!markerState || !markerState.lostTimerId) {
+      return;
+    }
+
+    window.clearTimeout(markerState.lostTimerId);
+    markerState.lostTimerId = 0;
+  }
+
+  function stabilizeMarkerPose(markerState, nowMs) {
+    if (!markerState || !markerState.markerEl || !markerState.markerEl.object3D || !CONFIG.poseFilter.enabled) {
+      return;
+    }
+
+    var markerObj = markerState.markerEl.object3D;
+    if (!markerObj.visible) {
+      if (
+        markerState.isVisibleStable &&
+        markerState.hasFilteredPose &&
+        nowMs - markerState.lastSeenAt <= CONFIG.markerVisibilityHoldMs
+      ) {
+        markerObj.visible = true;
+        markerObj.position.copy(markerState.filteredPosition);
+        markerObj.quaternion.copy(markerState.filteredQuaternion);
+        markerObj.scale.setScalar(markerState.fixedScale);
+      }
+      return;
+    }
+
+    markerState.lastSeenAt = nowMs;
+
+    if (!markerState.hasFilteredPose) {
+      markerState.filteredPosition.copy(markerObj.position);
+      markerState.filteredQuaternion.copy(markerObj.quaternion).normalize();
+      markerState.fixedScale = getUniformScale(markerObj.scale);
+      markerObj.scale.setScalar(markerState.fixedScale);
+      markerState.hasFilteredPose = true;
+      return;
+    }
+
+    var poseFilter = CONFIG.poseFilter;
+    var rotationDeadzone = degToRad(poseFilter.rotDeadzoneDeg);
+    var rotationSnap = degToRad(poseFilter.rotSnapDeg);
+
+    var positionDelta = markerState.filteredPosition.distanceTo(markerObj.position);
+    var rotationDelta = markerState.filteredQuaternion.angleTo(markerObj.quaternion);
+
+    if (positionDelta <= poseFilter.posDeadzone && rotationDelta <= rotationDeadzone) {
+      markerObj.position.copy(markerState.filteredPosition);
+      markerObj.quaternion.copy(markerState.filteredQuaternion);
+      markerObj.scale.setScalar(markerState.fixedScale);
+      return;
+    }
+
+    if (positionDelta >= poseFilter.posSnap || rotationDelta >= rotationSnap) {
+      markerState.filteredPosition.copy(markerObj.position);
+      markerState.filteredQuaternion.copy(markerObj.quaternion).normalize();
+      markerState.fixedScale = getUniformScale(markerObj.scale);
+    } else {
+      var positionRatio = positionDelta / Math.max(poseFilter.posSnap, 0.0001);
+      var rotationRatio = rotationDelta / Math.max(rotationSnap, 0.0001);
+      var reacquireBoost = nowMs - markerState.justFoundAt < poseFilter.reacquireBoostMs ? poseFilter.reacquireLerpBoost : 0;
+      var positionAlpha = clampUnit(poseFilter.posBaseLerp + positionRatio * 0.18 + reacquireBoost);
+      var rotationAlpha = clampUnit(poseFilter.rotBaseLerp + rotationRatio * 0.2 + reacquireBoost);
+
+      markerState.filteredPosition.lerp(markerObj.position, positionAlpha);
+      markerState.filteredQuaternion.slerp(markerObj.quaternion, rotationAlpha).normalize();
+    }
+
+    markerObj.position.copy(markerState.filteredPosition);
+    markerObj.quaternion.copy(markerState.filteredQuaternion);
+    markerObj.scale.setScalar(markerState.fixedScale);
+  }
+
+  function startMarkerPoseStabilizer() {
+    if (!THREE_NS || runtime.markerPoseRafId) {
+      return;
+    }
+
+    var tick = function (timestamp) {
+      runtime.markerPoseRafId = window.requestAnimationFrame(tick);
+
+      var markerKeys = Object.keys(runtime.markerStates);
+      if (!markerKeys.length) {
+        return;
+      }
+
+      for (var index = 0; index < markerKeys.length; index += 1) {
+        var markerState = runtime.markerStates[markerKeys[index]];
+        stabilizeMarkerPose(markerState, timestamp || performance.now());
+      }
+    };
+
+    runtime.markerPoseRafId = window.requestAnimationFrame(tick);
   }
 
   function sendAnalytics(eventName, extraData) {
@@ -261,6 +479,49 @@
     sendAnalytics("camera_ready", { source: source });
   }
 
+  function tuneModelMaterials(mesh) {
+    if (!mesh || typeof mesh.traverse !== "function") {
+      return;
+    }
+
+    var maxAnisotropy = 0;
+    if (sceneEl.renderer && sceneEl.renderer.capabilities && typeof sceneEl.renderer.capabilities.getMaxAnisotropy === "function") {
+      maxAnisotropy = Math.min(sceneEl.renderer.capabilities.getMaxAnisotropy(), CONFIG.renderer.maxAnisotropy);
+    }
+
+    mesh.traverse(function (node) {
+      if (!node || !node.isMesh) {
+        return;
+      }
+
+      node.frustumCulled = false;
+
+      var materials = Array.isArray(node.material) ? node.material : [node.material];
+      materials.forEach(function (material) {
+        if (!material) {
+          return;
+        }
+
+        ["map", "normalMap", "roughnessMap", "metalnessMap", "emissiveMap"].forEach(function (textureKey) {
+          var texture = material[textureKey];
+          if (texture && maxAnisotropy > 0) {
+            texture.anisotropy = maxAnisotropy;
+            if ((textureKey === "map" || textureKey === "emissiveMap") && THREE_NS) {
+              if ("colorSpace" in texture && THREE_NS.SRGBColorSpace) {
+                texture.colorSpace = THREE_NS.SRGBColorSpace;
+              } else if ("encoding" in texture && THREE_NS.sRGBEncoding) {
+                texture.encoding = THREE_NS.sRGBEncoding;
+              }
+            }
+            texture.needsUpdate = true;
+          }
+        });
+
+        material.needsUpdate = true;
+      });
+    });
+  }
+
   function normalizeModelEntity(modelEl, modelKey) {
     if (!THREE_NS || !modelEl) {
       return;
@@ -283,7 +544,9 @@
     };
 
     try {
+      configureRendererQuality();
       mesh.updateMatrixWorld(true);
+      tuneModelMaterials(mesh);
 
       var bounds = new THREE_NS.Box3().setFromObject(mesh);
       if (bounds.isEmpty()) {
@@ -304,6 +567,7 @@
       mesh.position.y -= bounds.min.y;
       mesh.position.z -= center.z;
 
+      modelEl.object3D.position.set(0, 0, 0);
       modelEl.object3D.scale.setScalar(fitScale);
 
       var rotation = Array.isArray(modelConfig.rotation) ? modelConfig.rotation : [0, 0, 0];
@@ -330,13 +594,35 @@
 
     markerEls.forEach(function (markerEl) {
       var markerKey = markerEl.dataset.markerKey || "unknown";
+      var markerState = getMarkerState(markerKey);
+      markerState.markerEl = markerEl;
 
       markerEl.addEventListener("markerFound", function () {
-        sendAnalytics("marker_found", { marker: markerKey });
+        clearMarkerLostTimer(markerState);
+        markerState.lastSeenAt = performance.now();
+        markerState.justFoundAt = markerState.lastSeenAt;
+        markerState.hasFilteredPose = false;
+        markerState.fixedScale = 1;
+
+        if (!markerState.isVisibleStable) {
+          markerState.isVisibleStable = true;
+          sendAnalytics("marker_found", { marker: markerKey });
+        }
       });
 
       markerEl.addEventListener("markerLost", function () {
-        sendAnalytics("marker_lost", { marker: markerKey });
+        clearMarkerLostTimer(markerState);
+
+        markerState.lostTimerId = window.setTimeout(function () {
+          markerState.lostTimerId = 0;
+          if (!markerState.isVisibleStable) {
+            return;
+          }
+
+          markerState.isVisibleStable = false;
+          markerState.hasFilteredPose = false;
+          sendAnalytics("marker_lost", { marker: markerKey });
+        }, CONFIG.markerLostDebounceMs);
       });
     });
   }
@@ -374,12 +660,12 @@
     videoEl.addEventListener("loadedmetadata", function () {
       runtime.lastVideoWidth = videoEl.videoWidth || runtime.lastVideoWidth;
       runtime.lastVideoHeight = videoEl.videoHeight || runtime.lastVideoHeight;
-      requestViewportSync("video-loadedmetadata", true);
+      scheduleViewportSettle("video-loadedmetadata");
     });
 
     videoEl.addEventListener("playing", function () {
       markCameraReady("video-playing");
-      requestViewportSync("video-playing", true);
+      scheduleViewportSettle("video-playing");
     });
 
     videoEl.addEventListener("error", function () {
@@ -403,7 +689,7 @@
 
       if (videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
         markCameraReady("video-dimensions-ready");
-        requestViewportSync("video-dimensions-ready", true);
+        scheduleViewportSettle("video-dimensions-ready");
 
         if (runtime.videoScanIntervalId) {
           window.clearInterval(runtime.videoScanIntervalId);
@@ -422,10 +708,13 @@
 
   function setupSceneEvents() {
     sceneEl.addEventListener("loaded", function () {
+      configureRendererQuality();
       requestViewportSync("scene-loaded", true);
+      scheduleViewportSettle("scene-loaded");
     });
 
     sceneEl.addEventListener("renderstart", function () {
+      configureRendererQuality();
       requestViewportSync("renderstart", true);
     });
 
@@ -450,9 +739,7 @@
     window.addEventListener(
       "orientationchange",
       function () {
-        window.setTimeout(function () {
-          requestViewportSync("orientationchange", true);
-        }, 140);
+        scheduleViewportSettle("orientationchange");
       },
       { passive: true },
     );
@@ -465,20 +752,45 @@
         },
         { passive: true },
       );
-
-      window.visualViewport.addEventListener(
-        "scroll",
-        function () {
-          requestViewportSync("visualViewport-scroll");
-        },
-        { passive: true },
-      );
     }
 
     document.addEventListener("visibilitychange", function () {
       if (!document.hidden) {
-        requestViewportSync("visibilitychange", true);
+        scheduleViewportSettle("visibilitychange");
       }
+    });
+
+    window.addEventListener(
+      "pageshow",
+      function () {
+        scheduleViewportSettle("pageshow");
+      },
+      { passive: true },
+    );
+  }
+
+  function setupLifecycleCleanup() {
+    window.addEventListener("beforeunload", function () {
+      clearViewportSettleTimers();
+
+      if (runtime.videoScanIntervalId) {
+        window.clearInterval(runtime.videoScanIntervalId);
+        runtime.videoScanIntervalId = 0;
+      }
+
+      if (runtime.resizeRafId) {
+        window.cancelAnimationFrame(runtime.resizeRafId);
+        runtime.resizeRafId = 0;
+      }
+
+      if (runtime.markerPoseRafId) {
+        window.cancelAnimationFrame(runtime.markerPoseRafId);
+        runtime.markerPoseRafId = 0;
+      }
+
+      Object.keys(runtime.markerStates).forEach(function (markerKey) {
+        clearMarkerLostTimer(runtime.markerStates[markerKey]);
+      });
     });
   }
 
@@ -511,11 +823,15 @@
 
     setupSceneEvents();
     setupMarkerEvents();
+    startMarkerPoseStabilizer();
     setupModelEvents();
     setupViewportListeners();
+    setupLifecycleCleanup();
     startVideoWatcher();
 
+    configureRendererQuality();
     requestViewportSync("init", true);
+    scheduleViewportSettle("init");
     sendAnalytics("session_start", { marker: CONFIG.markerFilter });
   }
 

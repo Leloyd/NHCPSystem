@@ -2,7 +2,7 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#0b1017" />
     <title>AR Content Detection</title>
 
@@ -22,8 +22,8 @@
       id="arScene"
       embedded
       vr-mode-ui="enabled: false"
-      renderer="alpha: true; antialias: false; precision: mediump; logarithmicDepthBuffer: false"
-      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono;"
+      renderer="alpha: true; antialias: false; precision: highp; logarithmicDepthBuffer: false"
+      arjs="sourceType: webcam; debugUIEnabled: false; detectionMode: mono; sourceWidth: 1280; sourceHeight: 960; displayWidth: 1280; displayHeight: 960; maxDetectionRate: 60;"
     >
       <a-assets timeout="20000">
         <a-asset-item id="balanghayModel" src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512.glb') }}"></a-asset-item>
@@ -36,9 +36,9 @@
         type="pattern"
         url="{{ url_for('static', filename='AR-Artifacts/Balanghay/balanghay.patt') }}"
         smooth="true"
-        smooth-count="10"
-        smooth-tolerance="0.02"
-        smooth-threshold="5"
+        smooth-count="8"
+        smooth-tolerance="0.01"
+        smooth-threshold="2"
       >
         <a-entity
           id="model-balanghay"
@@ -55,9 +55,9 @@
         type="pattern"
         url="{{ url_for('static', filename='AR-Artifacts/Kabaong/kabaong.patt') }}"
         smooth="true"
-        smooth-count="10"
-        smooth-tolerance="0.02"
-        smooth-threshold="5"
+        smooth-count="8"
+        smooth-tolerance="0.01"
+        smooth-threshold="2"
       >
         <a-entity
           id="model-kabaong"
