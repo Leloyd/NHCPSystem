@@ -28,10 +28,10 @@ body {
 
 #arScene,
 #arScene canvas,
-.a-canvas,
+#ar-canvas,
 #arjs-video,
 .arjs-video,
-a-scene video {
+video {
   position: fixed !important;
   top: 0;
   left: 0;
@@ -47,14 +47,14 @@ a-scene video {
 
 #arjs-video,
 .arjs-video,
-a-scene video {
+video {
   z-index: 0 !important;
   background: #000 !important;
 }
 
 #arScene,
 #arScene canvas,
-.a-canvas {
+#ar-canvas {
   z-index: 1 !important;
   background: transparent !important;
 }
