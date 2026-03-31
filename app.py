@@ -61,6 +61,11 @@ def interactive():
     return render_template("Interactive.html")
 
 
+@app.route("/site-map")
+def site_map():
+    return render_template("SiteMap.html")
+
+
 @app.route("/participation")
 def participation():
     return render_template("Participation.html")

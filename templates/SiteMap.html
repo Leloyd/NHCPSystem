@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Site Map | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/interactive.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-20">
+          <a href="/" class="flex items-center space-x-3">
+            <img src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" alt="Museum logo" class="museum-logo" />
+            <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+          </a>
+          <nav class="hidden lg:flex items-center space-x-8">
+            <a href="/" class="text-gray-700 hover:text-amber-800 transition">Home</a>
+            <a href="/digital-exhibits" class="text-gray-700 hover:text-amber-800 transition">Digital Exhibits</a>
+            <a href="/accessibility" class="text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+            <a href="/interactive" class="text-amber-800">Interactive</a>
+            <a href="/participation" class="text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+            <a href="/news" class="text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+            <a href="/support" class="text-gray-700 hover:text-amber-800 transition">Support</a>
+          </nav>
+          <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+            <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+          </button>
+        </div>
+        <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+          <a href="/" class="block text-gray-700 hover:text-amber-800 transition">Home</a>
+          <a href="/digital-exhibits" class="block text-gray-700 hover:text-amber-800 transition">Digital Exhibits</a>
+          <a href="/accessibility" class="block text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+          <a href="/interactive" class="block text-amber-800">Interactive</a>
+          <a href="/participation" class="block text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+          <a href="/news" class="block text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+          <a href="/support" class="block text-gray-700 hover:text-amber-800 transition">Support</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20 interactive-page">
+      <section class="interactive-hero text-white py-16">
+        <div class="container mx-auto px-4">
+          <div class="max-w-4xl">
+            <p class="interactive-kicker">Interactive Map</p>
+            <h1 class="text-4xl md:text-5xl font-serif mb-5">SiteMap Explorer</h1>
+            <p class="text-lg md:text-xl leading-relaxed max-w-3xl">
+              Explore key landmarks of the Nagcarlan Underground Cemetery through curated routes, stop-by-stop context,
+              and a quick knowledge challenge.
+            </p>
+            <div class="mt-8 flex flex-wrap gap-3">
+              <a href="/interactive" class="inline-flex items-center rounded-md bg-amber-500 px-5 py-3 font-semibold text-stone-900 hover:bg-amber-400 transition">← Back to Interactive</a>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="mapExplorer" class="py-16 bg-stone-100">
+        <div class="container mx-auto px-4">
+          <div class="grid grid-cols-1 lg:grid-cols-[1.35fr,1fr] gap-8 items-start">
+            <article class="map-shell" aria-labelledby="mapHeading">
+              <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
+                <h2 id="mapHeading" class="text-2xl font-serif text-stone-900">Interactive Site Map</h2>
+                <span class="text-sm text-stone-600">Tap pins or stop names to inspect each location.</span>
+              </div>
+
+              <div class="map-route-controls" role="tablist" aria-label="Heritage route selector">
+                <button class="map-route-btn is-active" data-route-btn="orientation" type="button">Orientation Loop</button>
+                <button class="map-route-btn" data-route-btn="heritage" type="button">Heritage Core</button>
+                <button class="map-route-btn" data-route-btn="accessibility" type="button">Accessible Route</button>
+              </div>
+
+              <div class="map-stage mt-4">
+                <svg id="interactiveMap" viewBox="0 0 1000 620" role="img" aria-label="Simplified map of the Nagcarlan Underground Cemetery complex">
+                  <defs>
+                    <linearGradient id="mapBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stop-color="#f7f0dd"></stop>
+                      <stop offset="100%" stop-color="#f2e4c4"></stop>
+                    </linearGradient>
+                  </defs>
+
+                  <rect x="12" y="12" width="976" height="596" rx="24" fill="url(#mapBg)"></rect>
+                  <rect x="64" y="58" width="872" height="504" rx="26" fill="#fff9eb" stroke="#ddc28a" stroke-width="3"></rect>
+
+                  <path d="M120 505 L220 430 L315 450 L460 365 L560 390 L675 300 L820 325" class="map-route" data-route="orientation"></path>
+                  <path d="M315 450 L460 365 L560 390 L740 245" class="map-route" data-route="heritage"></path>
+                  <path d="M120 505 L220 430 L460 365 L820 325" class="map-route" data-route="accessibility"></path>
+
+                  <g class="map-stop" data-stop="main-gate" tabindex="0" role="button" aria-label="Main Gate">
+                    <circle class="map-stop-halo" cx="120" cy="505" r="24"></circle>
+                    <circle class="map-stop-core" cx="120" cy="505" r="13"></circle>
+                    <text x="120" y="510" text-anchor="middle" class="map-stop-label">1</text>
+                  </g>
+
+                  <g class="map-stop" data-stop="welcome-plaza" tabindex="0" role="button" aria-label="Welcome Plaza">
+                    <circle class="map-stop-halo" cx="220" cy="430" r="24"></circle>
+                    <circle class="map-stop-core" cx="220" cy="430" r="13"></circle>
+                    <text x="220" y="435" text-anchor="middle" class="map-stop-label">2</text>
+                  </g>
+
+                  <g class="map-stop" data-stop="chapel-facade" tabindex="0" role="button" aria-label="Chapel Facade">
+                    <circle class="map-stop-halo" cx="315" cy="450" r="24"></circle>
+                    <circle class="map-stop-core" cx="315" cy="450" r="13"></circle>
+                    <text x="315" y="455" text-anchor="middle" class="map-stop-label">3</text>
+                  </g>
+
+                  <g class="map-stop" data-stop="underground-entrance" tabindex="0" role="button" aria-label="Underground Entrance">
+                    <circle class="map-stop-halo" cx="460" cy="365" r="24"></circle>
+                    <circle class="map-stop-core" cx="460" cy="365" r="13"></circle>
+                    <text x="460" y="370" text-anchor="middle" class="map-stop-label">4</text>
+                  </g>
+
+                  <g class="map-stop" data-stop="crypt-viewpoint" tabindex="0" role="button" aria-label="Crypt Viewpoint">
+                    <circle class="map-stop-halo" cx="560" cy="390" r="24"></circle>
+                    <circle class="map-stop-core" cx="560" cy="390" r="13"></circle>
+                    <text x="560" y="395" text-anchor="middle" class="map-stop-label">5</text>
+                  </g>
+
+                  <g class="map-stop" data-stop="bell-tower" tabindex="0" role="button" aria-label="Bell Tower">
+                    <circle class="map-stop-halo" cx="675" cy="300" r="24"></circle>
+                    <circle class="map-stop-core" cx="675" cy="300" r="13"></circle>
+                    <text x="675" y="305" text-anchor="middle" class="map-stop-label">6</text>
+                  </g>
+
+                  <g class="map-stop" data-stop="garden-court" tabindex="0" role="button" aria-label="Garden Court">
+                    <circle class="map-stop-halo" cx="820" cy="325" r="24"></circle>
+                    <circle class="map-stop-core" cx="820" cy="325" r="13"></circle>
+                    <text x="820" y="330" text-anchor="middle" class="map-stop-label">7</text>
+                  </g>
+                </svg>
+              </div>
+
+              <div id="stopList" class="stop-list mt-4" aria-label="Landmark selector"></div>
+            </article>
+
+            <aside class="details-shell" aria-live="polite">
+              <p id="stopRouteBadge" class="route-badge">Orientation Loop</p>
+              <h3 id="stopTitle" class="text-2xl font-serif text-stone-900 mt-2">Main Gate</h3>
+              <p id="stopSummary" class="text-stone-700 mt-2"></p>
+
+              <dl class="mt-6 space-y-4">
+                <div>
+                  <dt class="text-xs uppercase tracking-wide text-stone-500">Historical Period</dt>
+                  <dd id="stopEra" class="text-stone-900 font-medium"></dd>
+                </div>
+                <div>
+                  <dt class="text-xs uppercase tracking-wide text-stone-500">Visitor Focus</dt>
+                  <dd id="stopFocus" class="text-stone-900 font-medium"></dd>
+                </div>
+                <div>
+                  <dt class="text-xs uppercase tracking-wide text-stone-500">Learning Prompt</dt>
+                  <dd id="stopPrompt" class="text-stone-900 font-medium"></dd>
+                </div>
+                <div>
+                  <dt class="text-xs uppercase tracking-wide text-stone-500">Stop Order</dt>
+                  <dd id="stopOrder" class="text-stone-900 font-medium"></dd>
+                </div>
+              </dl>
+
+              <div class="details-controls mt-6">
+                <button id="prevStopBtn" type="button" class="details-btn">Previous Stop</button>
+                <button id="nextStopBtn" type="button" class="details-btn details-btn--primary">Next Stop</button>
+              </div>
+            </aside>
+          </div>
+        </div>
+      </section>
+
+      <section class="py-14 bg-white">
+        <div class="container mx-auto px-4">
+          <div class="quiz-shell max-w-4xl mx-auto">
+            <div class="flex flex-wrap items-center justify-between gap-3">
+              <h2 class="text-2xl font-serif text-stone-900">Quick Map Challenge</h2>
+              <span id="quizProgress" class="text-sm font-medium text-stone-600">Question 1 / 3</span>
+            </div>
+
+            <p id="quizQuestion" class="mt-4 text-lg text-stone-900"></p>
+            <div id="quizOptions" class="quiz-options mt-4" role="radiogroup" aria-label="Quiz answer options"></div>
+
+            <div class="mt-6 flex flex-wrap gap-3">
+              <button id="quizSubmitBtn" type="button" class="details-btn details-btn--primary">Submit Answer</button>
+              <button id="quizNextBtn" type="button" class="details-btn" disabled>Next Question</button>
+            </div>
+
+            <p id="quizFeedback" class="quiz-feedback mt-4" aria-live="polite"></p>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-300 py-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div>
+            <h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3>
+            <p class="text-sm leading-relaxed">
+              Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino
+              ingenuity and cultural preservation.
+            </p>
+          </div>
+          <div>
+            <h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3>
+            <ul class="space-y-2 text-sm">
+              <li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li>
+              <li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li>
+              <li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li>
+              <li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li>
+              <li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3>
+            <ul class="space-y-3 text-sm">
+              <li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li>
+              <li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li>
+              <li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li>
+            </ul>
+          </div>
+          <div>
+            <h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3>
+            <div class="flex items-start space-x-2 text-sm">
+              <i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i>
+              <div>
+                <p>Tuesday - Sunday</p>
+                <p>8:00 AM - 5:00 PM</p>
+                <p class="mt-2 text-amber-400">Closed on Mondays</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center">
+          <p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p>
+        </div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/interactive-map.js') }}"></script>
+  </body>
+</html>
