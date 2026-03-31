@@ -1,0 +1,175 @@
+{
+  "image": {
+    "url": "/static/images/site-map/aerial-view.jpg"
+  },
+  "hotspots": [
+    {
+      "id": "entrance",
+      "title": "Entrance",
+      "category": "Access",
+      "x": 1996,
+      "y": 132,
+      "era": "Current Site Layout",
+      "focus": "Arrival point",
+      "prompt": "",
+      "description": "Entrance marker.",
+      "media": []
+    },
+    {
+      "id": "flag-pole",
+      "title": "Flag Pole",
+      "category": "Landmark",
+      "x": 1643,
+      "y": 246,
+      "era": "Current Site Layout",
+      "focus": "Open grounds landmark",
+      "prompt": "",
+      "description": "Flag pole marker.",
+      "media": []
+    },
+    {
+      "id": "parking",
+      "title": "Parking",
+      "category": "Visitor Zone",
+      "x": 1579,
+      "y": 125,
+      "era": "Current Site Layout",
+      "focus": "Visitor access",
+      "prompt": "",
+      "description": "Parking marker.",
+      "media": []
+    },
+    {
+      "id": "museum-entrance",
+      "title": "Museum Entrance",
+      "category": "Access",
+      "x": 1337,
+      "y": 357,
+      "era": "Current Site Layout",
+      "focus": "Museum entry",
+      "prompt": "",
+      "description": "Museum entrance marker.",
+      "media": []
+    },
+    {
+      "id": "museum",
+      "title": "Museum",
+      "category": "Visitor Zone",
+      "x": 1175,
+      "y": 327,
+      "era": "Current Site Layout",
+      "focus": "Exhibit building",
+      "prompt": "",
+      "description": "Museum marker.",
+      "media": []
+    },
+    {
+      "id": "resource-center-office",
+      "title": "Resource Center / Office",
+      "category": "Visitor Zone",
+      "x": 1276,
+      "y": 576,
+      "era": "Current Site Layout",
+      "focus": "Support services",
+      "prompt": "",
+      "description": "Resource Center / Office marker.",
+      "media": []
+    },
+    {
+      "id": "side",
+      "title": "Side",
+      "category": "Access",
+      "x": 2470,
+      "y": 159,
+      "era": "Current Site Layout",
+      "focus": "Side perimeter",
+      "prompt": "",
+      "description": "Side marker.",
+      "media": []
+    },
+    {
+      "id": "main-gate",
+      "title": "Main Gate",
+      "category": "Access",
+      "x": 2016,
+      "y": 357,
+      "era": "Current Site Layout",
+      "focus": "Primary gate",
+      "prompt": "",
+      "description": "Main gate marker.",
+      "media": []
+    },
+    {
+      "id": "middle",
+      "title": "Middle",
+      "category": "Landmark",
+      "x": 2016,
+      "y": 1128,
+      "era": "Current Site Layout",
+      "focus": "Central axis",
+      "prompt": "",
+      "description": "Middle marker.",
+      "media": []
+    },
+    {
+      "id": "tombs-right-side",
+      "title": "Tombs (Right side)",
+      "category": "Tombs",
+      "x": 2579,
+      "y": 1706,
+      "era": "Current Site Layout",
+      "focus": "Burial cluster",
+      "prompt": "",
+      "description": "Right-side tombs marker.",
+      "media": []
+    },
+    {
+      "id": "tombs-left-side",
+      "title": "Tombs (Left side)",
+      "category": "Tombs",
+      "x": 1499,
+      "y": 1739,
+      "era": "Current Site Layout",
+      "focus": "Burial cluster",
+      "prompt": "",
+      "description": "Left-side tombs marker.",
+      "media": []
+    },
+    {
+      "id": "church-entrance",
+      "title": "Church Entrance",
+      "category": "Church",
+      "x": 2039,
+      "y": 1871,
+      "era": "Current Site Layout",
+      "focus": "Sacred access",
+      "prompt": "",
+      "description": "Church entrance marker.",
+      "media": []
+    },
+    {
+      "id": "church",
+      "title": "Church",
+      "category": "Church",
+      "x": 2047,
+      "y": 2131,
+      "era": "Current Site Layout",
+      "focus": "Main church structure",
+      "prompt": "",
+      "description": "Church marker.",
+      "media": []
+    },
+    {
+      "id": "underground-tombs",
+      "title": "Underground Tombs",
+      "category": "Tombs",
+      "x": 2244,
+      "y": 2068,
+      "era": "Current Site Layout",
+      "focus": "Underground heritage zone",
+      "prompt": "",
+      "description": "Underground tombs marker.",
+      "media": []
+    }
+  ]
+}
