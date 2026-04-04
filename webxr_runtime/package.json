@@ -1,0 +1,14 @@
+{
+  "name": "marble-webxr-viewer",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "vendor:sync": "node ./scripts/sync_vendor.mjs",
+    "postinstall": "npm run vendor:sync"
+  },
+  "dependencies": {
+    "@sparkjsdev/spark": "latest",
+    "three": "^0.180.0",
+    "three-mesh-bvh": "^0.9.2"
+  }
+}

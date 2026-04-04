@@ -1,0 +1,17 @@
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.env
+
+# Flask/runtime
+runtime/church_extracted/
+runtime/church_extract_state.json
+
+# Node
+node_modules/
+
+# IDE / OS
+.DS_Store
+Thumbs.db

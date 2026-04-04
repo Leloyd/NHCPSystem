@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>3D Environment | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <link rel="stylesheet" href="/webxr/static/css/app.css" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/webxr/static/vendor/three/three.module.js",
+          "three/addons/": "/webxr/static/vendor/three/examples/jsm/",
+          "three-mesh-bvh": "/webxr/static/vendor/three-mesh-bvh/index.module.js"
+        }
+      }
+    </script>
+  </head>
+  <body>
+    <div id="app-root" class="app-root"></div>
+    <div id="crosshair" class="crosshair hidden" aria-hidden="true"></div>
+
+    <div id="loading-overlay" class="loading-overlay">
+      <div class="loading-card">
+        <h1>Loading 3D Environment</h1>
+        <p id="loading-text">Initializing...</p>
+        <div class="progress-track">
+          <div id="loading-progress" class="progress-fill"></div>
+        </div>
+      </div>
+    </div>
+
+    <div id="error-banner" class="error-banner hidden"></div>
+
+    <aside class="hud-panel">
+      <div class="hud-block">
+        <h2>Controls</h2>
+        <button id="pointer-lock-button" class="btn">Click to capture mouse look</button>
+        <p class="hint">WASD move · Space jump · Shift sprint · Click objects to interact.</p>
+        <p id="player-coordinates" class="hint coords-readout">Position: X 0.00 Y 0.00 Z 0.00</p>
+        <p id="hotspot-helper" class="hint">Press H to copy hotspot position.</p>
+      </div>
+    </aside>
+
+    <aside id="interaction-panel" class="interaction-panel hidden">
+      <h2 id="interaction-name">Object</h2>
+      <pre id="interaction-meta"></pre>
+    </aside>
+
+    <section id="mobile-controls" class="mobile-controls hidden">
+      <div class="sticks-row">
+        <div id="left-stick-zone" class="stick-zone">
+          <div id="left-stick-thumb" class="stick-thumb"></div>
+        </div>
+
+        <div id="right-stick-zone" class="stick-zone">
+          <div id="right-stick-thumb" class="stick-thumb"></div>
+        </div>
+      </div>
+
+      <div class="mobile-buttons">
+        <button id="mobile-jump-button" class="btn">Jump</button>
+        <button id="mobile-sprint-button" class="btn">Sprint</button>
+      </div>
+    </section>
+
+    <script type="module" src="/webxr/static/js/main.js"></script>
+  </body>
+</html>
