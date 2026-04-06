@@ -212,6 +212,20 @@ def webxr_static_asset(asset_path):
     return send_from_directory(str(static_dir), asset_path)
 
 
+@app.route("/webxr/images/<path:image_path>")
+def webxr_image_asset(image_path):
+    images_dir = (Path(_get_webxr_config_value("BASE_DIR", WEBXR_BASE_DIR)) / "images").resolve()
+    candidate_path = _resolve_safe_path(images_dir, image_path)
+
+    if candidate_path is None:
+        return jsonify({"error": "Invalid image asset path"}), 400
+
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"Image asset not found: {image_path}"}), 404
+
+    return send_from_directory(str(images_dir), image_path)
+
+
 @app.route("/participation")
 def participation():
     return render_template("Participation.html")

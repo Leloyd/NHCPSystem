@@ -46,6 +46,13 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     radius: 0.07,
   },
 ];
+const CHURCH_FLOATING_LABEL_IMAGES = {
+  'hotspot-1': '/webxr/images/IMG_2628.jpg',
+};
+const CHURCH_HOTSPOT_INFO_TEXT = {
+  'hotspot-1':
+    'Sample exhibit: glazed azulejo tilework from Philippine heritage craftsmanship, often used for decorative floors and wall accents in historic structures.',
+};
 const QUALITY_PRESETS = {
   auto: {
     pixelRatio: () => Math.min(window.devicePixelRatio || 1, isMobileLikeDevice() ? 1.2 : 1.6),
@@ -90,6 +97,7 @@ export class WebXRApp {
     this.clock = new THREE.Clock();
     this.hotspotRaycaster = new THREE.Raycaster();
     this.hotspotRaycaster.firstHitOnly = true;
+    this.labelProjection = new THREE.Vector3();
 
     this.playerRig = new THREE.Group();
     this.playerRig.name = 'player-rig';
@@ -103,6 +111,12 @@ export class WebXRApp {
     this.splatEntries = [];
     this.pickableMeshes = [];
     this.hotspotMarkers = [];
+    this.floatingHotspotLabels = [];
+    this.expandedHotspotOverlay = null;
+    this.expandedHotspotOverlayImage = null;
+    this.expandedHotspotOverlayCaption = null;
+    this.expandedHotspotOverlayToggle = null;
+    this.expandedHotspotOverlayDescription = null;
 
     this.sparkRenderer = null;
     this.SplatMeshCtor = null;
@@ -125,6 +139,7 @@ export class WebXRApp {
       this.container.appendChild(this.renderer.domElement);
 
       this._setupUi();
+      this._setupExpandedHotspotOverlay();
       this._setupLights();
       this._setupXrUi();
       this._registerInteractions();
@@ -167,6 +182,106 @@ export class WebXRApp {
     });
 
     this.uiController.setMobileControlsVisible(this.mobileMode);
+  }
+
+  _setupExpandedHotspotOverlay() {
+    if (this.expandedHotspotOverlay) {
+      return;
+    }
+
+    const overlay = document.createElement('div');
+    overlay.className = 'hotspot-image-overlay hidden';
+
+    const panel = document.createElement('div');
+    panel.className = 'hotspot-image-overlay-panel';
+
+    const closeButton = document.createElement('button');
+    closeButton.type = 'button';
+    closeButton.className = 'hotspot-image-overlay-close';
+    closeButton.textContent = 'x';
+    closeButton.setAttribute('aria-label', 'Close hotspot image');
+
+    const image = document.createElement('img');
+    image.className = 'hotspot-image-overlay-image';
+    image.alt = '';
+
+    const caption = document.createElement('p');
+    caption.className = 'hotspot-image-overlay-caption';
+
+    const toggleInfoButton = document.createElement('button');
+    toggleInfoButton.type = 'button';
+    toggleInfoButton.className = 'hotspot-image-overlay-toggle hidden';
+    toggleInfoButton.textContent = 'Show info';
+
+    const description = document.createElement('p');
+    description.className = 'hotspot-image-overlay-description hidden';
+
+    panel.append(closeButton, image, caption, toggleInfoButton, description);
+    overlay.appendChild(panel);
+    document.body.appendChild(overlay);
+
+    closeButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      this._hideExpandedHotspotImage();
+    });
+
+    overlay.addEventListener('click', (event) => {
+      if (event.target === overlay) {
+        this._hideExpandedHotspotImage();
+      }
+    });
+
+    toggleInfoButton.addEventListener('click', (event) => {
+      event.preventDefault();
+
+      const shouldShow = description.classList.contains('hidden');
+      description.classList.toggle('hidden', !shouldShow);
+      toggleInfoButton.textContent = shouldShow ? 'Hide info' : 'Show info';
+    });
+
+    this.expandedHotspotOverlay = overlay;
+    this.expandedHotspotOverlayImage = image;
+    this.expandedHotspotOverlayCaption = caption;
+    this.expandedHotspotOverlayToggle = toggleInfoButton;
+    this.expandedHotspotOverlayDescription = description;
+  }
+
+  _showExpandedHotspotImage(imageUrl, hotspotId) {
+    if (!imageUrl) {
+      return;
+    }
+
+    this._setupExpandedHotspotOverlay();
+    if (!this.expandedHotspotOverlay || !this.expandedHotspotOverlayImage) {
+      return;
+    }
+
+    this.expandedHotspotOverlayImage.src = imageUrl;
+    this.expandedHotspotOverlayImage.alt = `${hotspotId} full image`;
+    if (this.expandedHotspotOverlayCaption) {
+      this.expandedHotspotOverlayCaption.textContent = String(hotspotId || '').replace(/-/g, ' ');
+    }
+
+    const infoText = CHURCH_HOTSPOT_INFO_TEXT[hotspotId] ?? '';
+    if (this.expandedHotspotOverlayToggle && this.expandedHotspotOverlayDescription) {
+      const hasInfoText = Boolean(infoText);
+      this.expandedHotspotOverlayToggle.classList.toggle('hidden', !hasInfoText);
+      this.expandedHotspotOverlayToggle.textContent = 'Show info';
+
+      this.expandedHotspotOverlayDescription.textContent = infoText;
+      this.expandedHotspotOverlayDescription.classList.add('hidden');
+    }
+
+    this.expandedHotspotOverlay.classList.remove('hidden');
+  }
+
+  _hideExpandedHotspotImage() {
+    this.expandedHotspotOverlayDescription?.classList.add('hidden');
+    if (this.expandedHotspotOverlayToggle) {
+      this.expandedHotspotOverlayToggle.textContent = 'Show info';
+    }
+
+    this.expandedHotspotOverlay?.classList.add('hidden');
   }
 
   _setupLights() {
@@ -366,6 +481,7 @@ export class WebXRApp {
       this.scene.remove(marker);
     }
     this.hotspotMarkers = [];
+    this._clearFloatingHotspotLabels();
     this.pickableMeshes = this.pickableMeshes.filter((mesh) => !mesh.userData?.isHotspotPickable);
 
     const activeHotspots = this._isUndergroundScene()
@@ -430,6 +546,92 @@ export class WebXRApp {
       root.add(ring, orb);
       this.scene.add(root);
       this.hotspotMarkers.push(root);
+
+      const labelImageUrl = !this._isUndergroundScene()
+        ? CHURCH_FLOATING_LABEL_IMAGES[hotspot.id]
+        : null;
+      if (labelImageUrl) {
+        this._createFloatingHotspotLabel(root, hotspot.id, labelImageUrl, hotspot.radius);
+      }
+    }
+
+    this._updateFloatingHotspotLabels();
+  }
+
+  _createFloatingHotspotLabel(anchor, hotspotId, imageUrl, radius = 0.07) {
+    const element = document.createElement('div');
+    element.className = 'hotspot-floating-label hotspot-floating-label-image-wrap';
+
+    const trigger = document.createElement('button');
+    trigger.type = 'button';
+    trigger.className = 'hotspot-floating-label-link';
+    trigger.setAttribute('aria-label', `Open image for ${hotspotId}`);
+    trigger.title = `Open image for ${hotspotId}`;
+    trigger.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      this._showExpandedHotspotImage(imageUrl, hotspotId);
+    });
+
+    const image = document.createElement('img');
+    image.className = 'hotspot-floating-label-image';
+    image.src = imageUrl;
+    image.alt = `${hotspotId} preview`;
+    image.decoding = 'async';
+    trigger.appendChild(image);
+    element.appendChild(trigger);
+
+    document.body.appendChild(element);
+
+    this.floatingHotspotLabels.push({
+      anchor,
+      element,
+      yOffset: Math.max(0.12, Number(radius) * 2.4),
+    });
+  }
+
+  _clearFloatingHotspotLabels() {
+    for (const label of this.floatingHotspotLabels) {
+      label.element?.remove();
+    }
+    this.floatingHotspotLabels = [];
+  }
+
+  _updateFloatingHotspotLabels() {
+    if (!this.camera || this.floatingHotspotLabels.length === 0) {
+      return;
+    }
+
+    const width = window.innerWidth;
+    const height = window.innerHeight;
+
+    for (const label of this.floatingHotspotLabels) {
+      if (!label.anchor?.parent || !label.element) {
+        continue;
+      }
+
+      label.anchor.getWorldPosition(this.labelProjection);
+      this.labelProjection.y += label.yOffset;
+      this.labelProjection.project(this.camera);
+
+      const isBehindCamera = this.labelProjection.z < -1 || this.labelProjection.z > 1;
+      const isOffscreen =
+        this.labelProjection.x < -1.05 ||
+        this.labelProjection.x > 1.05 ||
+        this.labelProjection.y < -1.05 ||
+        this.labelProjection.y > 1.05;
+
+      if (isBehindCamera || isOffscreen) {
+        label.element.classList.add('hidden');
+        continue;
+      }
+
+      const x = (this.labelProjection.x * 0.5 + 0.5) * width;
+      const y = (-this.labelProjection.y * 0.5 + 0.5) * height;
+
+      label.element.classList.remove('hidden');
+      label.element.style.left = `${x}px`;
+      label.element.style.top = `${y}px`;
     }
   }
 
@@ -587,6 +789,11 @@ export class WebXRApp {
   }
 
   _onGlobalKeyDown(event) {
+    if (event.code === 'Escape' && this.expandedHotspotOverlay && !this.expandedHotspotOverlay.classList.contains('hidden')) {
+      this._hideExpandedHotspotImage();
+      return;
+    }
+
     if (event.code !== 'KeyH' || event.repeat) {
       return;
     }
@@ -654,6 +861,7 @@ export class WebXRApp {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
+    this._updateFloatingHotspotLabels();
   }
 
   _animate() {
@@ -663,6 +871,8 @@ export class WebXRApp {
       this.playerController.update(dt, this.collisionSystem);
       this.uiController.setPlayerCoordinates(this.playerRig.position);
     }
+
+    this._updateFloatingHotspotLabels();
 
     this.renderer.render(this.scene, this.camera);
   }
