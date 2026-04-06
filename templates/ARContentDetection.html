@@ -18,6 +18,22 @@
       <a href="/digital-exhibits" class="ar-btn ar-btn--back">← Back</a>
     </div>
 
+    <div id="balanghayOverlay" class="ar-overlay ar-overlay--artifact" hidden>
+      <section class="ar-artifact-card" aria-label="Balanghay content options">
+        <div class="ar-artifact-tabs" role="tablist" aria-label="Balanghay views">
+          <button type="button" class="ar-artifact-tab is-active" data-balanghay-view="ar" role="tab" aria-selected="true">
+            AR
+          </button>
+          <button type="button" class="ar-artifact-tab" data-balanghay-view="image" role="tab" aria-selected="false" tabindex="-1">
+            Image
+          </button>
+          <button type="button" class="ar-artifact-tab" data-balanghay-view="info" role="tab" aria-selected="false" tabindex="-1">
+            Info
+          </button>
+        </div>
+      </section>
+    </div>
+
     <div id="arScene" aria-label="WebAR camera scene"></div>
 
     <script id="ar-three-config" type="application/json">
@@ -26,7 +42,10 @@
           {
             "key": "balanghay",
             "patternUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/balanghay.patt') }}",
-            "modelUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512.glb') }}"
+            "modelUrl": "{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512.glb') }}",
+            "imageUrl": "{{ url_for('static', filename='images/UndergroundLogo.jpg') }}",
+            "infoTitle": "Balanghay",
+            "infoText": "The balanghay is an early Philippine wooden boat linked to precolonial maritime travel, trade, and community life."
           },
           {
             "key": "kabaong",

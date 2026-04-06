@@ -24,6 +24,8 @@
   var IS_MOBILE = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
   var CONTENT_LAYER = 0;
   var OCCLUSION_LAYER = 1;
+  var BALANGHAY_KEY = "balanghay";
+  var BALANGHAY_VIEWS = ["ar", "image", "info"];
 
   var MODEL_CONFIG = {
     balanghay: {
@@ -123,6 +125,13 @@
     lastVideoHeight: 0,
     videoWatcherIntervalId: 0,
     markerFilter: "all",
+    textureLoader: null,
+    balanghayOverlayEl: null,
+    balanghayTabEls: [],
+    balanghayActiveView: "ar",
+    balanghayOverlayVisible: false,
+    balanghayEntry: null,
+    balanghayOverlayAnchor: new THREE_NS.Vector3(),
     rafId: 0,
     destroyed: false,
   };
@@ -189,6 +198,9 @@
           key: String(item && item.key ? item.key : "").toLowerCase(),
           patternUrl: String(item && item.patternUrl ? item.patternUrl : ""),
           modelUrl: String(item && item.modelUrl ? item.modelUrl : ""),
+          imageUrl: String(item && item.imageUrl ? item.imageUrl : ""),
+          infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
+          infoText: String(item && item.infoText ? item.infoText : ""),
         };
       })
       .filter(function (item) {
@@ -299,6 +311,282 @@
 
     runtime.cameraReady = true;
     sendAnalytics("camera_ready", { source: source });
+  }
+
+  function setBalanghayOverlayVisible(nextVisible) {
+    runtime.balanghayOverlayVisible = Boolean(nextVisible);
+
+    if (!runtime.balanghayOverlayEl) {
+      return;
+    }
+
+    runtime.balanghayOverlayEl.hidden = !runtime.balanghayOverlayVisible;
+
+    if (!runtime.balanghayOverlayVisible) {
+      runtime.balanghayOverlayEl.style.left = "";
+      runtime.balanghayOverlayEl.style.top = "";
+    }
+  }
+
+  function updateBalanghayOverlayPosition() {
+    if (
+      !runtime.balanghayOverlayEl ||
+      !runtime.balanghayEntry ||
+      !runtime.balanghayEntry.renderRoot ||
+      !runtime.renderer ||
+      !runtime.camera
+    ) {
+      return;
+    }
+
+    var rendererCanvas = runtime.renderer.domElement;
+    if (!rendererCanvas || typeof rendererCanvas.getBoundingClientRect !== "function") {
+      return;
+    }
+
+    runtime.balanghayOverlayAnchor.set(0, 0.3, 0);
+    runtime.balanghayEntry.renderRoot.localToWorld(runtime.balanghayOverlayAnchor);
+    runtime.balanghayOverlayAnchor.project(runtime.camera);
+
+    if (!Number.isFinite(runtime.balanghayOverlayAnchor.x) || !Number.isFinite(runtime.balanghayOverlayAnchor.y)) {
+      return;
+    }
+
+    var rect = rendererCanvas.getBoundingClientRect();
+    var rawX = rect.left + (runtime.balanghayOverlayAnchor.x * 0.5 + 0.5) * rect.width;
+    var rawY = rect.top + (-runtime.balanghayOverlayAnchor.y * 0.5 + 0.5) * rect.height;
+    var edgePadding = 12;
+
+    var clampedX = clampNumber(rawX, rect.left + rect.width * 0.5, rect.left + edgePadding, rect.right - edgePadding);
+    var clampedY = clampNumber(rawY - 6, rect.top + 84, rect.top + 84, rect.bottom - edgePadding);
+
+    runtime.balanghayOverlayEl.style.left = Math.round(clampedX) + "px";
+    runtime.balanghayOverlayEl.style.top = Math.round(clampedY) + "px";
+  }
+
+  function wrapCanvasTextLines(context, text, maxWidth) {
+    var words = String(text || "").trim().split(/\s+/).filter(Boolean);
+    if (!words.length) {
+      return [""];
+    }
+
+    var lines = [];
+    var currentLine = words[0];
+
+    for (var index = 1; index < words.length; index += 1) {
+      var candidate = currentLine + " " + words[index];
+      if (context.measureText(candidate).width <= maxWidth) {
+        currentLine = candidate;
+      } else {
+        lines.push(currentLine);
+        currentLine = words[index];
+      }
+    }
+
+    lines.push(currentLine);
+    return lines;
+  }
+
+  function createBalanghayInfoTexture(title, description) {
+    var canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 640;
+
+    var context = canvas.getContext("2d");
+    if (!context) {
+      return null;
+    }
+
+    context.fillStyle = "rgba(8, 16, 28, 0.92)";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.strokeStyle = "rgba(255, 196, 82, 0.9)";
+    context.lineWidth = 10;
+    context.strokeRect(12, 12, canvas.width - 24, canvas.height - 24);
+
+    context.fillStyle = "#fbbf24";
+    context.font = "700 76px 'Segoe UI', sans-serif";
+    context.fillText(String(title || "Balanghay"), 66, 130);
+
+    context.fillStyle = "rgba(255, 255, 255, 0.95)";
+    context.font = "500 46px 'Segoe UI', sans-serif";
+    var textLines = wrapCanvasTextLines(context, description, canvas.width - 132).slice(0, 7);
+
+    textLines.forEach(function (line, lineIndex) {
+      context.fillText(line, 66, 220 + lineIndex * 58);
+    });
+
+    var texture = new THREE_NS.CanvasTexture(canvas);
+    if ("colorSpace" in texture && THREE_NS.SRGBColorSpace) {
+      texture.colorSpace = THREE_NS.SRGBColorSpace;
+    } else if ("encoding" in texture && THREE_NS.sRGBEncoding) {
+      texture.encoding = THREE_NS.sRGBEncoding;
+    }
+    texture.needsUpdate = true;
+
+    return texture;
+  }
+
+  function createBalanghayInfoMesh(entry, markerConfig) {
+    if (!entry || !entry.altContentRoot) {
+      return;
+    }
+
+    var infoTexture = createBalanghayInfoTexture(markerConfig.infoTitle, markerConfig.infoText);
+    if (!infoTexture) {
+      return;
+    }
+
+    var infoGeometry = new THREE_NS.PlaneGeometry(0.84, 0.52);
+    var infoMaterial = new THREE_NS.MeshBasicMaterial({
+      map: infoTexture,
+      transparent: true,
+      side: THREE_NS.DoubleSide,
+    });
+
+    var infoMesh = new THREE_NS.Mesh(infoGeometry, infoMaterial);
+    infoMesh.position.set(0, 0.27, 0);
+    infoMesh.visible = false;
+
+    entry.altContentRoot.add(infoMesh);
+    entry.balanghayInfoMesh = infoMesh;
+  }
+
+  function createBalanghayImageMesh(entry, markerConfig) {
+    if (!entry || !entry.altContentRoot || !markerConfig.imageUrl) {
+      return;
+    }
+
+    if (!runtime.textureLoader) {
+      runtime.textureLoader = new THREE_NS.TextureLoader();
+    }
+
+    runtime.textureLoader.load(
+      markerConfig.imageUrl,
+      function (texture) {
+        if (!entry || !entry.altContentRoot || runtime.destroyed) {
+          if (texture && typeof texture.dispose === "function") {
+            texture.dispose();
+          }
+          return;
+        }
+
+        if ("colorSpace" in texture && THREE_NS.SRGBColorSpace) {
+          texture.colorSpace = THREE_NS.SRGBColorSpace;
+        } else if ("encoding" in texture && THREE_NS.sRGBEncoding) {
+          texture.encoding = THREE_NS.sRGBEncoding;
+        }
+        texture.needsUpdate = true;
+
+        var imageWidth = texture.image && texture.image.width ? texture.image.width : 1;
+        var imageHeight = texture.image && texture.image.height ? texture.image.height : 1;
+        var aspectRatio = imageWidth / Math.max(imageHeight, 1);
+        var planeWidth = 0.8;
+        var planeHeight = clampNumber(planeWidth / Math.max(aspectRatio, 0.15), 0.5, 0.22, 0.95);
+
+        var imageGeometry = new THREE_NS.PlaneGeometry(planeWidth, planeHeight);
+        var imageMaterial = new THREE_NS.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          side: THREE_NS.DoubleSide,
+        });
+
+        var imageMesh = new THREE_NS.Mesh(imageGeometry, imageMaterial);
+        imageMesh.position.set(0, 0.27, 0);
+        imageMesh.visible = false;
+
+        entry.altContentRoot.add(imageMesh);
+        entry.balanghayImageMesh = imageMesh;
+
+        setBalanghayContentVisibility();
+      },
+      undefined,
+      function (error) {
+        sendAnalytics("balanghay_image_error", {
+          marker: entry.key,
+          error: parseErrorMessage(error),
+        });
+      }
+    );
+  }
+
+  function initBalanghayMarkerContent(entry, markerConfig) {
+    if (!entry || entry.key !== BALANGHAY_KEY) {
+      return;
+    }
+
+    createBalanghayInfoMesh(entry, markerConfig || {});
+    createBalanghayImageMesh(entry, markerConfig || {});
+  }
+
+  function setBalanghayContentVisibility() {
+    if (!runtime.balanghayEntry) {
+      return;
+    }
+
+    var showAr = runtime.balanghayActiveView === "ar";
+    var showImage = runtime.balanghayActiveView === "image";
+    var showInfo = runtime.balanghayActiveView === "info";
+
+    if (runtime.balanghayEntry.modelContainer) {
+      runtime.balanghayEntry.modelContainer.visible = showAr;
+    }
+
+    if (runtime.balanghayEntry.occluderRoot) {
+      runtime.balanghayEntry.occluderRoot.visible = showAr;
+    }
+
+    if (runtime.balanghayEntry.altContentRoot) {
+      runtime.balanghayEntry.altContentRoot.visible = !showAr;
+    }
+
+    if (runtime.balanghayEntry.balanghayImageMesh) {
+      runtime.balanghayEntry.balanghayImageMesh.visible = showImage;
+    }
+
+    if (runtime.balanghayEntry.balanghayInfoMesh) {
+      runtime.balanghayEntry.balanghayInfoMesh.visible = showInfo;
+    }
+  }
+
+  function setBalanghayOverlayView(nextView) {
+    var requestedView = String(nextView || "ar").toLowerCase();
+    runtime.balanghayActiveView = BALANGHAY_VIEWS.indexOf(requestedView) > -1 ? requestedView : "ar";
+
+    runtime.balanghayTabEls.forEach(function (tabEl) {
+      var viewKey = tabEl.getAttribute("data-balanghay-view");
+      var isActive = viewKey === runtime.balanghayActiveView;
+
+      tabEl.classList.toggle("is-active", isActive);
+      tabEl.setAttribute("aria-selected", isActive ? "true" : "false");
+      tabEl.setAttribute("tabindex", isActive ? "0" : "-1");
+    });
+
+    setBalanghayContentVisibility();
+
+    if (runtime.balanghayOverlayVisible) {
+      updateBalanghayOverlayPosition();
+    }
+  }
+
+  function initBalanghayOverlay() {
+    runtime.balanghayOverlayEl = document.getElementById("balanghayOverlay");
+    if (!runtime.balanghayOverlayEl) {
+      return;
+    }
+
+    runtime.balanghayTabEls = Array.prototype.slice.call(
+      runtime.balanghayOverlayEl.querySelectorAll("[data-balanghay-view]")
+    );
+
+    runtime.balanghayTabEls.forEach(function (tabEl) {
+      tabEl.addEventListener("click", function () {
+        setBalanghayOverlayView(tabEl.getAttribute("data-balanghay-view"));
+      });
+    });
+
+    setBalanghayOverlayView("ar");
+    setBalanghayOverlayVisible(false);
   }
 
   function getSafePixelRatio() {
@@ -610,6 +898,15 @@
 
       scheduleMarkerLost(entry);
     });
+
+    var showBalanghayOverlay = Boolean(
+      runtime.balanghayEntry && runtime.balanghayEntry.renderRoot && runtime.balanghayEntry.renderRoot.visible
+    );
+    setBalanghayOverlayVisible(showBalanghayOverlay);
+
+    if (showBalanghayOverlay) {
+      updateBalanghayOverlayPosition();
+    }
   }
 
   function updateGroundOccluder(entry, modelSettings, size, fitScale) {
@@ -761,9 +1058,14 @@
 
         var modelSettings = getModelConfig(entry.key);
         tuneModelMaterials(scene);
+        entry.modelScene = scene;
         entry.modelContainer.add(scene);
         normalizeModel(entry, scene, modelSettings);
         entry.modelLoaded = true;
+
+        if (entry.key === BALANGHAY_KEY) {
+          setBalanghayContentVisibility();
+        }
 
         sendAnalytics("model_loaded", { model: entry.key });
       },
@@ -806,6 +1108,11 @@
       modelContainer.layers.set(CONTENT_LAYER);
       renderRoot.add(modelContainer);
 
+      var altContentRoot = new THREE_NS.Group();
+      altContentRoot.layers.set(CONTENT_LAYER);
+      altContentRoot.visible = false;
+      renderRoot.add(altContentRoot);
+
       var entry = {
         key: markerConfig.key,
         trackingRoot: trackingRoot,
@@ -814,6 +1121,10 @@
         occluderMesh: null,
         markerControls: markerControls,
         modelContainer: modelContainer,
+        altContentRoot: altContentRoot,
+        modelScene: null,
+        balanghayImageMesh: null,
+        balanghayInfoMesh: null,
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -827,6 +1138,12 @@
         smoothedQuaternion: new THREE_NS.Quaternion(),
         smoothedScale: new THREE_NS.Vector3(1, 1, 1),
       };
+
+      if (entry.key === BALANGHAY_KEY) {
+        runtime.balanghayEntry = entry;
+        initBalanghayMarkerContent(entry, markerConfig);
+        setBalanghayContentVisibility();
+      }
 
       loadMarkerModel(entry, markerConfig);
       return entry;
@@ -1070,6 +1387,31 @@
           entry.occluderMesh.material.dispose();
         }
       }
+
+      [entry.balanghayImageMesh, entry.balanghayInfoMesh].forEach(function (mesh) {
+        if (!mesh) {
+          return;
+        }
+
+        if (mesh.geometry && typeof mesh.geometry.dispose === "function") {
+          mesh.geometry.dispose();
+        }
+
+        var meshMaterials = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        meshMaterials.forEach(function (material) {
+          if (!material) {
+            return;
+          }
+
+          if (material.map && typeof material.map.dispose === "function") {
+            material.map.dispose();
+          }
+
+          if (typeof material.dispose === "function") {
+            material.dispose();
+          }
+        });
+      });
     });
 
     if (runtime.arSource && typeof runtime.arSource.dispose === "function") {
@@ -1079,6 +1421,9 @@
     if (runtime.arContext && typeof runtime.arContext.dispose === "function") {
       runtime.arContext.dispose();
     }
+
+    setBalanghayOverlayVisible(false);
+    runtime.balanghayEntry = null;
   }
 
   function init() {
@@ -1089,6 +1434,7 @@
       return;
     }
 
+    initBalanghayOverlay();
     initRendererScene();
     initArToolkit();
     buildMarkerEntries(enabledMarkers);
