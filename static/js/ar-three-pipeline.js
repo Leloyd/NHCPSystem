@@ -39,7 +39,7 @@
     },
     kabaong: {
       targetSize: 0.84,
-      scaleMultiplier: 3,
+      scaleMultiplier: 2,
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
@@ -50,13 +50,13 @@
     },
     banga: {
       targetSize: 0.8,
-      scaleMultiplier: 2,
+      scaleMultiplier: 3,
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
-        yOffset: 0.001,
+        yOffset: -0.02,
       },
     },
   };
