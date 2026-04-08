@@ -49,28 +49,23 @@
     </header>
 
     <main class="pt-20">
-      <section class="landing-intro relative h-screen min-h-[680px] overflow-hidden">
-        <div id="landingIntro3d" class="absolute inset-0" aria-hidden="true"></div>
-        <div class="landing-intro-gradient absolute inset-0"></div>
+      <section class="relative h-screen min-h-[680px]">
+        <img
+          src="{{ url_for('static', filename='images/UndergroundBG.png') }}"
+          alt="Nagcarlan Underground Cemetery"
+          class="absolute inset-0 h-full w-full object-cover"
+        />
+        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
 
-        <div class="landing-intro-copy relative h-full flex items-center justify-center text-white px-4">
+        <div class="relative h-full flex items-center justify-center text-white px-4">
           <div class="text-center max-w-4xl">
-            <p class="landing-intro-kicker mb-4 tracking-[0.22em] text-xs md:text-sm uppercase">3D Intro Experience</p>
             <h1 class="text-5xl md:text-7xl font-serif mb-6 tracking-tight">Museo ng Libingan sa Ilalim ng Lupa</h1>
             <p class="text-xl md:text-2xl mb-4 text-stone-200">Nagcarlan Underground Cemetery Museum</p>
             <p class="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-stone-300">
-              Begin at the cemetery gates, then move through the entrance toward the church as the 3D intro plays.
+              Discover the unique architectural and cultural heritage of the Philippines' only underground cemetery,
+              a National Historical Landmark.
             </p>
-
-            <div class="flex flex-wrap justify-center gap-4 mb-4">
-              <button id="landingIntroStart" type="button" class="landing-intro-start" disabled>
-                Loading 3D Intro...
-              </button>
-              <a href="#visitor-info" class="landing-intro-skip">Skip Intro</a>
-            </div>
-            <p id="landingIntroStatus" class="landing-intro-status">Preparing walls, gates, and church model...</p>
-
-            <div class="flex flex-wrap justify-center gap-4 mt-8">
+            <div class="flex flex-wrap justify-center gap-4">
               <a href="#visitor-info" class="bg-amber-600 hover:bg-amber-700 text-white px-8 py-3 rounded-lg transition">
                 Plan Your Visit
               </a>
@@ -483,10 +478,6 @@
     </footer>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/landing-3d.js') }}"></script>
   </body>
 </html>

@@ -2,10 +2,25 @@
   var introSection = document.querySelector(".landing-intro");
   var sceneContainer = document.getElementById("landingIntro3d");
   var startButton = document.getElementById("landingIntroStart");
+  var churchButton = document.getElementById("landingIntroChurch");
   var statusElement = document.getElementById("landingIntroStatus");
+  var autoStart = introSection ? introSection.getAttribute("data-auto-start") === "true" : false;
+  var WEBXR_SCENE_API_URL = "/api/webxr/scene";
+  var WEBXR_PREFETCH_STORAGE_KEY = "webxrSceneMetadataPrefetchV1";
+  var WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
+  var WEBXR_PREFETCH_CONCURRENCY = 4;
+  var webxrPrefetchStarted = false;
 
-  if (!introSection || !sceneContainer || !startButton || !statusElement) {
+  if (!introSection || !sceneContainer || !statusElement) {
     return;
+  }
+
+  if (!startButton && !autoStart) {
+    return;
+  }
+
+  if (churchButton) {
+    startWebxrPrefetch();
   }
 
   var THREE_NS = window.THREE;
@@ -25,8 +40,10 @@
     }
 
     setStatus("3D libraries did not load: " + missing.join(", ") + ". Please refresh and try again.", true);
-    startButton.disabled = true;
-    startButton.textContent = "3D Unavailable";
+    if (startButton) {
+      startButton.disabled = true;
+      startButton.textContent = "3D Unavailable";
+    }
     return;
   }
 
@@ -62,13 +79,174 @@
 
   initScene();
   loadModels();
-  startButton.addEventListener("click", startIntroAnimation);
+  if (startButton) {
+    startButton.addEventListener("click", startIntroAnimation);
+  }
   window.addEventListener("resize", onResize);
   window.addEventListener("beforeunload", dispose);
 
   function setStatus(message, isError) {
     statusElement.textContent = message;
     statusElement.classList.toggle("is-error", Boolean(isError));
+  }
+
+  function startWebxrPrefetch() {
+    if (webxrPrefetchStarted || !window.fetch || !window.sessionStorage) {
+      return;
+    }
+
+    webxrPrefetchStarted = true;
+
+    fetch(WEBXR_SCENE_API_URL, {
+      cache: "no-store",
+      credentials: "same-origin",
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Metadata request failed (" + response.status + ")");
+        }
+        return response.json();
+      })
+      .then(function (metadata) {
+        if (!metadata || !metadata.scene) {
+          return;
+        }
+
+        writePrefetchedWebxrMetadata(metadata);
+        return prefetchWebxrAssets(collectWebxrPrefetchUrls(metadata));
+      })
+      .catch(function (error) {
+        console.warn("[WebXR Prefetch] Unable to warm runtime assets.", error);
+      });
+  }
+
+  function writePrefetchedWebxrMetadata(metadata) {
+    var now = Date.now();
+    var payload = {
+      version: 1,
+      zipOverride: "",
+      storedAt: now,
+      expiresAt: now + WEBXR_PREFETCH_MAX_AGE_MS,
+      metadata: metadata,
+    };
+
+    try {
+      window.sessionStorage.setItem(WEBXR_PREFETCH_STORAGE_KEY, JSON.stringify(payload));
+    } catch (error) {
+      console.warn("[WebXR Prefetch] Unable to persist metadata in sessionStorage.", error);
+    }
+  }
+
+  function collectWebxrPrefetchUrls(metadata) {
+    var scene = metadata && metadata.scene ? metadata.scene : {};
+    var source = scene.source || {};
+    var assets = scene.assets || {};
+    var urls = [];
+
+    if (typeof source.sparkModuleUrl === "string" && source.sparkModuleUrl) {
+      urls.push(source.sparkModuleUrl);
+    }
+
+    if (typeof source.generatedConfigUrl === "string" && source.generatedConfigUrl) {
+      urls.push(source.generatedConfigUrl);
+    }
+
+    [assets.splats, assets.meshes, assets.textures].forEach(function (group) {
+      if (!Array.isArray(group)) {
+        return;
+      }
+
+      group.forEach(function (asset) {
+        if (asset && typeof asset.url === "string" && asset.url) {
+          urls.push(asset.url);
+        }
+      });
+    });
+
+    var deduped = [];
+    var seen = {};
+
+    urls.forEach(function (url) {
+      if (seen[url]) {
+        return;
+      }
+      seen[url] = true;
+      deduped.push(url);
+    });
+
+    return deduped;
+  }
+
+  function prefetchWebxrAssets(urls) {
+    if (!Array.isArray(urls) || !urls.length || !window.fetch) {
+      return Promise.resolve();
+    }
+
+    var pendingUrls = urls.slice();
+    var workerCount = Math.min(WEBXR_PREFETCH_CONCURRENCY, pendingUrls.length);
+    var workers = [];
+
+    for (var i = 0; i < workerCount; i += 1) {
+      workers.push(
+        new Promise(function (resolve) {
+          function consumeNext() {
+            var nextUrl = pendingUrls.shift();
+            if (!nextUrl) {
+              resolve();
+              return;
+            }
+
+            prefetchSingleWebxrAsset(nextUrl).finally(consumeNext);
+          }
+
+          consumeNext();
+        })
+      );
+    }
+
+    return Promise.allSettled(workers);
+  }
+
+  function prefetchSingleWebxrAsset(url) {
+    return fetch(url, {
+      cache: "force-cache",
+      credentials: "same-origin",
+    })
+      .then(function (response) {
+        if (!response.ok) {
+          throw new Error("Asset request failed (" + response.status + ")");
+        }
+        return drainResponseBody(response);
+      })
+      .catch(function () {
+        return null;
+      });
+  }
+
+  function drainResponseBody(response) {
+    if (!response || !response.body || typeof response.body.getReader !== "function") {
+      return response.arrayBuffer().then(
+        function () {
+          return null;
+        },
+        function () {
+          return null;
+        }
+      );
+    }
+
+    var reader = response.body.getReader();
+
+    function readChunk() {
+      return reader.read().then(function (result) {
+        if (result.done) {
+          return null;
+        }
+        return readChunk();
+      });
+    }
+
+    return readChunk();
   }
 
   function initScene() {
@@ -179,16 +357,26 @@
         scene.add(leftGatePivot);
         scene.add(rightGatePivot);
 
-        startButton.disabled = false;
-        startButton.textContent = "Start";
-        setStatus("Scene ready. Click Start to open the gates.");
+        if (startButton) {
+          startButton.disabled = false;
+          startButton.textContent = "Start";
+        }
+
+        if (autoStart) {
+          startIntroAnimation();
+        } else {
+          setStatus("Scene ready. Click Start to open the gates.");
+        }
+
         loadHighResModelsInBackground();
       })
       .catch(function (error) {
         console.error("[Landing Intro] Failed to load models", error);
         setStatus("Could not load the 3D intro assets. Please verify the GLB files.", true);
-        startButton.disabled = true;
-        startButton.textContent = "Unavailable";
+        if (startButton) {
+          startButton.disabled = true;
+          startButton.textContent = "Unavailable";
+        }
       });
   }
 
@@ -405,21 +593,31 @@
   }
 
   function startIntroAnimation() {
-    if (startButton.disabled || introTimeline || !leftGatePivot || !rightGatePivot) {
+    if (introTimeline || !leftGatePivot || !rightGatePivot) {
+      return;
+    }
+
+    if (startButton && startButton.disabled) {
       return;
     }
 
     introSection.classList.add("landing-intro--started");
-    startButton.disabled = true;
-    startButton.textContent = "Playing Intro...";
-    setStatus("Opening cemetery gates...");
+    statusElement.classList.add("hidden");
+    if (startButton) {
+      startButton.disabled = true;
+      startButton.textContent = "Playing Intro...";
+    }
 
     introTimeline = gsapNs.timeline({
       defaults: { ease: "power2.inOut" },
       onComplete: function () {
         introSection.classList.add("landing-intro--complete");
-        setStatus("Intro complete. Scroll down to continue exploring.");
-        startButton.textContent = "Intro Complete";
+        if (startButton) {
+          startButton.textContent = "Intro Complete";
+        }
+        if (churchButton) {
+          churchButton.classList.remove("hidden");
+        }
       },
     });
 
@@ -428,9 +626,6 @@
       .to(rightGatePivot.rotation, { y: Math.PI * 0.56, duration: 2.15 }, 0)
       .to(camera.position, { z: 7.3, y: 2.05, duration: 2.3 }, 0.2)
       .to(lookTarget, { z: -3.3, y: 1.58, duration: 2.6 }, 0.4)
-      .add(function () {
-        setStatus("Moving through the gates...");
-      }, 1.9)
       .to(camera.position, { z: -8.2, y: 2.35, duration: 3.2, ease: "power3.inOut" }, 2.25)
       .to(lookTarget, { z: -11.8, y: 2.15, duration: 3.2, ease: "power3.inOut" }, 2.25);
   }

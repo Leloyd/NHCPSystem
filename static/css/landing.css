@@ -60,6 +60,27 @@ body {
   color: #fff;
 }
 
+.landing-intro-church {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid rgba(134, 239, 172, 0.72);
+  padding: 0.72rem 1.35rem;
+  font-size: 0.95rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  background: rgba(16, 185, 129, 0.9);
+  color: #f0fdf4;
+  transition: transform 220ms ease, background-color 220ms ease, opacity 220ms ease;
+}
+
+.landing-intro-church:hover {
+  transform: translateY(-2px);
+  background: rgba(5, 150, 105, 0.95);
+}
+
 .landing-intro-start:enabled:hover {
   transform: translateY(-2px);
   background: rgba(245, 158, 11, 0.95);
@@ -120,7 +141,8 @@ body {
 
 @media (max-width: 768px) {
   .landing-intro-start,
-  .landing-intro-skip {
+  .landing-intro-skip,
+  .landing-intro-church {
     min-width: 152px;
     padding: 0.66rem 1.15rem;
     font-size: 0.88rem;

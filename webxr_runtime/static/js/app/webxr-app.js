@@ -13,6 +13,8 @@ const DEFAULT_BG = 0x0f1114;
 const CROSSHAIR_NDC = new THREE.Vector2(0, 0);
 const HOTSPOT_FALLBACK_DISTANCE = 5.0;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
+const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
+const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];
 const CHURCH_MAX_POSITIVE_CLAMP = { x: 2.5, z: 2.5 };
 const UNDERGROUND_MAX_POSITIVE_CLAMP = { x: 3.5, z: 2.5 };
@@ -334,6 +336,11 @@ export class WebXRApp {
   }
 
   async _fetchMetadata() {
+    const prefetched = this._readPrefetchedMetadata();
+    if (prefetched) {
+      return prefetched;
+    }
+
     const query = this.requestedZipOverride
       ? `?zip=${encodeURIComponent(this.requestedZipOverride)}`
       : '';
@@ -341,7 +348,78 @@ export class WebXRApp {
     if (!response.ok) {
       throw new Error(`Could not load /api/webxr/scene (${response.status})`);
     }
-    return response.json();
+    const payload = await response.json();
+    this._storePrefetchedMetadata(payload);
+    return payload;
+  }
+
+  _readPrefetchedMetadata() {
+    if (!window.sessionStorage) {
+      return null;
+    }
+
+    let raw = null;
+    try {
+      raw = window.sessionStorage.getItem(WEBXR_PREFETCH_STORAGE_KEY);
+    } catch {
+      return null;
+    }
+
+    if (!raw) {
+      return null;
+    }
+
+    try {
+      const payload = JSON.parse(raw);
+      if (!payload || payload.version !== 1 || !payload.metadata || !payload.metadata.scene) {
+        return null;
+      }
+
+      const expectedZip = String(this.requestedZipOverride || '').trim();
+      const cachedZip = String(payload.zipOverride || '').trim();
+      if (cachedZip !== expectedZip) {
+        return null;
+      }
+
+      const now = Date.now();
+      const expiresAt = Number(payload.expiresAt || 0);
+      if (Number.isFinite(expiresAt) && expiresAt > now) {
+        return payload.metadata;
+      }
+
+      const storedAt = Number(payload.storedAt || 0);
+      if (Number.isFinite(storedAt) && now - storedAt <= WEBXR_PREFETCH_MAX_AGE_MS) {
+        return payload.metadata;
+      }
+    } catch {
+      try {
+        window.sessionStorage.removeItem(WEBXR_PREFETCH_STORAGE_KEY);
+      } catch {
+      }
+      return null;
+    }
+
+    return null;
+  }
+
+  _storePrefetchedMetadata(payload) {
+    if (!window.sessionStorage || !payload || !payload.scene) {
+      return;
+    }
+
+    const now = Date.now();
+    const toStore = {
+      version: 1,
+      zipOverride: String(this.requestedZipOverride || '').trim(),
+      storedAt: now,
+      expiresAt: now + WEBXR_PREFETCH_MAX_AGE_MS,
+      metadata: payload,
+    };
+
+    try {
+      window.sessionStorage.setItem(WEBXR_PREFETCH_STORAGE_KEY, JSON.stringify(toStore));
+    } catch {
+    }
   }
 
   async _loadSparkRuntime() {
