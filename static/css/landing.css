@@ -9,6 +9,100 @@ body {
   margin: 0;
 }
 
+.landing-intro {
+  background: radial-gradient(circle at 50% 20%, #3a261d 0%, #110b08 55%, #060404 100%);
+}
+
+#landingIntro3d {
+  z-index: 0;
+}
+
+#landingIntro3d canvas {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
+.landing-intro-gradient {
+  z-index: 1;
+  background:
+    radial-gradient(circle at 50% 80%, rgba(232, 179, 106, 0.14), transparent 44%),
+    linear-gradient(180deg, rgba(10, 8, 8, 0.4) 0%, rgba(10, 8, 8, 0.6) 52%, rgba(10, 8, 8, 0.78) 100%);
+  pointer-events: none;
+}
+
+.landing-intro-copy {
+  z-index: 2;
+}
+
+.landing-intro-kicker {
+  color: #f4d6aa;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.48);
+}
+
+.landing-intro-start,
+.landing-intro-skip {
+  min-width: 180px;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  padding: 0.72rem 1.35rem;
+  font-size: 0.95rem;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  transition: transform 220ms ease, background-color 220ms ease, color 220ms ease, border-color 220ms ease,
+    opacity 220ms ease;
+  backdrop-filter: blur(6px);
+}
+
+.landing-intro-start {
+  background: rgba(217, 119, 6, 0.9);
+  border-color: rgba(251, 191, 36, 0.6);
+  color: #fff;
+}
+
+.landing-intro-start:enabled:hover {
+  transform: translateY(-2px);
+  background: rgba(245, 158, 11, 0.95);
+}
+
+.landing-intro-start:disabled {
+  opacity: 0.8;
+  cursor: not-allowed;
+}
+
+.landing-intro-skip {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.14);
+  color: #fff;
+}
+
+.landing-intro-skip:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.24);
+}
+
+.landing-intro-status {
+  min-height: 1.5rem;
+  margin: 0;
+  color: #e7dccf;
+  font-size: 0.95rem;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+}
+
+.landing-intro-status.is-error {
+  color: #fecaca;
+}
+
+.landing-intro.landing-intro--started .landing-intro-copy {
+  transition: opacity 300ms ease;
+}
+
+.landing-intro.landing-intro--complete .landing-intro-kicker {
+  color: #fde68a;
+}
+
 .museum-logo {
   width: 44px;
   height: 44px;
@@ -25,6 +119,17 @@ body {
 }
 
 @media (max-width: 768px) {
+  .landing-intro-start,
+  .landing-intro-skip {
+    min-width: 152px;
+    padding: 0.66rem 1.15rem;
+    font-size: 0.88rem;
+  }
+
+  .landing-intro-status {
+    font-size: 0.86rem;
+  }
+
   .timeline-row {
     flex-direction: column;
     gap: 1rem;
