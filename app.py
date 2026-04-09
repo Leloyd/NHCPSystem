@@ -95,6 +95,11 @@ def virtual_tour():
     return render_template("VirtualTour.html")
 
 
+@app.route("/edu-resources")
+def edu_resources():
+    return render_template("EduResources.html")
+
+
 @app.route("/ar-content-detection")
 def ar_content_detection():
     return render_template("ARContentDetection.html", analytics_endpoint=url_for("ar_analytics"))
