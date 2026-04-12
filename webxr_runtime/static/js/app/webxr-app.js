@@ -1,6 +1,5 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { VRButton } from 'three/addons/webxr/VRButton.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { InteractionRegistry } from './interaction-registry.js';
@@ -73,6 +72,8 @@ const QUALITY_PRESETS = {
     splatLodScale: 0.75,
   },
 };
+const XR_SESSION_MODE_AR = 'immersive-ar';
+const XR_SESSION_MODE_VR = 'immersive-vr';
 
 export class WebXRApp {
   constructor({ container, refs }) {
@@ -131,6 +132,7 @@ export class WebXRApp {
     this.playerController = null;
     this.collisionSystem = null;
     this.interactionSystem = null;
+    this.activeXrReferenceSpaceType = null;
 
     this.boundResize = this.onResize.bind(this);
     this.boundGlobalKeyDown = this._onGlobalKeyDown.bind(this);
@@ -294,30 +296,328 @@ export class WebXRApp {
   }
 
   _setupXrUi() {
-    const button = VRButton.createButton(this.renderer, {
-      optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'],
-    });
-    this.refs.xrButtonContainer?.appendChild(button);
-
     if (!navigator.xr) {
       this.uiController.setXrStatus('WebXR not available in this browser.');
       return;
     }
 
-    navigator.xr
-      .isSessionSupported('immersive-vr')
-      .then((supported) => {
-        this.uiController.setXrStatus(supported ? 'WebXR supported.' : 'WebXR unsupported on this device.');
+    const mountXrButton = (button) => {
+      const host = this.refs.xrButtonContainer ?? document.body;
+      host.appendChild(button);
+    };
+
+    try {
+      this.renderer.xr.setReferenceSpaceType('local-floor');
+    } catch {
+      this.renderer.xr.setReferenceSpaceType('local');
+    }
+
+    this.uiController.setXrStatus('Checking WebXR support...');
+
+    Promise.all([
+      navigator.xr.isSessionSupported(XR_SESSION_MODE_AR).catch(() => false),
+      navigator.xr.isSessionSupported(XR_SESSION_MODE_VR).catch(() => false),
+    ])
+      .then(([arSupported, vrSupported]) => {
+        const formatArStartError = (error) => {
+          const name = String(error?.name || 'Error');
+          const message = String(error?.message || '').trim();
+          const detail = message ? `${name}: ${message}` : name;
+
+          if (name === 'NotAllowedError') {
+            return `AR blocked (${detail}). Allow camera/motion permissions for this site.`;
+          }
+
+          if (name === 'SecurityError') {
+            return `AR blocked (${detail}). Open this page over HTTPS.`;
+          }
+
+          if (name === 'NotSupportedError') {
+            return `AR unsupported (${detail}). Try Chrome on Android with Google Play Services for AR.`;
+          }
+
+          return `AR start failed (${detail}). Check HTTPS, permissions, and browser/device support.`;
+        };
+
+        const formatVrStartError = (error) => {
+          const name = String(error?.name || 'Error');
+          const message = String(error?.message || '').trim();
+          const detail = message ? `${name}: ${message}` : name;
+
+          if (name === 'NotAllowedError') {
+            return `Full 3D XR blocked (${detail}). Allow XR permissions for this site.`;
+          }
+
+          if (name === 'SecurityError') {
+            return `Full 3D XR blocked (${detail}). Open this page over HTTPS.`;
+          }
+
+          if (name === 'NotSupportedError') {
+            return `Full 3D XR unsupported (${detail}). This device/browser does not support immersive-vr.`;
+          }
+
+          return `Full 3D XR start failed (${detail}).`;
+        };
+
+        const requestArSessionWithFallback = async () => {
+          const sessionAttempts = [
+            {
+              optionalFeatures: ['local-floor', 'bounded-floor', 'hit-test', 'hand-tracking'],
+            },
+            {
+              optionalFeatures: ['local-floor', 'bounded-floor'],
+            },
+            {},
+          ];
+
+          let lastError = null;
+
+          for (const options of sessionAttempts) {
+            try {
+              return await navigator.xr.requestSession(XR_SESSION_MODE_AR, options);
+            } catch (error) {
+              lastError = error;
+              console.warn('[xr] AR requestSession attempt failed', { options, error });
+            }
+          }
+
+          throw lastError || new Error('AR session request failed.');
+        };
+
+        const requestVrSessionWithFallback = async () => {
+          const sessionAttempts = [
+            {
+              optionalFeatures: ['local-floor', 'bounded-floor', 'hand-tracking'],
+            },
+            {
+              optionalFeatures: ['local-floor', 'bounded-floor'],
+            },
+            {},
+          ];
+
+          let lastError = null;
+
+          for (const options of sessionAttempts) {
+            try {
+              return await navigator.xr.requestSession(XR_SESSION_MODE_VR, options);
+            } catch (error) {
+              lastError = error;
+              console.warn('[xr] VR requestSession attempt failed', { options, error });
+            }
+          }
+
+          throw lastError || new Error('VR session request failed.');
+        };
+
+        const getReferenceSpaceCandidates = (sessionMode) => (
+          sessionMode === XR_SESSION_MODE_VR
+            ? ['local-floor']
+            : ['local-floor', 'local']
+        );
+
+        const bindSessionWithReferenceSpaceFallback = async (session, sessionMode) => {
+          const candidates = getReferenceSpaceCandidates(sessionMode);
+          let lastError = null;
+
+          for (const referenceSpaceType of candidates) {
+            try {
+              this.renderer.xr.setReferenceSpaceType(referenceSpaceType);
+            } catch (error) {
+              lastError = error;
+              continue;
+            }
+
+            try {
+              await this.renderer.xr.setSession(session);
+              return referenceSpaceType;
+            } catch (error) {
+              lastError = error;
+              console.warn('[xr] setSession failed for reference space', {
+                sessionMode,
+                referenceSpaceType,
+                error,
+              });
+            }
+          }
+
+          throw lastError || new Error('Failed to bind XR session.');
+        };
+
+        if (arSupported || vrSupported) {
+          let activeSession = null;
+          let activeButton = null;
+          const xrButtons = [];
+
+          const setButtonsDisabled = (disabled) => {
+            for (const entry of xrButtons) {
+              entry.button.disabled = disabled;
+            }
+          };
+
+          const resetButtons = () => {
+            for (const entry of xrButtons) {
+              entry.button.disabled = false;
+              entry.button.textContent = entry.startLabel;
+            }
+          };
+
+          const onSessionEnded = () => {
+            if (activeSession) {
+              activeSession.removeEventListener('end', onSessionEnded);
+            }
+            activeSession = null;
+            activeButton = null;
+            this.activeXrReferenceSpaceType = null;
+            resetButtons();
+          };
+
+          const createSessionButton = ({
+            startLabel,
+            startingLabel,
+            stopLabel,
+            sessionMode,
+            requestSession,
+            formatStartError,
+          }) => {
+            const button = document.createElement('button');
+            button.type = 'button';
+            button.className = 'btn';
+            button.textContent = startLabel;
+            xrButtons.push({ button, startLabel });
+
+            button.addEventListener('click', async () => {
+              if (activeSession) {
+                if (activeButton === button) {
+                  button.disabled = true;
+                  try {
+                    await activeSession.end();
+                  } catch {
+                    this.uiController.setXrStatus('Could not end active XR session. Try again.');
+                    resetButtons();
+                  }
+                } else {
+                  this.uiController.setXrStatus('Another XR mode is active. Stop it first, then start this mode.');
+                }
+                return;
+              }
+
+              setButtonsDisabled(true);
+              button.textContent = startingLabel;
+              let pendingSession = null;
+
+              try {
+                const session = await requestSession();
+                pendingSession = session;
+                session.addEventListener('end', onSessionEnded);
+
+                const boundReferenceSpaceType = await bindSessionWithReferenceSpaceFallback(
+                  session,
+                  sessionMode,
+                );
+
+                activeSession = session;
+                activeButton = button;
+                this.activeXrReferenceSpaceType = boundReferenceSpaceType;
+                pendingSession = null;
+
+                setButtonsDisabled(true);
+                button.disabled = false;
+                button.textContent = stopLabel;
+              } catch (error) {
+                if (pendingSession) {
+                  try {
+                    pendingSession.removeEventListener('end', onSessionEnded);
+                    await pendingSession.end();
+                  } catch {
+                  }
+                }
+
+                console.warn('[xr] failed to start XR session', { sessionMode, error });
+                this.activeXrReferenceSpaceType = null;
+                resetButtons();
+                this.uiController.setXrStatus(formatStartError(error));
+              }
+            });
+
+            mountXrButton(button);
+          };
+
+          if (vrSupported) {
+            createSessionButton({
+              startLabel: 'Start Full 3D XR',
+              startingLabel: 'Starting Full 3D XR...',
+              stopLabel: 'Stop Full 3D XR',
+              sessionMode: XR_SESSION_MODE_VR,
+              requestSession: requestVrSessionWithFallback,
+              formatStartError: formatVrStartError,
+            });
+          }
+
+          if (arSupported) {
+            createSessionButton({
+              startLabel: 'Start AR Walk Mode',
+              startingLabel: 'Starting AR Walk Mode...',
+              stopLabel: 'Stop AR Walk Mode',
+              sessionMode: XR_SESSION_MODE_AR,
+              requestSession: requestArSessionWithFallback,
+              formatStartError: formatArStartError,
+            });
+          }
+
+          if (arSupported && vrSupported) {
+            this.uiController.setXrStatus(
+              'Full 3D XR + AR supported. Use Start AR Walk Mode to test real-world walking in scene.',
+            );
+            return;
+          }
+
+          if (vrSupported) {
+            this.uiController.setXrStatus('Full 3D XR supported. Start Full 3D XR for full 3D environment view.');
+            return;
+          }
+
+          this.uiController.setXrStatus(
+            'AR supported. Start AR Walk Mode to move by physically walking and looking around.',
+          );
+          return;
+        }
+
+        this.uiController.setXrStatus('WebXR unsupported on this device.');
       })
       .catch(() => {
         this.uiController.setXrStatus('WebXR capability check failed.');
       });
 
     this.renderer.xr.addEventListener('sessionstart', () => {
-      this.uiController.setXrStatus('XR session started.');
+      const mode = this.renderer.xr.getSession()?.mode;
+      if (mode === XR_SESSION_MODE_AR) {
+        const blendMode = this.renderer.xr.getEnvironmentBlendMode?.();
+        const blendDetail = blendMode ? ` (${blendMode})` : '';
+        this.uiController.setXrStatus(
+          `AR session started${blendDetail}. Live camera is expected in AR; 3D content is rendered on top.`,
+        );
+      } else if (mode === XR_SESSION_MODE_VR) {
+        const refDetail = this.activeXrReferenceSpaceType
+          ? ` Reference space: ${this.activeXrReferenceSpaceType}.`
+          : '';
+        this.uiController.setXrStatus(
+          `VR session started. Full 3D environment is active.${refDetail} On phones, split-view is expected.`,
+        );
+      } else {
+        this.uiController.setXrStatus('XR session started.');
+      }
+
+      if (this.mobileMode) {
+        this.uiController.setMobileControlsVisible(false);
+      }
     });
     this.renderer.xr.addEventListener('sessionend', () => {
+      this.activeXrReferenceSpaceType = null;
       this.uiController.setXrStatus('XR session ended.');
+
+      if (this.mobileMode) {
+        this.uiController.setMobileControlsVisible(true);
+      }
     });
   }
 
@@ -661,16 +961,85 @@ export class WebXRApp {
 
     document.body.appendChild(element);
 
+    const yOffset = Math.max(0.12, Number(radius) * 2.4);
+    const xrSprite = this._createXrFloatingHotspotSprite({
+      anchor,
+      hotspotId,
+      imageUrl,
+      radius,
+      yOffset,
+    });
+
     this.floatingHotspotLabels.push({
       anchor,
       element,
-      yOffset: Math.max(0.12, Number(radius) * 2.4),
+      yOffset,
+      xrSprite,
     });
+  }
+
+  _createXrFloatingHotspotSprite({ anchor, hotspotId, imageUrl, radius = 0.07, yOffset = 0.12 }) {
+    if (!anchor || !imageUrl) {
+      return null;
+    }
+
+    const baseHeight = Math.max(0.28, Number(radius) * 5.2);
+    let sprite = null;
+
+    const texture = new THREE.TextureLoader().load(imageUrl, (loadedTexture) => {
+      if (!sprite) {
+        return;
+      }
+
+      const width = Number(loadedTexture.image?.naturalWidth ?? loadedTexture.image?.width ?? 0);
+      const height = Number(loadedTexture.image?.naturalHeight ?? loadedTexture.image?.height ?? 0);
+      if (!Number.isFinite(width) || !Number.isFinite(height) || width <= 0 || height <= 0) {
+        return;
+      }
+
+      const aspect = width / height;
+      sprite.scale.set(baseHeight * aspect, baseHeight, 1);
+    });
+    texture.colorSpace = THREE.SRGBColorSpace;
+
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    });
+
+    sprite = new THREE.Sprite(material);
+    sprite.name = `${hotspotId}-xr-floating-label`;
+    sprite.position.set(0, yOffset, 0);
+    sprite.scale.set(baseHeight * 1.2, baseHeight, 1);
+    sprite.renderOrder = 3;
+    sprite.visible = this.renderer.xr.isPresenting;
+    sprite.userData.interaction = {
+      name: hotspotId,
+      metadata: {
+        type: 'hotspot-floating-label',
+        hotspotId,
+      },
+    };
+    sprite.userData.isHotspotPickable = true;
+
+    anchor.add(sprite);
+    this.pickableMeshes.push(sprite);
+
+    return sprite;
   }
 
   _clearFloatingHotspotLabels() {
     for (const label of this.floatingHotspotLabels) {
       label.element?.remove();
+
+      if (label.xrSprite) {
+        label.xrSprite.parent?.remove(label.xrSprite);
+        label.xrSprite.material?.map?.dispose?.();
+        label.xrSprite.material?.dispose?.();
+      }
     }
     this.floatingHotspotLabels = [];
   }
@@ -682,9 +1051,22 @@ export class WebXRApp {
 
     const width = window.innerWidth;
     const height = window.innerHeight;
+    const xrPresenting = this.renderer.xr.isPresenting;
 
     for (const label of this.floatingHotspotLabels) {
       if (!label.anchor?.parent || !label.element) {
+        if (label.xrSprite) {
+          label.xrSprite.visible = false;
+        }
+        continue;
+      }
+
+      if (label.xrSprite) {
+        label.xrSprite.visible = xrPresenting;
+      }
+
+      if (xrPresenting) {
+        label.element.classList.add('hidden');
         continue;
       }
 

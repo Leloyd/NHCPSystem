@@ -7,6 +7,11 @@ const UP = new THREE.Vector3(0, 1, 0);
 const FORWARD = new THREE.Vector3();
 const RIGHT = new THREE.Vector3();
 const DESIRED_MOVE = new THREE.Vector3();
+const XR_LOCAL_OFFSET = new THREE.Vector3();
+const XR_SESSION_MODE_AR = 'immersive-ar';
+const XR_SESSION_MODE_VR = 'immersive-vr';
+const VR_MIN_TRACKED_HEAD_HEIGHT = 1.0;
+const AR_PHYSICAL_MOVE_DEADZONE_METERS = 0.012;
 
 const KEY_MAP = {
   KeyW: 'forward',
@@ -61,6 +66,11 @@ export class PlayerController {
       x: 0,
       z: 0,
     };
+
+    this.wasArPresenting = false;
+    this.wasVrPresenting = false;
+    this.xrPhysicalOffsetInitialized = false;
+    this.xrPhysicalOffsetBaseline = new THREE.Vector3();
 
     this.mobilePad = this._createMobilePadState(mobileRefs);
 
@@ -259,11 +269,11 @@ export class PlayerController {
     this.rig.position.copy(position);
   }
 
-  _readXrMoveAxes() {
+  _readXrMoveAxes(sessionMode = null) {
     this.xrInput.x = 0;
     this.xrInput.z = 0;
 
-    if (!this.renderer.xr.isPresenting) {
+    if (!this.renderer.xr.isPresenting || sessionMode !== XR_SESSION_MODE_VR) {
       return;
     }
 
@@ -299,15 +309,45 @@ export class PlayerController {
   }
 
   update(deltaSeconds, collisionSystem) {
-    this._readXrMoveAxes();
+    const sessionMode = this.renderer.xr.isPresenting
+      ? this.renderer.xr.getSession?.()?.mode ?? null
+      : null;
+    const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
+    const isVrPresenting = sessionMode === XR_SESSION_MODE_VR;
+
+    this._readXrMoveAxes(sessionMode);
 
     if (!this.renderer.xr.isPresenting) {
       this.camera.position.x = 0;
       this.camera.position.z = 0;
       this.camera.position.y = this.settings.height;
+      this.wasArPresenting = false;
+      this.wasVrPresenting = false;
+      this.xrPhysicalOffsetInitialized = false;
+      this.xrPhysicalOffsetBaseline.set(0, 0, 0);
+    } else {
+      if (isArPresenting && !this.wasArPresenting) {
+        this._calibrateArHeightFromCurrentPose();
+      } else if (isVrPresenting && !this.wasVrPresenting) {
+        this._calibrateVrHeightFromCurrentPose();
+      }
+
+      this._applyXrPhysicalOffset(sessionMode);
     }
 
-    if (this.mobileMode) {
+    this.wasArPresenting = isArPresenting;
+    this.wasVrPresenting = isVrPresenting;
+
+    if (isArPresenting) {
+      this.velocity.set(0, 0, 0);
+      this.input.jumpQueued = false;
+      this.mobileInput.jumpQueued = false;
+      this.xrInput.x = 0;
+      this.xrInput.z = 0;
+      return;
+    }
+
+    if (this.mobileMode && !this.renderer.xr.isPresenting) {
       this._applyMobileLook(deltaSeconds);
     }
 
@@ -325,7 +365,8 @@ export class PlayerController {
       this.velocity.z *= damping;
     }
 
-    if ((this.input.jumpQueued || this.mobileInput.jumpQueued) && this.isGrounded) {
+    const mobileJumpQueued = !this.renderer.xr.isPresenting && this.mobileInput.jumpQueued;
+    if ((this.input.jumpQueued || mobileJumpQueued) && this.isGrounded) {
       this.velocity.y = this.settings.jumpStrength;
       this.isGrounded = false;
     }
@@ -352,6 +393,36 @@ export class PlayerController {
     }
   }
 
+  _calibrateArHeightFromCurrentPose() {
+    const currentHeadHeight = Number.isFinite(this.camera.position.y)
+      ? this.camera.position.y
+      : 0;
+    const correction = this.settings.height - currentHeadHeight;
+
+    if (Math.abs(correction) < 1e-4) {
+      return;
+    }
+
+    this.rig.position.y += correction;
+  }
+
+  _calibrateVrHeightFromCurrentPose() {
+    const currentHeadHeight = Number.isFinite(this.camera.position.y)
+      ? this.camera.position.y
+      : 0;
+
+    if (currentHeadHeight >= VR_MIN_TRACKED_HEAD_HEIGHT) {
+      return;
+    }
+
+    const correction = this.settings.height - currentHeadHeight;
+    if (Math.abs(correction) < 1e-4) {
+      return;
+    }
+
+    this.rig.position.y += correction;
+  }
+
   _applyMobileLook(deltaSeconds) {
     const lookX = this.mobileInput.look.x;
     const lookY = this.mobileInput.look.y;
@@ -368,6 +439,44 @@ export class PlayerController {
     );
   }
 
+  _applyXrPhysicalOffset(sessionMode = null) {
+    const currentX = Number.isFinite(this.camera.position.x) ? this.camera.position.x : 0;
+    const currentZ = Number.isFinite(this.camera.position.z) ? this.camera.position.z : 0;
+
+    if (!this.xrPhysicalOffsetInitialized) {
+      this.xrPhysicalOffsetBaseline.set(currentX, 0, currentZ);
+      this.xrPhysicalOffsetInitialized = true;
+      this.camera.position.x = 0;
+      this.camera.position.z = 0;
+      return;
+    }
+
+    XR_LOCAL_OFFSET.set(
+      currentX - this.xrPhysicalOffsetBaseline.x,
+      0,
+      currentZ - this.xrPhysicalOffsetBaseline.z,
+    );
+
+    const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
+    if (isArPresenting) {
+      const deadzoneSq = AR_PHYSICAL_MOVE_DEADZONE_METERS * AR_PHYSICAL_MOVE_DEADZONE_METERS;
+      if (XR_LOCAL_OFFSET.lengthSq() < deadzoneSq) {
+        this.xrPhysicalOffsetBaseline.set(currentX, 0, currentZ);
+        this.camera.position.x = 0;
+        this.camera.position.z = 0;
+        return;
+      }
+    }
+
+    if (XR_LOCAL_OFFSET.lengthSq() > 1e-8) {
+      this.rig.position.add(XR_LOCAL_OFFSET);
+    }
+
+    this.xrPhysicalOffsetBaseline.set(currentX, 0, currentZ);
+    this.camera.position.x = 0;
+    this.camera.position.z = 0;
+  }
+
   _collectMoveInput() {
     let x = 0;
     let z = 0;
@@ -377,7 +486,7 @@ export class PlayerController {
     if (this.input.left) x -= 1;
     if (this.input.right) x += 1;
 
-    if (this.mobileMode) {
+    if (this.mobileMode && !this.renderer.xr.isPresenting) {
       x += this.mobileInput.move.x;
       z += -this.mobileInput.move.y;
     }
@@ -407,6 +516,10 @@ export class PlayerController {
   }
 
   _isSprinting() {
+    if (this.renderer.xr.isPresenting) {
+      return this.input.sprint;
+    }
+
     return this.input.sprint || this.mobileInput.sprint;
   }
 }
