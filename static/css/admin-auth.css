@@ -1,0 +1,170 @@
+:root {
+  --admin-bg: #0b1017;
+  --admin-bg-panel: rgba(11, 16, 23, 0.76);
+  --admin-border: rgba(245, 158, 11, 0.28);
+  --admin-text: #f9fafb;
+  --admin-muted: rgba(255, 255, 255, 0.8);
+  --admin-accent: #f59e0b;
+  --admin-accent-strong: #d97706;
+  --admin-danger: #fecaca;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  width: 100%;
+  min-height: 100%;
+}
+
+body.admin-auth-page {
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  color: var(--admin-text);
+  background: var(--admin-bg);
+}
+
+.admin-auth-shell {
+  position: relative;
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  overflow: hidden;
+}
+
+.admin-auth-backdrop {
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(130deg, rgba(0, 0, 0, 0.6), rgba(11, 16, 23, 0.5)),
+    radial-gradient(circle at 80% 10%, rgba(245, 158, 11, 0.18), transparent 52%),
+    url("/static/images/UndergroundBG.png");
+  background-size: cover;
+  background-position: center;
+  transform: scale(1.02);
+  will-change: transform;
+}
+
+.admin-auth-panel {
+  position: relative;
+  z-index: 1;
+  width: min(27rem, calc(100vw - 1.8rem));
+  border: 1px solid var(--admin-border);
+  border-radius: 1rem;
+  padding: 1.4rem 1.2rem;
+  background: var(--admin-bg-panel);
+  box-shadow: 0 18px 46px rgba(0, 0, 0, 0.44);
+  backdrop-filter: blur(8px);
+}
+
+.admin-auth-brand {
+  text-align: center;
+}
+
+.admin-auth-logo {
+  width: 64px;
+  height: 64px;
+  border-radius: 14px;
+  border: 2px solid rgba(245, 158, 11, 0.35);
+  object-fit: cover;
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.34);
+}
+
+.admin-auth-kicker {
+  margin: 0.85rem 0 0.35rem;
+  color: var(--admin-muted);
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.admin-auth-heading {
+  margin: 0;
+  font-size: 1.55rem;
+  font-weight: 700;
+}
+
+.admin-auth-form {
+  margin-top: 1.2rem;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-auth-field {
+  display: grid;
+  gap: 0.45rem;
+}
+
+.admin-auth-field label {
+  font-size: 0.9rem;
+  color: var(--admin-muted);
+}
+
+.admin-auth-field input {
+  width: 100%;
+  border-radius: 0.72rem;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--admin-text);
+  padding: 0.74rem 0.78rem;
+  font-size: 0.94rem;
+  outline: none;
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+
+.admin-auth-field input:focus-visible {
+  border-color: rgba(245, 158, 11, 0.9);
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.22);
+}
+
+.admin-auth-submit {
+  margin-top: 0.2rem;
+  border: 1px solid rgba(251, 191, 36, 0.38);
+  border-radius: 0.78rem;
+  padding: 0.78rem 1rem;
+  background: linear-gradient(140deg, var(--admin-accent), var(--admin-accent-strong));
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.admin-auth-submit:hover,
+.admin-auth-submit:focus-visible {
+  transform: translateY(-1px);
+  opacity: 0.96;
+}
+
+.admin-auth-submit:active {
+  transform: translateY(0);
+}
+
+.admin-auth-error {
+  margin: 0.95rem 0 0;
+  border-radius: 0.72rem;
+  border: 1px solid rgba(248, 113, 113, 0.5);
+  background: rgba(127, 29, 29, 0.32);
+  color: var(--admin-danger);
+  padding: 0.62rem 0.72rem;
+  font-size: 0.9rem;
+}
+
+@media (max-width: 640px) {
+  .admin-auth-panel {
+    border-radius: 0.85rem;
+    padding: 1.15rem 0.95rem;
+  }
+
+  .admin-auth-logo {
+    width: 56px;
+    height: 56px;
+  }
+
+  .admin-auth-heading {
+    font-size: 1.3rem;
+  }
+}

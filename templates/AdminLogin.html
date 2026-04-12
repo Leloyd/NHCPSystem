@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>Admin Login | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-auth.css') }}" />
+    <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script defer src="{{ url_for('static', filename='js/admin-login.js') }}"></script>
+  </head>
+  <body class="admin-auth-page">
+    <main class="admin-auth-shell" aria-label="Admin authentication area">
+      <div class="admin-auth-backdrop" aria-hidden="true"></div>
+      <section class="admin-auth-panel" role="region" aria-labelledby="adminAuthHeading">
+        <div class="admin-auth-brand">
+          <img
+            class="admin-auth-logo"
+            src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
+            alt="Museo ng Libingan sa Ilalim ng Lupa"
+          />
+          <p class="admin-auth-kicker">Administrative Access</p>
+          <h1 id="adminAuthHeading" class="admin-auth-heading">Sign in</h1>
+        </div>
+
+        {% if error_message %}
+        <p class="admin-auth-error" role="alert">{{ error_message }}</p>
+        {% endif %}
+
+        <form class="admin-auth-form" method="post" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+          <div class="admin-auth-field">
+            <label for="adminUsername">Username</label>
+            <input
+              id="adminUsername"
+              name="username"
+              type="text"
+              inputmode="email"
+              autocomplete="username"
+              required
+              maxlength="128"
+              aria-required="true"
+            />
+          </div>
+
+          <div class="admin-auth-field">
+            <label for="adminPassword">Password</label>
+            <input
+              id="adminPassword"
+              name="password"
+              type="password"
+              autocomplete="current-password"
+              required
+              maxlength="1024"
+              aria-required="true"
+            />
+          </div>
+
+          <button type="submit" class="admin-auth-submit">Continue</button>
+        </form>
+      </section>
+    </main>
+  </body>
+</html>

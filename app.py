@@ -1,14 +1,72 @@
+import hmac
+import os
+import re
+import secrets
+import threading
+import time
+from datetime import timedelta
+from functools import wraps
 from pathlib import Path
 
-from flask import Flask, jsonify, redirect, render_template, request, send_from_directory, url_for
+from flask import Flask, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
+from werkzeug.security import check_password_hash
 
 try:
     from dotenv import load_dotenv
 except ModuleNotFoundError:  # pragma: no cover - optional in some environments
     load_dotenv = None
 
+
+PROJECT_ROOT = Path(__file__).resolve().parent
+WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
+
+if load_dotenv is not None:
+    load_dotenv(dotenv_path=PROJECT_ROOT / ".env", override=False)
+
+
+def _bool_env(name, default):
+    raw = os.getenv(name)
+    if raw is None:
+        return default
+    return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
 app = Flask(__name__)
-WEBXR_BASE_DIR = (Path(__file__).resolve().parent / "webxr_runtime").resolve()
+
+IS_PRODUCTION = os.getenv("FLASK_ENV", "development").strip().lower() in {"prod", "production"}
+_secret_key = os.getenv("FLASK_SECRET_KEY", "").strip()
+if not _secret_key:
+    if IS_PRODUCTION:
+        raise RuntimeError("FLASK_SECRET_KEY must be set in production.")
+    _secret_key = secrets.token_hex(32)
+
+app.config.update(
+    SECRET_KEY=_secret_key,
+    SESSION_COOKIE_HTTPONLY=True,
+    SESSION_COOKIE_SAMESITE="Lax",
+    SESSION_COOKIE_SECURE=_bool_env("SESSION_COOKIE_SECURE", IS_PRODUCTION),
+    PERMANENT_SESSION_LIFETIME=timedelta(minutes=max(5, int(os.getenv("ADMIN_SESSION_MINUTES", "120")))),
+)
+
+ADMIN_ROUTE_PREFIX = "/_admin"
+ADMIN_LOGIN_PATH = f"{ADMIN_ROUTE_PREFIX}/login"
+ADMIN_DASHBOARD_PATH = ADMIN_ROUTE_PREFIX
+ADMIN_LOGOUT_PATH = f"{ADMIN_ROUTE_PREFIX}/logout"
+
+ADMIN_SESSION_KEY = "admin_authenticated"
+ADMIN_SESSION_USER_KEY = "admin_username"
+ADMIN_CSRF_KEY = "admin_csrf"
+
+ADMIN_USERNAME = (os.getenv("ADMIN_USERNAME") or "").strip().lower()
+ADMIN_PASSWORD_HASH = (os.getenv("ADMIN_PASSWORD_HASH") or "").strip()
+
+ADMIN_LOGIN_RATE_WINDOW_SECONDS = max(60, int(os.getenv("ADMIN_LOGIN_RATE_WINDOW_SECONDS", "900")))
+ADMIN_LOGIN_MAX_ATTEMPTS = max(3, int(os.getenv("ADMIN_LOGIN_MAX_ATTEMPTS", "5")))
+ADMIN_LOGIN_LOCKOUT_SECONDS = max(30, int(os.getenv("ADMIN_LOGIN_LOCKOUT_SECONDS", "900")))
+TRUST_PROXY_HEADERS = _bool_env("TRUST_PROXY_HEADERS", False)
+
+_ADMIN_LOGIN_ATTEMPTS = {}
+_ADMIN_LOGIN_ATTEMPTS_LOCK = threading.Lock()
 
 
 def _build_webxr_config():
@@ -72,7 +130,212 @@ def _ensure_webxr_runtime_initialized():
     return WEBXR_RUNTIME_SCENE is not None
 
 
+def _normalize_admin_identity(raw_value):
+    return str(raw_value or "").strip().lower()
+
+
+def _is_admin_auth_configured():
+    return bool(ADMIN_USERNAME and ADMIN_PASSWORD_HASH)
+
+
+def _get_client_ip():
+    if TRUST_PROXY_HEADERS:
+        forwarded_for = str(request.headers.get("X-Forwarded-For", "")).strip()
+        if forwarded_for:
+            return forwarded_for.split(",", 1)[0].strip()[:64] or "unknown"
+    return str(request.remote_addr or "unknown")[:64]
+
+
+def _prune_login_attempts(now):
+    expired_keys = []
+    for key, entry in _ADMIN_LOGIN_ATTEMPTS.items():
+        window_start = float(entry.get("window_start", now))
+        locked_until = float(entry.get("locked_until", 0.0))
+        if now - window_start > ADMIN_LOGIN_RATE_WINDOW_SECONDS and now >= locked_until:
+            expired_keys.append(key)
+    for key in expired_keys:
+        _ADMIN_LOGIN_ATTEMPTS.pop(key, None)
+
+
+def _is_login_rate_limited(client_ip):
+    now = time.monotonic()
+    with _ADMIN_LOGIN_ATTEMPTS_LOCK:
+        _prune_login_attempts(now)
+        entry = _ADMIN_LOGIN_ATTEMPTS.get(client_ip)
+        if not entry:
+            return False, 0
+        locked_until = float(entry.get("locked_until", 0.0))
+        if locked_until > now:
+            retry_after = max(1, int(locked_until - now))
+            return True, retry_after
+    return False, 0
+
+
+def _record_failed_login(client_ip):
+    now = time.monotonic()
+    with _ADMIN_LOGIN_ATTEMPTS_LOCK:
+        _prune_login_attempts(now)
+        entry = _ADMIN_LOGIN_ATTEMPTS.get(client_ip)
+        if not entry or now - float(entry.get("window_start", now)) > ADMIN_LOGIN_RATE_WINDOW_SECONDS:
+            entry = {
+                "window_start": now,
+                "attempts": 0,
+                "locked_until": 0.0,
+            }
+
+        entry["attempts"] = int(entry.get("attempts", 0)) + 1
+        if entry["attempts"] >= ADMIN_LOGIN_MAX_ATTEMPTS:
+            entry["locked_until"] = now + ADMIN_LOGIN_LOCKOUT_SECONDS
+        _ADMIN_LOGIN_ATTEMPTS[client_ip] = entry
+
+
+def _clear_failed_logins(client_ip):
+    with _ADMIN_LOGIN_ATTEMPTS_LOCK:
+        _ADMIN_LOGIN_ATTEMPTS.pop(client_ip, None)
+
+
+def _is_valid_login_payload(username, password):
+    if not username or len(username) > 128:
+        return False
+    if re.fullmatch(r"[a-z0-9._@+\-]+", username) is None:
+        return False
+    if not password or len(password) > 1024:
+        return False
+    return True
+
+
+def _credentials_match(username, password):
+    if not _is_admin_auth_configured():
+        return False
+    if not hmac.compare_digest(username, ADMIN_USERNAME):
+        return False
+    try:
+        return bool(check_password_hash(ADMIN_PASSWORD_HASH, password))
+    except (ValueError, TypeError):
+        return False
+
+
+def _ensure_admin_csrf_token():
+    token = session.get(ADMIN_CSRF_KEY)
+    if not isinstance(token, str) or not token:
+        token = secrets.token_urlsafe(32)
+        session[ADMIN_CSRF_KEY] = token
+    return token
+
+
+def _is_admin_csrf_valid(submitted_token):
+    stored_token = session.get(ADMIN_CSRF_KEY)
+    if not isinstance(stored_token, str) or not stored_token:
+        return False
+    return hmac.compare_digest(stored_token, str(submitted_token or ""))
+
+
+def _is_admin_authenticated():
+    if session.get(ADMIN_SESSION_KEY) is not True:
+        return False
+    session_username = _normalize_admin_identity(session.get(ADMIN_SESSION_USER_KEY, ""))
+    return bool(ADMIN_USERNAME) and hmac.compare_digest(session_username, ADMIN_USERNAME)
+
+
+def _admin_required(view_func):
+    @wraps(view_func)
+    def wrapped(*args, **kwargs):
+        if not _is_admin_authenticated():
+            return redirect(url_for("admin_login"))
+        return view_func(*args, **kwargs)
+
+    return wrapped
+
+
+@app.after_request
+def _set_security_headers(response):
+    response.headers.setdefault("X-Content-Type-Options", "nosniff")
+    response.headers.setdefault("Referrer-Policy", "strict-origin-when-cross-origin")
+    response.headers.setdefault("X-Frame-Options", "SAMEORIGIN")
+    response.headers.setdefault("Permissions-Policy", "camera=(self), microphone=(), geolocation=(), payment=()")
+
+    if request.path.startswith(ADMIN_ROUTE_PREFIX):
+        response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
+        response.headers["Content-Security-Policy"] = (
+            "default-src 'self'; "
+            "img-src 'self' data:; "
+            "script-src 'self' https://cdnjs.cloudflare.com; "
+            "style-src 'self'; "
+            "connect-src 'self'; "
+            "font-src 'self'; "
+            "base-uri 'self'; "
+            "form-action 'self'; "
+            "frame-ancestors 'none'; "
+            "object-src 'none'"
+        )
+
+    return response
+
+
 WEBXR_CONFIG, WEBXR_RUNTIME_SCENE, WEBXR_INIT_ERROR = _initialize_webxr_runtime()
+
+
+@app.route(ADMIN_LOGIN_PATH, methods=["GET", "POST"])
+def admin_login():
+    if _is_admin_authenticated():
+        return redirect(url_for("admin_dashboard"))
+
+    status_code = 200
+    error_message = None
+
+    if request.method == "POST":
+        if not _is_admin_auth_configured():
+            status_code = 503
+            error_message = "Login is temporarily unavailable."
+        elif not _is_admin_csrf_valid(request.form.get("csrf_token")):
+            status_code = 400
+            error_message = "Invalid request."
+        else:
+            client_ip = _get_client_ip()
+            is_limited, retry_after_seconds = _is_login_rate_limited(client_ip)
+            if is_limited:
+                status_code = 429
+                error_message = f"Too many attempts. Try again in {retry_after_seconds} seconds."
+            else:
+                username = _normalize_admin_identity(request.form.get("username", ""))
+                password = str(request.form.get("password", ""))
+
+                if _is_valid_login_payload(username, password) and _credentials_match(username, password):
+                    _clear_failed_logins(client_ip)
+                    session.clear()
+                    session.permanent = True
+                    session[ADMIN_SESSION_KEY] = True
+                    session[ADMIN_SESSION_USER_KEY] = ADMIN_USERNAME
+                    session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
+                    return redirect(url_for("admin_dashboard"))
+
+                _record_failed_login(client_ip)
+                status_code = 401
+                error_message = "Invalid credentials."
+
+    csrf_token = _ensure_admin_csrf_token()
+    response = make_response(
+        render_template("AdminLogin.html", csrf_token=csrf_token, error_message=error_message),
+        status_code,
+    )
+    return response
+
+
+@app.route(ADMIN_DASHBOARD_PATH)
+@_admin_required
+def admin_dashboard():
+    return render_template("AdminDashboard.html")
+
+
+@app.route(ADMIN_LOGOUT_PATH, methods=["POST"])
+@_admin_required
+def admin_logout():
+    if not _is_admin_csrf_valid(request.form.get("csrf_token")):
+        return redirect(url_for("admin_login"))
+    session.clear()
+    return redirect(url_for("admin_login"))
 
 
 @app.route("/")
@@ -257,4 +520,4 @@ def support():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=not IS_PRODUCTION)
