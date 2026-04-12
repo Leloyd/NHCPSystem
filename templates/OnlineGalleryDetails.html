@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gallery Details | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    <header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+      <div class="container mx-auto px-4">
+        <div class="flex items-center justify-between h-20">
+          <a href="/" class="flex items-center space-x-3">
+            <img src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" alt="Museum logo" class="museum-logo" />
+            <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+          </a>
+          <nav class="hidden lg:flex items-center space-x-8">
+            <a href="/" class="text-gray-700 hover:text-amber-800 transition">Home</a>
+            <a href="/digital-exhibits" class="text-amber-800">Digital Exhibits</a>
+            <a href="/accessibility" class="text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+            <a href="/interactive" class="text-gray-700 hover:text-amber-800 transition">Interactive</a>
+            <a href="/participation" class="text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+            <a href="/news" class="text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+            <a href="/support" class="text-gray-700 hover:text-amber-800 transition">Support</a>
+          </nav>
+          <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+            <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+            <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+          </button>
+        </div>
+        <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+          <a href="/" class="block text-gray-700 hover:text-amber-800 transition">Home</a>
+          <a href="/digital-exhibits" class="block text-amber-800">Digital Exhibits</a>
+          <a href="/accessibility" class="block text-gray-700 hover:text-amber-800 transition">Accessibility</a>
+          <a href="/interactive" class="block text-gray-700 hover:text-amber-800 transition">Interactive</a>
+          <a href="/participation" class="block text-gray-700 hover:text-amber-800 transition">E-Participation</a>
+          <a href="/news" class="block text-gray-700 hover:text-amber-800 transition">News &amp; Community</a>
+          <a href="/support" class="block text-gray-700 hover:text-amber-800 transition">Support</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="pt-20">
+      <section class="bg-gradient-to-br from-amber-700 to-amber-900 text-white py-14">
+        <div class="container mx-auto px-4">
+          <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Online Gallery</p>
+          <h1 class="text-4xl md:text-5xl font-serif">Gallery Detail</h1>
+          <p class="text-amber-50 mt-3 max-w-3xl">
+            A single detail page format for all Online Gallery entries.
+          </p>
+        </div>
+      </section>
+
+      <section class="py-12 md:py-16">
+        <div class="container mx-auto px-4">
+          <div class="mb-6 flex items-center justify-between gap-3 flex-wrap">
+            <a href="/online-gallery" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">← Back to Online Gallery</a>
+            <p id="detailCounter" class="text-sm text-gray-600"></p>
+          </div>
+
+          <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-6 md:p-8">
+            <div class="flex items-start justify-between gap-4 mb-4">
+              <div>
+                <p class="text-sm text-amber-700">Gallery Detail</p>
+                <h2 id="detailTitle" class="text-2xl md:text-3xl font-serif text-gray-900">Loading...</h2>
+                <p id="detailMeta" class="text-sm text-gray-600 mt-1"></p>
+              </div>
+            </div>
+
+            <div id="detailImage" class="gallery-thumb rounded-lg mb-5"></div>
+
+            <p id="detailDesc" class="text-gray-700 mb-3"></p>
+            <div id="detailTags" class="mb-4"></div>
+
+            <div class="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-6">
+              <h3 class="font-semibold text-amber-900 mb-1">Teaching Note</h3>
+              <p id="detailTeaching" class="text-sm text-gray-700"></p>
+            </div>
+
+            <div class="flex flex-wrap gap-3 justify-between">
+              <div class="flex gap-3">
+                <button id="prevItem" type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">← Previous</button>
+                <button id="nextItem" type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">Next →</button>
+              </div>
+            </div>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer class="bg-stone-900 text-stone-300 py-12">
+      <div class="container mx-auto px-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3><p class="text-sm leading-relaxed">Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino ingenuity and cultural preservation.</p></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3><ul class="space-y-2 text-sm"><li><a href="/digital-exhibits" class="hover:text-amber-500 transition">Digital Exhibits</a></li><li><a href="/accessibility" class="hover:text-amber-500 transition">Accessibility</a></li><li><a href="/interactive" class="hover:text-amber-500 transition">Interactive Tours</a></li><li><a href="/participation" class="hover:text-amber-500 transition">E-Participation</a></li><li><a href="/news" class="hover:text-amber-500 transition">News &amp; Events</a></li><li><a href="/support" class="hover:text-amber-500 transition">Support &amp; Governance</a></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3><ul class="space-y-3 text-sm"><li class="flex items-start space-x-2"><i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i><span>Nagcarlan, Laguna, Philippines</span></li><li class="flex items-center space-x-2"><i data-lucide="phone" class="w-4 h-4"></i><span>+63 XXX XXX XXXX</span></li><li class="flex items-center space-x-2"><i data-lucide="mail" class="w-4 h-4"></i><span>info@nagcarlanmuseum.ph</span></li></ul></div>
+          <div><h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3><div class="flex items-start space-x-2 text-sm"><i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i><div><p>Tuesday - Sunday</p><p>8:00 AM - 5:00 PM</p><p class="mt-2 text-amber-400">Closed on Mondays</p></div></div></div>
+        </div>
+        <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center"><p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p></div>
+      </div>
+    </footer>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/online-gallery-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/online-gallery-detail.js') }}"></script>
+  </body>
+</html>
