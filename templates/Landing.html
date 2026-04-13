@@ -116,132 +116,151 @@
         </div>
       </section>
 
-      <section id="exhibits" class="py-16 bg-stone-50">
+      <section id="exhibits" class="py-20 bg-stone-50">
         <div class="container mx-auto px-4">
-          <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-12">
-            <div class="max-w-2xl exhibits-reveal">
-              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-amber-700/80 mb-3">Museum Highlights</p>
-              <h2 class="text-4xl font-serif text-amber-900 mb-4">Current Exhibits &amp; News</h2>
-              <p class="text-gray-700 text-lg leading-relaxed">
-                Discover the latest stories, exhibitions, and preservation milestones curated by the museum team.
-              </p>
-            </div>
+          <div class="exhibits-section-panel">
+            <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between mb-12">
+              <div class="max-w-2xl exhibits-reveal">
+                <p class="exhibits-section-kicker">Museum Highlights</p>
+                <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Current Exhibits &amp; News</h2>
+                <p class="text-gray-700 text-lg leading-relaxed">
+                  Discover the latest stories, exhibitions, and preservation milestones curated by the museum team.
+                </p>
+              </div>
 
-            <a href="{{ url_for('current_exhibits_news') }}" class="exhibits-section-button exhibits-reveal">
-              Show All Current Exhibits &amp; News
-            </a>
-          </div>
-
-          {% if exhibits_news_items %}
-          <div class="exhibits-carousel-shell exhibits-reveal" data-exhibits-carousel>
-            <div class="exhibits-carousel-window">
-              <div class="exhibits-carousel-track" data-exhibits-track>
-                {% for exhibit_item in exhibits_news_items %}
-                <article class="exhibit-card" data-exhibit-card>
-                  <a href="{{ exhibit_item.detail_url }}" class="exhibit-card-link">
-                    <div class="exhibit-card-media{% if not exhibit_item.image_url %} is-placeholder{% endif %}">
-                      {% if exhibit_item.image_url %}
-                      <img src="{{ exhibit_item.image_url }}" alt="{{ exhibit_item.title }}" loading="lazy" />
-                      {% else %}
-                      <div class="exhibit-card-placeholder-glow"></div>
-                      {% endif %}
-                      <span class="exhibit-card-chip">Featured Story</span>
-                    </div>
-                    <div class="exhibit-card-content">
-                      <div class="flex items-center space-x-2 text-sm text-amber-700 mb-3">
-                        <i data-lucide="calendar" class="w-4 h-4"></i>
-                        <span>{{ exhibit_item.display_date }}</span>
-                      </div>
-                      <h3 class="text-2xl font-serif text-gray-900 mb-3">{{ exhibit_item.title }}</h3>
-                      <p class="text-gray-700 mb-6 leading-relaxed">{{ exhibit_item.short_description }}</p>
-                      <span class="exhibit-card-action">
-                        <span>Learn More</span>
-                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
-                      </span>
-                    </div>
-                  </a>
-                </article>
-                {% endfor %}
+              <div class="exhibits-section-meta exhibits-reveal">
+              
+                <a href="{{ url_for('current_exhibits_news') }}" class="exhibits-section-button">
+                  Show All Current Exhibits &amp; News
+                </a>
               </div>
             </div>
 
-            {% if exhibits_news_items|length > 3 %}
-            <div class="exhibits-carousel-controls" data-exhibits-controls>
-              <button type="button" class="exhibits-arrow is-prev" data-exhibits-prev aria-label="Show previous exhibits">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
-              </button>
-              <button type="button" class="exhibits-arrow" data-exhibits-next aria-label="Show more exhibits">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
-              </button>
+            {% if exhibits_news_items %}
+            <div class="exhibits-carousel-shell exhibits-reveal" data-exhibits-carousel>
+              <div class="exhibits-carousel-window">
+                <div class="exhibits-carousel-track" data-exhibits-track>
+                  {% for exhibit_item in exhibits_news_items %}
+                  <article class="exhibit-card" data-exhibit-card>
+                    <a href="{{ exhibit_item.detail_url }}" class="exhibit-card-link">
+                      <div class="exhibit-card-media{% if not exhibit_item.image_url %} is-placeholder{% endif %}">
+                        {% if exhibit_item.image_url %}
+                        <img src="{{ exhibit_item.image_url }}" alt="{{ exhibit_item.title }}" loading="lazy" />
+                        {% else %}
+                        <div class="exhibit-card-placeholder-glow"></div>
+                        {% endif %}
+                        <span class="exhibit-card-chip">Featured Story</span>
+                      </div>
+                      <div class="exhibit-card-content">
+                        <div class="exhibit-card-meta-row">
+                          <div class="flex items-center space-x-2 text-sm text-amber-700">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span>{{ exhibit_item.display_date }}</span>
+                          </div>
+                          <span class="exhibit-card-meta-tag">Museum Update</span>
+                        </div>
+                        <h3 class="text-2xl font-serif text-gray-900 mb-3">{{ exhibit_item.title }}</h3>
+                        <p class="text-gray-700 mb-6 leading-relaxed">{{ exhibit_item.short_description }}</p>
+                        <span class="exhibit-card-action">
+                          <span>Learn More</span>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                        </span>
+                      </div>
+                    </a>
+                  </article>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if exhibits_news_items|length > 3 %}
+              <div class="exhibits-carousel-controls" data-exhibits-controls>
+                <button type="button" class="exhibits-arrow is-prev" data-exhibits-prev aria-label="Show previous exhibits">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
+                </button>
+                <button type="button" class="exhibits-arrow" data-exhibits-next aria-label="Show more exhibits">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                </button>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="exhibits-empty-state exhibits-reveal">
+              <div class="exhibits-empty-icon">
+                <i data-lucide="newspaper" class="w-7 h-7"></i>
+              </div>
+              <h3 class="text-2xl font-serif text-amber-900 mb-3">No current exhibits yet</h3>
+              <p class="text-gray-700 max-w-2xl mx-auto leading-relaxed">
+                Once the admin adds published exhibit or news cards, they will appear here automatically.
+              </p>
             </div>
             {% endif %}
           </div>
-          {% else %}
-          <div class="exhibits-empty-state exhibits-reveal">
-            <div class="exhibits-empty-icon">
-              <i data-lucide="newspaper" class="w-7 h-7"></i>
-            </div>
-            <h3 class="text-2xl font-serif text-amber-900 mb-3">No current exhibits yet</h3>
-            <p class="text-gray-700 max-w-2xl mx-auto leading-relaxed">
-              Once the admin adds published exhibit or news cards, they will appear here automatically.
-            </p>
-          </div>
-          {% endif %}
         </div>
       </section>
 
-      <section id="visitor-info" class="py-16 bg-white">
+      <section id="visitor-info" class="py-20 bg-white">
         <div class="container mx-auto px-4">
-          <h2 class="text-4xl font-serif text-amber-900 mb-12 text-center">Visitor Information</h2>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8 max-w-6xl mx-auto">
-            <div class="text-center">
-              <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="clock" class="text-amber-700 w-8 h-8"></i>
-              </div>
-              <h3 class="text-lg font-serif text-gray-900 mb-2">Hours</h3>
-              <p class="text-gray-700">Tuesday - Sunday</p>
-              <p class="text-gray-700">8:00 AM - 5:00 PM</p>
-              <p class="text-sm text-amber-700 mt-1">Closed Mondays</p>
+          <div class="landing-section-shell">
+            <div class="landing-section-heading text-center max-w-3xl mx-auto">
+              <p class="landing-section-kicker">Plan Your Visit</p>
+              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Visitor Information</h2>
+              <p class="text-lg text-gray-700 leading-relaxed">
+                Everything you need before exploring the museum grounds, exhibits, and heritage spaces.
+              </p>
             </div>
 
-            <div class="text-center">
-              <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="map-pin" class="text-amber-700 w-8 h-8"></i>
-              </div>
-              <h3 class="text-lg font-serif text-gray-900 mb-2">Location</h3>
-              <p class="text-gray-700">Nagcarlan, Laguna</p>
-              <p class="text-gray-700">Philippines</p>
-              <p class="text-sm text-amber-700 mt-1">View Map →</p>
-            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-6xl mx-auto">
+              <article class="landing-info-card">
+                <div class="landing-info-icon">
+                  <i data-lucide="clock" class="text-amber-700 w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-900 mb-3">Hours</h3>
+                <p class="text-gray-700">Tuesday - Sunday</p>
+                <p class="text-gray-700">8:00 AM - 5:00 PM</p>
+                <p class="text-sm text-amber-700 mt-2">Closed Mondays</p>
+              </article>
 
-            <div class="text-center">
-              <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="users" class="text-amber-700 w-8 h-8"></i>
-              </div>
-              <h3 class="text-lg font-serif text-gray-900 mb-2">Admission</h3>
-              <p class="text-gray-700">Adults: ₱50</p>
-              <p class="text-gray-700">Students: ₱30</p>
-              <p class="text-sm text-amber-700 mt-1">Free for seniors</p>
-            </div>
+              <article class="landing-info-card">
+                <div class="landing-info-icon">
+                  <i data-lucide="map-pin" class="text-amber-700 w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-900 mb-3">Location</h3>
+                <p class="text-gray-700">Nagcarlan, Laguna</p>
+                <p class="text-gray-700">Philippines</p>
+                <p class="text-sm text-amber-700 mt-2">View Map →</p>
+              </article>
 
-            <div class="text-center">
-              <div class="w-20 h-20 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="info" class="text-amber-700 w-8 h-8"></i>
-              </div>
-              <h3 class="text-lg font-serif text-gray-900 mb-2">Contact</h3>
-              <p class="text-gray-700">+63 XXX XXX XXXX</p>
-              <p class="text-gray-700 text-sm">info@nagcarlanmuseum.ph</p>
+              <article class="landing-info-card">
+                <div class="landing-info-icon">
+                  <i data-lucide="users" class="text-amber-700 w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-900 mb-3">Admission</h3>
+                <p class="text-gray-700">Adults: ₱50</p>
+                <p class="text-gray-700">Students: ₱30</p>
+                <p class="text-sm text-amber-700 mt-2">Free for seniors</p>
+              </article>
+
+              <article class="landing-info-card">
+                <div class="landing-info-icon">
+                  <i data-lucide="info" class="text-amber-700 w-8 h-8"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-900 mb-3">Contact</h3>
+                <p class="text-gray-700">+63 XXX XXX XXXX</p>
+                <p class="text-gray-700 text-sm">info@nagcarlanmuseum.ph</p>
+              </article>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="py-16 bg-amber-50">
+      <section class="py-20 bg-amber-50">
         <div class="container mx-auto px-4">
-          <div class="max-w-4xl mx-auto">
-            <h2 class="text-4xl font-serif text-amber-900 mb-8 text-center">About the Site</h2>
-            <div class="bg-white p-8 rounded-lg shadow-md">
+          <div class="landing-section-shell landing-section-shell-soft max-w-5xl mx-auto">
+            <div class="landing-section-heading text-center max-w-3xl mx-auto">
+              <p class="landing-section-kicker">Heritage Overview</p>
+              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">About the Site</h2>
+            </div>
+            <div class="landing-content-panel">
               <p class="text-lg text-gray-700 leading-relaxed mb-4">
                 The Nagcarlan Underground Cemetery is a rare architectural gem built during the Spanish colonial
                 period in 1845. Constructed under the supervision of Franciscan friars, this unique structure served
@@ -262,14 +281,18 @@
         </div>
       </section>
 
-      <section class="py-16 bg-white">
+      <section class="py-20 bg-white">
         <div class="container mx-auto px-4">
-          <h2 class="text-4xl font-serif text-amber-900 mb-12 text-center">Cemetery History</h2>
+          <div class="landing-section-shell max-w-5xl mx-auto">
+            <div class="landing-section-heading text-center max-w-3xl mx-auto">
+              <p class="landing-section-kicker">Historical Journey</p>
+              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Cemetery History</h2>
+            </div>
 
-          <div class="max-w-4xl mx-auto space-y-8">
-            <div class="flex gap-6">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center text-white text-xl font-serif flex-shrink-0">1845</div>
-              <div>
+            <div class="max-w-4xl mx-auto space-y-6">
+            <div class="timeline-row">
+              <div class="timeline-year">1845</div>
+              <div class="timeline-content">
                 <h3 class="text-xl font-serif text-gray-900 mb-2">Construction Era</h3>
                 <p class="text-gray-700">
                   Built under the direction of Franciscan friars as a modern burial ground featuring underground
@@ -279,9 +302,9 @@
               </div>
             </div>
 
-            <div class="flex gap-6">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center text-white text-xl font-serif flex-shrink-0">1896</div>
-              <div>
+            <div class="timeline-row">
+              <div class="timeline-year">1896</div>
+              <div class="timeline-content">
                 <h3 class="text-xl font-serif text-gray-900 mb-2">Revolutionary Period</h3>
                 <p class="text-gray-700">
                   The underground chambers became a secret meeting place for members of the Katipunan during the
@@ -290,9 +313,9 @@
               </div>
             </div>
 
-            <div class="flex gap-6">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center text-white text-xl font-serif flex-shrink-0">1973</div>
-              <div>
+            <div class="timeline-row">
+              <div class="timeline-year">1973</div>
+              <div class="timeline-content">
                 <h3 class="text-xl font-serif text-gray-900 mb-2">National Landmark</h3>
                 <p class="text-gray-700">
                   Declared a National Historical Landmark by the National Historical Institute, recognizing its unique
@@ -301,9 +324,9 @@
               </div>
             </div>
 
-            <div class="flex gap-6">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center text-white text-xl font-serif flex-shrink-0">Today</div>
-              <div>
+            <div class="timeline-row">
+              <div class="timeline-year">Today</div>
+              <div class="timeline-content">
                 <h3 class="text-xl font-serif text-gray-900 mb-2">Museum &amp; Heritage Site</h3>
                 <p class="text-gray-700">
                   Now serves as a museum and cultural heritage site, welcoming visitors from around the world to
@@ -311,16 +334,21 @@
                 </p>
               </div>
             </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="py-16 bg-stone-50">
+      <section class="py-20 bg-stone-50">
         <div class="container mx-auto px-4">
-          <h2 class="text-4xl font-serif text-amber-900 mb-12 text-center">House Rules</h2>
+          <div class="landing-section-shell landing-section-shell-soft max-w-5xl mx-auto">
+            <div class="landing-section-heading text-center max-w-3xl mx-auto">
+              <p class="landing-section-kicker">Responsible Visiting</p>
+              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">House Rules</h2>
+            </div>
 
-          <div class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-md space-y-6">
-            <div class="flex items-start gap-4">
+            <div class="landing-rules-panel max-w-4xl mx-auto">
+            <div class="landing-rule-item">
               <i data-lucide="shield" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
               <div>
                 <h3 class="text-lg font-serif text-gray-900 mb-1">Respect the Heritage</h3>
@@ -330,7 +358,7 @@
               </div>
             </div>
 
-            <div class="flex items-start gap-4">
+            <div class="landing-rule-item">
               <i data-lucide="image" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
               <div>
                 <h3 class="text-lg font-serif text-gray-900 mb-1">Photography Guidelines</h3>
@@ -341,7 +369,7 @@
               </div>
             </div>
 
-            <div class="flex items-start gap-4">
+            <div class="landing-rule-item">
               <i data-lucide="users" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
               <div>
                 <h3 class="text-lg font-serif text-gray-900 mb-1">Group Tours</h3>
@@ -352,7 +380,7 @@
               </div>
             </div>
 
-            <div class="flex items-start gap-4">
+            <div class="landing-rule-item">
               <i data-lucide="lock" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
               <div>
                 <h3 class="text-lg font-serif text-gray-900 mb-1">Preservation</h3>
@@ -363,7 +391,7 @@
               </div>
             </div>
 
-            <div class="flex items-start gap-4">
+            <div class="landing-rule-item">
               <i data-lucide="info" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
               <div>
                 <h3 class="text-lg font-serif text-gray-900 mb-1">Safety First</h3>
@@ -377,60 +405,65 @@
         </div>
       </section>
 
-      <section class="py-16 bg-white">
+      <section class="py-20 bg-white">
         <div class="container mx-auto px-4">
-          <h2 class="text-4xl font-serif text-amber-900 mb-4 text-center">Explore Our Platform</h2>
-          <p class="text-center text-gray-700 max-w-3xl mx-auto mb-12">
-            The platform follows a capstone-limited navigation scope based on core information, learning modules, participation, and support services.
-          </p>
+          <div class="landing-section-shell max-w-7xl mx-auto">
+            <div class="landing-section-heading text-center max-w-3xl mx-auto">
+              <p class="landing-section-kicker">Digital Experiences</p>
+              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Explore Our Platform</h2>
+              <p class="text-center text-gray-700 max-w-3xl mx-auto">
+                The platform follows a capstone-limited navigation scope based on core information, learning modules, participation, and support services.
+              </p>
+            </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
-            <a href="#visitor-info" class="group bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-lg hover:shadow-lg transition">
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-7xl mx-auto">
+            <a href="#visitor-info" class="group landing-platform-card landing-platform-card-amber">
               <i data-lucide="compass" class="text-amber-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2 group-hover:text-amber-800">Core Information</h3>
               <p class="text-gray-700 text-sm">Visitor info, about the site, cemetery history, and house rules.</p>
             </a>
 
-            <a href="/digital-exhibits" class="group bg-gradient-to-br from-amber-50 to-amber-100 p-6 rounded-lg hover:shadow-lg transition">
+            <a href="/digital-exhibits" class="group landing-platform-card landing-platform-card-amber">
               <i data-lucide="image" class="text-amber-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2 group-hover:text-amber-800">Digital Exhibits</h3>
               <p class="text-gray-700 text-sm">Online gallery, virtual tour, AR content previews, and teacher resources.</p>
             </a>
 
-            <a href="/accessibility" class="group bg-gradient-to-br from-blue-50 to-blue-100 p-6 rounded-lg hover:shadow-lg transition">
+            <a href="/accessibility" class="group landing-platform-card landing-platform-card-blue">
               <i data-lucide="accessibility" class="text-blue-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2 group-hover:text-blue-800">Inclusive Accessibility</h3>
               <p class="text-gray-700 text-sm">Accessibility info and content options for inclusive use.</p>
             </a>
 
-            <a href="/interactive" class="group bg-gradient-to-br from-purple-50 to-purple-100 p-6 rounded-lg hover:shadow-lg transition">
+            <a href="/interactive" class="group landing-platform-card landing-platform-card-purple">
               <i data-lucide="gamepad-2" class="text-purple-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2 group-hover:text-purple-800">Interactive &amp; Immersive</h3>
               <p class="text-gray-700 text-sm">Site map, heritage trails, and quizzes or activities.</p>
             </a>
 
-            <a href="/participation" class="group bg-gradient-to-br from-green-50 to-green-100 p-6 rounded-lg hover:shadow-lg transition">
+            <a href="/participation" class="group landing-platform-card landing-platform-card-green">
               <i data-lucide="message-square" class="text-green-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2 group-hover:text-green-800">E-Participation</h3>
               <p class="text-gray-700 text-sm">Visitor feedback, teacher corner, stories submit, and general forms.</p>
             </a>
 
-            <a href="/news" class="group bg-gradient-to-br from-orange-50 to-orange-100 p-6 rounded-lg hover:shadow-lg transition">
+            <a href="/news" class="group landing-platform-card landing-platform-card-orange">
               <i data-lucide="newspaper" class="text-orange-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2 group-hover:text-orange-800">News &amp; Community</h3>
               <p class="text-gray-700 text-sm">Events calendar, news/blog updates, and social media posts.</p>
             </a>
 
-            <div class="group bg-gradient-to-br from-stone-50 to-stone-100 p-6 rounded-lg opacity-80">
+            <div class="group landing-platform-card landing-platform-card-stone is-muted">
               <i data-lucide="settings" class="text-stone-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2">Admin / Backend</h3>
               <p class="text-gray-700 text-sm">CMS/media management, user roles, and basic analytics (staff use).</p>
             </div>
 
-            <div class="group bg-gradient-to-br from-teal-50 to-teal-100 p-6 rounded-lg opacity-80">
+            <div class="group landing-platform-card landing-platform-card-teal is-muted">
               <i data-lucide="life-buoy" class="text-teal-700 mb-4 w-8 h-8"></i>
               <h3 class="text-xl font-serif text-gray-900 mb-2">Support &amp; Governance</h3>
               <p class="text-gray-700 text-sm">FAQs, policies, and contact helpdesk for user support.</p>
+            </div>
             </div>
           </div>
         </div>
