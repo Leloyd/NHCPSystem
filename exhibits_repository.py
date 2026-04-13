@@ -15,8 +15,8 @@ def list_published_exhibits(limit: int | None = None) -> list[dict[str, Any]]:
         client.table(EXHIBITS_TABLE)
         .select(EXHIBIT_SELECT_FIELDS)
         .eq("is_published", True)
-        .order("sort_order", desc=False)
         .order("event_date", desc=True)
+        .order("created_at", desc=True)
     )
 
     if isinstance(limit, int) and limit > 0:
@@ -31,8 +31,8 @@ def list_all_exhibits() -> list[dict[str, Any]]:
     response = (
         client.table(EXHIBITS_TABLE)
         .select(EXHIBIT_SELECT_FIELDS)
-        .order("sort_order", desc=False)
         .order("event_date", desc=True)
+        .order("created_at", desc=True)
         .execute()
     )
     return list(response.data or [])

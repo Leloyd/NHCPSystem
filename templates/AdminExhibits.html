@@ -105,7 +105,6 @@
                     <th>Card</th>
                     <th>Date</th>
                     <th>Status</th>
-                    <th>Sort</th>
                     <th>Image</th>
                     <th>Actions</th>
                   </tr>
@@ -125,7 +124,6 @@
                         {% if exhibit_item.is_published %}Published{% else %}Draft{% endif %}
                       </span>
                     </td>
-                    <td>{{ exhibit_item.sort_order }}</td>
                     <td>{{ exhibit_item.image_filename or 'No image' }}</td>
                     <td>
                       <div class="admin-resource-actions">

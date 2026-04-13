@@ -334,7 +334,6 @@ def _build_exhibit_form_state(source=None):
         "event_date": str(source.get("event_date") or "").strip(),
         "short_description": str(source.get("short_description") or "").strip(),
         "long_description": str(source.get("long_description") or "").strip(),
-        "sort_order": str(source.get("sort_order") or "0").strip() or "0",
         "is_published": bool(source.get("is_published")),
         "image_filename": str(source.get("image_filename") or "").strip(),
         "image_url": source.get("image_url"),
@@ -359,7 +358,6 @@ def _build_exhibit_form_payload(form, files, current_item=None):
         "event_date": _validate_event_date(form.get("event_date")),
         "short_description": short_description,
         "long_description": long_description,
-        "sort_order": _parse_sort_order(form.get("sort_order")),
         "is_published": _normalize_checkbox(form.get("is_published")),
     }
 
@@ -630,7 +628,7 @@ def admin_exhibit_new():
             form_title="Create Exhibit Card",
             submit_label="Create Exhibit",
             form_action=url_for("admin_exhibit_new"),
-            exhibit_form=_build_exhibit_form_state({"is_published": True, "sort_order": "0"}),
+            exhibit_form=_build_exhibit_form_state({"is_published": True}),
         )
 
     if not _is_admin_csrf_valid(request.form.get("csrf_token")):
