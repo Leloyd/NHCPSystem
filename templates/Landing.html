@@ -118,52 +118,75 @@
 
       <section id="exhibits" class="py-16 bg-stone-50">
         <div class="container mx-auto px-4">
-          <h2 class="text-4xl font-serif text-amber-900 mb-12 text-center">Current Exhibits &amp; News</h2>
-
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-              <div class="h-48 bg-gradient-to-br from-amber-200 to-amber-400"></div>
-              <div class="p-6">
-                <div class="flex items-center space-x-2 text-sm text-amber-700 mb-2">
-                  <i data-lucide="calendar" class="w-4 h-4"></i>
-                  <span>March 15, 2026</span>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Virtual Tour Launch</h3>
-                <p class="text-gray-700 mb-4">
-                  Experience the underground cemetery from anywhere with our new 360° virtual tour.
-                </p>
-                <a href="#" class="text-amber-700 hover:text-amber-900">Learn More →</a>
-              </div>
+          <div class="flex flex-col gap-6 md:flex-row md:items-end md:justify-between mb-12">
+            <div class="max-w-2xl exhibits-reveal">
+              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-amber-700/80 mb-3">Museum Highlights</p>
+              <h2 class="text-4xl font-serif text-amber-900 mb-4">Current Exhibits &amp; News</h2>
+              <p class="text-gray-700 text-lg leading-relaxed">
+                Discover the latest stories, exhibitions, and preservation milestones curated by the museum team.
+              </p>
             </div>
 
-            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-              <div class="h-48 bg-gradient-to-br from-stone-300 to-stone-500"></div>
-              <div class="p-6">
-                <div class="flex items-center space-x-2 text-sm text-amber-700 mb-2">
-                  <i data-lucide="calendar" class="w-4 h-4"></i>
-                  <span>March 10, 2026</span>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Heritage Month Exhibition</h3>
-                <p class="text-gray-700 mb-4">
-                  Special exhibition featuring artifacts and stories from the Spanish colonial period.
-                </p>
-                <a href="#" class="text-amber-700 hover:text-amber-900">Learn More →</a>
-              </div>
-            </div>
-
-            <div class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition">
-              <div class="h-48 bg-gradient-to-br from-amber-300 to-orange-400"></div>
-              <div class="p-6">
-                <div class="flex items-center space-x-2 text-sm text-amber-700 mb-2">
-                  <i data-lucide="calendar" class="w-4 h-4"></i>
-                  <span>March 5, 2026</span>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Restoration Updates</h3>
-                <p class="text-gray-700 mb-4">Latest progress on the ongoing preservation and restoration efforts.</p>
-                <a href="#" class="text-amber-700 hover:text-amber-900">Learn More →</a>
-              </div>
-            </div>
+            <a href="{{ url_for('current_exhibits_news') }}" class="exhibits-section-button exhibits-reveal">
+              Show All Current Exhibits &amp; News
+            </a>
           </div>
+
+          {% if exhibits_news_items %}
+          <div class="exhibits-carousel-shell exhibits-reveal" data-exhibits-carousel>
+            <div class="exhibits-carousel-window">
+              <div class="exhibits-carousel-track" data-exhibits-track>
+                {% for exhibit_item in exhibits_news_items %}
+                <article class="exhibit-card" data-exhibit-card>
+                  <a href="{{ exhibit_item.detail_url }}" class="exhibit-card-link">
+                    <div class="exhibit-card-media{% if not exhibit_item.image_url %} is-placeholder{% endif %}">
+                      {% if exhibit_item.image_url %}
+                      <img src="{{ exhibit_item.image_url }}" alt="{{ exhibit_item.title }}" loading="lazy" />
+                      {% else %}
+                      <div class="exhibit-card-placeholder-glow"></div>
+                      {% endif %}
+                      <span class="exhibit-card-chip">Featured Story</span>
+                    </div>
+                    <div class="exhibit-card-content">
+                      <div class="flex items-center space-x-2 text-sm text-amber-700 mb-3">
+                        <i data-lucide="calendar" class="w-4 h-4"></i>
+                        <span>{{ exhibit_item.display_date }}</span>
+                      </div>
+                      <h3 class="text-2xl font-serif text-gray-900 mb-3">{{ exhibit_item.title }}</h3>
+                      <p class="text-gray-700 mb-6 leading-relaxed">{{ exhibit_item.short_description }}</p>
+                      <span class="exhibit-card-action">
+                        <span>Learn More</span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                      </span>
+                    </div>
+                  </a>
+                </article>
+                {% endfor %}
+              </div>
+            </div>
+
+            {% if exhibits_news_items|length > 3 %}
+            <div class="exhibits-carousel-controls" data-exhibits-controls>
+              <button type="button" class="exhibits-arrow is-prev" data-exhibits-prev aria-label="Show previous exhibits">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
+              </button>
+              <button type="button" class="exhibits-arrow" data-exhibits-next aria-label="Show more exhibits">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+              </button>
+            </div>
+            {% endif %}
+          </div>
+          {% else %}
+          <div class="exhibits-empty-state exhibits-reveal">
+            <div class="exhibits-empty-icon">
+              <i data-lucide="newspaper" class="w-7 h-7"></i>
+            </div>
+            <h3 class="text-2xl font-serif text-amber-900 mb-3">No current exhibits yet</h3>
+            <p class="text-gray-700 max-w-2xl mx-auto leading-relaxed">
+              Once the admin adds published exhibit or news cards, they will appear here automatically.
+            </p>
+          </div>
+          {% endif %}
         </div>
       </section>
 
@@ -475,6 +498,7 @@
     </footer>
 
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>

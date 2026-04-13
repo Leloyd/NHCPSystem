@@ -132,10 +132,280 @@ body {
   border: 2px solid rgba(180, 83, 9, 0.25);
 }
 
+.exhibits-section-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 3.2rem;
+  padding: 0.9rem 1.35rem;
+  border-radius: 999px;
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.98), rgba(180, 83, 9, 0.95));
+  color: #fffbeb;
+  font-weight: 600;
+  text-align: center;
+  box-shadow: 0 16px 28px rgba(120, 53, 15, 0.18);
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+
+.exhibits-section-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px rgba(120, 53, 15, 0.24);
+}
+
+.exhibits-carousel-shell {
+  position: relative;
+}
+
+.exhibits-carousel-window {
+  overflow: hidden;
+}
+
+.exhibits-carousel-track {
+  display: flex;
+  gap: 1.5rem;
+  transition: transform 360ms ease;
+  will-change: transform;
+}
+
+.exhibit-card {
+  flex: 0 0 calc((100% - 3rem) / 3);
+  min-width: 0;
+}
+
+.exhibit-card-link {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 18px 34px rgba(148, 163, 184, 0.18);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.exhibit-card-link:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 42px rgba(148, 163, 184, 0.22);
+}
+
+.exhibit-card-media {
+  position: relative;
+  height: 15rem;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.35), rgba(120, 53, 15, 0.82));
+}
+
+.exhibit-card-media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exhibit-card-media::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.04) 0%, rgba(15, 23, 42, 0.58) 100%);
+}
+
+.exhibit-card-media.is-placeholder {
+  background:
+    radial-gradient(circle at 22% 18%, rgba(253, 230, 138, 0.46), transparent 28%),
+    linear-gradient(135deg, rgba(217, 119, 6, 0.88), rgba(120, 53, 15, 0.96));
+}
+
+.exhibit-card-placeholder-glow {
+  position: absolute;
+  inset: 18% 20%;
+  border-radius: 999px;
+  background: rgba(255, 251, 235, 0.18);
+  filter: blur(16px);
+}
+
+.exhibit-card-chip {
+  position: absolute;
+  left: 1rem;
+  top: 1rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  padding: 0.42rem 0.8rem;
+  border-radius: 999px;
+  background: rgba(255, 251, 235, 0.88);
+  color: #92400e;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.exhibit-card-content {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding: 1.5rem;
+}
+
+.exhibit-card-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: auto;
+  color: #b45309;
+  font-weight: 700;
+}
+
+.exhibit-card-action svg,
+.exhibits-arrow svg,
+.exhibit-detail-back svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  display: block;
+  fill: currentColor;
+}
+
+.exhibits-carousel-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1.4rem;
+}
+
+.exhibits-arrow {
+  width: 3rem;
+  height: 3rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 999px;
+  background: #ffffff;
+  color: #92400e;
+  box-shadow: 0 10px 22px rgba(120, 53, 15, 0.14);
+  transition: transform 180ms ease, box-shadow 180ms ease, opacity 180ms ease;
+}
+
+.exhibits-arrow:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 14px 28px rgba(120, 53, 15, 0.18);
+}
+
+.exhibits-arrow:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.exhibits-empty-state {
+  padding: 3rem 2rem;
+  border-radius: 1.75rem;
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.94), rgba(255, 255, 255, 0.98));
+  text-align: center;
+  box-shadow: inset 0 0 0 1px rgba(217, 119, 6, 0.08);
+}
+
+.exhibits-empty-icon {
+  width: 4rem;
+  height: 4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+  border-radius: 1.25rem;
+  background: rgba(251, 191, 36, 0.15);
+  color: #b45309;
+}
+
+.exhibit-list-hero,
+.exhibit-detail-hero {
+  position: relative;
+  overflow: hidden;
+  background: linear-gradient(135deg, rgba(120, 53, 15, 0.96), rgba(146, 64, 14, 0.92), rgba(120, 53, 15, 0.98));
+}
+
+.exhibit-list-hero::before,
+.exhibit-detail-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 75% 24%, rgba(253, 230, 138, 0.24), transparent 30%);
+}
+
+.exhibit-list-card {
+  overflow: hidden;
+  border-radius: 1.5rem;
+  background: #fff;
+  box-shadow: 0 18px 34px rgba(148, 163, 184, 0.16);
+  transition: transform 220ms ease, box-shadow 220ms ease;
+}
+
+.exhibit-list-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 24px 40px rgba(148, 163, 184, 0.2);
+}
+
+.exhibit-list-media {
+  position: relative;
+  height: 15rem;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.38), rgba(120, 53, 15, 0.95));
+}
+
+.exhibit-list-media img,
+.exhibit-detail-visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.exhibit-list-media.is-placeholder,
+.exhibit-detail-visual.is-placeholder {
+  background:
+    radial-gradient(circle at 24% 20%, rgba(253, 230, 138, 0.46), transparent 30%),
+    linear-gradient(135deg, rgba(217, 119, 6, 0.86), rgba(120, 53, 15, 0.96));
+}
+
+.exhibit-list-body {
+  padding: 1.5rem;
+}
+
+.exhibit-detail-card {
+  overflow: hidden;
+  border-radius: 1.75rem;
+  background: #fff;
+  box-shadow: 0 28px 48px rgba(15, 23, 42, 0.08);
+}
+
+.exhibit-detail-visual {
+  min-height: 22rem;
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.4), rgba(120, 53, 15, 0.96));
+}
+
+.exhibit-detail-content {
+  padding: 2rem;
+}
+
+.exhibit-detail-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #92400e;
+  font-weight: 700;
+}
+
+.exhibit-detail-body {
+  color: #374151;
+  font-size: 1rem;
+  line-height: 1.85;
+  white-space: pre-line;
+}
+
 @media (max-width: 1024px) {
   .museum-logo {
     width: 38px;
     height: 38px;
+  }
+
+  .exhibit-card {
+    flex-basis: calc((100% - 1.5rem) / 2);
   }
 }
 
@@ -155,5 +425,23 @@ body {
   .timeline-row {
     flex-direction: column;
     gap: 1rem;
+  }
+
+  .exhibits-carousel-track {
+    gap: 1rem;
+  }
+
+  .exhibit-card {
+    flex-basis: 100%;
+  }
+
+  .exhibit-card-media,
+  .exhibit-list-media {
+    height: 13rem;
+  }
+
+  .exhibit-detail-content,
+  .exhibit-list-body {
+    padding: 1.3rem;
   }
 }

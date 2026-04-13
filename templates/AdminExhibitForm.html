@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>{{ form_title }} | NHCP Admin</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-dashboard.css') }}" />
+    <script defer src="{{ url_for('static', filename='js/admin-dashboard.js') }}"></script>
+  </head>
+  <body class="admin-dashboard-page">
+    <div class="admin-layout admin-resource-layout">
+      <div class="admin-sidebar-overlay" data-sidebar-overlay></div>
+      <aside class="admin-sidebar" aria-label="Admin navigation">
+        <div class="admin-sidebar-brand">
+          <div class="admin-sidebar-brand-mark">
+            <img
+              src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
+              alt="Museo ng Libingan sa Ilalim ng Lupa"
+              class="admin-sidebar-logo"
+            />
+          </div>
+          <div class="admin-sidebar-brand-copy">
+            <p class="admin-sidebar-brand-label">NHCP Admin</p>
+            <p class="admin-sidebar-brand-subtitle">Museo ng Libingan</p>
+          </div>
+        </div>
+
+        <nav class="admin-nav">
+          <p class="admin-nav-label">Main Menu</p>
+          <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link">
+            <span class="admin-nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3Zm10 8h8v-6h-8ZM13 3v8h8V3ZM3 21h8v-6H3Z"></path></svg>
+            </span>
+            <span>Dashboard</span>
+          </a>
+          <a href="{{ url_for('admin_exhibits') }}" class="admin-nav-link is-active">
+            <span class="admin-nav-indicator" aria-hidden="true"></span>
+            <span class="admin-nav-icon" aria-hidden="true">
+              <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm2 2h8v2H8Zm0 4h5v2H8Z"></path></svg>
+            </span>
+            <span>Exhibits &amp; News</span>
+          </a>
+        </nav>
+
+        <div class="admin-sidebar-account">
+          <div class="admin-sidebar-avatar">{{ (admin_username or 'A')[:1]|upper }}</div>
+          <div class="admin-sidebar-account-copy">
+            <strong>{{ admin_username or 'Admin' }}</strong>
+            <span>Super Administrator</span>
+          </div>
+          <form method="post" action="{{ url_for('admin_logout') }}" class="admin-logout-form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <button type="submit" class="admin-logout-button" aria-label="Sign out">
+              <svg viewBox="0 0 24 24"><path d="M10 17l1.41-1.41L8.83 13H20v-2H8.83l2.58-2.59L10 7l-5 5Zm-5 2h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7v2H5Z"></path></svg>
+            </button>
+          </form>
+        </div>
+      </aside>
+
+      <div class="admin-main">
+        <header class="admin-topbar">
+          <button type="button" class="admin-menu-button" data-sidebar-toggle aria-label="Toggle navigation">
+            <svg viewBox="0 0 24 24"><path d="M4 7h16v2H4Zm0 4h16v2H4Zm0 4h16v2H4Z"></path></svg>
+          </button>
+          <div>
+            <h1>{{ form_title }}</h1>
+            <p>Create or update the public card content shown on the landing page.</p>
+          </div>
+
+          <div class="admin-topbar-tools">
+            <a href="{{ url_for('admin_exhibits') }}" class="admin-text-link">Back to list</a>
+          </div>
+        </header>
+
+        <main class="admin-content">
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+              <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="exhibitTitle">Title</label>
+                  <input id="exhibitTitle" name="title" type="text" maxlength="180" required value="{{ exhibit_form.title }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="exhibitDate">Event Date</label>
+                  <input id="exhibitDate" name="event_date" type="date" required value="{{ exhibit_form.event_date }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="exhibitSortOrder">Sort Order</label>
+                  <input id="exhibitSortOrder" name="sort_order" type="number" value="{{ exhibit_form.sort_order }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="exhibitShortDescription">Short Description</label>
+                  <textarea id="exhibitShortDescription" name="short_description" rows="4" required>{{ exhibit_form.short_description }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="exhibitLongDescription">More Information</label>
+                  <textarea id="exhibitLongDescription" name="long_description" rows="10" required>{{ exhibit_form.long_description }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="exhibitImage">Card Image (JPG or PNG)</label>
+                  <input id="exhibitImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                  {% if exhibit_form.image_filename %}
+                  <p class="admin-field-hint">Current image: <strong>{{ exhibit_form.image_filename }}</strong></p>
+                  {% endif %}
+                </div>
+
+                <label class="admin-checkbox-field admin-form-field-wide">
+                  <input name="is_published" type="checkbox" value="1" {% if exhibit_form.is_published %}checked{% endif %} />
+                  <span>Publish this card on the public site</span>
+                </label>
+              </div>
+
+              {% if exhibit_form.image_url %}
+              <div class="admin-image-preview-card">
+                <img src="{{ exhibit_form.image_url }}" alt="Current exhibit preview" />
+              </div>
+              {% endif %}
+
+              <div class="admin-form-actions">
+                <a href="{{ url_for('admin_exhibits') }}" class="admin-secondary-action">Cancel</a>
+                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
+              </div>
+            </form>
+          </section>
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

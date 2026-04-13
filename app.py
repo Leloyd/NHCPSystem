@@ -4,12 +4,24 @@ import re
 import secrets
 import threading
 import time
-from datetime import timedelta
+from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
 
 from flask import Flask, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash
+from werkzeug.utils import secure_filename
+
+from exhibits_repository import (
+    create_exhibit,
+    delete_exhibit,
+    get_exhibit_by_id,
+    get_published_exhibit_by_slug,
+    list_all_exhibits,
+    list_published_exhibits,
+    update_exhibit,
+)
+from supabase_client import SupabaseConfigError, is_supabase_configured
 
 try:
     from dotenv import load_dotenv
@@ -19,6 +31,8 @@ except ModuleNotFoundError:  # pragma: no cover - optional in some environments
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
+EXHIBITS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "exhibits").resolve()
+ALLOWED_EXHIBIT_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 if load_dotenv is not None:
     load_dotenv(dotenv_path=PROJECT_ROOT / ".env", override=False)
@@ -128,6 +142,261 @@ def _ensure_webxr_runtime_initialized():
 
     WEBXR_CONFIG, WEBXR_RUNTIME_SCENE, WEBXR_INIT_ERROR = _initialize_webxr_runtime()
     return WEBXR_RUNTIME_SCENE is not None
+
+
+def _load_landing_exhibits(limit=None):
+    if not is_supabase_configured():
+        return []
+
+    try:
+        return _prepare_exhibit_items(list_published_exhibits(limit=limit))
+    except SupabaseConfigError:
+        app.logger.warning("Supabase exhibits integration is not fully configured.")
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to load exhibits from Supabase: %s", exc)
+
+    return []
+
+
+def _load_published_exhibit(slug):
+    if not is_supabase_configured():
+        return None
+
+    try:
+        exhibit_item = get_published_exhibit_by_slug(slug)
+        if exhibit_item is None:
+            return None
+        return _prepare_exhibit_item(exhibit_item)
+    except SupabaseConfigError:
+        app.logger.warning("Supabase exhibits integration is not fully configured.")
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to load exhibit '%s' from Supabase: %s", slug, exc)
+
+    return None
+
+
+def _format_exhibit_date(raw_value):
+    raw_text = str(raw_value or "").strip()
+    if not raw_text:
+        return "Date unavailable"
+
+    try:
+        parsed = datetime.fromisoformat(raw_text.replace("Z", "+00:00"))
+    except ValueError:
+        try:
+            parsed = datetime.strptime(raw_text, "%Y-%m-%d")
+        except ValueError:
+            return raw_text
+
+    return parsed.strftime("%B %d, %Y")
+
+
+def _resolve_exhibit_image_url(image_filename):
+    safe_filename = Path(str(image_filename or "")).name.strip()
+    if not safe_filename:
+        return None
+
+    candidate_path = (EXHIBITS_UPLOAD_DIR / safe_filename).resolve()
+    if EXHIBITS_UPLOAD_DIR not in candidate_path.parents and candidate_path != EXHIBITS_UPLOAD_DIR:
+        return None
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return None
+
+    return url_for("static", filename=f"uploads/exhibits/{safe_filename}")
+
+
+def _prepare_exhibit_item(item):
+    prepared = dict(item or {})
+    prepared["display_date"] = _format_exhibit_date(prepared.get("event_date"))
+    prepared["detail_url"] = url_for("current_exhibits_news_detail", slug=prepared.get("slug", ""))
+    prepared["image_url"] = _resolve_exhibit_image_url(prepared.get("image_filename"))
+    return prepared
+
+
+def _prepare_exhibit_items(items):
+    return [_prepare_exhibit_item(item) for item in list(items or [])]
+
+
+def _load_admin_exhibits():
+    if not is_supabase_configured():
+        return []
+
+    try:
+        return _prepare_exhibit_items(list_all_exhibits())
+    except SupabaseConfigError:
+        app.logger.warning("Supabase exhibits integration is not fully configured.")
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to load admin exhibits from Supabase: %s", exc)
+
+    return []
+
+
+def _load_admin_exhibit(exhibit_id):
+    if not is_supabase_configured():
+        return None
+
+    try:
+        exhibit_item = get_exhibit_by_id(exhibit_id)
+        if exhibit_item is None:
+            return None
+        return _prepare_exhibit_item(exhibit_item)
+    except SupabaseConfigError:
+        app.logger.warning("Supabase exhibits integration is not fully configured.")
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to load admin exhibit '%s' from Supabase: %s", exhibit_id, exc)
+
+    return None
+
+
+def _slugify_text(value):
+    normalized = re.sub(r"[^a-z0-9]+", "-", str(value or "").strip().lower())
+    normalized = normalized.strip("-")
+    return normalized or "exhibit"
+
+
+def _build_unique_exhibit_slug(title, current_id=None):
+    base_slug = _slugify_text(title)
+    try:
+        existing_items = list_all_exhibits() if is_supabase_configured() else []
+    except Exception:  # noqa: BLE001
+        existing_items = []
+
+    existing_slugs = {
+        str(item.get("slug") or "").strip().lower()
+        for item in existing_items
+        if item.get("id") != current_id
+    }
+
+    slug = base_slug
+    counter = 2
+    while slug in existing_slugs:
+        slug = f"{base_slug}-{counter}"
+        counter += 1
+    return slug
+
+
+def _parse_sort_order(raw_value):
+    try:
+        return int(str(raw_value or "0").strip() or "0")
+    except ValueError:
+        return 0
+
+
+def _normalize_checkbox(raw_value):
+    return str(raw_value or "").strip().lower() in {"1", "true", "on", "yes"}
+
+
+def _validate_event_date(raw_value):
+    raw_text = str(raw_value or "").strip()
+    if not raw_text:
+        raise ValueError("Event date is required.")
+
+    try:
+        return datetime.strptime(raw_text, "%Y-%m-%d").date().isoformat()
+    except ValueError as exc:
+        raise ValueError("Event date must use YYYY-MM-DD format.") from exc
+
+
+def _delete_local_exhibit_image(image_filename):
+    safe_filename = Path(str(image_filename or "")).name.strip()
+    if not safe_filename:
+        return
+
+    candidate_path = (EXHIBITS_UPLOAD_DIR / safe_filename).resolve()
+    if EXHIBITS_UPLOAD_DIR not in candidate_path.parents and candidate_path != EXHIBITS_UPLOAD_DIR:
+        return
+    if candidate_path.exists() and candidate_path.is_file():
+        candidate_path.unlink()
+
+
+def _save_uploaded_exhibit_image(file_storage, title):
+    if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
+        return None
+
+    original_name = secure_filename(str(file_storage.filename or "").strip())
+    extension = Path(original_name).suffix.lower()
+    if extension not in ALLOWED_EXHIBIT_IMAGE_EXTENSIONS:
+        raise ValueError("Image must be a JPG or PNG file.")
+
+    EXHIBITS_UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    safe_title = _slugify_text(title)
+    filename = f"{safe_title}-{timestamp}{extension}"
+    destination = (EXHIBITS_UPLOAD_DIR / filename).resolve()
+    file_storage.save(destination)
+    return filename
+
+
+def _build_exhibit_form_state(source=None):
+    source = source or {}
+    return {
+        "title": str(source.get("title") or "").strip(),
+        "event_date": str(source.get("event_date") or "").strip(),
+        "short_description": str(source.get("short_description") or "").strip(),
+        "long_description": str(source.get("long_description") or "").strip(),
+        "sort_order": str(source.get("sort_order") or "0").strip() or "0",
+        "is_published": bool(source.get("is_published")),
+        "image_filename": str(source.get("image_filename") or "").strip(),
+        "image_url": source.get("image_url"),
+    }
+
+
+def _build_exhibit_form_payload(form, files, current_item=None):
+    title = str(form.get("title") or "").strip()
+    short_description = str(form.get("short_description") or "").strip()
+    long_description = str(form.get("long_description") or "").strip()
+
+    if len(title) < 3:
+        raise ValueError("Title must be at least 3 characters.")
+    if len(short_description) < 12:
+        raise ValueError("Short description must be at least 12 characters.")
+    if len(long_description) < 24:
+        raise ValueError("More information must be at least 24 characters.")
+
+    payload = {
+        "title": title,
+        "slug": _build_unique_exhibit_slug(title, current_id=current_item.get("id") if current_item else None),
+        "event_date": _validate_event_date(form.get("event_date")),
+        "short_description": short_description,
+        "long_description": long_description,
+        "sort_order": _parse_sort_order(form.get("sort_order")),
+        "is_published": _normalize_checkbox(form.get("is_published")),
+    }
+
+    uploaded_file = files.get("image_file")
+    new_image_filename = _save_uploaded_exhibit_image(uploaded_file, title)
+    if new_image_filename:
+        payload["image_filename"] = new_image_filename
+    elif current_item:
+        payload["image_filename"] = current_item.get("image_filename")
+    else:
+        payload["image_filename"] = None
+
+    return payload, new_image_filename
+
+
+def _get_exhibits_status_message(status_key):
+    mapping = {
+        "created": "Exhibit card created successfully.",
+        "updated": "Exhibit card updated successfully.",
+        "deleted": "Exhibit card deleted successfully.",
+    }
+    return mapping.get(str(status_key or "").strip().lower())
+
+
+def _render_admin_exhibit_form(*, form_title, submit_label, form_action, exhibit_form, error_message=None):
+    csrf_token = _ensure_admin_csrf_token()
+    admin_username = session.get(ADMIN_SESSION_USER_KEY, ADMIN_USERNAME)
+    return render_template(
+        "AdminExhibitForm.html",
+        csrf_token=csrf_token,
+        admin_username=admin_username,
+        form_title=form_title,
+        submit_label=submit_label,
+        form_action=form_action,
+        exhibit_form=exhibit_form,
+        error_message=error_message,
+    )
 
 
 def _normalize_admin_identity(raw_value):
@@ -335,6 +604,146 @@ def admin_dashboard():
     )
 
 
+@app.route(f"{ADMIN_ROUTE_PREFIX}/exhibits")
+@_admin_required
+def admin_exhibits():
+    csrf_token = _ensure_admin_csrf_token()
+    admin_username = session.get(ADMIN_SESSION_USER_KEY, ADMIN_USERNAME)
+    exhibits_items = _load_admin_exhibits()
+    status_message = _get_exhibits_status_message(request.args.get("status"))
+    config_error = None if is_supabase_configured() else "Supabase exhibits integration is not configured."
+    return render_template(
+        "AdminExhibits.html",
+        csrf_token=csrf_token,
+        admin_username=admin_username,
+        exhibits_items=exhibits_items,
+        status_message=status_message,
+        config_error=config_error,
+    )
+
+
+@app.route(f"{ADMIN_ROUTE_PREFIX}/exhibits/new", methods=["GET", "POST"])
+@_admin_required
+def admin_exhibit_new():
+    if request.method == "GET":
+        return _render_admin_exhibit_form(
+            form_title="Create Exhibit Card",
+            submit_label="Create Exhibit",
+            form_action=url_for("admin_exhibit_new"),
+            exhibit_form=_build_exhibit_form_state({"is_published": True, "sort_order": "0"}),
+        )
+
+    if not _is_admin_csrf_valid(request.form.get("csrf_token")):
+        return redirect(url_for("admin_exhibits"))
+
+    if not is_supabase_configured():
+        return _render_admin_exhibit_form(
+            form_title="Create Exhibit Card",
+            submit_label="Create Exhibit",
+            form_action=url_for("admin_exhibit_new"),
+            exhibit_form=_build_exhibit_form_state(request.form),
+            error_message="Supabase exhibits integration is not configured.",
+        )
+
+    new_image_filename = None
+    try:
+        payload, new_image_filename = _build_exhibit_form_payload(request.form, request.files)
+        create_exhibit(payload)
+    except ValueError as exc:
+        if new_image_filename:
+            _delete_local_exhibit_image(new_image_filename)
+        return _render_admin_exhibit_form(
+            form_title="Create Exhibit Card",
+            submit_label="Create Exhibit",
+            form_action=url_for("admin_exhibit_new"),
+            exhibit_form=_build_exhibit_form_state({**request.form, "is_published": _normalize_checkbox(request.form.get("is_published"))}),
+            error_message=str(exc),
+        )
+    except Exception as exc:  # noqa: BLE001
+        if new_image_filename:
+            _delete_local_exhibit_image(new_image_filename)
+        app.logger.exception("Failed to create exhibit: %s", exc)
+        return _render_admin_exhibit_form(
+            form_title="Create Exhibit Card",
+            submit_label="Create Exhibit",
+            form_action=url_for("admin_exhibit_new"),
+            exhibit_form=_build_exhibit_form_state({**request.form, "is_published": _normalize_checkbox(request.form.get("is_published"))}),
+            error_message="Could not create the exhibit card right now.",
+        )
+
+    return redirect(url_for("admin_exhibits", status="created"))
+
+
+@app.route(f"{ADMIN_ROUTE_PREFIX}/exhibits/<int:exhibit_id>/edit", methods=["GET", "POST"])
+@_admin_required
+def admin_exhibit_edit(exhibit_id):
+    current_item = _load_admin_exhibit(exhibit_id)
+    if current_item is None:
+        return redirect(url_for("admin_exhibits"))
+
+    if request.method == "GET":
+        return _render_admin_exhibit_form(
+            form_title="Edit Exhibit Card",
+            submit_label="Save Changes",
+            form_action=url_for("admin_exhibit_edit", exhibit_id=exhibit_id),
+            exhibit_form=_build_exhibit_form_state(current_item),
+        )
+
+    if not _is_admin_csrf_valid(request.form.get("csrf_token")):
+        return redirect(url_for("admin_exhibits"))
+
+    new_image_filename = None
+    previous_image_filename = current_item.get("image_filename")
+    try:
+        payload, new_image_filename = _build_exhibit_form_payload(request.form, request.files, current_item=current_item)
+        update_exhibit(exhibit_id, payload)
+        if new_image_filename and previous_image_filename and previous_image_filename != new_image_filename:
+            _delete_local_exhibit_image(previous_image_filename)
+    except ValueError as exc:
+        if new_image_filename:
+            _delete_local_exhibit_image(new_image_filename)
+        return _render_admin_exhibit_form(
+            form_title="Edit Exhibit Card",
+            submit_label="Save Changes",
+            form_action=url_for("admin_exhibit_edit", exhibit_id=exhibit_id),
+            exhibit_form=_build_exhibit_form_state({**current_item, **request.form, "is_published": _normalize_checkbox(request.form.get("is_published"))}),
+            error_message=str(exc),
+        )
+    except Exception as exc:  # noqa: BLE001
+        if new_image_filename:
+            _delete_local_exhibit_image(new_image_filename)
+        app.logger.exception("Failed to update exhibit %s: %s", exhibit_id, exc)
+        return _render_admin_exhibit_form(
+            form_title="Edit Exhibit Card",
+            submit_label="Save Changes",
+            form_action=url_for("admin_exhibit_edit", exhibit_id=exhibit_id),
+            exhibit_form=_build_exhibit_form_state({**current_item, **request.form, "is_published": _normalize_checkbox(request.form.get("is_published"))}),
+            error_message="Could not update the exhibit card right now.",
+        )
+
+    return redirect(url_for("admin_exhibits", status="updated"))
+
+
+@app.route(f"{ADMIN_ROUTE_PREFIX}/exhibits/<int:exhibit_id>/delete", methods=["POST"])
+@_admin_required
+def admin_exhibit_delete(exhibit_id):
+    if not _is_admin_csrf_valid(request.form.get("csrf_token")):
+        return redirect(url_for("admin_exhibits"))
+
+    current_item = _load_admin_exhibit(exhibit_id)
+    if current_item is None:
+        return redirect(url_for("admin_exhibits"))
+
+    try:
+        delete_exhibit(exhibit_id)
+        _delete_local_exhibit_image(current_item.get("image_filename"))
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed to delete exhibit %s: %s", exhibit_id, exc)
+        return redirect(url_for("admin_exhibits"))
+
+    return redirect(url_for("admin_exhibits", status="deleted"))
+
+
 @app.route(ADMIN_LOGOUT_PATH, methods=["POST"])
 @_admin_required
 def admin_logout():
@@ -346,7 +755,22 @@ def admin_logout():
 
 @app.route("/")
 def index():
-    return render_template("Landing.html")
+    exhibits_news_items = _load_landing_exhibits(limit=12)
+    return render_template("Landing.html", exhibits_news_items=exhibits_news_items)
+
+
+@app.route("/current-exhibits-news")
+def current_exhibits_news():
+    exhibits_news_items = _load_landing_exhibits(limit=None)
+    return render_template("CurrentExhibitsNews.html", exhibits_news_items=exhibits_news_items)
+
+
+@app.route("/current-exhibits-news/<slug>")
+def current_exhibits_news_detail(slug):
+    exhibit_item = _load_published_exhibit(slug)
+    if exhibit_item is None:
+        return redirect(url_for("current_exhibits_news"))
+    return render_template("CurrentExhibitNewsDetail.html", exhibit_item=exhibit_item)
 
 
 @app.route("/digital-exhibits")

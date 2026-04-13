@@ -35,11 +35,11 @@
             </span>
             <span>Dashboard</span>
           </a>
-          <a href="#" class="admin-nav-link">
+          <a href="{{ url_for('admin_exhibits') }}" class="admin-nav-link">
             <span class="admin-nav-icon" aria-hidden="true">
               <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm2 2h8v2H8Zm0 4h5v2H8Z"></path></svg>
             </span>
-            <span>Posts &amp; Content</span>
+            <span>Exhibits &amp; News</span>
           </a>
           <a href="#" class="admin-nav-link">
             <span class="admin-nav-icon" aria-hidden="true">
@@ -116,8 +116,8 @@
                 and visitor engagement snapshots.
               </p>
               <div class="admin-hero-actions">
-                <button type="button" class="admin-primary-action">New Post</button>
-                <button type="button" class="admin-secondary-action">Upload Media</button>
+                <a href="{{ url_for('admin_exhibit_new') }}" class="admin-primary-action">New Exhibit Card</a>
+                <a href="{{ url_for('admin_exhibits') }}" class="admin-secondary-action">Manage Exhibits</a>
               </div>
             </div>
             <div class="admin-welcome-mark" aria-hidden="true">
@@ -232,7 +232,7 @@
                   <h3>Recent Posts</h3>
                   <p>Latest published and drafted content</p>
                 </div>
-                <button type="button" class="admin-text-link">View all</button>
+                <a href="{{ url_for('admin_exhibits') }}" class="admin-text-link">View all</a>
               </div>
 
               <div class="admin-post-list">

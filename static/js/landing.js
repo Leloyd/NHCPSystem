@@ -1,4 +1,107 @@
 (function () {
+  function initExhibitsCarousel() {
+    var carousel = document.querySelector("[data-exhibits-carousel]");
+    if (!carousel) {
+      return;
+    }
+
+    var track = carousel.querySelector("[data-exhibits-track]");
+    var cards = carousel.querySelectorAll("[data-exhibit-card]");
+    var nextButton = carousel.querySelector("[data-exhibits-next]");
+    var prevButton = carousel.querySelector("[data-exhibits-prev]");
+
+    if (!track || cards.length === 0) {
+      return;
+    }
+
+    var currentIndex = 0;
+
+    function getVisibleCount() {
+      if (window.innerWidth <= 768) {
+        return 1;
+      }
+      if (window.innerWidth <= 1024) {
+        return 2;
+      }
+      return 3;
+    }
+
+    function getMaxIndex() {
+      return Math.max(0, cards.length - getVisibleCount());
+    }
+
+    function updateButtons() {
+      if (prevButton) {
+        prevButton.disabled = currentIndex <= 0;
+      }
+      if (nextButton) {
+        nextButton.disabled = currentIndex >= getMaxIndex();
+      }
+    }
+
+    function updateCarousel() {
+      var card = cards[0];
+      if (!card) {
+        return;
+      }
+
+      var cardStyles = window.getComputedStyle(card);
+      var trackStyles = window.getComputedStyle(track);
+      var cardWidth = card.getBoundingClientRect().width;
+      var gap = parseFloat(trackStyles.columnGap || trackStyles.gap || cardStyles.marginRight || "0") || 0;
+      var translateX = currentIndex * (cardWidth + gap);
+      track.style.transform = "translateX(-" + translateX + "px)";
+      updateButtons();
+    }
+
+    if (nextButton) {
+      nextButton.addEventListener("click", function () {
+        currentIndex = Math.min(getMaxIndex(), currentIndex + 1);
+        updateCarousel();
+      });
+    }
+
+    if (prevButton) {
+      prevButton.addEventListener("click", function () {
+        currentIndex = Math.max(0, currentIndex - 1);
+        updateCarousel();
+      });
+    }
+
+    window.addEventListener("resize", function () {
+      currentIndex = Math.min(currentIndex, getMaxIndex());
+      updateCarousel();
+    });
+
+    updateCarousel();
+  }
+
+  function initGsapReveal() {
+    if (typeof window.gsap === "undefined") {
+      return;
+    }
+
+    var gsap = window.gsap;
+    var revealItems = document.querySelectorAll(".exhibits-reveal, .exhibit-list-card, .exhibit-detail-card");
+    var cards = document.querySelectorAll("[data-exhibit-card]");
+
+    if (revealItems.length > 0) {
+      gsap.fromTo(
+        revealItems,
+        { y: 24, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, duration: 0.65, stagger: 0.08, ease: "power2.out" }
+      );
+    }
+
+    if (cards.length > 0) {
+      gsap.fromTo(
+        cards,
+        { y: 20, autoAlpha: 0 },
+        { y: 0, autoAlpha: 1, duration: 0.55, stagger: 0.12, delay: 0.12, ease: "power2.out" }
+      );
+    }
+  }
+
   const menuToggle = document.getElementById("menuToggle");
   const mobileMenu = document.getElementById("mobileMenu");
   const iconMenu = document.getElementById("iconMenu");
@@ -15,4 +118,7 @@
   if (window.lucide && typeof window.lucide.createIcons === "function") {
     window.lucide.createIcons();
   }
+
+  initExhibitsCarousel();
+  initGsapReveal();
 })();
