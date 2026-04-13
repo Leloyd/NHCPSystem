@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="robots" content="noindex, nofollow, noarchive" />
+    <title>{{ admin_document_title or 'NHCP Admin' }}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-dashboard.css') }}" />
+    <script defer src="{{ url_for('static', filename='admin/js/admin-dashboard.js') }}"></script>
+  </head>
+  <body class="admin-dashboard-page">
+    <div class="{{ admin_layout_class or 'admin-layout' }}">
+      <div class="admin-sidebar-overlay" data-sidebar-overlay></div>
+      {% include 'admin/_sidebar.html' %}
+
+      <div class="admin-main">
+        {% include 'admin/_topbar.html' %}
+
+        <main class="admin-content">
+          {% block admin_content %}{% endblock %}
+        </main>
+      </div>
+    </div>
+  </body>
+</html>

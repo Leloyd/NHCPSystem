@@ -1,0 +1,32 @@
+<header class="admin-topbar">
+  <button type="button" class="admin-menu-button" data-sidebar-toggle aria-label="Toggle navigation">
+    <svg viewBox="0 0 24 24"><path d="M4 7h16v2H4Zm0 4h16v2H4Zm0 4h16v2H4Z"></path></svg>
+  </button>
+  <div>
+    <h1>{{ admin_topbar_title }}</h1>
+    <p>{{ admin_topbar_subtitle }}</p>
+  </div>
+
+  <div class="admin-topbar-tools">
+    {% if admin_topbar_variant == 'dashboard' %}
+    <label class="admin-search" aria-label="Search dashboard">
+      <span class="admin-search-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
+      </span>
+      <input type="search" placeholder="Search…" />
+    </label>
+
+    <button type="button" class="admin-icon-button" aria-label="Notifications">
+      <svg viewBox="0 0 24 24"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1Z"></path></svg>
+      <span class="admin-notification-dot"></span>
+    </button>
+
+    <div class="admin-profile-pill">
+      <span class="admin-profile-avatar">{{ (admin_username or 'A')[:1]|upper }}</span>
+      <span class="admin-profile-name">{{ admin_username or 'Admin' }}</span>
+    </div>
+    {% elif admin_topbar_tool_href and admin_topbar_tool_label %}
+    <a href="{{ admin_topbar_tool_href }}" class="{{ admin_topbar_tool_class or 'admin-text-link' }}">{{ admin_topbar_tool_label }}</a>
+    {% endif %}
+  </div>
+</header>

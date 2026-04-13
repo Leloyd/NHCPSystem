@@ -1,0 +1,59 @@
+<footer class="bg-stone-900 text-stone-300 py-12">
+  <div class="container mx-auto px-4">
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+      <div>
+        <h3 class="text-amber-500 font-serif text-lg mb-4">About the Museum</h3>
+        <p class="text-sm leading-relaxed">
+          Preserving the heritage and history of the Nagcarlan Underground Cemetery, a unique testament to Filipino
+          ingenuity and cultural preservation.
+        </p>
+      </div>
+
+      <div>
+        <h3 class="text-amber-500 font-serif text-lg mb-4">Quick Links</h3>
+        <ul class="space-y-2 text-sm">
+          <li><a href="{{ url_for('digital_exhibits') }}" class="hover:text-amber-500 transition">Digital Exhibits</a></li>
+          <li><a href="{{ url_for('accessibility') }}" class="hover:text-amber-500 transition">Accessibility</a></li>
+          <li><a href="{{ url_for('interactive') }}" class="hover:text-amber-500 transition">Interactive Tours</a></li>
+          <li><a href="{{ url_for('participation') }}" class="hover:text-amber-500 transition">E-Participation</a></li>
+          <li><a href="{{ url_for('news') }}" class="hover:text-amber-500 transition">News &amp; Events</a></li>
+          <li><a href="{{ url_for('support') }}" class="hover:text-amber-500 transition">Support &amp; Governance</a></li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-amber-500 font-serif text-lg mb-4">Contact</h3>
+        <ul class="space-y-3 text-sm">
+          <li class="flex items-start space-x-2">
+            <i data-lucide="map-pin" class="mt-1 flex-shrink-0 w-4 h-4"></i>
+            <span>Nagcarlan, Laguna, Philippines</span>
+          </li>
+          <li class="flex items-center space-x-2">
+            <i data-lucide="phone" class="w-4 h-4"></i>
+            <span>+63 XXX XXX XXXX</span>
+          </li>
+          <li class="flex items-center space-x-2">
+            <i data-lucide="mail" class="w-4 h-4"></i>
+            <span>museum.undergroundnagcarlan@gmail.com</span>
+          </li>
+        </ul>
+      </div>
+
+      <div>
+        <h3 class="text-amber-500 font-serif text-lg mb-4">Visiting Hours</h3>
+        <div class="flex items-start space-x-2 text-sm">
+          <i data-lucide="clock" class="mt-1 flex-shrink-0 w-4 h-4"></i>
+          <div>
+            <p>Tuesday - Saturday</p>
+            <p>8:00 AM - 5:00 PM</p>
+            <p class="mt-2 text-amber-400">Closed on Mondays and Sundays</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="border-t border-stone-700 mt-8 pt-6 text-sm text-center">
+      <p>&copy; 2026 Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan. All rights reserved.</p>
+    </div>
+  </div>
+</footer>

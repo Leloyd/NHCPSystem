@@ -1,79 +1,15 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow, noarchive" />
-    <title>Manage Exhibits | NHCP Admin</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-dashboard.css') }}" />
-    <script defer src="{{ url_for('static', filename='admin/js/admin-dashboard.js') }}"></script>
-  </head>
-  <body class="admin-dashboard-page">
-    <div class="admin-layout admin-resource-layout">
-      <div class="admin-sidebar-overlay" data-sidebar-overlay></div>
-      <aside class="admin-sidebar" aria-label="Admin navigation">
-        <div class="admin-sidebar-brand">
-          <div class="admin-sidebar-brand-mark">
-            <img
-              src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
-              alt="Museo ng Libingan sa Ilalim ng Lupa"
-              class="admin-sidebar-logo"
-            />
-          </div>
-          <div class="admin-sidebar-brand-copy">
-            <p class="admin-sidebar-brand-label">NHCP Admin</p>
-            <p class="admin-sidebar-brand-subtitle">Museo ng Libingan</p>
-          </div>
-        </div>
+{% extends 'admin/_layout.html' %}
 
-        <nav class="admin-nav">
-          <p class="admin-nav-label">Main Menu</p>
-          <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link">
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3Zm10 8h8v-6h-8ZM13 3v8h8V3ZM3 21h8v-6H3Z"></path></svg>
-            </span>
-            <span>Dashboard</span>
-          </a>
-          <a href="{{ url_for('admin_exhibits') }}" class="admin-nav-link is-active">
-            <span class="admin-nav-indicator" aria-hidden="true"></span>
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm2 2h8v2H8Zm0 4h5v2H8Z"></path></svg>
-            </span>
-            <span>Exhibits &amp; News</span>
-          </a>
-        </nav>
+{% set admin_document_title = 'Manage Exhibits | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'exhibits' %}
+{% set admin_topbar_title = 'Exhibits & News' %}
+{% set admin_topbar_subtitle = 'Manage landing cards and public story details.' %}
+{% set admin_topbar_tool_href = url_for('admin_exhibit_new') %}
+{% set admin_topbar_tool_label = 'Create Exhibit Card' %}
+{% set admin_topbar_tool_class = 'admin-primary-action' %}
 
-        <div class="admin-sidebar-account">
-          <div class="admin-sidebar-avatar">{{ (admin_username or 'A')[:1]|upper }}</div>
-          <div class="admin-sidebar-account-copy">
-            <strong>{{ admin_username or 'Admin' }}</strong>
-            <span>Super Administrator</span>
-          </div>
-          <form method="post" action="{{ url_for('admin_logout') }}" class="admin-logout-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-            <button type="submit" class="admin-logout-button" aria-label="Sign out">
-              <svg viewBox="0 0 24 24"><path d="M10 17l1.41-1.41L8.83 13H20v-2H8.83l2.58-2.59L10 7l-5 5Zm-5 2h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7v2H5Z"></path></svg>
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      <div class="admin-main">
-        <header class="admin-topbar">
-          <button type="button" class="admin-menu-button" data-sidebar-toggle aria-label="Toggle navigation">
-            <svg viewBox="0 0 24 24"><path d="M4 7h16v2H4Zm0 4h16v2H4Zm0 4h16v2H4Z"></path></svg>
-          </button>
-          <div>
-            <h1>Exhibits &amp; News</h1>
-            <p>Manage landing cards and public story details.</p>
-          </div>
-
-          <div class="admin-topbar-tools">
-            <a href="{{ url_for('admin_exhibit_new') }}" class="admin-primary-action">Create Exhibit Card</a>
-          </div>
-        </header>
-
-        <main class="admin-content">
+{% block admin_content %}
           {% if status_message %}
           <section class="admin-alert admin-alert-success">
             <strong>Success</strong>
@@ -149,8 +85,4 @@
             </div>
             {% endif %}
           </section>
-        </main>
-      </div>
-    </div>
-  </body>
-</html>
+{% endblock %}

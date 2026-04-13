@@ -1,112 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="robots" content="noindex, nofollow, noarchive" />
-    <title>NHCP Admin Dashboard</title>
-    <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-dashboard.css') }}" />
-    <script defer src="{{ url_for('static', filename='admin/js/admin-dashboard.js') }}"></script>
-  </head>
-  <body class="admin-dashboard-page">
-    <div class="admin-layout">
-      <div class="admin-sidebar-overlay" data-sidebar-overlay></div>
-      <aside class="admin-sidebar" aria-label="Admin navigation">
-        <div class="admin-sidebar-brand">
-          <div class="admin-sidebar-brand-mark">
-            <img
-              src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
-              alt="Museo ng Libingan sa Ilalim ng Lupa"
-              class="admin-sidebar-logo"
-            />
-          </div>
-          <div class="admin-sidebar-brand-copy">
-            <p class="admin-sidebar-brand-label">NHCP Admin</p>
-            <p class="admin-sidebar-brand-subtitle">Museo ng Libingan</p>
-          </div>
-        </div>
+{% extends 'admin/_layout.html' %}
 
-        <nav class="admin-nav">
-          <p class="admin-nav-label">Main Menu</p>
-          <a href="{{ url_for('admin_dashboard') }}" class="admin-nav-link is-active">
-            <span class="admin-nav-indicator" aria-hidden="true"></span>
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M3 13h8V3H3Zm10 8h8v-6h-8ZM13 3v8h8V3ZM3 21h8v-6H3Z"></path></svg>
-            </span>
-            <span>Dashboard</span>
-          </a>
-          <a href="{{ url_for('admin_exhibits') }}" class="admin-nav-link">
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm2 2h8v2H8Zm0 4h5v2H8Z"></path></svg>
-            </span>
-            <span>Exhibits &amp; News</span>
-          </a>
-          <a href="#" class="admin-nav-link">
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4Zm2 2v12h12V6Zm2 2h8v5H8Zm0 7h5v1.5H8Z"></path></svg>
-            </span>
-            <span>Media Library</span>
-          </a>
-          <a href="#" class="admin-nav-link">
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M5 5h2v14H5Zm6 4h2v10h-2Zm6-6h2v16h-2Z"></path></svg>
-            </span>
-            <span>Analytics</span>
-          </a>
-          <a href="#" class="admin-nav-link">
-            <span class="admin-nav-icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24"><path d="M19.14 12.94a7.43 7.43 0 0 0 .05-.94 7.43 7.43 0 0 0-.05-.94l2.03-1.58a.5.5 0 0 0 .12-.63l-1.92-3.32a.5.5 0 0 0-.6-.22l-2.39.96a7.28 7.28 0 0 0-1.63-.94L14.5 2.5a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5l-.36 2.83a7.28 7.28 0 0 0-1.63.94l-2.39-.96a.5.5 0 0 0-.6.22L2.6 8.85a.5.5 0 0 0 .12.63l2.03 1.58a7.43 7.43 0 0 0-.05.94 7.43 7.43 0 0 0 .05.94L2.72 14.52a.5.5 0 0 0-.12.63l1.92 3.32a.5.5 0 0 0 .6.22l2.39-.96c.5.39 1.04.71 1.63.94l.36 2.83a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5l.36-2.83c.59-.23 1.13-.55 1.63-.94l2.39.96a.5.5 0 0 0 .6-.22l1.92-3.32a.5.5 0 0 0-.12-.63ZM12 15.5A3.5 3.5 0 1 1 15.5 12 3.5 3.5 0 0 1 12 15.5Z"></path></svg>
-            </span>
-            <span>Settings</span>
-          </a>
-        </nav>
+{% set admin_document_title = 'NHCP Admin Dashboard' %}
+{% set admin_layout_class = 'admin-layout' %}
+{% set admin_active_page = 'dashboard' %}
+{% set admin_topbar_title = 'Dashboard' %}
+{% set admin_topbar_subtitle = 'NCHP Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan' %}
+{% set admin_topbar_variant = 'dashboard' %}
 
-        <div class="admin-sidebar-account">
-          <div class="admin-sidebar-avatar">{{ (admin_username or 'A')[:1]|upper }}</div>
-          <div class="admin-sidebar-account-copy">
-            <strong>{{ admin_username or 'Admin' }}</strong>
-            <span>Super Administrator</span>
-          </div>
-          <form method="post" action="{{ url_for('admin_logout') }}" class="admin-logout-form">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-            <button type="submit" class="admin-logout-button" aria-label="Sign out">
-              <svg viewBox="0 0 24 24"><path d="M10 17l1.41-1.41L8.83 13H20v-2H8.83l2.58-2.59L10 7l-5 5Zm-5 2h7v2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h7v2H5Z"></path></svg>
-            </button>
-          </form>
-        </div>
-      </aside>
-
-      <div class="admin-main">
-        <header class="admin-topbar">
-          <button type="button" class="admin-menu-button" data-sidebar-toggle aria-label="Toggle navigation">
-            <svg viewBox="0 0 24 24"><path d="M4 7h16v2H4Zm0 4h16v2H4Zm0 4h16v2H4Z"></path></svg>
-          </button>
-          <div>
-            <h1>Dashboard</h1>
-            <p>NCHP Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan</p>
-          </div>
-
-          <div class="admin-topbar-tools">
-            <label class="admin-search" aria-label="Search dashboard">
-              <span class="admin-search-icon" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
-              </span>
-              <input type="search" placeholder="Search…" />
-            </label>
-
-            <button type="button" class="admin-icon-button" aria-label="Notifications">
-              <svg viewBox="0 0 24 24"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1Z"></path></svg>
-              <span class="admin-notification-dot"></span>
-            </button>
-
-            <div class="admin-profile-pill">
-              <span class="admin-profile-avatar">{{ (admin_username or 'A')[:1]|upper }}</span>
-              <span class="admin-profile-name">{{ admin_username or 'Admin' }}</span>
-            </div>
-          </div>
-        </header>
-
-        <main class="admin-content">
+{% block admin_content %}
           <section class="admin-welcome-card">
             <div class="admin-welcome-copy">
               <p class="admin-welcome-label">Welcome back</p>
@@ -386,8 +287,4 @@
               </div>
             </article>
           </section>
-        </main>
-      </div>
-    </div>
-  </body>
-</html>
+{% endblock %}

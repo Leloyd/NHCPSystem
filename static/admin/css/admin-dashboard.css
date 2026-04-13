@@ -61,6 +61,10 @@ select {
   flex: 0 0 16rem;
   display: flex;
   flex-direction: column;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  align-self: flex-start;
   background: linear-gradient(180deg, #0a1f15 0%, #0d2b1f 50%, #0f3024 100%);
   border-right: 1px solid rgba(201, 168, 76, 0.1);
   box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3);
@@ -120,6 +124,8 @@ select {
 .admin-nav {
   flex: 1;
   padding: 1rem 0.75rem;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .admin-nav-label {
@@ -196,8 +202,10 @@ select {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+  margin-top: auto;
   padding: 0.95rem 0.75rem 1rem;
   border-top: 1px solid rgba(201, 168, 76, 0.15);
+  background: linear-gradient(180deg, rgba(10, 31, 21, 0.96), rgba(13, 43, 31, 0.98));
 }
 
 .admin-sidebar-avatar,

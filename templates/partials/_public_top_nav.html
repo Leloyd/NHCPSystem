@@ -1,0 +1,39 @@
+<header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+  <div class="container mx-auto px-4">
+    <div class="flex items-center justify-between h-20">
+      <a href="{{ url_for('index') }}" class="flex items-center space-x-3">
+        <img
+          src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
+          alt="Museo ng Libingan sa Ilalim ng Lupa logo"
+          class="museum-logo"
+        />
+        <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+      </a>
+
+      <nav class="hidden lg:flex items-center space-x-8">
+        <a href="{{ url_for('index') }}" class="{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Home</a>
+        <a href="{{ url_for('digital_exhibits') }}" class="{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
+        <a href="{{ url_for('accessibility') }}" class="{% if public_active_page == 'accessibility' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Accessibility</a>
+        <a href="{{ url_for('interactive') }}" class="{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
+        <a href="{{ url_for('participation') }}" class="{% if public_active_page == 'participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">E-Participation</a>
+        <a href="{{ url_for('news') }}" class="{% if public_active_page == 'news' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">News &amp; Community</a>
+        <a href="{{ url_for('support') }}" class="{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Support</a>
+      </nav>
+
+      <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+        <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+        <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+      </button>
+    </div>
+
+    <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
+      <a href="{{ url_for('index') }}" class="block {% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Home</a>
+      <a href="{{ url_for('digital_exhibits') }}" class="block {% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
+      <a href="{{ url_for('accessibility') }}" class="block {% if public_active_page == 'accessibility' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Accessibility</a>
+      <a href="{{ url_for('interactive') }}" class="block {% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
+      <a href="{{ url_for('participation') }}" class="block {% if public_active_page == 'participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">E-Participation</a>
+      <a href="{{ url_for('news') }}" class="block {% if public_active_page == 'news' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">News &amp; Community</a>
+      <a href="{{ url_for('support') }}" class="block {% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Support</a>
+    </nav>
+  </div>
+</header>
