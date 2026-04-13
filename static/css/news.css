@@ -54,6 +54,8 @@
   overflow: hidden;
   padding: 0.45rem;
   margin: -0.45rem;
+  border-radius: 1.8rem;
+  background: transparent;
 }
 
 .news-carousel-track {
