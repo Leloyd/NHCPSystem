@@ -1,0 +1,71 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = form_title ~ ' | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'events' %}
+{% set admin_topbar_title = form_title %}
+{% set admin_topbar_subtitle = 'Create or update the event card content shown inside the public Events Calendar.' %}
+{% set admin_topbar_tool_href = url_for('admin_events') %}
+{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+              <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="eventTitle">Title</label>
+                  <input id="eventTitle" name="title" type="text" maxlength="180" required value="{{ event_form.title }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="eventDate">Date</label>
+                  <input id="eventDate" name="event_date" type="date" required value="{{ event_form.event_date }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="eventShortDescription">Short Description</label>
+                  <textarea id="eventShortDescription" name="short_description" rows="4" required>{{ event_form.short_description }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="eventLongDescription">Long Description</label>
+                  <textarea id="eventLongDescription" name="long_description" rows="10" required>{{ event_form.long_description }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="eventImage">Card Image (JPG or PNG)</label>
+                  <input id="eventImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                  {% if event_form.image_filename %}
+                  <p class="admin-field-hint">Current image: <strong>{{ event_form.image_filename }}</strong></p>
+                  {% endif %}
+                </div>
+
+                <label class="admin-checkbox-field admin-form-field-wide">
+                  <input name="is_published" type="checkbox" value="1" {% if event_form.is_published %}checked{% endif %} />
+                  <span>Publish this card on the public site</span>
+                </label>
+              </div>
+
+              {% if event_form.image_url %}
+              <div class="admin-image-preview-card">
+                <img src="{{ event_form.image_url }}" alt="Current event preview" />
+              </div>
+              {% endif %}
+
+              <div class="admin-form-actions">
+                <a href="{{ url_for('admin_events') }}" class="admin-secondary-action">Cancel</a>
+                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
+              </div>
+            </form>
+          </section>
+{% endblock %}

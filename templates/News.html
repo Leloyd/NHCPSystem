@@ -3,42 +3,170 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>News & Community | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <title>Community &amp; Events | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}" />
   </head>
   <body class="min-h-screen bg-stone-50 text-gray-900">
     {% set public_active_page = 'news' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-orange-600 to-orange-800 text-white py-20">
-        <div class="container mx-auto px-4 text-center">
-          <h1 class="text-5xl font-serif mb-4">News &amp; Community</h1>
-          <p class="text-xl max-w-3xl mx-auto">
-            Focused communication module for events calendar, museum updates, and social media announcements.
-          </p>
+      <section class="community-hero text-white py-20">
+        <div class="container mx-auto px-4 relative z-10">
+          <div class="max-w-4xl news-reveal text-center mx-auto">
+            <p class="news-section-kicker text-orange-100">Community &amp; Events</p>
+            <h1 class="text-5xl md:text-6xl font-serif mb-5">Community Highlights &amp; Event Calendar</h1>
+            <p class="text-xl max-w-3xl mx-auto text-orange-50 leading-relaxed">
+              Stay connected with museum programs, public activities, school engagements, and community announcements curated by the museum team.
+            </p>
+          </div>
         </div>
       </section>
 
       <section class="py-16 bg-white">
         <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-orange-900 mb-12 text-center">News &amp; Blog</h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
-            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition"><div class="bg-gradient-to-br from-orange-100 to-orange-200 h-48 flex items-center justify-center"><i data-lucide="newspaper" class="w-16 h-16 text-orange-700"></i></div><div class="p-6"><div class="flex items-center justify-between mb-2"><span class="text-sm text-orange-700">Blog</span><span class="text-sm text-gray-600">March 15, 2026</span></div><h3 class="text-xl font-serif text-gray-900 mb-2">Capstone Platform Orientation Published</h3><p class="text-gray-700 mb-4">New article introduces the modules and intended learning flow of the digital heritage platform.</p><button class="text-orange-700 hover:text-orange-900">Read More →</button></div></div>
-            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition"><div class="bg-gradient-to-br from-orange-100 to-orange-200 h-48 flex items-center justify-center"><i data-lucide="calendar-days" class="w-16 h-16 text-orange-700"></i></div><div class="p-6"><div class="flex items-center justify-between mb-2"><span class="text-sm text-orange-700">Events</span><span class="text-sm text-gray-600">March 10, 2026</span></div><h3 class="text-xl font-serif text-gray-900 mb-2">Teacher Orientation Schedule</h3><p class="text-gray-700 mb-4">Upcoming briefing for educators on how to use virtual tour and activity modules in class.</p><button class="text-orange-700 hover:text-orange-900">Read More →</button></div></div>
-            <div class="bg-white border border-gray-200 rounded-lg overflow-hidden hover:shadow-lg transition"><div class="bg-gradient-to-br from-orange-100 to-orange-200 h-48 flex items-center justify-center"><i data-lucide="megaphone" class="w-16 h-16 text-orange-700"></i></div><div class="p-6"><div class="flex items-center justify-between mb-2"><span class="text-sm text-orange-700">Announcement</span><span class="text-sm text-gray-600">March 5, 2026</span></div><h3 class="text-xl font-serif text-gray-900 mb-2">Story Submission Window Open</h3><p class="text-gray-700 mb-4">Community members can now submit local history stories through the participation module.</p><button class="text-orange-700 hover:text-orange-900">Read More →</button></div></div>
+          <div class="news-section-panel">
+            <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between mb-12">
+              <div class="max-w-2xl news-reveal">
+                <p class="news-section-kicker">Featured Programs</p>
+                <h2 class="text-4xl md:text-5xl font-serif text-orange-900 mb-4">Community Highlights</h2>
+                <p class="text-gray-700 text-lg leading-relaxed">
+                  Spotlight museum-led programs, community activities, and public advisories that connect the site with teachers, students, and local visitors.
+                </p>
+              </div>
+            </div>
+
+            {% if community_highlights_items %}
+            <div class="news-carousel-shell news-reveal" data-news-carousel>
+              <div class="news-carousel-window">
+                <div class="news-carousel-track" data-news-track>
+                  {% for highlight_item in community_highlights_items %}
+                  <article class="news-card" data-news-card>
+                    <a href="{{ highlight_item.detail_url }}" class="news-card-link">
+                      <div class="news-card-media{% if not highlight_item.image_url %} is-placeholder{% endif %}">
+                        {% if highlight_item.image_url %}
+                        <img src="{{ highlight_item.image_url }}" alt="{{ highlight_item.title }}" loading="lazy" />
+                        {% endif %}
+                        <span class="news-card-chip">{{ highlight_item.category }}</span>
+                      </div>
+                      <div class="news-card-content">
+                        <div class="news-card-meta-row">
+                          <div class="flex items-center space-x-2 text-sm text-orange-700">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span>{{ highlight_item.display_date }}</span>
+                          </div>
+                          <span class="news-card-meta-tag">Community</span>
+                        </div>
+                        <h3 class="text-2xl font-serif text-gray-900 mb-3">{{ highlight_item.title }}</h3>
+                        <p class="text-gray-700 mb-6 leading-relaxed">{{ highlight_item.short_description }}</p>
+                        <span class="news-card-action">
+                          <span>Learn More</span>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                        </span>
+                      </div>
+                    </a>
+                  </article>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if community_highlights_items|length > 3 %}
+              <div class="news-carousel-controls">
+                <button type="button" class="news-arrow is-prev" data-news-prev aria-label="Show previous highlights">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
+                </button>
+                <button type="button" class="news-arrow" data-news-next aria-label="Show more highlights">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                </button>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="news-empty-state news-reveal">
+              <div class="news-empty-icon">
+                <i data-lucide="newspaper" class="w-7 h-7"></i>
+              </div>
+              <h3 class="text-2xl font-serif text-orange-900 mb-3">No community highlights yet</h3>
+              <p class="text-gray-700 max-w-2xl mx-auto leading-relaxed">
+                Once the admin adds published Community Highlight cards, they will appear here automatically.
+              </p>
+            </div>
+            {% endif %}
           </div>
         </div>
       </section>
 
       <section class="py-16 bg-orange-50">
         <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-orange-900 mb-12 text-center">Events Calendar</h2>
-          <div class="max-w-4xl mx-auto space-y-6">
-            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition"><div class="flex flex-col md:flex-row md:items-center md:justify-between"><div class="flex-1 mb-4 md:mb-0"><h3 class="text-2xl font-serif text-gray-900 mb-2">Guided Museum Walkthrough</h3><p class="text-gray-700 mb-2">Scheduled orientation for first-time visitors and student groups.</p><div class="text-sm text-gray-600">March 25, 2026 • 9:00 AM - 11:00 AM</div></div><button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition whitespace-nowrap">View Event</button></div></div>
-            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition"><div class="flex flex-col md:flex-row md:items-center md:justify-between"><div class="flex-1 mb-4 md:mb-0"><h3 class="text-2xl font-serif text-gray-900 mb-2">Heritage Quiz Day</h3><p class="text-gray-700 mb-2">Class-based quiz activity linked to the Interactive module.</p><div class="text-sm text-gray-600">March 28, 2026 • 1:00 PM - 3:00 PM</div></div><button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition whitespace-nowrap">View Event</button></div></div>
-            <div class="bg-white p-6 rounded-lg shadow-md hover:shadow-lg transition"><div class="flex flex-col md:flex-row md:items-center md:justify-between"><div class="flex-1 mb-4 md:mb-0"><h3 class="text-2xl font-serif text-gray-900 mb-2">Community Story Forum</h3><p class="text-gray-700 mb-2">Open sharing session for approved stories from the participation module.</p><div class="text-sm text-gray-600">April 5, 2026 • 10:00 AM - 12:00 PM</div></div><button class="bg-orange-600 hover:bg-orange-700 text-white px-6 py-2 rounded-lg transition whitespace-nowrap">View Event</button></div></div>
+          <div class="news-section-panel">
+            <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between mb-12">
+              <div class="max-w-2xl news-reveal">
+                <p class="news-section-kicker">Public Schedule</p>
+                <h2 class="text-4xl md:text-5xl font-serif text-orange-900 mb-4">Events Calendar</h2>
+                <p class="text-gray-700 text-lg leading-relaxed">
+                  Publish upcoming orientations, community gatherings, student activities, and guided heritage sessions in one shared public calendar.
+                </p>
+              </div>
+            </div>
+
+            {% if community_events_items %}
+            <div class="news-carousel-shell news-reveal" data-news-carousel>
+              <div class="news-carousel-window">
+                <div class="news-carousel-track" data-news-track>
+                  {% for event_item in community_events_items %}
+                  <article class="news-card" data-news-card>
+                    <a href="{{ event_item.detail_url }}" class="news-card-link">
+                      <div class="news-card-media{% if not event_item.image_url %} is-placeholder{% endif %}">
+                        {% if event_item.image_url %}
+                        <img src="{{ event_item.image_url }}" alt="{{ event_item.title }}" loading="lazy" />
+                        {% endif %}
+                        <span class="news-card-chip">Event Calendar</span>
+                      </div>
+                      <div class="news-card-content">
+                        <div class="news-card-meta-row">
+                          <div class="flex items-center space-x-2 text-sm text-orange-700">
+                            <i data-lucide="calendar" class="w-4 h-4"></i>
+                            <span>{{ event_item.display_date }}</span>
+                          </div>
+                          <span class="news-card-meta-tag">Event</span>
+                        </div>
+                        <h3 class="text-2xl font-serif text-gray-900 mb-3">{{ event_item.title }}</h3>
+                        <p class="text-gray-700 mb-6 leading-relaxed">{{ event_item.short_description }}</p>
+                        <span class="news-card-action">
+                          <span>View Event</span>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                        </span>
+                      </div>
+                    </a>
+                  </article>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if community_events_items|length > 3 %}
+              <div class="news-carousel-controls">
+                <button type="button" class="news-arrow is-prev" data-news-prev aria-label="Show previous events">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
+                </button>
+                <button type="button" class="news-arrow" data-news-next aria-label="Show more events">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                </button>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="news-empty-state news-reveal">
+              <div class="news-empty-icon">
+                <i data-lucide="calendar-days" class="w-7 h-7"></i>
+              </div>
+              <h3 class="text-2xl font-serif text-orange-900 mb-3">No event cards yet</h3>
+              <p class="text-gray-700 max-w-2xl mx-auto leading-relaxed">
+                Once the admin adds published event cards, they will appear here automatically.
+              </p>
+            </div>
+            {% endif %}
           </div>
         </div>
       </section>
@@ -47,9 +175,9 @@
         <div class="container mx-auto px-4">
           <h2 class="text-3xl font-serif text-orange-900 mb-12 text-center">Social Media Updates</h2>
           <div class="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl mx-auto">
-            <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-8 rounded-lg"><i data-lucide="facebook" class="text-amber-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-2">Facebook</h3><p class="text-gray-700">Public announcements, event posters, and recap highlights.</p></div>
-            <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-8 rounded-lg"><i data-lucide="instagram" class="text-amber-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-2">Instagram</h3><p class="text-gray-700">Photo spotlights from the online gallery and heritage activities.</p></div>
-            <div class="bg-gradient-to-br from-amber-50 to-amber-100 p-8 rounded-lg"><i data-lucide="youtube" class="text-amber-700 mb-4 w-10 h-10"></i><h3 class="text-xl font-serif text-gray-900 mb-2">YouTube</h3><p class="text-gray-700">Short virtual tour clips and educational explainers.</p></div>
+            <div class="news-social-card news-reveal"><i data-lucide="facebook" class="text-amber-700 mb-4"></i><h3 class="text-xl font-serif text-gray-900 mb-2">Facebook</h3><p class="text-gray-700">Public announcements, event posters, and recap highlights.</p></div>
+            <div class="news-social-card news-reveal"><i data-lucide="instagram" class="text-amber-700 mb-4"></i><h3 class="text-xl font-serif text-gray-900 mb-2">Instagram</h3><p class="text-gray-700">Photo spotlights from community programs and heritage activities.</p></div>
+            <div class="news-social-card news-reveal"><i data-lucide="youtube" class="text-amber-700 mb-4"></i><h3 class="text-xl font-serif text-gray-900 mb-2">YouTube</h3><p class="text-gray-700">Recorded talks, educational explainers, and short event recap videos.</p></div>
           </div>
         </div>
       </section>
@@ -58,6 +186,7 @@
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/news.js') }}"></script>
   </body>
 </html>

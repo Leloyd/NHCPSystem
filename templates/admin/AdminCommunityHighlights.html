@@ -1,0 +1,91 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Manage Community Highlights | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'community-highlights' %}
+{% set admin_topbar_title = 'Community Highlights' %}
+{% set admin_topbar_subtitle = 'Manage featured programs, public advisories, and community stories shown on the Community & Events page.' %}
+{% set admin_topbar_tool_href = url_for('admin_community_highlight_new') %}
+{% set admin_topbar_tool_label = 'Create Highlight Card' %}
+{% set admin_topbar_tool_class = 'admin-primary-action' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          {% if config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Configuration issue</strong>
+            <span>{{ config_error }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Published and Draft Highlight Cards</h3>
+                <p>These entries feed the Community Highlights carousel and Learn More detail pages.</p>
+              </div>
+              <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-text-link">Add New</a>
+            </div>
+
+            {% if highlights_items %}
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Highlight</th>
+                    <th>Category</th>
+                    <th>Date</th>
+                    <th>Status</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for highlight_item in highlights_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ highlight_item.title }}</strong>
+                        <span>{{ highlight_item.short_description }}</span>
+                        <span>{{ highlight_item.long_description|truncate(120) }}</span>
+                      </div>
+                    </td>
+                    <td>{{ highlight_item.category }}</td>
+                    <td>{{ highlight_item.display_date }}</td>
+                    <td>
+                      <span class="admin-status-badge {% if highlight_item.is_published %}is-published{% else %}is-draft{% endif %}">
+                        {% if highlight_item.is_published %}Published{% else %}Draft{% endif %}
+                      </span>
+                    </td>
+                    <td>{{ highlight_item.image_filename or 'No image' }}</td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('community_highlight_detail', slug=highlight_item.slug) }}" class="admin-inline-link">View</a>
+                        <a href="{{ url_for('admin_community_highlight_edit', highlight_id=highlight_item.id) }}" class="admin-inline-link">Edit</a>
+                        <form method="post" action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                          <button type="submit" class="admin-inline-link admin-inline-link-danger">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="admin-empty-state">
+              <div class="admin-empty-state-icon">+</div>
+              <h3>No community highlights yet</h3>
+              <p>Create your first Community Highlight card to feature it on the public Community &amp; Events page.</p>
+              <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-primary-action">Create First Highlight</a>
+            </div>
+            {% endif %}
+          </section>
+{% endblock %}
