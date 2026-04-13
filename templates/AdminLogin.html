@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="robots" content="noindex, nofollow, noarchive" />
-    <title>Admin Login | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <title>NHCP Admin Portal</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/admin-auth.css') }}" />
     <script defer src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script defer src="{{ url_for('static', filename='js/admin-login.js') }}"></script>
@@ -12,53 +12,101 @@
   <body class="admin-auth-page">
     <main class="admin-auth-shell" aria-label="Admin authentication area">
       <div class="admin-auth-backdrop" aria-hidden="true"></div>
-      <section class="admin-auth-panel" role="region" aria-labelledby="adminAuthHeading">
-        <div class="admin-auth-brand">
-          <img
-            class="admin-auth-logo"
-            src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
-            alt="Museo ng Libingan sa Ilalim ng Lupa"
-          />
-          <p class="admin-auth-kicker">Administrative Access</p>
-          <h1 id="adminAuthHeading" class="admin-auth-heading">Sign in</h1>
+      <div class="admin-auth-glow admin-auth-glow-a" aria-hidden="true"></div>
+      <div class="admin-auth-glow admin-auth-glow-b" aria-hidden="true"></div>
+
+      <section class="admin-auth-stack">
+        <div class="admin-auth-brand" aria-labelledby="adminAuthHeading">
+          <div class="admin-auth-brand-badge">
+            <img
+              class="admin-auth-logo"
+              src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
+              alt="Museo ng Libingan sa Ilalim ng Lupa"
+            />
+          </div>
+          <h1 id="adminAuthHeading" class="admin-auth-heading">NHCP Admin Portal</h1>
+          <p class="admin-auth-subheading">Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan</p>
         </div>
 
-        {% if error_message %}
-        <p class="admin-auth-error" role="alert">{{ error_message }}</p>
-        {% endif %}
+        <section class="admin-auth-panel" role="region" aria-labelledby="adminAuthCardHeading">
+          <div class="admin-auth-panel-topbar" aria-hidden="true"></div>
+          <div class="admin-auth-card-body">
+            <h2 id="adminAuthCardHeading" class="admin-auth-card-title">Sign In</h2>
+            <p class="admin-auth-card-copy">Enter your credentials to access the dashboard.</p>
 
-        <form class="admin-auth-form" method="post" novalidate>
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            {% if error_message %}
+            <p class="admin-auth-error" role="alert">{{ error_message }}</p>
+            {% endif %}
 
-          <div class="admin-auth-field">
-            <label for="adminUsername">Username</label>
-            <input
-              id="adminUsername"
-              name="username"
-              type="text"
-              inputmode="email"
-              autocomplete="username"
-              required
-              maxlength="128"
-              aria-required="true"
-            />
+            <form class="admin-auth-form" method="post" novalidate>
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+              <div class="admin-auth-field">
+                <label for="adminUsername">Username</label>
+                <div class="admin-auth-input-wrap">
+                  <span class="admin-auth-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                      <path d="M12 12a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm0 2c-3.86 0-7 2.24-7 5v1h14v-1c0-2.76-3.14-5-7-5Z"></path>
+                    </svg>
+                  </span>
+                  <input
+                    id="adminUsername"
+                    name="username"
+                    type="text"
+                    inputmode="text"
+                    autocomplete="username"
+                    required
+                    maxlength="128"
+                    aria-required="true"
+                    value="{{ request.form.get('username', '') }}"
+                    placeholder="Enter username"
+                  />
+                </div>
+              </div>
+
+              <div class="admin-auth-field">
+                <label for="adminPassword">Password</label>
+                <div class="admin-auth-input-wrap admin-auth-password-wrap">
+                  <span class="admin-auth-input-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">
+                      <path d="M17 8h-1V6a4 4 0 0 0-8 0v2H7a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-8a2 2 0 0 0-2-2Zm-6 0V6a2 2 0 0 1 4 0v2Zm1 8.73A1.75 1.75 0 1 1 13.75 15 1.75 1.75 0 0 1 12 16.73Z"></path>
+                    </svg>
+                  </span>
+                  <input
+                    id="adminPassword"
+                    name="password"
+                    type="password"
+                    autocomplete="current-password"
+                    required
+                    maxlength="1024"
+                    aria-required="true"
+                    placeholder="Enter password"
+                  />
+                  <button
+                    type="button"
+                    class="admin-auth-toggle"
+                    data-password-toggle
+                    aria-label="Show password"
+                    aria-controls="adminPassword"
+                    aria-pressed="false"
+                  >
+                    <span class="toggle-label toggle-label-show">Show</span>
+                    <span class="toggle-label toggle-label-hide">Hide</span>
+                  </button>
+                </div>
+              </div>
+
+              <div class="admin-auth-meta">
+                <span>Protected access</span>
+                <span>Server-side authenticated</span>
+              </div>
+
+              <button type="submit" class="admin-auth-submit">Sign In to Dashboard</button>
+            </form>
           </div>
+        </section>
 
-          <div class="admin-auth-field">
-            <label for="adminPassword">Password</label>
-            <input
-              id="adminPassword"
-              name="password"
-              type="password"
-              autocomplete="current-password"
-              required
-              maxlength="1024"
-              aria-required="true"
-            />
-          </div>
-
-          <button type="submit" class="admin-auth-submit">Continue</button>
-        </form>
+        <p class="admin-auth-footer">Authorized personnel only</p>
       </section>
     </main>
   </body>

@@ -326,7 +326,13 @@ def admin_login():
 @app.route(ADMIN_DASHBOARD_PATH)
 @_admin_required
 def admin_dashboard():
-    return render_template("AdminDashboard.html")
+    csrf_token = _ensure_admin_csrf_token()
+    admin_username = session.get(ADMIN_SESSION_USER_KEY, ADMIN_USERNAME)
+    return render_template(
+        "AdminDashboard.html",
+        csrf_token=csrf_token,
+        admin_username=admin_username,
+    )
 
 
 @app.route(ADMIN_LOGOUT_PATH, methods=["POST"])
