@@ -386,7 +386,7 @@ def _render_admin_exhibit_form(*, form_title, submit_label, form_action, exhibit
     csrf_token = _ensure_admin_csrf_token()
     admin_username = session.get(ADMIN_SESSION_USER_KEY, ADMIN_USERNAME)
     return render_template(
-        "AdminExhibitForm.html",
+        "admin/AdminExhibitForm.html",
         csrf_token=csrf_token,
         admin_username=admin_username,
         form_title=form_title,
@@ -584,7 +584,7 @@ def admin_login():
 
     csrf_token = _ensure_admin_csrf_token()
     response = make_response(
-        render_template("AdminLogin.html", csrf_token=csrf_token, error_message=error_message),
+        render_template("admin/AdminLogin.html", csrf_token=csrf_token, error_message=error_message),
         status_code,
     )
     return response
@@ -596,7 +596,7 @@ def admin_dashboard():
     csrf_token = _ensure_admin_csrf_token()
     admin_username = session.get(ADMIN_SESSION_USER_KEY, ADMIN_USERNAME)
     return render_template(
-        "AdminDashboard.html",
+        "admin/AdminDashboard.html",
         csrf_token=csrf_token,
         admin_username=admin_username,
     )
@@ -611,7 +611,7 @@ def admin_exhibits():
     status_message = _get_exhibits_status_message(request.args.get("status"))
     config_error = None if is_supabase_configured() else "Supabase exhibits integration is not configured."
     return render_template(
-        "AdminExhibits.html",
+        "admin/AdminExhibits.html",
         csrf_token=csrf_token,
         admin_username=admin_username,
         exhibits_items=exhibits_items,
