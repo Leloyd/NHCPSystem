@@ -5,50 +5,50 @@
     orientation: {
       label: "Orientation Loop",
       stops: [
-        "parking",
-        "entrance",
-        "side",
+        "front-gate",
         "flag-pole",
-        "museum",
+        "parking",
         "museum-entrance",
-        "main-gate",
         "resource-center-office",
-        "middle",
-        "tombs-right-side",
-        "tombs-left-side",
-        "church-entrance",
-        "underground-tombs",
+        "rightside-outside",
+        "middle-ground",
+        "left-side-inside",
+        "right-side-inside",
+        "left-tombs",
+        "right-tombs",
+        "church-front",
         "church",
+        "underground-crypts",
       ],
     },
     heritage: {
       label: "Heritage Core",
       stops: [
-        "main-gate",
-        "middle",
-        "tombs-left-side",
-        "tombs-right-side",
-        "church-entrance",
+        "front-gate",
+        "middle-ground",
+        "left-tombs",
+        "right-tombs",
+        "church-front",
         "church",
-        "underground-tombs",
+        "underground-crypts",
       ],
     },
     accessibility: {
       label: "Accessible Route",
       stops: [
-        "entrance",
+        "front-gate",
         "parking",
         "museum-entrance",
-        "museum",
         "resource-center-office",
-        "main-gate",
-        "church-entrance",
+        "middle-ground",
+        "church-front",
       ],
     },
   };
 
   var DEFAULT_IMAGE_URL = "/static/images/site-map/aerial-view.jpg";
   var HOTSPOT_DATA_URL = "/static/data/site-map-hotspots.json";
+  var MAP_INFO_MIN_ZOOM_OFFSET = 1.25;
 
   var state = {
     map: null,
@@ -73,31 +73,17 @@
 
   var elements = {
     mapRoot: document.getElementById("interactiveMap"),
-    routeButtons: Array.prototype.slice.call(document.querySelectorAll("[data-route-btn]")),
     searchInput: document.getElementById("mapSearchInput"),
     resetViewBtn: document.getElementById("resetViewBtn"),
-    storyModeBtn: document.getElementById("storyModeBtn"),
-    calibrateToggleBtn: document.getElementById("calibrateToggleBtn"),
-    categoryFilters: document.getElementById("categoryFilters"),
-    calibrationHint: document.getElementById("calibrationHint"),
-    stopList: document.getElementById("stopList"),
-    stopRouteBadge: document.getElementById("stopRouteBadge"),
-    stopTitle: document.getElementById("stopTitle"),
-    stopSummary: document.getElementById("stopSummary"),
-    stopCategory: document.getElementById("stopCategory"),
-    stopEra: document.getElementById("stopEra"),
-    stopFocus: document.getElementById("stopFocus"),
-    stopCoordinates: document.getElementById("stopCoordinates"),
-    stopPrompt: document.getElementById("stopPrompt"),
-    stopOrder: document.getElementById("stopOrder"),
-    stopMedia: document.getElementById("stopMedia"),
-    stopLinks: document.getElementById("stopLinks"),
-    stopVideoWrap: document.getElementById("stopVideoWrap"),
-    prevStopBtn: document.getElementById("prevStopBtn"),
-    nextStopBtn: document.getElementById("nextStopBtn"),
+    mapInfoOverlay: document.getElementById("mapInfoOverlay"),
+    mapInfoCard: document.getElementById("mapInfoCard"),
+    mapInfoRoute: document.getElementById("mapInfoRoute"),
+    mapInfoTitle: document.getElementById("mapInfoTitle"),
+    mapInfoMeta: document.getElementById("mapInfoMeta"),
+    mapInfoSummary: document.getElementById("mapInfoSummary"),
   };
 
-  if (!elements.mapRoot || !window.L || !elements.stopList || !elements.stopTitle) {
+  if (!elements.mapRoot || !window.L) {
     return;
   }
 
@@ -268,22 +254,6 @@
         state.map.on("resize", function () {
           applyMapBoundsConstraints();
         });
-
-        state.map.on("click", function (event) {
-          if (!state.calibrationEnabled) {
-            return;
-          }
-
-          var x = Math.round(event.latlng.lng);
-          var y = Math.round(event.latlng.lat);
-          var hint = "Calibration point: x=" + x + ", y=" + y + " (copied)";
-          elements.calibrationHint.hidden = false;
-          elements.calibrationHint.textContent = hint;
-
-          if (navigator.clipboard && navigator.clipboard.writeText) {
-            navigator.clipboard.writeText(x + "," + y).catch(function () {});
-          }
-        });
       })
       .catch(function (error) {
         if (window.console && window.console.error) {
@@ -299,12 +269,15 @@
       return state.markerById[spot.id];
     }
 
-    var marker = window.L.circleMarker([spot.y, spot.x], {
-      radius: 8,
-      color: "#7c2d12",
-      weight: 2,
-      fillColor: "#b45309",
-      fillOpacity: 0.94,
+    var marker = window.L.marker([spot.y, spot.x], {
+      keyboard: false,
+      icon: window.L.divIcon({
+        className: "map-pin-marker",
+        html:
+          '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shape"><span class="map-pin__inner"></span></span></span>',
+        iconSize: [30, 42],
+        iconAnchor: [15, 42],
+      }),
     });
 
     marker.on("click", function () {
@@ -312,14 +285,16 @@
     });
 
     marker.on("mouseover", function () {
-      if (state.stopId !== spot.id) {
-        marker.setRadius(9.5);
+      var node = marker.getElement();
+      if (node && state.stopId !== spot.id) {
+        node.classList.add("is-hover");
       }
     });
 
     marker.on("mouseout", function () {
-      if (state.stopId !== spot.id) {
-        marker.setRadius(8);
+      var node = marker.getElement();
+      if (node && state.stopId !== spot.id) {
+        node.classList.remove("is-hover");
       }
     });
 
@@ -332,6 +307,7 @@
       node.setAttribute("tabindex", "0");
       node.setAttribute("role", "button");
       node.setAttribute("aria-label", spot.title);
+      node.dataset.stopMarker = spot.id;
       node.addEventListener("keydown", function (event) {
         if (event.key === "Enter" || event.key === " ") {
           event.preventDefault();
@@ -363,10 +339,9 @@
 
   function getVisibleStops() {
     var search = state.searchText.trim().toLowerCase();
-    return getRouteStops(state.routeId).filter(function (spot) {
-      var byCategory = isCategoryEnabled(spot.category);
+    return state.hotspots.filter(function (spot) {
       var bySearch = !search || spot.title.toLowerCase().indexOf(search) !== -1;
-      return byCategory && bySearch;
+      return bySearch;
     });
   }
 
@@ -374,11 +349,6 @@
     if (state.storyTimer) {
       window.clearInterval(state.storyTimer);
       state.storyTimer = null;
-    }
-
-    if (elements.storyModeBtn) {
-      elements.storyModeBtn.textContent = "Story Mode";
-      elements.storyModeBtn.setAttribute("aria-pressed", "false");
     }
   }
 
@@ -395,75 +365,17 @@
     return;
   }
 
-  function renderRouteButtons() {
-    elements.routeButtons.forEach(function (button) {
-      if (!button || !button.dataset) {
-        return;
-      }
-      button.classList.toggle("is-active", button.dataset.routeBtn === state.routeId);
-    });
-  }
-
-  function renderCategoryFilters() {
-    if (!elements.categoryFilters) {
-      return;
-    }
-
-    var categories = Object.keys(
-      state.hotspots.reduce(function (acc, spot) {
-        acc[spot.category] = true;
-        return acc;
-      }, {})
-    ).sort();
-
-    elements.categoryFilters.innerHTML = "";
-
-    categories.forEach(function (category) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "category-chip" + (isCategoryEnabled(category) ? " is-active" : "");
-      btn.textContent = category;
-      btn.setAttribute("aria-pressed", String(isCategoryEnabled(category)));
-      btn.addEventListener("click", function () {
-        state.selectedCategories[category] = !state.selectedCategories[category];
-        stopStoryMode();
-        renderAll();
-      });
-      elements.categoryFilters.appendChild(btn);
-    });
-  }
-
-  function renderStopList(visibleStops) {
-    elements.stopList.innerHTML = "";
-
-    if (!visibleStops.length) {
-      elements.stopList.innerHTML = '<p class="map-empty-state">No hotspots match the current filters.</p>';
-      return;
-    }
-
-    visibleStops.forEach(function (spot, index) {
-      var btn = document.createElement("button");
-      btn.type = "button";
-      btn.className = "stop-item-btn" + (spot.id === state.stopId ? " is-active" : "");
-      btn.dataset.stopListItem = spot.id;
-      btn.textContent = String(index + 1) + ". " + spot.title;
-      btn.addEventListener("click", function () {
-        setActiveStop(spot.id, true);
-      });
-      elements.stopList.appendChild(btn);
-    });
-  }
-
   function clearMarkerStyles() {
     Object.keys(state.markerById).forEach(function (id) {
       var marker = state.markerById[id];
-      marker.setStyle({
-        color: "#7c2d12",
-        weight: 2,
-        fillColor: "#b45309",
-        fillOpacity: 0.94,
-      });
-      marker.setRadius(8);
+      var node = marker.getElement();
+      if (!node) {
+        return;
+      }
+
+      node.classList.remove("is-active");
+      node.classList.remove("is-hover");
+      node.removeAttribute("aria-current");
     });
   }
 
@@ -493,13 +405,11 @@
 
     var active = state.markerById[state.stopId];
     if (active && state.map.hasLayer(active)) {
-      active.setStyle({
-        color: "#1d4ed8",
-        weight: 2,
-        fillColor: "#f59e0b",
-        fillOpacity: 1,
-      });
-      active.setRadius(10.5);
+      var activeNode = active.getElement();
+      if (activeNode) {
+        activeNode.classList.add("is-active");
+        activeNode.setAttribute("aria-current", "true");
+      }
     }
   }
 
@@ -560,71 +470,82 @@
     });
   }
 
-  function renderVideo(stop) {
-    if (!elements.stopVideoWrap) {
-      return;
+  function hideMapInfoOverlay() {
+    if (elements.mapInfoOverlay) {
+      elements.mapInfoOverlay.hidden = true;
     }
-
-    elements.stopVideoWrap.innerHTML = "";
-
-    if (!stop || !stop.videoEmbed) {
-      return;
-    }
-
-    var iframe = document.createElement("iframe");
-    iframe.src = stop.videoEmbed;
-    iframe.title = stop.title + " video";
-    iframe.loading = "lazy";
-    iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-    iframe.allowFullscreen = true;
-    elements.stopVideoWrap.appendChild(iframe);
   }
 
-  function renderDetails(stop, visibleStops) {
-    if (!stop) {
-      elements.stopRouteBadge.textContent = ROUTES[state.routeId].label;
-      elements.stopTitle.textContent = "Select a hotspot";
-      elements.stopSummary.textContent = "Use the map or list on the left to open a landmark profile.";
-      elements.stopCategory.textContent = "-";
-      elements.stopEra.textContent = "-";
-      elements.stopFocus.textContent = "-";
-      elements.stopCoordinates.textContent = "-";
-      elements.stopPrompt.textContent = "-";
-      elements.stopOrder.textContent = "-";
-      elements.prevStopBtn.disabled = true;
-      elements.nextStopBtn.disabled = true;
-      renderMedia(null);
-      renderLinks(null);
-      renderVideo(null);
+  function isMapInfoVisibleForCurrentZoom() {
+    if (!state.map) {
+      return false;
+    }
+
+    return state.map.getZoom() >= state.minZoom + MAP_INFO_MIN_ZOOM_OFFSET;
+  }
+
+  function positionMapInfoOverlay(stop) {
+    if (!stop || !state.map || !elements.mapInfoOverlay || !elements.mapInfoCard) {
+      hideMapInfoOverlay();
       return;
     }
 
-    elements.stopRouteBadge.textContent = ROUTES[state.routeId].label;
-    elements.stopTitle.textContent = stop.title;
-    elements.stopSummary.textContent = stop.description;
-    elements.stopCategory.textContent = stop.category;
-    elements.stopEra.textContent = stop.era;
-    elements.stopFocus.textContent = stop.focus;
-    elements.stopCoordinates.textContent = String(Math.round(stop.x)) + ", " + String(Math.round(stop.y));
-    elements.stopPrompt.textContent = stop.prompt;
-
-    var index = visibleStops.findIndex(function (item) {
-      return item.id === stop.id;
-    });
-
-    if (index >= 0) {
-      elements.stopOrder.textContent = "Stop " + String(index + 1) + " of " + String(visibleStops.length);
-      elements.prevStopBtn.disabled = index === 0;
-      elements.nextStopBtn.disabled = index === visibleStops.length - 1;
-    } else {
-      elements.stopOrder.textContent = "-";
-      elements.prevStopBtn.disabled = true;
-      elements.nextStopBtn.disabled = true;
+    if (!isMapInfoVisibleForCurrentZoom()) {
+      hideMapInfoOverlay();
+      return;
     }
 
-    renderMedia(stop);
-    renderLinks(stop);
-    renderVideo(stop);
+    var markerPoint = state.map.latLngToContainerPoint([stop.y, stop.x]);
+    var mapWidth = elements.mapRoot.clientWidth || 0;
+    var mapHeight = elements.mapRoot.clientHeight || 0;
+
+    if (!mapWidth || !mapHeight) {
+      hideMapInfoOverlay();
+      return;
+    }
+
+    elements.mapInfoOverlay.hidden = false;
+
+    var cardWidth = elements.mapInfoCard.offsetWidth || Math.min(320, Math.max(220, mapWidth - 24));
+    var cardHeight = elements.mapInfoCard.offsetHeight || 140;
+    var gap = 22;
+    var cardLeft = markerPoint.x - cardWidth * 0.5;
+    var minLeft = 12;
+    var maxLeft = Math.max(minLeft, mapWidth - cardWidth - 12);
+
+    cardLeft = Math.max(minLeft, Math.min(cardLeft, maxLeft));
+
+    var cardTop = markerPoint.y + gap;
+    var minTop = 12;
+    var maxTop = Math.max(minTop, mapHeight - cardHeight - 12);
+
+    cardTop = Math.max(minTop, Math.min(cardTop, maxTop));
+
+    elements.mapInfoCard.style.left = cardLeft + "px";
+    elements.mapInfoCard.style.top = cardTop + "px";
+  }
+
+  function renderMapInfo(stop) {
+    if (!elements.mapInfoOverlay || !elements.mapInfoTitle || !elements.mapInfoSummary || !elements.mapInfoMeta || !elements.mapInfoRoute) {
+      return;
+    }
+
+    if (!stop) {
+      hideMapInfoOverlay();
+      return;
+    }
+
+    if (!isMapInfoVisibleForCurrentZoom()) {
+      hideMapInfoOverlay();
+      return;
+    }
+
+    elements.mapInfoRoute.textContent = "Hotspot Information";
+    elements.mapInfoTitle.textContent = stop.title;
+    elements.mapInfoMeta.textContent = stop.category + " · " + String(Math.round(stop.x)) + ", " + String(Math.round(stop.y));
+    elements.mapInfoSummary.textContent = stop.description;
+
+    positionMapInfoOverlay(stop);
   }
 
   function ensureActiveStop(visibleStops) {
@@ -646,14 +567,11 @@
     var visibleStops = getVisibleStops();
 
     ensureActiveStop(visibleStops);
-    renderRouteButtons();
-    renderCategoryFilters();
-    renderStopList(visibleStops);
     renderMarkers(visibleStops);
     drawRouteLine(visibleStops);
 
     var activeStop = state.hotspotsById[state.stopId] || null;
-    renderDetails(activeStop, visibleStops);
+    renderMapInfo(activeStop);
   }
 
   function setActiveStop(stopId, panTo) {
@@ -677,92 +595,7 @@
     }
   }
 
-  function setRoute(routeId) {
-    if (!ROUTES[routeId]) {
-      return;
-    }
-    state.routeId = routeId;
-    state.storyIndex = 0;
-    stopStoryMode();
-    renderAll();
-  }
-
-  function moveStop(step) {
-    var visibleStops = getVisibleStops();
-    if (!visibleStops.length) {
-      return;
-    }
-
-    var idx = visibleStops.findIndex(function (spot) {
-      return spot.id === state.stopId;
-    });
-    if (idx < 0) {
-      return;
-    }
-
-    var next = idx + step;
-    if (next < 0 || next >= visibleStops.length) {
-      return;
-    }
-
-    setActiveStop(visibleStops[next].id, true);
-  }
-
-  function startStoryMode() {
-    var visibleStops = getVisibleStops();
-    if (!visibleStops.length) {
-      return;
-    }
-
-    stopStoryMode();
-
-    elements.storyModeBtn.textContent = "Stop Story";
-    elements.storyModeBtn.setAttribute("aria-pressed", "true");
-
-    state.storyTimer = window.setInterval(function () {
-      var items = getVisibleStops();
-      if (!items.length) {
-        return;
-      }
-
-      var nextSpot = items[state.storyIndex % items.length];
-      state.storyIndex += 1;
-      setActiveStop(nextSpot.id, true);
-    }, state.reduceMotion ? 4600 : 2800);
-  }
-
-  function setCalibrationEnabled(enabled) {
-    state.calibrationEnabled = enabled;
-    if (!elements.calibrateToggleBtn) {
-      return;
-    }
-
-    elements.calibrateToggleBtn.setAttribute("aria-pressed", String(enabled));
-    elements.calibrateToggleBtn.classList.toggle("details-btn--primary", enabled);
-
-    if (!elements.calibrationHint) {
-      return;
-    }
-
-    if (enabled) {
-      elements.calibrationHint.hidden = false;
-      elements.calibrationHint.textContent = "Calibration mode active. Click map to capture x,y coordinates.";
-    } else {
-      elements.calibrationHint.hidden = true;
-      elements.calibrationHint.textContent = "";
-    }
-  }
-
   function bindEvents() {
-    elements.routeButtons.forEach(function (button) {
-      button.addEventListener("click", function () {
-        if (!button.dataset || !button.dataset.routeBtn) {
-          return;
-        }
-        setRoute(button.dataset.routeBtn);
-      });
-    });
-
     if (elements.searchInput) {
       elements.searchInput.addEventListener("input", function () {
         state.searchText = elements.searchInput.value || "";
@@ -778,29 +611,16 @@
       });
     }
 
-    if (elements.storyModeBtn) {
-      elements.storyModeBtn.addEventListener("click", function () {
-        if (state.storyTimer) {
-          stopStoryMode();
-          return;
-        }
-        startStoryMode();
+    if (state.map) {
+      ["move", "zoom", "resize"].forEach(function (eventName) {
+        state.map.on(eventName, function () {
+          var activeStop = state.hotspotsById[state.stopId] || null;
+          if (activeStop) {
+            positionMapInfoOverlay(activeStop);
+          }
+        });
       });
     }
-
-    if (elements.calibrateToggleBtn) {
-      elements.calibrateToggleBtn.addEventListener("click", function () {
-        setCalibrationEnabled(!state.calibrationEnabled);
-      });
-    }
-
-    elements.prevStopBtn.addEventListener("click", function () {
-      moveStop(-1);
-    });
-
-    elements.nextStopBtn.addEventListener("click", function () {
-      moveStop(1);
-    });
   }
 
   function init() {
@@ -811,10 +631,6 @@
       .then(function () {
         bindEvents();
 
-        if (new URLSearchParams(window.location.search).get("calibrate") === "1") {
-          setCalibrationEnabled(true);
-        }
-
         var initialStops = getVisibleStops();
         if (initialStops.length) {
           state.stopId = initialStops[0].id;
@@ -822,7 +638,7 @@
         renderAll();
       })
       .catch(function () {
-        elements.stopList.innerHTML = '<p class="map-empty-state">Unable to load map data. Check <code>/static/data/site-map-hotspots.json</code>.</p>';
+        elements.mapRoot.innerHTML = '<div class="map-empty-state">Unable to load map data. Check <code>/static/data/site-map-hotspots.json</code>.</div>';
       });
   }
 

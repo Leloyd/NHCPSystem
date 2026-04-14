@@ -7,134 +7,79 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/interactive.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/site-map.css') }}" />
   </head>
   <body class="min-h-screen bg-stone-50 text-gray-900">
     {% set public_active_page = 'interactive' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20 interactive-page">
-      <section class="interactive-hero text-white py-16">
+      <section class="interactive-hero site-map-hero text-white">
         <div class="container mx-auto px-4">
-          <div class="max-w-4xl">
-            <p class="interactive-kicker">Interactive Map</p>
-            <h1 class="text-4xl md:text-5xl font-serif mb-5">SiteMap Explorer</h1>
-            <p class="text-lg md:text-xl leading-relaxed max-w-3xl">
-              Explore key landmarks of the Nagcarlan Underground Cemetery using a true aerial-image map with zoom, pan,
-              route overlays, and clickable hotspot details.
-            </p>
-            <div class="mt-8 flex flex-wrap gap-3">
-              <a href="/interactive" class="inline-flex items-center rounded-md bg-amber-500 px-5 py-3 font-semibold text-stone-900 hover:bg-amber-400 transition">← Back to Interactive</a>
+          <div class="site-map-hero__panel">
+            <div class="site-map-hero__content">
+              <p class="interactive-kicker">Interactive Map</p>
+              <h1 class="site-map-hero__title font-serif">SiteMap Explorer</h1>
+              <p class="site-map-hero__copy">
+                Explore key landmarks of the Nagcarlan Underground Cemetery through a focused aerial map experience with
+                guided routes, searchable hotspots, and contextual heritage details.
+              </p>
+              <div class="site-map-hero__actions">
+                <a href="/interactive" class="site-map-hero__button site-map-hero__button--primary">← Back to Interactive</a>
+                <a href="#mapExplorer" class="site-map-hero__button site-map-hero__button--secondary">Open Full Map</a>
+              </div>
             </div>
+
           </div>
         </div>
       </section>
 
-      <section id="mapExplorer" class="py-16 bg-stone-100">
+      <section id="mapExplorer" class="site-map-explorer-section">
         <div class="container mx-auto px-4">
-          <div class="grid grid-cols-1 lg:grid-cols-[1.35fr,1fr] gap-8 items-start">
-            <article class="map-shell" aria-labelledby="mapHeading">
-              <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <h2 id="mapHeading" class="text-2xl font-serif text-stone-900">Interactive Aerial Map</h2>
-                <span class="text-sm text-stone-600">Tap markers or list items to inspect each location.</span>
+          <article class="map-shell map-shell--feature" aria-labelledby="mapHeading">
+            <div class="map-shell-header">
+              <div class="map-heading-group">
+                <span class="map-heading-kicker">Interactive Aerial View</span>
+                <h2 id="mapHeading" class="map-heading-title font-serif">The map is the main stage</h2>
+                <p class="map-heading-copy">
+                  Pan, zoom, search, and inspect key landmarks directly from the aerial site view.
+                </p>
               </div>
+              <span class="map-shell-note">Tap markers to inspect each location.</span>
+            </div>
 
-              <div class="map-route-controls" role="tablist" aria-label="Heritage route selector">
-                <button class="map-route-btn is-active" data-route-btn="orientation" type="button">Orientation Loop</button>
-                <button class="map-route-btn" data-route-btn="heritage" type="button">Heritage Core</button>
-                <button class="map-route-btn" data-route-btn="accessibility" type="button">Accessible Route</button>
+            <div class="map-tools">
+              <label class="map-search" for="mapSearchInput">
+                <span class="sr-only">Search hotspot names</span>
+                <input id="mapSearchInput" type="search" placeholder="Search hotspots, landmarks, or spaces..." autocomplete="off" />
+              </label>
+              <div class="map-tool-actions">
+                <button id="resetViewBtn" type="button" class="details-btn">Reset View</button>
               </div>
+            </div>
 
-              <div class="map-tools mt-4">
-                <label class="map-search" for="mapSearchInput">
-                  <span class="sr-only">Search hotspot names</span>
-                  <input id="mapSearchInput" type="search" placeholder="Search hotspots..." autocomplete="off" />
-                </label>
-                <div class="map-tool-actions">
-                  <button id="resetViewBtn" type="button" class="details-btn">Reset View</button>
-                  <button id="storyModeBtn" type="button" class="details-btn" aria-pressed="false">Story Mode</button>
-                  <button id="calibrateToggleBtn" type="button" class="details-btn" aria-pressed="false">Calibration</button>
-                </div>
-              </div>
-
-              <div id="categoryFilters" class="category-filters mt-3" aria-label="Category filters"></div>
-
-              <div class="map-stage mt-4">
+            <div class="map-stage-shell">
+              <div class="map-stage map-stage--feature">
                 <div id="interactiveMap" role="region" aria-label="Aerial map of the Nagcarlan Underground Cemetery"></div>
+                <div id="mapInfoOverlay" class="map-info-overlay" hidden aria-live="polite">
+                  <div id="mapInfoCard" class="map-info-card">
+                    <p id="mapInfoRoute" class="map-info-card__route">Hotspot Information</p>
+                    <h3 id="mapInfoTitle" class="map-info-card__title font-serif">Select a hotspot</h3>
+                    <p id="mapInfoMeta" class="map-info-card__meta">Category · Coordinates</p>
+                    <p id="mapInfoSummary" class="map-info-card__summary">Tap a marker to view information directly on the map.</p>
+                  </div>
+                </div>
               </div>
-
-              <div class="map-legend mt-3" aria-label="Map legend">
-                <span class="legend-item"><span class="legend-dot"></span> Landmark hotspot</span>
-                <span class="legend-item"><span class="legend-line"></span> Suggested route</span>
-              </div>
-
-              <p id="calibrationHint" class="calibration-hint mt-3" hidden></p>
-
-              <div id="stopList" class="stop-list mt-4" aria-label="Landmark selector"></div>
-            </article>
-
-            <aside class="details-shell" aria-live="polite">
-              <p id="stopRouteBadge" class="route-badge">Orientation Loop</p>
-              <h3 id="stopTitle" class="text-2xl font-serif text-stone-900 mt-2">Select a hotspot</h3>
-              <p id="stopSummary" class="text-stone-700 mt-2">Use the map or list on the left to open a landmark profile.</p>
-
-              <dl class="mt-6 space-y-4">
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-stone-500">Category</dt>
-                  <dd id="stopCategory" class="text-stone-900 font-medium">-</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-stone-500">Historical Period</dt>
-                  <dd id="stopEra" class="text-stone-900 font-medium">-</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-stone-500">Visitor Focus</dt>
-                  <dd id="stopFocus" class="text-stone-900 font-medium">-</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-stone-500">Coordinates (x, y)</dt>
-                  <dd id="stopCoordinates" class="text-stone-900 font-medium">-</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-stone-500">Learning Prompt</dt>
-                  <dd id="stopPrompt" class="text-stone-900 font-medium">-</dd>
-                </div>
-                <div>
-                  <dt class="text-xs uppercase tracking-wide text-stone-500">Stop Order</dt>
-                  <dd id="stopOrder" class="text-stone-900 font-medium">-</dd>
-                </div>
-              </dl>
-
-              <div id="stopMedia" class="stop-media mt-5"></div>
-              <div id="stopLinks" class="stop-links mt-4"></div>
-              <div id="stopVideoWrap" class="stop-video mt-4"></div>
-
-              <div class="details-controls mt-6">
-                <button id="prevStopBtn" type="button" class="details-btn">Previous Stop</button>
-                <button id="nextStopBtn" type="button" class="details-btn details-btn--primary">Next Stop</button>
-              </div>
-            </aside>
-          </div>
-        </div>
-      </section>
-
-      <section class="py-14 bg-white">
-        <div class="container mx-auto px-4">
-          <div class="quiz-shell max-w-4xl mx-auto">
-            <div class="flex flex-wrap items-center justify-between gap-3">
-              <h2 class="text-2xl font-serif text-stone-900">Calibration Guide</h2>
-              <span class="text-sm font-medium text-stone-600">For precise hotspot placement</span>
             </div>
 
-            <ol class="calibration-steps mt-4">
-              <li>Upload your aerial image to <code>/static/images/site-map/aerial-view.jpg</code>.</li>
-              <li>Open <code>/site-map?calibrate=1</code> and click points directly on the image.</li>
-              <li>Copy the shown <code>x,y</code> values into <code>/static/data/site-map-hotspots.json</code>.</li>
-              <li>Refresh <code>/site-map</code> to review marker alignment and adjust as needed.</li>
-            </ol>
-          </div>
+            <div class="map-legend" aria-label="Map legend">
+              <span class="legend-item"><span class="legend-dot"></span> Landmark hotspot</span>
+            </div>
+          </article>
         </div>
       </section>
+
+
     </main>
 
     {% include 'partials/_public_footer.html' %}

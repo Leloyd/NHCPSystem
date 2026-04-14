@@ -13,48 +13,65 @@
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-amber-700 to-amber-900 text-white py-14">
+      <section class="interactive-hero gallery-hero text-white">
         <div class="container mx-auto px-4">
-          <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Online Gallery</p>
-          <h1 class="text-4xl md:text-5xl font-serif">Gallery Detail</h1>
-          <p class="text-amber-50 mt-3 max-w-3xl">
-            A single detail page format for all Online Gallery entries.
-          </p>
+          <div class="gallery-hero__panel">
+            <div class="gallery-hero__content">
+              <p class="interactive-kicker">Digital Exhibits</p>
+              <h1 class="gallery-hero__title font-serif">Online Gallery Archive</h1>
+              <p class="gallery-hero__copy">
+                Curated historical images with context, period filters, and teaching notes while the 360 virtual tour is in production.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="py-12 md:py-16">
+      <section class="gallery-explorer-section gallery-detail-section">
         <div class="container mx-auto px-4">
-          <div class="mb-6 flex items-center justify-between gap-3 flex-wrap">
-            <a href="/online-gallery" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">← Back to Online Gallery</a>
-            <p id="detailCounter" class="text-sm text-gray-600"></p>
-          </div>
-
-          <article class="bg-white border border-stone-200 rounded-xl shadow-sm p-6 md:p-8">
-            <div class="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <p class="text-sm text-amber-700">Gallery Detail</p>
-                <h2 id="detailTitle" class="text-2xl md:text-3xl font-serif text-gray-900">Loading...</h2>
-                <p id="detailMeta" class="text-sm text-gray-600 mt-1"></p>
+          <article class="gallery-shell gallery-shell--feature" aria-labelledby="detailTitle">
+            <div class="gallery-shell-header">
+              <div class="gallery-heading-group">
+                <span class="gallery-heading-kicker">Digital Archive View</span>
+                <h2 class="gallery-heading-title font-serif">Explore one archive item in focus</h2>
+                <p class="gallery-heading-copy">
+                  Review the selected record, its historical context, and teaching prompt in the same curated gallery experience.
+                </p>
               </div>
+              <span class="gallery-shell-note">Use the navigation controls to move across items in the archive.</span>
             </div>
 
-            <div id="detailImage" class="gallery-thumb rounded-lg mb-5"></div>
-
-            <p id="detailDesc" class="text-gray-700 mb-3"></p>
-            <div id="detailTags" class="mb-4"></div>
-
-            <div class="bg-amber-50 border border-amber-100 rounded-lg p-4 mb-6">
-              <h3 class="font-semibold text-amber-900 mb-1">Teaching Note</h3>
-              <p id="detailTeaching" class="text-sm text-gray-700"></p>
+            <div class="gallery-results-header gallery-detail-toolbar">
+              <a href="/online-gallery" class="gallery-detail-back-link">← Back to Online Gallery</a>
+              <p id="detailCounter" class="gallery-results-count">Item 0 of 0</p>
             </div>
 
-            <div class="flex flex-wrap gap-3 justify-between">
-              <div class="flex gap-3">
-                <button id="prevItem" type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">← Previous</button>
-                <button id="nextItem" type="button" class="px-4 py-2 rounded-lg bg-stone-100 hover:bg-stone-200 text-gray-900">Next →</button>
+            <article class="gallery-detail-card">
+              <div class="gallery-detail-card__header">
+                <div>
+                  <p class="gallery-detail-card__kicker">Gallery Detail</p>
+                  <h2 id="detailTitle" class="gallery-detail-card__title font-serif">Loading...</h2>
+                  <p id="detailMeta" class="gallery-detail-card__meta"></p>
+                </div>
               </div>
-            </div>
+
+              <div id="detailImage" class="gallery-thumb gallery-detail-card__image"></div>
+
+              <p id="detailDesc" class="gallery-detail-card__description"></p>
+              <div id="detailTags" class="gallery-detail-card__tags"></div>
+
+              <div class="gallery-detail-teaching-note">
+                <h3 class="gallery-detail-teaching-note__title">Teaching Note</h3>
+                <p id="detailTeaching" class="gallery-detail-teaching-note__copy"></p>
+              </div>
+
+              <div class="gallery-detail-actions">
+                <div class="gallery-detail-actions__group">
+                  <button id="prevItem" type="button" class="gallery-detail-nav-button">← Previous</button>
+                  <button id="nextItem" type="button" class="gallery-detail-nav-button">Next →</button>
+                </div>
+              </div>
+            </article>
           </article>
         </div>
       </section>

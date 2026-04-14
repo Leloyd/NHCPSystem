@@ -13,71 +13,89 @@
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-amber-700 to-amber-900 text-white py-16">
-        <div class="container mx-auto px-4 text-center">
-          <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Digital Exhibits</p>
-          <h1 class="text-5xl font-serif mb-4">Online Gallery Archive</h1>
-          <p class="text-lg max-w-3xl mx-auto text-amber-50">
-            Curated historical images with context, period filters, and teaching notes while the 360 virtual tour is in production.
-          </p>
+      <section class="interactive-hero gallery-hero text-white">
+        <div class="container mx-auto px-4">
+          <div class="gallery-hero__panel">
+            <div class="gallery-hero__content">
+              <p class="interactive-kicker">Digital Exhibits</p>
+              <h1 class="gallery-hero__title font-serif">Online Gallery Archive</h1>
+              <p class="gallery-hero__copy">
+                Curated historical images with context, period filters, and teaching notes while the 360 virtual tour is in production.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="py-16 bg-stone-50" id="online-gallery">
+      <section id="online-gallery" class="gallery-explorer-section">
         <div class="container mx-auto px-4">
-          <div class="gallery-filter-card p-6 mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-end gap-4">
-              <div class="w-full lg:w-2/5">
-                <label for="gallerySearch" class="block text-sm font-medium text-gray-900 mb-1">Search the archive</label>
+          <article class="gallery-shell gallery-shell--feature" aria-labelledby="galleryHeading">
+            <div class="gallery-shell-header">
+              <div class="gallery-heading-group">
+                <span class="gallery-heading-kicker">Digital Archive View</span>
+                <h2 id="galleryHeading" class="gallery-heading-title font-serif">Browse the collection with focused controls</h2>
+                <p class="gallery-heading-copy">
+                  Search, filter, sort, and open curated historical materials directly from the online archive.
+                </p>
+              </div>
+              <span class="gallery-shell-note">Use the filters to refine the collection and open any item for full details.</span>
+            </div>
+
+            <div class="gallery-tools">
+              <label class="gallery-search-panel" for="gallerySearch">
+                <span class="gallery-field-label">Search the archive</span>
                 <input id="gallerySearch" class="gallery-search" type="text" placeholder="Search title, caption, or tag" />
-              </div>
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="periodFilter" class="block text-sm font-medium text-gray-900 mb-1">Period</label>
-                <select id="periodFilter" class="gallery-select">
-                  <option value="all">All periods</option>
-                  <option value="Spanish Period">Spanish Period</option>
-                  <option value="American Period">American Period</option>
-                  <option value="Modern Restoration">Modern Restoration</option>
-                </select>
-              </div>
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="categoryFilter" class="block text-sm font-medium text-gray-900 mb-1">Type</label>
-                <select id="categoryFilter" class="gallery-select">
-                  <option value="all">All types</option>
-                  <option value="Exterior">Exterior</option>
-                  <option value="Interior">Interior</option>
-                  <option value="Artifacts">Artifacts</option>
-                  <option value="Maps">Maps</option>
-                  <option value="Community">Community</option>
-                </select>
-              </div>
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="sourceFilter" class="block text-sm font-medium text-gray-900 mb-1">Source</label>
-                <select id="sourceFilter" class="gallery-select">
-                  <option value="all">All sources</option>
-                  <option value="NHCP">NHCP</option>
-                  <option value="LGU">LGU</option>
-                  <option value="Community Submission">Community Submission</option>
-                </select>
-              </div>
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="sortFilter" class="block text-sm font-medium text-gray-900 mb-1">Sort</label>
-                <select id="sortFilter" class="gallery-select">
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="most-viewed">Most Viewed</option>
-                  <option value="curated">Curated</option>
-                </select>
+              </label>
+
+              <div class="gallery-filter-grid">
+                <div class="gallery-filter-field">
+                  <label for="periodFilter" class="gallery-field-label">Period</label>
+                  <select id="periodFilter" class="gallery-select">
+                    <option value="all">All periods</option>
+                    <option value="Spanish Period">Spanish Period</option>
+                    <option value="American Period">American Period</option>
+                    <option value="Modern Restoration">Modern Restoration</option>
+                  </select>
+                </div>
+                <div class="gallery-filter-field">
+                  <label for="categoryFilter" class="gallery-field-label">Type</label>
+                  <select id="categoryFilter" class="gallery-select">
+                    <option value="all">All types</option>
+                    <option value="Exterior">Exterior</option>
+                    <option value="Interior">Interior</option>
+                    <option value="Artifacts">Artifacts</option>
+                    <option value="Maps">Maps</option>
+                    <option value="Community">Community</option>
+                  </select>
+                </div>
+                <div class="gallery-filter-field">
+                  <label for="sourceFilter" class="gallery-field-label">Source</label>
+                  <select id="sourceFilter" class="gallery-select">
+                    <option value="all">All sources</option>
+                    <option value="NHCP">NHCP</option>
+                    <option value="LGU">LGU</option>
+                    <option value="Community Submission">Community Submission</option>
+                  </select>
+                </div>
+                <div class="gallery-filter-field">
+                  <label for="sortFilter" class="gallery-field-label">Sort</label>
+                  <select id="sortFilter" class="gallery-select">
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="most-viewed">Most Viewed</option>
+                    <option value="curated">Curated</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="flex items-center justify-between mb-5">
-            <h3 class="text-2xl font-serif text-amber-900">Gallery Results</h3>
-            <p id="galleryCount" class="text-sm text-gray-700">0 items</p>
-          </div>
+            <div class="gallery-results-header">
+              <h3 class="gallery-results-title font-serif">Gallery Results</h3>
+              <p id="galleryCount" class="gallery-results-count">0 items</p>
+            </div>
 
-          <div id="galleryGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="galleryGrid" class="gallery-grid"></div>
+          </article>
         </div>
       </section>
     </main>
