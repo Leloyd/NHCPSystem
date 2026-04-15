@@ -11,9 +11,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/virtual-tour.css') }}" />
   </head>
   <body class="tour-body">
-    <div class="ar-overlay ar-overlay--top tour-overlay-top">
-      <a href="/digital-exhibits" class="ar-btn ar-btn--back">← Back</a>
-    </div>
+   
 
     <main
       class="tour-app"
@@ -22,20 +20,22 @@
       data-panorama-title="Front Gate Panorama"
       data-panorama-subtitle="Drag to look around the site and use scroll or pinch to zoom."
       data-panorama-left-src="{{ url_for('static', filename='360VirtualTour/left-FrontGate.jpg') }}"
+      data-panorama-right-src="{{ url_for('static', filename='360VirtualTour/right-FrontGate.jpg') }}"
+      data-panorama-inside-front-gate-src="{{ url_for('static', filename='360VirtualTour/Inside-FrontGate.jpg') }}"
+      data-panorama-inside-front-gate1-src="{{ url_for('static', filename='360VirtualTour/1Inside-FrontGate.jpg') }}"
+      data-panorama-middle-g-inside-src="{{ url_for('static', filename='360VirtualTour/MiddleG-Inside.jpg') }}"
+      data-panorama-front-church-src="{{ url_for('static', filename='360VirtualTour/FrontChurch.jpg') }}"
       data-panorama-left-title="Left Front Gate Panorama"
       data-panorama-left-subtitle="Continue exploring from a left-side perspective of the front gate."
+      data-panorama-flag-src="{{ url_for('static', filename='360VirtualTour/left-Flag.jpg') }}"
+      data-panorama-middle-g-src="{{ url_for('static', filename='360VirtualTour/MiddleG-Museum.jpg') }}"
+      data-panorama-front-museum-src="{{ url_for('static', filename='360VirtualTour/FrontMuseum.jpg') }}"
+      data-panorama-inside-museum-src="{{ url_for('static', filename='360VirtualTour/InsideMuseum.jpg') }}"
+      data-panorama-museum1-src="{{ url_for('static', filename='360VirtualTour/1Museum.jpg') }}"
+      data-panorama-museum2-src="{{ url_for('static', filename='360VirtualTour/2Museum.jpg') }}"
+      data-panorama-museum3-src="{{ url_for('static', filename='360VirtualTour/3Museum.jpg') }}"
     >
       <div class="tour-viewer" id="tourViewer" aria-label="Interactive 360 virtual tour"></div>
-
-      <div class="tour-overlay tour-overlay--bottom-left">
-        <section class="tour-info-card" aria-live="polite">
-          <p class="tour-info-card__kicker">360 Virtual Tour</p>
-          <h1 id="tourTitle" class="tour-info-card__title">Front Gate Panorama</h1>
-          <p id="tourSubtitle" class="tour-info-card__copy">
-            Drag to look around the site and use scroll or pinch to zoom.
-          </p>
-        </section>
-      </div>
 
       <div class="tour-overlay tour-overlay--center" id="tourLoadingOverlay">
         <section class="tour-status-card">
