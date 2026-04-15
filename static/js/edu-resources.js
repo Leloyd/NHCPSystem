@@ -1,132 +1,7 @@
 (function () {
-  const resources = [
-    {
-      id: 1,
-      title: "Site History Guide",
-      type: "Lesson Plan",
-      audience: "Teachers",
-      format: "PDF",
-      year: "2026",
-      usageCount: 198,
-      dateAdded: "2026-03-05",
-      description: "Short lesson flow for introducing the cemetery timeline and historical context.",
-      tags: ["Timeline", "History", "Discussion"],
-      gradient: "linear-gradient(135deg, #f59e0b, #b45309)",
-      icon: "book-open",
-    },
-    {
-      id: 2,
-      title: "Map Observation Sheet",
-      type: "Worksheet",
-      audience: "Students",
-      format: "DOCX",
-      year: "2026",
-      usageCount: 167,
-      dateAdded: "2026-03-07",
-      description: "Worksheet aligned with the Site Map route exploration and landmark identification.",
-      tags: ["Map", "Landmarks", "Activity"],
-      gradient: "linear-gradient(135deg, #14b8a6, #0f766e)",
-      icon: "map",
-    },
-    {
-      id: 3,
-      title: "Class Prompt Cards",
-      type: "Discussion",
-      audience: "Mixed",
-      format: "PDF",
-      year: "2026",
-      usageCount: 144,
-      dateAdded: "2026-03-09",
-      description: "Prompt set for reflection after virtual tour, AR, or WebXR session.",
-      tags: ["Reflection", "Critical Thinking", "Prompts"],
-      gradient: "linear-gradient(135deg, #6366f1, #3730a3)",
-      icon: "message-square",
-    },
-    {
-      id: 4,
-      title: "Quick Quiz Bank",
-      type: "Assessment",
-      audience: "Teachers",
-      format: "DOCX",
-      year: "2026",
-      usageCount: 221,
-      dateAdded: "2026-03-11",
-      description: "Question bank for short formative assessments linked to platform modules.",
-      tags: ["Quiz", "Assessment", "Formative"],
-      gradient: "linear-gradient(135deg, #f97316, #c2410c)",
-      icon: "clipboard-check",
-    },
-    {
-      id: 5,
-      title: "Timeline Matching Task",
-      type: "Worksheet",
-      audience: "Students",
-      format: "PDF",
-      year: "2026",
-      usageCount: 138,
-      dateAdded: "2026-03-13",
-      description: "Printable matching exercise connecting events, spaces, and significance.",
-      tags: ["Timeline", "Matching", "Practice"],
-      gradient: "linear-gradient(135deg, #0ea5e9, #0369a1)",
-      icon: "clock-3",
-    },
-    {
-      id: 6,
-      title: "Learning Journal Sheet",
-      type: "Reflection",
-      audience: "Students",
-      format: "PDF",
-      year: "2026",
-      usageCount: 112,
-      dateAdded: "2026-03-15",
-      description: "End-of-session guided reflection with prompts for insights and takeaways.",
-      tags: ["Reflection", "Journal", "Writing"],
-      gradient: "linear-gradient(135deg, #10b981, #047857)",
-      icon: "notebook-pen",
-    },
-    {
-      id: 7,
-      title: "Heritage Walk Slides",
-      type: "Lesson Plan",
-      audience: "Teachers",
-      format: "Slides",
-      year: "2026",
-      usageCount: 95,
-      dateAdded: "2026-03-17",
-      description: "Slide deck template for introducing key route stops before virtual exploration.",
-      tags: ["Slides", "Orientation", "Heritage Walk"],
-      gradient: "linear-gradient(135deg, #8b5cf6, #5b21b6)",
-      icon: "presentation",
-    },
-    {
-      id: 8,
-      title: "Artifact Observation Log",
-      type: "Assessment",
-      audience: "Mixed",
-      format: "DOCX",
-      year: "2026",
-      usageCount: 83,
-      dateAdded: "2026-03-20",
-      description: "Observation log for documenting artifact details from gallery and AR modules.",
-      tags: ["Artifacts", "Observation", "Documentation"],
-      gradient: "linear-gradient(135deg, #475569, #1e293b)",
-      icon: "scan-search",
-    },
-    {
-      id: 9,
-      title: "Community Story Reflection",
-      type: "Discussion",
-      audience: "Mixed",
-      format: "PDF",
-      year: "2026",
-      usageCount: 76,
-      dateAdded: "2026-03-22",
-      description: "Guide questions for discussing local narratives from the participation module.",
-      tags: ["Community", "Stories", "Discussion"],
-      gradient: "linear-gradient(135deg, #f59e0b, #92400e)",
-      icon: "users",
-    },
-  ];
+  const resources = Array.isArray(window.EDU_RESOURCES_ITEMS)
+    ? [...window.EDU_RESOURCES_ITEMS]
+    : [];
 
   const resourceGrid = document.getElementById("resourceGrid");
   const resourceCount = document.getElementById("resourceCount");
@@ -155,6 +30,39 @@
     return sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
   }
 
+  function triggerDownload(item) {
+    if (!item) {
+      return;
+    }
+
+    const fileName = `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "resource-template"}.txt`;
+    const fileContents = [
+      item.title,
+      `Type: ${item.type}`,
+      `Audience: ${item.audience}`,
+      `Format: ${item.format}`,
+      `Year: ${item.year}`,
+      `Recommended Module: ${item.recommendedModule}`,
+      `Duration: ${item.duration}`,
+      `Learning Objective: ${item.learningObjective}`,
+      "",
+      item.fullDescription,
+      "",
+      `Teaching Prompt: ${item.teachingPrompt}`,
+      `Tags: ${item.tags.join(", ")}`,
+    ].join("\n");
+
+    const blob = new Blob([fileContents], { type: "text/plain;charset=utf-8" });
+    const downloadUrl = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(downloadUrl);
+  }
+
   function buildCard(item) {
     return `
       <article class="gallery-card">
@@ -169,7 +77,12 @@
           <h3 class="text-lg font-serif text-gray-900 mb-2">${item.title}</h3>
           <p class="text-sm text-gray-700 mb-3">${item.description}</p>
           <div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>
-          <button type="button" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">Download Template →</button>
+          <div class="gallery-card__actions">
+            <a href="/edu-resources/details?item=${item.id}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">Learn more →</a>
+            <button type="button" class="gallery-card__download" data-resource-id="${item.id}" aria-label="Download ${item.title}">
+              <i data-lucide="download" class="w-4 h-4"></i>
+            </button>
+          </div>
         </div>
       </article>
     `;
@@ -197,6 +110,14 @@
     if (window.lucide && typeof window.lucide.createIcons === "function") {
       window.lucide.createIcons();
     }
+
+    resourceGrid.querySelectorAll(".gallery-card__download").forEach((button) => {
+      button.addEventListener("click", () => {
+        const resourceId = Number(button.getAttribute("data-resource-id"));
+        const resource = resources.find((item) => item.id === resourceId);
+        triggerDownload(resource);
+      });
+    });
   }
 
   function applyFilters() {

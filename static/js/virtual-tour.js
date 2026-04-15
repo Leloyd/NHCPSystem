@@ -1,176 +1,169 @@
 (function () {
-  const stops = [
-    {
-      id: 1,
-      title: "Site Entrance Arch",
-      subtitle: "Gateway and orientation point",
-      description:
-        "This opening stop introduces the historical boundary of the cemetery complex and gives visitors context before entering the core heritage space.",
-      teachingPrompt:
-        "Ask learners: What visual clues in this entrance suggest colonial-era planning and community use?",
-      gradient: "linear-gradient(135deg, #92400e, #44403c)",
-    },
-    {
-      id: 2,
-      title: "Chapel Facade View",
-      subtitle: "Primary architectural landmark",
-      description:
-        "The facade demonstrates masonry rhythm, symmetry, and material craftsmanship that are central to preservation discussions.",
-      teachingPrompt:
-        "Ask learners: Which facade details seem designed for symbolism versus structural function?",
-      gradient: "linear-gradient(135deg, #b45309, #78350f)",
-    },
-    {
-      id: 3,
-      title: "Crypt Corridor",
-      subtitle: "Subsurface circulation route",
-      description:
-        "This stop focuses on enclosed circulation and ventilation, showing how underground architecture balanced ritual use and environmental constraints.",
-      teachingPrompt:
-        "Ask learners: How might corridor layout influence movement, atmosphere, and visitor interpretation?",
-      gradient: "linear-gradient(135deg, #57534e, #292524)",
-    },
-    {
-      id: 4,
-      title: "Historic Marker Zone",
-      subtitle: "Interpretation and memory point",
-      description:
-        "The final stop highlights inscription and public-history interpretation, linking the physical site to modern educational storytelling.",
-      teachingPrompt:
-        "Ask learners: How do official markers shape what future visitors remember about a place?",
-      gradient: "linear-gradient(135deg, #7c2d12, #431407)",
-    },
-  ];
+  const app = document.getElementById("tourApp");
+  const viewerContainer = document.getElementById("tourViewer");
+  const titleEl = document.getElementById("tourTitle");
+  const subtitleEl = document.getElementById("tourSubtitle");
+  const loadingOverlay = document.getElementById("tourLoadingOverlay");
+  const errorOverlay = document.getElementById("tourErrorOverlay");
+  const debugParams = new URLSearchParams(window.location.search);
+  const hotspotDebugEnabled = debugParams.get("debugHotspots") === "1";
 
-  const tourScene = document.getElementById("tourScene");
-  const tourStopCount = document.getElementById("tourStopCount");
-  const tourTitle = document.getElementById("tourTitle");
-  const tourSubtitle = document.getElementById("tourSubtitle");
-  const tourDescription = document.getElementById("tourDescription");
-  const tourTeaching = document.getElementById("tourTeaching");
-  const tourStopsList = document.getElementById("tourStopsList");
+  if (!app || !viewerContainer || !window.pannellum) {
+    if (loadingOverlay) {
+      loadingOverlay.hidden = true;
+    }
+    if (errorOverlay) {
+      errorOverlay.hidden = false;
+    }
+    return;
+  }
 
-  const prevStopBtn = document.getElementById("prevStop");
-  const nextStopBtn = document.getElementById("nextStop");
-  const autoWalkBtn = document.getElementById("autoWalkBtn");
+  const sceneContent = {
+    frontGate: {
+      title: app.dataset.panoramaTitle || "Front Gate Panorama",
+      subtitle: app.dataset.panoramaSubtitle || "Drag to look around the site and use scroll or pinch to zoom.",
+    },
+    leftFrontGate: {
+      title: app.dataset.panoramaLeftTitle || "Left Front Gate Panorama",
+      subtitle: app.dataset.panoramaLeftSubtitle || "Continue exploring from a left-side perspective of the front gate.",
+    },
+  };
 
-  let activeIndex = 0;
-  let autoWalkInterval = null;
+  const scenes = {
+    frontGate: {
+      type: "equirectangular",
+      panorama: app.dataset.panoramaSrc,
+      title: sceneContent.frontGate.title,
+      pitch: 1.8,
+      yaw: -10.2,
+      hfov: 150,
+      hotSpots: [
+        {
+          id: "go-left-front-gate",
+          pitch: -12,
+          yaw: -83,
+          type: "scene",
+          text: "Move to left viewpoint",
+          sceneId: "leftFrontGate",
+          cssClass: "tour-ground-hotspot",
+        },
+      ],
+    },
+    leftFrontGate: {
+      type: "equirectangular",
+      panorama: app.dataset.panoramaLeftSrc,
+      title: sceneContent.leftFrontGate.title,
+      pitch: -2,
+      yaw: -93,
+      hfov: 100,
+      hotSpots: [
+        {
+          id: "return-front-gate",
+          pitch: -14,
+          yaw: 105,
+          type: "scene",
+          text: "Return to front gate view",
+          sceneId: "frontGate",
+          cssClass: "tour-ground-hotspot",
+        },
+      ],
+    },
+  };
 
-  function renderStopsList() {
-    if (!tourStopsList) {
+  function updateSceneCopy(sceneId) {
+    const nextScene = sceneContent[sceneId];
+    if (!nextScene) {
       return;
     }
 
-    tourStopsList.innerHTML = stops
-      .map(
-        (stop, index) => `
-      <li>
-        <button type="button" class="tour-stop-button ${index === activeIndex ? "is-active" : ""}" data-stop-index="${index}">
-          Stop ${index + 1}: ${stop.title}
-        </button>
-      </li>
-    `,
-      )
-      .join("");
+    if (titleEl) {
+      titleEl.textContent = nextScene.title;
+    }
 
-    tourStopsList.querySelectorAll("[data-stop-index]").forEach((btn) => {
-      btn.addEventListener("click", () => {
-        const index = Number(btn.getAttribute("data-stop-index"));
-        showStop(index);
+    if (subtitleEl) {
+      subtitleEl.textContent = nextScene.subtitle;
+    }
+  }
+
+  if (!scenes.frontGate.panorama || !scenes.leftFrontGate.panorama) {
+    if (loadingOverlay) {
+      loadingOverlay.hidden = true;
+    }
+    if (errorOverlay) {
+      errorOverlay.hidden = false;
+    }
+    return;
+  }
+
+  try {
+    const viewer = window.pannellum.viewer("tourViewer", {
+      default: {
+        firstScene: "frontGate",
+        sceneFadeDuration: 1000,
+      },
+      scenes,
+      autoLoad: true,
+      hotSpotDebug: hotspotDebugEnabled,
+      showControls: true,
+      compass: false,
+      autoRotate: 0,
+      hfov: 100,
+      minHfov: 45,
+      maxHfov: 120,
+      mouseZoom: true,
+      draggable: true,
+      disableKeyboardCtrl: false,
+      showZoomCtrl: true,
+      showFullscreenCtrl: true,
+      loadingText: "Loading 360 view...",
+    });
+
+    updateSceneCopy("frontGate");
+
+    if (viewer && typeof viewer.on === "function") {
+      viewer.on("scenechange", function (sceneId) {
+        updateSceneCopy(sceneId);
       });
-    });
-  }
+      viewer.on("load", function () {
+        if (loadingOverlay) {
+          loadingOverlay.hidden = true;
+        }
+        if (errorOverlay) {
+          errorOverlay.hidden = true;
+        }
+      });
 
-  function showStop(index) {
-    if (!stops.length) {
-      return;
-    }
+      if (hotspotDebugEnabled) {
+        viewer.on("mousedown", function (event) {
+          const coords = viewer.mouseEventToCoords(event);
+          if (!coords || coords.length < 2) {
+            return;
+          }
 
-    activeIndex = (index + stops.length) % stops.length;
-    const stop = stops[activeIndex];
+          const pitch = Number(coords[0].toFixed(2));
+          const yaw = Number(coords[1].toFixed(2));
+          const sceneId = typeof viewer.getScene === "function" ? viewer.getScene() : "unknown";
 
-    if (tourStopCount) {
-      tourStopCount.textContent = `Stop ${activeIndex + 1} of ${stops.length}`;
-    }
-    if (tourTitle) {
-      tourTitle.textContent = stop.title;
-    }
-    if (tourSubtitle) {
-      tourSubtitle.textContent = stop.subtitle;
-    }
-    if (tourDescription) {
-      tourDescription.textContent = stop.description;
-    }
-    if (tourTeaching) {
-      tourTeaching.textContent = stop.teachingPrompt;
-    }
-    if (tourScene) {
-      tourScene.style.background = stop.gradient;
+          console.log(`[VirtualTour hotspot helper] scene=${sceneId} pitch=${pitch} yaw=${yaw}`);
+          console.log({ sceneId, pitch, yaw });
+        });
+      }
     }
 
-    renderStopsList();
-
-    if (window.lucide && typeof window.lucide.createIcons === "function") {
-      window.lucide.createIcons();
+    window.setTimeout(() => {
+      if (loadingOverlay) {
+        loadingOverlay.hidden = true;
+      }
+      if (errorOverlay) {
+        errorOverlay.hidden = true;
+      }
+    }, 900);
+  } catch (error) {
+    if (loadingOverlay) {
+      loadingOverlay.hidden = true;
     }
-  }
-
-  function stopAutoWalk() {
-    if (autoWalkInterval) {
-      clearInterval(autoWalkInterval);
-      autoWalkInterval = null;
-    }
-    if (autoWalkBtn) {
-      autoWalkBtn.textContent = "Start Auto Walkthrough";
-      autoWalkBtn.classList.remove("bg-stone-700", "hover:bg-stone-800");
-      autoWalkBtn.classList.add("bg-amber-600", "hover:bg-amber-700");
+    if (errorOverlay) {
+      errorOverlay.hidden = false;
     }
   }
-
-  function startAutoWalk() {
-    if (autoWalkInterval) {
-      stopAutoWalk();
-      return;
-    }
-
-    if (autoWalkBtn) {
-      autoWalkBtn.textContent = "Pause Auto Walkthrough";
-      autoWalkBtn.classList.remove("bg-amber-600", "hover:bg-amber-700");
-      autoWalkBtn.classList.add("bg-stone-700", "hover:bg-stone-800");
-    }
-
-    autoWalkInterval = setInterval(() => {
-      showStop(activeIndex + 1);
-    }, 4000);
-  }
-
-  if (prevStopBtn) {
-    prevStopBtn.addEventListener("click", () => {
-      showStop(activeIndex - 1);
-    });
-  }
-
-  if (nextStopBtn) {
-    nextStopBtn.addEventListener("click", () => {
-      showStop(activeIndex + 1);
-    });
-  }
-
-  if (autoWalkBtn) {
-    autoWalkBtn.addEventListener("click", startAutoWalk);
-  }
-
-  document.addEventListener("keydown", (event) => {
-    if (event.key === "ArrowLeft") {
-      showStop(activeIndex - 1);
-    }
-    if (event.key === "ArrowRight") {
-      showStop(activeIndex + 1);
-    }
-  });
-
-  window.addEventListener("beforeunload", stopAutoWalk);
-
-  showStop(0);
 })();

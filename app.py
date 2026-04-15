@@ -464,6 +464,11 @@ def edu_resources():
     return render_template("EduResources.html")
 
 
+@app.route("/edu-resources/details")
+def edu_resources_details():
+    return render_template("EduResourceDetails.html")
+
+
 @app.route("/ar-content-detection")
 def ar_content_detection():
     return render_template("ARContentDetection.html", analytics_endpoint=url_for("ar_analytics"))

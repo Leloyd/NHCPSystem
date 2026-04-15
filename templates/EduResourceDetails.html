@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Edu Resource Details | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    {% set public_active_page = 'digital-exhibits' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="pt-20">
+      <section class="interactive-hero gallery-hero text-white">
+        <div class="container mx-auto px-4">
+          <div class="gallery-hero__panel">
+            <div class="gallery-hero__content">
+              <p class="interactive-kicker">Digital Exhibits</p>
+              <h1 class="gallery-hero__title font-serif">Teacher Learning Pack</h1>
+              <p class="gallery-hero__copy">
+                Classroom-ready templates, prompts, and activity sheets designed for history lessons and guided museum discussions.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="gallery-explorer-section gallery-detail-section">
+        <div class="container mx-auto px-4">
+          <article class="gallery-shell gallery-shell--feature" aria-labelledby="detailTitle">
+            <div class="gallery-shell-header">
+              <div class="gallery-heading-group">
+                <span class="gallery-heading-kicker">Digital Archive View</span>
+                <h2 class="gallery-heading-title font-serif">Explore one teaching resource in focus</h2>
+                <p class="gallery-heading-copy">
+                  Review the selected learning pack, classroom application, and download-ready reference details in the same curated resource experience.
+                </p>
+              </div>
+              <span class="gallery-shell-note">Use the navigation controls to move across resources or download the current pack.</span>
+            </div>
+
+            <div class="gallery-results-header gallery-detail-toolbar">
+              <a href="/edu-resources" class="gallery-detail-back-link">← Back to Edu Resources</a>
+              <p id="detailCounter" class="gallery-results-count">Item 0 of 0</p>
+            </div>
+
+            <article class="gallery-detail-card">
+              <div class="gallery-detail-card__header">
+                <div>
+                  <p class="gallery-detail-card__kicker">Resource Detail</p>
+                  <h2 id="detailTitle" class="gallery-detail-card__title font-serif">Loading...</h2>
+                  <p id="detailMeta" class="gallery-detail-card__meta"></p>
+                </div>
+              </div>
+
+              <div id="detailImage" class="gallery-thumb gallery-detail-card__image"></div>
+
+              <div class="gallery-detail-info-grid">
+                <div class="gallery-detail-info-block">
+                  <p class="gallery-detail-info-block__label">Recommended Module</p>
+                  <p id="detailModule" class="gallery-detail-info-block__value"></p>
+                </div>
+                <div class="gallery-detail-info-block">
+                  <p class="gallery-detail-info-block__label">Duration</p>
+                  <p id="detailDuration" class="gallery-detail-info-block__value"></p>
+                </div>
+                <div class="gallery-detail-info-block gallery-detail-info-block--full">
+                  <p class="gallery-detail-info-block__label">Learning Objective</p>
+                  <p id="detailObjective" class="gallery-detail-info-block__value"></p>
+                </div>
+              </div>
+
+              <p id="detailDesc" class="gallery-detail-card__description"></p>
+              <div id="detailTags" class="gallery-detail-card__tags"></div>
+
+              <div class="gallery-detail-teaching-note">
+                <h3 class="gallery-detail-teaching-note__title">Teaching Prompt</h3>
+                <p id="detailTeaching" class="gallery-detail-teaching-note__copy"></p>
+              </div>
+
+              <div class="gallery-detail-actions">
+                <div class="gallery-detail-actions__group">
+                  <button id="prevItem" type="button" class="gallery-detail-nav-button">← Previous</button>
+                  <button id="nextItem" type="button" class="gallery-detail-nav-button">Next →</button>
+                </div>
+                <button id="downloadResource" type="button" class="gallery-detail-download-button">
+                  <i data-lucide="download" class="w-4 h-4"></i>
+                  <span>Download Resource</span>
+                </button>
+              </div>
+            </article>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    {% include 'partials/_public_footer.html' %}
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edu-resources-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edu-resource-detail.js') }}"></script>
+  </body>
+</html>

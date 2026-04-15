@@ -13,75 +13,92 @@
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-amber-700 to-stone-900 text-white py-16">
-        <div class="container mx-auto px-4 text-center">
-          <p class="text-sm uppercase tracking-wider text-amber-200 mb-2">Digital Exhibits</p>
-          <h1 class="text-5xl font-serif mb-4">Teacher Learning Pack</h1>
-          <p class="text-lg max-w-3xl mx-auto text-amber-50">
-            Classroom-ready templates, prompts, and activity sheets designed for history lessons and guided museum discussions.
-          </p>
+      <section class="interactive-hero gallery-hero text-white">
+        <div class="container mx-auto px-4">
+          <div class="gallery-hero__panel">
+            <div class="gallery-hero__content">
+              <p class="interactive-kicker">Digital Exhibits</p>
+              <h1 class="gallery-hero__title font-serif">Teacher Learning Pack</h1>
+              <p class="gallery-hero__copy">
+                Classroom-ready templates, prompts, and activity sheets designed for history lessons and guided museum discussions.
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section class="py-16 bg-stone-50" id="edu-resources">
+      <section id="edu-resources" class="gallery-explorer-section">
         <div class="container mx-auto px-4">
-          <div class="gallery-filter-card p-6 mb-8">
-            <div class="flex flex-col lg:flex-row lg:items-end gap-4">
-              <div class="w-full lg:w-2/5">
-                <label for="resourceSearch" class="block text-sm font-medium text-gray-900 mb-1">Search resources</label>
+          <article class="gallery-shell gallery-shell--feature" aria-labelledby="resourceHeading">
+            <div class="gallery-shell-header">
+              <div class="gallery-heading-group">
+                <span class="gallery-heading-kicker">Digital Archive View</span>
+                <h2 id="resourceHeading" class="gallery-heading-title font-serif">Browse teaching materials with focused controls</h2>
+                <p class="gallery-heading-copy">
+                  Search, filter, sort, and review classroom resources prepared for lessons, reflection, and guided museum activities.
+                </p>
+              </div>
+              <span class="gallery-shell-note">Use the filters to refine resource packs and select materials for your class objective.</span>
+            </div>
+
+            <div class="gallery-tools">
+              <label class="gallery-search-panel" for="resourceSearch">
+                <span class="gallery-field-label">Search resources</span>
                 <input id="resourceSearch" class="gallery-search" type="text" placeholder="Search title, objective, or tag" />
-              </div>
+              </label>
 
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="resourceTypeFilter" class="block text-sm font-medium text-gray-900 mb-1">Type</label>
-                <select id="resourceTypeFilter" class="gallery-select">
-                  <option value="all">All types</option>
-                  <option value="Lesson Plan">Lesson Plan</option>
-                  <option value="Worksheet">Worksheet</option>
-                  <option value="Discussion">Discussion</option>
-                  <option value="Assessment">Assessment</option>
-                  <option value="Reflection">Reflection</option>
-                </select>
-              </div>
+              <div class="gallery-filter-grid">
+                <div class="gallery-filter-field">
+                  <label for="resourceTypeFilter" class="gallery-field-label">Type</label>
+                  <select id="resourceTypeFilter" class="gallery-select">
+                    <option value="all">All types</option>
+                    <option value="Lesson Plan">Lesson Plan</option>
+                    <option value="Worksheet">Worksheet</option>
+                    <option value="Discussion">Discussion</option>
+                    <option value="Assessment">Assessment</option>
+                    <option value="Reflection">Reflection</option>
+                  </select>
+                </div>
 
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="resourceAudienceFilter" class="block text-sm font-medium text-gray-900 mb-1">Audience</label>
-                <select id="resourceAudienceFilter" class="gallery-select">
-                  <option value="all">All audiences</option>
-                  <option value="Students">Students</option>
-                  <option value="Teachers">Teachers</option>
-                  <option value="Mixed">Mixed Class</option>
-                </select>
-              </div>
+                <div class="gallery-filter-field">
+                  <label for="resourceAudienceFilter" class="gallery-field-label">Audience</label>
+                  <select id="resourceAudienceFilter" class="gallery-select">
+                    <option value="all">All audiences</option>
+                    <option value="Students">Students</option>
+                    <option value="Teachers">Teachers</option>
+                    <option value="Mixed">Mixed Class</option>
+                  </select>
+                </div>
 
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="resourceFormatFilter" class="block text-sm font-medium text-gray-900 mb-1">Format</label>
-                <select id="resourceFormatFilter" class="gallery-select">
-                  <option value="all">All formats</option>
-                  <option value="PDF">PDF</option>
-                  <option value="DOCX">DOCX</option>
-                  <option value="Slides">Slides</option>
-                </select>
-              </div>
+                <div class="gallery-filter-field">
+                  <label for="resourceFormatFilter" class="gallery-field-label">Format</label>
+                  <select id="resourceFormatFilter" class="gallery-select">
+                    <option value="all">All formats</option>
+                    <option value="PDF">PDF</option>
+                    <option value="DOCX">DOCX</option>
+                    <option value="Slides">Slides</option>
+                  </select>
+                </div>
 
-              <div class="w-full sm:w-1/2 lg:w-1/5">
-                <label for="resourceSortFilter" class="block text-sm font-medium text-gray-900 mb-1">Sort</label>
-                <select id="resourceSortFilter" class="gallery-select">
-                  <option value="newest">Newest</option>
-                  <option value="oldest">Oldest</option>
-                  <option value="most-used">Most Used</option>
-                  <option value="curated">Curated</option>
-                </select>
+                <div class="gallery-filter-field">
+                  <label for="resourceSortFilter" class="gallery-field-label">Sort</label>
+                  <select id="resourceSortFilter" class="gallery-select">
+                    <option value="newest">Newest</option>
+                    <option value="oldest">Oldest</option>
+                    <option value="most-used">Most Used</option>
+                    <option value="curated">Curated</option>
+                  </select>
+                </div>
               </div>
             </div>
-          </div>
 
-          <div class="flex items-center justify-between mb-5">
-            <h2 class="text-2xl font-serif text-amber-900">Resource Results</h2>
-            <p id="resourceCount" class="text-sm text-gray-700">0 items</p>
-          </div>
+            <div class="gallery-results-header">
+              <h2 class="gallery-results-title font-serif">Resource Results</h2>
+              <p id="resourceCount" class="gallery-results-count">0 items</p>
+            </div>
 
-          <div id="resourceGrid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+            <div id="resourceGrid" class="gallery-grid"></div>
+          </article>
         </div>
       </section>
 
@@ -107,6 +124,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edu-resources-data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edu-resources.js') }}"></script>
   </body>
 </html>

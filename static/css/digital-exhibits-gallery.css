@@ -259,6 +259,40 @@
   margin-bottom: 1.25rem;
 }
 
+.gallery-detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+.gallery-detail-info-block {
+  border: 1px solid rgba(120, 53, 15, 0.12);
+  border-radius: 1rem;
+  background: #fffaf2;
+  padding: 1rem;
+}
+
+.gallery-detail-info-block--full {
+  grid-column: 1 / -1;
+}
+
+.gallery-detail-info-block__label {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #b45309;
+}
+
+.gallery-detail-info-block__value {
+  margin: 0;
+  font-size: 0.96rem;
+  line-height: 1.65;
+  color: #374151;
+}
+
 .gallery-detail-teaching-note {
   margin-bottom: 1.5rem;
   border: 1px solid #fde68a;
@@ -317,6 +351,33 @@
   transform: none;
 }
 
+.gallery-detail-download-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  min-height: 3rem;
+  padding: 0.75rem 1.1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(180, 83, 9, 0.18);
+  background: #b45309;
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 700;
+  transition: background 0.2s ease, transform 0.2s ease;
+}
+
+.gallery-detail-download-button:hover {
+  background: #92400e;
+  transform: translateY(-1px);
+}
+
+.gallery-detail-download-button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  transform: none;
+}
+
 .gallery-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -334,6 +395,32 @@
 .gallery-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-card__actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gallery-card__download {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 999px;
+  border: 1px solid rgba(120, 53, 15, 0.12);
+  background: #fff7ed;
+  color: #b45309;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+.gallery-card__download:hover {
+  background: #ffedd5;
+  border-color: rgba(180, 83, 9, 0.28);
+  transform: translateY(-1px);
 }
 
 .gallery-thumb {
@@ -409,6 +496,10 @@
     padding: 1.15rem;
   }
 
+  .gallery-detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+
   .gallery-detail-card__image {
     min-height: 15rem;
   }
@@ -445,7 +536,8 @@
   }
 
   .gallery-detail-nav-button,
-  .gallery-detail-back-link {
+  .gallery-detail-back-link,
+  .gallery-detail-download-button {
     width: 100%;
     justify-content: center;
   }
