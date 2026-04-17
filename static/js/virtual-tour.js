@@ -3,8 +3,59 @@
   const viewerContainer = document.getElementById("tourViewer");
   const loadingOverlay = document.getElementById("tourLoadingOverlay");
   const errorOverlay = document.getElementById("tourErrorOverlay");
+  const artifactOverlay = document.getElementById("tourArtifactOverlay");
+  const artifactCloseButton = document.getElementById("tourArtifactClose");
+  const artifactImage = document.getElementById("tourArtifactImage");
+  const artifactModel = document.getElementById("tourArtifactModel");
+  const artifactTagalogTitle = document.getElementById("tourArtifactTagalogTitle");
+  const artifactTagalogText = document.getElementById("tourArtifactTagalogText");
+  const artifactEnglishTitle = document.getElementById("tourArtifactEnglishTitle");
+  const artifactEnglishText = document.getElementById("tourArtifactEnglishText");
+  const controlDock = document.getElementById("tourControlDock");
+  const toggleSceneHotspotsButton = document.getElementById("tourToggleSceneHotspots");
+  const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
+  const captureViewButton = document.getElementById("tourCaptureView");
+  const toggleFullscreenButton = document.getElementById("tourToggleFullscreen");
+  const backToExhibitsButton = document.getElementById("tourBackToExhibits");
   const debugParams = new URLSearchParams(window.location.search);
   const hotspotDebugEnabled = debugParams.get("debugHotspots") === "1";
+  const digitalExhibitsUrl = app ? app.dataset.digitalExhibitsUrl : "";
+  const balanghayImageSrc = app ? app.dataset.balanghayImageSrc : "";
+  const balanghayGlbSrc = app ? app.dataset.balanghayGlbSrc : "";
+  const kabaongImageSrc = app ? app.dataset.kabaongImageSrc : "";
+  const kabaongGlbSrc = app ? app.dataset.kabaongGlbSrc : "";
+  const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
+  const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
+  const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
+  const artifactPanes = Array.from(document.querySelectorAll("[data-artifact-pane]"));
+  let sceneHotspotsVisible = true;
+  let artifactHotspotsVisible = true;
+  let tourViewer = null;
+  let resolvedScenes = null;
+  const balanghayArtifactCopy = {
+    tagalogTitle: "Ang Balanghay",
+    tagalogText:
+      "ANG BALANGHAY ay isang sasakyang-pandagat na ginamit noon pang 320 A.D. na kumakatawan sa kakayahang pandagar at paniniwalang espiritwal ng mga ng mga sinaunang Pilipino. Higit pa sa papel nito sa kalakalan at pakikidigma, sinasagisag nito ang paglalakbay ng kaluluwa sa kabilang buhay, kabilang ang mga kilalang mandirigma at mandaragat na kadalasang inililibing sa loob o kasama ng kanilang mga bangka upang ipagpatuloy ang kanilang paglalakbay sa kabilang daigdig.",
+    englishTitle: "The Balanghay",
+    englishText:
+      "THE BALANGHAY, a seafaring vessel dating back to 320 A.D., exemplified the maritime skill and spiritual beliefs of pre-colonial Filipinos. It symbolized the soul's voyage to the afterlife, with notable warriors and seafarers often buried in or with their boats to continue their journey in the netherworld.",
+  };
+  const kabaongArtifactCopy = {
+    tagalogTitle: "Ang mga Nakabiting Kabaong ng Sagada",
+    tagalogText:
+      "ANG MGA IGOROT ng Sagada, Mountain Province, ay sumusunod sa isang natatanging paglilibing na mahigit dalawang libong taong tradisyon, kung saan ang mga pumanaw ay inilalagay sa mga kabaong na gawa sa kahoy at isinasabit sa gilid ng mga bangin, kadalasan ay nasa posisyong mala-sanggol na sumasagisag sa pagbabalik sa lupa. Maraming matatanda ang umuukit pa nga ng kanilang sariling mga kabaong bilang paghahanda sa kamatayan.",
+    englishTitle: "The Hanging Coffins of Sagada",
+    englishText:
+      "THE IGOROTS of Sagada, Mountain Province, follow a distinctive burial tradition dating back over two thousand years, where the deceased are placed in wooden coffins and hung on cliff edges, often in a fetal position to symbolize returning to the earth. Many elders even carve their own coffins in preparation for death.",
+  };
+  const ulohArtifactCopy = {
+    tagalogTitle: "Tradisyunal na Ulóh ng mga Ifugao",
+    tagalogText:
+      "ANG ULÓH ay isang tradisyunal na tela ng Ifugao na gawa sa tatlong magkakaibang bahagi: adolna (gitna), balingbing (mga gilid), at talungtong (mga laylay), hinabi ng magkakahiwalay at pinagsama-sama gamit ang natatanging pamamaraan, karaniwang kulay itim at pula. Ito ay gumaganap ng isang pangunahing papel sa ritwal ng kamatayan, ang bogwa, kung saan ang mga buto ng namatay ay hinuhukay, nililinis, at muling binabalot sa isang bagong Ulóh bilang paggalang at patuloy na pangangalaga, na may mga partikular na uri tulad ng kinuttiyan, inlhadang, pinagpagan, at gamong na ginagamit para sa paglilibing.",
+    englishTitle: "Traditional Ulóh of Ifugao",
+    englishText:
+      "THE ULÓH iS a traditional Ifugao textile made of three distinct parts: adolna(center), balingbing(sides), and talungtong(edges), woven separately and stitched together using a unique technique, typically in black and red. It plays a central role in the bogwa death ritual, where the deceased's bones are exhumed, cleansed, and rewrapped in a new Ulóh as a gesture of reverence and ongoing care, with specific types like kinuttiyan, inlha’dang, pinagpagan, and gamong used for funerary purposes.",
+  };
 
   if (!app || !viewerContainer || !window.pannellum) {
     if (loadingOverlay) {
@@ -1236,6 +1287,63 @@
       hfov: 140,
       hotSpots: [
         {
+          id: "museum1-pulse-marker",
+          pitch: -20.31,
+          yaw: 101.6,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openArtifactOverlay,
+          clickHandlerArgs: {
+            imageSrc: balanghayImageSrc,
+            imageAlt: "Balanghay",
+            glbSrc: balanghayGlbSrc,
+            tagalogTitle: balanghayArtifactCopy.tagalogTitle,
+            tagalogText: balanghayArtifactCopy.tagalogText,
+            englishTitle: balanghayArtifactCopy.englishTitle,
+            englishText: balanghayArtifactCopy.englishText,
+            view: "image",
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+        },
+        {
+          id: "museum1-kabaong-marker",
+          pitch: -18.35,
+          yaw: 26.68,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openArtifactOverlay,
+          clickHandlerArgs: {
+            imageSrc: kabaongImageSrc,
+            imageAlt: "Kabaong",
+            glbSrc: kabaongGlbSrc,
+            tagalogTitle: kabaongArtifactCopy.tagalogTitle,
+            tagalogText: kabaongArtifactCopy.tagalogText,
+            englishTitle: kabaongArtifactCopy.englishTitle,
+            englishText: kabaongArtifactCopy.englishText,
+            view: "image",
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+        },
+        {
+          id: "museum1-uloh-marker",
+          pitch: -17.35,
+          yaw: -128.78,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openArtifactOverlay,
+          clickHandlerArgs: {
+            imageSrc: ulohImageSrc,
+            imageAlt: "Ulóh",
+            glbSrc: ulohGlbSrc,
+            tagalogTitle: ulohArtifactCopy.tagalogTitle,
+            tagalogText: ulohArtifactCopy.tagalogText,
+            englishTitle: ulohArtifactCopy.englishTitle,
+            englishText: ulohArtifactCopy.englishText,
+            view: "image",
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+        },
+        {
           id: "go-museum-2",
           pitch: -30,
           yaw: -100,
@@ -1324,6 +1432,362 @@
     window.history.replaceState({}, "", nextUrl);
   }
 
+  function updateHotspotVisibilityState() {
+    if (!app) {
+      return;
+    }
+
+    app.classList.toggle("tour-hide-scene-hotspots", !sceneHotspotsVisible);
+    app.classList.toggle("tour-hide-artifact-hotspots", !artifactHotspotsVisible);
+
+    if (toggleSceneHotspotsButton) {
+      toggleSceneHotspotsButton.classList.toggle("is-active", sceneHotspotsVisible);
+      toggleSceneHotspotsButton.setAttribute("aria-pressed", sceneHotspotsVisible ? "true" : "false");
+    }
+
+    if (toggleArtifactHotspotsButton) {
+      toggleArtifactHotspotsButton.classList.toggle("is-active", artifactHotspotsVisible);
+      toggleArtifactHotspotsButton.setAttribute("aria-pressed", artifactHotspotsVisible ? "true" : "false");
+    }
+  }
+
+  function syncFullscreenButton() {
+    if (!toggleFullscreenButton) {
+      return;
+    }
+
+    const isFullscreen = Boolean(document.fullscreenElement);
+    toggleFullscreenButton.classList.toggle("is-active", isFullscreen);
+    toggleFullscreenButton.setAttribute("aria-pressed", isFullscreen ? "true" : "false");
+  }
+
+  function setControlDockVisibility(isVisible) {
+    if (!controlDock) {
+      return;
+    }
+
+    controlDock.hidden = !isVisible;
+    controlDock.classList.toggle("is-visible", isVisible);
+  }
+
+  function degreesToRadians(value) {
+    return (Number(value) * Math.PI) / 180;
+  }
+
+  function downloadImageDataUrl(dataUrl) {
+    const link = document.createElement("a");
+    const timestamp = new Date().toISOString().replace(/[.:]/g, "-");
+    link.href = dataUrl;
+    link.download = `virtual-tour-${timestamp}.png`;
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  function wrapHorizontalIndex(value, size) {
+    const remainder = value % size;
+    return remainder < 0 ? remainder + size : remainder;
+  }
+
+  async function renderExportImageFromCurrentView() {
+    if (!tourViewer || typeof tourViewer.getScene !== "function" || !resolvedScenes) {
+      throw new Error("Virtual tour viewer is not ready for export.");
+    }
+
+    const sceneId = tourViewer.getScene();
+    const scene = sceneId && resolvedScenes[sceneId] ? resolvedScenes[sceneId] : null;
+    const currentConfig = typeof tourViewer.getConfig === "function" ? tourViewer.getConfig() || {} : {};
+
+    if (!scene || !scene.panorama) {
+      throw new Error("Current panorama source is unavailable for export.");
+    }
+
+    const panoramaImage = await loadImage(scene.panorama);
+    const sourceWidth = panoramaImage.naturalWidth || panoramaImage.width;
+    const sourceHeight = panoramaImage.naturalHeight || panoramaImage.height;
+    const sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = sourceWidth;
+    sourceCanvas.height = sourceHeight;
+
+    const sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+    if (!sourceContext) {
+      throw new Error("Unable to create source panorama context.");
+    }
+
+    sourceContext.drawImage(panoramaImage, 0, 0, sourceWidth, sourceHeight);
+    const sourcePixels = sourceContext.getImageData(0, 0, sourceWidth, sourceHeight).data;
+
+    const exportWidth = Math.min(1600, Math.max(720, Math.round(viewerContainer ? viewerContainer.clientWidth : 1280)));
+    const exportHeight = Math.round(exportWidth / Math.max(1, (viewerContainer ? viewerContainer.clientWidth : 1280) / Math.max(1, viewerContainer ? viewerContainer.clientHeight : 720)));
+    const exportCanvas = document.createElement("canvas");
+    exportCanvas.width = exportWidth;
+    exportCanvas.height = exportHeight;
+
+    const exportContext = exportCanvas.getContext("2d");
+    if (!exportContext) {
+      throw new Error("Unable to create export canvas context.");
+    }
+
+    const exportImage = exportContext.createImageData(exportWidth, exportHeight);
+    const exportPixels = exportImage.data;
+    const pitch = degreesToRadians(typeof tourViewer.getPitch === "function" ? tourViewer.getPitch() : 0);
+    const yaw = degreesToRadians(typeof tourViewer.getYaw === "function" ? tourViewer.getYaw() : 0);
+    const hfov = degreesToRadians(typeof tourViewer.getHfov === "function" ? tourViewer.getHfov() : 100);
+    const aspect = exportWidth / exportHeight;
+    const vfov = 2 * Math.atan(Math.tan(hfov / 2) / aspect);
+    const tanHalfHfov = Math.tan(hfov / 2);
+    const tanHalfVfov = Math.tan(vfov / 2);
+    const sinPitch = Math.sin(pitch);
+    const cosPitch = Math.cos(pitch);
+    const sinYaw = Math.sin(yaw);
+    const cosYaw = Math.cos(yaw);
+
+    for (let y = 0; y < exportHeight; y += 1) {
+      const normalizedY = 1 - (2 * (y + 0.5)) / exportHeight;
+
+      for (let x = 0; x < exportWidth; x += 1) {
+        const normalizedX = (2 * (x + 0.5)) / exportWidth - 1;
+        let dirX = normalizedX * tanHalfHfov;
+        let dirY = normalizedY * tanHalfVfov;
+        let dirZ = 1;
+        const invLength = 1 / Math.hypot(dirX, dirY, dirZ);
+        dirX *= invLength;
+        dirY *= invLength;
+        dirZ *= invLength;
+
+        const pitchedY = dirY * cosPitch + dirZ * sinPitch;
+        const pitchedZ = -dirY * sinPitch + dirZ * cosPitch;
+        const worldX = dirX * cosYaw + pitchedZ * sinYaw;
+        const worldY = pitchedY;
+        const worldZ = -dirX * sinYaw + pitchedZ * cosYaw;
+
+        const longitude = Math.atan2(worldX, worldZ);
+        const latitude = Math.asin(Math.max(-1, Math.min(1, worldY)));
+        const panoramaX = wrapHorizontalIndex((longitude / (2 * Math.PI) + 0.5) * sourceWidth, sourceWidth);
+        const panoramaY = Math.min(sourceHeight - 1, Math.max(0, (0.5 - latitude / Math.PI) * sourceHeight));
+
+        const x0 = Math.floor(panoramaX);
+        const y0 = Math.floor(panoramaY);
+        const x1 = wrapHorizontalIndex(x0 + 1, sourceWidth);
+        const y1 = Math.min(sourceHeight - 1, y0 + 1);
+        const weightX = panoramaX - x0;
+        const weightY = panoramaY - y0;
+        const index00 = (y0 * sourceWidth + x0) * 4;
+        const index10 = (y0 * sourceWidth + x1) * 4;
+        const index01 = (y1 * sourceWidth + x0) * 4;
+        const index11 = (y1 * sourceWidth + x1) * 4;
+        const outputIndex = (y * exportWidth + x) * 4;
+
+        for (let channel = 0; channel < 4; channel += 1) {
+          const top = sourcePixels[index00 + channel] * (1 - weightX) + sourcePixels[index10 + channel] * weightX;
+          const bottom = sourcePixels[index01 + channel] * (1 - weightX) + sourcePixels[index11 + channel] * weightX;
+          exportPixels[outputIndex + channel] = top * (1 - weightY) + bottom * weightY;
+        }
+      }
+    }
+
+    exportContext.putImageData(exportImage, 0, 0);
+    return exportCanvas.toDataURL("image/png");
+  }
+
+  async function captureCurrentView() {
+    try {
+      const imageDataUrl = await renderExportImageFromCurrentView();
+      downloadImageDataUrl(imageDataUrl);
+    } catch (error) {
+      console.error("Unable to export virtual tour view.", error);
+      window.alert("Unable to capture the current 360 view yet. Please wait for the scene to finish loading, then try again.");
+    }
+  }
+
+  async function toggleFullscreenMode() {
+    if (!document.fullscreenElement) {
+      try {
+        await document.documentElement.requestFullscreen();
+      } catch (error) {
+        console.error("Unable to enter fullscreen mode.", error);
+      }
+      return;
+    }
+
+    try {
+      await document.exitFullscreen();
+    } catch (error) {
+      console.error("Unable to exit fullscreen mode.", error);
+    }
+  }
+
+  function setArtifactView(nextView) {
+    artifactNavButtons.forEach(function (button) {
+      const isActive = button.dataset.artifactView === nextView;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
+
+    artifactPanes.forEach(function (pane) {
+      const isActive = pane.dataset.artifactPane === nextView;
+      pane.hidden = !isActive;
+      pane.classList.toggle("is-active", isActive);
+    });
+  }
+
+  function openArtifactOverlay(event, args) {
+    if (event && typeof event.preventDefault === "function") {
+      event.preventDefault();
+    }
+
+    if (artifactImage && args && args.imageSrc) {
+      artifactImage.src = args.imageSrc;
+      artifactImage.alt = args.imageAlt || "Artifact image";
+    }
+
+    if (artifactModel && args && args.glbSrc) {
+      artifactModel.src = args.glbSrc;
+    }
+
+    if (artifactTagalogTitle && args && args.tagalogTitle) {
+      artifactTagalogTitle.textContent = args.tagalogTitle;
+    }
+
+    if (artifactTagalogText && args && args.tagalogText) {
+      artifactTagalogText.textContent = args.tagalogText;
+    }
+
+    if (artifactEnglishTitle && args && args.englishTitle) {
+      artifactEnglishTitle.textContent = args.englishTitle;
+    }
+
+    if (artifactEnglishText && args && args.englishText) {
+      artifactEnglishText.textContent = args.englishText;
+    }
+
+    setArtifactView(args && args.view ? args.view : "image");
+
+    if (artifactOverlay) {
+      artifactOverlay.hidden = false;
+    }
+  }
+
+  function closeArtifactOverlay() {
+    if (artifactOverlay) {
+      artifactOverlay.hidden = true;
+    }
+
+    if (artifactImage) {
+      artifactImage.removeAttribute("src");
+    }
+
+    if (artifactModel) {
+      artifactModel.removeAttribute("src");
+    }
+
+    setArtifactView("image");
+  }
+
+  artifactNavButtons.forEach(function (button) {
+    button.addEventListener("click", function () {
+      setArtifactView(button.dataset.artifactView || "image");
+    });
+  });
+
+  if (artifactCloseButton) {
+    artifactCloseButton.addEventListener("click", closeArtifactOverlay);
+  }
+
+  if (artifactOverlay) {
+    artifactOverlay.addEventListener("click", function (event) {
+      if (event.target === artifactOverlay) {
+        closeArtifactOverlay();
+      }
+    });
+  }
+
+  document.addEventListener("keydown", function (event) {
+    if (event.key === "Escape" && artifactOverlay && !artifactOverlay.hidden) {
+      closeArtifactOverlay();
+    }
+  });
+
+  if (toggleSceneHotspotsButton) {
+    toggleSceneHotspotsButton.addEventListener("click", function () {
+      sceneHotspotsVisible = !sceneHotspotsVisible;
+      updateHotspotVisibilityState();
+    });
+  }
+
+  if (toggleArtifactHotspotsButton) {
+    toggleArtifactHotspotsButton.addEventListener("click", function () {
+      artifactHotspotsVisible = !artifactHotspotsVisible;
+      updateHotspotVisibilityState();
+    });
+  }
+
+  if (captureViewButton) {
+    captureViewButton.addEventListener("click", function () {
+      captureCurrentView();
+    });
+  }
+
+  if (toggleFullscreenButton) {
+    toggleFullscreenButton.addEventListener("click", function () {
+      toggleFullscreenMode();
+    });
+  }
+
+  if (backToExhibitsButton) {
+    backToExhibitsButton.addEventListener("click", function () {
+      if (digitalExhibitsUrl) {
+        window.location.href = digitalExhibitsUrl;
+      }
+    });
+  }
+
+  document.addEventListener("fullscreenchange", syncFullscreenButton);
+  setControlDockVisibility(false);
+  updateHotspotVisibilityState();
+  syncFullscreenButton();
+
+  function createViewerWithCaptureSupport(scenes) {
+    const originalGetContext = HTMLCanvasElement.prototype.getContext;
+    let webglContextPatched = false;
+
+    HTMLCanvasElement.prototype.getContext = function (type, attributes) {
+      if (!webglContextPatched && (type === "webgl" || type === "experimental-webgl" || type === "webgl2")) {
+        webglContextPatched = true;
+        const nextAttributes = { ...(attributes || {}), preserveDrawingBuffer: true };
+        return originalGetContext.call(this, type, nextAttributes);
+      }
+
+      return originalGetContext.call(this, type, attributes);
+    };
+
+    try {
+      return window.pannellum.viewer("tourViewer", {
+        default: {
+          firstScene: initialScene,
+          sceneFadeDuration: 1000,
+        },
+        scenes,
+        autoLoad: true,
+        hotSpotDebug: hotspotDebugEnabled,
+        showControls: true,
+        compass: false,
+        autoRotate: 0,
+        hfov: 100,
+        minHfov: 50,
+        maxHfov: 140,
+        mouseZoom: true,
+        draggable: true,
+        disableKeyboardCtrl: false,
+        showZoomCtrl: true,
+        showFullscreenCtrl: true,
+        loadingText: "Loading 360 view...",
+      });
+    } finally {
+      HTMLCanvasElement.prototype.getContext = originalGetContext;
+    }
+  }
+
   function getSafeTextureLimit() {
     try {
       const canvas = document.createElement("canvas");
@@ -1395,38 +1859,23 @@
     if (errorOverlay) {
       errorOverlay.hidden = false;
     }
+    setControlDockVisibility(false);
     return;
   }
 
   buildScenes()
     .then((scenes) => {
-      const viewer = window.pannellum.viewer("tourViewer", {
-        default: {
-          firstScene: initialScene,
-          sceneFadeDuration: 1000,
-        },
-        scenes,
-        autoLoad: true,
-        hotSpotDebug: hotspotDebugEnabled,
-        showControls: true,
-        compass: false,
-        autoRotate: 0,
-        hfov: 100,
-        minHfov: 50,
-        maxHfov: 140,
-        mouseZoom: true,
-        draggable: true,
-        disableKeyboardCtrl: false,
-        showZoomCtrl: true,
-        showFullscreenCtrl: true,
-        loadingText: "Loading 360 view...",
-      });
+      resolvedScenes = scenes;
+      const viewer = createViewerWithCaptureSupport(scenes);
+      tourViewer = viewer;
 
       if (viewer && typeof viewer.on === "function") {
         syncSceneInUrl(initialScene);
+        updateHotspotVisibilityState();
 
         viewer.on("scenechange", function (sceneId) {
           syncSceneInUrl(sceneId);
+          window.requestAnimationFrame(updateHotspotVisibilityState);
         });
 
         viewer.on("load", function () {
@@ -1436,6 +1885,7 @@
           if (errorOverlay) {
             errorOverlay.hidden = true;
           }
+          setControlDockVisibility(true);
         });
 
         if (hotspotDebugEnabled) {
@@ -1454,22 +1904,16 @@
           });
         }
       }
-
-      window.setTimeout(() => {
-        if (loadingOverlay) {
-          loadingOverlay.hidden = true;
-        }
-        if (errorOverlay) {
-          errorOverlay.hidden = true;
-        }
-      }, 900);
     })
     .catch(() => {
+      resolvedScenes = null;
+      tourViewer = null;
       if (loadingOverlay) {
         loadingOverlay.hidden = true;
       }
       if (errorOverlay) {
         errorOverlay.hidden = false;
       }
+      setControlDockVisibility(false);
     });
 })();

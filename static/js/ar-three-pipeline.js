@@ -105,6 +105,18 @@
     },
   };
 
+  if (IS_MOBILE) {
+    CONFIG.markerVisibilityHoldMs = 90;
+    CONFIG.markerControls.smoothCount = 4;
+    CONFIG.markerControls.smoothTolerance = 0.006;
+    CONFIG.markerControls.smoothThreshold = 1;
+    CONFIG.poseFilter.positionLerp = 0.5;
+    CONFIG.poseFilter.rotationLerp = 0.78;
+    CONFIG.poseFilter.scaleLerp = 0.52;
+    CONFIG.poseFilter.snapPositionDistance = 0.08;
+    CONFIG.poseFilter.snapAngleDegrees = 8;
+  }
+
   var runtime = {
     renderer: null,
     scene: null,
@@ -637,7 +649,11 @@
         var scaleLerp = getAdaptiveLerp(CONFIG.poseFilter.scaleLerp, deltaMs);
 
         entry.smoothedPosition.lerp(entry.rawPosition, positionLerp);
-        entry.smoothedQuaternion.slerp(entry.rawQuaternion, rotationLerp);
+        if (IS_MOBILE) {
+          entry.smoothedQuaternion.copy(entry.rawQuaternion);
+        } else {
+          entry.smoothedQuaternion.slerp(entry.rawQuaternion, rotationLerp);
+        }
         entry.smoothedScale.lerp(entry.rawScale, scaleLerp);
       }
 
