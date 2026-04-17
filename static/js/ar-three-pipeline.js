@@ -29,7 +29,7 @@
   var MODEL_CONFIG = {
     balanghay: {
       targetSize: 0.76,
-      scaleMultiplier: 3,
+      scaleMultiplier: 2,
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
@@ -51,7 +51,7 @@
     },
     banga: {
       targetSize: 0.8,
-      scaleMultiplier: 3,
+      scaleMultiplier: 2,
       position: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
