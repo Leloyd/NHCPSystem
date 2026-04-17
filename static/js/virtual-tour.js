@@ -1489,6 +1489,25 @@
     return remainder < 0 ? remainder + size : remainder;
   }
 
+  function getExportDimensions() {
+    const viewerRect = viewerContainer ? viewerContainer.getBoundingClientRect() : null;
+    const baseWidth = Math.max(1, Math.round(viewerRect && viewerRect.width ? viewerRect.width : window.innerWidth || 1280));
+    const baseHeight = Math.max(1, Math.round(viewerRect && viewerRect.height ? viewerRect.height : window.innerHeight || 720));
+    const deviceScale = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    let width = Math.max(1, Math.round(baseWidth * deviceScale));
+    let height = Math.max(1, Math.round(baseHeight * deviceScale));
+    const maxEdge = 1600;
+    const longestEdge = Math.max(width, height);
+
+    if (longestEdge > maxEdge) {
+      const scale = maxEdge / longestEdge;
+      width = Math.max(1, Math.round(width * scale));
+      height = Math.max(1, Math.round(height * scale));
+    }
+
+    return { width, height };
+  }
+
   async function renderExportImageFromCurrentView() {
     if (!tourViewer || typeof tourViewer.getScene !== "function" || !resolvedScenes) {
       throw new Error("Virtual tour viewer is not ready for export.");
@@ -1517,8 +1536,9 @@
     sourceContext.drawImage(panoramaImage, 0, 0, sourceWidth, sourceHeight);
     const sourcePixels = sourceContext.getImageData(0, 0, sourceWidth, sourceHeight).data;
 
-    const exportWidth = Math.min(1600, Math.max(720, Math.round(viewerContainer ? viewerContainer.clientWidth : 1280)));
-    const exportHeight = Math.round(exportWidth / Math.max(1, (viewerContainer ? viewerContainer.clientWidth : 1280) / Math.max(1, viewerContainer ? viewerContainer.clientHeight : 720)));
+    const exportSize = getExportDimensions();
+    const exportWidth = exportSize.width;
+    const exportHeight = exportSize.height;
     const exportCanvas = document.createElement("canvas");
     exportCanvas.width = exportWidth;
     exportCanvas.height = exportHeight;
