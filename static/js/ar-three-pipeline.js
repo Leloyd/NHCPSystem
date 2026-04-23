@@ -60,6 +60,39 @@
         yOffset: -0.02,
       },
     },
+    uloh: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, -90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    tsapang: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    kagamitan: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
   };
 
   var CONFIG = {
@@ -1177,6 +1210,13 @@
       console.error("[AR] No valid marker/model entries found in config.");
       return;
     }
+
+    console.log(
+      "[AR] Enabled markers:",
+      enabledMarkers.map(function (marker) {
+        return marker.key;
+      })
+    );
 
     initRendererScene();
     initArToolkit();

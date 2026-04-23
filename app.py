@@ -476,7 +476,7 @@ def ar_content_detection():
 
 @app.route("/ar-launch/<artifact_key>")
 def ar_launch(artifact_key):
-    return redirect(url_for("ar_content_detection"))
+    return redirect(url_for("ar_content_detection", marker=str(artifact_key or "").strip().lower()))
 
 
 @app.post("/api/ar/analytics")
