@@ -1,5 +1,4 @@
 import * as THREE from 'three';
-import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
 
 import { clamp, normalize2D } from './utils.js';
 
@@ -12,6 +11,8 @@ const XR_SESSION_MODE_AR = 'immersive-ar';
 const XR_SESSION_MODE_VR = 'immersive-vr';
 const VR_MIN_TRACKED_HEAD_HEIGHT = 1.0;
 const AR_PHYSICAL_MOVE_DEADZONE_METERS = 0.012;
+const DESKTOP_JUMP_KEYS = new Set(['Space']);
+const DESKTOP_SPRINT_KEYS = new Set(['ShiftLeft', 'ShiftRight']);
 
 const KEY_MAP = {
   KeyW: 'forward',
@@ -32,16 +33,18 @@ export class PlayerController {
     this.uiController = uiController;
     this.mobileMode = Boolean(mobileMode);
 
+    const moveSpeed = Number(playerConfig.move_speed ?? 4.0);
+    const sprintSpeed = Number(playerConfig.sprint_speed ?? (moveSpeed * Number(playerConfig.sprint_multiplier ?? 1.55)));
+
     this.settings = {
       height: Number(playerConfig.height ?? 1.72),
       radius: Number(playerConfig.radius ?? 0.35),
       gravity: Number(playerConfig.gravity ?? 22.0),
-      jumpStrength: Number(playerConfig.jump_strength ?? 8.3),
-      moveSpeed: Number(playerConfig.move_speed ?? 4.0),
-      sprintSpeed: Number(playerConfig.sprint_speed ?? 6.5),
+      moveSpeed,
+      jumpVelocity: Number(playerConfig.jump_strength ?? playerConfig.jump_velocity ?? 8.3),
+      sprintMultiplier: moveSpeed > 0 ? sprintSpeed / moveSpeed : 1,
     };
 
-    this.controls = new PointerLockControls(this.camera, this.renderer.domElement);
     this.velocity = new THREE.Vector3();
 
     this.input = {
@@ -57,9 +60,13 @@ export class PlayerController {
 
     this.mobileInput = {
       move: { x: 0, y: 0 },
-      look: { x: 0, y: 0 },
-      sprint: false,
-      jumpQueued: false,
+    };
+
+    this.lookInput = {
+      active: false,
+      pointerId: null,
+      lastX: 0,
+      lastY: 0,
     };
 
     this.xrInput = {
@@ -75,35 +82,28 @@ export class PlayerController {
     this.mobilePad = this._createMobilePadState(mobileRefs);
 
     this._bindDesktopInput();
-    this._bindPointerLock();
+    this._bindLookInput();
     this._bindMobileInput();
 
     this.camera.rotation.order = 'YXZ';
     this.camera.position.set(0, this.settings.height, 0);
   }
 
+  _shouldUseDesktopActions() {
+    return !this.mobileMode && !this.renderer.xr.isPresenting;
+  }
+
   _createMobilePadState(mobileRefs = {}) {
     return {
-      left: {
-        zone: mobileRefs.leftStickZone ?? null,
-        thumb: mobileRefs.leftStickThumb ?? null,
+      move: {
+        zone: mobileRefs.moveStickZone ?? null,
+        thumb: mobileRefs.moveStickThumb ?? null,
         active: false,
         pointerId: null,
         centerX: 0,
         centerY: 0,
         radius: 1,
       },
-      right: {
-        zone: mobileRefs.rightStickZone ?? null,
-        thumb: mobileRefs.rightStickThumb ?? null,
-        active: false,
-        pointerId: null,
-        centerX: 0,
-        centerY: 0,
-        radius: 1,
-      },
-      jumpButton: mobileRefs.mobileJumpButton ?? null,
-      sprintButton: mobileRefs.mobileSprintButton ?? null,
     };
   }
 
@@ -114,11 +114,15 @@ export class PlayerController {
         this.input[mapped] = true;
       }
 
-      if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+      if (this.mobileMode) {
+        return;
+      }
+
+      if (DESKTOP_SPRINT_KEYS.has(event.code)) {
         this.input.sprint = true;
       }
 
-      if (event.code === 'Space') {
+      if (DESKTOP_JUMP_KEYS.has(event.code) && !event.repeat) {
         this.input.jumpQueued = true;
       }
     });
@@ -129,100 +133,143 @@ export class PlayerController {
         this.input[mapped] = false;
       }
 
-      if (event.code === 'ShiftLeft' || event.code === 'ShiftRight') {
+      if (DESKTOP_SPRINT_KEYS.has(event.code)) {
         this.input.sprint = false;
       }
     });
   }
 
-  _bindPointerLock() {
-    this.controls.addEventListener('lock', () => {
-      this.uiController?.setPointerLockState(true);
-    });
+  _bindLookInput() {
+    const element = this.renderer?.domElement;
+    if (!element) {
+      return;
+    }
 
-    this.controls.addEventListener('unlock', () => {
-      this.uiController?.setPointerLockState(false);
-    });
-
-    this.uiController?.setPointerLockState(false);
-  }
-
-  _bindMobileInput() {
-    const bindPad = (padKey, targetVector) => {
-      const pad = this.mobilePad[padKey];
-      if (!pad.zone) {
+    const onPointerDown = (event) => {
+      if (this.renderer.xr.isPresenting) {
         return;
       }
 
-      const onPointerDown = (event) => {
-        if (!this.mobileMode || pad.active) {
-          return;
-        }
+      if (event.pointerType === 'mouse' && event.button !== 0) {
+        return;
+      }
 
-        pad.active = true;
-        pad.pointerId = event.pointerId;
+      if (this._isMoveStickTarget(event.target)) {
+        return;
+      }
 
-        const rect = pad.zone.getBoundingClientRect();
-        pad.centerX = rect.left + rect.width / 2;
-        pad.centerY = rect.top + rect.height / 2;
-        pad.radius = Math.max(20, Math.min(rect.width, rect.height) * 0.45);
+      this.lookInput.active = true;
+      this.lookInput.pointerId = event.pointerId;
+      this.lookInput.lastX = event.clientX;
+      this.lookInput.lastY = event.clientY;
 
-        pad.zone.setPointerCapture(event.pointerId);
-        this._updatePadVector(pad, targetVector, event.clientX, event.clientY);
-      };
-
-      const onPointerMove = (event) => {
-        if (!pad.active || event.pointerId !== pad.pointerId) {
-          return;
-        }
-        this._updatePadVector(pad, targetVector, event.clientX, event.clientY);
-      };
-
-      const onPointerUp = (event) => {
-        if (!pad.active || event.pointerId !== pad.pointerId) {
-          return;
-        }
-        pad.active = false;
-        pad.pointerId = null;
-        targetVector.x = 0;
-        targetVector.y = 0;
-        this._moveThumb(pad.thumb, 0, 0);
-      };
-
-      pad.zone.addEventListener('pointerdown', onPointerDown);
-      pad.zone.addEventListener('pointermove', onPointerMove);
-      pad.zone.addEventListener('pointerup', onPointerUp);
-      pad.zone.addEventListener('pointercancel', onPointerUp);
+      try {
+        element.setPointerCapture(event.pointerId);
+      } catch {
+      }
     };
 
-    bindPad('left', this.mobileInput.move);
-    bindPad('right', this.mobileInput.look);
+    const onPointerMove = (event) => {
+      if (!this.lookInput.active || event.pointerId !== this.lookInput.pointerId) {
+        return;
+      }
 
-    const jumpButton = this.mobilePad.jumpButton;
-    if (jumpButton) {
-      jumpButton.addEventListener('pointerdown', () => {
-        if (!this.mobileMode) {
-          return;
-        }
-        this.mobileInput.jumpQueued = true;
-      });
+      const deltaX = event.clientX - this.lookInput.lastX;
+      const deltaY = event.clientY - this.lookInput.lastY;
+      this.lookInput.lastX = event.clientX;
+      this.lookInput.lastY = event.clientY;
+
+      this._applyLookDelta(deltaX, deltaY);
+    };
+
+    const onPointerUp = (event) => {
+      if (!this.lookInput.active || event.pointerId !== this.lookInput.pointerId) {
+        return;
+      }
+
+      this.lookInput.active = false;
+      this.lookInput.pointerId = null;
+
+      try {
+        element.releasePointerCapture(event.pointerId);
+      } catch {
+      }
+    };
+
+    element.addEventListener('pointerdown', onPointerDown);
+    element.addEventListener('pointermove', onPointerMove);
+    element.addEventListener('pointerup', onPointerUp);
+    element.addEventListener('pointercancel', onPointerUp);
+  }
+
+  _applyLookDelta(deltaX, deltaY) {
+    const sensitivity = this.mobileMode ? 0.0062 : 0.0046;
+    this.camera.rotation.y -= deltaX * sensitivity;
+    this.camera.rotation.x = clamp(
+      this.camera.rotation.x - deltaY * sensitivity,
+      -Math.PI * 0.495,
+      Math.PI * 0.495,
+    );
+  }
+
+  _isMoveStickTarget(target) {
+    if (!target || !(target instanceof Element)) {
+      return false;
     }
 
-    const sprintButton = this.mobilePad.sprintButton;
-    if (sprintButton) {
-      sprintButton.addEventListener('pointerdown', () => {
-        if (!this.mobileMode) {
-          return;
-        }
-        this.mobileInput.sprint = true;
-      });
-      const clearSprint = () => {
-        this.mobileInput.sprint = false;
-      };
-      sprintButton.addEventListener('pointerup', clearSprint);
-      sprintButton.addEventListener('pointercancel', clearSprint);
-      sprintButton.addEventListener('pointerleave', clearSprint);
+    const stickZone = this.mobilePad.move?.zone;
+    if (!stickZone) {
+      return false;
     }
+
+    return stickZone.contains(target);
+  }
+
+  _bindMobileInput() {
+    const pad = this.mobilePad.move;
+    if (!pad?.zone) {
+      return;
+    }
+
+    const onPointerDown = (event) => {
+      if (!this.mobileMode || pad.active) {
+        return;
+      }
+
+      pad.active = true;
+      pad.pointerId = event.pointerId;
+
+      const rect = pad.zone.getBoundingClientRect();
+      pad.centerX = rect.left + rect.width / 2;
+      pad.centerY = rect.top + rect.height / 2;
+      pad.radius = Math.max(20, Math.min(rect.width, rect.height) * 0.45);
+
+      pad.zone.setPointerCapture(event.pointerId);
+      this._updatePadVector(pad, this.mobileInput.move, event.clientX, event.clientY);
+    };
+
+    const onPointerMove = (event) => {
+      if (!pad.active || event.pointerId !== pad.pointerId) {
+        return;
+      }
+      this._updatePadVector(pad, this.mobileInput.move, event.clientX, event.clientY);
+    };
+
+    const onPointerUp = (event) => {
+      if (!pad.active || event.pointerId !== pad.pointerId) {
+        return;
+      }
+      pad.active = false;
+      pad.pointerId = null;
+      this.mobileInput.move.x = 0;
+      this.mobileInput.move.y = 0;
+      this._moveThumb(pad.thumb, 0, 0);
+    };
+
+    pad.zone.addEventListener('pointerdown', onPointerDown);
+    pad.zone.addEventListener('pointermove', onPointerMove);
+    pad.zone.addEventListener('pointerup', onPointerUp);
+    pad.zone.addEventListener('pointercancel', onPointerUp);
   }
 
   _updatePadVector(pad, target, x, y) {
@@ -252,17 +299,11 @@ export class PlayerController {
     if (!this.mobileMode) {
       this.mobileInput.move.x = 0;
       this.mobileInput.move.y = 0;
-      this.mobileInput.look.x = 0;
-      this.mobileInput.look.y = 0;
-      this.mobileInput.sprint = false;
-      this.mobileInput.jumpQueued = false;
     }
   }
 
   requestPointerLock() {
-    if (!this.mobileMode) {
-      this.controls.lock();
-    }
+    return;
   }
 
   setFeetPosition(position) {
@@ -340,19 +381,24 @@ export class PlayerController {
 
     if (isArPresenting) {
       this.velocity.set(0, 0, 0);
-      this.input.jumpQueued = false;
-      this.mobileInput.jumpQueued = false;
       this.xrInput.x = 0;
       this.xrInput.z = 0;
       return;
     }
 
-    if (this.mobileMode && !this.renderer.xr.isPresenting) {
-      this._applyMobileLook(deltaSeconds);
-    }
-
     const moveInput = this._collectMoveInput();
-    const speed = this._isSprinting() ? this.settings.sprintSpeed : this.settings.moveSpeed;
+    const speedMultiplier = this._shouldUseDesktopActions() && this.input.sprint
+      ? this.settings.sprintMultiplier
+      : 1;
+    const speed = this.settings.moveSpeed * speedMultiplier;
+
+    if (this._shouldUseDesktopActions() && this.input.jumpQueued) {
+      if (this.isGrounded) {
+        this.velocity.y = this.settings.jumpVelocity;
+        this.isGrounded = false;
+      }
+      this.input.jumpQueued = false;
+    }
 
     this._computeMoveDirection(moveInput.x, moveInput.z);
     if (DESIRED_MOVE.lengthSq() > 0) {
@@ -364,14 +410,6 @@ export class PlayerController {
       this.velocity.x *= damping;
       this.velocity.z *= damping;
     }
-
-    const mobileJumpQueued = !this.renderer.xr.isPresenting && this.mobileInput.jumpQueued;
-    if ((this.input.jumpQueued || mobileJumpQueued) && this.isGrounded) {
-      this.velocity.y = this.settings.jumpStrength;
-      this.isGrounded = false;
-    }
-    this.input.jumpQueued = false;
-    this.mobileInput.jumpQueued = false;
 
     this.velocity.y -= this.settings.gravity * deltaSeconds;
 
@@ -421,22 +459,6 @@ export class PlayerController {
     }
 
     this.rig.position.y += correction;
-  }
-
-  _applyMobileLook(deltaSeconds) {
-    const lookX = this.mobileInput.look.x;
-    const lookY = this.mobileInput.look.y;
-    if (Math.abs(lookX) < 0.001 && Math.abs(lookY) < 0.001) {
-      return;
-    }
-
-    const sensitivity = 2.0;
-    this.camera.rotation.y -= lookX * sensitivity * deltaSeconds;
-    this.camera.rotation.x = clamp(
-      this.camera.rotation.x - lookY * sensitivity * deltaSeconds,
-      -Math.PI * 0.495,
-      Math.PI * 0.495,
-    );
   }
 
   _applyXrPhysicalOffset(sessionMode = null) {
@@ -513,13 +535,5 @@ export class PlayerController {
     DESIRED_MOVE.set(0, 0, 0);
     DESIRED_MOVE.addScaledVector(RIGHT, moveX);
     DESIRED_MOVE.addScaledVector(FORWARD, moveZ);
-  }
-
-  _isSprinting() {
-    if (this.renderer.xr.isPresenting) {
-      return this.input.sprint;
-    }
-
-    return this.input.sprint || this.mobileInput.sprint;
   }
 }

@@ -1,28 +1,21 @@
 export class UiController {
   constructor(refs) {
     this.refs = refs;
-    this.onPointerLockRequested = null;
-    this.onQualityChanged = null;
-    this.onDebugCollisionChanged = null;
+    this.onBackRequested = null;
+    this.onFullscreenToggled = null;
     this.hotspotHelperResetTimer = null;
   }
 
-  bindHandlers({ onPointerLockRequested, onQualityChanged, onDebugCollisionChanged }) {
-    this.onPointerLockRequested = onPointerLockRequested;
-    this.onQualityChanged = onQualityChanged;
-    this.onDebugCollisionChanged = onDebugCollisionChanged;
+  bindHandlers({ onBackRequested, onFullscreenToggled }) {
+    this.onBackRequested = onBackRequested;
+    this.onFullscreenToggled = onFullscreenToggled;
 
-    this.refs.pointerLockButton?.addEventListener('click', () => {
-      this.onPointerLockRequested?.();
+    this.refs.backButton?.addEventListener('click', () => {
+      this.onBackRequested?.();
     });
 
-    this.refs.qualitySelect?.addEventListener('change', (event) => {
-      const value = event.target.value;
-      this.onQualityChanged?.(value);
-    });
-
-    this.refs.debugCollisionToggle?.addEventListener('change', (event) => {
-      this.onDebugCollisionChanged?.(Boolean(event.target.checked));
+    this.refs.fullscreenButton?.addEventListener('click', () => {
+      this.onFullscreenToggled?.();
     });
   }
 
@@ -61,28 +54,13 @@ export class UiController {
     }
   }
 
-  setPointerLockState(locked) {
-    if (this.refs.pointerLockButton) {
-      this.refs.pointerLockButton.textContent = locked
-        ? 'Mouse captured (Esc to release)'
-        : 'Click to capture mouse look';
+  setFullscreenState(active) {
+    if (!this.refs.fullscreenButton) {
+      return;
     }
 
-    if (this.refs.crosshair) {
-      this.refs.crosshair.classList.toggle('hidden', !locked);
-    }
-  }
-
-  setQuality(value) {
-    if (this.refs.qualitySelect) {
-      this.refs.qualitySelect.value = value;
-    }
-  }
-
-  setDebugCollision(value) {
-    if (this.refs.debugCollisionToggle) {
-      this.refs.debugCollisionToggle.checked = value;
-    }
+    this.refs.fullscreenButton.classList.toggle('is-active', Boolean(active));
+    this.refs.fullscreenButton.setAttribute('aria-pressed', active ? 'true' : 'false');
   }
 
   setMobileControlsVisible(visible) {

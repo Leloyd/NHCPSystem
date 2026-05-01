@@ -136,6 +136,7 @@ export class WebXRApp {
 
     this.boundResize = this.onResize.bind(this);
     this.boundGlobalKeyDown = this._onGlobalKeyDown.bind(this);
+    this.boundFullscreenChange = this._onFullscreenChange.bind(this);
   }
 
   async init() {
@@ -152,10 +153,8 @@ export class WebXRApp {
       this.metadata = await this._fetchMetadata();
 
       this.uiController.clearError();
-      this.uiController.setDebugCollision(Boolean(this.metadata.debug?.collision));
 
       const quality = this.metadata.quality?.default ?? 'auto';
-      this.uiController.setQuality(quality);
       this.applyQuality(quality);
 
       await this._loadSparkRuntime();
@@ -167,6 +166,7 @@ export class WebXRApp {
 
       window.addEventListener('resize', this.boundResize);
       window.addEventListener('keydown', this.boundGlobalKeyDown);
+      document.addEventListener('fullscreenchange', this.boundFullscreenChange);
       this.onResize();
 
       this.renderer.setAnimationLoop(this._animate.bind(this));
@@ -180,12 +180,47 @@ export class WebXRApp {
 
   _setupUi() {
     this.uiController.bindHandlers({
-      onPointerLockRequested: () => this.playerController?.requestPointerLock(),
-      onQualityChanged: (quality) => this.applyQuality(quality),
-      onDebugCollisionChanged: (enabled) => this.collisionSystem?.setDebugEnabled(enabled),
+      onBackRequested: () => this._handleBackRequested(),
+      onFullscreenToggled: () => {
+        void this._toggleFullscreen();
+      },
     });
 
-    this.uiController.setMobileControlsVisible(this.mobileMode);
+    this.uiController.setMobileControlsVisible(true);
+    this.uiController.setFullscreenState(Boolean(document.fullscreenElement));
+  }
+
+  _handleBackRequested() {
+    const referrer = String(document.referrer || '');
+    if (referrer && referrer.includes(window.location.host) && window.history.length > 1) {
+      window.history.back();
+      return;
+    }
+
+    window.location.assign('/3d-environment');
+  }
+
+  async _toggleFullscreen() {
+    const doc = document;
+    const root = document.documentElement;
+    const isActive = Boolean(doc.fullscreenElement);
+
+    try {
+      if (isActive) {
+        await doc.exitFullscreen?.();
+      } else {
+        await root.requestFullscreen?.();
+      }
+    } catch (error) {
+      console.warn('[ui] fullscreen toggle failed', error);
+      this.uiController.setXrStatus('Fullscreen toggle failed on this device/browser.');
+    } finally {
+      this.uiController.setFullscreenState(Boolean(doc.fullscreenElement));
+    }
+  }
+
+  _onFullscreenChange() {
+    this.uiController.setFullscreenState(Boolean(document.fullscreenElement));
   }
 
   _setupExpandedHotspotOverlay() {
@@ -457,7 +492,9 @@ export class WebXRApp {
           const resetButtons = () => {
             for (const entry of xrButtons) {
               entry.button.disabled = false;
-              entry.button.textContent = entry.startLabel;
+              if (entry.buttonLabel) {
+                entry.buttonLabel.textContent = entry.startLabel;
+              }
             }
           };
 
@@ -472,6 +509,7 @@ export class WebXRApp {
           };
 
           const createSessionButton = ({
+            iconLabel,
             startLabel,
             startingLabel,
             stopLabel,
@@ -481,9 +519,13 @@ export class WebXRApp {
           }) => {
             const button = document.createElement('button');
             button.type = 'button';
-            button.className = 'btn';
-            button.textContent = startLabel;
-            xrButtons.push({ button, startLabel });
+            button.className = 'tour-control-dock__action';
+            button.innerHTML = `
+              <span class="tour-control-dock__icon" aria-hidden="true">${iconLabel}</span>
+              <span class="tour-control-dock__label">${startLabel}</span>
+            `;
+            const buttonLabel = button.querySelector('.tour-control-dock__label');
+            xrButtons.push({ button, startLabel, buttonLabel });
 
             button.addEventListener('click', async () => {
               if (activeSession) {
@@ -502,7 +544,9 @@ export class WebXRApp {
               }
 
               setButtonsDisabled(true);
-              button.textContent = startingLabel;
+              if (buttonLabel) {
+                buttonLabel.textContent = startingLabel;
+              }
               let pendingSession = null;
 
               try {
@@ -522,7 +566,9 @@ export class WebXRApp {
 
                 setButtonsDisabled(true);
                 button.disabled = false;
-                button.textContent = stopLabel;
+                if (buttonLabel) {
+                  buttonLabel.textContent = stopLabel;
+                }
               } catch (error) {
                 if (pendingSession) {
                   try {
@@ -544,9 +590,10 @@ export class WebXRApp {
 
           if (vrSupported) {
             createSessionButton({
-              startLabel: 'Start Full 3D XR',
-              startingLabel: 'Starting Full 3D XR...',
-              stopLabel: 'Stop Full 3D XR',
+              iconLabel: 'VR',
+              startLabel: 'VR',
+              startingLabel: '...',
+              stopLabel: 'Stop',
               sessionMode: XR_SESSION_MODE_VR,
               requestSession: requestVrSessionWithFallback,
               formatStartError: formatVrStartError,
@@ -555,9 +602,10 @@ export class WebXRApp {
 
           if (arSupported) {
             createSessionButton({
-              startLabel: 'Start AR Walk Mode',
-              startingLabel: 'Starting AR Walk Mode...',
-              stopLabel: 'Stop AR Walk Mode',
+              iconLabel: 'AR',
+              startLabel: 'AR',
+              startingLabel: '...',
+              stopLabel: 'Stop',
               sessionMode: XR_SESSION_MODE_AR,
               requestSession: requestArSessionWithFallback,
               formatStartError: formatArStartError,
@@ -607,17 +655,13 @@ export class WebXRApp {
         this.uiController.setXrStatus('XR session started.');
       }
 
-      if (this.mobileMode) {
-        this.uiController.setMobileControlsVisible(false);
-      }
+      this.uiController.setMobileControlsVisible(true);
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
       this.uiController.setXrStatus('XR session ended.');
 
-      if (this.mobileMode) {
-        this.uiController.setMobileControlsVisible(true);
-      }
+      this.uiController.setMobileControlsVisible(true);
     });
   }
 
@@ -1129,12 +1173,8 @@ export class WebXRApp {
       playerConfig: this.metadata.player,
       mobileMode: this.mobileMode,
       mobileRefs: {
-        leftStickZone: this.refs.leftStickZone,
-        leftStickThumb: this.refs.leftStickThumb,
-        rightStickZone: this.refs.rightStickZone,
-        rightStickThumb: this.refs.rightStickThumb,
-        mobileJumpButton: this.refs.mobileJumpButton,
-        mobileSprintButton: this.refs.mobileSprintButton,
+        moveStickZone: this.refs.moveStickZone,
+        moveStickThumb: this.refs.moveStickThumb,
       },
     });
 
@@ -1158,7 +1198,6 @@ export class WebXRApp {
       uiController: this.uiController,
       registry: this.interactionRegistry,
       getPickables: () => this.pickableMeshes,
-      pointerLockControls: this.playerController.controls,
     });
     this.uiController.hideInteraction();
   }
@@ -1310,7 +1349,6 @@ export class WebXRApp {
       this.sparkRenderer.lodSplatScale = preset.splatLodScale;
     }
 
-    this.uiController.setQuality(value in QUALITY_PRESETS ? value : 'auto');
     this.onResize();
   }
 

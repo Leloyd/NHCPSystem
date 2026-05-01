@@ -41,38 +41,6 @@ canvas {
   touch-action: none;
 }
 
-.crosshair {
-  position: fixed;
-  left: 50%;
-  top: 50%;
-  width: 20px;
-  height: 20px;
-  transform: translate(-50%, -50%);
-  pointer-events: none;
-  z-index: 50;
-}
-
-.crosshair::before,
-.crosshair::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  top: 50%;
-  background: rgba(255, 255, 255, 0.92);
-  box-shadow: 0 0 10px rgba(0, 0, 0, 0.42);
-  transform: translate(-50%, -50%);
-}
-
-.crosshair::before {
-  width: 2px;
-  height: 16px;
-}
-
-.crosshair::after {
-  width: 16px;
-  height: 2px;
-}
-
 .hidden {
   display: none !important;
 }
@@ -264,106 +232,11 @@ canvas {
   filter: brightness(1.08);
 }
 
-.hud-panel {
-  position: fixed;
-  top: 12px;
-  left: 12px;
-  width: min(320px, calc(100vw - 24px));
-  display: grid;
-  gap: 10px;
-  z-index: 25;
-}
-
-.hud-block {
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 10px;
-}
-
-.hud-block h2 {
-  margin: 0 0 6px;
-  font-size: 0.95rem;
-}
-
 .hint {
-  margin: 6px 0 0;
-  color: var(--muted);
-  font-size: 0.83rem;
-  line-height: 1.25;
-}
-
-.btn {
-  width: 100%;
-  padding: 8px 10px;
-  border: 1px solid rgba(37, 174, 255, 0.45);
-  border-radius: 10px;
-  background: linear-gradient(180deg, rgba(20, 55, 93, 0.85), rgba(17, 33, 51, 0.95));
-  color: var(--text);
-  cursor: pointer;
-}
-
-.btn:hover {
-  filter: brightness(1.06);
-}
-
-#xr-button-container {
-  position: relative;
-  margin-bottom: 6px;
-  min-height: 40px;
-}
-
-#xr-button-container > button,
-#xr-button-container > a {
-  position: static !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  width: 100% !important;
   margin: 0;
-  display: block !important;
-  padding: 8px 10px !important;
-  border-radius: 10px !important;
-  background: linear-gradient(180deg, rgba(20, 55, 93, 0.85), rgba(17, 33, 51, 0.95)) !important;
-  border-color: rgba(37, 174, 255, 0.45) !important;
-  color: var(--text) !important;
-  text-decoration: none;
-  text-align: center;
-  font: 600 0.83rem "Segoe UI", system-ui, sans-serif !important;
-  opacity: 1 !important;
-  z-index: auto !important;
-}
-
-#xr-button-container > * + * {
-  margin-top: 6px !important;
-}
-
-#xr-button-container > button:hover,
-#xr-button-container > a:hover {
-  filter: brightness(1.06);
-}
-
-label {
-  display: grid;
-  gap: 6px;
-  font-size: 0.85rem;
-  margin-top: 6px;
-}
-
-select {
-  width: 100%;
-  border-radius: 9px;
-  border: 1px solid var(--border);
-  background: rgba(6, 9, 14, 0.88);
-  color: var(--text);
-  padding: 6px 8px;
-}
-
-.toggle-row {
-  display: flex;
-  align-items: center;
-  gap: 8px;
+  color: var(--muted);
+  font-size: 0.76rem;
+  line-height: 1.25;
 }
 
 .interaction-panel {
@@ -397,66 +270,219 @@ select {
   word-break: break-word;
 }
 
-.mobile-controls {
+.tour-control-dock {
   position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  padding: 14px;
+  left: 50%;
+  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  transform: translateX(-50%);
+  width: min(96vw, 740px);
+  min-height: 80px;
+  padding: 10px 12px;
+  border-radius: 30px;
+  border: 1px solid rgba(255, 255, 255, 0.24);
+  background: rgba(255, 255, 255, 0.9);
+  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
   z-index: 45;
-  display: grid;
-  gap: 10px;
-}
-
-.sticks-row {
   display: flex;
-  justify-content: space-between;
   align-items: center;
-}
-
-.stick-zone {
-  width: 114px;
-  height: 114px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  background: rgba(12, 16, 22, 0.4);
-  position: relative;
+  justify-content: center;
+  gap: 10px;
   touch-action: none;
 }
 
-.stick-thumb {
+.tour-control-dock__xr {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 6px;
+  min-width: 140px;
+}
+
+.tour-control-dock__action,
+.tour-control-dock__xr > button,
+.tour-control-dock__xr > a {
+  display: inline-flex !important;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 56px;
+  min-height: 58px;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: #111827 !important;
+  text-decoration: none !important;
+  text-align: center;
+  cursor: pointer;
+  font: 600 0.72rem "Segoe UI", system-ui, sans-serif !important;
+  opacity: 1 !important;
+  position: static !important;
+  left: auto !important;
+  right: auto !important;
+  bottom: auto !important;
+  z-index: auto !important;
+}
+
+.tour-control-dock__icon,
+.tour-control-dock__xr > button .tour-control-dock__icon,
+.tour-control-dock__xr > a .tour-control-dock__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.52rem;
+  height: 2.52rem;
+  border-radius: 0.92rem;
+  background: rgba(255, 255, 255, 0.72);
+  color: #171717;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 20px rgba(15, 23, 42, 0.12);
+}
+
+.tour-control-dock__icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.tour-control-dock__label {
+  font-size: 0.66rem;
+  font-weight: 620;
+  line-height: 1;
+  color: rgba(23, 23, 23, 0.78);
+}
+
+.tour-control-dock__xr .tour-control-dock__label {
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+}
+
+.tour-control-dock__action:disabled {
+  opacity: 0.5 !important;
+  cursor: default;
+}
+
+.tour-control-dock__action:hover .tour-control-dock__icon,
+.tour-control-dock__action.is-active .tour-control-dock__icon,
+.tour-control-dock__action:focus-visible .tour-control-dock__icon {
+  transform: translateY(-1px);
+}
+
+.tour-control-dock__action.is-active .tour-control-dock__icon {
+  background: linear-gradient(180deg, rgba(251, 191, 36, 0.32), rgba(245, 158, 11, 0.18));
+  color: #8a5a00;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 14px 24px rgba(245, 158, 11, 0.18);
+}
+
+.tour-control-dock__camera {
+  position: relative;
+  min-width: 88px;
+  min-height: 74px;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  touch-action: none;
+  transform: translateY(-0.28rem);
+}
+
+.tour-control-dock__camera-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 3.85rem;
+  height: 3.85rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  background: radial-gradient(circle at 30% 28%, #202020, #050505 65%);
+  color: #ffffff;
+  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.3), inset 0 4px 14px rgba(255, 255, 255, 0.06);
+}
+
+.tour-control-dock__camera-icon svg {
+  width: 1.25rem;
+  height: 1.25rem;
+}
+
+.tour-control-dock__joystick-thumb {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  margin-left: -18px;
-  margin-top: -18px;
-  border: 1px solid rgba(255, 255, 255, 0.28);
-  background: rgba(51, 174, 240, 0.44);
+  width: 1.9rem;
+  height: 1.9rem;
+  margin-left: -0.95rem;
+  margin-top: -0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18));
+  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25), 0 6px 12px rgba(0, 0, 0, 0.22);
   pointer-events: none;
 }
 
-.mobile-buttons {
-  display: flex;
-  justify-content: flex-end;
-  gap: 8px;
-}
-
-.mobile-buttons .btn {
-  width: auto;
-  min-width: 100px;
+.tour-control-dock__camera::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 4.4rem;
+  height: 4.4rem;
+  transform: translate(-50%, -50%);
+  border-radius: 999px;
+  border: 1px dashed rgba(255, 255, 255, 0.28);
+  pointer-events: none;
 }
 
 @media (max-width: 900px) {
-  .hud-panel {
-    width: min(280px, calc(100vw - 20px));
-  }
-
   .interaction-panel {
     top: auto;
-    bottom: 140px;
+    bottom: 112px;
     right: 10px;
+  }
+
+  .tour-control-dock {
+    gap: 6px;
+    min-height: 76px;
+    padding: 9px 10px 8px;
+    border-radius: 26px;
+  }
+
+  .tour-control-dock__xr {
+    min-width: 122px;
+    gap: 4px;
+  }
+
+  .tour-control-dock__action,
+  .tour-control-dock__xr > button,
+  .tour-control-dock__xr > a {
+    min-width: 52px;
+    min-height: 52px;
+    font-size: 0.66rem !important;
+  }
+
+  .tour-control-dock__icon,
+  .tour-control-dock__xr > button .tour-control-dock__icon,
+  .tour-control-dock__xr > a .tour-control-dock__icon {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .tour-control-dock__camera {
+    min-width: 74px;
+  }
+
+  .tour-control-dock__camera-icon {
+    width: 3.35rem;
+    height: 3.35rem;
+  }
+
+  .tour-control-dock__label {
+    font-size: 0.62rem;
+  }
+
+  .tour-control-dock__camera::after {
+    width: 3.95rem;
+    height: 3.95rem;
   }
 }
