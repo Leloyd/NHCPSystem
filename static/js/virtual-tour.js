@@ -22,7 +22,6 @@
   const userAgent = navigator.userAgent || "";
   const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isIOSChrome = isIOSDevice && /CriOS/.test(userAgent);
-  const isIOSSafari = isIOSDevice && /Safari/.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent);
   const fullscreenTarget = document.documentElement;
   const canUseNativeFullscreen = !isIOSDevice && typeof fullscreenTarget.requestFullscreen === "function" && typeof document.exitFullscreen === "function";
   const canUseFullscreen = canUseNativeFullscreen;
@@ -1556,21 +1555,8 @@
   }
 
   function downloadImageDataUrl(dataUrl) {
-    if (isIOSChrome) {
+    if (isIOSChrome || isIOSDevice) {
       showCapturePreview(dataUrl);
-      return;
-    }
-
-    if (isIOSSafari) {
-      const previewWindow = window.open("", "_blank", "noopener");
-
-      if (previewWindow) {
-        previewWindow.document.write(`<title>Virtual Tour Capture</title><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;margin:0 auto;background:#000;" />`);
-        previewWindow.document.close();
-        return;
-      }
-
-      window.location.href = dataUrl;
       return;
     }
 
