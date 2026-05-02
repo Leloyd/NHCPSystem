@@ -25,8 +25,7 @@
   const isIOSSafari = isIOSDevice && /Safari/.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent);
   const fullscreenTarget = document.documentElement;
   const canUseNativeFullscreen = !isIOSDevice && typeof fullscreenTarget.requestFullscreen === "function" && typeof document.exitFullscreen === "function";
-  const canUsePseudoFullscreen = isIOSDevice;
-  const canUseFullscreen = canUseNativeFullscreen || canUsePseudoFullscreen;
+  const canUseFullscreen = canUseNativeFullscreen;
   const digitalExhibitsUrl = app ? app.dataset.digitalExhibitsUrl : "";
   const balanghayImageSrc = app ? app.dataset.balanghayImageSrc : "";
   const balanghayGlbSrc = app ? app.dataset.balanghayGlbSrc : "";
@@ -40,7 +39,6 @@
   let artifactHotspotsVisible = true;
   let tourViewer = null;
   let resolvedScenes = null;
-  let isPseudoFullscreen = false;
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
   const balanghayArtifactCopy = {
@@ -1468,18 +1466,12 @@
     }
 
     if (!canUseFullscreen) {
-      toggleFullscreenButton.hidden = true;
-      toggleFullscreenButton.disabled = true;
-      toggleFullscreenButton.setAttribute("aria-hidden", "true");
-      toggleFullscreenButton.setAttribute("aria-disabled", "true");
+      toggleFullscreenButton.classList.remove("is-active");
+      toggleFullscreenButton.setAttribute("aria-pressed", "false");
       return;
     }
 
-    const isFullscreen = Boolean(document.fullscreenElement) || isPseudoFullscreen;
-    toggleFullscreenButton.hidden = false;
-    toggleFullscreenButton.disabled = false;
-    toggleFullscreenButton.removeAttribute("aria-hidden");
-    toggleFullscreenButton.removeAttribute("aria-disabled");
+    const isFullscreen = Boolean(document.fullscreenElement);
     toggleFullscreenButton.classList.toggle("is-active", isFullscreen);
     toggleFullscreenButton.setAttribute("aria-pressed", isFullscreen ? "true" : "false");
   }
@@ -1497,35 +1489,8 @@
     return (Number(value) * Math.PI) / 180;
   }
 
-  function syncIOSViewportHeight() {
-    if (!isIOSDevice) {
-      return;
-    }
-
-    const nextHeight = window.visualViewport && window.visualViewport.height ? window.visualViewport.height : window.innerHeight;
-    document.documentElement.style.setProperty("--tour-ios-viewport-height", `${Math.round(nextHeight)}px`);
-  }
-
-  function setPseudoFullscreenMode(isEnabled) {
-    if (!canUsePseudoFullscreen) {
-      return;
-    }
-
-    isPseudoFullscreen = Boolean(isEnabled);
-    document.documentElement.classList.toggle("tour-pseudo-fullscreen", isPseudoFullscreen);
-    document.body.classList.toggle("tour-pseudo-fullscreen", isPseudoFullscreen);
-
-    if (app) {
-      app.classList.toggle("tour-pseudo-fullscreen", isPseudoFullscreen);
-    }
-
-    syncIOSViewportHeight();
-
-    if (isPseudoFullscreen) {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    }
-
-    syncFullscreenButton();
+  function showFullscreenUnsupportedMessage() {
+    window.alert("Fullscreen is not supported in this browser on iPhone. Please use pinch zoom and landscape mode for a larger view.");
   }
 
   function ensureCapturePreviewOverlay() {
@@ -1756,11 +1721,9 @@
 
   async function toggleFullscreenMode() {
     if (!canUseFullscreen) {
-      return;
-    }
-
-    if (!canUseNativeFullscreen && canUsePseudoFullscreen) {
-      setPseudoFullscreenMode(!isPseudoFullscreen);
+      if (isIOSDevice) {
+        showFullscreenUnsupportedMessage();
+      }
       return;
     }
 
@@ -1910,15 +1873,6 @@
         window.location.href = digitalExhibitsUrl;
       }
     });
-  }
-
-  if (isIOSDevice) {
-    syncIOSViewportHeight();
-    window.addEventListener("resize", syncIOSViewportHeight);
-    window.addEventListener("orientationchange", syncIOSViewportHeight);
-    if (window.visualViewport) {
-      window.visualViewport.addEventListener("resize", syncIOSViewportHeight);
-    }
   }
 
   document.addEventListener("fullscreenchange", syncFullscreenButton);
