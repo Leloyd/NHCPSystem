@@ -1489,19 +1489,6 @@
   }
 
   function downloadImageDataUrl(dataUrl) {
-    if (isIOSSafari) {
-      const previewWindow = window.open("", "_blank", "noopener");
-
-      if (previewWindow) {
-        previewWindow.document.write(`<title>Virtual Tour Capture</title><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;margin:0 auto;background:#000;" />`);
-        previewWindow.document.close();
-        return;
-      }
-
-      window.location.href = dataUrl;
-      return;
-    }
-
     if (isIOSDevice) {
       window.location.href = dataUrl;
       return;
@@ -1657,7 +1644,7 @@
     try {
       const imageDataUrl = await renderExportImageFromCurrentView();
 
-      if (isIOSChrome && writeCapturePreview(previewWindow, imageDataUrl)) {
+      if (isIOSDevice && writeCapturePreview(previewWindow, imageDataUrl)) {
         return;
       }
 
@@ -1802,7 +1789,7 @@
     captureViewButton.addEventListener("click", function () {
       let previewWindow = null;
 
-      if (isIOSChrome) {
+      if (isIOSDevice) {
         previewWindow = window.open("", "_blank");
 
         if (previewWindow) {
