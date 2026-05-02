@@ -1,0 +1,516 @@
+{
+  "splats": [
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334.spz",
+      "transform": {
+        "translation": [
+          -1.641,
+          1.592,
+          -3.37
+        ],
+        "rotation": [
+          180,
+          -1.9484320243766016,
+          0
+        ],
+        "quaternion": [
+          1,
+          0,
+          -0.017,
+          0
+        ],
+        "scale": 2.598333333333333
+      }
+    },
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334-1.spz",
+      "transform": {
+        "translation": [
+          -2.718,
+          1.589,
+          -3.249
+        ],
+        "rotation": [
+          180,
+          -1.9484320243766016,
+          0
+        ],
+        "quaternion": [
+          1,
+          0,
+          -0.017,
+          0
+        ],
+        "scale": 2.598333333333333
+      }
+    },
+    {
+      "filename": "aged-ornate-church-interior.spz",
+      "transform": {
+        "translation": [
+          1.182,
+          1.72,
+          -0.351
+        ],
+        "rotation": [
+          -179.9005974319522,
+          5.4998837013507895,
+          -2.069261752195244
+        ],
+        "quaternion": [
+          0.998685961560851,
+          0.01799432269121006,
+          0.04798492008403151,
+          -1.0734078921577352e-9
+        ],
+        "scale": 2.77499730423396
+      }
+    },
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334-2.spz",
+      "transform": {
+        "translation": [
+          -0.902,
+          1.699,
+          2.403
+        ],
+        "rotation": [
+          -180,
+          2.7496704699156584,
+          0
+        ],
+        "quaternion": [
+          0.9997121240705623,
+          0,
+          0.02399309891513377,
+          0
+        ],
+        "scale": 2.589984515311484
+      }
+    },
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334-3.spz",
+      "transform": {
+        "translation": [
+          -0.563,
+          1.699,
+          -3.159
+        ],
+        "rotation": [
+          -180,
+          44.666776884683955,
+          0
+        ],
+        "quaternion": [
+          0.9249884376277414,
+          0,
+          0.37999525018708674,
+          0
+        ],
+        "scale": 2.5820858841382544
+      }
+    },
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334-4.spz",
+      "transform": {
+        "translation": [
+          -0.515,
+          1.691,
+          0.014
+        ],
+        "rotation": [
+          180,
+          -4.8148279529846505,
+          0
+        ],
+        "quaternion": [
+          0.999117403095834,
+          0,
+          -0.04200493817441966,
+          0
+        ],
+        "scale": 2.5961862733328167
+      }
+    },
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334-5.spz",
+      "transform": {
+        "translation": [
+          -1.116,
+          1.828,
+          0.083
+        ],
+        "rotation": [
+          180,
+          -4.70031951230739,
+          0
+        ],
+        "quaternion": [
+          0.9991588786394651,
+          0,
+          -0.04100652467321323,
+          0
+        ],
+        "scale": 2.296359264520152
+      }
+    },
+    {
+      "filename": "historic-mission-interior-exhibit-hall.spz",
+      "transform": {
+        "translation": [
+          -3.796,
+          1.528,
+          1.871
+        ],
+        "rotation": [
+          -180,
+          5.043497312378018,
+          0
+        ],
+        "quaternion": [
+          0.999,
+          0,
+          0.044,
+          0
+        ],
+        "scale": 0.9
+      }
+    },
+    {
+      "filename": "1983e137-6ebc-42fb-9e29-46d77f270334-6.spz",
+      "transform": {
+        "translation": [
+          -1.612,
+          1.643,
+          -0.272
+        ],
+        "rotation": [
+          180,
+          -1.9484320243766016,
+          0
+        ],
+        "quaternion": [
+          1,
+          0,
+          -0.017,
+          0
+        ],
+        "scale": 2.5913333333333335
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "filename": "woodenchurchpew3dmodelglb.glb",
+      "originalFilename": "wooden+church+pew+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -1.438,
+          -0.055,
+          -1.699
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "quaternion": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1.57,
+          1.57,
+          1.57
+        ]
+      }
+    },
+    {
+      "filename": "woodenchurchpew3dmodelglb-1.glb",
+      "originalFilename": "wooden+church+pew+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -0.413,
+          -0.026,
+          -1.659
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "quaternion": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1.57,
+          1.57,
+          1.57
+        ]
+      }
+    },
+    {
+      "filename": "woodenchurchpew3dmodelglb-2.glb",
+      "originalFilename": "wooden+church+pew+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          0.55,
+          0.068,
+          -1.639
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "quaternion": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1.57,
+          1.57,
+          1.57
+        ]
+      }
+    },
+    {
+      "filename": "woodenchurchpew3dmodelglb-3.glb",
+      "originalFilename": "wooden+church+pew+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -1.518,
+          -0.022,
+          1.512
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "quaternion": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1.57,
+          1.57,
+          1.57
+        ]
+      }
+    },
+    {
+      "filename": "woodenchurchpew3dmodelglb-4.glb",
+      "originalFilename": "wooden+church+pew+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -0.481,
+          0.024,
+          1.539
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "quaternion": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1.57,
+          1.57,
+          1.57
+        ]
+      }
+    },
+    {
+      "filename": "altarglb.glb",
+      "originalFilename": "Altar.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          2.953,
+          1.937,
+          0
+        ],
+        "rotation": [
+          -180,
+          0,
+          -180
+        ],
+        "quaternion": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "scale": [
+          3.92,
+          3.917,
+          3.92
+        ]
+      }
+    },
+    {
+      "filename": "deskglb.glb",
+      "originalFilename": "desk.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -3.746,
+          0.128,
+          -1.209
+        ],
+        "rotation": [
+          -180,
+          87.9500145324857,
+          -180
+        ],
+        "quaternion": [
+          0,
+          0.72,
+          0,
+          0.694
+        ],
+        "scale": [
+          0.537,
+          0.537,
+          0.537
+        ]
+      }
+    },
+    {
+      "filename": "rocksampledisplay3dmodelglb.glb",
+      "originalFilename": "rock+sample+display+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -2.565,
+          -0.094,
+          -1.727
+        ],
+        "rotation": [
+          -180,
+          0,
+          -180
+        ],
+        "quaternion": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "scale": [
+          2.1,
+          2.1,
+          2.1
+        ]
+      }
+    },
+    {
+      "filename": "museumdisplaycase3dmodelglb.glb",
+      "originalFilename": "museum+display+case+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -2.65,
+          -0.069,
+          1.486
+        ],
+        "rotation": [
+          -180,
+          0,
+          -180
+        ],
+        "quaternion": [
+          0,
+          1,
+          0,
+          0
+        ],
+        "scale": [
+          2.1,
+          2.1,
+          2.1
+        ]
+      }
+    },
+    {
+      "filename": "doorglb.glb",
+      "originalFilename": "Door.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          -3.627,
+          -0.298,
+          2.91
+        ],
+        "rotation": [
+          65.87940727806644,
+          -87.60160123477435,
+          66.12310812013378
+        ],
+        "quaternion": [
+          0.014,
+          -0.7,
+          0.017,
+          0.714
+        ],
+        "scale": [
+          2.044,
+          2.041,
+          2.044
+        ]
+      }
+    },
+    {
+      "filename": "woodenchurchpew3dmodelglb-5.glb",
+      "originalFilename": "wooden+church+pew+3d+model.glb",
+      "mimeType": "model/gltf-binary",
+      "transform": {
+        "translation": [
+          0.537,
+          0.068,
+          1.599
+        ],
+        "rotation": [
+          0,
+          0,
+          0
+        ],
+        "quaternion": [
+          0,
+          0,
+          0,
+          1
+        ],
+        "scale": [
+          1.57,
+          1.57,
+          1.57
+        ]
+      }
+    }
+  ],
+  "metadata": {
+    "exportTimestamp": "2026-04-02T18:58:25.406Z",
+    "spzExportVersion": 2
+  }
+}

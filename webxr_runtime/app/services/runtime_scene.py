@@ -63,7 +63,7 @@ class RuntimeSceneService:
         except FileNotFoundError as exc:
             self._is_ready = False
             self._error = str(exc)
-            LOGGER.exception("Critical startup failure: required ZIP is missing.")
+            LOGGER.exception("Critical startup failure: required WebXR scene source is missing.")
             raise
         except SceneParseError as exc:
             self._is_ready = False
@@ -85,7 +85,7 @@ class RuntimeSceneService:
 
     def _log_startup_report(self) -> None:
         LOGGER.info("--- Marble scene startup report ---")
-        LOGGER.info("ZIP found: %s", self._startup_report.get("zipFound"))
+        LOGGER.info("Scene source: %s", self._startup_report.get("zipFound"))
         LOGGER.info("Manifest found: %s", self._startup_report.get("manifestFound"))
         LOGGER.info("Manifest path: %s", self._startup_report.get("manifestPath"))
         LOGGER.info("Primary splat: %s", self._startup_report.get("primarySplat"))
