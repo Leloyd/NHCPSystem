@@ -5,3 +5,9 @@
 *.zip filter=lfs diff=lfs merge=lfs -text
 *.glb filter=lfs diff=lfs merge=lfs -text
 *.mb filter=lfs diff=lfs merge=lfs -text
+
+public/images/* -filter -diff -merge -text
+static/images/* -filter -diff -merge -text
+static/images/site-map/* -filter -diff -merge -text
+static/uploads/* -filter -diff -merge -text
+static/uploads/exhibits/* -filter -diff -merge -text
