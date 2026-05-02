@@ -615,5 +615,16 @@ def support():
     return render_template("Support.html")
 
 
+@app.route("/public/<path:filename>")
+def public_file(filename):
+    public_dir = PROJECT_ROOT / "public"
+    candidate_path = _resolve_safe_path(public_dir, filename)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid public file path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"File not found: {filename}"}), 404
+    return send_from_directory(str(public_dir), filename)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=not IS_PRODUCTION)
