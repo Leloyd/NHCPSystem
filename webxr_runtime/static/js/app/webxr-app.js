@@ -347,11 +347,6 @@ export class WebXRApp {
   }
 
   _setupXrUi() {
-    if (!navigator.xr) {
-      this.uiController.setXrStatus('WebXR not available in this browser.');
-      return;
-    }
-
     const mountXrButton = (button) => {
       const host = this.refs.xrButtonContainer ?? document.body;
       host.appendChild(button);
@@ -363,12 +358,16 @@ export class WebXRApp {
       this.renderer.xr.setReferenceSpaceType('local');
     }
 
-    this.uiController.setXrStatus('Checking WebXR support...');
+    const xrApiAvailable = Boolean(navigator.xr);
 
-    Promise.all([
-      navigator.xr.isSessionSupported(XR_SESSION_MODE_AR).catch(() => false),
-      navigator.xr.isSessionSupported(XR_SESSION_MODE_VR).catch(() => false),
-    ])
+    Promise.resolve(
+      xrApiAvailable
+        ? Promise.all([
+          navigator.xr.isSessionSupported(XR_SESSION_MODE_AR).catch(() => false),
+          navigator.xr.isSessionSupported(XR_SESSION_MODE_VR).catch(() => false),
+        ])
+        : [false, false],
+    )
       .then(([arSupported, vrSupported]) => {
         const formatArStartError = (error) => {
           const name = String(error?.name || 'Error');
@@ -408,6 +407,15 @@ export class WebXRApp {
           }
 
           return `Full 3D XR start failed (${detail}).`;
+        };
+
+        const showUnsupportedModeMessage = (sessionMode) => {
+          if (sessionMode === XR_SESSION_MODE_AR) {
+            this.uiController.showError('AR is not supported on this device/browser. The button stays visible, but this mode cannot start here.');
+            return;
+          }
+
+          this.uiController.showError('VR is not supported on this device/browser. The button stays visible, but immersive-vr cannot start here.');
         };
 
         const requestArSessionWithFallback = async () => {
@@ -493,8 +501,6 @@ export class WebXRApp {
 
           throw lastError || new Error('Failed to bind XR session.');
         };
-
-        if (arSupported || vrSupported) {
           let activeSession = null;
           let activeButton = null;
           const xrButtons = [];
@@ -530,6 +536,7 @@ export class WebXRApp {
             startingLabel,
             stopLabel,
             sessionMode,
+            supported,
             requestSession,
             formatStartError,
           }) => {
@@ -544,6 +551,8 @@ export class WebXRApp {
             xrButtons.push({ button, startLabel, buttonLabel });
 
             button.addEventListener('click', async () => {
+              this.uiController.clearError();
+
               if (activeSession) {
                 if (activeButton === button) {
                   button.disabled = true;
@@ -556,6 +565,11 @@ export class WebXRApp {
                 } else {
                   this.uiController.setXrStatus('Another XR mode is active. Stop it first, then start this mode.');
                 }
+                return;
+              }
+
+              if (!supported) {
+                showUnsupportedModeMessage(sessionMode);
                 return;
               }
 
@@ -604,78 +618,71 @@ export class WebXRApp {
             mountXrButton(button);
           };
 
-          if (vrSupported) {
-            createSessionButton({
-              iconLabel: 'VR',
-              startLabel: 'VR',
-              startingLabel: '...',
-              stopLabel: 'Stop',
-              sessionMode: XR_SESSION_MODE_VR,
-              requestSession: requestVrSessionWithFallback,
-              formatStartError: formatVrStartError,
-            });
-          }
+          createSessionButton({
+            iconLabel: 'VR',
+            startLabel: 'VR',
+            startingLabel: '...',
+            stopLabel: 'Stop',
+            sessionMode: XR_SESSION_MODE_VR,
+            supported: vrSupported,
+            requestSession: requestVrSessionWithFallback,
+            formatStartError: formatVrStartError,
+          });
 
-          if (arSupported) {
-            createSessionButton({
-              iconLabel: 'AR',
-              startLabel: 'AR',
-              startingLabel: '...',
-              stopLabel: 'Stop',
-              sessionMode: XR_SESSION_MODE_AR,
-              requestSession: requestArSessionWithFallback,
-              formatStartError: formatArStartError,
-            });
-          }
-
-          if (arSupported && vrSupported) {
-            this.uiController.setXrStatus(
-              'Full 3D XR + AR supported. Use Start AR Walk Mode to test real-world walking in scene.',
-            );
-            return;
-          }
-
-          if (vrSupported) {
-            this.uiController.setXrStatus('Full 3D XR supported. Start Full 3D XR for full 3D environment view.');
-            return;
-          }
-
-          this.uiController.setXrStatus(
-            'AR supported. Start AR Walk Mode to move by physically walking and looking around.',
-          );
-          return;
-        }
-
-        this.uiController.setXrStatus('WebXR unsupported on this device.');
+          createSessionButton({
+            iconLabel: 'AR',
+            startLabel: 'AR',
+            startingLabel: '...',
+            stopLabel: 'Stop',
+            sessionMode: XR_SESSION_MODE_AR,
+            supported: arSupported,
+            requestSession: requestArSessionWithFallback,
+            formatStartError: formatArStartError,
+          });
       })
       .catch(() => {
-        this.uiController.setXrStatus('WebXR capability check failed.');
+        const fallbackButtons = [
+          {
+            iconLabel: 'VR',
+            startLabel: 'VR',
+            sessionMode: XR_SESSION_MODE_VR,
+          },
+          {
+            iconLabel: 'AR',
+            startLabel: 'AR',
+            sessionMode: XR_SESSION_MODE_AR,
+          },
+        ];
+
+        for (const entry of fallbackButtons) {
+          const button = document.createElement('button');
+          button.type = 'button';
+          button.className = 'tour-control-dock__action';
+          button.innerHTML = `
+            <span class="tour-control-dock__icon" aria-hidden="true">${entry.iconLabel}</span>
+            <span class="tour-control-dock__label">${entry.startLabel}</span>
+          `;
+          button.addEventListener('click', () => {
+            this.uiController.showError('WebXR capability check failed on this device/browser, so this XR mode cannot start.');
+          });
+          mountXrButton(button);
+        }
       });
 
     this.renderer.xr.addEventListener('sessionstart', () => {
       const mode = this.renderer.xr.getSession()?.mode;
       if (mode === XR_SESSION_MODE_AR) {
-        const blendMode = this.renderer.xr.getEnvironmentBlendMode?.();
-        const blendDetail = blendMode ? ` (${blendMode})` : '';
-        this.uiController.setXrStatus(
-          `AR session started${blendDetail}. Live camera is expected in AR; 3D content is rendered on top.`,
-        );
+        this.uiController.clearError();
       } else if (mode === XR_SESSION_MODE_VR) {
-        const refDetail = this.activeXrReferenceSpaceType
-          ? ` Reference space: ${this.activeXrReferenceSpaceType}.`
-          : '';
-        this.uiController.setXrStatus(
-          `VR session started. Full 3D environment is active.${refDetail} On phones, split-view is expected.`,
-        );
+        this.uiController.clearError();
       } else {
-        this.uiController.setXrStatus('XR session started.');
+        this.uiController.clearError();
       }
 
       this.uiController.setMobileControlsVisible(true);
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
-      this.uiController.setXrStatus('XR session ended.');
 
       this.uiController.setMobileControlsVisible(true);
     });

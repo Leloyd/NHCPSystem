@@ -275,29 +275,27 @@ canvas {
   left: 50%;
   bottom: max(12px, env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
-  width: min(96vw, 740px);
-  min-height: 80px;
-  padding: 10px 12px;
-  border-radius: 30px;
+  width: min(23rem, calc(100vw - 2rem));
+  min-height: 0;
+  padding: 0.62rem 0.72rem;
+  border-radius: 1.8rem;
   border: 1px solid rgba(255, 255, 255, 0.24);
   background: rgba(255, 255, 255, 0.9);
   box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(18px);
-  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
   z-index: 45;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(0, 1fr);
+  align-items: end;
+  gap: 0.38rem;
+  box-sizing: border-box;
   touch-action: none;
 }
 
 .tour-control-dock__xr {
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  gap: 6px;
-  min-width: 140px;
+  display: contents;
 }
 
 .tour-control-dock__action,
@@ -307,9 +305,9 @@ canvas {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  min-width: 56px;
-  min-height: 58px;
+  gap: 0.35rem;
+  min-width: 0;
+  min-height: 3.75rem;
   margin: 0 !important;
   padding: 0 !important;
   border: 0 !important;
@@ -333,22 +331,24 @@ canvas {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2.52rem;
-  height: 2.52rem;
+  width: 2.55rem;
+  height: 2.55rem;
   border-radius: 0.92rem;
   background: rgba(255, 255, 255, 0.72);
   color: #171717;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 20px rgba(15, 23, 42, 0.12);
+  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
 }
 
-.tour-control-dock__icon svg {
-  width: 1.1rem;
-  height: 1.1rem;
+.tour-control-dock__icon svg,
+.tour-control-dock__camera-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
 }
 
 .tour-control-dock__label {
   font-size: 0.66rem;
-  font-weight: 620;
+  font-weight: 600;
   line-height: 1;
   color: rgba(23, 23, 23, 0.78);
 }
@@ -377,33 +377,26 @@ canvas {
 
 .tour-control-dock__camera {
   position: relative;
-  min-width: 88px;
-  min-height: 74px;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
+  gap: 0.35rem;
   touch-action: none;
-  transform: translateY(-0.28rem);
+  transform: translateY(-0.32rem);
 }
 
 .tour-control-dock__camera-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.85rem;
-  height: 3.85rem;
+  width: 3.8rem;
+  height: 3.8rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.18);
-  background: radial-gradient(circle at 30% 28%, #202020, #050505 65%);
+  background: #050505;
   color: #ffffff;
-  box-shadow: 0 18px 30px rgba(0, 0, 0, 0.3), inset 0 4px 14px rgba(255, 255, 255, 0.06);
-}
-
-.tour-control-dock__camera-icon svg {
-  width: 1.25rem;
-  height: 1.25rem;
+  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.32);
+  transition: transform 0.18s ease, box-shadow 0.18s ease;
 }
 
 .tour-control-dock__joystick-thumb {
@@ -442,39 +435,29 @@ canvas {
   }
 
   .tour-control-dock {
-    gap: 6px;
-    min-height: 76px;
-    padding: 9px 10px 8px;
-    border-radius: 26px;
-  }
-
-  .tour-control-dock__xr {
-    min-width: 122px;
-    gap: 4px;
+    width: min(20.5rem, calc(100vw - 0.9rem));
+    padding: 0.58rem 0.65rem calc(0.62rem + (env(safe-area-inset-bottom, 0px) * 0.18));
+    gap: 0.3rem;
+    border-radius: 1.65rem;
   }
 
   .tour-control-dock__action,
   .tour-control-dock__xr > button,
   .tour-control-dock__xr > a {
-    min-width: 52px;
-    min-height: 52px;
-    font-size: 0.66rem !important;
+    min-height: 3.5rem;
   }
 
   .tour-control-dock__icon,
   .tour-control-dock__xr > button .tour-control-dock__icon,
   .tour-control-dock__xr > a .tour-control-dock__icon {
-    width: 2.2rem;
-    height: 2.2rem;
-  }
-
-  .tour-control-dock__camera {
-    min-width: 74px;
+    width: 2.35rem;
+    height: 2.35rem;
+    border-radius: 0.85rem;
   }
 
   .tour-control-dock__camera-icon {
-    width: 3.35rem;
-    height: 3.35rem;
+    width: 3.45rem;
+    height: 3.45rem;
   }
 
   .tour-control-dock__label {
@@ -482,7 +465,7 @@ canvas {
   }
 
   .tour-control-dock__camera::after {
-    width: 3.95rem;
-    height: 3.95rem;
+    width: 3.9rem;
+    height: 3.9rem;
   }
 }
