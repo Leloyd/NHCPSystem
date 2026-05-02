@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import os
+import tempfile
 from pathlib import Path
 
 
@@ -12,6 +13,13 @@ def _bool_env(name: str, default: bool) -> bool:
     if raw is None:
         return default
     return raw.strip().lower() in {"1", "true", "yes", "on"}
+
+
+def _runtime_dir() -> Path:
+    configured = (os.getenv("WEBXR_RUNTIME_DIR") or "").strip()
+    if configured:
+        return Path(configured).expanduser().resolve()
+    return Path(tempfile.gettempdir()).resolve() / "nhcp_webxr_runtime"
 
 
 class BaseConfig:
@@ -28,7 +36,7 @@ class BaseConfig:
         "Church.zip",
     )
 
-    RUNTIME_DIR = BASE_DIR / "runtime"
+    RUNTIME_DIR = _runtime_dir()
     RUNTIME_URL_PREFIX = "/webxr/runtime"
     EXTRACTED_DIR_NAME = "church_extracted"
     EXTRACT_STATE_FILE = "church_extract_state.json"
