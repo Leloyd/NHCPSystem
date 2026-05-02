@@ -10,7 +10,7 @@ body {
 }
 
 .landing-intro {
-  background: radial-gradient(circle at 50% 20%, #3a261d 0%, #110b08 55%, #060404 100%);
+  background: transparent;
 }
 
 #landingIntro3d {
@@ -23,16 +23,11 @@ body {
   display: block;
 }
 
-.landing-intro-gradient {
-  z-index: 1;
-  background:
-    radial-gradient(circle at 50% 80%, rgba(232, 179, 106, 0.14), transparent 44%),
-    linear-gradient(180deg, rgba(10, 8, 8, 0.4) 0%, rgba(10, 8, 8, 0.6) 52%, rgba(10, 8, 8, 0.78) 100%);
+.landing-intro-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
   pointer-events: none;
-}
-
-.landing-intro-copy {
-  z-index: 2;
 }
 
 .landing-intro-kicker {
@@ -61,24 +56,66 @@ body {
 }
 
 .landing-intro-church {
+  position: fixed;
+  left: 0;
+  top: 0;
+  transform: translate(-50%, -112%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+  min-width: 148px;
+  min-height: 58px;
+  padding: 0.6rem 0.72rem;
+  border-radius: 1.15rem;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(255, 255, 255, 0.14);
+  color: #f8fafc;
+  text-decoration: none;
+  text-align: left;
+  font: 600 0.72rem "Segoe UI", system-ui, sans-serif;
+  box-shadow: 0 18px 38px rgba(2, 6, 23, 0.28);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  transition: opacity 220ms ease, transform 220ms ease;
+  pointer-events: auto;
+}
+
+.landing-intro-church__icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  min-width: 180px;
-  border-radius: 999px;
-  border: 1px solid rgba(134, 239, 172, 0.72);
-  padding: 0.72rem 1.35rem;
-  font-size: 0.95rem;
-  font-weight: 700;
-  letter-spacing: 0.01em;
-  background: rgba(16, 185, 129, 0.9);
-  color: #f0fdf4;
-  transition: transform 220ms ease, background-color 220ms ease, opacity 220ms ease;
+  width: 2.52rem;
+  height: 2.52rem;
+  border-radius: 0.92rem;
+  flex: 0 0 auto;
+  background: rgba(255, 255, 255, 0.88);
+  color: #171717;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 20px rgba(15, 23, 42, 0.12);
+  transition: transform 180ms ease, box-shadow 180ms ease, background 180ms ease;
 }
 
-.landing-intro-church:hover {
-  transform: translateY(-2px);
-  background: rgba(5, 150, 105, 0.95);
+.landing-intro-church__icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.landing-intro-church__label {
+  font-size: 0.74rem;
+  font-weight: 620;
+  line-height: 1;
+  color: rgba(255, 255, 255, 0.95);
+  letter-spacing: 0.01em;
+}
+
+.landing-intro-church:hover .landing-intro-church__icon,
+.landing-intro-church:focus-visible .landing-intro-church__icon {
+  transform: translateY(-1px);
+}
+
+.landing-intro-church:hover,
+.landing-intro-church:focus-visible {
+  transform: translate(-50%, -114%);
 }
 
 .landing-intro-start:enabled:hover {
@@ -105,15 +142,24 @@ body {
 }
 
 .landing-intro-status {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom, 0px) + 12px);
+  transform: translateX(-50%);
   min-height: 1.5rem;
   margin: 0;
   color: #e7dccf;
   font-size: 0.95rem;
   text-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  pointer-events: none;
 }
 
 .landing-intro-status.is-error {
   color: #fecaca;
+}
+
+.landing-intro-status:empty {
+  display: none;
 }
 
 .landing-intro.landing-intro--started .landing-intro-copy {
@@ -722,9 +768,18 @@ body {
   .landing-intro-start,
   .landing-intro-skip,
   .landing-intro-church {
-    min-width: 152px;
-    padding: 0.66rem 1.15rem;
-    font-size: 0.88rem;
+    min-width: 128px;
+    min-height: 52px;
+    font-size: 0.66rem;
+  }
+
+  .landing-intro-church__icon {
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .landing-intro-church__label {
+    font-size: 0.68rem;
   }
 
   .landing-intro-status {
