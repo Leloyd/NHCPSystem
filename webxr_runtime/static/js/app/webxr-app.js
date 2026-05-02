@@ -15,8 +15,13 @@ const UNDERGROUND_ZIP_NAME = 'underground.zip';
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];
+const UNDERGROUND_SPAWN_POINT = [3.15, -0.47, 0.0];
 const CHURCH_MAX_POSITIVE_CLAMP = { x: 2.5, z: 2.5 };
 const UNDERGROUND_MAX_POSITIVE_CLAMP = { x: 3.5, z: 2.5 };
+const UNDERGROUND_FALLBACK_BOUNDS = {
+  min: [-3.45, -0.47, -5.35],
+  max: [3.65, 3.4, 2.65],
+};
 const UNDERGROUND_WALK_BOUNDARY = [
   [3.5, -0.7],
   [1.5, -0.7],
@@ -1143,6 +1148,14 @@ export class WebXRApp {
     const maxPositiveClamp = this._isUndergroundScene()
       ? UNDERGROUND_MAX_POSITIVE_CLAMP
       : CHURCH_MAX_POSITIVE_CLAMP;
+    const preferredCollisionIds = new Set(this.metadata.scene?.collision?.preferredMeshIds ?? []);
+    const collisionEntries = this.meshEntries.filter((entry) => preferredCollisionIds.has(entry.asset.id));
+    const useUndergroundFallbackOnly = this._isUndergroundScene() && collisionEntries.length === 0 && this.meshEntries.length <= 2;
+    const chosenEntries = useUndergroundFallbackOnly
+      ? []
+      : collisionEntries.length > 0
+        ? collisionEntries
+        : this.meshEntries;
 
     this.collisionSystem = new CollisionSystem({
       scene: this.scene,
@@ -1150,20 +1163,10 @@ export class WebXRApp {
       walkBoundary: this._isUndergroundScene() ? UNDERGROUND_WALK_BOUNDARY : null,
       maxPositiveClamp,
     });
+    this.collisionSystem.buildFromMeshes(chosenEntries);
+    const fallbackBounds = this._computeSceneFallbackBounds();
 
-    const preferredCollisionIds = new Set(this.metadata.scene?.collision?.preferredMeshIds ?? []);
-    const collisionEntries = this.meshEntries.filter((entry) => preferredCollisionIds.has(entry.asset.id));
-
-    const chosenEntries = collisionEntries.length > 0 ? collisionEntries : this.meshEntries;
-    const collisionSummary = this.collisionSystem.buildFromMeshes(chosenEntries);
-
-    if (collisionSummary.colliderCount === 0) {
-      const fallbackBounds = this._computeWorldBounds();
-      this.collisionSystem.setFallbackBounds(fallbackBounds);
-    } else {
-      const worldBounds = this._computeWorldBounds();
-      this.collisionSystem.setFallbackBounds(worldBounds);
-    }
+    this.collisionSystem.setFallbackBounds(fallbackBounds);
 
     this.playerController = new PlayerController({
       camera: this.camera,
@@ -1219,9 +1222,20 @@ export class WebXRApp {
     return bounds;
   }
 
+  _computeSceneFallbackBounds() {
+    if (this._isUndergroundScene()) {
+      return new THREE.Box3(
+        new THREE.Vector3(...UNDERGROUND_FALLBACK_BOUNDS.min),
+        new THREE.Vector3(...UNDERGROUND_FALLBACK_BOUNDS.max),
+      );
+    }
+
+    return this._computeWorldBounds();
+  }
+
   _computeSpawnPoint() {
     if (this._isUndergroundScene()) {
-      return new THREE.Vector3(3.5, 0.10, 0);
+      return new THREE.Vector3(...UNDERGROUND_SPAWN_POINT);
     }
 
     if (this.requestedSpawnOverride) {
