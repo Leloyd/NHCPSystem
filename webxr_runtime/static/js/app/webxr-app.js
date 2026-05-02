@@ -24,7 +24,7 @@ const UNDERGROUND_FALLBACK_BOUNDS = {
 };
 const UNDERGROUND_FLOOR_REGIONS = [
   {
-    floorY: -0.2,
+    floorY: -0.05,
     points: [
       [-1.6, -5.1],
       [1.5, -5.1],
