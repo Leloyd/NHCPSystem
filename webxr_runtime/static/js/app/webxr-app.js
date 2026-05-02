@@ -19,7 +19,7 @@ const UNDERGROUND_SPAWN_POINT = [3.15, -0.47, 0.0];
 const CHURCH_MAX_POSITIVE_CLAMP = { x: 2.5, z: 2.5 };
 const UNDERGROUND_MAX_POSITIVE_CLAMP = { x: 3.5, z: 2.5 };
 const UNDERGROUND_FALLBACK_BOUNDS = {
-  min: [-3.45, -0.47, -5.35],
+  min: [-3.45, 1.0, -5.35],
   max: [3.65, 3.4, 2.65],
 };
 const UNDERGROUND_WALK_BOUNDARY = [
