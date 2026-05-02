@@ -24,7 +24,9 @@
   const isIOSChrome = isIOSDevice && /CriOS/.test(userAgent);
   const isIOSSafari = isIOSDevice && /Safari/.test(userAgent) && !/CriOS|FxiOS|EdgiOS|OPiOS/.test(userAgent);
   const fullscreenTarget = document.documentElement;
-  const canUseFullscreen = !isIOSDevice && typeof fullscreenTarget.requestFullscreen === "function" && typeof document.exitFullscreen === "function";
+  const canUseNativeFullscreen = !isIOSDevice && typeof fullscreenTarget.requestFullscreen === "function" && typeof document.exitFullscreen === "function";
+  const canUsePseudoFullscreen = isIOSDevice;
+  const canUseFullscreen = canUseNativeFullscreen || canUsePseudoFullscreen;
   const digitalExhibitsUrl = app ? app.dataset.digitalExhibitsUrl : "";
   const balanghayImageSrc = app ? app.dataset.balanghayImageSrc : "";
   const balanghayGlbSrc = app ? app.dataset.balanghayGlbSrc : "";
@@ -38,6 +40,9 @@
   let artifactHotspotsVisible = true;
   let tourViewer = null;
   let resolvedScenes = null;
+  let isPseudoFullscreen = false;
+  let capturePreviewOverlay = null;
+  let capturePreviewImage = null;
   const balanghayArtifactCopy = {
     tagalogTitle: "Ang Balanghay",
     tagalogText:
@@ -1470,7 +1475,11 @@
       return;
     }
 
-    const isFullscreen = Boolean(document.fullscreenElement);
+    const isFullscreen = Boolean(document.fullscreenElement) || isPseudoFullscreen;
+    toggleFullscreenButton.hidden = false;
+    toggleFullscreenButton.disabled = false;
+    toggleFullscreenButton.removeAttribute("aria-hidden");
+    toggleFullscreenButton.removeAttribute("aria-disabled");
     toggleFullscreenButton.classList.toggle("is-active", isFullscreen);
     toggleFullscreenButton.setAttribute("aria-pressed", isFullscreen ? "true" : "false");
   }
@@ -1488,8 +1497,114 @@
     return (Number(value) * Math.PI) / 180;
   }
 
+  function syncIOSViewportHeight() {
+    if (!isIOSDevice) {
+      return;
+    }
+
+    const nextHeight = window.visualViewport && window.visualViewport.height ? window.visualViewport.height : window.innerHeight;
+    document.documentElement.style.setProperty("--tour-ios-viewport-height", `${Math.round(nextHeight)}px`);
+  }
+
+  function setPseudoFullscreenMode(isEnabled) {
+    if (!canUsePseudoFullscreen) {
+      return;
+    }
+
+    isPseudoFullscreen = Boolean(isEnabled);
+    document.documentElement.classList.toggle("tour-pseudo-fullscreen", isPseudoFullscreen);
+    document.body.classList.toggle("tour-pseudo-fullscreen", isPseudoFullscreen);
+
+    if (app) {
+      app.classList.toggle("tour-pseudo-fullscreen", isPseudoFullscreen);
+    }
+
+    syncIOSViewportHeight();
+
+    if (isPseudoFullscreen) {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    }
+
+    syncFullscreenButton();
+  }
+
+  function ensureCapturePreviewOverlay() {
+    if (capturePreviewOverlay && capturePreviewImage) {
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive";
+    overlay.hidden = true;
+    overlay.id = "tourCapturePreviewOverlay";
+
+    const panel = document.createElement("section");
+    panel.className = "tour-capture-preview";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-label", "Captured virtual tour image");
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "tour-capture-preview__close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close captured image preview");
+    closeButton.textContent = "×";
+
+    const imageWrap = document.createElement("div");
+    imageWrap.className = "tour-capture-preview__image-wrap";
+
+    const image = document.createElement("img");
+    image.className = "tour-capture-preview__image";
+    image.alt = "Captured virtual tour image";
+
+    imageWrap.appendChild(image);
+    panel.appendChild(closeButton);
+    panel.appendChild(imageWrap);
+    overlay.appendChild(panel);
+    app.appendChild(overlay);
+
+    closeButton.addEventListener("click", function () {
+      overlay.hidden = true;
+      image.removeAttribute("src");
+    });
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        overlay.hidden = true;
+        image.removeAttribute("src");
+      }
+    });
+
+    capturePreviewOverlay = overlay;
+    capturePreviewImage = image;
+  }
+
+  function showCapturePreview(dataUrl) {
+    ensureCapturePreviewOverlay();
+
+    if (!capturePreviewOverlay || !capturePreviewImage) {
+      return;
+    }
+
+    capturePreviewImage.src = dataUrl;
+    capturePreviewOverlay.hidden = false;
+  }
+
   function downloadImageDataUrl(dataUrl) {
-    if (isIOSDevice) {
+    if (isIOSChrome) {
+      showCapturePreview(dataUrl);
+      return;
+    }
+
+    if (isIOSSafari) {
+      const previewWindow = window.open("", "_blank", "noopener");
+
+      if (previewWindow) {
+        previewWindow.document.write(`<title>Virtual Tour Capture</title><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;margin:0 auto;background:#000;" />`);
+        previewWindow.document.close();
+        return;
+      }
+
       window.location.href = dataUrl;
       return;
     }
@@ -1629,31 +1744,11 @@
     return exportCanvas.toDataURL("image/png");
   }
 
-  function writeCapturePreview(previewWindow, dataUrl) {
-    if (!previewWindow || previewWindow.closed) {
-      return false;
-    }
-
-    previewWindow.document.open();
-    previewWindow.document.write(`<title>Virtual Tour Capture</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;" /></body>`);
-    previewWindow.document.close();
-    return true;
-  }
-
-  async function captureCurrentView(previewWindow) {
+  async function captureCurrentView() {
     try {
       const imageDataUrl = await renderExportImageFromCurrentView();
-
-      if (isIOSDevice && writeCapturePreview(previewWindow, imageDataUrl)) {
-        return;
-      }
-
       downloadImageDataUrl(imageDataUrl);
     } catch (error) {
-      if (previewWindow && !previewWindow.closed) {
-        previewWindow.close();
-      }
-
       console.error("Unable to export virtual tour view.", error);
       window.alert("Unable to capture the current 360 view yet. Please wait for the scene to finish loading, then try again.");
     }
@@ -1661,6 +1756,11 @@
 
   async function toggleFullscreenMode() {
     if (!canUseFullscreen) {
+      return;
+    }
+
+    if (!canUseNativeFullscreen && canUsePseudoFullscreen) {
+      setPseudoFullscreenMode(!isPseudoFullscreen);
       return;
     }
 
@@ -1769,6 +1869,13 @@
     if (event.key === "Escape" && artifactOverlay && !artifactOverlay.hidden) {
       closeArtifactOverlay();
     }
+
+    if (event.key === "Escape" && capturePreviewOverlay && !capturePreviewOverlay.hidden) {
+      capturePreviewOverlay.hidden = true;
+      if (capturePreviewImage) {
+        capturePreviewImage.removeAttribute("src");
+      }
+    }
   });
 
   if (toggleSceneHotspotsButton) {
@@ -1787,19 +1894,7 @@
 
   if (captureViewButton) {
     captureViewButton.addEventListener("click", function () {
-      let previewWindow = null;
-
-      if (isIOSDevice) {
-        previewWindow = window.open("", "_blank");
-
-        if (previewWindow) {
-          previewWindow.document.open();
-          previewWindow.document.write('<title>Preparing Capture</title><body style="margin:0;background:#000;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;">Preparing capture...</body>');
-          previewWindow.document.close();
-        }
-      }
-
-      captureCurrentView(previewWindow);
+      captureCurrentView();
     });
   }
 
@@ -1815,6 +1910,15 @@
         window.location.href = digitalExhibitsUrl;
       }
     });
+  }
+
+  if (isIOSDevice) {
+    syncIOSViewportHeight();
+    window.addEventListener("resize", syncIOSViewportHeight);
+    window.addEventListener("orientationchange", syncIOSViewportHeight);
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", syncIOSViewportHeight);
+    }
   }
 
   document.addEventListener("fullscreenchange", syncFullscreenButton);
