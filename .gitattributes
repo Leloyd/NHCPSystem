@@ -12,8 +12,6 @@ static/AR-Artifacts/* -filter -diff -merge -text
 static/AR-Artifacts/**/* -filter -diff -merge -text
 static/models/landing/3DRuntime/* -filter -diff -merge -text
 static/models/landing/3DRuntime/**/* -filter -diff -merge -text
-webxr_runtime/runtime/church_extracted/* -filter -diff -merge -text
-webxr_runtime/runtime/church_extracted/**/* -filter -diff -merge -text
 static/images/* -filter -diff -merge -text
 static/images/site-map/* -filter -diff -merge -text
 static/uploads/* -filter -diff -merge -text

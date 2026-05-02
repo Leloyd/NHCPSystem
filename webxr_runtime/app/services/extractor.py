@@ -27,17 +27,6 @@ class ExtractionResult:
     extracted_at: str
 
 
-def _has_extracted_files(extracted_dir: Path) -> bool:
-    if not extracted_dir.exists() or not extracted_dir.is_dir():
-        return False
-
-    for file_path in extracted_dir.rglob("*"):
-        if file_path.is_file():
-            return True
-
-    return False
-
-
 def _resolve_zip_path(base_dir: Path, configured_path: str, candidates: tuple[str, ...]) -> Path:
     if configured_path:
         configured = Path(configured_path)
@@ -145,27 +134,11 @@ def ensure_extracted(config: dict) -> ExtractionResult:
     extracted_dir = runtime_dir / config["EXTRACTED_DIR_NAME"]
     state_file = runtime_dir / config["EXTRACT_STATE_FILE"]
 
-    try:
-        zip_path = _resolve_zip_path(
-            base_dir=base_dir,
-            configured_path=config.get("MARBLE_ZIP_PATH", ""),
-            candidates=tuple(config.get("ZIP_CANDIDATES", ())),
-        )
-    except FileNotFoundError:
-        if _has_extracted_files(extracted_dir):
-            LOGGER.info("ZIP not found. Reusing committed runtime folder: %s", extracted_dir)
-            inventory = _collect_inventory(extracted_dir)
-
-            return ExtractionResult(
-                zip_path=extracted_dir,
-                extracted_dir=extracted_dir,
-                did_extract=False,
-                fingerprint="preextracted",
-                inventory=inventory,
-                extracted_at="",
-            )
-
-        raise
+    zip_path = _resolve_zip_path(
+        base_dir=base_dir,
+        configured_path=config.get("MARBLE_ZIP_PATH", ""),
+        candidates=tuple(config.get("ZIP_CANDIDATES", ())),
+    )
 
     LOGGER.info("ZIP found: %s", zip_path)
 

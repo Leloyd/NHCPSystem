@@ -6,7 +6,7 @@ venv/
 .env
 
 # Flask/runtime
-church.zip
+runtime/church_extracted/
 runtime/church_extract_state.json
 
 # Node
