@@ -1488,14 +1488,6 @@
 
   function downloadImageDataUrl(dataUrl) {
     if (isIOSDevice) {
-      const previewWindow = window.open("", "_blank", "noopener");
-
-      if (previewWindow) {
-        previewWindow.document.write(`<title>Virtual Tour Capture</title><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;margin:0 auto;background:#000;" />`);
-        previewWindow.document.close();
-        return;
-      }
-
       window.location.href = dataUrl;
       return;
     }
@@ -1635,11 +1627,31 @@
     return exportCanvas.toDataURL("image/png");
   }
 
-  async function captureCurrentView() {
+  function writeCapturePreview(previewWindow, dataUrl) {
+    if (!previewWindow || previewWindow.closed) {
+      return false;
+    }
+
+    previewWindow.document.open();
+    previewWindow.document.write(`<title>Virtual Tour Capture</title><body style="margin:0;background:#000;display:flex;align-items:center;justify-content:center;min-height:100vh;"><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;" /></body>`);
+    previewWindow.document.close();
+    return true;
+  }
+
+  async function captureCurrentView(previewWindow) {
     try {
       const imageDataUrl = await renderExportImageFromCurrentView();
+
+      if (isIOSDevice && writeCapturePreview(previewWindow, imageDataUrl)) {
+        return;
+      }
+
       downloadImageDataUrl(imageDataUrl);
     } catch (error) {
+      if (previewWindow && !previewWindow.closed) {
+        previewWindow.close();
+      }
+
       console.error("Unable to export virtual tour view.", error);
       window.alert("Unable to capture the current 360 view yet. Please wait for the scene to finish loading, then try again.");
     }
@@ -1773,7 +1785,19 @@
 
   if (captureViewButton) {
     captureViewButton.addEventListener("click", function () {
-      captureCurrentView();
+      let previewWindow = null;
+
+      if (isIOSDevice) {
+        previewWindow = window.open("", "_blank");
+
+        if (previewWindow) {
+          previewWindow.document.open();
+          previewWindow.document.write('<title>Preparing Capture</title><body style="margin:0;background:#000;color:#fff;font-family:Arial,sans-serif;display:flex;align-items:center;justify-content:center;min-height:100vh;">Preparing capture...</body>');
+          previewWindow.document.close();
+        }
+      }
+
+      captureCurrentView(previewWindow);
     });
   }
 
