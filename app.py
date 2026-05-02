@@ -563,8 +563,41 @@ def webxr_healthz():
     return jsonify(payload), status_code
 
 
+def _ensure_webxr_runtime_asset_ready(asset_path):
+    requested_path = str(asset_path or "").strip().replace("\\", "/")
+    if not requested_path:
+        return True
+
+    extracted_dir_name = requested_path.split("/", 1)[0].strip()
+    if not extracted_dir_name:
+        return True
+
+    default_extracted_dir = str(_get_webxr_config_value("EXTRACTED_DIR_NAME", "church_extracted") or "church_extracted").strip()
+    if extracted_dir_name == default_extracted_dir:
+        return _ensure_webxr_runtime_initialized()
+
+    if not extracted_dir_name.endswith("_extracted"):
+        return _ensure_webxr_runtime_initialized()
+
+    if WEBXR_RUNTIME_SCENE is None and not _ensure_webxr_runtime_initialized():
+        return False
+
+    zip_override = f"{extracted_dir_name[:-10]}.zip"
+
+    try:
+        WEBXR_RUNTIME_SCENE.get_scene_description(zip_override=zip_override)
+        return True
+    except Exception as exc:  # noqa: BLE001
+        app.logger.exception("Failed preparing WebXR runtime assets for %s", zip_override)
+        globals()["WEBXR_INIT_ERROR"] = str(exc)
+        return False
+
+
 @app.route("/webxr/runtime/<path:asset_path>")
 def webxr_runtime_asset(asset_path):
+    if not _ensure_webxr_runtime_asset_ready(asset_path):
+        return jsonify({"error": "WebXR runtime asset is unavailable.", "details": WEBXR_INIT_ERROR}), 503
+
     runtime_dir = Path(_get_webxr_config_value("RUNTIME_DIR", WEBXR_BASE_DIR / "runtime")).resolve()
     candidate_path = _resolve_safe_path(runtime_dir, asset_path)
 
