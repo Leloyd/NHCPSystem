@@ -22,6 +22,17 @@ const UNDERGROUND_FALLBACK_BOUNDS = {
   min: [-3.45, 0, -5.35],
   max: [3.65, 3.4, 2.65],
 };
+const UNDERGROUND_FLOOR_REGIONS = [
+  {
+    floorY: -0.5,
+    points: [
+      [-1.6, -5.1],
+      [1.5, -5.1],
+      [1.5, 1.1],
+      [-1.6, 1.2],
+    ],
+  },
+];
 const UNDERGROUND_WALK_BOUNDARY = [
   [3.5, -0.7],
   [1.5, -0.7],
@@ -1162,6 +1173,7 @@ export class WebXRApp {
       debugEnabled: Boolean(this.metadata.debug?.collision),
       walkBoundary: this._isUndergroundScene() ? UNDERGROUND_WALK_BOUNDARY : null,
       maxPositiveClamp,
+      floorRegions: this._isUndergroundScene() ? UNDERGROUND_FLOOR_REGIONS : null,
     });
     this.collisionSystem.buildFromMeshes(chosenEntries);
     const fallbackBounds = this._computeSceneFallbackBounds();

@@ -15,11 +15,12 @@ const DEFAULT_MAX_POSITIVE_X = 2.5;
 const DEFAULT_MAX_POSITIVE_Z = 2.5;
 
 export class CollisionSystem {
-  constructor({ scene, debugEnabled = false, walkBoundary = null, maxPositiveClamp = null }) {
+  constructor({ scene, debugEnabled = false, walkBoundary = null, maxPositiveClamp = null, floorRegions = null }) {
     this.scene = scene;
     this.debugEnabled = Boolean(debugEnabled);
     this.walkBoundary = this._normalizeWalkBoundary(walkBoundary);
     this.maxPositiveClamp = this._normalizeMaxPositiveClamp(maxPositiveClamp);
+    this.floorRegions = this._normalizeFloorRegions(floorRegions);
 
     this.colliders = [];
     this.fallbackBounds = new THREE.Box3(
@@ -88,6 +89,10 @@ export class CollisionSystem {
       this.fallbackBounds.copy(box);
       this.worldBoundsHelper.box.copy(this.fallbackBounds);
     }
+  }
+
+  setFloorRegions(floorRegions) {
+    this.floorRegions = this._normalizeFloorRegions(floorRegions);
   }
 
   /**
@@ -239,7 +244,7 @@ export class CollisionSystem {
 
     this._applyWalkBoundaryClamp(this._tempCorrectedFeet);
 
-    const floorY = this.fallbackBounds.min.y;
+    const floorY = this._getFloorYAtPosition(this._tempCorrectedFeet);
     if (Number.isFinite(floorY) && this._tempCorrectedFeet.y < floorY) {
       this._tempCorrectedFeet.y = floorY;
     }
@@ -314,17 +319,61 @@ export class CollisionSystem {
     return normalized.length >= 3 ? normalized : null;
   }
 
+  _normalizeFloorRegions(floorRegions) {
+    if (!Array.isArray(floorRegions) || floorRegions.length === 0) {
+      return [];
+    }
+
+    const normalizedRegions = [];
+    for (const region of floorRegions) {
+      const floorY = Number(region?.floorY);
+      const points = this._normalizeWalkBoundary(region?.points);
+      if (!Number.isFinite(floorY) || !points) {
+        continue;
+      }
+
+      normalizedRegions.push({
+        floorY,
+        points,
+      });
+    }
+
+    return normalizedRegions;
+  }
+
+  _getFloorYAtPosition(position) {
+    const x = Number(position?.x);
+    const z = Number(position?.z);
+    if (Number.isFinite(x) && Number.isFinite(z)) {
+      for (const region of this.floorRegions) {
+        if (this._isInsidePolygon(region.points, x, z)) {
+          return region.floorY;
+        }
+      }
+    }
+
+    return this.fallbackBounds.min.y;
+  }
+
   _isInsideWalkBoundary(x, z) {
     if (!this.walkBoundary) {
       return true;
     }
 
+    return this._isInsidePolygon(this.walkBoundary, x, z);
+  }
+
+  _isInsidePolygon(points, x, z) {
+    if (!points || points.length < 3) {
+      return false;
+    }
+
     let inside = false;
-    const count = this.walkBoundary.length;
+    const count = points.length;
 
     for (let index = 0, prev = count - 1; index < count; prev = index, index += 1) {
-      const current = this.walkBoundary[index];
-      const previous = this.walkBoundary[prev];
+      const current = points[index];
+      const previous = points[prev];
 
       const crossesRay = (current.y > z) !== (previous.y > z);
       if (!crossesRay) {
