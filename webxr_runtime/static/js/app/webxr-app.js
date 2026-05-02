@@ -411,11 +411,11 @@ export class WebXRApp {
 
         const showUnsupportedModeMessage = (sessionMode) => {
           if (sessionMode === XR_SESSION_MODE_AR) {
-            this.uiController.showError('AR is not supported on this device/browser. The button stays visible, but this mode cannot start here.');
+            this.uiController.showError('AR is not supported on this device/browser.', 3200);
             return;
           }
 
-          this.uiController.showError('VR is not supported on this device/browser. The button stays visible, but immersive-vr cannot start here.');
+          this.uiController.showError('VR is not supported on this device/browser.', 3200);
         };
 
         const requestArSessionWithFallback = async () => {
@@ -663,7 +663,7 @@ export class WebXRApp {
             <span class="tour-control-dock__label">${entry.startLabel}</span>
           `;
           button.addEventListener('click', () => {
-            this.uiController.showError('WebXR capability check failed on this device/browser, so this XR mode cannot start.');
+            this.uiController.showError('WebXR capability check failed on this device/browser, so this XR mode cannot start.', 3200);
           });
           mountXrButton(button);
         }

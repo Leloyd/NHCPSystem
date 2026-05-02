@@ -4,6 +4,7 @@ export class UiController {
     this.onBackRequested = null;
     this.onFullscreenToggled = null;
     this.hotspotHelperResetTimer = null;
+    this.errorResetTimer = null;
   }
 
   bindHandlers({ onBackRequested, onFullscreenToggled }) {
@@ -36,15 +37,32 @@ export class UiController {
     }, 300);
   }
 
-  showError(message) {
+  showError(message, resetAfterMs = 0) {
     if (!this.refs.errorBanner) {
       return;
     }
+
+    if (this.errorResetTimer) {
+      window.clearTimeout(this.errorResetTimer);
+      this.errorResetTimer = null;
+    }
+
     this.refs.errorBanner.textContent = message;
     this.refs.errorBanner.classList.remove('hidden');
+
+    if (resetAfterMs > 0) {
+      this.errorResetTimer = window.setTimeout(() => {
+        this.clearError();
+      }, resetAfterMs);
+    }
   }
 
   clearError() {
+    if (this.errorResetTimer) {
+      window.clearTimeout(this.errorResetTimer);
+      this.errorResetTimer = null;
+    }
+
     this.refs.errorBanner?.classList.add('hidden');
   }
 
