@@ -231,13 +231,18 @@ export class InteractionSystem {
         mesh.parent?.name ||
         'Unnamed object',
       metadata: interactionData.metadata ?? {},
+      suppressPanel: Boolean(interactionData.suppressPanel),
       object: mesh,
       point: hit.point.clone(),
       distance: hit.distance,
       assetId: interactionData.assetId ?? null,
     };
 
-    this.uiController?.showInteraction(context);
+    if (context.suppressPanel) {
+      this.uiController?.hideInteraction();
+    } else {
+      this.uiController?.showInteraction(context);
+    }
     this.registry?.trigger(context);
   }
 

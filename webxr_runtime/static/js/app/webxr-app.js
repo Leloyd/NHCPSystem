@@ -893,6 +893,7 @@ export class WebXRApp {
           child.userData.interaction = {
             assetId: asset.id,
             name: asset.fileName || asset.relativePath || child.name || root.name,
+            suppressPanel: true,
             metadata: {
               fileName: asset.fileName,
               relativePath: asset.relativePath,
@@ -963,6 +964,7 @@ export class WebXRApp {
 
         ring.userData.interaction = {
           name: hotspot.id,
+          suppressPanel: true,
           metadata: {
             type: 'hotspot',
             hotspotId: hotspot.id,
@@ -970,6 +972,7 @@ export class WebXRApp {
         };
         orb.userData.interaction = {
           name: hotspot.id,
+          suppressPanel: true,
           metadata: {
             type: 'hotspot',
             hotspotId: hotspot.id,
