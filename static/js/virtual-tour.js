@@ -19,6 +19,10 @@
   const backToExhibitsButton = document.getElementById("tourBackToExhibits");
   const debugParams = new URLSearchParams(window.location.search);
   const hotspotDebugEnabled = debugParams.get("debugHotspots") === "1";
+  const userAgent = navigator.userAgent || "";
+  const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+  const fullscreenTarget = document.documentElement;
+  const canUseFullscreen = !isIOSDevice && typeof fullscreenTarget.requestFullscreen === "function" && typeof document.exitFullscreen === "function";
   const digitalExhibitsUrl = app ? app.dataset.digitalExhibitsUrl : "";
   const balanghayImageSrc = app ? app.dataset.balanghayImageSrc : "";
   const balanghayGlbSrc = app ? app.dataset.balanghayGlbSrc : "";
@@ -1456,6 +1460,14 @@
       return;
     }
 
+    if (!canUseFullscreen) {
+      toggleFullscreenButton.hidden = true;
+      toggleFullscreenButton.disabled = true;
+      toggleFullscreenButton.setAttribute("aria-hidden", "true");
+      toggleFullscreenButton.setAttribute("aria-disabled", "true");
+      return;
+    }
+
     const isFullscreen = Boolean(document.fullscreenElement);
     toggleFullscreenButton.classList.toggle("is-active", isFullscreen);
     toggleFullscreenButton.setAttribute("aria-pressed", isFullscreen ? "true" : "false");
@@ -1475,6 +1487,19 @@
   }
 
   function downloadImageDataUrl(dataUrl) {
+    if (isIOSDevice) {
+      const previewWindow = window.open("", "_blank", "noopener");
+
+      if (previewWindow) {
+        previewWindow.document.write(`<title>Virtual Tour Capture</title><img src="${dataUrl}" alt="Virtual tour capture" style="display:block;max-width:100%;height:auto;margin:0 auto;background:#000;" />`);
+        previewWindow.document.close();
+        return;
+      }
+
+      window.location.href = dataUrl;
+      return;
+    }
+
     const link = document.createElement("a");
     const timestamp = new Date().toISOString().replace(/[.:]/g, "-");
     link.href = dataUrl;
@@ -1621,9 +1646,13 @@
   }
 
   async function toggleFullscreenMode() {
+    if (!canUseFullscreen) {
+      return;
+    }
+
     if (!document.fullscreenElement) {
       try {
-        await document.documentElement.requestFullscreen();
+        await fullscreenTarget.requestFullscreen();
       } catch (error) {
         console.error("Unable to enter fullscreen mode.", error);
       }
