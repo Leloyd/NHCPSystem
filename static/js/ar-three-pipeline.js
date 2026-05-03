@@ -38,6 +38,17 @@
         yOffset: 0.001,
       },
     },
+    bogwa: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
     kabaong: {
       targetSize: 0.84,
       scaleMultiplier: 2,
