@@ -648,6 +648,17 @@ def support():
     return render_template("Support.html")
 
 
+@app.route("/360VirtualTour/<path:filename>")
+def virtual_tour_file(filename):
+    virtual_tour_dir = PROJECT_ROOT / "public" / "360VirtualTour"
+    candidate_path = _resolve_safe_path(virtual_tour_dir, filename)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid virtual tour file path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"Virtual tour file not found: {filename}"}), 404
+    return send_from_directory(str(virtual_tour_dir), filename)
+
+
 @app.route("/public/<path:filename>")
 def public_file(filename):
     public_dir = PROJECT_ROOT / "public"
