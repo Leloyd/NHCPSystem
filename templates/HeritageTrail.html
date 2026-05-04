@@ -12,32 +12,51 @@
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-purple-700 via-purple-800 to-fuchsia-700 text-white py-20">
-        <div class="container mx-auto px-4 text-center">
-          <p class="text-sm font-semibold uppercase tracking-[0.35em] text-purple-100 mb-4">Interactive Heritage Trail</p>
-          <h1 class="text-5xl font-serif mb-4">Choose a guided path through the cemetery</h1>
-          <p class="text-xl max-w-3xl mx-auto">
-            Follow curated trail routes that connect key landmarks, learning prompts, and immersive tools into one focused heritage journey.
-          </p>
+      <section class="relative overflow-hidden bg-gradient-to-br from-stone-950 via-purple-950 to-fuchsia-800 text-white">
+        <div class="absolute inset-0 opacity-20">
+          <div class="absolute -top-24 right-0 h-72 w-72 rounded-full bg-purple-300 blur-3xl"></div>
+          <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-fuchsia-400 blur-3xl"></div>
+        </div>
+        <div class="container relative mx-auto px-4 py-20 md:py-24">
+          <div class="max-w-6xl mx-auto flex justify-center">
+            <div class="max-w-4xl text-center">
+              <p class="text-sm font-semibold uppercase tracking-[0.35em] text-purple-100">Interactive Heritage Trail</p>
+              <h1 class="mt-6 text-5xl md:text-6xl font-serif leading-tight">Choose a guided path through the cemetery</h1>
+              <p class="mt-6 text-lg md:text-xl text-purple-50/90 leading-relaxed">
+                Follow curated trail routes that connect landmarks, learning prompts, and digital tools into one clearer heritage journey designed for visitors, students, and guided groups.
+              </p>
+              <div class="mt-8 flex flex-wrap justify-center gap-4">
+                <a href="#heritageTrails" class="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-purple-900 transition hover:bg-purple-50">Explore trail options</a>
+                <a href="#trailActivities" class="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">View learning activities</a>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 
-      <section id="heritageTrails" class="py-16 bg-stone-50">
+      <section id="heritageTrails" class="bg-white py-16 md:py-20">
         <div class="container mx-auto px-4">
           <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-10">
-              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-purple-700 mb-3">Guided Routes</p>
-              <h2 class="text-3xl md:text-4xl font-serif text-purple-900 mb-4">Select a trail based on your visit goals</h2>
-              <p class="text-gray-700 max-w-3xl mx-auto">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-purple-700">Guided routes</p>
+              <h2 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Select a trail based on your visit goals</h2>
+              <p class="mt-4 text-gray-600 leading-relaxed">
                 Each trail gives you a structured sequence of stops, built-in learning prompts, and quick links to the map, 360 tour, and immersive 3D environment so visitors can explore with purpose.
               </p>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
-              <div class="space-y-4">
+            <div class="grid grid-cols-1 gap-8 xl:grid-cols-[0.95fr_1.35fr] items-start">
+              <div class="rounded-[2rem] border border-purple-100 bg-gradient-to-b from-purple-50 via-white to-white p-5 shadow-sm md:p-6">
+                <div class="mb-5">
+                  <p class="text-xs font-semibold uppercase tracking-[0.3em] text-purple-700">Trail menu</p>
+                  <h3 class="mt-3 text-2xl font-serif text-stone-900">Pick the route that matches your visit</h3>
+                  <p class="mt-3 text-sm leading-relaxed text-gray-600">Choose a quick orientation path, a deeper historical route, or a classroom-friendly guided trail.</p>
+                </div>
+
+                <div class="space-y-4">
                 <button
                   type="button"
-                  class="trail-selector w-full text-left bg-white rounded-2xl shadow-md border border-purple-100 p-5 transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  class="trail-selector w-full text-left rounded-[1.5rem] border border-purple-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   data-trail-select="orientation"
                 >
                   <div class="flex items-start justify-between gap-4">
@@ -56,7 +75,7 @@
 
                 <button
                   type="button"
-                  class="trail-selector w-full text-left bg-white rounded-2xl shadow-md border border-purple-100 p-5 transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  class="trail-selector w-full text-left rounded-[1.5rem] border border-purple-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   data-trail-select="history"
                 >
                   <div class="flex items-start justify-between gap-4">
@@ -75,7 +94,7 @@
 
                 <button
                   type="button"
-                  class="trail-selector w-full text-left bg-white rounded-2xl shadow-md border border-purple-100 p-5 transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  class="trail-selector w-full text-left rounded-[1.5rem] border border-purple-100 bg-white p-5 shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
                   data-trail-select="student"
                 >
                   <div class="flex items-start justify-between gap-4">
@@ -93,8 +112,10 @@
                 </button>
               </div>
 
-              <article class="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-purple-100 overflow-hidden">
-                <div class="bg-gradient-to-r from-purple-700 via-purple-600 to-fuchsia-600 text-white p-8">
+              </div>
+
+              <article class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-xl shadow-purple-100/50">
+                <div class="bg-gradient-to-r from-purple-800 via-purple-700 to-fuchsia-700 p-8 text-white md:p-10">
                   <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
                     <div>
                       <p id="trailTag" class="text-xs font-semibold uppercase tracking-[0.35em] text-purple-100">Quick Orientation</p>
@@ -124,7 +145,7 @@
                   </div>
                 </div>
 
-                <div class="p-8 space-y-8">
+                <div class="space-y-8 p-8 md:p-10">
                   <div class="grid grid-cols-1 xl:grid-cols-[1.4fr_0.8fr] gap-8 items-start">
                     <div>
                       <div class="flex items-center justify-between gap-4 mb-3">
@@ -135,16 +156,16 @@
                         <div id="trailProgressBar" class="h-full bg-gradient-to-r from-purple-600 to-fuchsia-500 rounded-full transition-all duration-300" style="width: 0%"></div>
                       </div>
                       <div class="mt-4 flex flex-wrap gap-3">
-                        <button id="trailPrimaryAction" type="button" class="inline-flex items-center rounded-full bg-purple-700 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-800 transition">
+                        <button id="trailPrimaryAction" type="button" class="inline-flex items-center rounded-full bg-purple-700 px-5 py-3 text-sm font-semibold text-white transition hover:bg-purple-800">
                           Start this trail
                         </button>
-                        <button id="trailResetButton" type="button" class="inline-flex items-center rounded-full border border-purple-200 px-5 py-3 text-sm font-semibold text-purple-700 hover:bg-purple-50 transition">
+                        <button id="trailResetButton" type="button" class="inline-flex items-center rounded-full border border-purple-200 px-5 py-3 text-sm font-semibold text-purple-700 transition hover:bg-purple-50">
                           Reset progress
                         </button>
                       </div>
                     </div>
 
-                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                    <div class="rounded-[1.5rem] border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 p-5 shadow-sm">
                       <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">Learning Prompt</p>
                       <h4 class="text-lg font-serif text-gray-900 mt-3" id="trailPromptTitle">What should visitors notice first?</h4>
                       <p class="text-gray-700 mt-3 leading-relaxed" id="trailPromptBody">
@@ -158,7 +179,7 @@
                       <h4 class="text-2xl font-serif text-purple-900">Stops in this trail</h4>
                       <span id="trailCompletionBadge" class="hidden rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">Trail complete</span>
                     </div>
-                    <div id="trailStops" class="space-y-4"></div>
+                    <div id="trailStops" class="space-y-5"></div>
                   </div>
                 </div>
               </article>
@@ -167,37 +188,44 @@
         </div>
       </section>
 
-      <section id="trailActivities" class="py-16 bg-white">
+      <section id="trailActivities" class="bg-stone-50 py-16 md:py-20">
         <div class="container mx-auto px-4">
           <div class="max-w-6xl mx-auto">
-            <div class="text-center mb-10">
-              <h2 class="text-3xl font-serif text-purple-900 mb-4">Trail-linked learning activities</h2>
-              <p class="text-gray-700 max-w-3xl mx-auto">
+            <div class="text-center max-w-3xl mx-auto mb-12">
+              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-purple-700">Follow-up activities</p>
+              <h2 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Trail-linked learning activities</h2>
+              <p class="mt-4 text-gray-600 leading-relaxed">
                 Use these prompts after each trail to turn site exploration into guided reflection, classroom discussion, or self-paced visitor learning.
               </p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 shadow-sm">
-                <div class="bg-gradient-to-br from-amber-200 to-amber-300 h-40 rounded-2xl mb-4 flex items-center justify-center">
+              <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                <div class="bg-gradient-to-br from-amber-200 to-amber-300 h-44 flex items-center justify-center">
                   <i data-lucide="clipboard-check" class="w-14 h-14 text-amber-800"></i>
                 </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Reflection Checkpoint</h3>
-                <p class="text-gray-700 mb-4">
-                  Ask visitors to compare what they saw in the trail with what they learned on the site map, 360 tour, or 3D environment.
-                </p>
-                <button id="promptTrailReflection" type="button" class="text-purple-700 hover:text-purple-900">Use this as a discussion guide →</button>
+                <div class="p-6 md:p-8">
+                  <p class="text-sm font-semibold uppercase tracking-[0.25em] text-purple-700">Reflection activity</p>
+                  <h3 class="mt-3 text-2xl font-serif text-stone-900">Reflection Checkpoint</h3>
+                  <p class="mt-4 text-gray-600 leading-relaxed">
+                    Ask visitors to compare what they saw in the trail with what they learned on the site map, 360 tour, or 3D environment.
+                  </p>
+                  <button id="promptTrailReflection" type="button" class="mt-6 inline-flex items-center text-sm font-semibold text-purple-700 hover:text-purple-900">Use this as a discussion guide →</button>
+                </div>
               </div>
 
-              <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 shadow-sm">
-                <div class="bg-gradient-to-br from-blue-200 to-blue-300 h-40 rounded-2xl mb-4 flex items-center justify-center">
+              <div class="overflow-hidden rounded-[2rem] border border-stone-200 bg-white shadow-sm transition hover:-translate-y-0.5 hover:shadow-lg">
+                <div class="bg-gradient-to-br from-blue-200 to-blue-300 h-44 flex items-center justify-center">
                   <i data-lucide="milestone" class="w-14 h-14 text-blue-800"></i>
                 </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Stop Matching Challenge</h3>
-                <p class="text-gray-700 mb-4">
-                  Challenge learners to match each stop to its historical role, architectural detail, or cultural function.
-                </p>
-                <button id="promptStopChallenge" type="button" class="text-purple-700 hover:text-purple-900">Try this after the trail →</button>
+                <div class="p-6 md:p-8">
+                  <p class="text-sm font-semibold uppercase tracking-[0.25em] text-purple-700">Challenge activity</p>
+                  <h3 class="mt-3 text-2xl font-serif text-stone-900">Stop Matching Challenge</h3>
+                  <p class="mt-4 text-gray-600 leading-relaxed">
+                    Challenge learners to match each stop to its historical role, architectural detail, or cultural function.
+                  </p>
+                  <button id="promptStopChallenge" type="button" class="mt-6 inline-flex items-center text-sm font-semibold text-purple-700 hover:text-purple-900">Try this after the trail →</button>
+                </div>
               </div>
             </div>
           </div>
@@ -460,7 +488,7 @@
                 .join("");
 
               return `
-                <article class="rounded-2xl border ${completed ? "border-emerald-200 bg-emerald-50" : "border-stone-200 bg-white"} p-5 shadow-sm transition">
+                <article class="rounded-[1.5rem] border ${completed ? "border-emerald-200 bg-gradient-to-br from-emerald-50 to-white" : "border-stone-200 bg-white"} p-5 shadow-sm transition">
                   <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
                     <div class="flex-1">
                       <div class="flex items-center gap-3 mb-3">
@@ -471,7 +499,7 @@
                         </div>
                       </div>
                       <p class="text-gray-700 leading-relaxed">${stop.summary}</p>
-                      <div class="mt-4 rounded-2xl bg-stone-50 px-4 py-3 text-sm text-gray-700">
+                      <div class="mt-4 rounded-[1.25rem] bg-stone-50 px-4 py-3 text-sm text-gray-700">
                         <span class="font-semibold text-gray-900">Prompt:</span> ${stop.activity}
                       </div>
                       <div class="mt-4 flex flex-wrap gap-3">${links}</div>
