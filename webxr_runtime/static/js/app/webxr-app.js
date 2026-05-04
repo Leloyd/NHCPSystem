@@ -207,13 +207,7 @@ export class WebXRApp {
   }
 
   _handleBackRequested() {
-    const referrer = String(document.referrer || '');
-    if (referrer && referrer.includes(window.location.host) && window.history.length > 1) {
-      window.history.back();
-      return;
-    }
-
-    window.location.assign('/3d-environment');
+    window.location.assign('/interactive');
   }
 
   async _toggleFullscreen() {
