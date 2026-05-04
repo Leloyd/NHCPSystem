@@ -1,0 +1,578 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Heritage Trail | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    {% set public_active_page = 'heritage-trail' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="pt-20">
+      <section class="bg-gradient-to-br from-purple-700 via-purple-800 to-fuchsia-700 text-white py-20">
+        <div class="container mx-auto px-4 text-center">
+          <p class="text-sm font-semibold uppercase tracking-[0.35em] text-purple-100 mb-4">Interactive Heritage Trail</p>
+          <h1 class="text-5xl font-serif mb-4">Choose a guided path through the cemetery</h1>
+          <p class="text-xl max-w-3xl mx-auto">
+            Follow curated trail routes that connect key landmarks, learning prompts, and immersive tools into one focused heritage journey.
+          </p>
+        </div>
+      </section>
+
+      <section id="heritageTrails" class="py-16 bg-stone-50">
+        <div class="container mx-auto px-4">
+          <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-purple-700 mb-3">Guided Routes</p>
+              <h2 class="text-3xl md:text-4xl font-serif text-purple-900 mb-4">Select a trail based on your visit goals</h2>
+              <p class="text-gray-700 max-w-3xl mx-auto">
+                Each trail gives you a structured sequence of stops, built-in learning prompts, and quick links to the map, 360 tour, and immersive 3D environment so visitors can explore with purpose.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
+              <div class="space-y-4">
+                <button
+                  type="button"
+                  class="trail-selector w-full text-left bg-white rounded-2xl shadow-md border border-purple-100 p-5 transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  data-trail-select="orientation"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-purple-600">Quick Orientation</p>
+                      <h3 class="text-xl font-serif text-gray-900 mt-2">First-Time Visitor Trail</h3>
+                      <p class="text-sm text-gray-600 mt-2">A clear starting route for visitors who want the most important landmarks first.</p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">4 stops</span>
+                  </div>
+                  <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+                    <span>20 minutes</span>
+                    <span class="trail-selector-progress font-medium text-purple-700" data-trail-progress-label="orientation">0% complete</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  class="trail-selector w-full text-left bg-white rounded-2xl shadow-md border border-purple-100 p-5 transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  data-trail-select="history"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-purple-600">Deeper Interpretation</p>
+                      <h3 class="text-xl font-serif text-gray-900 mt-2">Historical Significance Trail</h3>
+                      <p class="text-sm text-gray-600 mt-2">Focus on how architecture, ritual, and public memory shape the site.</p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">5 stops</span>
+                  </div>
+                  <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+                    <span>30 minutes</span>
+                    <span class="trail-selector-progress font-medium text-purple-700" data-trail-progress-label="history">0% complete</span>
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  class="trail-selector w-full text-left bg-white rounded-2xl shadow-md border border-purple-100 p-5 transition hover:shadow-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
+                  data-trail-select="student"
+                >
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs font-semibold uppercase tracking-[0.25em] text-purple-600">Classroom Friendly</p>
+                      <h3 class="text-xl font-serif text-gray-900 mt-2">Student Discovery Trail</h3>
+                      <p class="text-sm text-gray-600 mt-2">Adds guided questions and observation tasks for younger learners.</p>
+                    </div>
+                    <span class="inline-flex items-center rounded-full bg-purple-100 px-3 py-1 text-xs font-semibold text-purple-700">4 stops</span>
+                  </div>
+                  <div class="mt-4 flex items-center justify-between text-sm text-gray-500">
+                    <span>25 minutes</span>
+                    <span class="trail-selector-progress font-medium text-purple-700" data-trail-progress-label="student">0% complete</span>
+                  </div>
+                </button>
+              </div>
+
+              <article class="lg:col-span-2 bg-white rounded-3xl shadow-xl border border-purple-100 overflow-hidden">
+                <div class="bg-gradient-to-r from-purple-700 via-purple-600 to-fuchsia-600 text-white p-8">
+                  <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-6">
+                    <div>
+                      <p id="trailTag" class="text-xs font-semibold uppercase tracking-[0.35em] text-purple-100">Quick Orientation</p>
+                      <h3 id="trailTitle" class="text-3xl font-serif mt-3">First-Time Visitor Trail</h3>
+                      <p id="trailDescription" class="text-purple-50 mt-4 max-w-2xl">
+                        Start with a short orientation route that introduces the gate, church, map, and immersive spaces.
+                      </p>
+                    </div>
+                    <div class="grid grid-cols-2 gap-3 text-sm min-w-[220px]">
+                      <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                        <p class="text-purple-100">Audience</p>
+                        <p id="trailAudience" class="font-semibold mt-1">General visitors</p>
+                      </div>
+                      <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                        <p class="text-purple-100">Estimated Time</p>
+                        <p id="trailDuration" class="font-semibold mt-1">20 minutes</p>
+                      </div>
+                      <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                        <p class="text-purple-100">Stops</p>
+                        <p id="trailStopCount" class="font-semibold mt-1">4 stops</p>
+                      </div>
+                      <div class="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+                        <p class="text-purple-100">Accessibility</p>
+                        <p id="trailAccessibility" class="font-semibold mt-1">Low-bandwidth friendly</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div class="p-8 space-y-8">
+                  <div class="grid grid-cols-1 xl:grid-cols-[1.4fr_0.8fr] gap-8 items-start">
+                    <div>
+                      <div class="flex items-center justify-between gap-4 mb-3">
+                        <h4 class="text-xl font-serif text-purple-900">Trail Progress</h4>
+                        <span id="trailProgressText" class="text-sm font-semibold text-purple-700">0 of 4 stops completed</span>
+                      </div>
+                      <div class="w-full h-3 bg-purple-100 rounded-full overflow-hidden">
+                        <div id="trailProgressBar" class="h-full bg-gradient-to-r from-purple-600 to-fuchsia-500 rounded-full transition-all duration-300" style="width: 0%"></div>
+                      </div>
+                      <div class="mt-4 flex flex-wrap gap-3">
+                        <button id="trailPrimaryAction" type="button" class="inline-flex items-center rounded-full bg-purple-700 px-5 py-3 text-sm font-semibold text-white hover:bg-purple-800 transition">
+                          Start this trail
+                        </button>
+                        <button id="trailResetButton" type="button" class="inline-flex items-center rounded-full border border-purple-200 px-5 py-3 text-sm font-semibold text-purple-700 hover:bg-purple-50 transition">
+                          Reset progress
+                        </button>
+                      </div>
+                    </div>
+
+                    <div class="rounded-2xl border border-amber-200 bg-amber-50 p-5">
+                      <p class="text-xs font-semibold uppercase tracking-[0.3em] text-amber-700">Learning Prompt</p>
+                      <h4 class="text-lg font-serif text-gray-900 mt-3" id="trailPromptTitle">What should visitors notice first?</h4>
+                      <p class="text-gray-700 mt-3 leading-relaxed" id="trailPromptBody">
+                        Observe how the entrance and nearby landmarks orient the visitor before they move into deeper heritage spaces.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div class="flex items-center justify-between gap-4 mb-4">
+                      <h4 class="text-2xl font-serif text-purple-900">Stops in this trail</h4>
+                      <span id="trailCompletionBadge" class="hidden rounded-full bg-emerald-100 px-4 py-2 text-sm font-semibold text-emerald-700">Trail complete</span>
+                    </div>
+                    <div id="trailStops" class="space-y-4"></div>
+                  </div>
+                </div>
+              </article>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="trailActivities" class="py-16 bg-white">
+        <div class="container mx-auto px-4">
+          <div class="max-w-6xl mx-auto">
+            <div class="text-center mb-10">
+              <h2 class="text-3xl font-serif text-purple-900 mb-4">Trail-linked learning activities</h2>
+              <p class="text-gray-700 max-w-3xl mx-auto">
+                Use these prompts after each trail to turn site exploration into guided reflection, classroom discussion, or self-paced visitor learning.
+              </p>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 shadow-sm">
+                <div class="bg-gradient-to-br from-amber-200 to-amber-300 h-40 rounded-2xl mb-4 flex items-center justify-center">
+                  <i data-lucide="clipboard-check" class="w-14 h-14 text-amber-800"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-900 mb-2">Reflection Checkpoint</h3>
+                <p class="text-gray-700 mb-4">
+                  Ask visitors to compare what they saw in the trail with what they learned on the site map, 360 tour, or 3D environment.
+                </p>
+                <button id="promptTrailReflection" type="button" class="text-purple-700 hover:text-purple-900">Use this as a discussion guide →</button>
+              </div>
+
+              <div class="bg-stone-50 p-6 rounded-2xl border border-stone-200 shadow-sm">
+                <div class="bg-gradient-to-br from-blue-200 to-blue-300 h-40 rounded-2xl mb-4 flex items-center justify-center">
+                  <i data-lucide="milestone" class="w-14 h-14 text-blue-800"></i>
+                </div>
+                <h3 class="text-xl font-serif text-gray-900 mb-2">Stop Matching Challenge</h3>
+                <p class="text-gray-700 mb-4">
+                  Challenge learners to match each stop to its historical role, architectural detail, or cultural function.
+                </p>
+                <button id="promptStopChallenge" type="button" class="text-purple-700 hover:text-purple-900">Try this after the trail →</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    {% include 'partials/_public_footer.html' %}
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script>
+      (function () {
+        const trails = {
+          orientation: {
+            tag: "Quick Orientation",
+            title: "First-Time Visitor Trail",
+            description: "A short guided route for visitors who want the main landmarks first before exploring the rest of the interactive features.",
+            audience: "General visitors",
+            duration: "20 minutes",
+            accessibility: "Low-bandwidth friendly",
+            promptTitle: "What should visitors notice first?",
+            promptBody: "Focus on how the gate, church, and cemetery layout orient visitors before they move into deeper historical interpretation.",
+            primaryLabel: "Start this trail",
+            stops: [
+              {
+                id: "orientation-front-gate",
+                title: "Start at the Front Gate",
+                summary: "Use the entrance as your orientation point and introduce the site as both a sacred and historical space.",
+                activity: "Ask visitors what first impressions the entry sequence gives about the site.",
+                links: [
+                  { label: "Open Virtual Tour", href: "/virtual-tour" },
+                  { label: "Open Site Map", href: "/site-map" }
+                ]
+              },
+              {
+                id: "orientation-church",
+                title: "Observe the Church Exterior",
+                summary: "Highlight how the church and cemetery relationship defines the site’s identity and visitor movement.",
+                activity: "Invite learners to identify architectural features that feel religious, civic, or defensive.",
+                links: [
+                  { label: "Open Site Map", href: "/site-map" },
+                  { label: "Launch 3D Environment", href: "/3d-environment" }
+                ]
+              },
+              {
+                id: "orientation-underground",
+                title: "Introduce the Underground Cemetery",
+                summary: "Explain why the underground chamber is the most distinctive heritage element of the complex.",
+                activity: "Prompt users to describe how burial spaces underground differ from typical cemetery expectations.",
+                links: [
+                  { label: "Open Virtual Tour", href: "/virtual-tour" },
+                  { label: "Launch 3D Environment", href: "/3d-environment/runtime" }
+                ]
+              },
+              {
+                id: "orientation-wrap-up",
+                title: "Wrap Up on the Site Map",
+                summary: "Return to the map to connect the stops into one coherent spatial story.",
+                activity: "Ask visitors which landmark they would revisit first and why.",
+                links: [
+                  { label: "Open Site Map", href: "/site-map" }
+                ]
+              }
+            ]
+          },
+          history: {
+            tag: "Deeper Interpretation",
+            title: "Historical Significance Trail",
+            description: "A slower trail for visitors who want to connect architecture, burial practice, religion, and cultural memory across the cemetery.",
+            audience: "Researchers and heritage-focused visitors",
+            duration: "30 minutes",
+            accessibility: "Map-first with optional immersive follow-up",
+            promptTitle: "How does place shape memory?",
+            promptBody: "Look at how religious architecture, burial space, and circulation routes work together to preserve collective memory.",
+            primaryLabel: "Explore the historical route",
+            stops: [
+              {
+                id: "history-gate",
+                title: "Entry and Public Threshold",
+                summary: "Study the gate as the symbolic transition from everyday space into a heritage and memorial environment.",
+                activity: "Discuss why thresholds matter in ritual, security, and visitor orientation.",
+                links: [
+                  { label: "Open Site Map", href: "/site-map" },
+                  { label: "Open Virtual Tour", href: "/virtual-tour" }
+                ]
+              },
+              {
+                id: "history-church",
+                title: "Church and Community Identity",
+                summary: "Interpret the church façade as part of a wider religious and civic landscape tied to colonial-era life.",
+                activity: "Ask what visual cues signal the importance of the church in the overall complex.",
+                links: [
+                  { label: "Launch 3D Environment", href: "/3d-environment" },
+                  { label: "Open Site Map", href: "/site-map" }
+                ]
+              },
+              {
+                id: "history-underground",
+                title: "Underground Chamber Function",
+                summary: "Use the underground cemetery to discuss burial practice, climate, and the uniqueness of the site in Philippine heritage.",
+                activity: "Invite learners to connect environment, engineering, and belief systems.",
+                links: [
+                  { label: "Open Virtual Tour", href: "/virtual-tour" },
+                  { label: "Launch 3D Runtime", href: "/3d-environment/runtime" }
+                ]
+              },
+              {
+                id: "history-tombs",
+                title: "Tomb Sections and Social Memory",
+                summary: "Explore how tomb groupings and memorial spaces reflect family, status, and remembrance practices.",
+                activity: "Have visitors note how movement through tomb areas changes the emotional tone of the visit.",
+                links: [
+                  { label: "Open Virtual Tour", href: "/virtual-tour" }
+                ]
+              },
+              {
+                id: "history-synthesis",
+                title: "Synthesis on the Map",
+                summary: "End by re-reading the cemetery as a system of connected historical zones rather than isolated landmarks.",
+                activity: "Ask which stop best explains why the site deserves digital preservation.",
+                links: [
+                  { label: "Open Site Map", href: "/site-map" }
+                ]
+              }
+            ]
+          },
+          student: {
+            tag: "Classroom Friendly",
+            title: "Student Discovery Trail",
+            description: "A guided path designed for simpler explanations, observation-based learning, and classroom follow-up prompts.",
+            audience: "Students and guided school groups",
+            duration: "25 minutes",
+            accessibility: "Short stops with reflection prompts",
+            promptTitle: "What can you learn by observing closely?",
+            promptBody: "Encourage students to compare shapes, materials, and spaces instead of memorizing facts too early in the experience.",
+            primaryLabel: "Begin student trail",
+            stops: [
+              {
+                id: "student-orient",
+                title: "Find the Main Entrance",
+                summary: "Start with basic orientation so students understand where they are and what the space is used for.",
+                activity: "Ask students to describe how the entrance prepares visitors for the experience inside.",
+                links: [
+                  { label: "Open Site Map", href: "/site-map" }
+                ]
+              },
+              {
+                id: "student-church",
+                title: "Look at the Church Front",
+                summary: "Use the church exterior to talk about architecture, function, and community identity in simple terms.",
+                activity: "Have students point out three visible features they think are important.",
+                links: [
+                  { label: "Launch 3D Environment", href: "/3d-environment" },
+                  { label: "Open Virtual Tour", href: "/virtual-tour" }
+                ]
+              },
+              {
+                id: "student-underground",
+                title: "Explore the Underground Space",
+                summary: "Introduce why this underground area is unusual and why it matters to local and national heritage.",
+                activity: "Ask students to compare how this space feels different from an open cemetery.",
+                links: [
+                  { label: "Open Virtual Tour", href: "/virtual-tour" },
+                  { label: "Launch 3D Runtime", href: "/3d-environment/runtime" }
+                ]
+              },
+              {
+                id: "student-reflect",
+                title: "Reflect and Share",
+                summary: "End with a simple reflection prompt that turns the trail into a classroom conversation.",
+                activity: "Ask students which stop they would teach to a classmate and why.",
+                links: [
+                  { label: "Open Site Map", href: "/site-map" }
+                ]
+              }
+            ]
+          }
+        };
+
+        const progressStorageKey = "interactiveHeritageTrailProgress";
+        const trailSelectors = Array.from(document.querySelectorAll("[data-trail-select]"));
+        const trailTag = document.getElementById("trailTag");
+        const trailTitle = document.getElementById("trailTitle");
+        const trailDescription = document.getElementById("trailDescription");
+        const trailAudience = document.getElementById("trailAudience");
+        const trailDuration = document.getElementById("trailDuration");
+        const trailStopCount = document.getElementById("trailStopCount");
+        const trailAccessibility = document.getElementById("trailAccessibility");
+        const trailPromptTitle = document.getElementById("trailPromptTitle");
+        const trailPromptBody = document.getElementById("trailPromptBody");
+        const trailProgressText = document.getElementById("trailProgressText");
+        const trailProgressBar = document.getElementById("trailProgressBar");
+        const trailPrimaryAction = document.getElementById("trailPrimaryAction");
+        const trailResetButton = document.getElementById("trailResetButton");
+        const trailStops = document.getElementById("trailStops");
+        const trailCompletionBadge = document.getElementById("trailCompletionBadge");
+        const promptTrailReflection = document.getElementById("promptTrailReflection");
+        const promptStopChallenge = document.getElementById("promptStopChallenge");
+
+        let activeTrailId = "orientation";
+
+        function getStoredProgress() {
+          try {
+            const parsed = JSON.parse(window.localStorage.getItem(progressStorageKey) || "{}");
+            return parsed && typeof parsed === "object" ? parsed : {};
+          } catch (error) {
+            return {};
+          }
+        }
+
+        function setStoredProgress(progress) {
+          window.localStorage.setItem(progressStorageKey, JSON.stringify(progress));
+        }
+
+        function getCompletedStops(trailId) {
+          const progress = getStoredProgress();
+          return Array.isArray(progress[trailId]) ? progress[trailId] : [];
+        }
+
+        function setCompletedStops(trailId, completedStops) {
+          const progress = getStoredProgress();
+          progress[trailId] = completedStops;
+          setStoredProgress(progress);
+        }
+
+        function updateSelectorStates() {
+          trailSelectors.forEach((button) => {
+            const trailId = button.dataset.trailSelect;
+            const selected = trailId === activeTrailId;
+            button.classList.toggle("ring-2", selected);
+            button.classList.toggle("ring-purple-500", selected);
+            button.classList.toggle("border-purple-300", selected);
+            button.classList.toggle("bg-purple-50", selected);
+
+            const label = document.querySelector(`[data-trail-progress-label="${trailId}"]`);
+            if (!label) {
+              return;
+            }
+
+            const trail = trails[trailId];
+            const completed = getCompletedStops(trailId).length;
+            const percent = Math.round((completed / trail.stops.length) * 100);
+            label.textContent = `${percent}% complete`;
+          });
+        }
+
+        function renderTrailStops(trailId) {
+          const trail = trails[trailId];
+          const completedStops = getCompletedStops(trailId);
+
+          trailStops.innerHTML = trail.stops
+            .map((stop, index) => {
+              const completed = completedStops.includes(stop.id);
+              const links = stop.links
+                .map(
+                  (link) =>
+                    `<a href="${link.href}" class="inline-flex items-center rounded-full border border-purple-200 px-4 py-2 text-xs font-semibold text-purple-700 hover:bg-purple-50 transition">${link.label}</a>`
+                )
+                .join("");
+
+              return `
+                <article class="rounded-2xl border ${completed ? "border-emerald-200 bg-emerald-50" : "border-stone-200 bg-white"} p-5 shadow-sm transition">
+                  <div class="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-5">
+                    <div class="flex-1">
+                      <div class="flex items-center gap-3 mb-3">
+                        <span class="inline-flex h-9 w-9 items-center justify-center rounded-full ${completed ? "bg-emerald-600 text-white" : "bg-purple-100 text-purple-700"} font-semibold">${index + 1}</span>
+                        <div>
+                          <h5 class="text-lg font-serif text-gray-900">${stop.title}</h5>
+                          <p class="text-sm ${completed ? "text-emerald-700" : "text-purple-700"} font-medium">${completed ? "Completed" : "In progress"}</p>
+                        </div>
+                      </div>
+                      <p class="text-gray-700 leading-relaxed">${stop.summary}</p>
+                      <div class="mt-4 rounded-2xl bg-stone-50 px-4 py-3 text-sm text-gray-700">
+                        <span class="font-semibold text-gray-900">Prompt:</span> ${stop.activity}
+                      </div>
+                      <div class="mt-4 flex flex-wrap gap-3">${links}</div>
+                    </div>
+                    <div>
+                      <button
+                        type="button"
+                        class="trail-stop-toggle inline-flex min-w-[180px] items-center justify-center rounded-full ${completed ? "bg-emerald-600 text-white hover:bg-emerald-700" : "bg-purple-700 text-white hover:bg-purple-800"} px-5 py-3 text-sm font-semibold transition"
+                        data-trail-stop="${trailId}"
+                        data-stop-id="${stop.id}"
+                      >
+                        ${completed ? "Mark as not done" : "Mark stop complete"}
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              `;
+            })
+            .join("");
+
+          Array.from(document.querySelectorAll(".trail-stop-toggle")).forEach((button) => {
+            button.addEventListener("click", function () {
+              const currentTrailId = this.dataset.trailStop;
+              const stopId = this.dataset.stopId;
+              const completed = new Set(getCompletedStops(currentTrailId));
+
+              if (completed.has(stopId)) {
+                completed.delete(stopId);
+              } else {
+                completed.add(stopId);
+              }
+
+              setCompletedStops(currentTrailId, Array.from(completed));
+              renderActiveTrail();
+            });
+          });
+        }
+
+        function renderActiveTrail() {
+          const trail = trails[activeTrailId];
+          const completedCount = getCompletedStops(activeTrailId).length;
+          const totalStops = trail.stops.length;
+          const percent = Math.round((completedCount / totalStops) * 100);
+
+          trailTag.textContent = trail.tag;
+          trailTitle.textContent = trail.title;
+          trailDescription.textContent = trail.description;
+          trailAudience.textContent = trail.audience;
+          trailDuration.textContent = trail.duration;
+          trailStopCount.textContent = `${totalStops} stops`;
+          trailAccessibility.textContent = trail.accessibility;
+          trailPromptTitle.textContent = trail.promptTitle;
+          trailPromptBody.textContent = trail.promptBody;
+          trailPrimaryAction.textContent = trail.primaryLabel;
+          trailProgressText.textContent = `${completedCount} of ${totalStops} stops completed`;
+          trailProgressBar.style.width = `${percent}%`;
+          trailCompletionBadge.classList.toggle("hidden", completedCount !== totalStops);
+
+          renderTrailStops(activeTrailId);
+          updateSelectorStates();
+        }
+
+        trailSelectors.forEach((button) => {
+          button.addEventListener("click", function () {
+            activeTrailId = this.dataset.trailSelect;
+            renderActiveTrail();
+          });
+        });
+
+        trailPrimaryAction.addEventListener("click", function () {
+          const nextIncomplete = trails[activeTrailId].stops.find((stop) => !getCompletedStops(activeTrailId).includes(stop.id));
+          if (nextIncomplete) {
+            const firstLink = nextIncomplete.links[0];
+            if (firstLink) {
+              window.location.href = firstLink.href;
+              return;
+            }
+          }
+
+          document.getElementById("heritageTrails").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        trailResetButton.addEventListener("click", function () {
+          setCompletedStops(activeTrailId, []);
+          renderActiveTrail();
+        });
+
+        promptTrailReflection.addEventListener("click", function () {
+          activeTrailId = "student";
+          renderActiveTrail();
+          document.getElementById("heritageTrails").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        promptStopChallenge.addEventListener("click", function () {
+          activeTrailId = "history";
+          renderActiveTrail();
+          document.getElementById("heritageTrails").scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+
+        renderActiveTrail();
+      })();
+    </script>
+  </body>
+</html>

@@ -507,6 +507,11 @@ def interactive():
     return render_template("Interactive.html")
 
 
+@app.route("/heritage-trail")
+def heritage_trail():
+    return render_template("HeritageTrail.html")
+
+
 @app.route("/site-map")
 def site_map():
     return render_template("SiteMap.html")
