@@ -68,6 +68,7 @@
     storyTimer: null,
     storyIndex: 0,
     calibrationEnabled: false,
+    hotspotsVisible: true,
     reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
 
@@ -75,6 +76,10 @@
     mapRoot: document.getElementById("interactiveMap"),
     searchInput: document.getElementById("mapSearchInput"),
     resetViewBtn: document.getElementById("resetViewBtn"),
+    searchOverlay: document.getElementById("mapSearchOverlay"),
+    searchOpenBtn: document.getElementById("mapSearchOpenBtn"),
+    searchCloseBtn: document.getElementById("mapSearchCloseBtn"),
+    toggleHotspotsBtn: document.getElementById("mapToggleHotspotsBtn"),
     mapInfoOverlay: document.getElementById("mapInfoOverlay"),
     mapInfoCard: document.getElementById("mapInfoCard"),
     mapInfoRoute: document.getElementById("mapInfoRoute"),
@@ -384,6 +389,18 @@
       return;
     }
 
+    if (!state.hotspotsVisible) {
+      state.hotspots.forEach(function (spot) {
+        var hiddenMarker = ensureMarker(spot);
+        if (state.map.hasLayer(hiddenMarker)) {
+          state.map.removeLayer(hiddenMarker);
+        }
+      });
+      clearMarkerStyles();
+      hideMapInfoOverlay();
+      return;
+    }
+
     var visibleLookup = {};
     visibleStops.forEach(function (spot) {
       visibleLookup[spot.id] = true;
@@ -476,6 +493,30 @@
     }
   }
 
+  function updateHotspotToggleButton() {
+    if (!elements.toggleHotspotsBtn) {
+      return;
+    }
+
+    elements.toggleHotspotsBtn.classList.toggle("is-active", state.hotspotsVisible);
+    elements.toggleHotspotsBtn.setAttribute("aria-pressed", state.hotspotsVisible ? "true" : "false");
+  }
+
+  function setSearchOverlayOpen(isOpen) {
+    if (!elements.searchOverlay) {
+      return;
+    }
+
+    elements.searchOverlay.hidden = !isOpen;
+
+    if (isOpen && elements.searchInput) {
+      window.setTimeout(function () {
+        elements.searchInput.focus();
+        elements.searchInput.select();
+      }, 0);
+    }
+  }
+
   function isMapInfoVisibleForCurrentZoom() {
     if (!state.map) {
       return false;
@@ -530,7 +571,7 @@
       return;
     }
 
-    if (!stop) {
+    if (!stop || !state.hotspotsVisible) {
       hideMapInfoOverlay();
       return;
     }
@@ -611,6 +652,34 @@
       });
     }
 
+    if (elements.searchOpenBtn) {
+      elements.searchOpenBtn.addEventListener("click", function () {
+        setSearchOverlayOpen(true);
+      });
+    }
+
+    if (elements.searchCloseBtn) {
+      elements.searchCloseBtn.addEventListener("click", function () {
+        setSearchOverlayOpen(false);
+      });
+    }
+
+    if (elements.searchOverlay) {
+      elements.searchOverlay.addEventListener("click", function (event) {
+        if (event.target === elements.searchOverlay) {
+          setSearchOverlayOpen(false);
+        }
+      });
+    }
+
+    if (elements.toggleHotspotsBtn) {
+      elements.toggleHotspotsBtn.addEventListener("click", function () {
+        state.hotspotsVisible = !state.hotspotsVisible;
+        updateHotspotToggleButton();
+        renderAll();
+      });
+    }
+
     if (state.map) {
       ["move", "zoom", "resize"].forEach(function (eventName) {
         state.map.on(eventName, function () {
@@ -621,6 +690,12 @@
         });
       });
     }
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && elements.searchOverlay && !elements.searchOverlay.hidden) {
+        setSearchOverlayOpen(false);
+      }
+    });
   }
 
   function init() {
@@ -635,6 +710,8 @@
         if (initialStops.length) {
           state.stopId = initialStops[0].id;
         }
+        updateHotspotToggleButton();
+        setSearchOverlayOpen(false);
         renderAll();
       })
       .catch(function () {
