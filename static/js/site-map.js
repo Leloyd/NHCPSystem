@@ -527,7 +527,6 @@
 
   function positionMapInfoOverlay(stop) {
     if (!stop || !state.map || !elements.mapInfoOverlay || !elements.mapInfoCard) {
-      hideMapInfoOverlay();
       return;
     }
 
