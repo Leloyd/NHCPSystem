@@ -19,6 +19,15 @@
     >
       <div id="interactiveMap" class="site-map-canvas" role="region" aria-label="Aerial map of the Nagcarlan Underground Cemetery"></div>
 
+      <div id="mapInfoOverlay" class="map-info-overlay" hidden aria-live="polite">
+        <div id="mapInfoCard" class="map-info-card">
+          <p id="mapInfoRoute" class="map-info-card__route">Hotspot Information</p>
+          <h3 id="mapInfoTitle" class="map-info-card__title font-serif">Select a hotspot</h3>
+          <p id="mapInfoMeta" class="map-info-card__meta">Category · Coordinates</p>
+          <p id="mapInfoSummary" class="map-info-card__summary">Tap a marker to view information directly on the map.</p>
+        </div>
+      </div>
+
       <div class="site-map-loading" id="mapLoadingOverlay" aria-live="polite">
         <section class="site-map-loading__card">
           <p class="site-map-loading__title font-serif" id="mapLoadingTitle">Loading Site Map...</p>
