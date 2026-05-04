@@ -29,7 +29,6 @@
     <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
       <a href="{{ url_for('index') }}" class="block {% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Home</a>
       <a href="{{ url_for('digital_exhibits') }}" class="block {% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
-      <a href="{{ url_for('accessibility') }}" class="block {% if public_active_page == 'accessibility' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Accessibility</a>
       <a href="{{ url_for('interactive') }}" class="block {% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
       <a href="{{ url_for('heritage_trail') }}" class="block {% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Heritage Trail</a>
       <a href="{{ url_for('participation') }}" class="block {% if public_active_page == 'participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">E-Participation</a>
