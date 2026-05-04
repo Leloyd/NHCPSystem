@@ -1,0 +1,7 @@
+webxr_runtime/runtime/
+__pycache__/
+*.pyc
+*.pyo
+.venv/
+venv/
+.env
