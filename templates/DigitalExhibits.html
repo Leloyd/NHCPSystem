@@ -46,59 +46,106 @@
               </p>
             </div>
 
-            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
-              <a href="/online-gallery" class="group rounded-[1.75rem] border border-stone-200 bg-gradient-to-b from-white to-stone-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-100/70">
-                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                  <i data-lucide="images" class="h-7 w-7"></i>
+            <div class="space-y-8">
+              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-amber-50 via-white to-white shadow-sm">
+                <div class="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+                  <div class="flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100 p-10 md:p-12">
+                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/80 text-amber-700 shadow-lg shadow-amber-200/60">
+                      <i data-lucide="images" class="h-14 w-14"></i>
+                    </div>
+                  </div>
+                  <div class="p-8 md:p-10 lg:p-12">
+                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Online Gallery</p>
+                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Curated Photo Archive</h3>
+                    <p class="mt-5 text-gray-600 leading-relaxed">
+                      Browse selected photographs and exhibit images presented with short descriptions, historical context, and clearer detail viewing for visitors who want a calm, visual-first experience.
+                    </p>
+                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Focused image browsing</div>
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Short exhibit context</div>
+                    </div>
+                    <div class="mt-8">
+                      <a href="/online-gallery" class="inline-flex items-center rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-800">Open Gallery →</a>
+                    </div>
+                  </div>
                 </div>
-                <div class="mt-6">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Online Gallery</p>
-                  <h3 class="mt-2 text-2xl font-serif text-stone-900">Curated Photo Archive</h3>
-                  <p class="mt-4 text-sm leading-relaxed text-gray-600">Browse selected images with short historical context, exhibit details, and a more focused viewing experience.</p>
-                </div>
-                <div class="mt-6 inline-flex items-center text-sm font-semibold text-amber-800 transition group-hover:translate-x-1">Open Gallery →</div>
-              </a>
+              </section>
 
-              <a href="/virtual-tour" class="group rounded-[1.75rem] border border-stone-200 bg-gradient-to-b from-white to-stone-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-100/70">
-                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                  <i data-lucide="video" class="h-7 w-7"></i>
+              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-white via-white to-stone-50 shadow-sm">
+                <div class="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div class="order-2 p-8 md:p-10 lg:order-1 lg:p-12">
+                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Virtual Tour</p>
+                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Guided Site Walkthrough</h3>
+                    <p class="mt-5 text-gray-600 leading-relaxed">
+                      Move through key areas of the museum using a guided panoramic experience that helps visitors understand the layout, atmosphere, and important stops before or after a physical visit.
+                    </p>
+                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Immersive panoramic views</div>
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Guided route through the site</div>
+                    </div>
+                    <div class="mt-8">
+                      <a href="/virtual-tour" class="inline-flex items-center rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-800">Start Tour →</a>
+                    </div>
+                  </div>
+                  <div class="order-1 flex items-center justify-center bg-gradient-to-br from-stone-100 to-amber-100 p-10 md:p-12 lg:order-2">
+                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/85 text-amber-700 shadow-lg shadow-stone-200/60">
+                      <i data-lucide="video" class="h-14 w-14"></i>
+                    </div>
+                  </div>
                 </div>
-                <div class="mt-6">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Virtual Tour</p>
-                  <h3 class="mt-2 text-2xl font-serif text-stone-900">Guided Site Walkthrough</h3>
-                  <p class="mt-4 text-sm leading-relaxed text-gray-600">Follow a clear digital route across key spaces and explore the museum through immersive panoramic views.</p>
-                </div>
-                <div class="mt-6 inline-flex items-center text-sm font-semibold text-amber-800 transition group-hover:translate-x-1">Start Tour →</div>
-              </a>
+              </section>
 
-              <a href="/ar-content-detection" class="group rounded-[1.75rem] border border-stone-200 bg-gradient-to-b from-white to-stone-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-100/70">
-                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                  <i data-lucide="scan" class="h-7 w-7"></i>
+              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-amber-50 via-white to-white shadow-sm">
+                <div class="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
+                  <div class="flex items-center justify-center bg-gradient-to-br from-amber-100 to-yellow-100 p-10 md:p-12">
+                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/80 text-amber-700 shadow-lg shadow-amber-200/60">
+                      <i data-lucide="scan" class="h-14 w-14"></i>
+                    </div>
+                  </div>
+                  <div class="p-8 md:p-10 lg:p-12">
+                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">AR Content</p>
+                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Marker-Based AR Views</h3>
+                    <p class="mt-5 text-gray-600 leading-relaxed">
+                      Use your device camera to activate digital overlays linked to heritage markers and selected artifacts, giving visitors a more interactive way to experience museum content beyond static images.
+                    </p>
+                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Interactive artifact viewing</div>
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Camera-based marker detection</div>
+                    </div>
+                    <div class="mt-8">
+                      <a href="/ar-content-detection" class="inline-flex items-center rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-800">Open AR Camera →</a>
+                    </div>
+                  </div>
                 </div>
-                <div class="mt-6">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">AR Content</p>
-                  <h3 class="mt-2 text-2xl font-serif text-stone-900">Marker-Based AR Views</h3>
-                  <p class="mt-4 text-sm leading-relaxed text-gray-600">Preview selected digital overlays connected to heritage markers and artifacts using your device camera.</p>
-                </div>
-                <div class="mt-6 inline-flex items-center text-sm font-semibold text-amber-800 transition group-hover:translate-x-1">Open AR Camera →</div>
-              </a>
+              </section>
 
-              <a href="/edu-resources" class="group rounded-[1.75rem] border border-stone-200 bg-gradient-to-b from-white to-stone-50 p-6 shadow-sm transition hover:-translate-y-1 hover:shadow-xl hover:shadow-amber-100/70">
-                <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-amber-100 text-amber-700">
-                  <i data-lucide="book-open" class="h-7 w-7"></i>
+              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-white via-white to-stone-50 shadow-sm">
+                <div class="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
+                  <div class="order-2 p-8 md:p-10 lg:order-1 lg:p-12">
+                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Edu Resources</p>
+                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Teacher Learning Pack</h3>
+                    <p class="mt-5 text-gray-600 leading-relaxed">
+                      Access learning materials that support guided discussion, classroom activities, and structured engagement with the museum’s history, spaces, and cultural meaning.
+                    </p>
+                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Classroom-ready references</div>
+                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Guides for deeper discussion</div>
+                    </div>
+                    <div class="mt-8">
+                      <a href="/edu-resources" class="inline-flex items-center rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-800">Open Resources →</a>
+                    </div>
+                  </div>
+                  <div class="order-1 flex items-center justify-center bg-gradient-to-br from-stone-100 to-amber-100 p-10 md:p-12 lg:order-2">
+                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/85 text-amber-700 shadow-lg shadow-stone-200/60">
+                      <i data-lucide="book-open" class="h-14 w-14"></i>
+                    </div>
+                  </div>
                 </div>
-                <div class="mt-6">
-                  <p class="text-sm font-semibold uppercase tracking-[0.2em] text-amber-700">Edu Resources</p>
-                  <h3 class="mt-2 text-2xl font-serif text-stone-900">Teacher Learning Pack</h3>
-                  <p class="mt-4 text-sm leading-relaxed text-gray-600">Access downloadable guides, classroom prompts, and activity materials that support deeper understanding.</p>
-                </div>
-                <div class="mt-6 inline-flex items-center text-sm font-semibold text-amber-800 transition group-hover:translate-x-1">Open Resources →</div>
-              </a>
+              </section>
             </div>
           </div>
         </div>
       </section>
-
 
     </main>
 
