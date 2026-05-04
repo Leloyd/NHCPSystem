@@ -38,6 +38,39 @@
         yOffset: 0.001,
       },
     },
+    alay: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    antuk: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    bagongon: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
     bogwa: {
       targetSize: 0.8,
       scaleMultiplier: 2,
@@ -69,6 +102,28 @@
         enabled: true,
         sizeMultiplier: 1.15,
         yOffset: -0.02,
+      },
+    },
+    pagpag: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    pahimakas: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
       },
     },
     uloh: {
