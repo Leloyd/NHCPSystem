@@ -13,7 +13,6 @@
       <nav class="hidden lg:flex items-center space-x-8">
         <a href="{{ url_for('index') }}" class="{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Home</a>
         <a href="{{ url_for('digital_exhibits') }}" class="{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
-        <a href="{{ url_for('accessibility') }}" class="{% if public_active_page == 'accessibility' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Accessibility</a>
         <a href="{{ url_for('interactive') }}" class="{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
         <a href="{{ url_for('participation') }}" class="{% if public_active_page == 'participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">E-Participation</a>
         <a href="{{ url_for('news') }}" class="{% if public_active_page == 'news' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community &amp; Events</a>
