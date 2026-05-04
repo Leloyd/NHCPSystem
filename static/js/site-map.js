@@ -80,6 +80,10 @@
     searchOpenBtn: document.getElementById("mapSearchOpenBtn"),
     searchCloseBtn: document.getElementById("mapSearchCloseBtn"),
     toggleHotspotsBtn: document.getElementById("mapToggleHotspotsBtn"),
+    controlDock: document.getElementById("mapControlDock"),
+    loadingOverlay: document.getElementById("mapLoadingOverlay"),
+    loadingTitle: document.getElementById("mapLoadingTitle"),
+    loadingCopy: document.getElementById("mapLoadingCopy"),
     mapInfoOverlay: document.getElementById("mapInfoOverlay"),
     mapInfoCard: document.getElementById("mapInfoCard"),
     mapInfoRoute: document.getElementById("mapInfoRoute"),
@@ -90,6 +94,24 @@
 
   if (!elements.mapRoot || !window.L) {
     return;
+  }
+
+  function setLoadingState(isLoading, title, copy) {
+    if (elements.loadingTitle && title) {
+      elements.loadingTitle.textContent = title;
+    }
+
+    if (elements.loadingCopy && copy) {
+      elements.loadingCopy.textContent = copy;
+    }
+
+    if (elements.loadingOverlay) {
+      elements.loadingOverlay.hidden = !isLoading;
+    }
+
+    if (elements.controlDock) {
+      elements.controlDock.hidden = !!isLoading;
+    }
   }
 
   function appendCacheBuster(url) {
@@ -698,6 +720,8 @@
   }
 
   function init() {
+    setLoadingState(true, "Loading Site Map...", "Preparing the aerial image and controls.");
+
     fetchMapData()
       .then(function () {
         return initLeafletMap();
@@ -712,8 +736,10 @@
         updateHotspotToggleButton();
         setSearchOverlayOpen(false);
         renderAll();
+        setLoadingState(false);
       })
       .catch(function () {
+        setLoadingState(true, "Unable to load Site Map", "Please refresh the page and try again.");
         elements.mapRoot.innerHTML = '<div class="map-empty-state">Unable to load map data. Check <code>/static/data/site-map-hotspots.json</code>.</div>';
       });
   }

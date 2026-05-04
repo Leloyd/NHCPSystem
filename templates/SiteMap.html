@@ -10,9 +10,6 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/site-map.css') }}" />
   </head>
   <body class="site-map-body text-gray-900">
-    {% set public_active_page = 'interactive' %}
-    {% include 'partials/_public_top_nav.html' %}
-
     <main
       class="site-map-app"
       id="siteMapApp"
@@ -21,6 +18,13 @@
       data-hotspots-url="{{ url_for('static', filename='data/site-map-hotspots.json') }}"
     >
       <div id="interactiveMap" class="site-map-canvas" role="region" aria-label="Aerial map of the Nagcarlan Underground Cemetery"></div>
+
+      <div class="site-map-loading" id="mapLoadingOverlay" aria-live="polite">
+        <section class="site-map-loading__card">
+          <p class="site-map-loading__title font-serif" id="mapLoadingTitle">Loading Site Map...</p>
+          <p class="site-map-loading__copy" id="mapLoadingCopy">Preparing the aerial image and controls.</p>
+        </section>
+      </div>
 
       <div class="site-map-overlay site-map-overlay--center" id="mapSearchOverlay" hidden>
         <section class="site-map-search-panel" role="dialog" aria-modal="true" aria-label="Search map hotspots">
@@ -43,7 +47,7 @@
         </section>
       </div>
 
-      <div class="site-map-control-dock" aria-label="Site map controls">
+      <div class="site-map-control-dock" aria-label="Site map controls" id="mapControlDock" hidden>
         <button class="site-map-control-dock__action is-disabled" type="button" aria-disabled="true">
           <span class="site-map-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
