@@ -73,6 +73,10 @@ def prepare_online_gallery_item(item: dict[str, Any] | None, *, categories_by_id
     prepared["tags"] = _prepare_tags(prepared.get("tags"))
     prepared["image_url"] = resolve_online_gallery_image_url(prepared.get("image_filename"))
     prepared["teaching_note"] = str(prepared.get("teaching_note") or "").strip()
+    prepared["title_tl"] = str(prepared.get("title_tl") or "").strip()
+    prepared["location_tl"] = str(prepared.get("location_tl") or "").strip()
+    prepared["short_caption_tl"] = str(prepared.get("short_caption_tl") or "").strip()
+    prepared["full_description_tl"] = str(prepared.get("full_description_tl") or "").strip()
     return prepared
 
 
@@ -182,13 +186,17 @@ def build_online_gallery_form_state(source: dict[str, Any] | None = None, *, cat
 
     return {
         "title": str(source.get("title") or "").strip(),
+        "title_tl": str(source.get("title_tl") or "").strip(),
         "period": str(source.get("period") or "").strip(),
         "year_label": str(source.get("year_label") or source.get("year") or "").strip(),
         "category_id": category_id,
         "source": str(source.get("source") or "").strip(),
         "location": str(source.get("location") or "").strip(),
+        "location_tl": str(source.get("location_tl") or "").strip(),
         "short_caption": str(source.get("short_caption") or "").strip(),
+        "short_caption_tl": str(source.get("short_caption_tl") or "").strip(),
         "full_description": str(source.get("full_description") or "").strip(),
+        "full_description_tl": str(source.get("full_description_tl") or "").strip(),
         "teaching_note": str(source.get("teaching_note") or "").strip(),
         "tags_text": ", ".join(_prepare_tags(source.get("tags") if source.get("tags") is not None else source.get("tags_text"))),
         "sort_order": str(source.get("sort_order") or "0").strip() or "0",

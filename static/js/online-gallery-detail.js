@@ -54,7 +54,8 @@
 
     if (titleEl) titleEl.textContent = item.title;
     if (metaEl) {
-      metaEl.textContent = `${item.period} • ${item.year} • ${item.location} • Source: ${item.source}`;
+      const metaParts = [item.category, item.year, item.location].filter(Boolean);
+      metaEl.textContent = metaParts.join(" • ");
     }
 
     if (imageEl) {

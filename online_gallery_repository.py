@@ -7,8 +7,9 @@ ONLINE_GALLERY_CATEGORIES_TABLE = "online_gallery_categories"
 ONLINE_GALLERY_ITEMS_TABLE = "online_gallery_items"
 ONLINE_GALLERY_CATEGORY_FIELDS = "id, slug, display_name, sort_order, is_active, created_at, updated_at"
 ONLINE_GALLERY_ITEM_FIELDS = (
-    "id, category_id, title, period, year_label, source, location, short_caption, full_description, "
-    "teaching_note, tags, image_filename, is_published, sort_order, created_at, updated_at"
+    "id, category_id, title, title_tl, period, year_label, source, location, location_tl, short_caption, "
+    "short_caption_tl, full_description, full_description_tl, teaching_note, tags, image_filename, "
+    "is_published, sort_order, created_at, updated_at"
 )
 
 

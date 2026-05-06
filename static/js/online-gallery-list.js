@@ -28,13 +28,14 @@
     const thumbMarkup = item.image_url
       ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-thumb__image" loading="lazy" />`
       : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
+    const metaParts = [item.category, item.year].filter(Boolean);
     return `
       <article class="gallery-card">
         <div class="gallery-thumb">
           ${thumbMarkup}
         </div>
         <div class="p-5">
-          <p class="text-xs text-amber-700 mb-1">${item.period} • ${item.year}</p>
+          <p class="text-xs text-amber-700 mb-1">${metaParts.join(" • ")}</p>
           <h3 class="text-lg font-serif text-gray-900 mb-2">${item.title}</h3>
           <p class="text-sm text-gray-700 mb-3">${item.short_caption}</p>
           <div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>

@@ -16,40 +16,61 @@ from .service import (
 )
 
 
+ONLINE_GALLERY_CATEGORY_RULES = {
+    "mga-rehiyunal-na-kaugalian-regional-customs": {
+        "requires_location": True,
+        "requires_year": False,
+    },
+    "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": {
+        "requires_location": False,
+        "requires_year": False,
+    },
+    "kasaysayan-history": {
+        "requires_location": False,
+        "requires_year": True,
+    },
+    "materyales-materials": {
+        "requires_location": False,
+        "requires_year": False,
+    },
+}
+
+
 def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image):
     title = str(form.get("title") or "").strip()
-    period = str(form.get("period") or "").strip()
+    title_tl = str(form.get("title_tl") or "").strip()
     year_label = str(form.get("year_label") or "").strip()
     category_id_text = str(form.get("category_id") or "").strip()
-    source = str(form.get("source") or "").strip()
     location = str(form.get("location") or "").strip()
+    location_tl = str(form.get("location_tl") or "").strip()
     short_caption = str(form.get("short_caption") or "").strip()
+    short_caption_tl = str(form.get("short_caption_tl") or "").strip()
     full_description = str(form.get("full_description") or "").strip()
-    teaching_note = str(form.get("teaching_note") or "").strip()
-    tags = [part.strip() for part in str(form.get("tags_text") or "").split(",") if part.strip()]
+    full_description_tl = str(form.get("full_description_tl") or "").strip()
 
     if len(title) < 3:
         raise ValueError("Title must be at least 3 characters.")
-    if len(period) < 3:
-        raise ValueError("Period must be at least 3 characters.")
-    if len(year_label) < 2:
-        raise ValueError("Year label must be at least 2 characters.")
-    if len(source) < 2:
-        raise ValueError("Source must be at least 2 characters.")
-    if len(location) < 2:
-        raise ValueError("Location must be at least 2 characters.")
     if len(short_caption) < 12:
         raise ValueError("Short caption must be at least 12 characters.")
     if len(full_description) < 24:
         raise ValueError("Full description must be at least 24 characters.")
-    if len(teaching_note) < 12:
-        raise ValueError("Teaching note must be at least 12 characters.")
-    if not tags:
-        raise ValueError("Please add at least one tag.")
 
-    valid_category_ids = {str(category.get("id")) for category in categories}
-    if category_id_text not in valid_category_ids:
+    categories_by_id = {str(category.get("id")): category for category in categories}
+    selected_category = categories_by_id.get(category_id_text)
+    if selected_category is None:
         raise ValueError("Please choose a valid category.")
+
+    category_slug = str(selected_category.get("slug") or "").strip()
+    category_rules = ONLINE_GALLERY_CATEGORY_RULES.get(
+        category_slug,
+        {"requires_location": False, "requires_year": False},
+    )
+
+    if category_rules.get("requires_location") and len(location) < 2:
+        raise ValueError("Location is required for this category.")
+
+    if category_rules.get("requires_year") and len(year_label) < 2:
+        raise ValueError("Year is required for this category.")
 
     try:
         sort_order = int(str(form.get("sort_order") or "0").strip() or "0")
@@ -58,15 +79,19 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
 
     payload = {
         "title": title,
-        "period": period,
-        "year_label": year_label,
+        "title_tl": title_tl or None,
+        "period": None,
+        "year_label": (year_label or None) if category_rules.get("requires_year") else None,
         "category_id": int(category_id_text),
-        "source": source,
-        "location": location,
+        "source": None,
+        "location": (location or None) if category_rules.get("requires_location") else None,
+        "location_tl": (location_tl or None) if category_rules.get("requires_location") else None,
         "short_caption": short_caption,
+        "short_caption_tl": short_caption_tl or None,
         "full_description": full_description,
-        "teaching_note": teaching_note,
-        "tags": tags,
+        "full_description_tl": full_description_tl or None,
+        "teaching_note": None,
+        "tags": [],
         "is_published": normalize_checkbox(form.get("is_published")),
         "sort_order": sort_order,
     }
