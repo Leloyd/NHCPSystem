@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Heritage Trail | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-trail.css') }}" />
   </head>
@@ -12,10 +13,11 @@
     {% set public_active_page = 'heritage-trail' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="heritage-shell pt-20" id="heritageTrailShell" data-stop1-image="{{ url_for('static', filename='images/heritage-trail/Step01-Orientation.jpg') }}"></main>
+    <main class="heritage-shell pt-20" id="heritageTrailShell" data-stop1-image="{{ url_for('static', filename='images/heritage-trail/Step01-Orientation.jpg') }}" data-panorama-front-gate="{{ url_for('virtual_tour_file', filename='FrontGate.jpg') }}" data-panorama-right-front-gate="{{ url_for('virtual_tour_file', filename='right-FrontGate.jpg') }}"></main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <script src="{{ url_for('static', filename='js/heritage-trail.js') }}"></script>
   </body>
 </html>

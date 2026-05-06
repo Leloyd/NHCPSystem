@@ -3,6 +3,9 @@
 
   var shell = document.getElementById("heritageTrailShell");
   var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
+  var panoramaFrontGate = shell ? shell.dataset.panoramaFrontGate || "" : "";
+  var panoramaRightFrontGate = shell ? shell.dataset.panoramaRightFrontGate || "" : "";
+  var heroPanoramaViewer = null;
 
   if (!shell) {
     return;
@@ -11,7 +14,7 @@
   var FONT_SIZES = { sm: "13px", md: "16px", lg: "19px", xl: "23px" };
 
   var STOPS = [
-    { id: 1, title: "Front Gate Orientation", short: "Front Gates" },
+    { id: 1, title: "Orientation", short: "Front Gates" },
     { id: 2, title: "Museum Registration & Visitor Guidance", short: "Registration" },
     { id: 3, title: "Museum Artifact Interpretation", short: "Artifacts" },
     { id: 4, title: "Museum Quiz Checkpoint", short: "Quiz" },
@@ -23,7 +26,7 @@
     { id: 10, title: "Return to Gates & Thank You", short: "Thank You" },
   ];
 
-  var HERO_TRANSCRIPT = "[00:00] Welcome to the Underground Cemetery — one of the most significant heritage sites in the region. Built centuries ago as a circular walled enclosure, it served as both a parish cemetery and a monument to community memory. [00:18] You stand at the threshold between the present and the past. Inside: artifacts spanning 700 years, a church built to outlast generations, and below the church floor — the underground crypts. [00:48] This trail is your guide through all of it. Begin here. End here. Carry the story with you.";
+  var HERO_TRANSCRIPT = "[00:00] Welcome to the orientation point of the Nagcarlan Underground Cemetery. From the gate, you first encounter the circular enclosure, the red-brick pathways, and the chapel that anchors the site. [00:16] Established in 1845 under Fr. Vicente Velloc, the cemetery was built outside the town center in keeping with 19th-century health regulations. [00:31] The front gate prepares you for what lies ahead: a National Historical Landmark that served the town in life, in death, and at key moments in Philippine history. [00:48] Use this 360 view to familiarize yourself with the approach before beginning the full trail.";
 
   var QUIZ_QUESTIONS = [
     {
@@ -431,13 +434,86 @@
         '</div>' +
         '<div class="heritage-hero__media">' +
           (!state.textOnly
-            ? '<div class="heritage-hero__video"><iframe src="https://www.youtube.com/embed/tU8a3-QLKDc?rel=0&modestbranding=1&cc_load_policy=1" title="Underground Cemetery Heritage Trail Documentary Introduction" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>' +
-              '<div class="heritage-hero__media-bar"><span>Enable captions via the CC button.</span><button type="button" class="heritage-inline-button" data-action="toggle-transcript" aria-expanded="' + (state.showTranscript ? 'true' : 'false') + '">' + (state.showTranscript ? 'Hide' : 'View') + ' Transcript</button></div>' +
+            ? '<div class="heritage-hero__panorama"><div id="heritageHeroPanorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div>' +
+              '<div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span><button type="button" class="heritage-inline-button" data-action="toggle-transcript" aria-expanded="' + (state.showTranscript ? 'true' : 'false') + '">' + (state.showTranscript ? 'Hide' : 'View') + ' Orientation Notes</button></div>' +
               (state.showTranscript ? '<div class="heritage-transcript">' + escapeHtml(HERO_TRANSCRIPT) + '</div>' : '')
-            : '<div class="heritage-transcript"><p class="heritage-label heritage-small">Video Transcript</p><p>' + escapeHtml(HERO_TRANSCRIPT) + '</p></div>') +
+            : '<div class="heritage-transcript"><p class="heritage-label heritage-small">Orientation Notes</p><p>' + escapeHtml(HERO_TRANSCRIPT) + '</p></div>') +
         '</div>' +
       '</div>' +
     '</section>';
+  }
+
+  function initHeroPanorama() {
+    if (state.textOnly || state.currentStop !== 0) {
+      if (heroPanoramaViewer && typeof heroPanoramaViewer.destroy === 'function') {
+        heroPanoramaViewer.destroy();
+      }
+      heroPanoramaViewer = null;
+      return;
+    }
+
+    var panoramaTarget = document.getElementById('heritageHeroPanorama');
+
+    if (!panoramaTarget || !window.pannellum || !panoramaFrontGate || !panoramaRightFrontGate) {
+      return;
+    }
+
+    if (heroPanoramaViewer && typeof heroPanoramaViewer.destroy === 'function') {
+      heroPanoramaViewer.destroy();
+      heroPanoramaViewer = null;
+    }
+
+    heroPanoramaViewer = window.pannellum.viewer('heritageHeroPanorama', {
+      default: {
+        firstScene: 'frontGate',
+        sceneFadeDuration: 700,
+        autoLoad: true,
+        showControls: true,
+        autoRotate: -2
+      },
+      scenes: {
+        frontGate: {
+          type: 'equirectangular',
+          panorama: panoramaFrontGate,
+          pitch: 1.8,
+          yaw: -10.2,
+          hfov: 150,
+          hotSpots: [
+            {
+              pitch: -10,
+              yaw: 90,
+              type: 'scene',
+              text: 'Move to right-side front gate view',
+              sceneId: 'rightFrontGate',
+              targetPitch: -20,
+              targetYaw: 90,
+              targetHfov: 100,
+              cssClass: 'tour-ground-hotspot'
+            }
+          ]
+        },
+        rightFrontGate: {
+          type: 'equirectangular',
+          panorama: panoramaRightFrontGate,
+          pitch: -20,
+          yaw: 90,
+          hfov: 100,
+          hotSpots: [
+            {
+              pitch: -11,
+              yaw: -89,
+              type: 'scene',
+              text: 'Return to front gate view',
+              sceneId: 'frontGate',
+              targetPitch: -20,
+              targetYaw: -90,
+              targetHfov: 100,
+              cssClass: 'tour-ground-hotspot'
+            }
+          ]
+        }
+      }
+    });
   }
 
   function renderProgress() {
@@ -491,16 +567,16 @@
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
       '</div>' +
       '<div class="heritage-grid-2" style="margin-top:1.5rem;">' +
-        '<div class="heritage-stack heritage-copy"><p>The gates mark the beginning of a journey that bridges centuries. Constructed during the colonial period, this enclosure was conceived as a community space for mourning, memory, and devotion. Stepping through means crossing from the present into layers of living history.</p><p>As a heritage site, the Underground Cemetery is protected and curated to ensure future generations can access its stories. As a learning space, it invites visitors to engage with artifacts, architecture, and the underground world beneath the church floor.</p></div>' +
-        '<div class="heritage-stack heritage-copy"><p>The circular enclosure was not an accidental design. Built to contain the dead and frame the act of burial, the circle carries deep symbolic weight across many cultures: wholeness, continuity, the eternal return. Every visitor who passes through the gates steps into that symbol.</p><p>Originally constructed by the Augustinian Order, the gates and walls were rebuilt and reinforced over generations — each era leaving its fingerprints in the stone. What you see today is a palimpsest: history written in layers of masonry.</p></div>' +
+        '<div class="heritage-stack heritage-copy"><p>The front gate is the correct place to begin because it reveals the cemetery as a complete designed landscape. From here, visitors can read the circular plan, the perimeter wall, the brick-lined approach, and the chapel that rises at the center of the enclosure. Orientation at the gate turns the site from a striking photograph into a structured heritage place with a clear ceremonial axis.</p><p>The cemetery was established in 1845 under the supervision of Fr. Vicente Velloc. It was built south of the town proper, consistent with 19th-century public-health regulations that discouraged burials within crowded poblacion centers during recurring disease outbreaks such as cholera. This means the approach to the gate is already part of the story: the site was planned to be both accessible to the community and physically set apart from daily domestic life.</p></div>' +
+        '<div class="heritage-stack heritage-copy"><p>The gate also introduces the site\'s dual identity. It is a Catholic burial ground centered on a chapel where funeral rites were held, but it is also a civic landmark tied to larger historical events. During the Revolution and later conflicts, the cemetery became a discreet meeting place and refuge because of its enclosure, distance from the town center, and the privacy offered by its built form.</p><p>Seen from this viewpoint, the materials are just as important as the layout. The red-brick paths, masonry walls, iron grilles, and high arched entrance create a formal threshold between the public road and sacred ground. Before moving deeper into the trail, the gate invites visitors to slow down, recognize the site\'s scale, and understand that every later stop grows out of the spatial order first announced here.</p></div>' +
       '</div>' +
       renderDivider() +
       renderSectionLabel('Deep Dive — Explore Further') +
       renderAccordion('stop1-deep', [
-        { id: 'circle', title: 'The Circle as Sacred Symbol', content: '<p>Across cultures from ancient Rome to pre-colonial Southeast Asia, the circular enclosure was used as a sacred boundary — a temenos — separating the space of the dead from the space of the living. The Underground Cemetery\'s circular wall is both practical and deeply symbolic.</p><p>In Philippine indigenous tradition, the circle represented the cycle of life and death. When the Augustinians built on this site, they adopted the form, integrating Catholic doctrine with existing cultural intuitions about sacred space. The result is a syncretic architecture that speaks to multiple traditions simultaneously.</p>' },
-        { id: 'construction', title: 'Who Built These Gates? — Construction History', content: '<p>The original gate structures were laid using adobe stone quarried from local volcanic deposits — a material abundant in the Philippine archipelago and remarkably durable in the tropical climate.</p><p>The construction workforce was drawn from the local Filipino community — skilled craftsmen whose names were never formally recorded but whose techniques are visible in every joint and course of stonework. The gates stand as their anonymous monument.</p><p>Major reconstructions occurred after the 1863 earthquake and during the American colonial period. Each rebuilding preserved the essential footprint while updating the surface finishes, creating the layered appearance visible today.</p>' },
-        { id: 'today', title: 'The Gates as a Learning Space Today', content: '<p>In 1982, the site was declared a National Cultural Treasure by the National Museum of the Philippines, triggering formal conservation protocols.</p><p>The gate area is deliberately used as the orientation point because it combines the site\'s most legible architectural statement with enough open space for reflection. Before entering the museum or the church grounds, visitors are invited to pause here — to calibrate their expectations and orient their attention.</p><p>This trail is one outcome of that pedagogical philosophy: the heritage site as classroom, the gate as its first lesson.</p>' },
-        { id: 'quote', title: 'A Traveler\'s Account — 1875', content: '<blockquote class="heritage-copy">"We arrived at the cemetery at the hour of the Angelus, when the light fell long and amber across the gate. The stone archway appeared to compress time — one felt, passing through it, that the centuries were not behind us but immediately present, standing at one\'s elbow."</blockquote><p class="heritage-small heritage-label">— Fr. Emilio Castellano, S.J., Relaciones de Viajes, 1875 (translated)</p>' }
+        { id: 'layout', title: 'Reading the Layout from the Gate', content: '<p>From the entrance, visitors can immediately understand the site\'s one-hectare circular plan. The perimeter wall encloses rows of niches, while the central chapel anchors the composition along a straight approach. This makes the gate more than an entry point: it is the first place where the logic of the cemetery becomes visible.</p><p>Orientation matters because the Nagcarlan Underground Cemetery is not simply a crypt hidden below ground. It is an integrated funerary complex composed of an entrance arch, circular walled enclosure, pathways, chapel, and the subterranean chamber below. The front gate is where these elements first come together in a single frame.</p>' },
+        { id: '1845', title: 'Why the Cemetery Was Built Here in 1845', content: '<p>Historical accounts identify 1845 as the year the cemetery was established under Fr. Vicente Velloc. It was intentionally placed outside the town center, following 19th-century sanitary regulations intended to reduce the spread of disease by moving burials away from dense residential areas.</p><p>That decision shaped the visitor experience that remains today. The cemetery is close enough to Nagcarlan to stay part of community memory, yet separate enough to feel solemn and self-contained. Approaching the gate still communicates that original balance between public access and sacred distance.</p>' },
+        { id: 'landmark', title: 'Why the Gate Belongs to a National Historical Landmark', content: '<p>The cemetery is recognized as a National Historical Landmark, and the front gate is one of the clearest expressions of that status because it preserves the site\'s scale, form, and ceremonial approach. It is the public face of a place later associated not only with burial practice but also with the Philippine Revolution, the Philippine-American War, and World War II.</p><p>For orientation purposes, the key point is simple: the gate prepares visitors to read the site as both architecture and history. Before anyone reaches the chapel or underground chamber, the entrance already introduces the cemetery as a landmark shaped by faith, memory, and national events.</p>' },
+        { id: 'threshold', title: 'Why Orientation Starts at the Threshold', content: '<p>Heritage trails often begin where visitors can best grasp a site\'s overall organization. At Nagcarlan, that place is the front gate. From here, the scale of the enclosure, the material character of the masonry, and the visual axis toward the chapel can all be understood before attention shifts to individual objects or stories.</p><p>Beginning here also respects the original rhythm of entry. The site was designed so that movement inward happened deliberately — from the public road, through the gate, across the open court, and only then toward the chapel and the underground crypt. Orientation at the threshold helps modern visitors experience that sequence with the same sense of progression.</p>' }
       ]) +
       renderDivider() +
       (!state.textOnly ? renderSectionLabel('Photo Gallery — The Site Through the Lens') + renderGallery('stop1') : '') +
@@ -883,6 +959,7 @@
       renderAccessPanel() +
       renderProgress() +
       '<main id="heritageTrailMain" class="heritage-main ' + (state.currentStop === 0 ? 'is-landing' : '') + '">' + renderStopContent() + '</main>';
+    initHeroPanorama();
   }
 
   shell.addEventListener('click', function (event) {

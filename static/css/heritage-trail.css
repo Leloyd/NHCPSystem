@@ -240,7 +240,8 @@
   margin: 2rem auto 0;
 }
 
-.heritage-hero__video {
+.heritage-hero__video,
+.heritage-hero__panorama {
   position: relative;
   width: 100%;
   padding-top: 56.25%;
@@ -255,6 +256,35 @@
   inset: 0;
   width: 100%;
   height: 100%;
+}
+
+.heritage-hero__panorama-view {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  background: #241a12;
+}
+
+.heritage-hero__panorama .pnlm-container {
+  background: #241a12;
+}
+
+.heritage-hero__panorama .tour-ground-hotspot {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 247, 235, 0.92);
+  background: rgba(217, 144, 16, 0.84);
+  box-shadow: 0 12px 22px rgba(0, 0, 0, 0.26);
+}
+
+.heritage-hero__panorama .tour-ground-hotspot::after {
+  content: "";
+  position: absolute;
+  inset: 0.45rem;
+  border-radius: 999px;
+  background: rgba(255, 253, 249, 0.92);
 }
 
 .heritage-hero__media-bar {
