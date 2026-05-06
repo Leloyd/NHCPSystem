@@ -767,34 +767,24 @@
       '<div class="heritage-grid-2 heritage-stop-centered-block">' +
         '<div class="heritage-stack">' +
           renderSectionLabel('Visitor Registration') +
-          '<p class="heritage-copy">Complete this short registration to log your visit. Your information helps the heritage office track visitor numbers and improve facilities for future guests.</p>' +
-          (state.registrationSubmitted
-            ? '<div class="heritage-result is-success"><p class="heritage-card-button__title">Registration Confirmed</p><p class="heritage-copy">Welcome, ' + escapeHtml(state.registration.name || 'Visitor') + '. Your visit has been recorded. Enjoy the trail!</p><button type="button" class="heritage-inline-button" data-action="edit-registration">Edit Registration</button></div>'
-            : '<form class="heritage-form" id="heritageRegistrationForm">' +
-                '<div><label class="heritage-small">Full Name *</label><input type="text" required data-field="name" value="' + escapeHtml(state.registration.name) + '" /></div>' +
-                '<div><label class="heritage-small">Email Address</label><input type="email" data-field="email" value="' + escapeHtml(state.registration.email) + '" /></div>' +
-                '<div class="heritage-form-grid"><div><label class="heritage-small">Visit Date</label><input type="date" data-field="date" value="' + escapeHtml(state.registration.date) + '" /></div><div><label class="heritage-small">Group Size</label><select data-field="group">' + ['1', '2–5', '6–9', '10–20', '20+'].map(function (option) { return '<option value="' + option + '" ' + (state.registration.group === option ? 'selected' : '') + '>' + option + (option === '1' ? ' person' : ' people') + '</option>'; }).join('') + '</select></div></div>' +
-                '<label class="heritage-form-check"><input type="checkbox" data-field="access" ' + (state.registration.access ? 'checked' : '') + ' /><span class="heritage-copy">I require accessibility accommodations (audio guide, wheelchair access, large-print materials).</span></label>' +
-                '<button type="submit" class="heritage-button">Complete Registration</button>' +
-              '</form>') +
+          '<p class="heritage-copy">Visitors do not register online for this stop. Upon arrival, museum staff may ask you to complete one or more on-site documents depending on the purpose of your visit. The forms shown below help the museum record attendance, approve special requests, measure visitor experience, and organize scheduled tours.</p>' +
+          '<div class="heritage-grid-2">' +
+            '<article class="heritage-card"><p class="heritage-card-button__title">Visitor\'s Log Form</p><p class="heritage-card-button__copy">This is the daily sign-in sheet used at the museum entrance. Visitors record their name, address, nationality, sex, school or company affiliation, and visitor count so the site can document attendance and basic visitor profiles.</p></article>' +
+            '<article class="heritage-card"><p class="heritage-card-button__title">Permission to Use the Museum</p><p class="heritage-card-button__copy">This form is used when a visitor, school, media team, or researcher requests special use of the museum, such as video documentation, photo documentation, interviews, surveys, or use of museum resources. It explains the request and records approval by NHCP staff.</p></article>' +
+            '<article class="heritage-card"><p class="heritage-card-button__title">Client Satisfaction Measurement</p><p class="heritage-card-button__copy">This survey gathers feedback after a transaction or visit. It helps the museum assess service quality, staff assistance, facilities, and overall visitor satisfaction so improvements can be planned.</p></article>' +
+            '<article class="heritage-card"><p class="heritage-card-button__title">Tour Booking Form</p><p class="heritage-card-button__copy">This form is used for scheduled group visits. It records the requested date and time, institution or tour agency, contact details, visitor count, and the final confirmation, reschedule, or cancellation status of the booking.</p></article>' +
+          '</div>' +
         '</div>' +
         '<div class="heritage-stack">' +
           renderSectionLabel('Opening Hours') +
           '<div class="heritage-rule">' + [
-            ['Tuesday – Friday', '8:00 AM – 5:00 PM'],
-            ['Saturday – Sunday', '8:00 AM – 6:00 PM'],
-            ['Monday', 'Closed (Conservation Day)'],
-            ['Last Entry', 'One hour before closing'],
-            ['Guided Tours', '9:00 AM · 11:00 AM · 2:00 PM']
+            ['Tuesday – Saturday', '8:00 AM – 4:00 PM'],
+            ['Sunday', 'Closed'],
+            ['Monday', 'Closed'],
+            ['Admission', 'Free for all visitors']
           ].map(function (row) { return '<div class="heritage-nav__row"><span class="heritage-copy">' + row[0] + '</span><strong>' + row[1] + '</strong></div>'; }).join('') + '</div>' +
           renderSectionLabel('Admission Fees') +
-          '<div class="heritage-rule">' + [
-            ['General Admission', '₱ 50'],
-            ['Students (with ID)', '₱ 30'],
-            ['Senior Citizens / PWD', '₱ 20'],
-            ['Children under 7', 'FREE'],
-            ['Group (10 or more)', '₱ 40 / person']
-          ].map(function (row) { return '<div class="heritage-nav__row"><span class="heritage-copy">' + row[0] + '</span><strong>' + row[1] + '</strong></div>'; }).join('') + '</div>' +
+          '<div class="heritage-rule"><div class="heritage-nav__row"><span class="heritage-copy">All Visitors</span><strong>FREE</strong></div><p class="heritage-copy" style="margin-top:0.75rem;">There is no admission charge for entry to the museum. Visitors may still be asked to complete the appropriate on-site form depending on whether the visit is a regular walk-in, a special request, or a scheduled tour.</p></div>' +
         '</div>' +
       '</div>' +
       renderDivider() +
@@ -808,8 +798,10 @@
         { id: 'r6', title: 'Emergency Procedures', content: '<p>Emergency exits are marked with green signage throughout the complex. The nearest hospital is 800 meters from the main gate. Site staff are first-aid certified. In case of earthquake: move away from walls and monuments and follow staff direction to the designated assembly area near the main gate archway.</p>' }
       ], 'heritage-stop-centered-block') +
       renderEasyRead('stop2', [
-        'Write your name and details when you arrive at the museum entrance.',
-        'Opening hours are Tuesday to Sunday. The museum is closed on Mondays.',
+        'Visitors do not register online for this stop.',
+        'Museum staff may ask you to fill out a log sheet, request form, satisfaction survey, or tour booking form on site.',
+        'The museum is open from 8:00 AM to 4:00 PM from Tuesday to Saturday.',
+        'Admission is free for all visitors.',
         'Do not touch any artifacts or grave markers inside the site.',
         'Be quiet and respectful throughout — this is a place of history and remembrance.',
         'Ask for a large-print guide, audio guide, or wheelchair access at the desk.'
