@@ -757,7 +757,7 @@
       title: 'Museum Registration & Visitor Guidance',
       subtitle: 'Before entering, register your visit and review the guidelines that protect both you and the heritage objects within.',
       imageSrc: 'https://images.unsplash.com/photo-1767938072548-112727a13266?w=1400&h=700&fit=crop&auto=format',
-      headerClass: 'heritage-stop-centered-block',
+      headerClass: 'heritage-stop-centered-block heritage-stop-hero__header--round',
       imageAlt: 'Museum interior with display cases showing ancient artifacts and organized visitor pathways'
     }) +
     '<div class="heritage-stop-body">' +

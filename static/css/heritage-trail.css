@@ -601,6 +601,10 @@
   padding: 1rem;
 }
 
+.heritage-stop-hero__header--round {
+  border-radius: 2rem;
+}
+
 .heritage-kicker-row {
   display: flex;
   align-items: center;
