@@ -4,6 +4,7 @@
   var shell = document.getElementById("heritageTrailShell");
   var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
   var stop2Image = shell ? shell.dataset.stop2Image || "" : "";
+  var stop3Image = shell ? shell.dataset.stop3Image || "" : "";
   var stop1Gallery1 = shell ? shell.dataset.stop1GalleryOne || "" : "";
   var stop1Gallery2 = shell ? shell.dataset.stop1GalleryTwo || "" : "";
   var stop1Gallery3 = shell ? shell.dataset.stop1GalleryThree || "" : "";
@@ -874,7 +875,7 @@
       stopNum: 3,
       title: 'Museum Artifact Interpretation',
       subtitle: 'Each object in the collection is a thread in a larger tapestry of memory — connecting burial customs, community identity, and the story of this site.',
-      imageSrc: 'https://images.unsplash.com/photo-1767938072548-112727a13266?w=1400&h=700&fit=crop&auto=format',
+      imageSrc: stop3Image,
       headerClass: 'heritage-stop-hero__header--full-bleed',
       imageAlt: 'Museum display cases containing ancient burial artifacts and ceremonial objects under warm archival lighting'
     }) +
