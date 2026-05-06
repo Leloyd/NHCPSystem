@@ -630,6 +630,12 @@
   text-justify: inter-word;
 }
 
+.heritage-stop-centered-block {
+  width: min(100%, 64rem);
+  margin-left: auto;
+  margin-right: auto;
+}
+
 .heritage-grid,
 .heritage-grid-2,
 .heritage-grid-3,
@@ -1168,7 +1174,8 @@
   }
 
   .heritage-stop-feature,
-  .heritage-stop-feature__copy {
+  .heritage-stop-feature__copy,
+  .heritage-stop-centered-block {
     width: min(100%, 72rem);
   }
 }

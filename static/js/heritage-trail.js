@@ -308,28 +308,28 @@
     return '<div class="heritage-divider" aria-hidden="true"><span class="heritage-divider__diamond"></span></div>';
   }
 
-  function renderSectionLabel(label) {
-    return '<p class="heritage-section-label heritage-label">' + escapeHtml(label) + '</p>';
+  function renderSectionLabel(label, extraClass) {
+    return '<p class="heritage-section-label heritage-label' + (extraClass ? ' ' + extraClass : '') + '">' + escapeHtml(label) + '</p>';
   }
 
-  function renderEasyRead(key, points, forceOpen) {
+  function renderEasyRead(key, points, forceOpen, extraClass) {
     var isOpen = forceOpen || !!state.easyRead[key];
     var button = forceOpen
       ? ''
       : '<button type="button" class="heritage-inline-button" data-action="toggle-easy-read" data-key="' + key + '" aria-expanded="' + (isOpen ? 'true' : 'false') + '">' + (isOpen ? 'Hide' : 'Show') + ' Easy-Read Summary</button>';
 
-    return '<div class="heritage-stack">' +
+    return '<div class="heritage-stack' + (extraClass ? ' ' + extraClass : '') + '">' +
       button +
       (isOpen
-        ? '<div class="heritage-callout"><div class="heritage-callout__icon">ER</div><div><p class="heritage-label heritage-small">Easy-Read Summary</p><ul class="heritage-stack">' +
+        ? '<div class="heritage-callout' + (extraClass ? ' ' + extraClass : '') + '"><div class="heritage-callout__icon">ER</div><div><p class="heritage-label heritage-small">Easy-Read Summary</p><ul class="heritage-stack">' +
           points.map(function (point) { return '<li class="heritage-copy">' + escapeHtml(point) + '</li>'; }).join('') +
           '</ul></div></div>'
         : '') +
       '</div>';
   }
 
-  function renderAccordion(group, items) {
-    return '<div class="heritage-accordion">' + items.map(function (item) {
+  function renderAccordion(group, items, extraClass) {
+    return '<div class="heritage-accordion' + (extraClass ? ' ' + extraClass : '') + '">' + items.map(function (item) {
       var open = state.accordions[group] === item.id;
       return '<div class="heritage-accordion__item">' +
         '<button type="button" class="heritage-accordion__button" data-action="toggle-accordion" data-group="' + group + '" data-key="' + item.id + '" aria-expanded="' + (open ? 'true' : 'false') + '">' +
@@ -578,16 +578,16 @@
       '</div>' +
       '</section>' +
       renderDivider() +
-      renderSectionLabel('Deep Dive — Explore Further') +
+      renderSectionLabel('Deep Dive — Explore Further', 'heritage-stop-centered-block') +
       renderAccordion('stop1-deep', [
         { id: 'layout', title: 'Reading the Layout from the Gate', content: '<p>From the entrance, visitors can immediately understand the site\'s one-hectare circular plan. The perimeter wall encloses rows of niches, while the central chapel anchors the composition along a straight approach. This makes the gate more than an entry point: it is the first place where the logic of the cemetery becomes visible.</p><p>Orientation matters because the Nagcarlan Underground Cemetery is not simply a crypt hidden below ground. It is an integrated funerary complex composed of an entrance arch, circular walled enclosure, pathways, chapel, and the subterranean chamber below. The front gate is where these elements first come together in a single frame.</p>' },
         { id: '1845', title: 'Why the Cemetery Was Built Here in 1845', content: '<p>Historical accounts identify 1845 as the year the cemetery was established under Fr. Vicente Velloc. It was intentionally placed outside the town center, following 19th-century sanitary regulations intended to reduce the spread of disease by moving burials away from dense residential areas.</p><p>That decision shaped the visitor experience that remains today. The cemetery is close enough to Nagcarlan to stay part of community memory, yet separate enough to feel solemn and self-contained. Approaching the gate still communicates that original balance between public access and sacred distance.</p>' },
         { id: 'landmark', title: 'Why the Gate Belongs to a National Historical Landmark', content: '<p>The cemetery is recognized as a National Historical Landmark, and the front gate is one of the clearest expressions of that status because it preserves the site\'s scale, form, and ceremonial approach. It is the public face of a place later associated not only with burial practice but also with the Philippine Revolution, the Philippine-American War, and World War II.</p><p>For orientation purposes, the key point is simple: the gate prepares visitors to read the site as both architecture and history. Before anyone reaches the chapel or underground chamber, the entrance already introduces the cemetery as a landmark shaped by faith, memory, and national events.</p>' },
         { id: 'threshold', title: 'Why Orientation Starts at the Threshold', content: '<p>Heritage trails often begin where visitors can best grasp a site\'s overall organization. At Nagcarlan, that place is the front gate. From here, the scale of the enclosure, the material character of the masonry, and the visual axis toward the chapel can all be understood before attention shifts to individual objects or stories.</p><p>Beginning here also respects the original rhythm of entry. The site was designed so that movement inward happened deliberately — from the public road, through the gate, across the open court, and only then toward the chapel and the underground crypt. Orientation at the threshold helps modern visitors experience that sequence with the same sense of progression.</p>' }
-      ]) +
+      ], 'heritage-stop-centered-block') +
       renderDivider() +
-      (!state.textOnly ? renderSectionLabel('Photo Gallery — The Site Through the Lens') + '<div class="heritage-stop-gallery">' + renderGallery('stop1') + '</div>' : '') +
-      '<div style="margin-top:1.5rem;" class="heritage-callout"><div class="heritage-callout__icon">i</div><div><p class="heritage-label heritage-small">Did You Know?</p><p class="heritage-copy">The Underground Cemetery is one of only three circular colonial-era burial enclosures still in active heritage use in Southeast Asia. The others are located in Macau and Goa — reflecting the reach of the Spanish and Portuguese colonial networks that built and managed these sites.</p></div></div>' +
+      (!state.textOnly ? renderSectionLabel('Photo Gallery — The Site Through the Lens', 'heritage-stop-centered-block') + '<div class="heritage-stop-gallery">' + renderGallery('stop1') + '</div>' : '') +
+      '<div style="margin-top:1.5rem;" class="heritage-callout heritage-stop-centered-block"><div class="heritage-callout__icon">i</div><div><p class="heritage-label heritage-small">Did You Know?</p><p class="heritage-copy">The Underground Cemetery is one of only three circular colonial-era burial enclosures still in active heritage use in Southeast Asia. The others are located in Macau and Goa — reflecting the reach of the Spanish and Portuguese colonial networks that built and managed these sites.</p></div></div>' +
       renderEasyRead('stop1', [
         'This is the starting point of the heritage trail at the historic front gates.',
         'The cemetery was established around 1820 by the Augustinian religious order.',
@@ -595,7 +595,7 @@
         'The gate walls are made from local volcanic adobe stone.',
         'The site was declared a National Cultural Treasure in 1982.',
         'It is one of only three circular colonial-era burial enclosures still in use in Southeast Asia.'
-      ]) +
+      ], false, 'heritage-stop-centered-block') +
       renderNav(1) +
     '</div>';
   }
