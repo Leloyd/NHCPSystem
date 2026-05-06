@@ -125,6 +125,37 @@
     },
   ];
 
+  var galleryData = {
+    stop1: [
+      {
+        src: stop1Gallery1,
+        alt: "Step 01 orientation view of the Nagcarlan Underground Cemetery entrance gate",
+        caption: "",
+      },
+      {
+        src: stop1Gallery2,
+        alt: "Step 01 gallery image showing another view from the entrance area of the heritage site",
+        caption: "",
+      },
+      {
+        src: stop1Gallery3,
+        alt: "Step 01 gallery image highlighting the front approach and surrounding grounds",
+        caption: "",
+      },
+    ].filter(function (item) { return !!item.src; }),
+    stop5: [
+      {
+        src: "https://images.unsplash.com/photo-1776203715343-0e9784bfa5f3?w=900&h=500&fit=crop&auto=format",
+        alt: "Aged cemetery grounds with weathered stone markers",
+        caption: "The eastern section — oldest surviving grave markers",
+      },
+      {
+        src: "https://images.unsplash.com/photo-1776441553967-be9d8cd57bdf?w=900&h=500&fit=crop&auto=format",
+        alt: "Cemetery pathway toward the church",
+        caption: "The processional path — worn by centuries of passage",
+      },
+    ],
+  };
 
   var artifacts = [
     { id: "a1", name: "Baybayin Burial Jar", period: "Pre-Colonial · c. 14th Century", category: "pre-colonial", icon: "Jar", short: "Earthenware jar incised with early Baybayin script, used in indigenous burial rites.", detail: "This ceramic vessel is among the oldest objects in the collection. Found in the deepest archaeological stratum beneath the church floor, it predates the Spanish arrival by at least two centuries. The incised markings are consistent with pre-colonial Baybayin script — a syllabic writing system used across the archipelago. Its presence at a Catholic burial site suggests continuity of practice: the site was sacred before the church, and the community continued to honor earlier burial traditions even after conversion." },
@@ -327,7 +358,7 @@
         '<img class="heritage-gallery__image" src="' + escapeHtml(activeItem.src) + '" alt="' + escapeHtml(activeItem.alt) + '" loading="lazy" />' +
         (items.length > 1 ? '<button type="button" class="heritage-gallery__nav" data-direction="prev" data-action="gallery-step" data-gallery="' + key + '" aria-label="Previous image"><span class="heritage-gallery__nav-icon" aria-hidden="true">‹</span></button>' : '') +
         (items.length > 1 ? '<button type="button" class="heritage-gallery__nav" data-direction="next" data-action="gallery-step" data-gallery="' + key + '" aria-label="Next image"><span class="heritage-gallery__nav-icon" aria-hidden="true">›</span></button>' : '') +
-        '<div class="heritage-gallery__caption">' + escapeHtml(activeItem.caption) + '</div>' +
+        (activeItem.caption ? '<div class="heritage-gallery__caption">' + escapeHtml(activeItem.caption) + '</div>' : '') +
       '</div>' +
       (items.length > 1 ? '<div class="heritage-gallery__dots">' + items.map(function (item, index) {
         return '<button type="button" class="heritage-gallery__dot ' + (index === activeIndex ? 'is-active' : '') + '" data-action="gallery-select" data-gallery="' + key + '" data-index="' + index + '" aria-label="Image ' + (index + 1) + '"></button>';
@@ -359,7 +390,7 @@
     var currentImage = frame ? frame.querySelector('.heritage-gallery__image:not(.heritage-gallery__image--incoming)') : null;
     var caption = frame ? frame.querySelector('.heritage-gallery__caption') : null;
 
-    if (!frame || !currentImage || !caption) {
+    if (!frame || !currentImage) {
       state.galleries[galleryKey] = nextIndex;
       render();
       return;
@@ -381,7 +412,9 @@
     frame.insertBefore(incomingImage, caption);
 
     var swap = function () {
-      caption.textContent = nextItem.caption;
+      if (caption) {
+        caption.textContent = nextItem.caption;
+      }
       requestAnimationFrame(function () {
         currentImage.classList.add('heritage-gallery__image--outgoing');
         incomingImage.classList.add('is-visible');
