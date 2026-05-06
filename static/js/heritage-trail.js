@@ -953,7 +953,7 @@
     if (state.currentStop === 9) body = renderStop9();
     if (state.currentStop === 10) body = renderStop10();
 
-    return '<section class="heritage-content heritage-content--steps"><div class="heritage-steps-container"><article class="heritage-panel heritage-panel--steps">' + body + '</article></div></section>';
+    return '<section class="heritage-content"><article class="heritage-panel">' + body + '</article></section>';
   }
 
   function render() {
