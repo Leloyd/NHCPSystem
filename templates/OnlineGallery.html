@@ -35,7 +35,7 @@
                 <span class="gallery-heading-kicker">Digital Archive View</span>
                 <h2 id="galleryHeading" class="gallery-heading-title font-serif">Browse the collection with focused controls</h2>
                 <p class="gallery-heading-copy">
-                  Search, filter, sort, and open curated historical materials directly from the online archive.
+                  Search and open curated historical materials directly from the online archive.
                 </p>
               </div>
               <span class="gallery-shell-note">Use the filters to refine the collection and open any item for full details.</span>
@@ -52,10 +52,9 @@
                   <span class="gallery-field-label">Categories</span>
                   <div id="categoryFilter" class="gallery-chip-group" role="group" aria-label="Filter gallery by category">
                     <button type="button" class="gallery-chip is-active" data-category-filter="all" aria-pressed="true">All categories</button>
-                    <button type="button" class="gallery-chip" data-category-filter="Mga Rehiyunal Na Kaugalian (Regional Belief)" aria-pressed="false">Mga Rehiyunal Na Kaugalian (Regional Belief)</button>
-                    <button type="button" class="gallery-chip" data-category-filter="Mga Paniniwala sa Buong Bansa (Beliefs across the Nation)" aria-pressed="false">Mga Paniniwala sa Buong Bansa (Beliefs across the Nation)</button>
-                    <button type="button" class="gallery-chip" data-category-filter="Kasaysayan (History)" aria-pressed="false">Kasaysayan (History)</button>
-                    <button type="button" class="gallery-chip" data-category-filter="Materyalas (Materials)" aria-pressed="false">Materyalas (Materials)</button>
+                    {% for category in gallery_categories %}
+                    <button type="button" class="gallery-chip" data-category-filter="{{ category.display_name }}" aria-pressed="false">{{ category.display_name }}</button>
+                    {% endfor %}
                   </div>
                 </div>
               </div>
@@ -76,7 +75,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/online-gallery-data.js') }}"></script>
+    <script id="onlineGalleryItemsData" type="application/json">{{ gallery_items|tojson }}</script>
     <script src="{{ url_for('static', filename='js/online-gallery-list.js') }}"></script>
   </body>
 </html>

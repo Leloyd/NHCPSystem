@@ -1,0 +1,90 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Manage Online Gallery | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'online-gallery' %}
+{% set admin_topbar_title = 'Online Gallery' %}
+{% set admin_topbar_subtitle = 'Manage public gallery cards, uploaded images, and category-linked archive details.' %}
+{% set admin_topbar_tool_href = url_for('admin_online_gallery_new') %}
+{% set admin_topbar_tool_label = 'Create Gallery Card' %}
+{% set admin_topbar_tool_class = 'admin-primary-action' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          {% if config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Configuration issue</strong>
+            <span>{{ config_error }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Published and Draft Gallery Cards</h3>
+                <p>These entries feed the public Online Gallery list, details page, and category filtering.</p>
+              </div>
+              <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-text-link">Add New</a>
+            </div>
+
+            {% if gallery_items %}
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Card</th>
+                    <th>Category</th>
+                    <th>Period / Year</th>
+                    <th>Status</th>
+                    <th>Image</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for gallery_item in gallery_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ gallery_item.title }}</strong>
+                        <span>{{ gallery_item.short_caption }}</span>
+                      </div>
+                    </td>
+                    <td>{{ gallery_item.category or 'Uncategorized' }}</td>
+                    <td>{{ gallery_item.period }} / {{ gallery_item.year }}</td>
+                    <td>
+                      <span class="admin-status-badge {% if gallery_item.is_published %}is-published{% else %}is-draft{% endif %}">
+                        {% if gallery_item.is_published %}Published{% else %}Draft{% endif %}
+                      </span>
+                    </td>
+                    <td>{{ gallery_item.image_filename or 'No image' }}</td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('online_gallery_details', item=gallery_item.id) }}" class="admin-inline-link">View</a>
+                        <a href="{{ url_for('admin_online_gallery_edit', item_id=gallery_item.id) }}" class="admin-inline-link">Edit</a>
+                        <form method="post" action="{{ url_for('admin_online_gallery_delete', item_id=gallery_item.id) }}">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                          <button type="submit" class="admin-inline-link admin-inline-link-danger">Delete</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+            {% else %}
+            <div class="admin-empty-state">
+              <div class="admin-empty-state-icon">+</div>
+              <h3>No online gallery cards yet</h3>
+              <p>Create your first Online Gallery information card to publish it on the public archive.</p>
+              <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-primary-action">Create First Card</a>
+            </div>
+            {% endif %}
+          </section>
+{% endblock %}

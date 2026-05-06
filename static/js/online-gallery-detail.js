@@ -1,7 +1,12 @@
 (function () {
-  const items = Array.isArray(window.ONLINE_GALLERY_ITEMS)
-    ? [...window.ONLINE_GALLERY_ITEMS]
-    : [];
+  const itemsDataScript = document.getElementById("onlineGalleryItemsData");
+  let items = [];
+  try {
+    const parsedItems = itemsDataScript ? JSON.parse(itemsDataScript.textContent || "[]") : window.ONLINE_GALLERY_ITEMS;
+    items = Array.isArray(parsedItems) ? [...parsedItems] : [];
+  } catch (_error) {
+    items = [];
+  }
 
   const titleEl = document.getElementById("detailTitle");
   const metaEl = document.getElementById("detailMeta");
@@ -53,12 +58,13 @@
     }
 
     if (imageEl) {
-      imageEl.style.background = item.gradient;
-      imageEl.innerHTML = `<i data-lucide="${item.icon}" class="w-16 h-16"></i>`;
+      imageEl.innerHTML = item.image_url
+        ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-detail-card__image-tag" />`
+        : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
     }
 
     if (descEl) {
-      descEl.textContent = item.fullDescription;
+      descEl.textContent = item.full_description;
     }
 
     if (tagsEl) {
@@ -66,8 +72,7 @@
     }
 
     if (teachingEl) {
-      teachingEl.textContent =
-        "Teaching note: Ask learners how this material reflects social, architectural, or cultural changes in Nagcarlan.";
+      teachingEl.textContent = item.teaching_note;
     }
 
     if (counterEl) {
@@ -76,9 +81,6 @@
 
     document.title = `${item.title} | Online Gallery`;
 
-    if (window.lucide && typeof window.lucide.createIcons === "function") {
-      window.lucide.createIcons();
-    }
   }
 
   if (prevBtn) {

@@ -51,6 +51,15 @@
       </span>
       <span>Events Calendar</span>
     </a>
+    <a href="{{ url_for('admin_online_gallery') }}" class="admin-nav-link{% if admin_active_page == 'online-gallery' %} is-active{% endif %}">
+      {% if admin_active_page == 'online-gallery' %}
+      <span class="admin-nav-indicator" aria-hidden="true"></span>
+      {% endif %}
+      <span class="admin-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm1 8 3.5-4.5 2.5 3 1.75-2.25L18 15Zm1-6h3v2H8Z"></path></svg>
+      </span>
+      <span>Online Gallery</span>
+    </a>
     <a href="#" class="admin-nav-link">
       <span class="admin-nav-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4Zm2 2v12h12V6Zm2 2h8v5H8Zm0 7h5v1.5H8Z"></path></svg>

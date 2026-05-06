@@ -1233,6 +1233,7 @@ a.admin-text-link {
 }
 
 .admin-form-field input,
+.admin-form-field select,
 .admin-form-field textarea {
   width: 100%;
   border: 1px solid #e5e7eb;
@@ -1250,6 +1251,7 @@ a.admin-text-link {
 }
 
 .admin-form-field input:focus,
+.admin-form-field select:focus,
 .admin-form-field textarea:focus {
   border-color: rgba(201, 168, 76, 0.6);
   box-shadow: 0 0 0 4px rgba(201, 168, 76, 0.14);

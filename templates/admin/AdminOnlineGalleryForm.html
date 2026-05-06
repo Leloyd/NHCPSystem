@@ -1,0 +1,111 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = form_title ~ ' | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'online-gallery' %}
+{% set admin_topbar_title = form_title %}
+{% set admin_topbar_subtitle = 'Create or update the public card content shown inside the Online Gallery archive.' %}
+{% set admin_topbar_tool_href = url_for('admin_online_gallery') %}
+{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+              <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryTitle">Title</label>
+                  <input id="galleryTitle" name="title" type="text" maxlength="180" required value="{{ gallery_form.title }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="galleryPeriod">Period</label>
+                  <input id="galleryPeriod" name="period" type="text" maxlength="120" required value="{{ gallery_form.period }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="galleryYearLabel">Year Label</label>
+                  <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" required value="{{ gallery_form.year_label }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="galleryCategory">Category</label>
+                  <select id="galleryCategory" name="category_id" required>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="gallerySortOrder">Sort Order</label>
+                  <input id="gallerySortOrder" name="sort_order" type="number" step="1" value="{{ gallery_form.sort_order }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="gallerySource">Source</label>
+                  <input id="gallerySource" name="source" type="text" maxlength="120" required value="{{ gallery_form.source }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="galleryLocation">Location</label>
+                  <input id="galleryLocation" name="location" type="text" maxlength="180" required value="{{ gallery_form.location }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryTags">Tags</label>
+                  <input id="galleryTags" name="tags_text" type="text" maxlength="500" required value="{{ gallery_form.tags_text }}" />
+                  <p class="admin-field-hint">Separate tags with commas.</p>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryShortCaption">Short Caption</label>
+                  <textarea id="galleryShortCaption" name="short_caption" rows="4" required>{{ gallery_form.short_caption }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryFullDescription">Full Description</label>
+                  <textarea id="galleryFullDescription" name="full_description" rows="8" required>{{ gallery_form.full_description }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryTeachingNote">Teaching Note</label>
+                  <textarea id="galleryTeachingNote" name="teaching_note" rows="5" required>{{ gallery_form.teaching_note }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryImage">Card Image (JPG or PNG)</label>
+                  <input id="galleryImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                  {% if gallery_form.image_filename %}
+                  <p class="admin-field-hint">Current image: <strong>{{ gallery_form.image_filename }}</strong></p>
+                  {% endif %}
+                </div>
+
+                <label class="admin-checkbox-field admin-form-field-wide">
+                  <input name="is_published" type="checkbox" value="1" {% if gallery_form.is_published %}checked{% endif %} />
+                  <span>Publish this card on the public site</span>
+                </label>
+              </div>
+
+              {% if gallery_form.image_url %}
+              <div class="admin-image-preview-card">
+                <img src="{{ gallery_form.image_url }}" alt="Current online gallery preview" />
+              </div>
+              {% endif %}
+
+              <div class="admin-form-actions">
+                <a href="{{ url_for('admin_online_gallery') }}" class="admin-secondary-action">Cancel</a>
+                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
+              </div>
+            </form>
+          </section>
+{% endblock %}

@@ -1,7 +1,12 @@
 (function () {
-  const items = Array.isArray(window.ONLINE_GALLERY_ITEMS)
-    ? [...window.ONLINE_GALLERY_ITEMS]
-    : [];
+  const itemsDataScript = document.getElementById("onlineGalleryItemsData");
+  let items = [];
+  try {
+    const parsedItems = itemsDataScript ? JSON.parse(itemsDataScript.textContent || "[]") : window.ONLINE_GALLERY_ITEMS;
+    items = Array.isArray(parsedItems) ? [...parsedItems] : [];
+  } catch (_error) {
+    items = [];
+  }
 
   const galleryGrid = document.getElementById("galleryGrid");
   const galleryCount = document.getElementById("galleryCount");
@@ -20,18 +25,18 @@
   }
 
   function buildCard(item) {
+    const thumbMarkup = item.image_url
+      ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-thumb__image" loading="lazy" />`
+      : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
     return `
       <article class="gallery-card">
-        <div class="gallery-thumb" style="background:${item.gradient}">
-          <div class="text-center p-4">
-            <i data-lucide="${item.icon}" class="w-12 h-12 mx-auto mb-2"></i>
-            <p class="font-semibold">${item.category}</p>
-          </div>
+        <div class="gallery-thumb">
+          ${thumbMarkup}
         </div>
         <div class="p-5">
           <p class="text-xs text-amber-700 mb-1">${item.period} • ${item.year}</p>
           <h3 class="text-lg font-serif text-gray-900 mb-2">${item.title}</h3>
-          <p class="text-sm text-gray-700 mb-3">${item.shortCaption}</p>
+          <p class="text-sm text-gray-700 mb-3">${item.short_caption}</p>
           <div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>
           <a href="/online-gallery/details?item=${item.id}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
         </div>
@@ -75,7 +80,7 @@
     const filtered = items.filter((item) => {
       const inQuery =
         item.title.toLowerCase().includes(q) ||
-        item.shortCaption.toLowerCase().includes(q) ||
+        item.short_caption.toLowerCase().includes(q) ||
         item.tags.join(" ").toLowerCase().includes(q);
       const inCategory = category === "all" || item.category === category;
       return inQuery && inCategory;

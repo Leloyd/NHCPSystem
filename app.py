@@ -15,6 +15,11 @@ from werkzeug.utils import secure_filename
 from admin_users_repository import get_active_admin_user_by_username
 from community_content import register_community_content_routes
 from exhibits_content import load_landing_exhibits, register_exhibits_content_routes
+from online_gallery_content import (
+    load_public_online_gallery_categories,
+    load_public_online_gallery_items,
+    register_online_gallery_content_routes,
+)
 from supabase_client import is_supabase_configured
 
 try:
@@ -460,6 +465,20 @@ register_community_content_routes(
 )
 
 
+register_online_gallery_content_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    ensure_admin_csrf_token=_ensure_admin_csrf_token,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    admin_session_user_key=ADMIN_SESSION_USER_KEY,
+    admin_username=ADMIN_DEFAULT_USERNAME,
+    normalize_checkbox=_normalize_checkbox,
+    save_uploaded_image=_save_uploaded_image,
+    delete_local_image=_delete_local_image,
+)
+
+
 @app.route("/")
 def index():
     exhibits_news_items = load_landing_exhibits(limit=12)
@@ -473,12 +492,19 @@ def digital_exhibits():
 
 @app.route("/online-gallery")
 def online_gallery():
-    return render_template("OnlineGallery.html")
+    gallery_categories = load_public_online_gallery_categories()
+    gallery_items = load_public_online_gallery_items()
+    return render_template(
+        "OnlineGallery.html",
+        gallery_categories=gallery_categories,
+        gallery_items=gallery_items,
+    )
 
 
 @app.route("/online-gallery/details")
 def online_gallery_details():
-    return render_template("OnlineGalleryDetails.html")
+    gallery_items = load_public_online_gallery_items()
+    return render_template("OnlineGalleryDetails.html", gallery_items=gallery_items)
 
 
 @app.route("/virtual-tour")

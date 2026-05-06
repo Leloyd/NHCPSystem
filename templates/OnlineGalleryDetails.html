@@ -20,7 +20,7 @@
               <p class="interactive-kicker">Digital Exhibits</p>
               <h1 class="gallery-hero__title font-serif">Online Gallery Archive</h1>
               <p class="gallery-hero__copy">
-                Curated historical images with context, period filters, and teaching notes while the 360 virtual tour is in production.
+                Curated historical images with context and teaching notes while the 360 virtual tour is in production.
               </p>
             </div>
           </div>
@@ -81,7 +81,7 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/online-gallery-data.js') }}"></script>
+    <script id="onlineGalleryItemsData" type="application/json">{{ gallery_items|tojson }}</script>
     <script src="{{ url_for('static', filename='js/online-gallery-detail.js') }}"></script>
   </body>
 </html>
