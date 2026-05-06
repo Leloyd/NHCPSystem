@@ -8,7 +8,6 @@
   const searchInput = document.getElementById("gallerySearch");
   const categoryFilter = document.getElementById("categoryFilter");
   const categoryButtons = categoryFilter ? Array.from(categoryFilter.querySelectorAll("[data-category-filter]")) : [];
-  const sourceFilter = document.getElementById("sourceFilter");
   let activeCategory = "all";
 
   function setActiveCategory(nextCategory) {
@@ -49,7 +48,7 @@
       galleryGrid.innerHTML = `
         <div class="col-span-full bg-white border border-stone-200 rounded-lg p-8 text-center">
           <p class="text-lg text-gray-700">No gallery items found for your current filters.</p>
-          <p class="text-sm text-gray-500 mt-2">Try changing category, source, or search terms.</p>
+          <p class="text-sm text-gray-500 mt-2">Try changing category or search terms.</p>
         </div>
       `;
       if (galleryCount) {
@@ -72,7 +71,6 @@
   function applyFilters() {
     const q = (searchInput?.value || "").trim().toLowerCase();
     const category = activeCategory;
-    const source = sourceFilter?.value || "all";
 
     const filtered = items.filter((item) => {
       const inQuery =
@@ -80,15 +78,13 @@
         item.shortCaption.toLowerCase().includes(q) ||
         item.tags.join(" ").toLowerCase().includes(q);
       const inCategory = category === "all" || item.category === category;
-      const inSource = source === "all" || item.source === source;
-      return inQuery && inCategory && inSource;
+      return inQuery && inCategory;
     });
 
     renderGrid(filtered);
   }
 
   if (searchInput) searchInput.addEventListener("input", applyFilters);
-  if (sourceFilter) sourceFilter.addEventListener("change", applyFilters);
   categoryButtons.forEach((button) => {
     button.addEventListener("click", () => {
       setActiveCategory(button.dataset.categoryFilter);
