@@ -2,6 +2,7 @@
   "use strict";
 
   var shell = document.getElementById("heritageTrailShell");
+  var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
 
   if (!shell) {
     return;
@@ -479,7 +480,7 @@
       stopNum: 1,
       title: 'Orientation',
       subtitle: 'Begin at the gates — the threshold between the everyday world and a space shaped by centuries of devotion, mourning, and community memory.',
-      imageSrc: '/static/images/heritage-trail/Step01-Orientation.jpg',
+      imageSrc: stop1Image,
       imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
     '<div class="heritage-stop-body">' +

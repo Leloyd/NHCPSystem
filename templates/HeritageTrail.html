@@ -12,7 +12,7 @@
     {% set public_active_page = 'heritage-trail' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="heritage-shell pt-20" id="heritageTrailShell"></main>
+    <main class="heritage-shell pt-20" id="heritageTrailShell" data-stop1-image="{{ url_for('static', filename='images/heritage-trail/Step01-Orientation.jpg') }}"></main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
