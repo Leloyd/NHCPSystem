@@ -686,10 +686,11 @@
       title: 'Museum Registration & Visitor Guidance',
       subtitle: 'Before entering, register your visit and review the guidelines that protect both you and the heritage objects within.',
       imageSrc: 'https://images.unsplash.com/photo-1767938072548-112727a13266?w=1400&h=700&fit=crop&auto=format',
+      headerClass: 'heritage-stop-centered-block',
       imageAlt: 'Museum interior with display cases showing ancient artifacts and organized visitor pathways'
     }) +
     '<div class="heritage-stop-body">' +
-      '<div class="heritage-grid-2">' +
+      '<div class="heritage-grid-2 heritage-stop-centered-block">' +
         '<div class="heritage-stack">' +
           renderSectionLabel('Visitor Registration') +
           '<p class="heritage-copy">Complete this short registration to log your visit. Your information helps the heritage office track visitor numbers and improve facilities for future guests.</p>' +
@@ -723,7 +724,7 @@
         '</div>' +
       '</div>' +
       renderDivider() +
-      renderSectionLabel('Visitor Guidelines — Please Read Before Entering') +
+      renderSectionLabel('Visitor Guidelines — Please Read Before Entering', 'heritage-stop-centered-block') +
       renderAccordion('stop2-rules', [
         { id: 'r1', title: 'Photography & Recording', content: '<p>Photography is warmly encouraged as a means of engaging with the heritage site. However, flash photography is strictly prohibited — the sudden light can damage pigments in historical artifacts and disturb the atmospheric integrity of the space. Video recording is permitted in all open areas. Drone photography requires advance written authorization from the heritage office.</p>' },
         { id: 'r2', title: 'Artifact Handling', content: '<p>Please do not touch, lean against, or place objects on any displayed artifact, architectural element, or grave marker. Even gentle contact transfers oils and moisture that accelerate deterioration. Point and observe from a respectful distance. If you wish to examine an artifact closely, guided white-glove sessions are available on request.</p>' },
@@ -731,14 +732,14 @@
         { id: 'r4', title: 'Food, Drink & Smoking', content: '<p>Food and beverages are not permitted within the museum or church buildings. Water bottles with secure lids are the sole exception. Eating and drinking may be enjoyed in the designated rest area near the main gate. The entire site is a non-smoking zone in compliance with national heritage preservation law.</p>' },
         { id: 'r5', title: 'Accessibility & Support', content: '<p>Wheelchair-accessible pathways connect all major stops on this trail. Audio guides, large-print brochures, and tactile maps are available at the registration desk. A trained accessibility guide is available on Saturdays and Sundays from 10:00 AM to 3:00 PM. Please notify staff of any accommodation needs upon arrival.</p>' },
         { id: 'r6', title: 'Emergency Procedures', content: '<p>Emergency exits are marked with green signage throughout the complex. The nearest hospital is 800 meters from the main gate. Site staff are first-aid certified. In case of earthquake: move away from walls and monuments and follow staff direction to the designated assembly area near the main gate archway.</p>' }
-      ]) +
+      ], 'heritage-stop-centered-block') +
       renderEasyRead('stop2', [
         'Write your name and details when you arrive at the museum entrance.',
         'Opening hours are Tuesday to Sunday. The museum is closed on Mondays.',
         'Do not touch any artifacts or grave markers inside the site.',
         'Be quiet and respectful throughout — this is a place of history and remembrance.',
         'Ask for a large-print guide, audio guide, or wheelchair access at the desk.'
-      ]) +
+      ], false, 'heritage-stop-centered-block') +
       renderNav(2) +
     '</div>';
   }
