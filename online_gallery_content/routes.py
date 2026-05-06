@@ -16,6 +16,28 @@ from .service import (
 )
 
 
+def _get_online_gallery_save_error_message(error: Exception) -> str:
+    message = str(error).strip()
+    lowered = message.lower()
+
+    schema_markers = (
+        "title_tl",
+        "location_tl",
+        "short_caption_tl",
+        "full_description_tl",
+        "schema cache",
+        "could not find the",
+        "column",
+    )
+    if any(marker in lowered for marker in schema_markers):
+        return "Online Gallery database schema is outdated. Please run online_gallery_tables.sql in Supabase, then try again."
+
+    if message:
+        return message
+
+    return "Could not save the online gallery card right now."
+
+
 ONLINE_GALLERY_CATEGORY_RULES = {
     "mga-rehiyunal-na-kaugalian-regional-customs": {
         "requires_location": True,
@@ -218,7 +240,7 @@ def register_online_gallery_content_routes(
                     categories=categories,
                 ),
                 categories=categories,
-                error_message="Could not create the online gallery card right now.",
+                error_message=_get_online_gallery_save_error_message(exc),
             )
 
         return redirect(url_for("admin_online_gallery", status="created"))
@@ -293,7 +315,7 @@ def register_online_gallery_content_routes(
                     categories=categories,
                 ),
                 categories=categories,
-                error_message="Could not update the online gallery card right now.",
+                error_message=_get_online_gallery_save_error_message(exc),
             )
 
         return redirect(url_for("admin_online_gallery", status="updated"))
