@@ -423,7 +423,7 @@
       '<div class="heritage-hero__inner">' +
         '<div class="heritage-eyebrow">Heritage Trail · Living Monument</div>' +
         '<h1 class="heritage-hero__title">The Underground <span class="heritage-hero__accent">Cemetery</span></h1>' +
-        '<p class="heritage-hero__copy">A self-guided heritage trail through history, memory, and sacred space. Ten stops. One living testament. Accessible to all.</p>' +
+        '<p class="heritage-hero__copy">A guided heritage trail through history, memory, and sacred space. One living testament. Accessible to all.</p>' +
         '<div class="heritage-hero__actions">' +
           '<button type="button" class="heritage-button" data-action="begin">Begin the Trail</button>' +
           '<button type="button" class="heritage-button--ghost" data-action="toggle-access">Accessibility</button>' +
@@ -477,17 +477,17 @@
   function renderStop1() {
     return renderStopHero({
       stopNum: 1,
-      title: 'Front Gate Orientation',
+      title: 'Orientation',
       subtitle: 'Begin at the gates — the threshold between the everyday world and a space shaped by centuries of devotion, mourning, and community memory.',
-      imageSrc: 'https://images.unsplash.com/photo-1776441553951-a52ee2228407?w=1400&h=700&fit=crop&auto=format',
+      imageSrc: '/static/images/heritage-trail/Step01-Orientation.jpg',
       imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
     '<div class="heritage-stop-body">' +
       '<div class="heritage-grid-4">' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Circa 1820</span></div>' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">1.3 Hectares</span></div>' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Treasure</span></div>' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">40,000+</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
       '</div>' +
       '<div class="heritage-grid-2" style="margin-top:1.5rem;">' +
         '<div class="heritage-stack heritage-copy"><p>The gates mark the beginning of a journey that bridges centuries. Constructed during the colonial period, this enclosure was conceived as a community space for mourning, memory, and devotion. Stepping through means crossing from the present into layers of living history.</p><p>As a heritage site, the Underground Cemetery is protected and curated to ensure future generations can access its stories. As a learning space, it invites visitors to engage with artifacts, architecture, and the underground world beneath the church floor.</p></div>' +
