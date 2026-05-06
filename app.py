@@ -168,11 +168,8 @@ def _delete_local_image(image_filename, upload_dir):
         return
 
     upload_folder_name = Path(upload_dir).name
-    runtime_upload_dir = get_public_upload_dir(upload_folder_name)
-    candidate_path = (runtime_upload_dir / safe_filename).resolve()
-    if runtime_upload_dir not in candidate_path.parents and candidate_path != runtime_upload_dir:
-        return
-    if candidate_path.exists() and candidate_path.is_file():
+    candidate_path = resolve_existing_public_upload_path(upload_folder_name, safe_filename)
+    if candidate_path is not None and candidate_path.exists() and candidate_path.is_file():
         candidate_path.unlink()
 
 
@@ -186,12 +183,18 @@ def _save_uploaded_image(file_storage, title, upload_dir):
         raise ValueError("Image must be a JPG or PNG file.")
 
     upload_folder_name = Path(upload_dir).name
-    runtime_upload_dir = get_public_upload_dir(upload_folder_name)
-    runtime_upload_dir.mkdir(parents=True, exist_ok=True)
+    preferred_upload_dir = Path(upload_dir).resolve()
+    try:
+        preferred_upload_dir.mkdir(parents=True, exist_ok=True)
+        destination_dir = preferred_upload_dir if os.access(preferred_upload_dir, os.W_OK) else get_public_upload_dir(upload_folder_name)
+    except OSError:
+        destination_dir = get_public_upload_dir(upload_folder_name)
+
+    destination_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     safe_title = _slugify_text(title, fallback="image")
     filename = f"{safe_title}-{timestamp}{extension}"
-    destination = (runtime_upload_dir / filename).resolve()
+    destination = (destination_dir / filename).resolve()
     file_storage.save(destination)
     return filename
 

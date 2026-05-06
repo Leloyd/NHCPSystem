@@ -19,11 +19,11 @@ from community_highlights_repository import (
     list_published_community_highlights,
 )
 from supabase_client import SupabaseConfigError, is_supabase_configured
-from upload_paths import get_public_upload_dir, resolve_existing_public_upload_path
+from upload_paths import get_legacy_public_upload_dir, resolve_existing_public_upload_path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = get_public_upload_dir("community-highlights")
-COMMUNITY_EVENTS_UPLOAD_DIR = get_public_upload_dir("events")
+COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = get_legacy_public_upload_dir("community-highlights")
+COMMUNITY_EVENTS_UPLOAD_DIR = get_legacy_public_upload_dir("events")
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
     "Education Program",
     "Community Activity",

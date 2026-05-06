@@ -9,20 +9,35 @@
   }
 
   const titleEl = document.getElementById("detailTitle");
+  const titleTranslationEl = document.getElementById("detailTitleTranslation");
   const metaEl = document.getElementById("detailMeta");
   const imageEl = document.getElementById("detailImage");
   const descEl = document.getElementById("detailDesc");
+  const descTranslationEl = document.getElementById("detailDescTranslation");
+  const locationTranslationEl = document.getElementById("detailLocationTranslation");
   const tagsEl = document.getElementById("detailTags");
   const teachingEl = document.getElementById("detailTeaching");
   const counterEl = document.getElementById("detailCounter");
   const prevBtn = document.getElementById("prevItem");
   const nextBtn = document.getElementById("nextItem");
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   if (!items.length) {
     if (titleEl) titleEl.textContent = "No gallery items available";
+    if (titleTranslationEl) titleTranslationEl.textContent = "";
     if (metaEl) metaEl.textContent = "Please return to the gallery page.";
     if (imageEl) imageEl.innerHTML = "";
     if (descEl) descEl.textContent = "";
+    if (descTranslationEl) descTranslationEl.textContent = "";
+    if (locationTranslationEl) locationTranslationEl.textContent = "";
     if (tagsEl) tagsEl.innerHTML = "";
     if (teachingEl) teachingEl.textContent = "";
     if (prevBtn) prevBtn.disabled = true;
@@ -52,7 +67,11 @@
 
     activeIndex = index;
 
-    if (titleEl) titleEl.textContent = item.title;
+    if (titleEl) titleEl.textContent = item.title || item.title_tl || "Untitled";
+    if (titleTranslationEl) {
+      titleTranslationEl.textContent = item.title_tl || "";
+      titleTranslationEl.hidden = !String(item.title_tl || "").trim();
+    }
     if (metaEl) {
       const metaParts = [item.category, item.year, item.location].filter(Boolean);
       metaEl.textContent = metaParts.join(" • ");
@@ -60,27 +79,34 @@
 
     if (imageEl) {
       imageEl.innerHTML = item.image_url
-        ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-detail-card__image-tag" />`
-        : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
+        ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title || item.title_tl || "Online Gallery item")}" class="gallery-detail-card__image-tag" />`
+        : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${escapeHtml(item.category || "Online Gallery")}</p></div>`;
     }
 
-    if (descEl) {
-      descEl.textContent = item.full_description;
+    if (descEl) descEl.textContent = item.full_description || "";
+    if (descTranslationEl) {
+      descTranslationEl.textContent = item.full_description_tl || "";
+      descTranslationEl.hidden = !String(item.full_description_tl || "").trim();
+    }
+    if (locationTranslationEl) {
+      const locationSecondary = String(item.location_tl || "").trim();
+      locationTranslationEl.textContent = locationSecondary ? `Tagalog Location: ${locationSecondary}` : "";
+      locationTranslationEl.hidden = !locationSecondary;
     }
 
     if (tagsEl) {
-      tagsEl.innerHTML = item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("");
+      tagsEl.innerHTML = (Array.isArray(item.tags) ? item.tags : []).map((tag) => `<span class="gallery-tag">${escapeHtml(tag)}</span>`).join("");
     }
 
     if (teachingEl) {
-      teachingEl.textContent = item.teaching_note;
+      teachingEl.textContent = item.teaching_note || "";
     }
 
     if (counterEl) {
       counterEl.textContent = `Item ${activeIndex + 1} of ${items.length}`;
     }
 
-    document.title = `${item.title} | Online Gallery`;
+    document.title = `${item.title || item.title_tl || "Online Gallery"} | Online Gallery`;
 
   }
 

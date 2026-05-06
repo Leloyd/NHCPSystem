@@ -15,6 +15,32 @@
   const categoryButtons = categoryFilter ? Array.from(categoryFilter.querySelectorAll("[data-category-filter]")) : [];
   let activeCategory = "all";
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function buildBilingualText(primaryValue, secondaryValue, primaryClassName, secondaryClassName) {
+    const primaryText = String(primaryValue || "").trim();
+    const secondaryText = String(secondaryValue || "").trim();
+    if (!primaryText && !secondaryText) {
+      return "";
+    }
+
+    const parts = [];
+    if (primaryText) {
+      parts.push(`<div class="${primaryClassName}">${escapeHtml(primaryText)}</div>`);
+    }
+    if (secondaryText) {
+      parts.push(`<div class="${secondaryClassName}" lang="tl">${escapeHtml(secondaryText)}</div>`);
+    }
+    return parts.join("");
+  }
+
   function setActiveCategory(nextCategory) {
     activeCategory = nextCategory || "all";
     categoryButtons.forEach((button) => {
@@ -26,20 +52,22 @@
 
   function buildCard(item) {
     const thumbMarkup = item.image_url
-      ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-thumb__image" loading="lazy" />`
-      : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
-    const metaParts = [item.category, item.year].filter(Boolean);
+      ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title || item.title_tl || "Online Gallery item")}" class="gallery-thumb__image" loading="lazy" />`
+      : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${escapeHtml(item.category || "Online Gallery")}</p></div>`;
+    const metaParts = [item.category, item.year, item.location].filter(Boolean);
+    const titleMarkup = buildBilingualText(item.title, item.title_tl, "text-lg font-serif text-gray-900", "text-sm text-gray-500 mt-1");
+    const captionMarkup = buildBilingualText(item.short_caption, item.short_caption_tl, "text-sm text-gray-700 mb-1", "text-sm text-gray-500 mb-3");
     return `
       <article class="gallery-card">
         <div class="gallery-thumb">
           ${thumbMarkup}
         </div>
         <div class="p-5">
-          <p class="text-xs text-amber-700 mb-1">${metaParts.join(" • ")}</p>
-          <h3 class="text-lg font-serif text-gray-900 mb-2">${item.title}</h3>
-          <p class="text-sm text-gray-700 mb-3">${item.short_caption}</p>
-          <div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>
-          <a href="/online-gallery/details?item=${item.id}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
+          <p class="text-xs text-amber-700 mb-1">${escapeHtml(metaParts.join(" • "))}</p>
+          <div class="mb-2">${titleMarkup}</div>
+          <div>${captionMarkup}</div>
+          <div class="mb-3">${(Array.isArray(item.tags) ? item.tags : []).map((tag) => `<span class="gallery-tag">${escapeHtml(tag)}</span>`).join("")}</div>
+          <a href="/online-gallery/details?item=${encodeURIComponent(item.id)}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
         </div>
       </article>
     `;
@@ -79,10 +107,24 @@
     const category = activeCategory;
 
     const filtered = items.filter((item) => {
+      const searchText = [
+        item.title,
+        item.title_tl,
+        item.short_caption,
+        item.short_caption_tl,
+        item.full_description,
+        item.full_description_tl,
+        item.location,
+        item.location_tl,
+        item.category,
+        item.year,
+        Array.isArray(item.tags) ? item.tags.join(" ") : "",
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
       const inQuery =
-        item.title.toLowerCase().includes(q) ||
-        item.short_caption.toLowerCase().includes(q) ||
-        item.tags.join(" ").toLowerCase().includes(q);
+        !q || searchText.includes(q);
       const inCategory = category === "all" || item.category === category;
       return inQuery && inCategory;
     });

@@ -323,6 +323,13 @@
   line-height: 1.8;
 }
 
+.gallery-detail-card__translation {
+  margin: -0.35rem 0 1rem;
+  color: #6b7280;
+  font-size: 0.98rem;
+  line-height: 1.8;
+}
+
 .gallery-detail-card__tags {
   margin-bottom: 1.25rem;
 }

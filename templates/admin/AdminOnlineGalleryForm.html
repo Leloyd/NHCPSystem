@@ -111,11 +111,28 @@
           <script>
             (function () {
               const categorySelect = document.getElementById("galleryCategory");
-              const yearGroup = document.querySelector('[data-gallery-field-group="year"]');
-              const yearInput = document.getElementById("galleryYearLabel");
+              const yearGroups = Array.from(document.querySelectorAll('[data-gallery-field-group="year"]'));
+              const yearInputs = Array.from(document.querySelectorAll('[data-gallery-field-group="year"] input, [data-gallery-field-group="year"] textarea, [data-gallery-field-group="year"] select'));
               const locationGroups = Array.from(document.querySelectorAll('[data-gallery-field-group="location"]'));
-              const locationInput = document.getElementById("galleryLocation");
-              const locationTranslationInput = document.getElementById("galleryLocationTagalog");
+              const locationInputs = Array.from(document.querySelectorAll('[data-gallery-field-group="location"] input, [data-gallery-field-group="location"] textarea, [data-gallery-field-group="location"] select'));
+              const categoryRules = {
+                "mga-rehiyunal-na-kaugalian-regional-customs": {
+                  requiresYear: false,
+                  requiresLocation: true,
+                },
+                "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": {
+                  requiresYear: false,
+                  requiresLocation: false,
+                },
+                "kasaysayan-history": {
+                  requiresYear: true,
+                  requiresLocation: false,
+                },
+                "materyales-materials": {
+                  requiresYear: false,
+                  requiresLocation: false,
+                },
+              };
 
               if (!categorySelect) {
                 return;
@@ -128,31 +145,31 @@
 
               function syncCategoryFields() {
                 const categorySlug = getSelectedCategorySlug();
-                const needsYear = categorySlug === "kasaysayan-history";
-                const needsLocation = categorySlug === "mga-rehiyunal-na-kaugalian-regional-customs";
+                const rules = categoryRules[categorySlug] || { requiresYear: false, requiresLocation: false };
+                const needsYear = Boolean(rules.requiresYear);
+                const needsLocation = Boolean(rules.requiresLocation);
 
-                if (yearGroup) {
-                  yearGroup.hidden = !needsYear;
-                }
-                if (yearInput) {
-                  yearInput.required = needsYear;
+                yearGroups.forEach((group) => {
+                  group.hidden = !needsYear;
+                });
+                yearInputs.forEach((input) => {
+                  input.disabled = !needsYear;
+                  input.required = needsYear;
                   if (!needsYear) {
-                    yearInput.value = "";
+                    input.value = "";
                   }
-                }
+                });
 
                 locationGroups.forEach((group) => {
                   group.hidden = !needsLocation;
                 });
-                if (locationInput) {
-                  locationInput.required = needsLocation;
+                locationInputs.forEach((input) => {
+                  input.disabled = !needsLocation;
+                  input.required = needsLocation && input.name === "location";
                   if (!needsLocation) {
-                    locationInput.value = "";
+                    input.value = "";
                   }
-                }
-                if (locationTranslationInput && !needsLocation) {
-                  locationTranslationInput.value = "";
-                }
+                });
               }
 
               categorySelect.addEventListener("change", syncCategoryFields);
