@@ -14,9 +14,10 @@ from online_gallery_repository import (
     list_published_online_gallery_items,
 )
 from supabase_client import SupabaseConfigError, is_supabase_configured
+from upload_paths import get_public_upload_dir
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ONLINE_GALLERY_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "online-gallery").resolve()
+ONLINE_GALLERY_UPLOAD_DIR = get_public_upload_dir("online-gallery")
 ONLINE_GALLERY_DEFAULT_CATEGORIES = [
     "Mga Rehiyunal na Kaugalian (Regional Customs)",
     "Mga Paniniwala sa Buong Bansa (Beliefs Across the Nation)",

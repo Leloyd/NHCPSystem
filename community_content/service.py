@@ -19,10 +19,11 @@ from community_highlights_repository import (
     list_published_community_highlights,
 )
 from supabase_client import SupabaseConfigError, is_supabase_configured
+from upload_paths import get_public_upload_dir, resolve_existing_public_upload_path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "community-highlights").resolve()
-COMMUNITY_EVENTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "events").resolve()
+COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = get_public_upload_dir("community-highlights")
+COMMUNITY_EVENTS_UPLOAD_DIR = get_public_upload_dir("events")
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
     "Education Program",
     "Community Activity",
@@ -51,13 +52,11 @@ def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, im
     if not safe_filename:
         return None
 
-    candidate_path = (upload_dir / safe_filename).resolve()
-    if upload_dir not in candidate_path.parents and candidate_path != upload_dir:
-        return None
-    if not candidate_path.exists() or not candidate_path.is_file():
+    candidate_path = resolve_existing_public_upload_path(upload_folder_name, safe_filename)
+    if candidate_path is None:
         return None
 
-    return url_for("static", filename=f"uploads/{upload_folder_name}/{safe_filename}")
+    return url_for("public_uploaded_file", upload_folder=upload_folder_name, filename=safe_filename)
 
 
 def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, Any]:

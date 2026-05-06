@@ -21,6 +21,7 @@ from online_gallery_content import (
     register_online_gallery_content_routes,
 )
 from supabase_client import is_supabase_configured
+from upload_paths import get_public_upload_dir, resolve_existing_public_upload_path
 
 try:
     from dotenv import load_dotenv
@@ -166,8 +167,10 @@ def _delete_local_image(image_filename, upload_dir):
     if not safe_filename:
         return
 
-    candidate_path = (upload_dir / safe_filename).resolve()
-    if upload_dir not in candidate_path.parents and candidate_path != upload_dir:
+    upload_folder_name = Path(upload_dir).name
+    runtime_upload_dir = get_public_upload_dir(upload_folder_name)
+    candidate_path = (runtime_upload_dir / safe_filename).resolve()
+    if runtime_upload_dir not in candidate_path.parents and candidate_path != runtime_upload_dir:
         return
     if candidate_path.exists() and candidate_path.is_file():
         candidate_path.unlink()
@@ -182,17 +185,33 @@ def _save_uploaded_image(file_storage, title, upload_dir):
     if extension not in ALLOWED_EXHIBIT_IMAGE_EXTENSIONS:
         raise ValueError("Image must be a JPG or PNG file.")
 
-    upload_dir.mkdir(parents=True, exist_ok=True)
+    upload_folder_name = Path(upload_dir).name
+    runtime_upload_dir = get_public_upload_dir(upload_folder_name)
+    runtime_upload_dir.mkdir(parents=True, exist_ok=True)
     timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
     safe_title = _slugify_text(title, fallback="image")
     filename = f"{safe_title}-{timestamp}{extension}"
-    destination = (upload_dir / filename).resolve()
+    destination = (runtime_upload_dir / filename).resolve()
     file_storage.save(destination)
     return filename
 
 
 def _normalize_admin_identity(raw_value):
     return str(raw_value or "").strip().lower()
+
+
+@app.route("/uploads/<path:upload_folder>/<path:filename>")
+def public_uploaded_file(upload_folder, filename):
+    safe_folder = Path(str(upload_folder or "")).name.strip()
+    safe_filename = Path(str(filename or "")).name.strip()
+    if not safe_folder or not safe_filename:
+        return ("", 404)
+
+    resolved_path = resolve_existing_public_upload_path(safe_folder, safe_filename)
+    if resolved_path is None:
+        return ("", 404)
+
+    return send_from_directory(resolved_path.parent, resolved_path.name)
 
 
 def _is_admin_auth_configured():

@@ -8,9 +8,10 @@ from flask import current_app, render_template, session, url_for
 
 from exhibits_repository import get_exhibit_by_id, get_published_exhibit_by_slug, list_all_exhibits, list_published_exhibits
 from supabase_client import SupabaseConfigError, is_supabase_configured
+from upload_paths import get_legacy_public_upload_dir, get_public_upload_dir, resolve_existing_public_upload_path
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXHIBITS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "exhibits").resolve()
+EXHIBITS_UPLOAD_DIR = get_public_upload_dir("exhibits")
 
 
 def format_exhibit_date(raw_value: Any) -> str:
@@ -34,13 +35,11 @@ def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, im
     if not safe_filename:
         return None
 
-    candidate_path = (upload_dir / safe_filename).resolve()
-    if upload_dir not in candidate_path.parents and candidate_path != upload_dir:
-        return None
-    if not candidate_path.exists() or not candidate_path.is_file():
+    candidate_path = resolve_existing_public_upload_path(upload_folder_name, safe_filename)
+    if candidate_path is None:
         return None
 
-    return url_for("static", filename=f"uploads/{upload_folder_name}/{safe_filename}")
+    return url_for("public_uploaded_file", upload_folder=upload_folder_name, filename=safe_filename)
 
 
 def resolve_exhibit_image_url(image_filename: Any) -> str | None:
