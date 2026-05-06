@@ -6,24 +6,18 @@
   const galleryGrid = document.getElementById("galleryGrid");
   const galleryCount = document.getElementById("galleryCount");
   const searchInput = document.getElementById("gallerySearch");
-  const periodFilter = document.getElementById("periodFilter");
   const categoryFilter = document.getElementById("categoryFilter");
+  const categoryButtons = categoryFilter ? Array.from(categoryFilter.querySelectorAll("[data-category-filter]")) : [];
   const sourceFilter = document.getElementById("sourceFilter");
-  const sortFilter = document.getElementById("sortFilter");
+  let activeCategory = "all";
 
-  function sortItems(data, mode) {
-    const sorted = [...data];
-    if (mode === "oldest") {
-      return sorted.sort((a, b) => new Date(a.dateAdded) - new Date(b.dateAdded));
-    }
-    if (mode === "most-viewed") {
-      return sorted.sort((a, b) => b.viewed - a.viewed);
-    }
-    if (mode === "curated") {
-      const priority = ["Spanish Period", "American Period", "Modern Restoration"];
-      return sorted.sort((a, b) => priority.indexOf(a.period) - priority.indexOf(b.period));
-    }
-    return sorted.sort((a, b) => new Date(b.dateAdded) - new Date(a.dateAdded));
+  function setActiveCategory(nextCategory) {
+    activeCategory = nextCategory || "all";
+    categoryButtons.forEach((button) => {
+      const isActive = button.dataset.categoryFilter === activeCategory;
+      button.classList.toggle("is-active", isActive);
+      button.setAttribute("aria-pressed", isActive ? "true" : "false");
+    });
   }
 
   function buildCard(item) {
@@ -55,7 +49,7 @@
       galleryGrid.innerHTML = `
         <div class="col-span-full bg-white border border-stone-200 rounded-lg p-8 text-center">
           <p class="text-lg text-gray-700">No gallery items found for your current filters.</p>
-          <p class="text-sm text-gray-500 mt-2">Try changing period, category, source, or search terms.</p>
+          <p class="text-sm text-gray-500 mt-2">Try changing category, source, or search terms.</p>
         </div>
       `;
       if (galleryCount) {
@@ -77,30 +71,31 @@
 
   function applyFilters() {
     const q = (searchInput?.value || "").trim().toLowerCase();
-    const period = periodFilter?.value || "all";
-    const category = categoryFilter?.value || "all";
+    const category = activeCategory;
     const source = sourceFilter?.value || "all";
-    const sortMode = sortFilter?.value || "newest";
 
     const filtered = items.filter((item) => {
       const inQuery =
         item.title.toLowerCase().includes(q) ||
         item.shortCaption.toLowerCase().includes(q) ||
         item.tags.join(" ").toLowerCase().includes(q);
-      const inPeriod = period === "all" || item.period === period;
       const inCategory = category === "all" || item.category === category;
       const inSource = source === "all" || item.source === source;
-      return inQuery && inPeriod && inCategory && inSource;
+      return inQuery && inCategory && inSource;
     });
 
-    renderGrid(sortItems(filtered, sortMode));
+    renderGrid(filtered);
   }
 
   if (searchInput) searchInput.addEventListener("input", applyFilters);
-  if (periodFilter) periodFilter.addEventListener("change", applyFilters);
-  if (categoryFilter) categoryFilter.addEventListener("change", applyFilters);
   if (sourceFilter) sourceFilter.addEventListener("change", applyFilters);
-  if (sortFilter) sortFilter.addEventListener("change", applyFilters);
+  categoryButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      setActiveCategory(button.dataset.categoryFilter);
+      applyFilters();
+    });
+  });
 
+  setActiveCategory(activeCategory);
   applyFilters();
 })();

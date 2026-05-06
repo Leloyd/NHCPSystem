@@ -47,26 +47,7 @@
                 <input id="gallerySearch" class="gallery-search" type="text" placeholder="Search title, caption, or tag" />
               </label>
 
-              <div class="gallery-filter-grid">
-                <div class="gallery-filter-field">
-                  <label for="periodFilter" class="gallery-field-label">Period</label>
-                  <select id="periodFilter" class="gallery-select">
-                    <option value="all">All periods</option>
-                    <option value="Spanish Period">Spanish Period</option>
-                    <option value="American Period">American Period</option>
-                    <option value="Modern Restoration">Modern Restoration</option>
-                  </select>
-                </div>
-                <div class="gallery-filter-field">
-                  <label for="categoryFilter" class="gallery-field-label">Categories</label>
-                  <select id="categoryFilter" class="gallery-select">
-                    <option value="all">All categories</option>
-                    <option value="Mga Rehiyunal Na Kaugalian (Regional Belief)">Mga Rehiyunal Na Kaugalian (Regional Belief)</option>
-                    <option value="Mga Paniniwala sa Buong Bansa (Beliefs across the Nation)">Mga Paniniwala sa Buong Bansa (Beliefs across the Nation)</option>
-                    <option value="Kasaysayan (History)">Kasaysayan (History)</option>
-                    <option value="Materyalas (Materials)">Materyalas (Materials)</option>
-                  </select>
-                </div>
+              <div class="gallery-filter-grid gallery-filter-grid--compact">
                 <div class="gallery-filter-field">
                   <label for="sourceFilter" class="gallery-field-label">Source</label>
                   <select id="sourceFilter" class="gallery-select">
@@ -76,14 +57,15 @@
                     <option value="Community Submission">Community Submission</option>
                   </select>
                 </div>
-                <div class="gallery-filter-field">
-                  <label for="sortFilter" class="gallery-field-label">Sort</label>
-                  <select id="sortFilter" class="gallery-select">
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="most-viewed">Most Viewed</option>
-                    <option value="curated">Curated</option>
-                  </select>
+                <div class="gallery-filter-field gallery-filter-field--wide">
+                  <span class="gallery-field-label">Categories</span>
+                  <div id="categoryFilter" class="gallery-chip-group" role="group" aria-label="Filter gallery by category">
+                    <button type="button" class="gallery-chip is-active" data-category-filter="all" aria-pressed="true">All categories</button>
+                    <button type="button" class="gallery-chip" data-category-filter="Mga Rehiyunal Na Kaugalian (Regional Belief)" aria-pressed="false">Mga Rehiyunal Na Kaugalian (Regional Belief)</button>
+                    <button type="button" class="gallery-chip" data-category-filter="Mga Paniniwala sa Buong Bansa (Beliefs across the Nation)" aria-pressed="false">Mga Paniniwala sa Buong Bansa (Beliefs across the Nation)</button>
+                    <button type="button" class="gallery-chip" data-category-filter="Kasaysayan (History)" aria-pressed="false">Kasaysayan (History)</button>
+                    <button type="button" class="gallery-chip" data-category-filter="Materyalas (Materials)" aria-pressed="false">Materyalas (Materials)</button>
+                  </div>
                 </div>
               </div>
             </div>
