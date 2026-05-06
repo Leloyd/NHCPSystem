@@ -878,12 +878,12 @@
       imageAlt: 'Museum display cases containing ancient burial artifacts and ceremonial objects under warm archival lighting'
     }) +
     '<div class="heritage-stop-body">' +
-      '<p class="heritage-copy">The museum holds over 300 objects spanning 700 years of continuous habitation at this site. Below are six key pieces — each selected because it illuminates a different dimension of the burial customs, beliefs, and community life that shaped this place. Select any artifact to read the full interpretation.</p>' +
-      '<div class="heritage-chip-row" style="margin-top:1rem;">' + ['all', 'pre-colonial', 'colonial', 'religious'].map(function (category) {
+      '<p class="heritage-copy heritage-stop-centered-block">The museum holds over 300 objects spanning 700 years of continuous habitation at this site. Below are six key pieces — each selected because it illuminates a different dimension of the burial customs, beliefs, and community life that shaped this place. Select any artifact to read the full interpretation.</p>' +
+      '<div class="heritage-chip-row heritage-stop-centered-block" style="margin-top:1rem;">' + ['all', 'pre-colonial', 'colonial', 'religious'].map(function (category) {
         var labels = { all: 'All Artifacts', 'pre-colonial': 'Pre-Colonial', colonial: 'Colonial Era', religious: 'Religious' };
         return '<button type="button" class="heritage-chip ' + (state.activeArtifactCategory === category ? 'is-active' : '') + '" data-action="set-artifact-category" data-category="' + category + '">' + labels[category] + '</button>';
       }).join('') + '</div>' +
-      '<div class="heritage-grid-3" style="margin-top:1rem;">' + filteredArtifacts.map(function (artifact) {
+      '<div class="heritage-grid-3 heritage-stop-centered-block" style="margin-top:1rem;">' + filteredArtifacts.map(function (artifact) {
         var selected = state.selectedArtifactId === artifact.id;
         return '<button type="button" class="heritage-card-button ' + (selected ? 'is-active' : '') + '" data-action="select-artifact" data-artifact="' + artifact.id + '" aria-expanded="' + (selected ? 'true' : 'false') + '">' +
           '<span class="heritage-card-button__meta heritage-small">' + escapeHtml(artifact.period) + '</span>' +
@@ -892,9 +892,9 @@
           '<span class="heritage-card-button__hint heritage-small">' + (selected ? 'Collapse' : 'Read Interpretation') + '</span>' +
         '</button>';
       }).join('') + '</div>' +
-      (selectedArtifact ? '<div class="heritage-detail" style="margin-top:1rem;"><div class="heritage-nav__row"><div><p class="heritage-label heritage-small">' + escapeHtml(selectedArtifact.period) + '</p><h3 class="heritage-card-button__title">' + escapeHtml(selectedArtifact.name) + '</h3></div><button type="button" class="heritage-inline-button" data-action="close-artifact">Close</button></div><p class="heritage-copy" style="margin-top:0.8rem;">' + escapeHtml(selectedArtifact.detail) + '</p></div>' : '') +
+      (selectedArtifact ? '<div class="heritage-detail heritage-stop-centered-block" style="margin-top:1rem;"><div class="heritage-nav__row"><div><p class="heritage-label heritage-small">' + escapeHtml(selectedArtifact.period) + '</p><h3 class="heritage-card-button__title">' + escapeHtml(selectedArtifact.name) + '</h3></div><button type="button" class="heritage-inline-button" data-action="close-artifact">Close</button></div><p class="heritage-copy" style="margin-top:0.8rem;">' + escapeHtml(selectedArtifact.detail) + '</p></div>' : '') +
       renderDivider() +
-      '<div class="heritage-callout"><div class="heritage-callout__icon">i</div><div><p class="heritage-label heritage-small">A Note on Interpretation</p><p class="heritage-copy">Artifacts do not speak for themselves — they are interpreted through the frameworks we bring to them. The interpretations here reflect current archaeological and historical scholarship, but they remain provisional. New excavations, new analytical techniques, and new scholarly conversations continue to refine and revise what we understand about this collection. Heritage is a living conversation, not a closed archive.</p></div></div>' +
+      '<div class="heritage-callout heritage-stop-centered-block"><div class="heritage-callout__icon">i</div><div><p class="heritage-label heritage-small">A Note on Interpretation</p><p class="heritage-copy">Artifacts do not speak for themselves — they are interpreted through the frameworks we bring to them. The interpretations here reflect current archaeological and historical scholarship, but they remain provisional. New excavations, new analytical techniques, and new scholarly conversations continue to refine and revise what we understand about this collection. Heritage is a living conversation, not a closed archive.</p></div></div>' +
       renderEasyRead('stop3', [
         'The museum holds over 300 objects spanning 700 years of history.',
         'Old burial jars were used long before the church was built.',
@@ -902,7 +902,7 @@
         'Religious figures were buried with people as spiritual protection.',
         'Old handwritten registers record the names of people who were buried here.',
         'Click on any artifact card to read the full explanation.'
-      ]) +
+      ], false, 'heritage-stop-centered-block') +
       renderNav(3) +
     '</div>';
   }
