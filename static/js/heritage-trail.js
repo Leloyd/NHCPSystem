@@ -125,37 +125,6 @@
     },
   ];
 
-  var galleryData = {
-    stop1: [
-      {
-        src: stop1Gallery1,
-        alt: "Step 01 orientation view of the Nagcarlan Underground Cemetery entrance gate",
-        caption: "Step 01 — Front Gate Orientation",
-      },
-      {
-        src: stop1Gallery2,
-        alt: "Step 01 gallery image showing another view from the entrance area of the heritage site",
-        caption: "Step 01 — Entrance View",
-      },
-      {
-        src: stop1Gallery3,
-        alt: "Step 01 gallery image highlighting the front approach and surrounding grounds",
-        caption: "Step 01 — Heritage Approach",
-      },
-    ].filter(function (item) { return !!item.src; }),
-    stop5: [
-      {
-        src: "https://images.unsplash.com/photo-1776203715343-0e9784bfa5f3?w=900&h=500&fit=crop&auto=format",
-        alt: "Aged cemetery grounds with weathered stone markers",
-        caption: "The eastern section — oldest surviving grave markers",
-      },
-      {
-        src: "https://images.unsplash.com/photo-1776441553967-be9d8cd57bdf?w=900&h=500&fit=crop&auto=format",
-        alt: "Cemetery pathway toward the church",
-        caption: "The processional path — worn by centuries of passage",
-      },
-    ],
-  };
 
   var artifacts = [
     { id: "a1", name: "Baybayin Burial Jar", period: "Pre-Colonial · c. 14th Century", category: "pre-colonial", icon: "Jar", short: "Earthenware jar incised with early Baybayin script, used in indigenous burial rites.", detail: "This ceramic vessel is among the oldest objects in the collection. Found in the deepest archaeological stratum beneath the church floor, it predates the Spanish arrival by at least two centuries. The incised markings are consistent with pre-colonial Baybayin script — a syllabic writing system used across the archipelago. Its presence at a Catholic burial site suggests continuity of practice: the site was sacred before the church, and the community continued to honor earlier burial traditions even after conversion." },
