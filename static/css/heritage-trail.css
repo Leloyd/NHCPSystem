@@ -92,7 +92,8 @@
 
 .heritage-hero {
   position: relative;
-  min-height: calc(100vh - 5rem);
+  min-height: 100vh;
+  min-height: 100svh;
   display: flex;
   align-items: center;
   overflow: hidden;
@@ -132,7 +133,7 @@
   z-index: 1;
   width: 100%;
   margin: 0 auto;
-  padding: 5.5rem clamp(1rem, 4vw, 3rem) 4.5rem;
+  padding: 4.5rem 1rem 3rem;
   text-align: center;
 }
 
@@ -156,7 +157,7 @@
 
 .heritage-hero__title {
   margin: 1.2rem 0 0;
-  font-size: clamp(2.9rem, 7vw, 5.4rem);
+  font-size: clamp(2.5rem, 10vw, 4.8rem);
   line-height: 0.98;
   font-family: Georgia, "Times New Roman", serif;
 }
@@ -175,7 +176,7 @@
 
 .heritage-hero__actions {
   display: flex;
-  flex-wrap: wrap;
+  flex-direction: column;
   justify-content: center;
   gap: 0.9rem;
   margin-top: 1.7rem;
@@ -201,6 +202,7 @@
   justify-content: center;
   gap: 0.55rem;
   border-radius: 999px;
+  width: 100%;
   padding: 0.95rem 1.4rem;
   font-size: 0.8rem;
   font-weight: 700;
@@ -233,8 +235,9 @@
 }
 
 .heritage-hero__media {
-  width: min(100%, 52rem);
-  margin: 1.8rem auto 0;
+  width: 100%;
+  max-width: 64rem;
+  margin: 2rem auto 0;
 }
 
 .heritage-hero__video {
@@ -256,7 +259,8 @@
 
 .heritage-hero__media-bar {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   margin-top: 0.65rem;
@@ -289,7 +293,7 @@
   z-index: 1;
   width: 100%;
   margin: 0;
-  padding: 0 0 5rem;
+  padding: 0 0 4rem;
 }
 
 .heritage-progress {
@@ -312,7 +316,8 @@
 
 .heritage-progress__top {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
   padding: 1.1rem 1.1rem 0.9rem;
@@ -338,13 +343,13 @@
 
 .heritage-progress__meta {
   color: var(--heritage-primary);
-  text-align: center;
+  text-align: left;
   flex: 1;
 }
 
 .heritage-progress__segments {
   display: grid;
-  grid-template-columns: repeat(10, minmax(0, 1fr));
+  grid-template-columns: repeat(5, minmax(0, 1fr));
   gap: 0.25rem;
   padding: 0 0.9rem 0.9rem;
 }
@@ -393,8 +398,8 @@
 
 .heritage-access {
   position: fixed;
-  right: 1rem;
-  top: 6.4rem;
+  right: 0.75rem;
+  top: 5.6rem;
   z-index: 70;
   width: min(22rem, calc(100vw - 2rem));
   border-radius: 1.6rem;
@@ -507,11 +512,11 @@
 .heritage-stop-hero__body {
   position: relative;
   z-index: 1;
-  padding: 1.6rem clamp(1rem, 4vw, 3rem) 0;
+  padding: 1.2rem 1rem 0;
 }
 
 .heritage-stop-hero__body.is-overlap {
-  margin-top: -6rem;
+  margin-top: -4rem;
 }
 
 .heritage-stop-hero__header {
@@ -561,7 +566,7 @@
 }
 
 .heritage-stop-body {
-  padding: 1.8rem clamp(1rem, 4vw, 3rem) 3rem;
+  padding: 1.4rem 1rem 2.5rem;
 }
 
 .heritage-grid,
@@ -573,15 +578,15 @@
 }
 
 .heritage-grid-2 {
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .heritage-grid-3 {
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .heritage-grid-4 {
-  grid-template-columns: repeat(4, minmax(0, 1fr));
+  grid-template-columns: 1fr;
 }
 
 .heritage-card,
@@ -920,7 +925,8 @@
 
 .heritage-nav__row {
   display: flex;
-  align-items: center;
+  flex-direction: column;
+  align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
 }
@@ -1007,70 +1013,87 @@
   min-height: 18rem;
 }
 
-@media (max-width: 1024px) {
+@media (min-width: 641px) {
+  .heritage-hero__inner {
+    padding: 5rem 1.25rem 3.5rem;
+  }
+
   .heritage-grid-4 {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  .heritage-progress {
-    top: 4.5rem;
-  }
-}
-
-@media (max-width: 768px) {
-  .heritage-main {
-    padding-left: 0.85rem;
-    padding-right: 0.85rem;
-  }
-
-  .heritage-progress__top,
-  .heritage-nav__row,
-  .heritage-hero__media-bar {
-    flex-direction: column;
-    align-items: flex-start;
-  }
-
-  .heritage-progress__meta {
-    text-align: left;
-  }
-
-  .heritage-grid-2,
-  .heritage-grid-3,
-  .heritage-grid-4,
   .heritage-form-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .heritage-progress__segments {
-    grid-template-columns: repeat(5, minmax(0, 1fr));
-  }
-
-  .heritage-access {
-    top: 5.6rem;
-    right: 0.75rem;
-  }
-
-  .heritage-stop-hero__body.is-overlap {
-    margin-top: -4rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 
-@media (max-width: 640px) {
+@media (min-width: 769px) {
   .heritage-hero__inner {
-    padding-top: 4.8rem;
+    padding: 5.5rem clamp(1.25rem, 4vw, 3rem) 4.5rem;
   }
 
-  .heritage-hero__title {
-    font-size: 2.6rem;
+  .heritage-hero__actions {
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .heritage-button,
   .heritage-button--ghost,
   .heritage-nav-button {
-    width: 100%;
+    width: auto;
   }
 
-  .heritage-hero__actions {
-    flex-direction: column;
+  .heritage-hero__media-bar,
+  .heritage-progress__top,
+  .heritage-nav__row {
+    flex-direction: row;
+    align-items: center;
+  }
+
+  .heritage-progress {
+    top: 4.5rem;
+  }
+
+  .heritage-progress__meta {
+    text-align: center;
+  }
+
+  .heritage-progress__segments {
+    grid-template-columns: repeat(10, minmax(0, 1fr));
+  }
+
+  .heritage-access {
+    top: 6.4rem;
+    right: 1rem;
+  }
+
+  .heritage-grid-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .heritage-grid-3 {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .heritage-stop-hero__body {
+    padding: 1.6rem clamp(1rem, 4vw, 3rem) 0;
+  }
+
+  .heritage-stop-hero__body.is-overlap {
+    margin-top: -6rem;
+  }
+
+  .heritage-stop-body {
+    padding: 1.8rem clamp(1rem, 4vw, 3rem) 3rem;
+  }
+}
+
+@media (min-width: 1025px) {
+  .heritage-grid-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .heritage-hero__media {
+    max-width: 72rem;
   }
 }
