@@ -366,11 +366,12 @@
     '</div>';
   }
 
-  function transitionGallery(galleryKey, nextIndex) {
+  function transitionGallery(galleryKey, nextIndex, direction) {
     var items = galleryData[galleryKey] || [];
     var gallery = document.querySelector('.heritage-gallery[data-gallery-key="' + galleryKey + '"]');
     var currentIndex = state.galleries[galleryKey] || 0;
     var nextItem = items[nextIndex];
+    var slideDirection = direction === 'prev' ? 'prev' : 'next';
 
     if (!items.length || !nextItem) {
       return;
@@ -404,7 +405,7 @@
     });
 
     var incomingImage = document.createElement('img');
-    incomingImage.className = 'heritage-gallery__image heritage-gallery__image--incoming';
+    incomingImage.className = 'heritage-gallery__image heritage-gallery__image--incoming is-' + slideDirection;
     incomingImage.src = nextItem.src;
     incomingImage.alt = nextItem.alt;
     incomingImage.loading = 'lazy';
@@ -416,7 +417,7 @@
         caption.textContent = nextItem.caption;
       }
       requestAnimationFrame(function () {
-        currentImage.classList.add('heritage-gallery__image--outgoing');
+        currentImage.classList.add('heritage-gallery__image--outgoing', 'is-' + slideDirection);
         incomingImage.classList.add('is-visible');
       });
     };
@@ -1132,13 +1133,16 @@
       var items = galleryData[galleryKey] || [];
       if (items.length) {
         var current = state.galleries[galleryKey] || 0;
-        transitionGallery(galleryKey, direction === 'prev' ? (current - 1 + items.length) % items.length : (current + 1) % items.length);
+        transitionGallery(galleryKey, direction === 'prev' ? (current - 1 + items.length) % items.length : (current + 1) % items.length, direction);
       }
       return;
     }
 
     if (action === 'gallery-select') {
-      transitionGallery(trigger.getAttribute('data-gallery'), Number(trigger.getAttribute('data-index')));
+      var selectedGallery = trigger.getAttribute('data-gallery');
+      var selectedIndex = Number(trigger.getAttribute('data-index'));
+      var activeIndex = state.galleries[selectedGallery] || 0;
+      transitionGallery(selectedGallery, selectedIndex, selectedIndex < activeIndex ? 'prev' : 'next');
       return;
     }
 
