@@ -3,9 +3,9 @@
 
   var shell = document.getElementById("heritageTrailShell");
   var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
-  var stop1Gallery1 = shell ? shell.dataset.stop1Gallery1 || "" : "";
-  var stop1Gallery2 = shell ? shell.dataset.stop1Gallery2 || "" : "";
-  var stop1Gallery3 = shell ? shell.dataset.stop1Gallery3 || "" : "";
+  var stop1Gallery1 = shell ? shell.dataset.stop1GalleryOne || "" : "";
+  var stop1Gallery2 = shell ? shell.dataset.stop1GalleryTwo || "" : "";
+  var stop1Gallery3 = shell ? shell.dataset.stop1GalleryThree || "" : "";
   var panoramaFrontGate = shell ? shell.dataset.panoramaFrontGate || "" : "";
   var panoramaRightFrontGate = shell ? shell.dataset.panoramaRightFrontGate || "" : "";
   var step1PanoramaViewer = null;
