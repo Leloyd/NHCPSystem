@@ -707,7 +707,7 @@
       title: 'Orientation',
       subtitle: 'Begin at the gates — the threshold between the everyday world and a space shaped by centuries of devotion, mourning, and community memory.',
       imageSrc: stop1Image,
-      headerClass: 'heritage-stop-centered-block',
+      headerClass: 'heritage-stop-hero__header--full-bleed',
       imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
     '<div class="heritage-stop-body">' +
