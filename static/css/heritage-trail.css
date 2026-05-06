@@ -334,14 +334,15 @@
   position: sticky;
   top: 5rem;
   z-index: 30;
-  margin-top: -1.8rem;
+  margin-top: -1rem;
   border: 1px solid rgba(217, 119, 6, 0.1);
-  border-radius: 1.75rem;
+  border-radius: 1.5rem;
   background:
     radial-gradient(circle at top right, rgba(251, 191, 36, 0.1), transparent 24%),
     linear-gradient(180deg, rgba(255, 251, 235, 0.96), rgba(255, 255, 255, 0.98));
-  box-shadow: 0 18px 42px rgba(120, 53, 15, 0.1);
+  box-shadow: 0 16px 34px rgba(120, 53, 15, 0.1);
   backdrop-filter: blur(18px);
+  overflow: hidden;
 }
 
 .heritage-progress[hidden] {
@@ -353,8 +354,16 @@
   flex-direction: column;
   align-items: flex-start;
   justify-content: space-between;
-  gap: 1rem;
-  padding: 1.1rem 1.1rem 0.9rem;
+  gap: 0.9rem;
+  padding: 1rem 1rem 0.85rem;
+}
+
+.heritage-progress__eyebrow-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .heritage-progress__title,
@@ -375,47 +384,178 @@
   color: #92400e;
 }
 
-.heritage-progress__meta {
-  color: var(--heritage-primary);
-  text-align: left;
-  flex: 1;
+.heritage-progress__kicker {
+  color: #b45309;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  font-size: 0.67rem;
+  font-weight: 800;
 }
 
-.heritage-progress__segments {
+.heritage-progress__summary {
   display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.25rem;
-  padding: 0 0.9rem 0.9rem;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: stretch;
+  gap: 0.9rem;
+  width: 100%;
+}
+
+.heritage-progress__summary-copy {
+  min-width: 0;
+}
+
+.heritage-progress__current {
+  margin-top: 0.25rem;
+  color: #7c2d12;
+  font-size: 1.05rem;
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.heritage-progress__meta {
+  margin-top: 0.35rem;
+  color: #9a3412;
+  text-align: left;
+  flex: 1;
+  letter-spacing: normal;
+  text-transform: none;
+  font-size: 0.84rem;
+  font-weight: 500;
+}
+
+.heritage-progress__badge {
+  min-width: 4.9rem;
+  border-radius: 1.2rem;
+  border: 1px solid rgba(217, 119, 6, 0.15);
+  background: linear-gradient(180deg, rgba(255, 247, 235, 0.96), rgba(255, 255, 255, 0.96));
+  padding: 0.8rem 0.7rem;
+  text-align: center;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.heritage-progress__badge-value {
+  display: block;
+  color: #92400e;
+  font-size: 1.15rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.heritage-progress__badge-label {
+  display: block;
+  margin-top: 0.35rem;
+  color: #b45309;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.heritage-progress__hint {
+  color: rgba(120, 53, 15, 0.72);
+  font-size: 0.73rem;
+  line-height: 1.5;
+}
+
+.heritage-progress__rail {
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(12rem, 78vw);
+  gap: 0.65rem;
+  padding: 0 1rem 1rem;
+  overflow-x: auto;
+  overscroll-behavior-x: contain;
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
 }
 
 .heritage-segment {
   display: flex;
-  flex-direction: column;
   align-items: center;
-  gap: 0.35rem;
-  border: 0;
-  background: transparent;
-  padding: 0;
+  gap: 0.8rem;
+  min-height: 4.4rem;
+  border: 1px solid rgba(217, 119, 6, 0.12);
+  border-radius: 1.2rem;
+  background: rgba(255, 252, 247, 0.92);
+  padding: 0.8rem 0.9rem;
+  text-align: left;
+  scroll-snap-align: start;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease, background 160ms ease;
 }
 
-.heritage-segment__bar {
-  width: 100%;
-  height: 0.35rem;
+.heritage-segment:disabled {
+  opacity: 1;
+}
+
+.heritage-segment__index {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.35rem;
+  height: 2.35rem;
   border-radius: 999px;
-  background: rgba(120, 85, 43, 0.14);
+  background: rgba(120, 85, 43, 0.1);
+  color: #8b5e34;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
 }
 
-.heritage-segment.is-current .heritage-segment__bar {
-  background: linear-gradient(90deg, #d99010 0%, #f4c75b 100%);
+.heritage-segment__body {
+  display: flex;
+  flex-direction: column;
+  gap: 0.18rem;
+  min-width: 0;
 }
 
-.heritage-segment.is-complete .heritage-segment__bar {
-  background: rgba(161, 98, 7, 0.58);
+.heritage-segment__title {
+  color: #78350f;
+  font-size: 0.84rem;
+  font-weight: 700;
+  line-height: 1.25;
 }
 
-.heritage-segment span {
-  color: var(--heritage-muted);
-  font-size: 0.58rem;
+.heritage-segment__status {
+  color: rgba(120, 53, 15, 0.72);
+  font-size: 0.7rem;
+  line-height: 1.35;
+}
+
+.heritage-segment.is-current {
+  border-color: rgba(217, 119, 6, 0.42);
+  background: linear-gradient(180deg, rgba(255, 243, 220, 0.98), rgba(255, 250, 242, 0.98));
+  box-shadow: 0 10px 22px rgba(180, 83, 9, 0.12);
+}
+
+.heritage-segment.is-current .heritage-segment__index {
+  background: linear-gradient(135deg, #d99010 0%, #f4c75b 100%);
+  color: #fffdf8;
+}
+
+.heritage-segment.is-current .heritage-segment__title {
+  color: #7c2d12;
+}
+
+.heritage-segment.is-complete {
+  border-color: rgba(161, 98, 7, 0.24);
+  background: rgba(255, 251, 235, 0.96);
+}
+
+.heritage-segment.is-complete .heritage-segment__index {
+  background: rgba(161, 98, 7, 0.18);
+  color: #92400e;
+}
+
+.heritage-segment:not(.is-current):not(.is-complete) {
+  border-style: dashed;
+  background: rgba(248, 245, 240, 0.92);
+}
+
+.heritage-segment:not(.is-current):not(.is-complete) .heritage-segment__title,
+.heritage-segment:not(.is-current):not(.is-complete) .heritage-segment__index {
+  color: rgba(120, 85, 43, 0.72);
 }
 
 .heritage-progress__action {
@@ -1082,7 +1222,6 @@
   }
 
   .heritage-hero__media-bar,
-  .heritage-progress__top,
   .heritage-nav__row {
     flex-direction: row;
     align-items: center;
@@ -1092,12 +1231,18 @@
     top: 4.5rem;
   }
 
-  .heritage-progress__meta {
-    text-align: center;
+  .heritage-progress__top {
+    padding: 1rem 1.25rem 0.95rem;
   }
 
-  .heritage-progress__segments {
-    grid-template-columns: repeat(10, minmax(0, 1fr));
+  .heritage-progress__summary {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .heritage-progress__rail {
+    grid-auto-columns: minmax(11rem, 15rem);
+    padding: 0 1.25rem 1rem;
   }
 
   .heritage-access {
