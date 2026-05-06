@@ -3,6 +3,9 @@
 
   var shell = document.getElementById("heritageTrailShell");
   var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
+  var stop1Gallery1 = shell ? shell.dataset.stop1Gallery1 || "" : "";
+  var stop1Gallery2 = shell ? shell.dataset.stop1Gallery2 || "" : "";
+  var stop1Gallery3 = shell ? shell.dataset.stop1Gallery3 || "" : "";
   var panoramaFrontGate = shell ? shell.dataset.panoramaFrontGate || "" : "";
   var panoramaRightFrontGate = shell ? shell.dataset.panoramaRightFrontGate || "" : "";
   var step1PanoramaViewer = null;
@@ -125,21 +128,21 @@
   var galleryData = {
     stop1: [
       {
-        src: "https://images.unsplash.com/photo-1776441553951-a52ee2228407?w=900&h=600&fit=crop&auto=format",
-        alt: "Historic stone cemetery entrance gate, weathered by centuries, framed by towering trees",
-        caption: "The Front Gates — Heritage Threshold",
+        src: stop1Gallery1,
+        alt: "Step 01 orientation view of the Nagcarlan Underground Cemetery entrance gate",
+        caption: "Step 01 — Front Gate Orientation",
       },
       {
-        src: "https://images.unsplash.com/photo-1776441553967-be9d8cd57bdf?w=900&h=600&fit=crop&auto=format",
-        alt: "Stone cemetery path leading deeper into the heritage grounds, flanked by aged grave markers",
-        caption: "The Processional Path — Approach to the Sacred",
+        src: stop1Gallery2,
+        alt: "Step 01 gallery image showing another view from the entrance area of the heritage site",
+        caption: "Step 01 — Entrance View",
       },
       {
-        src: "https://images.unsplash.com/photo-1776203715343-0e9784bfa5f3?w=900&h=600&fit=crop&auto=format",
-        alt: "Old cemetery grounds with stone grave markers and an overgrown historical atmosphere",
-        caption: "The Grounds — Centuries of Memory in Stone",
+        src: stop1Gallery3,
+        alt: "Step 01 gallery image highlighting the front approach and surrounding grounds",
+        caption: "Step 01 — Heritage Approach",
       },
-    ],
+    ].filter(function (item) { return !!item.src; }),
     stop5: [
       {
         src: "https://images.unsplash.com/photo-1776203715343-0e9784bfa5f3?w=900&h=500&fit=crop&auto=format",
@@ -352,9 +355,9 @@
 
     return '<div class="heritage-gallery">' +
       '<div class="heritage-gallery__frame">' +
-        '<img src="' + escapeHtml(activeItem.src) + '" alt="' + escapeHtml(activeItem.alt) + '" loading="lazy" />' +
-        (items.length > 1 ? '<button type="button" class="heritage-gallery__nav" data-direction="prev" data-action="gallery-step" data-gallery="' + key + '" aria-label="Previous image">←</button>' : '') +
-        (items.length > 1 ? '<button type="button" class="heritage-gallery__nav" data-direction="next" data-action="gallery-step" data-gallery="' + key + '" aria-label="Next image">→</button>' : '') +
+        '<img class="heritage-gallery__image" src="' + escapeHtml(activeItem.src) + '" alt="' + escapeHtml(activeItem.alt) + '" loading="lazy" />' +
+        (items.length > 1 ? '<button type="button" class="heritage-gallery__nav" data-direction="prev" data-action="gallery-step" data-gallery="' + key + '" aria-label="Previous image"><span aria-hidden="true">‹</span></button>' : '') +
+        (items.length > 1 ? '<button type="button" class="heritage-gallery__nav" data-direction="next" data-action="gallery-step" data-gallery="' + key + '" aria-label="Next image"><span aria-hidden="true">›</span></button>' : '') +
         '<div class="heritage-gallery__caption">' + escapeHtml(activeItem.caption) + '</div>' +
       '</div>' +
       (items.length > 1 ? '<div class="heritage-gallery__dots">' + items.map(function (item, index) {

@@ -13,7 +13,7 @@
     {% set public_active_page = 'heritage-trail' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="heritage-shell pt-20" id="heritageTrailShell" data-stop1-image="{{ url_for('static', filename='images/heritage-trail/Step01-Orientation.jpg') }}" data-panorama-front-gate="{{ url_for('virtual_tour_file', filename='FrontGate.jpg') }}" data-panorama-right-front-gate="{{ url_for('virtual_tour_file', filename='right-FrontGate.jpg') }}"></main>
+    <main class="heritage-shell pt-20" id="heritageTrailShell" data-stop1-image="{{ url_for('static', filename='images/heritage-trail/Step01Pics/Step01-Orientation.jpg') }}" data-stop1-gallery-1="{{ url_for('static', filename='images/heritage-trail/Step01Pics/Step1-Pic1.jpg') }}" data-stop1-gallery-2="{{ url_for('static', filename='images/heritage-trail/Step01Pics/Step1-Pic2.jpg') }}" data-stop1-gallery-3="{{ url_for('static', filename='images/heritage-trail/Step01Pics/Step1-Pic3.jpg') }}" data-panorama-front-gate="{{ url_for('virtual_tour_file', filename='FrontGate.jpg') }}" data-panorama-right-front-gate="{{ url_for('virtual_tour_file', filename='right-FrontGate.jpg') }}"></main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
