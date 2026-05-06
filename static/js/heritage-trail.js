@@ -881,7 +881,7 @@
       '<a href="#heritageTrailMain" class="heritage-skip-link">Skip to main content</a>' +
       renderAccessPanel() +
       renderProgress() +
-      '<main id="heritageTrailMain" class="heritage-main">' + renderStopContent() + '</main>';
+      '<main id="heritageTrailMain" class="heritage-main ' + (state.currentStop === 0 ? 'is-landing' : '') + '">' + renderStopContent() + '</main>';
   }
 
   shell.addEventListener('click', function (event) {

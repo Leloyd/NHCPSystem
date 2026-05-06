@@ -296,6 +296,10 @@
   padding: 0 0 4rem;
 }
 
+.heritage-main.is-landing {
+  padding-bottom: 0;
+}
+
 .heritage-progress {
   position: sticky;
   top: 5rem;
@@ -463,6 +467,10 @@
 
 .heritage-content {
   margin-top: 1.5rem;
+}
+
+.heritage-main.is-landing .heritage-content {
+  margin-top: 0;
 }
 
 .heritage-panel {
