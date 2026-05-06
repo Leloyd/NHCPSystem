@@ -8,7 +8,10 @@
   var stop1Gallery3 = shell ? shell.dataset.stop1GalleryThree || "" : "";
   var panoramaFrontGate = shell ? shell.dataset.panoramaFrontGate || "" : "";
   var panoramaRightFrontGate = shell ? shell.dataset.panoramaRightFrontGate || "" : "";
+  var panoramaMiddleGMuseum = shell ? shell.dataset.panoramaMiddleGMuseum || "" : "";
+  var panoramaFrontMuseum = shell ? shell.dataset.panoramaFrontMuseum || "" : "";
   var step1PanoramaViewer = null;
+  var step2PanoramaViewer = null;
 
   if (!shell) {
     return;
@@ -594,6 +597,75 @@
     });
   }
 
+  function initStep2Panorama() {
+    if (state.textOnly || state.currentStop !== 2) {
+      if (step2PanoramaViewer && typeof step2PanoramaViewer.destroy === 'function') {
+        step2PanoramaViewer.destroy();
+      }
+      step2PanoramaViewer = null;
+      return;
+    }
+
+    var panoramaTarget = document.getElementById('heritageStep2Panorama');
+
+    if (!panoramaTarget || !window.pannellum || !panoramaMiddleGMuseum || !panoramaFrontMuseum) {
+      return;
+    }
+
+    if (step2PanoramaViewer && typeof step2PanoramaViewer.destroy === 'function') {
+      step2PanoramaViewer.destroy();
+      step2PanoramaViewer = null;
+    }
+
+    step2PanoramaViewer = window.pannellum.viewer('heritageStep2Panorama', {
+      default: {
+        firstScene: 'middleGMuseum',
+        sceneFadeDuration: 0,
+        autoLoad: true,
+        showControls: true,
+        autoRotate: -2
+      },
+      loadingText: '',
+      scenes: {
+        middleGMuseum: {
+          type: 'equirectangular',
+          panorama: panoramaMiddleGMuseum,
+          pitch: -5,
+          yaw: -100,
+          hfov: 100,
+          hotSpots: [
+            {
+              pitch: -25,
+              yaw: -100,
+              type: 'scene',
+              sceneId: 'frontMuseum',
+              cssClass: 'tour-ground-hotspot'
+            }
+          ]
+        },
+        frontMuseum: {
+          type: 'equirectangular',
+          panorama: panoramaFrontMuseum,
+          pitch: 0,
+          yaw: 0,
+          hfov: 100,
+          hotSpots: [
+            {
+              pitch: -30,
+              yaw: 173,
+              type: 'scene',
+              sceneId: 'middleGMuseum',
+              targetPitch: -20,
+              targetYaw: 90,
+              targetHfov: 100,
+              cssClass: 'tour-ground-hotspot'
+            }
+          ]
+        }
+      }
+    });
+  }
+
   function renderProgress() {
     if (state.currentStop <= 0) {
       return '';
@@ -689,6 +761,9 @@
       imageAlt: 'Museum interior with display cases showing ancient artifacts and organized visitor pathways'
     }) +
     '<div class="heritage-stop-body">' +
+      (!state.textOnly
+        ? '<section class="heritage-stop-feature"><div class="heritage-hero__media heritage-stop-panorama"><p class="heritage-label heritage-small">360 View — Museum Approach</p><div class="heritage-hero__panorama"><div id="heritageStep2Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the museum approach and front museum area"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the museum approach. Use the hotspot to move between the approach and front museum viewpoint.</span></div></div></section>'
+        : '') +
       '<div class="heritage-grid-2 heritage-stop-centered-block">' +
         '<div class="heritage-stack">' +
           renderSectionLabel('Visitor Registration') +
@@ -1047,6 +1122,7 @@
       renderProgress() +
       '<main id="heritageTrailMain" class="heritage-main ' + (state.currentStop === 0 ? 'is-landing' : '') + '">' + renderStopContent() + '</main>';
     initStep1Panorama();
+    initStep2Panorama();
   }
 
   shell.addEventListener('click', function (event) {
