@@ -545,11 +545,12 @@
     step1PanoramaViewer = window.pannellum.viewer('heritageStep1Panorama', {
       default: {
         firstScene: 'frontGate',
-        sceneFadeDuration: 700,
+        sceneFadeDuration: 0,
         autoLoad: true,
         showControls: true,
         autoRotate: -2
       },
+      loadingText: '',
       scenes: {
         frontGate: {
           type: 'equirectangular',
@@ -562,7 +563,6 @@
               pitch: -10,
               yaw: 90,
               type: 'scene',
-              text: 'Move to right-side front gate view',
               sceneId: 'rightFrontGate',
               targetPitch: -20,
               targetYaw: 90,
@@ -582,7 +582,6 @@
               pitch: -11,
               yaw: -89,
               type: 'scene',
-              text: 'Return to front gate view',
               sceneId: 'frontGate',
               targetPitch: -20,
               targetYaw: -90,
