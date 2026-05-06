@@ -563,6 +563,14 @@
   padding: 1.2rem 1rem 0;
 }
 
+.heritage-stop-hero__header {
+  border-radius: 1.5rem;
+  border: 1px solid rgba(217, 119, 6, 0.12);
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.96), rgba(255, 255, 255, 0.98));
+  box-shadow: 0 18px 40px rgba(120, 53, 15, 0.1);
+  padding: 1rem;
+}
+
 .heritage-kicker-row {
   display: flex;
   align-items: center;
