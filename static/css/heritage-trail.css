@@ -745,6 +745,30 @@
   line-height: 1.85;
 }
 
+.heritage-info-list {
+  margin: 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.7rem;
+}
+
+.heritage-info-list li {
+  padding-left: 0.15rem;
+}
+
+.heritage-notice-card {
+  background: linear-gradient(180deg, rgba(255, 251, 235, 0.96), rgba(255, 255, 255, 0.98));
+  box-shadow: 0 10px 24px rgba(120, 53, 15, 0.05);
+}
+
+.heritage-notice-card .heritage-card-button__title {
+  margin-top: 0.25rem;
+}
+
+.heritage-notice-card .heritage-card-button__copy {
+  margin-top: 0.45rem;
+}
+
 .heritage-divider {
   display: flex;
   align-items: center;

@@ -791,22 +791,73 @@
         '</div>' +
       '</div>' +
       renderDivider() +
-      renderSectionLabel('Visitor Guidelines — Please Read Before Entering', 'heritage-stop-centered-block') +
-      renderAccordion('stop2-rules', [
-        { id: 'r1', title: 'Photography & Recording', content: '<p>Photography is warmly encouraged as a means of engaging with the heritage site. However, flash photography is strictly prohibited — the sudden light can damage pigments in historical artifacts and disturb the atmospheric integrity of the space. Video recording is permitted in all open areas. Drone photography requires advance written authorization from the heritage office.</p>' },
-        { id: 'r2', title: 'Artifact Handling', content: '<p>Please do not touch, lean against, or place objects on any displayed artifact, architectural element, or grave marker. Even gentle contact transfers oils and moisture that accelerate deterioration. Point and observe from a respectful distance. If you wish to examine an artifact closely, guided white-glove sessions are available on request.</p>' },
-        { id: 'r3', title: 'Noise & Conduct', content: '<p>The Underground Cemetery is simultaneously a heritage learning space and an active place of religious and community remembrance. Visitors are asked to maintain a tone appropriate to both. Loud conversation, music playback without headphones, and disruptive behavior are not permitted. Children are welcome and should be gently guided through the experience.</p>' },
-        { id: 'r4', title: 'Food, Drink & Smoking', content: '<p>Food and beverages are not permitted within the museum or church buildings. Water bottles with secure lids are the sole exception. Eating and drinking may be enjoyed in the designated rest area near the main gate. The entire site is a non-smoking zone in compliance with national heritage preservation law.</p>' },
-        { id: 'r5', title: 'Accessibility & Support', content: '<p>Wheelchair-accessible pathways connect all major stops on this trail. Audio guides, large-print brochures, and tactile maps are available at the registration desk. A trained accessibility guide is available on Saturdays and Sundays from 10:00 AM to 3:00 PM. Please notify staff of any accommodation needs upon arrival.</p>' },
-        { id: 'r6', title: 'Emergency Procedures', content: '<p>Emergency exits are marked with green signage throughout the complex. The nearest hospital is 800 meters from the main gate. Site staff are first-aid certified. In case of earthquake: move away from walls and monuments and follow staff direction to the designated assembly area near the main gate archway.</p>' }
-      ], 'heritage-stop-centered-block') +
+      renderSectionLabel('Visitor Guidelines, Museum Rules & Public Service Information', 'heritage-stop-centered-block') +
+      '<div class="heritage-stack heritage-stop-centered-block">' +
+        '<div class="heritage-grid-2">' +
+          '<section class="heritage-card heritage-stack">' +
+            '<p class="heritage-label heritage-small">Museum Rules</p>' +
+            '<p class="heritage-card-button__title">Please Read Before Entering</p>' +
+            '<ul class="heritage-info-list heritage-copy">' +
+              '<li>Observe silence, be mindful of other guests, and avoid loitering inside the museum.</li>' +
+              '<li>Remove hats or caps as a sign of respect to the museum and historic landmark.</li>' +
+              '<li>No flash photography. Video and photo shoots are allowed only with permission from museum management.</li>' +
+              '<li>Do not touch displays, artifacts, or other historic features.</li>' +
+              '<li>Food and drinks are not allowed inside the museum and chapel.</li>' +
+              '<li>Visitors are required to sign the guest book or logbook upon arrival.</li>' +
+              '<li>Follow the instructions of museum staff and guides at all times, especially during emergencies.</li>' +
+              '<li>Waste must be disposed of properly, and the curator or officer-in-charge may limit entry if the museum becomes overcrowded.</li>' +
+            '</ul>' +
+          '</section>' +
+          '<section class="heritage-card heritage-stack">' +
+            '<p class="heritage-label heritage-small">Agency Profile</p>' +
+            '<p class="heritage-card-button__title">National Historical Commission of the Philippines</p>' +
+            '<p class="heritage-card-button__copy">The NHCP is the government agency responsible for promoting Philippine history and protecting sites, monuments, shrines, and other landmarks of historical and cultural value.</p>' +
+            '<div class="heritage-stack" style="gap:0.75rem;">' +
+              '<div class="heritage-rule"><p class="heritage-label heritage-small">Vision</p><p class="heritage-copy">An informed Filipino society that understands, values, and takes pride in the nation\'s history and cultural heritage.</p></div>' +
+              '<div class="heritage-rule"><p class="heritage-label heritage-small">Mission</p><p class="heritage-copy">To promote Philippine history and cultural heritage through research, conservation, site management, education, and public service.</p></div>' +
+              '<div class="heritage-rule"><p class="heritage-label heritage-small">Service Pledge</p><p class="heritage-copy">The museum commits to respectful, responsive, and accessible public service for all visitors, including senior citizens, pregnant women, and persons with disabilities.</p></div>' +
+            '</div>' +
+          '</section>' +
+        '</div>' +
+        '<div class="heritage-grid-2">' +
+          '<section class="heritage-card heritage-stack">' +
+            '<p class="heritage-label heritage-small">Citizen\'s Charter</p>' +
+            '<p class="heritage-card-button__title">2025 (1st Edition)</p>' +
+            '<div class="heritage-stack" style="gap:0.75rem;">' +
+              '<div class="heritage-rule"><p class="heritage-label heritage-small">Service 01</p><p class="heritage-copy"><strong>Use of Shrines/Museums for Tours, Photo/Video Shoots, Events and Resource Center</strong><br />This service covers museum tours, approved photo or video shoots, and requests to use museum spaces or resources. The posted process explains requirements, handling staff, and estimated service time.</p></div>' +
+              '<div class="heritage-rule"><p class="heritage-label heritage-small">Service 02</p><p class="heritage-copy"><strong>Sale of NHCP Publications</strong><br />Visitors may also purchase NHCP publications. The charter outlines the basic transaction flow, responsible office, and processing time for publication sales.</p></div>' +
+            '</div>' +
+          '</section>' +
+          '<section class="heritage-card heritage-stack">' +
+            '<p class="heritage-label heritage-small">Feedback and Complaints Mechanism</p>' +
+            '<p class="heritage-card-button__title">How Visitors Can Raise Concerns</p>' +
+            '<ul class="heritage-info-list heritage-copy">' +
+              '<li>Feedback may be sent through the Client Satisfaction Measurement form after a transaction.</li>' +
+              '<li>Complaints may be submitted through the Contact Center ng Bayan and the complaint channels posted on site.</li>' +
+              '<li>Visible public contact details include text <strong>0908-8816565</strong>, call <strong>1-6565</strong>, and visit <strong>www.contactcenterngbayan.gov.ph</strong>.</li>' +
+              '<li>Visitors may also approach museum staff directly for guidance on where to file concerns or requests.</li>' +
+            '</ul>' +
+          '</section>' +
+        '</div>' +
+        '<section class="heritage-card heritage-stack">' +
+          '<p class="heritage-label heritage-small">Civil Service Commission & ARTA Notices</p>' +
+          '<p class="heritage-card-button__title">Public Service Reminders Posted at the Museum</p>' +
+          '<div class="heritage-grid-2">' +
+            '<article class="heritage-rule heritage-notice-card"><p class="heritage-label heritage-small">CSC Notice</p><p class="heritage-card-button__title">Strictly No Smoking</p><p class="heritage-card-button__copy">Smoking is prohibited inside the government office and museum premises in compliance with posted Civil Service Commission rules.</p></article>' +
+            '<article class="heritage-rule heritage-notice-card"><p class="heritage-label heritage-small">CSC Notice</p><p class="heritage-card-button__title">No Fixer</p><p class="heritage-card-button__copy">Visitors should transact only with authorized museum personnel. Do not deal with unauthorized intermediaries or fixers.</p></article>' +
+            '<article class="heritage-rule heritage-notice-card"><p class="heritage-label heritage-small">CSC Notice</p><p class="heritage-card-button__title">No Noon Break</p><p class="heritage-card-button__copy">Public service continues during lunch hours. Visitors may still ask for assistance and process transactions within official office hours.</p></article>' +
+            '<article class="heritage-rule heritage-notice-card"><p class="heritage-label heritage-small">ARTA Reminder</p><p class="heritage-card-button__title">Bawal ang Red Tape</p><p class="heritage-card-button__copy">Transactions should follow the Citizen\'s Charter, without unnecessary delays, extra steps, unofficial payments, or discriminatory treatment.</p></article>' +
+          '</div>' +
+          '<div class="heritage-callout"><div class="heritage-callout__icon">i</div><div><p class="heritage-label heritage-small">May Reklamo Ka Ba?</p><p class="heritage-copy">If a visitor experiences poor service, red tape, or improper conduct, the posted government complaint channels may be used for escalation and follow-up.</p></div></div>' +
+        '</section>' +
+      '</div>' +
       renderEasyRead('stop2', [
         'Museum staff will guide visitors to the correct form at the entrance.',
         'You may be asked to fill out a log sheet, request form, satisfaction survey, or tour booking form on site.',
         'The museum is open from 8:00 AM to 4:00 PM from Tuesday to Sunday.',
         'Admission is free for all visitors.',
-        'Do not touch any artifacts or grave markers inside the site.',
-        'Be quiet and respectful throughout — this is a place of history and remembrance.',
+        'Posted signs explain the museum rules, agency profile, citizen\'s charter, and complaint process.',
+        'Do not touch artifacts, do not smoke, and do not transact with fixers.',
         'Ask for a large-print guide, audio guide, or wheelchair access at the desk.'
       ], false, 'heritage-stop-centered-block') +
       renderNav(2) +
