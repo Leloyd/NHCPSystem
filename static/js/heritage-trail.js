@@ -5,7 +5,7 @@
   var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
   var panoramaFrontGate = shell ? shell.dataset.panoramaFrontGate || "" : "";
   var panoramaRightFrontGate = shell ? shell.dataset.panoramaRightFrontGate || "" : "";
-  var heroPanoramaViewer = null;
+  var step1PanoramaViewer = null;
 
   if (!shell) {
     return;
@@ -434,36 +434,36 @@
         '</div>' +
         '<div class="heritage-hero__media">' +
           (!state.textOnly
-            ? '<div class="heritage-hero__panorama"><div id="heritageHeroPanorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div>' +
-              '<div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span><button type="button" class="heritage-inline-button" data-action="toggle-transcript" aria-expanded="' + (state.showTranscript ? 'true' : 'false') + '">' + (state.showTranscript ? 'Hide' : 'View') + ' Orientation Notes</button></div>' +
+            ? '<div class="heritage-hero__video"><iframe src="https://www.youtube.com/embed/tU8a3-QLKDc?rel=0&modestbranding=1&cc_load_policy=1" title="Underground Cemetery Heritage Trail Documentary Introduction" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe></div>' +
+              '<div class="heritage-hero__media-bar"><span>Enable captions via the CC button.</span><button type="button" class="heritage-inline-button" data-action="toggle-transcript" aria-expanded="' + (state.showTranscript ? 'true' : 'false') + '">' + (state.showTranscript ? 'Hide' : 'View') + ' Transcript</button></div>' +
               (state.showTranscript ? '<div class="heritage-transcript">' + escapeHtml(HERO_TRANSCRIPT) + '</div>' : '')
-            : '<div class="heritage-transcript"><p class="heritage-label heritage-small">Orientation Notes</p><p>' + escapeHtml(HERO_TRANSCRIPT) + '</p></div>') +
+            : '<div class="heritage-transcript"><p class="heritage-label heritage-small">Video Transcript</p><p>' + escapeHtml(HERO_TRANSCRIPT) + '</p></div>') +
         '</div>' +
       '</div>' +
     '</section>';
   }
 
-  function initHeroPanorama() {
-    if (state.textOnly || state.currentStop !== 0) {
-      if (heroPanoramaViewer && typeof heroPanoramaViewer.destroy === 'function') {
-        heroPanoramaViewer.destroy();
+  function initStep1Panorama() {
+    if (state.textOnly || state.currentStop !== 1) {
+      if (step1PanoramaViewer && typeof step1PanoramaViewer.destroy === 'function') {
+        step1PanoramaViewer.destroy();
       }
-      heroPanoramaViewer = null;
+      step1PanoramaViewer = null;
       return;
     }
 
-    var panoramaTarget = document.getElementById('heritageHeroPanorama');
+    var panoramaTarget = document.getElementById('heritageStep1Panorama');
 
     if (!panoramaTarget || !window.pannellum || !panoramaFrontGate || !panoramaRightFrontGate) {
       return;
     }
 
-    if (heroPanoramaViewer && typeof heroPanoramaViewer.destroy === 'function') {
-      heroPanoramaViewer.destroy();
-      heroPanoramaViewer = null;
+    if (step1PanoramaViewer && typeof step1PanoramaViewer.destroy === 'function') {
+      step1PanoramaViewer.destroy();
+      step1PanoramaViewer = null;
     }
 
-    heroPanoramaViewer = window.pannellum.viewer('heritageHeroPanorama', {
+    step1PanoramaViewer = window.pannellum.viewer('heritageStep1Panorama', {
       default: {
         firstScene: 'frontGate',
         sceneFadeDuration: 700,
@@ -566,9 +566,14 @@
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
       '</div>' +
-      '<div class="heritage-grid-2" style="margin-top:1.5rem;">' +
-        '<div class="heritage-stack heritage-copy"><p>The front gate is the correct place to begin because it reveals the cemetery as a complete designed landscape. From here, visitors can read the circular plan, the perimeter wall, the brick-lined approach, and the chapel that rises at the center of the enclosure. Orientation at the gate turns the site from a striking photograph into a structured heritage place with a clear ceremonial axis.</p><p>The cemetery was established in 1845 under the supervision of Fr. Vicente Velloc. It was built south of the town proper, consistent with 19th-century public-health regulations that discouraged burials within crowded poblacion centers during recurring disease outbreaks such as cholera. This means the approach to the gate is already part of the story: the site was planned to be both accessible to the community and physically set apart from daily domestic life.</p></div>' +
-        '<div class="heritage-stack heritage-copy"><p>The gate also introduces the site\'s dual identity. It is a Catholic burial ground centered on a chapel where funeral rites were held, but it is also a civic landmark tied to larger historical events. During the Revolution and later conflicts, the cemetery became a discreet meeting place and refuge because of its enclosure, distance from the town center, and the privacy offered by its built form.</p><p>Seen from this viewpoint, the materials are just as important as the layout. The red-brick paths, masonry walls, iron grilles, and high arched entrance create a formal threshold between the public road and sacred ground. Before moving deeper into the trail, the gate invites visitors to slow down, recognize the site\'s scale, and understand that every later stop grows out of the spatial order first announced here.</p></div>' +
+      (!state.textOnly
+        ? '<div class="heritage-hero__media heritage-stop-panorama"><div class="heritage-hero__panorama"><div id="heritageStep1Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span></div></div>'
+        : '') +
+      '<div class="heritage-stack heritage-copy" style="margin-top:1.5rem;">' +
+        '<p>The front gate is the opening frame of the Nagcarlan Underground Cemetery. From this point, visitors can immediately understand the site as a planned circular enclosure rather than a single isolated structure. The entrance, the perimeter wall, the central chapel, and the approach path all work together to prepare visitors for a place shaped by ritual, memory, and community history.</p>' +
+        '<p>Historical records identify 1845 as the year the cemetery was established under the supervision of Fr. Vicente Velloc. It was built south of the town center in line with 19th-century health regulations that encouraged burial grounds to be placed outside densely populated areas. That location gave the cemetery a solemn distance from everyday life while keeping it closely tied to the people of Nagcarlan.</p>' +
+        '<p>This orientation point also helps explain why the site matters beyond architecture. The cemetery functioned as a Catholic burial ground centered on a chapel for funeral rites, yet over time it also became connected to major historical events, including revolutionary activity and later wartime use. Even before entering deeper into the grounds, the gate already introduces the cemetery as both sacred space and historical landmark.</p>' +
+        '<p>The materials visible here reinforce that sense of threshold. The high arch, iron gate, masonry walls, and formal path inward separate the public road from the enclosed world of the cemetery. Beginning the trail here allows visitors to recognize the site\'s layout, scale, and atmosphere first, making the later stops easier to understand in context.</p>' +
       '</div>' +
       renderDivider() +
       renderSectionLabel('Deep Dive — Explore Further') +
@@ -959,7 +964,7 @@
       renderAccessPanel() +
       renderProgress() +
       '<main id="heritageTrailMain" class="heritage-main ' + (state.currentStop === 0 ? 'is-landing' : '') + '">' + renderStopContent() + '</main>';
-    initHeroPanorama();
+    initStep1Panorama();
   }
 
   shell.addEventListener('click', function (event) {
