@@ -875,6 +875,7 @@
       title: 'Museum Artifact Interpretation',
       subtitle: 'Each object in the collection is a thread in a larger tapestry of memory — connecting burial customs, community identity, and the story of this site.',
       imageSrc: 'https://images.unsplash.com/photo-1767938072548-112727a13266?w=1400&h=700&fit=crop&auto=format',
+      headerClass: 'heritage-stop-hero__header--full-bleed',
       imageAlt: 'Museum display cases containing ancient burial artifacts and ceremonial objects under warm archival lighting'
     }) +
     '<div class="heritage-stop-body">' +
