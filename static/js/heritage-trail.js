@@ -876,6 +876,7 @@
 
   function render() {
     setFontSize();
+    document.body.classList.toggle('is-immersive', state.currentStop > 0);
     shell.innerHTML =
       '<a href="#heritageTrailMain" class="heritage-skip-link">Skip to main content</a>' +
       renderAccessPanel() +
