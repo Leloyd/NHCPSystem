@@ -764,27 +764,29 @@
       (!state.textOnly
         ? '<section class="heritage-stop-feature"><div class="heritage-hero__media heritage-stop-panorama"><p class="heritage-label heritage-small">360 View — Museum Approach</p><div class="heritage-hero__panorama"><div id="heritageStep2Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the museum approach and front museum area"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the museum approach. Use the hotspot to move between the approach and front museum viewpoint.</span></div></div></section>'
         : '') +
-      '<div class="heritage-grid-2 heritage-stop-centered-block">' +
-        '<div class="heritage-stack">' +
+      '<div class="heritage-stack heritage-stop-centered-block" style="margin-top:1.5rem;">' +
+        '<section class="heritage-card heritage-stack">' +
           renderSectionLabel('Visitor Registration') +
-          '<p class="heritage-copy">Visitors do not register online for this stop. Upon arrival, museum staff may ask you to complete one or more on-site documents depending on the purpose of your visit. The forms shown below help the museum record attendance, approve special requests, measure visitor experience, and organize scheduled tours.</p>' +
+          '<p class="heritage-copy">At the museum entrance, staff will guide visitors to the correct form depending on the purpose of the visit.</p>' +
           '<div class="heritage-grid-2">' +
             '<article class="heritage-card"><p class="heritage-card-button__title">Visitor\'s Log Form</p><p class="heritage-card-button__copy">This is the daily sign-in sheet used at the museum entrance. Visitors record their name, address, nationality, sex, school or company affiliation, and visitor count so the site can document attendance and basic visitor profiles.</p></article>' +
             '<article class="heritage-card"><p class="heritage-card-button__title">Permission to Use the Museum</p><p class="heritage-card-button__copy">This form is used when a visitor, school, media team, or researcher requests special use of the museum, such as video documentation, photo documentation, interviews, surveys, or use of museum resources. It explains the request and records approval by NHCP staff.</p></article>' +
             '<article class="heritage-card"><p class="heritage-card-button__title">Client Satisfaction Measurement</p><p class="heritage-card-button__copy">This survey gathers feedback after a transaction or visit. It helps the museum assess service quality, staff assistance, facilities, and overall visitor satisfaction so improvements can be planned.</p></article>' +
             '<article class="heritage-card"><p class="heritage-card-button__title">Tour Booking Form</p><p class="heritage-card-button__copy">This form is used for scheduled group visits. It records the requested date and time, institution or tour agency, contact details, visitor count, and the final confirmation, reschedule, or cancellation status of the booking.</p></article>' +
           '</div>' +
-        '</div>' +
-        '<div class="heritage-stack">' +
-          renderSectionLabel('Opening Hours') +
-          '<div class="heritage-rule">' + [
-            ['Tuesday – Saturday', '8:00 AM – 4:00 PM'],
-            ['Sunday', 'Closed'],
-            ['Monday', 'Closed'],
-            ['Admission', 'Free for all visitors']
-          ].map(function (row) { return '<div class="heritage-nav__row"><span class="heritage-copy">' + row[0] + '</span><strong>' + row[1] + '</strong></div>'; }).join('') + '</div>' +
-          renderSectionLabel('Admission Fees') +
-          '<div class="heritage-rule"><div class="heritage-nav__row"><span class="heritage-copy">All Visitors</span><strong>FREE</strong></div><p class="heritage-copy" style="margin-top:0.75rem;">There is no admission charge for entry to the museum. Visitors may still be asked to complete the appropriate on-site form depending on whether the visit is a regular walk-in, a special request, or a scheduled tour.</p></div>' +
+        '</section>' +
+        '<div class="heritage-grid-2">' +
+          '<section class="heritage-card heritage-stack">' +
+            renderSectionLabel('Opening Hours') +
+            '<div class="heritage-rule">' + [
+              ['Tuesday – Sunday', '8:00 AM – 4:00 PM'],
+              ['Monday', 'Closed']
+            ].map(function (row) { return '<div class="heritage-nav__row"><span class="heritage-copy">' + row[0] + '</span><strong>' + row[1] + '</strong></div>'; }).join('') + '</div>' +
+          '</section>' +
+          '<section class="heritage-card heritage-stack">' +
+            renderSectionLabel('Admission Fees') +
+            '<div class="heritage-rule"><div class="heritage-nav__row"><span class="heritage-copy">All Visitors</span><strong>FREE</strong></div><p class="heritage-copy" style="margin-top:0.75rem;">There is no admission charge for entry to the museum.</p></div>' +
+          '</section>' +
         '</div>' +
       '</div>' +
       renderDivider() +
@@ -798,9 +800,9 @@
         { id: 'r6', title: 'Emergency Procedures', content: '<p>Emergency exits are marked with green signage throughout the complex. The nearest hospital is 800 meters from the main gate. Site staff are first-aid certified. In case of earthquake: move away from walls and monuments and follow staff direction to the designated assembly area near the main gate archway.</p>' }
       ], 'heritage-stop-centered-block') +
       renderEasyRead('stop2', [
-        'Visitors do not register online for this stop.',
-        'Museum staff may ask you to fill out a log sheet, request form, satisfaction survey, or tour booking form on site.',
-        'The museum is open from 8:00 AM to 4:00 PM from Tuesday to Saturday.',
+        'Museum staff will guide visitors to the correct form at the entrance.',
+        'You may be asked to fill out a log sheet, request form, satisfaction survey, or tour booking form on site.',
+        'The museum is open from 8:00 AM to 4:00 PM from Tuesday to Sunday.',
         'Admission is free for all visitors.',
         'Do not touch any artifacts or grave markers inside the site.',
         'Be quiet and respectful throughout — this is a place of history and remembrance.',
