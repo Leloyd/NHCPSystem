@@ -453,7 +453,6 @@
           (config.badge ? '<span class="heritage-pill">' + escapeHtml(config.badge) + '</span>' : '') + '</div>' +
           '<h1 class="heritage-stop-title">' + escapeHtml(config.title) + '</h1>' +
           '<p class="heritage-stop-subtitle">' + escapeHtml(config.subtitle) + '</p>' +
-          (config.bodyContent || '') +
         '</div>' +
       '</div>' +
     '</section>';
@@ -638,15 +637,15 @@
       subtitle: 'Begin at the gates — the threshold between the everyday world and a space shaped by centuries of devotion, mourning, and community memory.',
       imageSrc: stop1Image,
       headerClass: 'heritage-stop-centered-block',
-      bodyContent: '<div class="heritage-grid-4 heritage-stop-hero__stats">' +
-        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
-        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
-        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
-        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
-      '</div>',
       imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
     '<div class="heritage-stop-body">' +
+      '<div class="heritage-grid-4 heritage-stop-centered-block">' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
+      '</div>' +
       '<section class="heritage-stop-feature">' +
       (!state.textOnly
         ? '<div class="heritage-hero__media heritage-stop-panorama"><p class="heritage-label heritage-small">360 View — Front Gate Orientation</p><div class="heritage-hero__panorama"><div id="heritageStep1Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span></div></div>'
