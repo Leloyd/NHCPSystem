@@ -639,10 +639,10 @@
       imageSrc: stop1Image,
       headerClass: 'heritage-stop-centered-block',
       bodyContent: '<div class="heritage-grid-4 heritage-stop-hero__stats">' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
-        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
+        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
+        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
+        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
+        '<div class="heritage-stop-hero__stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
       '</div>',
       imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
