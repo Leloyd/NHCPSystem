@@ -601,8 +601,23 @@
   padding: 1rem;
 }
 
-.heritage-stop-hero__header--round {
-  border-radius: 2rem;
+.heritage-stop-hero__header--wide-center {
+  width: min(100%, 76rem);
+  padding-inline: clamp(1.25rem, 4vw, 3rem);
+  text-align: center;
+}
+
+.heritage-stop-hero__header--wide-center .heritage-kicker-row {
+  justify-content: center;
+}
+
+.heritage-stop-hero__header--wide-center .heritage-kicker-row::after {
+  display: none;
+}
+
+.heritage-stop-hero__header--wide-center .heritage-stop-subtitle {
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .heritage-kicker-row {
