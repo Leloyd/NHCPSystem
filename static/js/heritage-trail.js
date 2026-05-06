@@ -369,7 +369,7 @@
         ? '<div class="heritage-stop-hero__image"><img src="' + escapeHtml(config.imageSrc) + '" alt="' + escapeHtml(config.imageAlt || '') + '" loading="lazy" /></div>'
         : '') +
       '<div class="heritage-stop-hero__body ' + (!state.textOnly && config.imageSrc ? 'is-overlap' : '') + '">' +
-        '<div class="heritage-stop-hero__header">' +
+        '<div class="heritage-stop-hero__header' + (config.headerClass ? ' ' + config.headerClass : '') + '">' +
           '<div class="heritage-kicker-row"><span class="heritage-label">Stop ' + String(config.stopNum).padStart(2, '0') + ' of 10</span>' +
           (config.badge ? '<span class="heritage-pill">' + escapeHtml(config.badge) + '</span>' : '') + '</div>' +
           '<h1 class="heritage-stop-title">' + escapeHtml(config.title) + '</h1>' +
@@ -557,10 +557,11 @@
       title: 'Orientation',
       subtitle: 'Begin at the gates — the threshold between the everyday world and a space shaped by centuries of devotion, mourning, and community memory.',
       imageSrc: stop1Image,
+      headerClass: 'heritage-stop-centered-block',
       imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
     '<div class="heritage-stop-body">' +
-      '<div class="heritage-grid-4">' +
+      '<div class="heritage-grid-4 heritage-stop-centered-block">' +
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
