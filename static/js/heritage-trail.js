@@ -566,15 +566,17 @@
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
         '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
       '</div>' +
+      '<section class="heritage-stop-feature">' +
       (!state.textOnly
         ? '<div class="heritage-hero__media heritage-stop-panorama"><p class="heritage-label heritage-small">360 View — Front Gate Orientation</p><div class="heritage-hero__panorama"><div id="heritageStep1Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span></div></div>'
         : '') +
-      '<div class="heritage-stack heritage-copy" style="margin-top:1.5rem;">' +
+      '<div class="heritage-stop-feature__copy heritage-stack heritage-copy">' +
         '<p>The front gate is the opening frame of the Nagcarlan Underground Cemetery. From this point, visitors can immediately understand the site as a planned circular enclosure rather than a single isolated structure. The entrance, the perimeter wall, the central chapel, and the approach path all work together to prepare visitors for a place shaped by ritual, memory, and community history.</p>' +
         '<p>Historical records identify 1845 as the year the cemetery was established under the supervision of Fr. Vicente Velloc. It was built south of the town center in line with 19th-century health regulations that encouraged burial grounds to be placed outside densely populated areas. That location gave the cemetery a solemn distance from everyday life while keeping it closely tied to the people of Nagcarlan.</p>' +
         '<p>This orientation point also helps explain why the site matters beyond architecture. The cemetery functioned as a Catholic burial ground centered on a chapel for funeral rites, yet over time it also became connected to major historical events, including revolutionary activity and later wartime use. Even before entering deeper into the grounds, the gate already introduces the cemetery as both sacred space and historical landmark.</p>' +
         '<p>The materials visible here reinforce that sense of threshold. The high arch, iron gate, masonry walls, and formal path inward separate the public road from the enclosed world of the cemetery. Beginning the trail here allows visitors to recognize the site\'s layout, scale, and atmosphere first, making the later stops easier to understand in context.</p>' +
       '</div>' +
+      '</section>' +
       renderDivider() +
       renderSectionLabel('Deep Dive — Explore Further') +
       renderAccordion('stop1-deep', [
