@@ -374,7 +374,6 @@
           (config.badge ? '<span class="heritage-pill">' + escapeHtml(config.badge) + '</span>' : '') + '</div>' +
           '<h1 class="heritage-stop-title">' + escapeHtml(config.title) + '</h1>' +
           '<p class="heritage-stop-subtitle">' + escapeHtml(config.subtitle) + '</p>' +
-          (config.metaHtml || '') +
         '</div>' +
       '</div>' +
     '</section>';
@@ -558,17 +557,17 @@
       title: 'Orientation',
       subtitle: 'Begin at the gates — the threshold between the everyday world and a space shaped by centuries of devotion, mourning, and community memory.',
       imageSrc: stop1Image,
-      imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds',
-      metaHtml: '<div class="heritage-stop-meta heritage-stop-meta--badges">' +
-        '<span class="heritage-stop-badge"><span class="heritage-stop-badge__label">Established</span><span class="heritage-stop-badge__value">1845</span></span>' +
-        '<span class="heritage-stop-badge"><span class="heritage-stop-badge__label">Site Area</span><span class="heritage-stop-badge__value">1 hectare</span></span>' +
-        '<span class="heritage-stop-badge"><span class="heritage-stop-badge__label">Status</span><span class="heritage-stop-badge__value">National Historical Landmark</span></span>' +
-        '<span class="heritage-stop-badge"><span class="heritage-stop-badge__label">Visitors</span><span class="heritage-stop-badge__value">15,600</span></span>' +
-      '</div>'
+      imageAlt: 'Historic stone cemetery entrance gate framed by aged trees, opening to the heritage site grounds'
     }) +
     '<div class="heritage-stop-body">' +
+      '<div class="heritage-grid-4">' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Established</span><span class="heritage-stat__value">Year 1845</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Site Area</span><span class="heritage-stat__value">Approximately 1 hectare</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Heritage Status</span><span class="heritage-stat__value">National Historical Landmark</span></div>' +
+        '<div class="heritage-stat"><span class="heritage-stat__label heritage-small">Annual Visitors</span><span class="heritage-stat__value">15,600</span></div>' +
+      '</div>' +
       (!state.textOnly
-        ? '<div class="heritage-stop-feature heritage-stop-feature--panorama"><div class="heritage-stop-feature__title-wrap"><p class="heritage-stop-feature__eyebrow">360 Orientation View</p><h2 class="heritage-stop-feature__title">Front Gate Panorama</h2></div><div class="heritage-hero__media heritage-stop-panorama"><div class="heritage-hero__panorama"><div id="heritageStep1Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span></div></div></div>'
+        ? '<div class="heritage-hero__media heritage-stop-panorama"><p class="heritage-label heritage-small">360 View — Front Gate Orientation</p><div class="heritage-hero__panorama"><div id="heritageStep1Panorama" class="heritage-hero__panorama-view" role="img" aria-label="360 view of the Nagcarlan Underground Cemetery front gate"></div></div><div class="heritage-hero__media-bar"><span>Drag to look around the front gate. Use the hotspot to move to the right-side viewpoint.</span></div></div>'
         : '') +
       '<div class="heritage-stack heritage-copy" style="margin-top:1.5rem;">' +
         '<p>The front gate is the opening frame of the Nagcarlan Underground Cemetery. From this point, visitors can immediately understand the site as a planned circular enclosure rather than a single isolated structure. The entrance, the perimeter wall, the central chapel, and the approach path all work together to prepare visitors for a place shaped by ritual, memory, and community history.</p>' +
@@ -585,7 +584,7 @@
         { id: 'threshold', title: 'Why Orientation Starts at the Threshold', content: '<p>Heritage trails often begin where visitors can best grasp a site\'s overall organization. At Nagcarlan, that place is the front gate. From here, the scale of the enclosure, the material character of the masonry, and the visual axis toward the chapel can all be understood before attention shifts to individual objects or stories.</p><p>Beginning here also respects the original rhythm of entry. The site was designed so that movement inward happened deliberately — from the public road, through the gate, across the open court, and only then toward the chapel and the underground crypt. Orientation at the threshold helps modern visitors experience that sequence with the same sense of progression.</p>' }
       ]) +
       renderDivider() +
-      (!state.textOnly ? renderSectionLabel('Photo Gallery — The Site Through the Lens') + '<div class="heritage-stop-feature heritage-stop-feature--gallery">' + renderGallery('stop1') + '</div>' : '') +
+      (!state.textOnly ? renderSectionLabel('Photo Gallery — The Site Through the Lens') + '<div class="heritage-stop-gallery">' + renderGallery('stop1') + '</div>' : '') +
       '<div style="margin-top:1.5rem;" class="heritage-callout"><div class="heritage-callout__icon">i</div><div><p class="heritage-label heritage-small">Did You Know?</p><p class="heritage-copy">The Underground Cemetery is one of only three circular colonial-era burial enclosures still in active heritage use in Southeast Asia. The others are located in Macau and Goa — reflecting the reach of the Spanish and Portuguese colonial networks that built and managed these sites.</p></div></div>' +
       renderEasyRead('stop1', [
         'This is the starting point of the heritage trail at the historic front gates.',
