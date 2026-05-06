@@ -521,39 +521,18 @@
       return '';
     }
 
-    var completedCount = STOPS.filter(function (stop) {
-      return !!state.completedStops[stop.id];
-    }).length;
-
     return '<section class="heritage-progress">' +
       '<div class="heritage-progress__top">' +
-        '<div class="heritage-progress__eyebrow-row">' +
-          '<p class="heritage-progress__title">Underground Cemetery Trail</p>' +
-          '<button type="button" class="heritage-progress__action" data-action="toggle-access">Accessibility</button>' +
-        '</div>' +
-        '<div class="heritage-progress__summary">' +
-          '<div class="heritage-progress__summary-copy">' +
-            '<p class="heritage-progress__kicker">Stop ' + state.currentStop + ' of 10</p>' +
-            '<p class="heritage-progress__current">' + escapeHtml(STOPS[state.currentStop - 1].title) + '</p>' +
-            '<p class="heritage-progress__meta">You have completed ' + completedCount + ' of 10 stops.</p>' +
-          '</div>' +
-          '<div class="heritage-progress__badge">' +
-            '<span class="heritage-progress__badge-value">' + Math.round((completedCount / STOPS.length) * 100) + '%</span>' +
-            '<span class="heritage-progress__badge-label">Trail progress</span>' +
-          '</div>' +
-        '</div>' +
-        '<div class="heritage-progress__hint">Tap completed stops to jump back. Your current stop stays highlighted.</div>' +
+        '<p class="heritage-progress__title">The Underground Cemetery</p>' +
+        '<p class="heritage-progress__meta">Stop ' + state.currentStop + ' of 10 · ' + escapeHtml(STOPS[state.currentStop - 1].short) + '</p>' +
+        '<button type="button" class="heritage-progress__action" data-action="toggle-access">Accessibility</button>' +
       '</div>' +
-      '<div class="heritage-progress__rail" aria-label="Trail stop navigation">' + STOPS.map(function (stop) {
+      '<div class="heritage-progress__segments">' + STOPS.map(function (stop) {
         var complete = !!state.completedStops[stop.id];
         var current = state.currentStop === stop.id;
         var canJump = complete;
         return '<button type="button" class="heritage-segment ' + (complete ? 'is-complete ' : '') + (current ? 'is-current' : '') + '" data-action="jump-stop" data-stop="' + stop.id + '" ' + (!canJump ? 'disabled' : '') + '>' +
-          '<span class="heritage-segment__index">' + String(stop.id).padStart(2, '0') + '</span>' +
-          '<span class="heritage-segment__body">' +
-            '<span class="heritage-segment__title">' + escapeHtml(stop.short) + '</span>' +
-            '<span class="heritage-segment__status">' + (current ? 'Current stop' : complete ? 'Completed' : 'Locked until visited') + '</span>' +
-          '</span></button>';
+          '<span class="heritage-segment__bar"></span><span>' + stop.id + '</span></button>';
       }).join('') + '</div>' +
     '</section>';
   }
