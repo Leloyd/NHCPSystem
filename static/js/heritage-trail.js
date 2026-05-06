@@ -3,6 +3,7 @@
 
   var shell = document.getElementById("heritageTrailShell");
   var stop1Image = shell ? shell.dataset.stop1Image || "" : "";
+  var stop2Image = shell ? shell.dataset.stop2Image || "" : "";
   var stop1Gallery1 = shell ? shell.dataset.stop1GalleryOne || "" : "";
   var stop1Gallery2 = shell ? shell.dataset.stop1GalleryTwo || "" : "";
   var stop1Gallery3 = shell ? shell.dataset.stop1GalleryThree || "" : "";
@@ -756,7 +757,7 @@
       stopNum: 2,
       title: 'Museum Registration & Visitor Guidance',
       subtitle: 'Before entering, register your visit and review the guidelines that protect both you and the heritage objects within.',
-      imageSrc: 'https://images.unsplash.com/photo-1767938072548-112727a13266?w=1400&h=700&fit=crop&auto=format',
+      imageSrc: stop2Image,
       headerClass: 'heritage-stop-hero__header--full-bleed',
       imageAlt: 'Museum interior with display cases showing ancient artifacts and organized visitor pathways'
     }) +
