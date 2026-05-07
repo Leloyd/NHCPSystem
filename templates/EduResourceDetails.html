@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,99 +8,153 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900">
+  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="pt-20">
-      <section class="interactive-hero gallery-hero text-white">
+    <main class="pt-20 ogd-detail-page">
+      <section class="ogd-detail-topbar">
         <div class="container mx-auto px-4">
-          <div class="gallery-hero__panel">
-            <div class="gallery-hero__content">
-              <p class="interactive-kicker">Digital Exhibits</p>
-              <h1 class="gallery-hero__title font-serif">Teacher Learning Pack</h1>
-              <p class="gallery-hero__copy">
-                Classroom-ready templates, prompts, and activity sheets designed for history lessons and guided museum discussions.
-              </p>
+          <div class="ogd-detail-topbar__inner">
+            <nav class="ogd-breadcrumb" aria-label="Breadcrumb">
+              <a id="detailBreadcrumbHome" href="/">Tahanan</a>
+              <span aria-hidden="true">/</span>
+              <a id="detailBreadcrumbResources" href="/edu-resources">Edu Resources</a>
+              <span aria-hidden="true">/</span>
+              <span id="detailBreadcrumbTitle" aria-current="page">Loading...</span>
+            </nav>
+
+            <div class="ogd-detail-nav">
+              <button id="prevItem" class="ogd-detail-nav__button" type="button" aria-label="Nakaraang resource">
+                <i data-lucide="chevron-left" aria-hidden="true"></i>
+              </button>
+              <button id="nextItem" class="ogd-detail-nav__button" type="button" aria-label="Susunod na resource">
+                <i data-lucide="chevron-right" aria-hidden="true"></i>
+              </button>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="gallery-explorer-section gallery-detail-section">
+      <section class="ogd-detail-main">
         <div class="container mx-auto px-4">
-          <article class="gallery-shell gallery-shell--feature" aria-labelledby="detailTitle">
-            <div class="gallery-shell-header">
-              <div class="gallery-heading-group">
-                <span class="gallery-heading-kicker">Digital Archive View</span>
-                <h2 class="gallery-heading-title font-serif">Explore one teaching resource in focus</h2>
-                <p class="gallery-heading-copy">
-                  Review the selected learning pack, classroom application, and download-ready reference details in the same curated resource experience.
-                </p>
-              </div>
-              <span class="gallery-shell-note">Use the navigation controls to move across resources or download the current pack.</span>
-            </div>
-
-            <div class="gallery-results-header gallery-detail-toolbar">
-              <a href="/edu-resources" class="gallery-detail-back-link">← Back to Edu Resources</a>
-              <p id="detailCounter" class="gallery-results-count">Item 0 of 0</p>
-            </div>
-
-            <article class="gallery-detail-card">
-              <div class="gallery-detail-card__header">
-                <div>
-                  <p class="gallery-detail-card__kicker">Resource Detail</p>
-                  <h2 id="detailTitle" class="gallery-detail-card__title font-serif">Loading...</h2>
-                  <p id="detailMeta" class="gallery-detail-card__meta"></p>
-                </div>
-              </div>
-
-              <div id="detailImage" class="gallery-thumb gallery-detail-card__image"></div>
-
-              <div class="gallery-detail-info-grid">
-                <div class="gallery-detail-info-block">
-                  <p class="gallery-detail-info-block__label">Recommended Module</p>
-                  <p id="detailModule" class="gallery-detail-info-block__value"></p>
-                </div>
-                <div class="gallery-detail-info-block">
-                  <p class="gallery-detail-info-block__label">Duration</p>
-                  <p id="detailDuration" class="gallery-detail-info-block__value"></p>
-                </div>
-                <div class="gallery-detail-info-block gallery-detail-info-block--full">
-                  <p class="gallery-detail-info-block__label">Learning Objective</p>
-                  <p id="detailObjective" class="gallery-detail-info-block__value"></p>
-                </div>
-              </div>
-
-              <p id="detailDesc" class="gallery-detail-card__description"></p>
-              <div id="detailTags" class="gallery-detail-card__tags"></div>
-
-              <div class="gallery-detail-teaching-note">
-                <h3 class="gallery-detail-teaching-note__title">Teaching Prompt</h3>
-                <p id="detailTeaching" class="gallery-detail-teaching-note__copy"></p>
-              </div>
-
-              <div class="gallery-detail-actions">
-                <div class="gallery-detail-actions__group">
-                  <button id="prevItem" type="button" class="gallery-detail-nav-button">← Previous</button>
-                  <button id="nextItem" type="button" class="gallery-detail-nav-button">Next →</button>
-                </div>
-                <button id="downloadResource" type="button" class="gallery-detail-download-button">
-                  <i data-lucide="download" class="w-4 h-4"></i>
-                  <span>Download Resource</span>
+          <div class="ogd-detail-layout">
+            <div class="ogd-detail-media-column">
+              <div class="ogd-detail-media-sticky">
+                <button id="detailZoomToggle" class="ogd-detail-media" type="button" aria-label="I-click para i-zoom in" aria-pressed="false">
+                  <div id="detailImage" class="ogd-detail-media__frame"></div>
+                  <span id="detailImageBadge" class="ogd-detail-media__badge"></span>
+                  <span class="ogd-detail-media__hint">
+                    <i data-lucide="zoom-in" aria-hidden="true"></i>
+                    <span id="detailZoomHintText">I-click para i-zoom in</span>
+                  </span>
                 </button>
+
+                <div class="ogd-detail-actions-row">
+                  <button id="downloadResource" class="ogd-detail-action-button" type="button">
+                    <i data-lucide="download" aria-hidden="true"></i>
+                    <span id="detailDownloadText">I-download</span>
+                  </button>
+                  <button id="detailShare" class="ogd-detail-action-button" type="button">
+                    <i data-lucide="share-2" aria-hidden="true"></i>
+                    <span id="detailShareText">Ibahagi</span>
+                  </button>
+                </div>
               </div>
-            </article>
-          </article>
+            </div>
+
+            <div class="ogd-detail-content">
+              <p id="detailCounter" class="ogd-detail-counter">Resource 0 ng 0</p>
+              <h1 id="detailTitle" class="ogd-detail-title font-serif">Loading...</h1>
+
+              <div class="ogd-detail-meta-row">
+                <span id="detailCategoryPill" class="ogd-detail-category-pill"></span>
+                <span id="detailMeta" class="ogd-detail-meta"></span>
+              </div>
+
+              <section class="ogd-detail-section-card">
+                <h2 id="detailDescriptionHeading" class="ogd-detail-section-card__title">Paglalarawan</h2>
+                <p id="detailDesc" class="ogd-detail-description"></p>
+              </section>
+
+              <section id="detailTagsSection" class="ogd-detail-section-card" hidden>
+                <h2 id="detailTagsHeading" class="ogd-detail-section-card__title">Mga Tag</h2>
+                <div id="detailTags" class="ogd-detail-tags"></div>
+              </section>
+
+              <section id="detailTeachingSection" class="ogd-detail-section-card" hidden>
+                <h2 id="detailTeachingHeading" class="ogd-detail-section-card__title">Teaching Prompt</h2>
+                <p id="detailTeaching" class="ogd-detail-teaching"></p>
+              </section>
+
+              <section class="ogd-detail-facts">
+                <h2 id="detailFactsHeading" class="ogd-detail-section-card__title">Detalye ng Resource</h2>
+                <div id="detailFacts" class="ogd-detail-facts__list"></div>
+              </section>
+
+              <div class="ogd-detail-back-row">
+                <a href="/edu-resources" class="ogd-detail-back-button">
+                  <i data-lucide="arrow-left" aria-hidden="true"></i>
+                  <span id="detailBackText">Bumalik sa Edu Resources</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          <section id="relatedItemsSection" class="ogd-related-section" hidden>
+            <div class="ogd-related-header">
+              <div>
+                <span id="relatedSectionKicker" class="ogd-related-header__kicker">Maaari Mo Ring Magustuhan</span>
+                <h2 id="relatedSectionTitle" class="ogd-related-header__title font-serif">Kaugnay na mga Resource</h2>
+              </div>
+              <a id="relatedSectionLink" href="/edu-resources" class="ogd-related-header__link">Tingnan Lahat</a>
+            </div>
+            <div id="relatedItemsGrid" class="ogd-related-grid"></div>
+          </section>
         </div>
       </section>
     </main>
+
+    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
+      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Mga kontrol sa aksesibilidad">
+        <div class="ogd-accessibility-panel__header">
+          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Mga Kontrol sa Aksesibilidad</h2>
+          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Isara ang panel ng aksesibilidad">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="ogd-accessibility-panel__group">
+          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Laki ng Teksto</p>
+          <div class="ogd-accessibility-segmented" role="group" aria-label="Mga pagpipilian sa laki ng teksto">
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Maliit</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Katamtaman</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Malaki</button>
+          </div>
+        </div>
+
+        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
+          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">Mataas na Kontrasto</span>
+          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
+        </button>
+
+        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Palitan ang wika">
+          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Wika</span>
+          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">FIL</span>
+        </button>
+      </div>
+
+      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Buksan ang panel ng aksesibilidad" aria-expanded="false" aria-haspopup="dialog">
+        <i data-lucide="accessibility" aria-hidden="true"></i>
+      </button>
+    </div>
 
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edu-resources-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edu-resource-detail.js') }}"></script>
   </body>
 </html>

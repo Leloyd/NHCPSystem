@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,123 +8,148 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900">
+  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="interactive-hero gallery-hero text-white">
+      <section class="ogd-page-header" aria-labelledby="resourcePageHeading">
         <div class="container mx-auto px-4">
-          <div class="gallery-hero__panel">
-            <div class="gallery-hero__content">
-              <p class="interactive-kicker">Digital Exhibits</p>
-              <h1 class="gallery-hero__title font-serif">Teacher Learning Pack</h1>
-              <p class="gallery-hero__copy">
-                Classroom-ready templates, prompts, and activity sheets designed for history lessons and guided museum discussions.
-              </p>
+          <div class="ogd-page-header__inner">
+            <span id="resourceHeaderKicker" class="ogd-page-header__kicker">Mga Materyal sa Pagkatuto</span>
+            <h1 id="resourcePageHeading" class="ogd-page-header__title font-serif">Edu Resources</h1>
+            <p id="resourceHeaderCopy" class="ogd-page-header__copy">
+              Tuklasin ang mga handang-gamitin na lesson guide, worksheet, at prompt na maaaring iayon sa Virtual Tour, Site Map, AR, WebXR, at Online Gallery ng museo.
+            </p>
+
+            <form id="resourceSearchForm" class="ogd-search-form" role="search">
+              <label id="resourceSearchLabel" class="sr-only" for="resourceSearch">Maghanap ng mga materyal sa pagkatuto</label>
+              <div class="ogd-search-field">
+                <i data-lucide="search" class="ogd-search-field__icon" aria-hidden="true"></i>
+                <input id="resourceSearch" class="ogd-search-field__input" type="search" placeholder="Maghanap ayon sa pamagat, layunin, module, o tag..." />
+                <button id="resourceSearchClear" class="ogd-search-field__clear" type="button" aria-label="I-clear ang paghahanap" hidden>
+                  <i data-lucide="x" aria-hidden="true"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="ogd-toolbar-section" aria-label="Resource filters and view controls">
+        <div class="container mx-auto px-4">
+          <div class="ogd-toolbar">
+            <div id="resourceTypeTabs" class="ogd-category-tabs" role="tablist" aria-label="I-filter ang mga resource ayon sa uri">
+              <button type="button" class="ogd-category-tabs__button is-active" data-resource-type-filter="all" data-label-en="All Resources" data-label-tl="Lahat ng Resource" aria-pressed="true" aria-selected="true">Lahat ng Resource</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Lesson Plan" data-label-en="Lesson Plan" data-label-tl="Banghay-Aralin" aria-pressed="false" aria-selected="false">Banghay-Aralin</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Worksheet" data-label-en="Worksheet" data-label-tl="Worksheet" aria-pressed="false" aria-selected="false">Worksheet</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Discussion" data-label-en="Discussion" data-label-tl="Talakayan" aria-pressed="false" aria-selected="false">Talakayan</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Assessment" data-label-en="Assessment" data-label-tl="Pagtataya" aria-pressed="false" aria-selected="false">Pagtataya</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Reflection" data-label-en="Reflection" data-label-tl="Pagninilay" aria-pressed="false" aria-selected="false">Pagninilay</button>
+            </div>
+
+            <div class="ogd-toolbar__controls flex-wrap justify-end">
+              <label id="resourceAudienceLabel" class="sr-only" for="resourceAudienceFilter">I-filter ayon sa audience</label>
+              <div class="ogd-sort-control">
+                <i data-lucide="users" class="ogd-sort-control__icon" aria-hidden="true"></i>
+                <select id="resourceAudienceFilter" class="ogd-sort-control__select" aria-label="I-filter ayon sa audience">
+                  <option value="all">Lahat ng Audience</option>
+                  <option value="Students">Mga Estudyante</option>
+                  <option value="Teachers">Mga Guro</option>
+                  <option value="Mixed">Pinaghalong Klase</option>
+                </select>
+              </div>
+
+              <label id="resourceFormatLabel" class="sr-only" for="resourceFormatFilter">I-filter ayon sa format</label>
+              <div class="ogd-sort-control">
+                <i data-lucide="file-text" class="ogd-sort-control__icon" aria-hidden="true"></i>
+                <select id="resourceFormatFilter" class="ogd-sort-control__select" aria-label="I-filter ayon sa format">
+                  <option value="all">Lahat ng Format</option>
+                  <option value="PDF">PDF</option>
+                  <option value="DOCX">DOCX</option>
+                  <option value="Slides">Slides</option>
+                </select>
+              </div>
+
+              <label id="resourceSortLabel" class="sr-only" for="resourceSortFilter">Ayusin ang mga resource</label>
+              <div class="ogd-sort-control">
+                <i data-lucide="sliders-horizontal" class="ogd-sort-control__icon" aria-hidden="true"></i>
+                <select id="resourceSortFilter" class="ogd-sort-control__select" aria-label="Ayusin ang mga resource">
+                  <option value="newest">Pinakabago</option>
+                  <option value="oldest">Pinakaluma</option>
+                  <option value="most-used">Pinakaginagamit</option>
+                  <option value="curated">Kurado</option>
+                </select>
+              </div>
+
+              <div class="ogd-view-toggle" role="group" aria-label="View mode">
+                <button id="resourceViewGrid" class="ogd-view-toggle__button is-active" type="button" aria-pressed="true" aria-label="Grid view">
+                  <i data-lucide="grid-3x3" aria-hidden="true"></i>
+                </button>
+                <button id="resourceViewList" class="ogd-view-toggle__button" type="button" aria-pressed="false" aria-label="List view">
+                  <i data-lucide="list" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="edu-resources" class="gallery-explorer-section">
+      <section id="edu-resources" class="ogd-results-section">
         <div class="container mx-auto px-4">
-          <article class="gallery-shell gallery-shell--feature" aria-labelledby="resourceHeading">
-            <div class="gallery-shell-header">
-              <div class="gallery-heading-group">
-                <span class="gallery-heading-kicker">Digital Archive View</span>
-                <h2 id="resourceHeading" class="gallery-heading-title font-serif">Browse teaching materials with focused controls</h2>
-                <p class="gallery-heading-copy">
-                  Search, filter, sort, and review classroom resources prepared for lessons, reflection, and guided museum activities.
-                </p>
-              </div>
-              <span class="gallery-shell-note">Use the filters to refine resource packs and select materials for your class objective.</span>
-            </div>
-
-            <div class="gallery-tools">
-              <label class="gallery-search-panel" for="resourceSearch">
-                <span class="gallery-field-label">Search resources</span>
-                <input id="resourceSearch" class="gallery-search" type="text" placeholder="Search title, objective, or tag" />
-              </label>
-
-              <div class="gallery-filter-grid">
-                <div class="gallery-filter-field">
-                  <label for="resourceTypeFilter" class="gallery-field-label">Type</label>
-                  <select id="resourceTypeFilter" class="gallery-select">
-                    <option value="all">All types</option>
-                    <option value="Lesson Plan">Lesson Plan</option>
-                    <option value="Worksheet">Worksheet</option>
-                    <option value="Discussion">Discussion</option>
-                    <option value="Assessment">Assessment</option>
-                    <option value="Reflection">Reflection</option>
-                  </select>
-                </div>
-
-                <div class="gallery-filter-field">
-                  <label for="resourceAudienceFilter" class="gallery-field-label">Audience</label>
-                  <select id="resourceAudienceFilter" class="gallery-select">
-                    <option value="all">All audiences</option>
-                    <option value="Students">Students</option>
-                    <option value="Teachers">Teachers</option>
-                    <option value="Mixed">Mixed Class</option>
-                  </select>
-                </div>
-
-                <div class="gallery-filter-field">
-                  <label for="resourceFormatFilter" class="gallery-field-label">Format</label>
-                  <select id="resourceFormatFilter" class="gallery-select">
-                    <option value="all">All formats</option>
-                    <option value="PDF">PDF</option>
-                    <option value="DOCX">DOCX</option>
-                    <option value="Slides">Slides</option>
-                  </select>
-                </div>
-
-                <div class="gallery-filter-field">
-                  <label for="resourceSortFilter" class="gallery-field-label">Sort</label>
-                  <select id="resourceSortFilter" class="gallery-select">
-                    <option value="newest">Newest</option>
-                    <option value="oldest">Oldest</option>
-                    <option value="most-used">Most Used</option>
-                    <option value="curated">Curated</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            <div class="gallery-results-header">
-              <h2 class="gallery-results-title font-serif">Resource Results</h2>
-              <p id="resourceCount" class="gallery-results-count">0 items</p>
-            </div>
-
-            <div id="resourceGrid" class="gallery-grid"></div>
-          </article>
-        </div>
-      </section>
-
-      <section class="py-16 bg-stone-50">
-        <div class="container mx-auto px-4">
-          <div class="max-w-4xl mx-auto bg-white rounded-lg border border-stone-200 p-8">
-            <h2 class="text-3xl font-serif text-amber-900 mb-4 text-center">How to Use This Module</h2>
-            <ol class="space-y-3 text-gray-700">
-              <li>1. Select a resource card based on your class objective.</li>
-              <li>2. Pair it with one platform module (Virtual Tour, Site Map, AR, or WebXR).</li>
-              <li>3. Run a 10-20 minute guided activity.</li>
-              <li>4. Use quiz or reflection sheets to check understanding.</li>
-            </ol>
-            <div class="text-center mt-6">
-              <a href="/digital-exhibits" class="inline-flex items-center rounded-md bg-amber-600 px-5 py-3 font-semibold text-white hover:bg-amber-700 transition">← Back to Digital Exhibits</a>
-            </div>
+          <div class="ogd-results-header">
+            <p id="resourceCount" class="ogd-results-count" role="status" aria-live="polite">0 resource ang nakita</p>
+            <button id="resourceClearFilters" class="ogd-clear-filters" type="button" hidden aria-label="I-clear ang mga filter">
+              <i data-lucide="x" aria-hidden="true"></i>
+              <span id="resourceClearFiltersText">I-clear ang mga filter</span>
+            </button>
           </div>
+
+          <div id="resourceGrid" class="ogd-gallery-results ogd-gallery-results--grid"></div>
         </div>
       </section>
     </main>
+
+    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
+      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Mga kontrol sa aksesibilidad">
+        <div class="ogd-accessibility-panel__header">
+          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Mga Kontrol sa Aksesibilidad</h2>
+          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Isara ang panel ng aksesibilidad">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="ogd-accessibility-panel__group">
+          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Laki ng Teksto</p>
+          <div class="ogd-accessibility-segmented" role="group" aria-label="Mga pagpipilian sa laki ng teksto">
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Maliit</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Katamtaman</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Malaki</button>
+          </div>
+        </div>
+
+        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
+          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">Mataas na Kontrasto</span>
+          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
+        </button>
+
+        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Palitan ang wika">
+          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Wika</span>
+          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">FIL</span>
+        </button>
+      </div>
+
+      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Buksan ang panel ng aksesibilidad" aria-expanded="false" aria-haspopup="dialog">
+        <i data-lucide="accessibility" aria-hidden="true"></i>
+      </button>
+    </div>
 
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edu-resources-data.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edu-resources.js') }}"></script>
   </body>
 </html>
