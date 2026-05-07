@@ -199,6 +199,32 @@ def _save_uploaded_image(file_storage, title, upload_dir):
     return filename
 
 
+def _save_uploaded_image_local_only(file_storage, title, upload_dir):
+    if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
+        return None
+
+    original_name = secure_filename(str(file_storage.filename or "").strip())
+    extension = Path(original_name).suffix.lower()
+    if extension not in ALLOWED_EXHIBIT_IMAGE_EXTENSIONS:
+        raise ValueError("Image must be a JPG or PNG file.")
+
+    destination_dir = Path(upload_dir).resolve()
+    try:
+        destination_dir.mkdir(parents=True, exist_ok=True)
+    except OSError as exc:
+        raise ValueError(f"Could not create local upload folder: {destination_dir}") from exc
+
+    if not os.access(destination_dir, os.W_OK):
+        raise ValueError(f"Local upload folder is not writable: {destination_dir}")
+
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    safe_title = _slugify_text(title, fallback="image")
+    filename = f"{safe_title}-{timestamp}{extension}"
+    destination = (destination_dir / filename).resolve()
+    file_storage.save(destination)
+    return filename
+
+
 def _normalize_admin_identity(raw_value):
     return str(raw_value or "").strip().lower()
 
@@ -496,7 +522,7 @@ register_online_gallery_content_routes(
     admin_session_user_key=ADMIN_SESSION_USER_KEY,
     admin_username=ADMIN_DEFAULT_USERNAME,
     normalize_checkbox=_normalize_checkbox,
-    save_uploaded_image=_save_uploaded_image,
+    save_uploaded_image=_save_uploaded_image_local_only,
     delete_local_image=_delete_local_image,
 )
 
