@@ -28,16 +28,21 @@
     const thumbMarkup = item.image_url
       ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-thumb__image" loading="lazy" />`
       : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
+    const metaParts = [item.category, item.year].filter((value) => String(value || "").trim());
+    const metaMarkup = metaParts.length ? `<p class="text-xs text-amber-700 mb-1">${metaParts.join(" • ")}</p>` : "";
+    const tagsMarkup = Array.isArray(item.tags) && item.tags.length
+      ? `<div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>`
+      : "";
     return `
       <article class="gallery-card">
         <div class="gallery-thumb">
           ${thumbMarkup}
         </div>
         <div class="p-5">
-          <p class="text-xs text-amber-700 mb-1">${item.period} • ${item.year}</p>
+          ${metaMarkup}
           <h3 class="text-lg font-serif text-gray-900 mb-2">${item.title}</h3>
           <p class="text-sm text-gray-700 mb-3">${item.short_caption}</p>
-          <div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>
+          ${tagsMarkup}
           <a href="/online-gallery/details?item=${item.id}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
         </div>
       </article>

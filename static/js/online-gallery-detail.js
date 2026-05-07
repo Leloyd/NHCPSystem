@@ -14,6 +14,7 @@
   const descEl = document.getElementById("detailDesc");
   const tagsEl = document.getElementById("detailTags");
   const teachingEl = document.getElementById("detailTeaching");
+  const teachingCardEl = teachingEl ? teachingEl.closest(".gallery-detail-teaching-note") : null;
   const counterEl = document.getElementById("detailCounter");
   const prevBtn = document.getElementById("prevItem");
   const nextBtn = document.getElementById("nextItem");
@@ -54,7 +55,8 @@
 
     if (titleEl) titleEl.textContent = item.title;
     if (metaEl) {
-      metaEl.textContent = `${item.period} • ${item.year} • ${item.location} • Source: ${item.source}`;
+      const metaParts = [item.category, item.year, item.location].filter((value) => String(value || "").trim());
+      metaEl.textContent = metaParts.join(" • ");
     }
 
     if (imageEl) {
@@ -68,11 +70,15 @@
     }
 
     if (tagsEl) {
-      tagsEl.innerHTML = item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("");
+      const tagMarkup = Array.isArray(item.tags) ? item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("") : "";
+      tagsEl.innerHTML = tagMarkup;
+      tagsEl.hidden = !tagMarkup;
     }
 
-    if (teachingEl) {
-      teachingEl.textContent = item.teaching_note;
+    if (teachingEl && teachingCardEl) {
+      const teachingNote = String(item.teaching_note || "").trim();
+      teachingEl.textContent = teachingNote;
+      teachingCardEl.hidden = !teachingNote;
     }
 
     if (counterEl) {

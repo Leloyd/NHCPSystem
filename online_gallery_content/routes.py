@@ -16,62 +16,59 @@ from .service import (
 )
 
 
+CATEGORY_REQUIRES_LOCATION = {"mga-rehiyunal-na-kaugalian-regional-customs"}
+CATEGORY_REQUIRES_YEAR = {"kasaysayan-history", "materyales-materials"}
+
+
 def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image):
     title = str(form.get("title") or "").strip()
-    period = str(form.get("period") or "").strip()
     year_label = str(form.get("year_label") or "").strip()
     category_id_text = str(form.get("category_id") or "").strip()
-    source = str(form.get("source") or "").strip()
     location = str(form.get("location") or "").strip()
     short_caption = str(form.get("short_caption") or "").strip()
     full_description = str(form.get("full_description") or "").strip()
-    teaching_note = str(form.get("teaching_note") or "").strip()
-    tags = [part.strip() for part in str(form.get("tags_text") or "").split(",") if part.strip()]
 
     if not categories:
         raise ValueError("No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.")
 
     if len(title) < 3:
         raise ValueError("Title must be at least 3 characters.")
-    if len(period) < 3:
-        raise ValueError("Period must be at least 3 characters.")
-    if len(year_label) < 2:
-        raise ValueError("Year label must be at least 2 characters.")
-    if len(source) < 2:
-        raise ValueError("Source must be at least 2 characters.")
-    if len(location) < 2:
-        raise ValueError("Location must be at least 2 characters.")
     if len(short_caption) < 12:
         raise ValueError("Short caption must be at least 12 characters.")
     if len(full_description) < 24:
         raise ValueError("Full description must be at least 24 characters.")
-    if len(teaching_note) < 12:
-        raise ValueError("Teaching note must be at least 12 characters.")
-    if not tags:
-        raise ValueError("Please add at least one tag.")
 
-    valid_category_ids = {str(category.get("id")) for category in categories}
-    if category_id_text not in valid_category_ids:
+    categories_by_id = {str(category.get("id")): category for category in categories}
+    selected_category = categories_by_id.get(category_id_text)
+    if selected_category is None:
         raise ValueError("Please choose a valid category.")
 
-    try:
-        sort_order = int(str(form.get("sort_order") or "0").strip() or "0")
-    except ValueError as exc:
-        raise ValueError("Sort order must be a whole number.") from exc
+    category_slug = str(selected_category.get("slug") or "").strip().lower()
+    if category_slug in CATEGORY_REQUIRES_YEAR:
+        if len(year_label) < 2:
+            raise ValueError("Year must be at least 2 characters.")
+    else:
+        year_label = ""
+
+    if category_slug in CATEGORY_REQUIRES_LOCATION:
+        if len(location) < 2:
+            raise ValueError("Location must be at least 2 characters.")
+    else:
+        location = ""
 
     payload = {
         "title": title,
-        "period": period,
+        "period": "",
         "year_label": year_label,
         "category_id": int(category_id_text),
-        "source": source,
+        "source": "",
         "location": location,
         "short_caption": short_caption,
         "full_description": full_description,
-        "teaching_note": teaching_note,
-        "tags": tags,
+        "teaching_note": "",
+        "tags": [],
         "is_published": normalize_checkbox(form.get("is_published")),
-        "sort_order": sort_order,
+        "sort_order": 0,
     }
 
     uploaded_file = files.get("image_file")

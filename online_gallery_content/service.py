@@ -215,16 +215,11 @@ def build_online_gallery_form_state(source: dict[str, Any] | None = None, *, cat
 
     return {
         "title": str(source.get("title") or "").strip(),
-        "period": str(source.get("period") or "").strip(),
         "year_label": str(source.get("year_label") or source.get("year") or "").strip(),
         "category_id": category_id,
-        "source": str(source.get("source") or "").strip(),
         "location": str(source.get("location") or "").strip(),
         "short_caption": str(source.get("short_caption") or "").strip(),
         "full_description": str(source.get("full_description") or "").strip(),
-        "teaching_note": str(source.get("teaching_note") or "").strip(),
-        "tags_text": ", ".join(_prepare_tags(source.get("tags") if source.get("tags") is not None else source.get("tags_text"))),
-        "sort_order": str(source.get("sort_order") or "0").strip() or "0",
         "is_published": bool(source.get("is_published")),
         "image_filename": str(source.get("image_filename") or "").strip(),
         "image_url": source.get("image_url"),

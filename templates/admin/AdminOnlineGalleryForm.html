@@ -28,61 +28,35 @@
                 </div>
 
                 <div class="admin-form-field">
-                  <label for="galleryPeriod">Period</label>
-                  <input id="galleryPeriod" name="period" type="text" maxlength="120" required value="{{ gallery_form.period }}" />
-                </div>
-
-                <div class="admin-form-field">
-                  <label for="galleryYearLabel">Year Label</label>
-                  <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" required value="{{ gallery_form.year_label }}" />
-                </div>
-
-                <div class="admin-form-field">
                   <label for="galleryCategory">Category</label>
                   <select id="galleryCategory" name="category_id" required>
                     {% if not categories %}
                     <option value="" selected disabled>No categories available</option>
                     {% endif %}
                     {% for category in categories %}
-                    <option value="{{ category.id }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
+                    <option value="{{ category.id }}" data-category-slug="{{ category.slug }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
                     {% endfor %}
                   </select>
                 </div>
 
-                <div class="admin-form-field">
-                  <label for="gallerySortOrder">Sort Order</label>
-                  <input id="gallerySortOrder" name="sort_order" type="number" step="1" value="{{ gallery_form.sort_order }}" />
+                <div class="admin-form-field" data-category-field="year_label" hidden>
+                  <label for="galleryYearLabel">Year</label>
+                  <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" value="{{ gallery_form.year_label }}" />
                 </div>
 
-                <div class="admin-form-field">
-                  <label for="gallerySource">Source</label>
-                  <input id="gallerySource" name="source" type="text" maxlength="120" required value="{{ gallery_form.source }}" />
-                </div>
-
-                <div class="admin-form-field">
+                <div class="admin-form-field" data-category-field="location" hidden>
                   <label for="galleryLocation">Location</label>
-                  <input id="galleryLocation" name="location" type="text" maxlength="180" required value="{{ gallery_form.location }}" />
+                  <input id="galleryLocation" name="location" type="text" maxlength="180" value="{{ gallery_form.location }}" />
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryTags">Tags</label>
-                  <input id="galleryTags" name="tags_text" type="text" maxlength="500" required value="{{ gallery_form.tags_text }}" />
-                  <p class="admin-field-hint">Separate tags with commas.</p>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryShortCaption">Short Caption</label>
+                  <label for="galleryShortCaption">Short Description</label>
                   <textarea id="galleryShortCaption" name="short_caption" rows="4" required>{{ gallery_form.short_caption }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
                   <label for="galleryFullDescription">Full Description</label>
                   <textarea id="galleryFullDescription" name="full_description" rows="8" required>{{ gallery_form.full_description }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryTeachingNote">Teaching Note</label>
-                  <textarea id="galleryTeachingNote" name="teaching_note" rows="5" required>{{ gallery_form.teaching_note }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
@@ -111,4 +85,53 @@
               </div>
             </form>
           </section>
+
+          <script>
+            (function () {
+              const categorySelect = document.getElementById("galleryCategory");
+              const conditionalFields = {
+                year_label: document.querySelector('[data-category-field="year_label"]'),
+                location: document.querySelector('[data-category-field="location"]'),
+              };
+              const visibilityByCategory = {
+                "mga-rehiyunal-na-kaugalian-regional-customs": ["location"],
+                "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": [],
+                "kasaysayan-history": ["year_label"],
+                "materyales-materials": ["year_label"],
+              };
+
+              function setFieldVisibility(fieldName, isVisible) {
+                const field = conditionalFields[fieldName];
+                if (!field) {
+                  return;
+                }
+
+                field.hidden = !isVisible;
+                field.querySelectorAll("input, textarea, select").forEach((input) => {
+                  input.disabled = !isVisible;
+                  input.required = isVisible;
+                });
+              }
+
+              function updateFormForCategory() {
+                if (!categorySelect) {
+                  return;
+                }
+
+                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
+                const selectedSlug = selectedOption ? String(selectedOption.dataset.categorySlug || "").trim().toLowerCase() : "";
+                const visibleFields = new Set(visibilityByCategory[selectedSlug] || []);
+
+                Object.keys(conditionalFields).forEach((fieldName) => {
+                  setFieldVisibility(fieldName, visibleFields.has(fieldName));
+                });
+              }
+
+              if (categorySelect) {
+                categorySelect.addEventListener("change", updateFormForCategory);
+              }
+
+              updateFormForCategory();
+            })();
+          </script>
 {% endblock %}
