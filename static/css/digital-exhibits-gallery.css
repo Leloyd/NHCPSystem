@@ -321,6 +321,7 @@
   color: #374151;
   font-size: 1rem;
   line-height: 1.8;
+  white-space: pre-line;
 }
 
 .gallery-detail-card__tags {
@@ -463,6 +464,49 @@
 .gallery-card:hover {
   transform: translateY(-2px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
+}
+
+.gallery-card__body {
+  padding: 1.25rem;
+}
+
+.gallery-card__meta-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.5rem;
+  font-size: 0.75rem;
+  line-height: 1.35;
+  color: #b45309;
+}
+
+.gallery-card__meta-left,
+.gallery-card__meta-right {
+  margin: 0;
+}
+
+.gallery-card__meta-left {
+  font-weight: 700;
+}
+
+.gallery-card__meta-right {
+  text-align: right;
+}
+
+.gallery-card__title {
+  margin: 0 0 0.5rem;
+  font-size: 1.125rem;
+  line-height: 1.4;
+  color: #111827;
+}
+
+.gallery-card__summary {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: #374151;
+  white-space: pre-line;
 }
 
 .gallery-card__actions {

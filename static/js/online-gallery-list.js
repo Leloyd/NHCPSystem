@@ -15,6 +15,15 @@
   const categoryButtons = categoryFilter ? Array.from(categoryFilter.querySelectorAll("[data-category-filter]")) : [];
   let activeCategory = "all";
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   function setActiveCategory(nextCategory) {
     activeCategory = nextCategory || "all";
     categoryButtons.forEach((button) => {
@@ -26,22 +35,30 @@
 
   function buildCard(item) {
     const thumbMarkup = item.image_url
-      ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-thumb__image" loading="lazy" />`
-      : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
-    const metaParts = [item.category, item.year].filter((value) => String(value || "").trim());
-    const metaMarkup = metaParts.length ? `<p class="text-xs text-amber-700 mb-1">${metaParts.join(" • ")}</p>` : "";
+      ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" class="gallery-thumb__image" loading="lazy" />`
+      : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${escapeHtml(item.category || "Online Gallery")}</p></div>`;
+    const categoryText = String(item.category || "").trim();
+    const detailParts = [item.year, item.location].filter((value) => String(value || "").trim());
+    const metaMarkup = categoryText || detailParts.length
+      ? `
+          <div class="gallery-card__meta-row">
+            <p class="gallery-card__meta-left">${escapeHtml(categoryText)}</p>
+            <p class="gallery-card__meta-right">${escapeHtml(detailParts.join(" • "))}</p>
+          </div>
+        `
+      : "";
     const tagsMarkup = Array.isArray(item.tags) && item.tags.length
-      ? `<div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${tag}</span>`).join("")}</div>`
+      ? `<div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${escapeHtml(tag)}</span>`).join("")}</div>`
       : "";
     return `
       <article class="gallery-card">
         <div class="gallery-thumb">
           ${thumbMarkup}
         </div>
-        <div class="p-5">
+        <div class="gallery-card__body">
           ${metaMarkup}
-          <h3 class="text-lg font-serif text-gray-900 mb-2">${item.title}</h3>
-          <p class="text-sm text-gray-700 mb-3">${item.short_caption}</p>
+          <h3 class="gallery-card__title font-serif">${escapeHtml(item.title)}</h3>
+          <p class="gallery-card__summary">${escapeHtml(item.short_caption)}</p>
           ${tagsMarkup}
           <a href="/online-gallery/details?item=${item.id}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
         </div>
@@ -83,10 +100,11 @@
     const category = activeCategory;
 
     const filtered = items.filter((item) => {
+      const itemTags = Array.isArray(item.tags) ? item.tags : [];
       const inQuery =
         item.title.toLowerCase().includes(q) ||
         item.short_caption.toLowerCase().includes(q) ||
-        item.tags.join(" ").toLowerCase().includes(q);
+        itemTags.join(" ").toLowerCase().includes(q);
       const inCategory = category === "all" || item.category === category;
       return inQuery && inCategory;
     });

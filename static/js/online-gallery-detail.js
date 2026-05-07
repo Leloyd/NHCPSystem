@@ -19,6 +19,15 @@
   const prevBtn = document.getElementById("prevItem");
   const nextBtn = document.getElementById("nextItem");
 
+  function escapeHtml(value) {
+    return String(value ?? "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/\"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
   if (!items.length) {
     if (titleEl) titleEl.textContent = "No gallery items available";
     if (metaEl) metaEl.textContent = "Please return to the gallery page.";
@@ -61,8 +70,8 @@
 
     if (imageEl) {
       imageEl.innerHTML = item.image_url
-        ? `<img src="${item.image_url}" alt="${item.title}" class="gallery-detail-card__image-tag" />`
-        : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${item.category || "Online Gallery"}</p></div>`;
+        ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(item.title)}" class="gallery-detail-card__image-tag" />`
+        : `<div class="gallery-thumb__fallback"><p class="gallery-thumb__category">${escapeHtml(item.category || "Online Gallery")}</p></div>`;
     }
 
     if (descEl) {
