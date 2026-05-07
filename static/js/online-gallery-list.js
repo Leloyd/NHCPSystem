@@ -48,7 +48,7 @@
         `
       : "";
     const tagsMarkup = Array.isArray(item.tags) && item.tags.length
-      ? `<div class="mb-3">${item.tags.map((tag) => `<span class="gallery-tag">${escapeHtml(tag)}</span>`).join("")}</div>`
+      ? item.tags.map((tag) => `<span class="gallery-tag">${escapeHtml(tag)}</span>`).join("")
       : "";
     return `
       <article class="gallery-card">
@@ -59,8 +59,8 @@
           ${metaMarkup}
           <h3 class="gallery-card__title font-serif">${escapeHtml(item.title)}</h3>
           <p class="gallery-card__summary">${escapeHtml(item.short_caption)}</p>
-          ${tagsMarkup}
-          <a href="/online-gallery/details?item=${item.id}" class="text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
+          <div class="gallery-card__tags">${tagsMarkup}</div>
+          <a href="/online-gallery/details?item=${item.id}" class="gallery-card__link text-amber-700 hover:text-amber-900 text-sm font-semibold">View details →</a>
         </div>
       </article>
     `;
