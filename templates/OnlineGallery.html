@@ -13,60 +13,75 @@
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="interactive-hero gallery-hero text-white">
+      <section class="ogd-page-header" aria-labelledby="galleryHeading">
         <div class="container mx-auto px-4">
-          <div class="gallery-hero__panel">
-            <div class="gallery-hero__content">
-              <p class="interactive-kicker">Digital Exhibits</p>
-              <h1 class="gallery-hero__title font-serif">Online Gallery Archive</h1>
-              <p class="gallery-hero__copy">
-                Curated historical images with context, period filters, and teaching notes while the 360 virtual tour is in production.
-              </p>
+          <div class="ogd-page-header__inner">
+            <span class="ogd-page-header__kicker">Collection</span>
+            <h1 id="galleryHeading" class="ogd-page-header__title font-serif">Online Gallery</h1>
+            <p class="ogd-page-header__copy">
+              Explore our curated collection of historical materials and discover their cultural context through a refined digital archive experience.
+            </p>
+
+            <form id="gallerySearchForm" class="ogd-search-form" role="search">
+              <label class="sr-only" for="gallerySearch">Search gallery items</label>
+              <div class="ogd-search-field">
+                <i data-lucide="search" class="ogd-search-field__icon" aria-hidden="true"></i>
+                <input id="gallerySearch" class="ogd-search-field__input" type="search" placeholder="Search title, category, year, location, or tag..." />
+                <button id="gallerySearchClear" class="ogd-search-field__clear" type="button" aria-label="Clear search" hidden>
+                  <i data-lucide="x" aria-hidden="true"></i>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      </section>
+
+      <section class="ogd-toolbar-section" aria-label="Filter and view controls">
+        <div class="container mx-auto px-4">
+          <div class="ogd-toolbar">
+            <div id="categoryFilter" class="ogd-category-tabs" role="tablist" aria-label="Filter gallery by category">
+              <button type="button" class="ogd-category-tabs__button is-active" data-category-filter="all" aria-pressed="true" aria-selected="true">All items</button>
+              {% for category in gallery_categories %}
+              <button type="button" class="ogd-category-tabs__button" data-category-filter="{{ category.display_name }}" aria-pressed="false" aria-selected="false">{{ category.display_name }}</button>
+              {% endfor %}
+            </div>
+
+            <div class="ogd-toolbar__controls">
+              <label class="sr-only" for="gallerySort">Sort gallery items</label>
+              <div class="ogd-sort-control">
+                <i data-lucide="sliders-horizontal" class="ogd-sort-control__icon" aria-hidden="true"></i>
+                <select id="gallerySort" class="ogd-sort-control__select" aria-label="Sort gallery items">
+                  <option value="default">Default</option>
+                  <option value="az">A – Z</option>
+                  <option value="za">Z – A</option>
+                  <option value="period">By Year</option>
+                </select>
+              </div>
+
+              <div class="ogd-view-toggle" role="group" aria-label="View mode">
+                <button id="galleryViewGrid" class="ogd-view-toggle__button is-active" type="button" aria-pressed="true" aria-label="Grid view">
+                  <i data-lucide="grid-3x3" aria-hidden="true"></i>
+                </button>
+                <button id="galleryViewList" class="ogd-view-toggle__button" type="button" aria-pressed="false" aria-label="List view">
+                  <i data-lucide="list" aria-hidden="true"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section id="online-gallery" class="gallery-explorer-section">
+      <section id="online-gallery" class="ogd-results-section">
         <div class="container mx-auto px-4">
-          <article class="gallery-shell gallery-shell--feature" aria-labelledby="galleryHeading">
-            <div class="gallery-shell-header">
-              <div class="gallery-heading-group">
-                <span class="gallery-heading-kicker">Digital Archive View</span>
-                <h2 id="galleryHeading" class="gallery-heading-title font-serif">Browse the collection with focused controls</h2>
-                <p class="gallery-heading-copy">
-                  Search and open curated historical materials directly from the online archive.
-                </p>
-              </div>
-              <span class="gallery-shell-note">Use the filters to refine the collection and open any item for full details.</span>
-            </div>
+          <div class="ogd-results-header">
+            <p id="galleryCount" class="ogd-results-count" role="status" aria-live="polite">0 items found</p>
+            <button id="galleryClearFilters" class="ogd-clear-filters" type="button" hidden>
+              <i data-lucide="x" aria-hidden="true"></i>
+              <span>Clear filters</span>
+            </button>
+          </div>
 
-            <div class="gallery-tools">
-              <label class="gallery-search-panel" for="gallerySearch">
-                <span class="gallery-field-label">Search the archive</span>
-                <input id="gallerySearch" class="gallery-search" type="text" placeholder="Search title, caption, or tag" />
-              </label>
-
-              <div class="gallery-filter-grid gallery-filter-grid--compact">
-                <div class="gallery-filter-field gallery-filter-field--wide">
-                  <span class="gallery-field-label">Categories</span>
-                  <div id="categoryFilter" class="gallery-chip-group" role="group" aria-label="Filter gallery by category">
-                    <button type="button" class="gallery-chip is-active" data-category-filter="all" aria-pressed="true">All categories</button>
-                    {% for category in gallery_categories %}
-                    <button type="button" class="gallery-chip" data-category-filter="{{ category.display_name }}" aria-pressed="false">{{ category.display_name }}</button>
-                    {% endfor %}
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div class="gallery-results-header">
-              <h3 class="gallery-results-title font-serif">Gallery Results</h3>
-              <p id="galleryCount" class="gallery-results-count">0 items</p>
-            </div>
-
-            <div id="galleryGrid" class="gallery-grid"></div>
-          </article>
+          <div id="galleryGrid" class="ogd-gallery-results ogd-gallery-results--grid"></div>
         </div>
       </section>
     </main>
