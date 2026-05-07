@@ -40,7 +40,7 @@
                   <tr>
                     <th>Card</th>
                     <th>Category</th>
-                    <th>Year</th>
+                    <th>Period / Year</th>
                     <th>Status</th>
                     <th>Image</th>
                     <th>Actions</th>
@@ -56,7 +56,7 @@
                       </div>
                     </td>
                     <td>{{ gallery_item.category or 'Uncategorized' }}</td>
-                    <td>{{ gallery_item.year or '—' }}</td>
+                    <td>{{ gallery_item.period }} / {{ gallery_item.year }}</td>
                     <td>
                       <span class="admin-status-badge {% if gallery_item.is_published %}is-published{% else %}is-draft{% endif %}">
                         {% if gallery_item.is_published %}Published{% else %}Draft{% endif %}

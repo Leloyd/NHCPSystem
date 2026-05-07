@@ -22,11 +22,26 @@
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
 
               <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryTitle">Title</label>
+                  <input id="galleryTitle" name="title" type="text" maxlength="180" required value="{{ gallery_form.title }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="galleryPeriod">Period</label>
+                  <input id="galleryPeriod" name="period" type="text" maxlength="120" required value="{{ gallery_form.period }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="galleryYearLabel">Year Label</label>
+                  <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" required value="{{ gallery_form.year_label }}" />
+                </div>
+
                 <div class="admin-form-field">
                   <label for="galleryCategory">Category</label>
                   <select id="galleryCategory" name="category_id" required>
                     {% for category in categories %}
-                    <option value="{{ category.id }}" data-category-slug="{{ category.slug }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
+                    <option value="{{ category.id }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
                     {% endfor %}
                   </select>
                 </div>
@@ -37,48 +52,34 @@
                 </div>
 
                 <div class="admin-form-field">
-                  <label for="galleryTitle">Title (English)</label>
-                  <input id="galleryTitle" name="title" type="text" maxlength="180" required value="{{ gallery_form.title }}" />
+                  <label for="gallerySource">Source</label>
+                  <input id="gallerySource" name="source" type="text" maxlength="120" required value="{{ gallery_form.source }}" />
                 </div>
 
                 <div class="admin-form-field">
-                  <label for="galleryTitleTagalog">Title (Tagalog Translation)</label>
-                  <input id="galleryTitleTagalog" name="title_tl" type="text" maxlength="180" value="{{ gallery_form.title_tl }}" />
-                </div>
-
-                <div class="admin-form-field" data-gallery-field-group="year" hidden>
-                  <label for="galleryYearLabel">Year</label>
-                  <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" value="{{ gallery_form.year_label }}" />
-                </div>
-
-                <div class="admin-form-field" data-gallery-field-group="location" hidden>
-                  <label for="galleryLocation">Location (English)</label>
-                  <input id="galleryLocation" name="location" type="text" maxlength="180" value="{{ gallery_form.location }}" />
-                </div>
-
-                <div class="admin-form-field" data-gallery-field-group="location" hidden>
-                  <label for="galleryLocationTagalog">Location (Tagalog Translation)</label>
-                  <input id="galleryLocationTagalog" name="location_tl" type="text" maxlength="180" value="{{ gallery_form.location_tl }}" />
+                  <label for="galleryLocation">Location</label>
+                  <input id="galleryLocation" name="location" type="text" maxlength="180" required value="{{ gallery_form.location }}" />
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryShortCaption">Short Description (English)</label>
+                  <label for="galleryTags">Tags</label>
+                  <input id="galleryTags" name="tags_text" type="text" maxlength="500" required value="{{ gallery_form.tags_text }}" />
+                  <p class="admin-field-hint">Separate tags with commas.</p>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryShortCaption">Short Caption</label>
                   <textarea id="galleryShortCaption" name="short_caption" rows="4" required>{{ gallery_form.short_caption }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryShortCaptionTagalog">Short Description (Tagalog Translation)</label>
-                  <textarea id="galleryShortCaptionTagalog" name="short_caption_tl" rows="4">{{ gallery_form.short_caption_tl }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryFullDescription">Full Description (English)</label>
+                  <label for="galleryFullDescription">Full Description</label>
                   <textarea id="galleryFullDescription" name="full_description" rows="8" required>{{ gallery_form.full_description }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryFullDescriptionTagalog">Full Description (Tagalog Translation)</label>
-                  <textarea id="galleryFullDescriptionTagalog" name="full_description_tl" rows="8">{{ gallery_form.full_description_tl }}</textarea>
+                  <label for="galleryTeachingNote">Teaching Note</label>
+                  <textarea id="galleryTeachingNote" name="teaching_note" rows="5" required>{{ gallery_form.teaching_note }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
@@ -107,73 +108,4 @@
               </div>
             </form>
           </section>
-
-          <script>
-            (function () {
-              const categorySelect = document.getElementById("galleryCategory");
-              const yearGroups = Array.from(document.querySelectorAll('[data-gallery-field-group="year"]'));
-              const yearInputs = Array.from(document.querySelectorAll('[data-gallery-field-group="year"] input, [data-gallery-field-group="year"] textarea, [data-gallery-field-group="year"] select'));
-              const locationGroups = Array.from(document.querySelectorAll('[data-gallery-field-group="location"]'));
-              const locationInputs = Array.from(document.querySelectorAll('[data-gallery-field-group="location"] input, [data-gallery-field-group="location"] textarea, [data-gallery-field-group="location"] select'));
-              const categoryRules = {
-                "mga-rehiyunal-na-kaugalian-regional-customs": {
-                  requiresYear: false,
-                  requiresLocation: true,
-                },
-                "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": {
-                  requiresYear: false,
-                  requiresLocation: false,
-                },
-                "kasaysayan-history": {
-                  requiresYear: true,
-                  requiresLocation: false,
-                },
-                "materyales-materials": {
-                  requiresYear: false,
-                  requiresLocation: false,
-                },
-              };
-
-              if (!categorySelect) {
-                return;
-              }
-
-              function getSelectedCategorySlug() {
-                const selectedOption = categorySelect.options[categorySelect.selectedIndex];
-                return selectedOption ? String(selectedOption.dataset.categorySlug || "") : "";
-              }
-
-              function syncCategoryFields() {
-                const categorySlug = getSelectedCategorySlug();
-                const rules = categoryRules[categorySlug] || { requiresYear: false, requiresLocation: false };
-                const needsYear = Boolean(rules.requiresYear);
-                const needsLocation = Boolean(rules.requiresLocation);
-
-                yearGroups.forEach((group) => {
-                  group.hidden = !needsYear;
-                });
-                yearInputs.forEach((input) => {
-                  input.disabled = !needsYear;
-                  input.required = needsYear;
-                  if (!needsYear) {
-                    input.value = "";
-                  }
-                });
-
-                locationGroups.forEach((group) => {
-                  group.hidden = !needsLocation;
-                });
-                locationInputs.forEach((input) => {
-                  input.disabled = !needsLocation;
-                  input.required = needsLocation && input.name === "location";
-                  if (!needsLocation) {
-                    input.value = "";
-                  }
-                });
-              }
-
-              categorySelect.addEventListener("change", syncCategoryFields);
-              syncCategoryFields();
-            })();
-          </script>
 {% endblock %}
