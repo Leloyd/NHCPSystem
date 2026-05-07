@@ -1222,6 +1222,10 @@ a.admin-text-link {
   gap: 0.45rem;
 }
 
+.admin-form-field[hidden] {
+  display: none !important;
+}
+
 .admin-form-field-wide {
   grid-column: 1 / -1;
 }
