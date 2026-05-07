@@ -26,10 +26,6 @@
    const counterEl = document.getElementById("detailCounter");
    const prevBtn = document.getElementById("prevItem");
    const nextBtn = document.getElementById("nextItem");
-   const downloadBtn = document.getElementById("downloadResource");
-   const downloadTextEl = document.getElementById("detailDownloadText");
-   const shareButton = document.getElementById("detailShare");
-   const shareTextEl = document.getElementById("detailShareText");
    const backTextEl = document.getElementById("detailBackText");
    const relatedSectionKickerEl = document.getElementById("relatedSectionKicker");
    const relatedSectionTitleEl = document.getElementById("relatedSectionTitle");
@@ -61,9 +57,6 @@
        next: "Next resource",
        zoomIn: "Click to zoom in",
        zoomOut: "Click to zoom out",
-       download: "Download",
-       share: "Share",
-       linkCopied: "Link copied",
        description: "Description",
        tags: "Tags",
        teaching: "Teaching Prompt",
@@ -85,7 +78,6 @@
        objective: "Learning Objective",
        fallbackCategory: "Edu Resource",
        metadataUnavailable: "Metadata unavailable",
-       viewDetails: "Learn More",
        titleSuffix: "Edu Resources",
      },
      filipino: {
@@ -95,9 +87,6 @@
        next: "Susunod na resource",
        zoomIn: "I-click para i-zoom in",
        zoomOut: "I-click para i-zoom out",
-       download: "I-download",
-       share: "Ibahagi",
-       linkCopied: "Nakopya ang link",
        description: "Paglalarawan",
        tags: "Mga Tag",
        teaching: "Teaching Prompt",
@@ -119,7 +108,6 @@
        objective: "Layunin sa Pagkatuto",
        fallbackCategory: "Edu Resource",
        metadataUnavailable: "Walang metadata na available",
-       viewDetails: "Tingnan Pa",
        titleSuffix: "Edu Resources",
      },
    };
@@ -159,79 +147,6 @@
    function getLocalizedAudience(audience) {
      const entry = audienceLabels[audience];
      return entry ? entry[getLanguage()] || entry.english : audience;
-   }
- 
-   function triggerDownload(item) {
-     if (!item) {
-       return;
-     }
- 
-     const fileName = `${item.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "resource-template"}.txt`;
-     const fileContents = [
-       item.title,
-       `Type: ${item.type}`,
-       `Audience: ${item.audience}`,
-       `Format: ${item.format}`,
-       `Year: ${item.year}`,
-       `Recommended Module: ${item.recommendedModule}`,
-       `Duration: ${item.duration}`,
-       `Learning Objective: ${item.learningObjective}`,
-       "",
-       item.fullDescription,
-       "",
-       `Teaching Prompt: ${item.teachingPrompt}`,
-       `Tags: ${item.tags.join(", ")}`,
-     ].join("\n");
- 
-     const blob = new Blob([fileContents], { type: "text/plain;charset=utf-8" });
-     const downloadUrl = window.URL.createObjectURL(blob);
-     const link = document.createElement("a");
-     link.href = downloadUrl;
-     link.download = fileName;
-     document.body.appendChild(link);
-     link.click();
-     document.body.removeChild(link);
-     window.URL.revokeObjectURL(downloadUrl);
-   }
- 
-   async function handleShare(item) {
-     if (!shareTextEl) {
-       return;
-     }
-     const strings = getStrings();
-     const currentUrl = window.location.href;
-     try {
-       if (navigator.share) {
-         await navigator.share({
-           title: item.title,
-           text: item.description || item.title,
-           url: currentUrl,
-         });
-         return;
-       }
-       if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-         await navigator.clipboard.writeText(currentUrl);
-         shareTextEl.textContent = strings.linkCopied;
-         window.setTimeout(() => {
-           shareTextEl.textContent = strings.share;
-         }, 1800);
-       }
-     } catch (_error) {
-       shareTextEl.textContent = strings.share;
-     }
-   }
- 
-   function setZoomState(nextZoomed) {
-     isZoomed = Boolean(nextZoomed);
-     if (!zoomToggleEl || !zoomHintTextEl) {
-       return;
-     }
-     const strings = getStrings();
-     const label = isZoomed ? strings.zoomOut : strings.zoomIn;
-     zoomToggleEl.classList.toggle("is-zoomed", isZoomed);
-     zoomToggleEl.setAttribute("aria-pressed", isZoomed ? "true" : "false");
-     zoomToggleEl.setAttribute("aria-label", label);
-     zoomHintTextEl.textContent = label;
    }
  
    function buildFactItem(iconName, label, value) {
@@ -306,8 +221,6 @@
      if (tagsHeadingEl) tagsHeadingEl.textContent = strings.tags;
      if (teachingHeadingEl) teachingHeadingEl.textContent = strings.teaching;
      if (factsHeadingEl) factsHeadingEl.textContent = strings.facts;
-     if (downloadTextEl) downloadTextEl.textContent = strings.download;
-     if (shareTextEl) shareTextEl.textContent = strings.share;
      if (backTextEl) backTextEl.textContent = strings.back;
      if (relatedSectionKickerEl) relatedSectionKickerEl.textContent = strings.relatedKicker;
      if (relatedSectionTitleEl) relatedSectionTitleEl.textContent = strings.relatedTitle;
@@ -327,8 +240,6 @@
      if (factsEl) factsEl.innerHTML = "";
      if (prevBtn) prevBtn.disabled = true;
      if (nextBtn) nextBtn.disabled = true;
-     if (downloadBtn) downloadBtn.disabled = true;
-     if (shareButton) shareButton.disabled = true;
      if (zoomToggleEl) zoomToggleEl.disabled = true;
      updateStaticLabels();
      return;
@@ -425,18 +336,6 @@
    if (zoomToggleEl) {
      zoomToggleEl.addEventListener("click", () => {
        setZoomState(!isZoomed);
-     });
-   }
- 
-   if (downloadBtn) {
-     downloadBtn.addEventListener("click", () => {
-       triggerDownload(items[activeIndex]);
-     });
-   }
- 
-   if (shareButton) {
-     shareButton.addEventListener("click", () => {
-       handleShare(items[activeIndex]);
      });
    }
  

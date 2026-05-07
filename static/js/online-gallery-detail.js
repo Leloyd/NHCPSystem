@@ -31,17 +31,12 @@
   const counterEl = document.getElementById("detailCounter");
   const prevBtn = document.getElementById("prevItem");
   const nextBtn = document.getElementById("nextItem");
-  const shareButton = document.getElementById("detailShare");
-  const shareTextEl = document.getElementById("detailShareText");
-  const bookmarkButton = document.getElementById("detailBookmark");
-  const bookmarkTextEl = document.getElementById("detailBookmarkText");
   const backTextEl = document.getElementById("detailBackText");
   const relatedSectionKickerEl = document.getElementById("relatedSectionKicker");
   const relatedSectionTitleEl = document.getElementById("relatedSectionTitle");
   const relatedSectionLinkEl = document.getElementById("relatedSectionLink");
   const relatedItemsSection = document.getElementById("relatedItemsSection");
   const relatedItemsGrid = document.getElementById("relatedItemsGrid");
-  const BOOKMARK_STORAGE_KEY = "nhcpOnlineGalleryBookmarks";
   let activeIndex = 0;
   let isZoomed = false;
 
@@ -53,10 +48,6 @@
       next: "Next artifact",
       zoomIn: "Click to zoom in",
       zoomOut: "Click to zoom out",
-      bookmark: "Bookmark",
-      bookmarked: "Bookmarked",
-      share: "Share",
-      linkCopied: "Link copied",
       description: "Description",
       tags: "Tags",
       teaching: "Teaching Note",
@@ -87,10 +78,6 @@
       next: "Susunod na artifact",
       zoomIn: "I-click para i-zoom in",
       zoomOut: "I-click para i-zoom out",
-      bookmark: "I-bookmark",
-      bookmarked: "Naka-bookmark",
-      share: "Ibahagi",
-      linkCopied: "Nakopya ang link",
       description: "Paglalarawan",
       tags: "Mga Tag",
       teaching: "Tala sa Pagtuturo",
@@ -170,48 +157,6 @@
 
   function getLocalizedLocation(item) {
     return getLocalizedField(item, "location");
-  }
-
-  function getBookmarks() {
-    try {
-      const parsed = JSON.parse(window.localStorage.getItem(BOOKMARK_STORAGE_KEY) || "[]");
-      return Array.isArray(parsed) ? parsed : [];
-    } catch (_error) {
-      return [];
-    }
-  }
-
-  function setBookmarks(nextBookmarks) {
-    try {
-      window.localStorage.setItem(BOOKMARK_STORAGE_KEY, JSON.stringify(nextBookmarks));
-    } catch (_error) {
-      return;
-    }
-  }
-
-  function isBookmarked(itemId) {
-    return getBookmarks().includes(String(itemId));
-  }
-
-  function updateBookmarkUi(itemId) {
-    if (!bookmarkButton || !bookmarkTextEl) {
-      return;
-    }
-    const strings = getStrings();
-    const bookmarked = isBookmarked(itemId);
-    bookmarkButton.classList.toggle("is-active", bookmarked);
-    bookmarkButton.setAttribute("aria-pressed", bookmarked ? "true" : "false");
-    bookmarkTextEl.textContent = bookmarked ? strings.bookmarked : strings.bookmark;
-  }
-
-  function toggleBookmark(itemId) {
-    const normalizedId = String(itemId);
-    const bookmarks = getBookmarks();
-    const nextBookmarks = bookmarks.includes(normalizedId)
-      ? bookmarks.filter((value) => value !== normalizedId)
-      : [...bookmarks, normalizedId];
-    setBookmarks(nextBookmarks);
-    updateBookmarkUi(itemId);
   }
 
   function setZoomState(nextZoomed) {
@@ -295,33 +240,6 @@
     relatedItemsSection.hidden = false;
   }
 
-  async function handleShare(item) {
-    if (!shareTextEl) {
-      return;
-    }
-    const strings = getStrings();
-    const currentUrl = window.location.href;
-    try {
-      if (navigator.share) {
-        await navigator.share({
-          title: getLocalizedTitle(item),
-          text: getLocalizedSummary(item) || getLocalizedTitle(item),
-          url: currentUrl,
-        });
-        return;
-      }
-      if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
-        await navigator.clipboard.writeText(currentUrl);
-        shareTextEl.textContent = strings.linkCopied;
-        window.setTimeout(() => {
-          shareTextEl.textContent = strings.share;
-        }, 1800);
-      }
-    } catch (_error) {
-      shareTextEl.textContent = strings.share;
-    }
-  }
-
   function updateStaticLabels() {
     const strings = getStrings();
     if (breadcrumbHomeEl) breadcrumbHomeEl.textContent = strings.home;
@@ -336,12 +254,7 @@
     if (relatedSectionKickerEl) relatedSectionKickerEl.textContent = strings.relatedKicker;
     if (relatedSectionTitleEl) relatedSectionTitleEl.textContent = strings.relatedTitle;
     if (relatedSectionLinkEl) relatedSectionLinkEl.textContent = strings.relatedLink;
-    if (shareTextEl) shareTextEl.textContent = strings.share;
     setZoomState(isZoomed);
-    const currentItem = items[activeIndex];
-    if (currentItem) {
-      updateBookmarkUi(currentItem.id);
-    }
   }
 
   if (!items.length) {
@@ -357,8 +270,6 @@
     if (prevBtn) prevBtn.disabled = true;
     if (nextBtn) nextBtn.disabled = true;
     if (zoomToggleEl) zoomToggleEl.disabled = true;
-    if (bookmarkButton) bookmarkButton.disabled = true;
-    if (shareButton) shareButton.disabled = true;
     updateStaticLabels();
     return;
   }
@@ -441,7 +352,6 @@
     }
 
     document.title = `${title} | ${strings.detailTitleSuffix}`;
-    updateBookmarkUi(item.id);
     renderRelatedItems(item);
 
     if (window.lucide && typeof window.lucide.createIcons === "function") {
@@ -468,26 +378,6 @@
   if (zoomToggleEl) {
     zoomToggleEl.addEventListener("click", () => {
       setZoomState(!isZoomed);
-    });
-  }
-
-  if (bookmarkButton) {
-    bookmarkButton.addEventListener("click", () => {
-      const currentItem = items[activeIndex];
-      if (!currentItem) {
-        return;
-      }
-      toggleBookmark(currentItem.id);
-    });
-  }
-
-  if (shareButton) {
-    shareButton.addEventListener("click", () => {
-      const currentItem = items[activeIndex];
-      if (!currentItem) {
-        return;
-      }
-      handleShare(currentItem);
     });
   }
 

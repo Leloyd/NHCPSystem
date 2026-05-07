@@ -570,7 +570,7 @@ def site_map():
 
 @app.route("/3d-environment")
 def three_d_environment():
-    return render_template("ThreeDEnvironmentIntro.html")
+    return render_template("WebXR.html", webxr_init_error=WEBXR_INIT_ERROR)
 
 
 @app.route("/3d-environment/runtime")
