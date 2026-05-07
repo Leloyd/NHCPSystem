@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import os
+import tempfile
 from pathlib import Path
 from typing import Any
 
@@ -16,7 +18,33 @@ from online_gallery_repository import (
 from supabase_client import SupabaseConfigError, is_supabase_configured
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-ONLINE_GALLERY_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "online-gallery").resolve()
+
+
+def _resolve_runtime_uploads_root() -> Path:
+    configured_root = str(os.getenv("LOCAL_UPLOADS_DIR") or "").strip()
+    candidate_roots = []
+    if configured_root:
+        candidate_roots.append(Path(configured_root))
+    candidate_roots.append(PROJECT_ROOT / "static" / "uploads")
+    candidate_roots.append(Path(tempfile.gettempdir()) / "nhcp-system-uploads")
+
+    for candidate_root in candidate_roots:
+        try:
+            candidate_root.mkdir(parents=True, exist_ok=True)
+            probe_path = candidate_root / ".upload-write-test"
+            probe_path.write_text("ok", encoding="utf-8")
+            probe_path.unlink(missing_ok=True)
+            return candidate_root.resolve()
+        except OSError:
+            continue
+
+    fallback_root = (Path(tempfile.gettempdir()) / "nhcp-system-uploads").resolve()
+    fallback_root.mkdir(parents=True, exist_ok=True)
+    return fallback_root
+
+
+ONLINE_GALLERY_UPLOADS_ROOT = _resolve_runtime_uploads_root()
+ONLINE_GALLERY_UPLOAD_DIR = (ONLINE_GALLERY_UPLOADS_ROOT / "online-gallery").resolve()
 ONLINE_GALLERY_DEFAULT_CATEGORIES = [
     "Mga Rehiyunal na Kaugalian (Regional Customs)",
     "Mga Paniniwala sa Buong Bansa (Beliefs Across the Nation)",
@@ -32,7 +60,17 @@ ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS = {
 
 
 def resolve_online_gallery_image_url(image_filename: Any) -> str | None:
-    return resolve_local_upload_image_url(ONLINE_GALLERY_UPLOAD_DIR, "online-gallery", image_filename)
+    safe_filename = Path(str(image_filename or "")).name.strip()
+    if not safe_filename:
+        return None
+
+    candidate_path = (ONLINE_GALLERY_UPLOAD_DIR / safe_filename).resolve()
+    if ONLINE_GALLERY_UPLOAD_DIR not in candidate_path.parents and candidate_path != ONLINE_GALLERY_UPLOAD_DIR:
+        return None
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return None
+
+    return url_for("online_gallery_uploaded_image", filename=safe_filename)
 
 
 def _prepare_tags(raw_tags: Any) -> list[str]:
