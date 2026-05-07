@@ -6,6 +6,7 @@ from typing import Any
 
 from flask import current_app, render_template, session, url_for
 
+from supabase_storage import is_storage_object_path, resolve_public_image_url
 from community_events_repository import (
     get_community_event_by_id,
     get_published_community_event_by_slug,
@@ -23,6 +24,8 @@ from supabase_client import SupabaseConfigError, is_supabase_configured
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "community-highlights").resolve()
 COMMUNITY_EVENTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "events").resolve()
+COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX = "community-highlights"
+COMMUNITY_EVENTS_STORAGE_PREFIX = "events"
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
     "Education Program",
     "Community Activity",
@@ -60,14 +63,23 @@ def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, im
     return url_for("static", filename=f"uploads/{upload_folder_name}/{safe_filename}")
 
 
+def resolve_community_upload_image_url(image_filename: Any, *, upload_dir: Path, upload_folder_name: str, storage_prefix: str) -> str | None:
+    if is_storage_object_path(image_filename, folder_prefix=storage_prefix):
+        remote_url = resolve_public_image_url(image_filename)
+        if remote_url:
+            return remote_url
+    return resolve_local_upload_image_url(upload_dir, upload_folder_name, image_filename)
+
+
 def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared = dict(item or {})
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_highlight_detail", slug=prepared.get("slug", ""))
-    prepared["image_url"] = resolve_local_upload_image_url(
-        COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
-        "community-highlights",
+    prepared["image_url"] = resolve_community_upload_image_url(
         prepared.get("image_filename"),
+        upload_dir=COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
+        upload_folder_name="community-highlights",
+        storage_prefix=COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX,
     )
     prepared["category"] = str(prepared.get("category") or COMMUNITY_HIGHLIGHT_CATEGORIES[0]).strip() or COMMUNITY_HIGHLIGHT_CATEGORIES[0]
     return prepared
@@ -81,10 +93,11 @@ def prepare_community_event_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared = dict(item or {})
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_event_detail", slug=prepared.get("slug", ""))
-    prepared["image_url"] = resolve_local_upload_image_url(
-        COMMUNITY_EVENTS_UPLOAD_DIR,
-        "events",
+    prepared["image_url"] = resolve_community_upload_image_url(
         prepared.get("image_filename"),
+        upload_dir=COMMUNITY_EVENTS_UPLOAD_DIR,
+        upload_folder_name="events",
+        storage_prefix=COMMUNITY_EVENTS_STORAGE_PREFIX,
     )
     return prepared
 
