@@ -17,7 +17,7 @@ from .service import (
 
 
 CATEGORY_REQUIRES_LOCATION = {"mga-rehiyunal-na-kaugalian-regional-customs"}
-CATEGORY_REQUIRES_YEAR = {"kasaysayan-history", "materyales-materials"}
+CATEGORY_REQUIRES_YEAR = {"kasaysayan-history"}
 
 
 def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image):

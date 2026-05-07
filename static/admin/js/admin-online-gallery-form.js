@@ -8,7 +8,7 @@
     "mga-rehiyunal-na-kaugalian-regional-customs": ["location"],
     "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": [],
     "kasaysayan-history": ["year_label"],
-    "materyales-materials": ["year_label"],
+    "materyales-materials": [],
   };
 
   function setFieldVisibility(fieldName, isVisible) {
