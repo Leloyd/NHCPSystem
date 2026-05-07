@@ -28,6 +28,9 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     teaching_note = str(form.get("teaching_note") or "").strip()
     tags = [part.strip() for part in str(form.get("tags_text") or "").split(",") if part.strip()]
 
+    if not categories:
+        raise ValueError("No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.")
+
     if len(title) < 3:
         raise ValueError("Title must be at least 3 characters.")
     if len(period) < 3:
@@ -86,7 +89,6 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     return payload, new_image_filename
 
 
-
 def register_online_gallery_content_routes(
     app,
     *,
@@ -131,6 +133,7 @@ def register_online_gallery_content_routes(
                 form_action=url_for("admin_online_gallery_new"),
                 gallery_form=build_online_gallery_form_state({"is_published": True}, categories=categories),
                 categories=categories,
+                error_message=None if categories else "No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.",
             )
 
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
@@ -193,7 +196,7 @@ def register_online_gallery_content_routes(
                     categories=categories,
                 ),
                 categories=categories,
-                error_message="Could not create the online gallery card right now.",
+                error_message=f"Could not create the online gallery card right now. Details: {exc}",
             )
 
         return redirect(url_for("admin_online_gallery", status="created"))
@@ -216,6 +219,7 @@ def register_online_gallery_content_routes(
                 form_action=url_for("admin_online_gallery_edit", item_id=item_id),
                 gallery_form=build_online_gallery_form_state(current_item, categories=categories),
                 categories=categories,
+                error_message=None if categories else "No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.",
             )
 
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
@@ -268,7 +272,7 @@ def register_online_gallery_content_routes(
                     categories=categories,
                 ),
                 categories=categories,
-                error_message="Could not update the online gallery card right now.",
+                error_message=f"Could not update the online gallery card right now. Details: {exc}",
             )
 
         return redirect(url_for("admin_online_gallery", status="updated"))

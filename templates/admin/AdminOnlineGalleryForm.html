@@ -40,6 +40,9 @@
                 <div class="admin-form-field">
                   <label for="galleryCategory">Category</label>
                   <select id="galleryCategory" name="category_id" required>
+                    {% if not categories %}
+                    <option value="" selected disabled>No categories available</option>
+                    {% endif %}
                     {% for category in categories %}
                     <option value="{{ category.id }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
                     {% endfor %}
