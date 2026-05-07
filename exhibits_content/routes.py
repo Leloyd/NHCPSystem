@@ -52,6 +52,9 @@ def _build_exhibit_form_payload(form, files, *, current_item, normalize_checkbox
     else:
         payload["image_filename"] = None
 
+    if not payload.get("image_filename"):
+        raise ValueError("Please upload an exhibit image.")
+
     return payload, new_image_filename
 
 

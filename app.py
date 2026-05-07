@@ -14,7 +14,7 @@ from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_username
 from community_content import register_community_content_routes
-from exhibits_content import load_landing_exhibits, register_exhibits_content_routes
+from exhibits_content import EXHIBITS_UPLOAD_DIR, load_landing_exhibits, register_exhibits_content_routes
 from online_gallery_content import (
     ONLINE_GALLERY_UPLOAD_DIR,
     load_public_online_gallery_categories,
@@ -695,6 +695,19 @@ def webxr_image_asset(image_path):
         return jsonify({"error": f"Image asset not found: {image_path}"}), 404
 
     return send_from_directory(str(images_dir), image_path)
+
+
+@app.route("/uploads/exhibits/<path:filename>")
+def exhibit_uploaded_image(filename):
+    candidate_path = _resolve_safe_path(EXHIBITS_UPLOAD_DIR, filename)
+
+    if candidate_path is None:
+        return jsonify({"error": "Invalid exhibit upload path"}), 400
+
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"Exhibit upload not found: {filename}"}), 404
+
+    return send_from_directory(str(EXHIBITS_UPLOAD_DIR), filename)
 
 
 @app.route("/uploads/online-gallery/<path:filename>")

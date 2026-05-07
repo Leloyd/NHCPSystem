@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 from datetime import datetime
+import os
 from pathlib import Path
+import tempfile
 from typing import Any, Callable
 
 from flask import current_app, render_template, session, url_for
@@ -10,7 +12,33 @@ from exhibits_repository import get_exhibit_by_id, get_published_exhibit_by_slug
 from supabase_client import SupabaseConfigError, is_supabase_configured
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
-EXHIBITS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "exhibits").resolve()
+
+
+def _resolve_runtime_uploads_root() -> Path:
+    configured_root = str(os.getenv("LOCAL_UPLOADS_DIR") or "").strip()
+    candidate_roots = []
+    if configured_root:
+        candidate_roots.append(Path(configured_root))
+    candidate_roots.append(PROJECT_ROOT / "static" / "uploads")
+    candidate_roots.append(Path(tempfile.gettempdir()) / "nhcp-system-uploads")
+
+    for candidate_root in candidate_roots:
+        try:
+            candidate_root.mkdir(parents=True, exist_ok=True)
+            probe_path = candidate_root / ".upload-write-test"
+            probe_path.write_text("ok", encoding="utf-8")
+            probe_path.unlink(missing_ok=True)
+            return candidate_root.resolve()
+        except OSError:
+            continue
+
+    fallback_root = (Path(tempfile.gettempdir()) / "nhcp-system-uploads").resolve()
+    fallback_root.mkdir(parents=True, exist_ok=True)
+    return fallback_root
+
+
+EXHIBITS_UPLOADS_ROOT = _resolve_runtime_uploads_root()
+EXHIBITS_UPLOAD_DIR = (EXHIBITS_UPLOADS_ROOT / "exhibits").resolve()
 
 
 def format_exhibit_date(raw_value: Any) -> str:
@@ -40,11 +68,21 @@ def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, im
     if not candidate_path.exists() or not candidate_path.is_file():
         return None
 
-    return url_for("static", filename=f"uploads/{upload_folder_name}/{safe_filename}")
+    return url_for(f"{upload_folder_name[:-1]}_uploaded_image" if upload_folder_name.endswith("s") else f"{upload_folder_name}_uploaded_image", filename=safe_filename)
 
 
 def resolve_exhibit_image_url(image_filename: Any) -> str | None:
-    return resolve_local_upload_image_url(EXHIBITS_UPLOAD_DIR, "exhibits", image_filename)
+    safe_filename = Path(str(image_filename or "")).name.strip()
+    if not safe_filename:
+        return None
+
+    candidate_path = (EXHIBITS_UPLOAD_DIR / safe_filename).resolve()
+    if EXHIBITS_UPLOAD_DIR not in candidate_path.parents and candidate_path != EXHIBITS_UPLOAD_DIR:
+        return None
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return None
+
+    return url_for("exhibit_uploaded_image", filename=safe_filename)
 
 
 def prepare_exhibit_item(item: dict[str, Any] | None) -> dict[str, Any]:
