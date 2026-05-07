@@ -81,18 +81,26 @@ def create_online_gallery_item(payload: dict[str, Any]) -> dict[str, Any]:
     client = get_supabase_client()
     response = client.table(ONLINE_GALLERY_ITEMS_TABLE).insert(payload).execute()
     rows = list(response.data or [])
-    if not rows:
-        raise RuntimeError("Supabase did not return the created online gallery row.")
-    return rows[0]
+    if rows:
+        return rows[0]
+
+    if isinstance(getattr(response, "count", None), int) and response.count == 0:
+        raise RuntimeError("Supabase did not create the online gallery row.")
+
+    return dict(payload)
 
 
 def update_online_gallery_item(item_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     client = get_supabase_client()
     response = client.table(ONLINE_GALLERY_ITEMS_TABLE).update(payload).eq("id", int(item_id)).execute()
     rows = list(response.data or [])
-    if not rows:
+    if rows:
+        return rows[0]
+
+    refreshed_item = get_online_gallery_item_by_id(item_id)
+    if refreshed_item is None:
         raise RuntimeError("Supabase did not return the updated online gallery row.")
-    return rows[0]
+    return refreshed_item
 
 
 def delete_online_gallery_item(item_id: int) -> None:
