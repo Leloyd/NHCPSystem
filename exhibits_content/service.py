@@ -9,6 +9,7 @@ from typing import Any, Callable
 from flask import current_app, render_template, session, url_for
 
 from exhibits_repository import get_exhibit_by_id, get_published_exhibit_by_slug, list_all_exhibits, list_published_exhibits
+from supabase_storage import EXHIBITS_STORAGE_PREFIX, is_storage_object_path, resolve_public_image_url
 from supabase_client import SupabaseConfigError, is_supabase_configured
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -72,17 +73,11 @@ def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, im
 
 
 def resolve_exhibit_image_url(image_filename: Any) -> str | None:
-    safe_filename = Path(str(image_filename or "")).name.strip()
-    if not safe_filename:
-        return None
-
-    candidate_path = (EXHIBITS_UPLOAD_DIR / safe_filename).resolve()
-    if EXHIBITS_UPLOAD_DIR not in candidate_path.parents and candidate_path != EXHIBITS_UPLOAD_DIR:
-        return None
-    if not candidate_path.exists() or not candidate_path.is_file():
-        return None
-
-    return url_for("exhibit_uploaded_image", filename=safe_filename)
+    if is_storage_object_path(image_filename, folder_prefix=EXHIBITS_STORAGE_PREFIX):
+        remote_url = resolve_public_image_url(image_filename)
+        if remote_url:
+            return remote_url
+    return resolve_local_upload_image_url(EXHIBITS_UPLOAD_DIR, "exhibits", image_filename)
 
 
 def prepare_exhibit_item(item: dict[str, Any] | None) -> dict[str, Any]:

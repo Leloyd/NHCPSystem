@@ -21,6 +21,7 @@ from online_gallery_content import (
     load_public_online_gallery_items,
     register_online_gallery_content_routes,
 )
+from supabase_storage import delete_public_image, upload_public_image
 from supabase_client import is_supabase_configured
 
 try:
@@ -163,6 +164,10 @@ def _validate_event_date(raw_value):
 
 
 def _delete_local_image(image_filename, upload_dir):
+    folder_prefix = Path(upload_dir).name.strip()
+    if delete_public_image(image_filename, folder_prefix=folder_prefix):
+        return
+
     safe_filename = Path(str(image_filename or "")).name.strip()
     if not safe_filename:
         return
@@ -175,21 +180,13 @@ def _delete_local_image(image_filename, upload_dir):
 
 
 def _save_uploaded_image(file_storage, title, upload_dir):
-    if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
-        return None
-
-    original_name = secure_filename(str(file_storage.filename or "").strip())
-    extension = Path(original_name).suffix.lower()
-    if extension not in ALLOWED_EXHIBIT_IMAGE_EXTENSIONS:
-        raise ValueError("Image must be a JPG or PNG file.")
-
-    upload_dir.mkdir(parents=True, exist_ok=True)
-    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-    safe_title = _slugify_text(title, fallback="image")
-    filename = f"{safe_title}-{timestamp}{extension}"
-    destination = (upload_dir / filename).resolve()
-    file_storage.save(destination)
-    return filename
+    folder_prefix = Path(upload_dir).name.strip() or "uploads"
+    return upload_public_image(
+        file_storage,
+        title=title,
+        folder_prefix=folder_prefix,
+        slugify_text=_slugify_text,
+    )
 
 
 def _normalize_admin_identity(raw_value):

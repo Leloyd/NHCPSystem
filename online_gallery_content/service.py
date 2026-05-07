@@ -15,6 +15,7 @@ from online_gallery_repository import (
     list_all_online_gallery_items,
     list_published_online_gallery_items,
 )
+from supabase_storage import ONLINE_GALLERY_STORAGE_PREFIX, is_storage_object_path, resolve_public_image_url
 from supabase_client import SupabaseConfigError, is_supabase_configured
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
@@ -60,17 +61,11 @@ ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS = {
 
 
 def resolve_online_gallery_image_url(image_filename: Any) -> str | None:
-    safe_filename = Path(str(image_filename or "")).name.strip()
-    if not safe_filename:
-        return None
-
-    candidate_path = (ONLINE_GALLERY_UPLOAD_DIR / safe_filename).resolve()
-    if ONLINE_GALLERY_UPLOAD_DIR not in candidate_path.parents and candidate_path != ONLINE_GALLERY_UPLOAD_DIR:
-        return None
-    if not candidate_path.exists() or not candidate_path.is_file():
-        return None
-
-    return url_for("online_gallery_uploaded_image", filename=safe_filename)
+    if is_storage_object_path(image_filename, folder_prefix=ONLINE_GALLERY_STORAGE_PREFIX):
+        remote_url = resolve_public_image_url(image_filename)
+        if remote_url:
+            return remote_url
+    return resolve_local_upload_image_url(ONLINE_GALLERY_UPLOAD_DIR, "online-gallery", image_filename)
 
 
 def _prepare_tags(raw_tags: Any) -> list[str]:

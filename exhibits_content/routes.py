@@ -157,7 +157,7 @@ def register_exhibits_content_routes(
                 submit_label="Create Exhibit",
                 form_action=url_for("admin_exhibit_new"),
                 exhibit_form=build_exhibit_form_state({**request.form, "is_published": normalize_checkbox(request.form.get("is_published"))}),
-                error_message="Could not create the exhibit card right now.",
+                error_message=f"Could not create the exhibit card right now. Details: {exc}",
             )
 
         return redirect(url_for("admin_exhibits", status="created"))
@@ -223,7 +223,7 @@ def register_exhibits_content_routes(
                 submit_label="Save Changes",
                 form_action=url_for("admin_exhibit_edit", exhibit_id=exhibit_id),
                 exhibit_form=build_exhibit_form_state({**current_item, **request.form, "is_published": normalize_checkbox(request.form.get("is_published"))}),
-                error_message="Could not update the exhibit card right now.",
+                error_message=f"Could not update the exhibit card right now. Details: {exc}",
             )
 
         return redirect(url_for("admin_exhibits", status="updated"))
