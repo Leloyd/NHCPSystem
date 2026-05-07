@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900">
+  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
@@ -16,18 +16,18 @@
       <section class="ogd-page-header" aria-labelledby="galleryHeading">
         <div class="container mx-auto px-4">
           <div class="ogd-page-header__inner">
-            <span class="ogd-page-header__kicker">Collection</span>
+            <span id="galleryHeaderKicker" class="ogd-page-header__kicker">Koleksiyon</span>
             <h1 id="galleryHeading" class="ogd-page-header__title font-serif">Online Gallery</h1>
-            <p class="ogd-page-header__copy">
-              Explore our curated collection of historical materials and discover their cultural context through a refined digital archive experience.
+            <p id="galleryHeaderCopy" class="ogd-page-header__copy">
+              Tuklasin ang aming piling koleksiyon ng makasaysayang materyales at unawain ang kanilang kontekstong pangkultura sa isang mas pinong digital archive na karanasan.
             </p>
 
             <form id="gallerySearchForm" class="ogd-search-form" role="search">
-              <label class="sr-only" for="gallerySearch">Search gallery items</label>
+              <label id="gallerySearchLabel" class="sr-only" for="gallerySearch">Maghanap ng mga artifact</label>
               <div class="ogd-search-field">
                 <i data-lucide="search" class="ogd-search-field__icon" aria-hidden="true"></i>
-                <input id="gallerySearch" class="ogd-search-field__input" type="search" placeholder="Search title, category, year, location, or tag..." />
-                <button id="gallerySearchClear" class="ogd-search-field__clear" type="button" aria-label="Clear search" hidden>
+                <input id="gallerySearch" class="ogd-search-field__input" type="search" placeholder="Maghanap ayon sa pamagat, kategorya, taon, lokasyon, o tag..." />
+                <button id="gallerySearchClear" class="ogd-search-field__clear" type="button" aria-label="I-clear ang paghahanap" hidden>
                   <i data-lucide="x" aria-hidden="true"></i>
                 </button>
               </div>
@@ -40,21 +40,21 @@
         <div class="container mx-auto px-4">
           <div class="ogd-toolbar">
             <div id="categoryFilter" class="ogd-category-tabs" role="tablist" aria-label="Filter gallery by category">
-              <button type="button" class="ogd-category-tabs__button is-active" data-category-filter="all" aria-pressed="true" aria-selected="true">All items</button>
+              <button type="button" class="ogd-category-tabs__button is-active" data-category-filter="all" data-category-label-en="All Items" data-category-label-tl="Lahat ng Artifact" aria-pressed="true" aria-selected="true">Lahat ng Artifact</button>
               {% for category in gallery_categories %}
-              <button type="button" class="ogd-category-tabs__button" data-category-filter="{{ category.display_name }}" aria-pressed="false" aria-selected="false">{{ category.display_name }}</button>
+              <button type="button" class="ogd-category-tabs__button" data-category-filter="{{ category.id }}" data-category-label-en="{{ category.display_name_en or category.display_name }}" data-category-label-tl="{{ category.display_name_tl or category.display_name }}" aria-pressed="false" aria-selected="false">{{ category.display_name_tl or category.display_name }}</button>
               {% endfor %}
             </div>
 
             <div class="ogd-toolbar__controls">
-              <label class="sr-only" for="gallerySort">Sort gallery items</label>
+              <label id="gallerySortLabel" class="sr-only" for="gallerySort">Ayusin ang mga artifact</label>
               <div class="ogd-sort-control">
                 <i data-lucide="sliders-horizontal" class="ogd-sort-control__icon" aria-hidden="true"></i>
                 <select id="gallerySort" class="ogd-sort-control__select" aria-label="Sort gallery items">
-                  <option value="default">Default</option>
+                  <option value="default">Karaniwan</option>
                   <option value="az">A – Z</option>
                   <option value="za">Z – A</option>
-                  <option value="period">By Year</option>
+                  <option value="period">Ayon sa Taon</option>
                 </select>
               </div>
 
@@ -74,10 +74,10 @@
       <section id="online-gallery" class="ogd-results-section">
         <div class="container mx-auto px-4">
           <div class="ogd-results-header">
-            <p id="galleryCount" class="ogd-results-count" role="status" aria-live="polite">0 items found</p>
-            <button id="galleryClearFilters" class="ogd-clear-filters" type="button" hidden>
+            <p id="galleryCount" class="ogd-results-count" role="status" aria-live="polite">0 artifact ang nakita</p>
+            <button id="galleryClearFilters" class="ogd-clear-filters" type="button" hidden aria-label="I-clear ang mga filter">
               <i data-lucide="x" aria-hidden="true"></i>
-              <span>Clear filters</span>
+              <span id="galleryClearFiltersText">I-clear ang mga filter</span>
             </button>
           </div>
 
@@ -86,11 +86,46 @@
       </section>
     </main>
 
+    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
+      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Mga kontrol sa aksesibilidad">
+        <div class="ogd-accessibility-panel__header">
+          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Mga Kontrol sa Aksesibilidad</h2>
+          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Isara ang panel ng aksesibilidad">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="ogd-accessibility-panel__group">
+          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Laki ng Teksto</p>
+          <div class="ogd-accessibility-segmented" role="group" aria-label="Mga pagpipilian sa laki ng teksto">
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Maliit</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Katamtaman</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Malaki</button>
+          </div>
+        </div>
+
+        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
+          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">Mataas na Kontrasto</span>
+          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
+        </button>
+
+        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Palitan ang wika">
+          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Wika</span>
+          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">FIL</span>
+        </button>
+      </div>
+
+      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Buksan ang panel ng aksesibilidad" aria-expanded="false" aria-haspopup="dialog">
+        <i data-lucide="accessibility" aria-hidden="true"></i>
+      </button>
+    </div>
+
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script id="onlineGalleryItemsData" type="application/json">{{ gallery_items|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
     <script src="{{ url_for('static', filename='js/online-gallery-list.js') }}"></script>
   </body>
-</html>
+ </html>

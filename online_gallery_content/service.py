@@ -47,16 +47,16 @@ def _resolve_runtime_uploads_root() -> Path:
 ONLINE_GALLERY_UPLOADS_ROOT = _resolve_runtime_uploads_root()
 ONLINE_GALLERY_UPLOAD_DIR = (ONLINE_GALLERY_UPLOADS_ROOT / "online-gallery").resolve()
 ONLINE_GALLERY_DEFAULT_CATEGORIES = [
-    "Mga Rehiyunal na Kaugalian (Regional Customs)",
-    "Mga Paniniwala sa Buong Bansa (Beliefs Across the Nation)",
-    "Kasaysayan (History)",
-    "Materyales (Materials)",
+    "Mga Rehiyunal na Kaugalian",
+    "Mga Paniniwala sa Buong Bansa",
+    "Kasaysayan",
+    "Materyales",
 ]
 ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS = {
-    "mga-rehiyunal-na-kaugalian-regional-customs": "Mga Rehiyunal na Kaugalian (Regional Customs)",
-    "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": "Mga Paniniwala sa Buong Bansa (Beliefs Across the Nation)",
-    "kasaysayan-history": "Kasaysayan (History)",
-    "materyales-materials": "Materyales (Materials)",
+    "mga-rehiyunal-na-kaugalian-regional-customs": "Mga Rehiyunal na Kaugalian",
+    "mga-paniniwala-sa-buong-bansa-beliefs-across-the-nation": "Mga Paniniwala sa Buong Bansa",
+    "kasaysayan-history": "Kasaysayan",
+    "materyales-materials": "Materyales",
 }
 
 
@@ -78,9 +78,28 @@ def _prepare_tags(raw_tags: Any) -> list[str]:
     return []
 
 
-def _normalize_category_name(raw_value: Any, categories_by_id: dict[int, str]) -> str:
+def _normalize_text(raw_value: Any) -> str:
+    return str(raw_value or "").strip()
+
+
+def prepare_online_gallery_category(category: dict[str, Any] | None) -> dict[str, Any]:
+    prepared = dict(category or {})
+    display_name = _normalize_text(prepared.get("display_name"))
+    display_name_en = _normalize_text(prepared.get("display_name_en")) or display_name
+    display_name_tl = _normalize_text(prepared.get("display_name_tl")) or display_name
+    prepared["display_name_en"] = display_name_en
+    prepared["display_name_tl"] = display_name_tl
+    prepared["display_name"] = display_name_tl or display_name_en or display_name
+    return prepared
+
+
+def prepare_online_gallery_categories(categories: list[dict[str, Any]] | None) -> list[dict[str, Any]]:
+    return [prepare_online_gallery_category(category) for category in list(categories or [])]
+
+
+def _normalize_category_name(raw_value: Any, categories_by_id: dict[int, dict[str, Any]]) -> dict[str, str]:
     if isinstance(raw_value, int):
-        return categories_by_id.get(raw_value, "")
+        return dict(categories_by_id.get(raw_value) or {})
 
     try:
         numeric_id = int(raw_value)
@@ -88,41 +107,62 @@ def _normalize_category_name(raw_value: Any, categories_by_id: dict[int, str]) -
         numeric_id = None
 
     if numeric_id is not None:
-        return categories_by_id.get(numeric_id, "")
+        return dict(categories_by_id.get(numeric_id) or {})
 
     raw_text = str(raw_value or "").strip()
     if raw_text in ONLINE_GALLERY_DEFAULT_CATEGORIES:
-        return raw_text
-    return ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS.get(raw_text.lower(), raw_text)
+        return {
+            "display_name": raw_text,
+            "display_name_en": raw_text,
+            "display_name_tl": raw_text,
+            "slug": raw_text.lower(),
+        }
+    fallback_name = ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS.get(raw_text.lower(), raw_text)
+    return {
+        "display_name": fallback_name,
+        "display_name_en": fallback_name,
+        "display_name_tl": fallback_name,
+        "slug": raw_text.lower(),
+    }
 
 
-def prepare_online_gallery_item(item: dict[str, Any] | None, *, categories_by_id: dict[int, str] | None = None) -> dict[str, Any]:
+def prepare_online_gallery_item(item: dict[str, Any] | None, *, categories_by_id: dict[int, dict[str, Any]] | None = None) -> dict[str, Any]:
     prepared = dict(item or {})
     categories_by_id = categories_by_id or {}
 
-    category_name = _normalize_category_name(prepared.get("category_id"), categories_by_id)
-    prepared["category"] = category_name
+    category_info = _normalize_category_name(prepared.get("category_id"), categories_by_id)
+    prepared["category"] = _normalize_text(category_info.get("display_name_tl")) or _normalize_text(category_info.get("display_name")) or _normalize_text(category_info.get("display_name_en"))
+    prepared["category_en"] = _normalize_text(category_info.get("display_name_en")) or prepared["category"]
+    prepared["category_tl"] = _normalize_text(category_info.get("display_name_tl")) or prepared["category"]
+    prepared["category_slug"] = _normalize_text(category_info.get("slug"))
+    prepared["title_en"] = _normalize_text(prepared.get("title_en")) or _normalize_text(prepared.get("title"))
+    prepared["title_tl"] = _normalize_text(prepared.get("title_tl")) or _normalize_text(prepared.get("title"))
     prepared["year"] = str(prepared.get("year_label") or "").strip()
+    prepared["location_en"] = _normalize_text(prepared.get("location_en")) or _normalize_text(prepared.get("location"))
+    prepared["location_tl"] = _normalize_text(prepared.get("location_tl")) or _normalize_text(prepared.get("location"))
+    prepared["short_caption_en"] = _normalize_text(prepared.get("short_caption_en")) or _normalize_text(prepared.get("short_caption"))
+    prepared["short_caption_tl"] = _normalize_text(prepared.get("short_caption_tl")) or _normalize_text(prepared.get("short_caption"))
+    prepared["full_description_en"] = _normalize_text(prepared.get("full_description_en")) or _normalize_text(prepared.get("full_description"))
+    prepared["full_description_tl"] = _normalize_text(prepared.get("full_description_tl")) or _normalize_text(prepared.get("full_description"))
     prepared["tags"] = _prepare_tags(prepared.get("tags"))
     prepared["image_url"] = resolve_online_gallery_image_url(prepared.get("image_filename"))
     prepared["teaching_note"] = str(prepared.get("teaching_note") or "").strip()
     return prepared
 
 
-def prepare_online_gallery_items(items: list[dict[str, Any]] | None, *, categories_by_id: dict[int, str] | None = None) -> list[dict[str, Any]]:
+def prepare_online_gallery_items(items: list[dict[str, Any]] | None, *, categories_by_id: dict[int, dict[str, Any]] | None = None) -> list[dict[str, Any]]:
     return [prepare_online_gallery_item(item, categories_by_id=categories_by_id) for item in list(items or [])]
 
 
-def _build_categories_by_id(categories: list[dict[str, Any]]) -> dict[int, str]:
-    mapping: dict[int, str] = {}
+def _build_categories_by_id(categories: list[dict[str, Any]]) -> dict[int, dict[str, Any]]:
+    mapping: dict[int, dict[str, Any]] = {}
     for category in categories:
+        prepared_category = prepare_online_gallery_category(category)
         try:
-            key = int(category.get("id"))
+            key = int(prepared_category.get("id"))
         except (TypeError, ValueError):
             continue
-        value = str(category.get("display_name") or "").strip()
-        if value:
-            mapping[key] = value
+        mapping[key] = prepared_category
     return mapping
 
 
@@ -131,7 +171,7 @@ def load_public_online_gallery_categories() -> list[dict[str, Any]]:
         return []
 
     try:
-        return list_active_online_gallery_categories()
+        return prepare_online_gallery_categories(list_active_online_gallery_categories())
     except SupabaseConfigError:
         current_app.logger.warning("Supabase online gallery categories integration is not fully configured.")
     except Exception as exc:  # noqa: BLE001
@@ -145,7 +185,7 @@ def load_admin_online_gallery_categories() -> list[dict[str, Any]]:
         return []
 
     try:
-        return list_all_online_gallery_categories()
+        return prepare_online_gallery_categories(list_all_online_gallery_categories())
     except SupabaseConfigError:
         current_app.logger.warning("Supabase online gallery categories integration is not fully configured.")
     except Exception as exc:  # noqa: BLE001
@@ -214,12 +254,20 @@ def build_online_gallery_form_state(source: dict[str, Any] | None = None, *, cat
         category_id = str(categories[0].get("id"))
 
     return {
-        "title": str(source.get("title") or "").strip(),
+        "title": str(source.get("title") or source.get("title_en") or "").strip(),
+        "title_en": str(source.get("title_en") or source.get("title") or "").strip(),
+        "title_tl": str(source.get("title_tl") or source.get("title") or "").strip(),
         "year_label": str(source.get("year_label") or source.get("year") or "").strip(),
         "category_id": category_id,
-        "location": str(source.get("location") or "").strip(),
-        "short_caption": str(source.get("short_caption") or "").strip(),
-        "full_description": str(source.get("full_description") or "").strip(),
+        "location": str(source.get("location") or source.get("location_en") or "").strip(),
+        "location_en": str(source.get("location_en") or source.get("location") or "").strip(),
+        "location_tl": str(source.get("location_tl") or source.get("location") or "").strip(),
+        "short_caption": str(source.get("short_caption") or source.get("short_caption_en") or "").strip(),
+        "short_caption_en": str(source.get("short_caption_en") or source.get("short_caption") or "").strip(),
+        "short_caption_tl": str(source.get("short_caption_tl") or source.get("short_caption") or "").strip(),
+        "full_description": str(source.get("full_description") or source.get("full_description_en") or "").strip(),
+        "full_description_en": str(source.get("full_description_en") or source.get("full_description") or "").strip(),
+        "full_description_tl": str(source.get("full_description_tl") or source.get("full_description") or "").strip(),
         "is_published": bool(source.get("is_published")),
         "image_filename": str(source.get("image_filename") or "").strip(),
         "image_url": source.get("image_url"),

@@ -21,22 +21,32 @@ CATEGORY_REQUIRES_YEAR = {"kasaysayan-history"}
 
 
 def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image):
-    title = str(form.get("title") or "").strip()
+    title_en = str(form.get("title_en") or form.get("title") or "").strip()
+    title_tl = str(form.get("title_tl") or form.get("title") or "").strip()
     year_label = str(form.get("year_label") or "").strip()
     category_id_text = str(form.get("category_id") or "").strip()
-    location = str(form.get("location") or "").strip()
-    short_caption = str(form.get("short_caption") or "").strip()
-    full_description = str(form.get("full_description") or "").strip()
+    location_en = str(form.get("location_en") or form.get("location") or "").strip()
+    location_tl = str(form.get("location_tl") or form.get("location") or "").strip()
+    short_caption_en = str(form.get("short_caption_en") or form.get("short_caption") or "").strip()
+    short_caption_tl = str(form.get("short_caption_tl") or form.get("short_caption") or "").strip()
+    full_description_en = str(form.get("full_description_en") or form.get("full_description") or "").strip()
+    full_description_tl = str(form.get("full_description_tl") or form.get("full_description") or "").strip()
 
     if not categories:
         raise ValueError("No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.")
 
-    if len(title) < 3:
-        raise ValueError("Title must be at least 3 characters.")
-    if len(short_caption) < 12:
-        raise ValueError("Short caption must be at least 12 characters.")
-    if len(full_description) < 24:
-        raise ValueError("Full description must be at least 24 characters.")
+    if len(title_en) < 3:
+        raise ValueError("English title must be at least 3 characters.")
+    if len(title_tl) < 3:
+        raise ValueError("Tagalog title must be at least 3 characters.")
+    if len(short_caption_en) < 12:
+        raise ValueError("English short description must be at least 12 characters.")
+    if len(short_caption_tl) < 12:
+        raise ValueError("Tagalog short description must be at least 12 characters.")
+    if len(full_description_en) < 24:
+        raise ValueError("English full description must be at least 24 characters.")
+    if len(full_description_tl) < 24:
+        raise ValueError("Tagalog full description must be at least 24 characters.")
 
     categories_by_id = {str(category.get("id")): category for category in categories}
     selected_category = categories_by_id.get(category_id_text)
@@ -51,20 +61,31 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
         year_label = ""
 
     if category_slug in CATEGORY_REQUIRES_LOCATION:
-        if len(location) < 2:
-            raise ValueError("Location must be at least 2 characters.")
+        if len(location_en) < 2:
+            raise ValueError("English location must be at least 2 characters.")
+        if len(location_tl) < 2:
+            raise ValueError("Tagalog location must be at least 2 characters.")
     else:
-        location = ""
+        location_en = ""
+        location_tl = ""
 
     payload = {
-        "title": title,
+        "title": title_tl,
+        "title_en": title_en,
+        "title_tl": title_tl,
         "period": "",
         "year_label": year_label,
         "category_id": int(category_id_text),
         "source": "",
-        "location": location,
-        "short_caption": short_caption,
-        "full_description": full_description,
+        "location": location_tl,
+        "location_en": location_en,
+        "location_tl": location_tl,
+        "short_caption": short_caption_tl,
+        "short_caption_en": short_caption_en,
+        "short_caption_tl": short_caption_tl,
+        "full_description": full_description_tl,
+        "full_description_en": full_description_en,
+        "full_description_tl": full_description_tl,
         "teaching_note": "",
         "tags": [],
         "is_published": normalize_checkbox(form.get("is_published")),
@@ -72,7 +93,7 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     }
 
     uploaded_file = files.get("image_file")
-    new_image_filename = save_uploaded_image(uploaded_file, title, ONLINE_GALLERY_UPLOAD_DIR)
+    new_image_filename = save_uploaded_image(uploaded_file, title_en or title_tl, ONLINE_GALLERY_UPLOAD_DIR)
     if new_image_filename:
         payload["image_filename"] = new_image_filename
     elif current_item:

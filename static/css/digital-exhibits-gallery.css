@@ -1499,6 +1499,288 @@
   gap: 1.5rem;
 }
 
+.ogd-accessibility-root {
+  position: fixed;
+  right: 1.5rem;
+  bottom: 1.5rem;
+  z-index: 60;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.8rem;
+}
+
+.ogd-accessibility-panel {
+  width: min(22rem, calc(100vw - 2rem));
+  border: 1px solid #e8e4df;
+  border-radius: 1.25rem;
+  background: rgba(255, 255, 255, 0.98);
+  box-shadow: 0 24px 40px rgba(28, 25, 23, 0.14);
+  padding: 1.15rem;
+  backdrop-filter: blur(10px);
+}
+
+.ogd-accessibility-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.ogd-accessibility-panel__title {
+  margin: 0;
+  color: #1c1917;
+  font-size: 0.95rem;
+  font-weight: 700;
+}
+
+.ogd-accessibility-panel__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.7rem;
+  color: #6b6560;
+  transition: background 0.2s ease, color 0.2s ease;
+}
+
+.ogd-accessibility-panel__close:hover {
+  background: #f5f1ec;
+  color: #1c1917;
+}
+
+.ogd-accessibility-panel__group {
+  margin-bottom: 0.9rem;
+}
+
+.ogd-accessibility-panel__label {
+  margin: 0 0 0.55rem;
+  color: #aba89f;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.ogd-accessibility-segmented {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.ogd-accessibility-segmented__button,
+.ogd-accessibility-toggle {
+  border: 1px solid #e8e4df;
+  background: #ffffff;
+  color: #6b6560;
+  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease, box-shadow 0.2s ease;
+}
+
+.ogd-accessibility-segmented__button {
+  min-height: 2.6rem;
+  padding: 0.65rem 0.5rem;
+  border-radius: 0.85rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.ogd-accessibility-segmented__button:hover,
+.ogd-accessibility-toggle:hover {
+  border-color: rgba(184, 148, 90, 0.45);
+}
+
+.ogd-accessibility-segmented__button.is-active {
+  background: #b8945a;
+  border-color: #b8945a;
+  color: #ffffff;
+  box-shadow: 0 10px 20px rgba(184, 148, 90, 0.18);
+}
+
+.ogd-accessibility-toggle {
+  width: 100%;
+  min-height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.8rem 0.9rem;
+  border-radius: 0.95rem;
+}
+
+.ogd-accessibility-toggle + .ogd-accessibility-toggle {
+  margin-top: 0.65rem;
+}
+
+.ogd-accessibility-toggle__text {
+  color: inherit;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.ogd-accessibility-toggle__switch {
+  width: 2.65rem;
+  height: 1.45rem;
+  padding: 0.12rem;
+  border-radius: 999px;
+  background: #e8e4df;
+  display: inline-flex;
+  align-items: center;
+  transition: background 0.2s ease;
+  flex-shrink: 0;
+}
+
+.ogd-accessibility-toggle__switch > span {
+  width: 1.05rem;
+  height: 1.05rem;
+  border-radius: 999px;
+  background: #ffffff;
+  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.12);
+  transition: transform 0.2s ease;
+}
+
+.ogd-accessibility-toggle.is-active {
+  background: rgba(184, 148, 90, 0.1);
+  border-color: rgba(184, 148, 90, 0.4);
+  color: #b8945a;
+}
+
+.ogd-accessibility-toggle.is-active .ogd-accessibility-toggle__switch {
+  background: #b8945a;
+}
+
+.ogd-accessibility-toggle.is-active .ogd-accessibility-toggle__switch > span {
+  transform: translateX(1.18rem);
+}
+
+.ogd-accessibility-toggle__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 2.75rem;
+  min-height: 1.75rem;
+  padding: 0.2rem 0.65rem;
+  border-radius: 999px;
+  background: #f5f1ec;
+  color: #b8945a;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.ogd-accessibility-fab {
+  width: 3.6rem;
+  height: 3.6rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 999px;
+  background: #b8945a;
+  color: #ffffff;
+  box-shadow: 0 18px 30px rgba(184, 148, 90, 0.24);
+  transition: transform 0.25s ease, background 0.2s ease, box-shadow 0.25s ease;
+}
+
+.ogd-accessibility-fab:hover {
+  background: #a07d47;
+  transform: translateY(-2px);
+  box-shadow: 0 22px 36px rgba(184, 148, 90, 0.28);
+}
+
+.ogd-accessibility-fab.is-open {
+  transform: rotate(12deg);
+}
+
+html.ogd-high-contrast {
+  background: #000000;
+}
+
+html.ogd-high-contrast .ogd-page-header,
+html.ogd-high-contrast .ogd-toolbar-section,
+html.ogd-high-contrast .ogd-detail-topbar,
+html.ogd-high-contrast .ogd-page-header__copy,
+html.ogd-high-contrast .ogd-results-count,
+html.ogd-high-contrast .ogd-breadcrumb,
+html.ogd-high-contrast .ogd-detail-meta,
+html.ogd-high-contrast .ogd-artifact-card,
+html.ogd-high-contrast .ogd-list-item,
+html.ogd-high-contrast .ogd-empty-state,
+html.ogd-high-contrast .ogd-detail-section-card,
+html.ogd-high-contrast .ogd-detail-facts,
+html.ogd-high-contrast .ogd-detail-fact,
+html.ogd-high-contrast .ogd-accessibility-panel,
+html.ogd-high-contrast .ogd-search-field__input,
+html.ogd-high-contrast .ogd-sort-control__select,
+html.ogd-high-contrast .ogd-category-tabs__button,
+html.ogd-high-contrast .ogd-view-toggle,
+html.ogd-high-contrast .ogd-view-toggle__button,
+html.ogd-high-contrast .ogd-detail-action-button,
+html.ogd-high-contrast .ogd-detail-nav__button,
+html.ogd-high-contrast .ogd-detail-back-button,
+html.ogd-high-contrast .ogd-accessibility-segmented__button,
+html.ogd-high-contrast .ogd-accessibility-toggle {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #facc15 !important;
+}
+
+html.ogd-high-contrast .ogd-page-header__kicker,
+html.ogd-high-contrast .ogd-related-header__kicker,
+html.ogd-high-contrast .ogd-detail-section-card__title,
+html.ogd-high-contrast .ogd-artifact-card__action,
+html.ogd-high-contrast .ogd-clear-filters,
+html.ogd-high-contrast .ogd-related-header__link,
+html.ogd-high-contrast .ogd-list-item__badge,
+html.ogd-high-contrast .ogd-detail-category-pill,
+html.ogd-high-contrast .ogd-detail-media__badge,
+html.ogd-high-contrast .ogd-detail-tag,
+html.ogd-high-contrast .ogd-accessibility-panel__label,
+html.ogd-high-contrast .ogd-accessibility-toggle__badge {
+  color: #facc15 !important;
+}
+
+html.ogd-high-contrast .ogd-accessibility-segmented__button.is-active,
+html.ogd-high-contrast .ogd-category-tabs__button.is-active,
+html.ogd-high-contrast .ogd-view-toggle__button.is-active,
+html.ogd-high-contrast .ogd-detail-action-button.is-active,
+html.ogd-high-contrast .ogd-artifact-card__action,
+html.ogd-high-contrast .ogd-accessibility-toggle.is-active {
+  background: #facc15 !important;
+  color: #000000 !important;
+}
+
+html.ogd-high-contrast .ogd-accessibility-toggle__switch,
+html.ogd-high-contrast .ogd-detail-fact__icon,
+html.ogd-high-contrast .ogd-empty-state__icon,
+html.ogd-high-contrast .ogd-list-item__badge,
+html.ogd-high-contrast .ogd-detail-category-pill,
+html.ogd-high-contrast .ogd-detail-media__badge,
+html.ogd-high-contrast .ogd-detail-tag,
+html.ogd-high-contrast .ogd-accessibility-toggle__badge {
+  background: #111111 !important;
+  border-color: #facc15 !important;
+}
+
+html.ogd-high-contrast .ogd-accessibility-fab {
+  background: #facc15 !important;
+  color: #000000 !important;
+}
+
+html.ogd-high-contrast .ogd-accessibility-toggle.is-active .ogd-accessibility-toggle__switch {
+  background: #facc15 !important;
+}
+
+@media (max-width: 768px) {
+  .ogd-accessibility-root {
+    right: 1rem;
+    bottom: 1rem;
+  }
+
+  .ogd-accessibility-panel {
+    width: min(21rem, calc(100vw - 1rem));
+  }
+}
+
 @media (max-width: 1280px) {
   .ogd-gallery-results--grid,
   .ogd-related-grid {

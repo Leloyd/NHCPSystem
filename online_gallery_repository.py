@@ -5,11 +5,8 @@ from supabase_client import get_supabase_client
 
 ONLINE_GALLERY_CATEGORIES_TABLE = "online_gallery_categories"
 ONLINE_GALLERY_ITEMS_TABLE = "online_gallery_items"
-ONLINE_GALLERY_CATEGORY_FIELDS = "id, slug, display_name, sort_order, is_active, created_at, updated_at"
-ONLINE_GALLERY_ITEM_FIELDS = (
-    "id, category_id, title, period, year_label, source, location, short_caption, full_description, "
-    "teaching_note, tags, image_filename, is_published, sort_order, created_at, updated_at"
-)
+ONLINE_GALLERY_CATEGORY_FIELDS = "*"
+ONLINE_GALLERY_ITEM_FIELDS = "*"
 
 
 def list_active_online_gallery_categories() -> list[dict[str, Any]]:

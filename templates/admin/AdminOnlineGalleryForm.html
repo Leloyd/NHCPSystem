@@ -23,8 +23,13 @@
 
               <div class="admin-form-grid">
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryTitle">Title</label>
-                  <input id="galleryTitle" name="title" type="text" maxlength="180" required value="{{ gallery_form.title }}" />
+                  <label for="galleryTitleEn">Title (English)</label>
+                  <input id="galleryTitleEn" name="title_en" type="text" maxlength="180" required value="{{ gallery_form.title_en }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryTitleTl">Title (Tagalog)</label>
+                  <input id="galleryTitleTl" name="title_tl" type="text" maxlength="180" required value="{{ gallery_form.title_tl }}" />
                 </div>
 
                 <div class="admin-form-field">
@@ -44,19 +49,37 @@
                   <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" value="{{ gallery_form.year_label }}" />
                 </div>
 
-                <div class="admin-form-field" data-category-field="location" hidden>
-                  <label for="galleryLocation">Location</label>
-                  <input id="galleryLocation" name="location" type="text" maxlength="180" value="{{ gallery_form.location }}" />
+                <div class="admin-form-field admin-form-field-wide" data-category-field="location" hidden>
+                  <div class="admin-form-grid">
+                    <div class="admin-form-field">
+                      <label for="galleryLocationEn">Location (English)</label>
+                      <input id="galleryLocationEn" name="location_en" type="text" maxlength="180" value="{{ gallery_form.location_en }}" />
+                    </div>
+                    <div class="admin-form-field">
+                      <label for="galleryLocationTl">Location (Tagalog)</label>
+                      <input id="galleryLocationTl" name="location_tl" type="text" maxlength="180" value="{{ gallery_form.location_tl }}" />
+                    </div>
+                  </div>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryShortCaption">Short Description</label>
-                  <textarea id="galleryShortCaption" name="short_caption" rows="4" required>{{ gallery_form.short_caption }}</textarea>
+                  <label for="galleryShortCaptionEn">Short Description (English)</label>
+                  <textarea id="galleryShortCaptionEn" name="short_caption_en" rows="4" required>{{ gallery_form.short_caption_en }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryFullDescription">Full Description</label>
-                  <textarea id="galleryFullDescription" name="full_description" rows="8" required>{{ gallery_form.full_description }}</textarea>
+                  <label for="galleryShortCaptionTl">Short Description (Tagalog)</label>
+                  <textarea id="galleryShortCaptionTl" name="short_caption_tl" rows="4" required>{{ gallery_form.short_caption_tl }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryFullDescriptionEn">Full Description (English)</label>
+                  <textarea id="galleryFullDescriptionEn" name="full_description_en" rows="8" required>{{ gallery_form.full_description_en }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="galleryFullDescriptionTl">Full Description (Tagalog)</label>
+                  <textarea id="galleryFullDescriptionTl" name="full_description_tl" rows="8" required>{{ gallery_form.full_description_tl }}</textarea>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">

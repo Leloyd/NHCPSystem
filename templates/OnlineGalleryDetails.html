@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="tl">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,7 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900">
+  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
@@ -17,18 +17,18 @@
         <div class="container mx-auto px-4">
           <div class="ogd-detail-topbar__inner">
             <nav class="ogd-breadcrumb" aria-label="Breadcrumb">
-              <a href="/">Home</a>
+              <a id="detailBreadcrumbHome" href="/">Tahanan</a>
               <span aria-hidden="true">/</span>
-              <a href="/online-gallery">Gallery</a>
+              <a id="detailBreadcrumbGallery" href="/online-gallery">Gallery</a>
               <span aria-hidden="true">/</span>
               <span id="detailBreadcrumbTitle" aria-current="page">Loading...</span>
             </nav>
 
             <div class="ogd-detail-nav">
-              <button id="prevItem" class="ogd-detail-nav__button" type="button" aria-label="Previous artifact">
+              <button id="prevItem" class="ogd-detail-nav__button" type="button" aria-label="Nakaraang artifact">
                 <i data-lucide="chevron-left" aria-hidden="true"></i>
               </button>
-              <button id="nextItem" class="ogd-detail-nav__button" type="button" aria-label="Next artifact">
+              <button id="nextItem" class="ogd-detail-nav__button" type="button" aria-label="Susunod na artifact">
                 <i data-lucide="chevron-right" aria-hidden="true"></i>
               </button>
             </div>
@@ -41,30 +41,30 @@
           <div class="ogd-detail-layout">
             <div class="ogd-detail-media-column">
               <div class="ogd-detail-media-sticky">
-                <button id="detailZoomToggle" class="ogd-detail-media" type="button" aria-label="Click to zoom in" aria-pressed="false">
+                <button id="detailZoomToggle" class="ogd-detail-media" type="button" aria-label="I-click para i-zoom in" aria-pressed="false">
                   <div id="detailImage" class="ogd-detail-media__frame"></div>
                   <span id="detailImageBadge" class="ogd-detail-media__badge"></span>
                   <span class="ogd-detail-media__hint">
                     <i data-lucide="zoom-in" aria-hidden="true"></i>
-                    <span id="detailZoomHintText">Click to zoom in</span>
+                    <span id="detailZoomHintText">I-click para i-zoom in</span>
                   </span>
                 </button>
 
                 <div class="ogd-detail-actions-row">
                   <button id="detailBookmark" class="ogd-detail-action-button" type="button" aria-pressed="false">
                     <i data-lucide="bookmark" aria-hidden="true"></i>
-                    <span id="detailBookmarkText">Bookmark</span>
+                    <span id="detailBookmarkText">I-bookmark</span>
                   </button>
                   <button id="detailShare" class="ogd-detail-action-button" type="button">
                     <i data-lucide="share-2" aria-hidden="true"></i>
-                    <span id="detailShareText">Share</span>
+                    <span id="detailShareText">Ibahagi</span>
                   </button>
                 </div>
               </div>
             </div>
 
             <div class="ogd-detail-content">
-              <p id="detailCounter" class="ogd-detail-counter">Item 0 of 0</p>
+              <p id="detailCounter" class="ogd-detail-counter">Artifact 0 ng 0</p>
               <h1 id="detailTitle" class="ogd-detail-title font-serif">Loading...</h1>
 
               <div class="ogd-detail-meta-row">
@@ -73,29 +73,29 @@
               </div>
 
               <section class="ogd-detail-section-card">
-                <h2 class="ogd-detail-section-card__title">Description</h2>
+                <h2 id="detailDescriptionHeading" class="ogd-detail-section-card__title">Paglalarawan</h2>
                 <p id="detailDesc" class="ogd-detail-description"></p>
               </section>
 
               <section id="detailTagsSection" class="ogd-detail-section-card" hidden>
-                <h2 class="ogd-detail-section-card__title">Tags</h2>
+                <h2 id="detailTagsHeading" class="ogd-detail-section-card__title">Mga Tag</h2>
                 <div id="detailTags" class="ogd-detail-tags"></div>
               </section>
 
               <section id="detailTeachingSection" class="ogd-detail-section-card" hidden>
-                <h2 class="ogd-detail-section-card__title">Teaching Note</h2>
+                <h2 id="detailTeachingHeading" class="ogd-detail-section-card__title">Tala sa Pagtuturo</h2>
                 <p id="detailTeaching" class="ogd-detail-teaching"></p>
               </section>
 
               <section class="ogd-detail-facts">
-                <h2 class="ogd-detail-section-card__title">Artifact Details</h2>
+                <h2 id="detailFactsHeading" class="ogd-detail-section-card__title">Detalye ng Artifact</h2>
                 <div id="detailFacts" class="ogd-detail-facts__list"></div>
               </section>
 
               <div class="ogd-detail-back-row">
                 <a href="/online-gallery" class="ogd-detail-back-button">
                   <i data-lucide="arrow-left" aria-hidden="true"></i>
-                  <span>Back to Gallery</span>
+                  <span id="detailBackText">Bumalik sa Gallery</span>
                 </a>
               </div>
             </div>
@@ -104,10 +104,10 @@
           <section id="relatedItemsSection" class="ogd-related-section" hidden>
             <div class="ogd-related-header">
               <div>
-                <span class="ogd-related-header__kicker">You Might Also Like</span>
-                <h2 class="ogd-related-header__title font-serif">Related Artifacts</h2>
+                <span id="relatedSectionKicker" class="ogd-related-header__kicker">Maaari Mo Ring Magustuhan</span>
+                <h2 id="relatedSectionTitle" class="ogd-related-header__title font-serif">Kaugnay na mga Artifact</h2>
               </div>
-              <a href="/online-gallery" class="ogd-related-header__link">View All</a>
+              <a id="relatedSectionLink" href="/online-gallery" class="ogd-related-header__link">Tingnan Lahat</a>
             </div>
             <div id="relatedItemsGrid" class="ogd-related-grid"></div>
           </section>
@@ -115,11 +115,46 @@
       </section>
     </main>
 
+    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
+      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Mga kontrol sa aksesibilidad">
+        <div class="ogd-accessibility-panel__header">
+          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Mga Kontrol sa Aksesibilidad</h2>
+          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Isara ang panel ng aksesibilidad">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="ogd-accessibility-panel__group">
+          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Laki ng Teksto</p>
+          <div class="ogd-accessibility-segmented" role="group" aria-label="Mga pagpipilian sa laki ng teksto">
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Maliit</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Katamtaman</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Malaki</button>
+          </div>
+        </div>
+
+        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
+          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">Mataas na Kontrasto</span>
+          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
+        </button>
+
+        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Palitan ang wika">
+          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Wika</span>
+          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">FIL</span>
+        </button>
+      </div>
+
+      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Buksan ang panel ng aksesibilidad" aria-expanded="false" aria-haspopup="dialog">
+        <i data-lucide="accessibility" aria-hidden="true"></i>
+      </button>
+    </div>
+
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script id="onlineGalleryItemsData" type="application/json">{{ gallery_items|tojson }}</script>
+    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
     <script src="{{ url_for('static', filename='js/online-gallery-detail.js') }}"></script>
   </body>
-</html>
+ </html>
