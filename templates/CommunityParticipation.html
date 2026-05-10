@@ -220,8 +220,7 @@
 
         <div class="modal-body">
           <!-- Visitor Feedback Form -->
-          <form id="visitorFeedbackForm" class="participation-form" style="display: none;" action="{{ url_for('submit_visitor_feedback') }}" method="post">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <form id="visitorFeedbackForm" class="participation-form" style="display: none;" action="#" method="post">
             
             <div class="form-header">
               <h4 class="form-title">Visitor Feedback</h4>
@@ -263,8 +262,7 @@
           </form>
 
           <!-- Teacher Corner Form -->
-          <form id="teacherCornerForm" class="participation-form" style="display: none;" action="{{ url_for('submit_teacher_resource') }}" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <form id="teacherCornerForm" class="participation-form" style="display: none;" action="#" method="post" enctype="multipart/form-data">
             
             <div class="form-header">
               <h4 class="form-title">Teacher Corner</h4>
@@ -305,8 +303,7 @@
           </form>
 
           <!-- Stories Submit Form -->
-          <form id="storiesSubmitForm" class="participation-form" style="display: none;" action="{{ url_for('submit_community_story') }}" method="post" enctype="multipart/form-data">
-            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}" />
+          <form id="storiesSubmitForm" class="participation-form" style="display: none;" action="#" method="post" enctype="multipart/form-data">
             
             <div class="form-header">
               <h4 class="form-title">Stories Submit</h4>
