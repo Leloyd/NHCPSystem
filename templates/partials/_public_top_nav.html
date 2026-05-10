@@ -35,3 +35,24 @@
     </nav>
   </div>
 </header>
+
+<script>
+  (function () {
+    const menuToggle = document.getElementById("menuToggle");
+    const mobileMenu = document.getElementById("mobileMenu");
+    const iconMenu = document.getElementById("iconMenu");
+    const iconClose = document.getElementById("iconClose");
+
+    if (!menuToggle || !mobileMenu || !iconMenu || !iconClose || menuToggle.dataset.navBound === "true") {
+      return;
+    }
+
+    menuToggle.dataset.navBound = "true";
+
+    menuToggle.addEventListener("click", function () {
+      mobileMenu.classList.toggle("hidden");
+      iconMenu.classList.toggle("hidden");
+      iconClose.classList.toggle("hidden");
+    });
+  })();
+</script>
