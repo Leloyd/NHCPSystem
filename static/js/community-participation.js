@@ -646,8 +646,182 @@ function initParticipationModals() {
   });
 }
 
+function initFormInteractions() {
+  // Visit Type Buttons
+  const visitTypeBtns = document.querySelectorAll('.visit-type-btn');
+  const visitTypeInput = document.getElementById('visitType');
+  
+  visitTypeBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      visitTypeBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (visitTypeInput) {
+        visitTypeInput.value = btn.dataset.visitType;
+      }
+    });
+  });
+
+  // Star Rating
+  const starBtns = document.querySelectorAll('.star-btn');
+  const ratingInput = document.getElementById('rating');
+  const ratingText = document.getElementById('ratingText');
+  const ratingLabels = ['', 'Poor', 'Fair', 'Good', 'Very Good', 'Excellent'];
+  let currentRating = 0;
+
+  starBtns.forEach((btn, index) => {
+    btn.addEventListener('mouseenter', () => {
+      starBtns.forEach((b, i) => {
+        if (i <= index) {
+          b.classList.add('filled');
+        } else {
+          b.classList.remove('filled');
+        }
+      });
+    });
+
+    btn.addEventListener('click', () => {
+      currentRating = index + 1;
+      if (ratingInput) ratingInput.value = currentRating;
+      if (ratingText) {
+        ratingText.textContent = ratingLabels[currentRating];
+        ratingText.style.display = 'block';
+      }
+    });
+  });
+
+  document.getElementById('starRating')?.addEventListener('mouseleave', () => {
+    starBtns.forEach((b, i) => {
+      if (i < currentRating) {
+        b.classList.add('filled');
+      } else {
+        b.classList.remove('filled');
+      }
+    });
+  });
+
+  // File Drop Zone
+  const fileDropZone = document.getElementById('fileDropZone');
+  const resourceFileInput = document.getElementById('resourceFile');
+  const fileList = document.getElementById('fileList');
+  let uploadedFiles = [];
+
+  if (fileDropZone && resourceFileInput) {
+    fileDropZone.addEventListener('click', () => resourceFileInput.click());
+
+    fileDropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      fileDropZone.classList.add('drag-over');
+    });
+
+    fileDropZone.addEventListener('dragleave', () => {
+      fileDropZone.classList.remove('drag-over');
+    });
+
+    fileDropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      fileDropZone.classList.remove('drag-over');
+      const files = Array.from(e.dataTransfer.files);
+      handleFiles(files);
+    });
+
+    resourceFileInput.addEventListener('change', (e) => {
+      const files = Array.from(e.target.files);
+      handleFiles(files);
+    });
+
+    function handleFiles(files) {
+      const acceptedFormats = ['.pdf', '.docx', '.doc', '.pptx', '.ppt'];
+      const validFiles = files.filter(f => 
+        acceptedFormats.some(ext => f.name.toLowerCase().endsWith(ext))
+      );
+      uploadedFiles = [...uploadedFiles, ...validFiles];
+      renderFileList();
+    }
+
+    function renderFileList() {
+      if (!fileList) return;
+      fileList.innerHTML = uploadedFiles.map((file, index) => {
+        const icon = file.name.endsWith('.pdf') ? '📄' : file.name.endsWith('.pptx') || file.name.endsWith('.ppt') ? '📊' : '📝';
+        return `
+          <div class="flex items-center gap-3 p-3 rounded-xl bg-stone-50 border border-gray-200">
+            <span class="text-lg">${icon}</span>
+            <div class="flex-1 min-w-0">
+              <p class="text-gray-700 text-xs truncate font-medium">${file.name}</p>
+              <p class="text-gray-400 text-xs">${(file.size / 1024).toFixed(0)} KB</p>
+            </div>
+            <button type="button" class="text-gray-400 hover:text-red-500 transition-colors" onclick="removeFile(${index})">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+              </svg>
+            </button>
+          </div>
+        `;
+      }).join('');
+    }
+
+    window.removeFile = (index) => {
+      uploadedFiles.splice(index, 1);
+      renderFileList();
+    };
+  }
+
+  // Category Buttons
+  const categoryBtns = document.querySelectorAll('.category-btn');
+  const categoryInput = document.getElementById('storyCategory');
+
+  categoryBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      categoryBtns.forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      if (categoryInput) {
+        categoryInput.value = btn.dataset.category;
+      }
+    });
+  });
+
+  // Photo Upload with Preview
+  const photoUploadZone = document.getElementById('photoUploadZone');
+  const storyPhotoInput = document.getElementById('storyPhoto');
+  const photoPreview = document.getElementById('photoPreview');
+  const photoPreviewImg = document.getElementById('photoPreviewImg');
+  const photoUploadPrompt = document.getElementById('photoUploadPrompt');
+  const removePhotoBtn = document.getElementById('removePhoto');
+
+  if (photoUploadZone && storyPhotoInput) {
+    photoUploadZone.addEventListener('click', () => {
+      if (!photoPreview?.classList.contains('hidden')) return;
+      storyPhotoInput.click();
+    });
+
+    storyPhotoInput.addEventListener('change', (e) => {
+      const file = e.target.files?.[0];
+      if (file && file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          if (photoPreviewImg && photoPreview && photoUploadPrompt) {
+            photoPreviewImg.src = ev.target.result;
+            photoPreview.classList.remove('hidden');
+            photoUploadPrompt.classList.add('hidden');
+          }
+        };
+        reader.readAsDataURL(file);
+      }
+    });
+
+    removePhotoBtn?.addEventListener('click', (e) => {
+      e.stopPropagation();
+      if (storyPhotoInput) storyPhotoInput.value = '';
+      if (photoPreview && photoUploadPrompt) {
+        photoPreview.classList.add('hidden');
+        photoUploadPrompt.classList.remove('hidden');
+      }
+    });
+  }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   initHighlights();
   initCalendar();
   initParticipationModals();
+  initFormInteractions();
 });

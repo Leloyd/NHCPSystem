@@ -773,3 +773,114 @@
   opacity: 0.9;
   transform: scale(0.98);
 }
+
+.visit-type-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.625rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  border: 1px solid #E8E0D5;
+  color: #6B7280;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.visit-type-btn:hover {
+  border-color: rgba(30, 58, 95, 0.5);
+}
+
+.visit-type-btn.active {
+  border-color: #1E3A5F;
+  background: #1E3A5F;
+  color: white;
+}
+
+.star-rating {
+  display: flex;
+  gap: 0.375rem;
+}
+
+.star-btn {
+  transition: transform 0.2s, color 0.2s;
+  color: #D1C5B8;
+}
+
+.star-btn:hover {
+  transform: scale(1.1);
+}
+
+.star-btn:active {
+  transform: scale(0.95);
+}
+
+.star-btn.filled {
+  color: #C5973A;
+}
+
+.star-btn.filled svg {
+  fill: #C5973A;
+}
+
+.file-drop-zone {
+  position: relative;
+  border: 2px dashed #D1C5B8;
+  border-radius: 0.75rem;
+  padding: 1.5rem;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+}
+
+.file-drop-zone:hover {
+  border-color: rgba(30, 58, 95, 0.5);
+  background: #F9F7F4;
+}
+
+.file-drop-zone.drag-over {
+  border-color: #1E3A5F;
+  background: rgba(30, 58, 95, 0.05);
+}
+
+.category-btn {
+  padding: 0.375rem 0.75rem;
+  font-size: 0.75rem;
+  border-radius: 0.5rem;
+  border: 1px solid #E8E0D5;
+  color: #6B7280;
+  transition: all 0.2s;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+}
+
+.category-btn:hover {
+  border-color: rgba(197, 151, 58, 0.5);
+}
+
+.category-btn.active {
+  border-color: #C5973A;
+  background: #C5973A;
+  color: white;
+}
+
+.photo-upload-zone {
+  border: 2px dashed #E8E0D5;
+  border-radius: 0.75rem;
+  padding: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.photo-upload-zone:hover {
+  border-color: #C5973A;
+  background: #F9F7F4;
+}
+
+.hidden {
+  display: none;
+}
