@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Community Participation | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-50 text-gray-900">
+    {% set public_active_page = 'community-participation' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="pt-20">
+      <section class="relative overflow-hidden text-white">
+        <img src="/images/UndergroundBG.png" alt="Museo ng Libingan sa Ilalim ng Lupa" class="absolute inset-0 h-full w-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0f1e2ecc] via-[#0f1e2ee6] to-[#0f1e2ef2]"></div>
+        <div class="relative z-10 container mx-auto px-4 py-24 md:py-28">
+          <div class="mx-auto max-w-5xl text-center">
+            <div class="mb-6 inline-flex items-center gap-2 rounded-full border border-[#C5973A]/40 bg-[#C5973A]/10 px-4 py-1.5 backdrop-blur-sm">
+              <span class="h-1.5 w-1.5 animate-pulse rounded-full bg-[#C5973A]"></span>
+              <span class="text-xs font-semibold uppercase tracking-[0.25em] text-[#E0B868]">Open for Community Participation</span>
+            </div>
+            <h1 class="mb-6 font-serif text-5xl leading-tight md:text-6xl">Community Participation</h1>
+            <p class="mx-auto mb-10 max-w-3xl text-lg leading-relaxed text-white/80 md:text-xl">
+              Explore community highlights, upcoming events, and participation channels in one shared public space designed for visitors, educators, and local storytellers.
+            </p>
+            <div class="flex flex-col justify-center gap-3 sm:flex-row">
+              <a href="#community-highlights" class="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#C5973A] to-[#D4A843] px-7 py-3.5 text-sm font-semibold text-white transition hover:scale-[1.02]">Community Highlights</a>
+              <a href="#events-calendar" class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/15">Events Calendar</a>
+              <a href="#e-participation" class="inline-flex items-center justify-center gap-2 rounded-xl border border-white/25 bg-white/10 px-7 py-3.5 text-sm font-semibold text-white transition hover:bg-white/15">E-Participation</a>
+            </div>
+            <div class="mt-16 grid grid-cols-1 gap-6 border-t border-white/15 pt-8 text-center sm:grid-cols-3">
+              <div>
+                <div class="mb-1 font-serif text-3xl text-[#E0B868]">{{ community_highlights_items|length }}</div>
+                <div class="text-xs uppercase tracking-[0.25em] text-white/60">Highlights Published</div>
+              </div>
+              <div>
+                <div class="mb-1 font-serif text-3xl text-[#E0B868]">{{ community_events_items|length }}</div>
+                <div class="text-xs uppercase tracking-[0.25em] text-white/60">Events Available</div>
+              </div>
+              <div>
+                <div class="mb-1 font-serif text-3xl text-[#E0B868]">3</div>
+                <div class="text-xs uppercase tracking-[0.25em] text-white/60">Participation Channels</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="community-highlights" class="bg-white py-16">
+        <div class="container mx-auto px-4">
+          <div class="news-section-panel">
+            <div class="mb-12 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div class="max-w-2xl news-reveal">
+                <p class="news-section-kicker">Community Highlights</p>
+                <h2 class="mb-4 font-serif text-4xl text-orange-900 md:text-5xl">Spotlight on Our Community</h2>
+                <p class="text-lg leading-relaxed text-gray-700">
+                  Discover museum-led programs, community activities, and public advisories that connect the site with teachers, students, and local visitors.
+                </p>
+              </div>
+            </div>
+
+            {% if community_highlights_items %}
+            <div class="news-carousel-shell news-reveal" data-news-carousel>
+              <div class="news-carousel-window">
+                <div class="news-carousel-track" data-news-track>
+                  {% for highlight_item in community_highlights_items %}
+                  <article class="news-card" data-news-card>
+                    <a href="{{ highlight_item.detail_url }}" class="news-card-link">
+                      <div class="news-card-media{% if not highlight_item.image_url %} is-placeholder{% endif %}">
+                        {% if highlight_item.image_url %}
+                        <img src="{{ highlight_item.image_url }}" alt="{{ highlight_item.title }}" loading="lazy" />
+                        {% endif %}
+                        <span class="news-card-chip">{{ highlight_item.category }}</span>
+                      </div>
+                      <div class="news-card-content">
+                        <div class="news-card-meta-row">
+                          <div class="flex items-center space-x-2 text-sm text-orange-700">
+                            <i data-lucide="calendar" class="h-4 w-4"></i>
+                            <span>{{ highlight_item.display_date }}</span>
+                          </div>
+                          <span class="news-card-meta-tag">Community</span>
+                        </div>
+                        <h3 class="mb-3 font-serif text-2xl text-gray-900">{{ highlight_item.title }}</h3>
+                        <p class="mb-6 leading-relaxed text-gray-700">{{ highlight_item.short_description }}</p>
+                        <span class="news-card-action">
+                          <span>Learn More</span>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                        </span>
+                      </div>
+                    </a>
+                  </article>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if community_highlights_items|length > 3 %}
+              <div class="news-carousel-controls">
+                <button type="button" class="news-arrow is-prev" data-news-prev aria-label="Show previous highlights">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
+                </button>
+                <button type="button" class="news-arrow" data-news-next aria-label="Show more highlights">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                </button>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="news-empty-state news-reveal">
+              <div class="news-empty-icon">
+                <i data-lucide="newspaper" class="h-7 w-7"></i>
+              </div>
+              <h3 class="mb-3 font-serif text-2xl text-orange-900">No community highlights yet</h3>
+              <p class="mx-auto max-w-2xl leading-relaxed text-gray-700">
+                Once the admin adds published Community Highlight cards, they will appear here automatically.
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section id="events-calendar" class="bg-orange-50 py-16">
+        <div class="container mx-auto px-4">
+          <div class="news-section-panel">
+            <div class="mb-12 flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
+              <div class="max-w-2xl news-reveal">
+                <p class="news-section-kicker">Events Calendar</p>
+                <h2 class="mb-4 font-serif text-4xl text-orange-900 md:text-5xl">Upcoming Programs &amp; Events</h2>
+                <p class="text-lg leading-relaxed text-gray-700">
+                  Explore orientations, community gatherings, student activities, and guided heritage sessions in one shared public calendar.
+                </p>
+              </div>
+            </div>
+
+            {% if community_events_items %}
+            <div class="news-carousel-shell news-reveal" data-news-carousel>
+              <div class="news-carousel-window">
+                <div class="news-carousel-track" data-news-track>
+                  {% for event_item in community_events_items %}
+                  <article class="news-card" data-news-card>
+                    <a href="{{ event_item.detail_url }}" class="news-card-link">
+                      <div class="news-card-media{% if not event_item.image_url %} is-placeholder{% endif %}">
+                        {% if event_item.image_url %}
+                        <img src="{{ event_item.image_url }}" alt="{{ event_item.title }}" loading="lazy" />
+                        {% endif %}
+                        <span class="news-card-chip">Event Calendar</span>
+                      </div>
+                      <div class="news-card-content">
+                        <div class="news-card-meta-row">
+                          <div class="flex items-center space-x-2 text-sm text-orange-700">
+                            <i data-lucide="calendar" class="h-4 w-4"></i>
+                            <span>{{ event_item.display_date }}</span>
+                          </div>
+                          <span class="news-card-meta-tag">Event</span>
+                        </div>
+                        <h3 class="mb-3 font-serif text-2xl text-gray-900">{{ event_item.title }}</h3>
+                        <p class="mb-6 leading-relaxed text-gray-700">{{ event_item.short_description }}</p>
+                        <span class="news-card-action">
+                          <span>View Event</span>
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                        </span>
+                      </div>
+                    </a>
+                  </article>
+                  {% endfor %}
+                </div>
+              </div>
+
+              {% if community_events_items|length > 3 %}
+              <div class="news-carousel-controls">
+                <button type="button" class="news-arrow is-prev" data-news-prev aria-label="Show previous events">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
+                </button>
+                <button type="button" class="news-arrow" data-news-next aria-label="Show more events">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
+                </button>
+              </div>
+              {% endif %}
+            </div>
+            {% else %}
+            <div class="news-empty-state news-reveal">
+              <div class="news-empty-icon">
+                <i data-lucide="calendar-days" class="h-7 w-7"></i>
+              </div>
+              <h3 class="mb-3 font-serif text-2xl text-orange-900">No event cards yet</h3>
+              <p class="mx-auto max-w-2xl leading-relaxed text-gray-700">
+                Once the admin adds published event cards, they will appear here automatically.
+              </p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
+      <section id="e-participation" class="bg-[#F9F7F4] py-20 lg:py-24">
+        <div class="container mx-auto px-4">
+          <div class="mx-auto mb-14 max-w-2xl text-center">
+            <span class="mb-3 inline-block text-xs font-semibold uppercase tracking-[0.25em] text-[#C5973A]">E-Participation</span>
+            <h2 class="mb-4 font-serif text-4xl text-[#1E3A5F] md:text-5xl">Engage with Your Heritage Museum</h2>
+            <p class="text-base leading-8 text-[#6B7280]">
+              Your voice, knowledge, and stories are part of our shared heritage. Choose how you would like to contribute to the museum community.
+            </p>
+          </div>
+
+          <div class="grid grid-cols-1 gap-6 md:grid-cols-3 lg:gap-8">
+            <article class="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#F0E6D3] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl" data-open-modal="visitor-feedback">
+              <div class="relative h-48 overflow-hidden bg-gradient-to-br from-[#fff7ed] via-[#f7d58b] to-[#c5973a] p-6">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0f1e2e]/20 to-transparent"></div>
+                <div class="relative flex h-full items-end justify-between">
+                  <span class="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-[#92680A]">Quick &amp; Easy</span>
+                  <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/85 text-[#C5973A] shadow-lg">
+                    <i data-lucide="star" class="h-7 w-7"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <div class="mb-4 flex items-start justify-between gap-3">
+                  <div class="rounded-xl bg-[#FFF7ED] px-3 py-1 text-xs text-[#6B7280]">Quality Improvement</div>
+                </div>
+                <h3 class="mb-2 font-serif text-2xl text-[#1E3A5F]">Visitor Feedback</h3>
+                <p class="mb-5 text-sm leading-7 text-[#6B7280]">Share your experience with us through quick ratings and comments from both on-site and website visits.</p>
+                <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-[#C5973A] transition group-hover:gap-3">Leave a Review <span>→</span></button>
+              </div>
+            </article>
+
+            <article class="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#D1DCF0] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl" data-open-modal="teacher-corner">
+              <div class="relative h-48 overflow-hidden bg-gradient-to-br from-[#eef4ff] via-[#a9c1e7] to-[#1E3A5F] p-6">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0f1e2e]/20 to-transparent"></div>
+                <div class="relative flex h-full items-end justify-between">
+                  <span class="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-[#1E3A5F]">For Educators</span>
+                  <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/85 text-[#1E3A5F] shadow-lg">
+                    <i data-lucide="book-open" class="h-7 w-7"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <div class="mb-4 flex items-start justify-between gap-3">
+                  <div class="rounded-xl bg-[#EEF4FF] px-3 py-1 text-xs text-[#6B7280]">Learning Materials</div>
+                </div>
+                <h3 class="mb-2 font-serif text-2xl text-[#1E3A5F]">Teacher Corner</h3>
+                <p class="mb-5 text-sm leading-7 text-[#6B7280]">Educators can submit classroom-ready files in PDF, DOCX, and slide formats to support curated learning resources.</p>
+                <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-[#1E3A5F] transition group-hover:gap-3">Submit Materials <span>→</span></button>
+              </div>
+            </article>
+
+            <article class="group cursor-pointer overflow-hidden rounded-[1.5rem] border border-[#DDD6F0] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:shadow-xl" data-open-modal="stories-submit">
+              <div class="relative h-48 overflow-hidden bg-gradient-to-br from-[#f5f3ff] via-[#d7c8ff] to-[#7C3AED] p-6">
+                <div class="absolute inset-0 bg-gradient-to-t from-[#0f1e2e]/20 to-transparent"></div>
+                <div class="relative flex h-full items-end justify-between">
+                  <span class="rounded-full bg-white/85 px-3 py-1 text-xs font-semibold text-[#5B21B6]">Share Stories</span>
+                  <div class="flex h-14 w-14 items-center justify-center rounded-2xl bg-white/85 text-[#7C3AED] shadow-lg">
+                    <i data-lucide="book-heart" class="h-7 w-7"></i>
+                  </div>
+                </div>
+              </div>
+              <div class="p-6">
+                <div class="mb-4 flex items-start justify-between gap-3">
+                  <div class="rounded-xl bg-[#F5F3FF] px-3 py-1 text-xs text-[#6B7280]">Preserve Narratives</div>
+                </div>
+                <h3 class="mb-2 font-serif text-2xl text-[#1E3A5F]">Stories Submit</h3>
+                <p class="mb-5 text-sm leading-7 text-[#6B7280]">Community members can share experiences, memories, and personal stories with optional photos for future archive features.</p>
+                <button type="button" class="inline-flex items-center gap-2 text-sm font-semibold text-[#7C3AED] transition group-hover:gap-3">Share My Story <span>→</span></button>
+              </div>
+            </article>
+          </div>
+
+          <div class="mt-10 flex flex-col items-start gap-3 rounded-[1.5rem] border border-[#D1DCF0] bg-[#EEF4FF]/70 p-5 sm:flex-row sm:items-center">
+            <div class="flex h-10 w-10 items-center justify-center rounded-xl bg-[#1E3A5F] text-white">
+              <i data-lucide="paperclip" class="h-4 w-4"></i>
+            </div>
+            <div>
+              <p class="text-sm font-semibold text-[#1E3A5F]">All submissions are reviewed by the museum team before publication or feature placement.</p>
+              <p class="mt-1 text-xs text-[#6B7280]">Your personal information will only be used for museum communication and review purposes.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <div id="submissionModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="submissionModalTitle">
+      <button type="button" class="absolute inset-0 bg-stone-900/70 backdrop-blur-sm" data-close-modal aria-label="Close modal overlay"></button>
+
+      <div class="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-[1.75rem] border border-stone-200 bg-white shadow-2xl">
+        <div class="flex items-start justify-between gap-4 bg-gradient-to-r from-[#1E3A5F] to-[#2A5A8A] px-6 py-5 text-white">
+          <div>
+            <p class="text-xs uppercase tracking-wider text-blue-100">Community Participation Form</p>
+            <h3 id="submissionModalTitle" class="text-2xl font-serif">Submission Form</h3>
+            <p id="submissionModalDescription" class="mt-1 text-sm text-blue-50">Choose a participation channel and complete the form below.</p>
+          </div>
+          <button type="button" class="h-10 w-10 rounded-full border border-white/40 text-xl leading-none text-white transition hover:bg-white/10" data-close-modal aria-label="Close submission modal">×</button>
+        </div>
+
+        <div class="max-h-[calc(90vh-120px)] overflow-y-auto p-6 sm:p-8">
+          <form class="space-y-5" data-modal-form="visitor-feedback" action="#" method="post" novalidate>
+            <div class="flex items-start justify-between gap-4">
+              <h4 class="text-xl font-serif text-[#1E3A5F]">Visitor Feedback</h4>
+              <span class="rounded-full bg-amber-100 px-3 py-1 text-xs text-amber-800">On-site &amp; Website</span>
+            </div>
+
+            <div>
+              <label for="visitMode" class="mb-2 block text-gray-900">Visit mode</label>
+              <select id="visitMode" name="visit_mode" class="w-full rounded-xl border border-gray-300 p-3" required>
+                <option value="">Select mode</option>
+                <option value="on-site">On-site visit</option>
+                <option value="website">Website visit</option>
+              </select>
+            </div>
+
+            <div>
+              <label for="visitedModule" class="mb-2 block text-gray-900">Module visited</label>
+              <select id="visitedModule" name="visited_module" class="w-full rounded-xl border border-gray-300 p-3" required>
+                <option value="">Select module</option>
+                <option value="core-information">Core Information</option>
+                <option value="digital-exhibits">Digital Exhibits</option>
+                <option value="accessibility">Accessibility</option>
+                <option value="interactive">Interactive</option>
+                <option value="community-participation">Community Participation</option>
+              </select>
+            </div>
+
+            <div>
+              <label class="mb-2 block text-gray-900">How was your experience?</label>
+              <div class="flex gap-2" id="ratingStars">
+                <button type="button" class="rating-star text-3xl text-gray-300 transition-colors" data-rating="1" aria-label="Rate 1" aria-pressed="false">★</button>
+                <button type="button" class="rating-star text-3xl text-gray-300 transition-colors" data-rating="2" aria-label="Rate 2" aria-pressed="false">★</button>
+                <button type="button" class="rating-star text-3xl text-gray-300 transition-colors" data-rating="3" aria-label="Rate 3" aria-pressed="false">★</button>
+                <button type="button" class="rating-star text-3xl text-gray-300 transition-colors" data-rating="4" aria-label="Rate 4" aria-pressed="false">★</button>
+                <button type="button" class="rating-star text-3xl text-gray-300 transition-colors" data-rating="5" aria-label="Rate 5" aria-pressed="false">★</button>
+              </div>
+              <input type="hidden" id="visitorRating" name="rating" value="" />
+              <p id="visitorRatingText" class="mt-2 text-xs text-gray-500">No rating selected</p>
+            </div>
+
+            <div>
+              <label for="visitorFeedback" class="mb-2 block text-gray-900">Feedback</label>
+              <textarea id="visitorFeedback" name="feedback" class="w-full rounded-xl border border-gray-300 p-3" rows="4" placeholder="Share your comments..." required></textarea>
+            </div>
+
+            <div>
+              <label for="visitorEmail" class="mb-2 block text-gray-900">Email (optional)</label>
+              <input id="visitorEmail" name="email" type="email" class="w-full rounded-xl border border-gray-300 p-3" placeholder="your.email@example.com" />
+            </div>
+
+            <button type="button" class="w-full rounded-xl bg-[#1E3A5F] py-3 text-white transition hover:bg-[#2A5A8A]">Submit Feedback</button>
+          </form>
+
+          <form class="hidden space-y-5" data-modal-form="teacher-corner" action="#" method="post" enctype="multipart/form-data" novalidate>
+            <div class="flex items-start justify-between gap-4">
+              <h4 class="text-xl font-serif text-[#1E3A5F]">Teacher Corner Upload</h4>
+              <span class="rounded-full bg-blue-100 px-3 py-1 text-xs text-blue-800">Pending Admin Review</span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label for="teacherName" class="mb-2 block text-gray-900">Full name</label>
+                <input id="teacherName" name="teacher_name" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="Enter your full name" required />
+              </div>
+              <div>
+                <label for="teacherRole" class="mb-2 block text-gray-900">Role</label>
+                <select id="teacherRole" name="teacher_role" class="w-full rounded-xl border border-gray-300 p-3" required>
+                  <option value="">Select role</option>
+                  <option value="teacher">Teacher</option>
+                  <option value="educator">Educator</option>
+                  <option value="coordinator">Academic Coordinator</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label for="teacherSchool" class="mb-2 block text-gray-900">School / Institution</label>
+                <input id="teacherSchool" name="school" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="School or organization" required />
+              </div>
+              <div>
+                <label for="resourceTitle" class="mb-2 block text-gray-900">Resource title</label>
+                <input id="resourceTitle" name="resource_title" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="Title of your resource" required />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label for="subjectArea" class="mb-2 block text-gray-900">Subject area</label>
+                <input id="subjectArea" name="subject_area" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="History, AP, Social Studies..." required />
+              </div>
+              <div>
+                <label for="gradeLevel" class="mb-2 block text-gray-900">Grade level</label>
+                <input id="gradeLevel" name="grade_level" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="Grade 6, Grade 10, SHS..." required />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label for="moduleMapping" class="mb-2 block text-gray-900">Recommended module</label>
+                <select id="moduleMapping" name="module_mapping" class="w-full rounded-xl border border-gray-300 p-3" required>
+                  <option value="">Select module</option>
+                  <option value="community-participation">Community Participation</option>
+                  <option value="online-gallery">Online Gallery</option>
+                  <option value="virtual-tour">Virtual Tour</option>
+                  <option value="ar-content">AR Content</option>
+                  <option value="site-map">Site Map</option>
+                  <option value="webxr">WebXR</option>
+                </select>
+              </div>
+              <div>
+                <label for="resourceFormat" class="mb-2 block text-gray-900">File format</label>
+                <select id="resourceFormat" name="resource_format" class="w-full rounded-xl border border-gray-300 p-3" required>
+                  <option value="">Select format</option>
+                  <option value="pdf">PDF</option>
+                  <option value="docx">DOCX</option>
+                  <option value="slides">Slides (PPT/PPTX)</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="resourceObjective" class="mb-2 block text-gray-900">Learning objective</label>
+              <textarea id="resourceObjective" name="learning_objective" class="w-full rounded-xl border border-gray-300 p-3" rows="3" placeholder="What should students learn from this material?" required></textarea>
+            </div>
+
+            <div>
+              <label for="resourceTags" class="mb-2 block text-gray-900">Tags (optional)</label>
+              <input id="resourceTags" name="resource_tags" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="Example: timeline, worksheet, heritage" />
+            </div>
+
+            <div>
+              <label for="resourceFile" class="mb-2 block text-gray-900">Upload file</label>
+              <input id="resourceFile" name="resource_file" type="file" class="w-full rounded-xl border border-gray-300 p-3" accept=".pdf,.doc,.docx,.ppt,.pptx" required />
+              <p class="mt-2 text-xs text-gray-500">Accepted formats: PDF, DOCX, PPT/PPTX. File size and security checks will be enforced in backend.</p>
+            </div>
+
+            <label class="flex items-start gap-2 text-sm text-gray-700">
+              <input type="checkbox" class="mt-1" required />
+              <span>I confirm that I own this content or have permission to share it for educational use.</span>
+            </label>
+            <label class="flex items-start gap-2 text-sm text-gray-700">
+              <input type="checkbox" class="mt-1" required />
+              <span>I understand this submission will remain pending until approved by an admin before it appears in Edu Resources.</span>
+            </label>
+
+            <button type="button" class="w-full rounded-xl bg-[#1E3A5F] py-3 text-white transition hover:bg-[#2A5A8A]">Submit Resource</button>
+          </form>
+
+          <form class="hidden space-y-5" data-modal-form="stories-submit" action="#" method="post" enctype="multipart/form-data" novalidate>
+            <div class="flex items-start justify-between gap-4">
+              <h4 class="text-xl font-serif text-[#1E3A5F]">Stories Submit</h4>
+              <span class="rounded-full bg-violet-100 px-3 py-1 text-xs text-violet-800">Includes Optional Photo</span>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+              <div>
+                <label for="storyName" class="mb-2 block text-gray-900">Name or pseudonym</label>
+                <input id="storyName" name="story_name" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="How should we call you?" required />
+              </div>
+              <div>
+                <label for="storyCategory" class="mb-2 block text-gray-900">Story category</label>
+                <select id="storyCategory" name="story_category" class="w-full rounded-xl border border-gray-300 p-3" required>
+                  <option value="">Select category</option>
+                  <option value="on-site">On-site experience</option>
+                  <option value="website">Website experience</option>
+                  <option value="family-crypt">Relative buried in crypts</option>
+                  <option value="local-memory">Local heritage memory</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label for="displayPreference" class="mb-2 block text-gray-900">Display preference</label>
+                <select id="displayPreference" name="display_preference" class="w-full rounded-xl border border-gray-300 p-3" required>
+                  <option value="">Select preference</option>
+                  <option value="public-name">Publish with my name</option>
+                  <option value="anonymous">Publish anonymously</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="storyTitle" class="mb-2 block text-gray-900">Story title</label>
+              <input id="storyTitle" name="story_title" type="text" class="w-full rounded-xl border border-gray-300 p-3" placeholder="Enter your story title" required />
+            </div>
+
+            <div>
+              <label for="storyBody" class="mb-2 block text-gray-900">Your story</label>
+              <textarea id="storyBody" name="story_body" class="w-full rounded-xl border border-gray-300 p-3" rows="6" placeholder="Share your experience, memory, or family narrative..." required></textarea>
+            </div>
+
+            <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+              <div>
+                <label for="storyPhoto" class="mb-2 block text-gray-900">Attach photo (optional)</label>
+                <input id="storyPhoto" name="story_photo" type="file" class="w-full rounded-xl border border-gray-300 p-3" accept=".jpg,.jpeg,.png,.webp" />
+              </div>
+              <div>
+                <label for="storyEmail" class="mb-2 block text-gray-900">Email (optional)</label>
+                <input id="storyEmail" name="story_email" type="email" class="w-full rounded-xl border border-gray-300 p-3" placeholder="For follow-up updates" />
+              </div>
+            </div>
+
+            <label class="flex items-start gap-2 text-sm text-gray-700">
+              <input type="checkbox" class="mt-1" required />
+              <span>I allow the museum to review and potentially publish this story based on moderation guidelines.</span>
+            </label>
+            <label class="flex items-start gap-2 text-sm text-gray-700">
+              <input type="checkbox" class="mt-1" required />
+              <span>I confirm this story and attached media do not violate privacy, copyright, or community standards.</span>
+            </label>
+
+            <button type="button" class="w-full rounded-xl bg-[#7C3AED] py-3 text-white transition hover:bg-[#6D28D9]">Submit Story</button>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    {% include 'partials/_public_footer.html' %}
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+    <script src="{{ url_for('static', filename='js/news.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/community-participation.js') }}"></script>
+  </body>
+</html>
