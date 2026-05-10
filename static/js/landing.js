@@ -121,7 +121,8 @@
   const iconMenu = document.getElementById("iconMenu");
   const iconClose = document.getElementById("iconClose");
 
-  if (menuToggle && mobileMenu && iconMenu && iconClose) {
+  if (menuToggle && mobileMenu && iconMenu && iconClose && menuToggle.dataset.navBound !== "true") {
+    menuToggle.dataset.navBound = "true";
     menuToggle.addEventListener("click", function () {
       mobileMenu.classList.toggle("hidden");
       iconMenu.classList.toggle("hidden");
