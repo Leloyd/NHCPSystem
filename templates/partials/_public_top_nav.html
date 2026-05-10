@@ -3,14 +3,11 @@
     <div class="flex items-center justify-between h-20">
       <a href="{{ url_for('index') }}" class="flex items-center space-x-3">
         <img
-          src="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}"
-          alt="Museo ng Libingan sa Ilalim ng Lupa"
-          class="h-12 w-auto object-contain"
+          src="/images/UndergroundLogo.jpg"
+          alt="Museo ng Libingan sa Ilalim ng Lupa logo"
+          class="museum-logo"
         />
-        <div class="hidden md:block leading-tight text-amber-800">
-          <div class="text-sm lg:text-base font-serif">Museo ng Libingan</div>
-          <div class="text-sm lg:text-base font-serif">sa Ilalim ng Lupa</div>
-        </div>
+        <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
       </a>
 
       <nav class="hidden lg:flex items-center space-x-8">
@@ -18,7 +15,8 @@
         <a href="{{ url_for('digital_exhibits') }}" class="{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
         <a href="{{ url_for('interactive') }}" class="{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
         <a href="{{ url_for('heritage_trail') }}" class="{% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Heritage Trail</a>
-        <a href="{{ url_for('community_participation') }}" class="{% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community Participation</a>
+        <a href="{{ url_for('participation') }}" class="{% if public_active_page == 'participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">E-Participation</a>
+        <a href="{{ url_for('news') }}" class="{% if public_active_page == 'news' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community &amp; Events</a>
         <a href="{{ url_for('support') }}" class="{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Support</a>
       </nav>
 
@@ -33,7 +31,8 @@
       <a href="{{ url_for('digital_exhibits') }}" class="block {% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
       <a href="{{ url_for('interactive') }}" class="block {% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
       <a href="{{ url_for('heritage_trail') }}" class="block {% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Heritage Trail</a>
-      <a href="{{ url_for('community_participation') }}" class="block {% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community Participation</a>
+      <a href="{{ url_for('participation') }}" class="block {% if public_active_page == 'participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">E-Participation</a>
+      <a href="{{ url_for('news') }}" class="block {% if public_active_page == 'news' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community &amp; Events</a>
       <a href="{{ url_for('support') }}" class="block {% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Support</a>
     </nav>
   </div>
