@@ -618,23 +618,37 @@
 
   const modal = document.getElementById("submissionModal");
   const modalTitle = document.getElementById("submissionModalTitle");
+  const modalEyebrow = document.getElementById("submissionModalEyebrow");
   const modalDescription = document.getElementById("submissionModalDescription");
+  const modalIcon = document.getElementById("submissionModalIcon");
   const openButtons = document.querySelectorAll("[data-open-modal]");
   const closeButtons = document.querySelectorAll("[data-close-modal]");
   const modalForms = document.querySelectorAll("[data-modal-form]");
 
   const modalMeta = {
     "visitor-feedback": {
+      eyebrow: "Visitor Feedback",
       title: "Visitor Feedback Form",
       description: "For quick comments and ratings from on-site and website visitors.",
+      iconBg: "#FFF7ED",
+      iconColor: "#C5973A",
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 0 0 .95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 0 0-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 0 0-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 0 0-.363-1.118L2.98 10.1c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 0 0 .951-.69l1.519-4.674Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"></path></svg>'
     },
     "teacher-corner": {
+      eyebrow: "Teacher Corner",
       title: "Teacher Corner Upload",
       description: "For educators sharing classroom files. Submissions remain pending until admin approval.",
+      iconBg: "#EEF4FF",
+      iconColor: "#1E3A5F",
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
     },
     "stories-submit": {
+      eyebrow: "Community Stories",
       title: "Stories Submit Form",
       description: "For community and family heritage stories with optional photo attachments.",
+      iconBg: "#F5F3FF",
+      iconColor: "#7C3AED",
+      icon: '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>'
     },
   };
 
@@ -657,7 +671,13 @@
 
     const meta = modalMeta[formKey];
     if (modalTitle && meta?.title) modalTitle.textContent = meta.title;
+    if (modalEyebrow && meta?.eyebrow) modalEyebrow.textContent = meta.eyebrow;
     if (modalDescription && meta?.description) modalDescription.textContent = meta.description;
+    if (modalIcon && meta?.icon) {
+      modalIcon.style.background = meta.iconBg;
+      modalIcon.style.color = meta.iconColor;
+      modalIcon.innerHTML = meta.icon;
+    }
 
     modal.classList.remove("hidden");
     modal.classList.add("flex");
@@ -682,6 +702,76 @@
   document.addEventListener("keydown", (event) => {
     if (event.key === "Escape") closeModal();
   });
+
+  const visitModeInput = document.getElementById("visitMode");
+  document.querySelectorAll("[data-visit-mode]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-visit-mode]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      if (visitModeInput) {
+        visitModeInput.value = button.getAttribute("data-visit-mode") || "";
+      }
+    });
+  });
+
+  const storyCategoryInput = document.getElementById("storyCategory");
+  document.querySelectorAll("[data-story-category]").forEach((button) => {
+    button.addEventListener("click", () => {
+      document.querySelectorAll("[data-story-category]").forEach((item) => item.classList.remove("active"));
+      button.classList.add("active");
+      if (storyCategoryInput) {
+        storyCategoryInput.value = button.getAttribute("data-story-category") || "";
+      }
+    });
+  });
+
+  const teacherUploadTrigger = document.getElementById("teacherUploadTrigger");
+  const teacherUploadInput = document.getElementById("resourceFile");
+  const teacherUploadSummary = document.getElementById("teacherUploadSummary");
+
+  if (teacherUploadTrigger && teacherUploadInput) {
+    teacherUploadTrigger.addEventListener("click", () => {
+      teacherUploadInput.click();
+    });
+
+    teacherUploadInput.addEventListener("change", () => {
+      const files = teacherUploadInput.files;
+      if (!teacherUploadSummary) {
+        return;
+      }
+      if (!files || files.length === 0) {
+        teacherUploadSummary.textContent = "No file selected yet.";
+        return;
+      }
+      if (files.length === 1) {
+        teacherUploadSummary.textContent = `Selected: ${files[0].name}`;
+        return;
+      }
+      teacherUploadSummary.textContent = `${files.length} files selected.`;
+    });
+  }
+
+  const storyPhotoTrigger = document.getElementById("storyPhotoTrigger");
+  const storyPhotoInput = document.getElementById("storyPhoto");
+  const storyPhotoSummary = document.getElementById("storyPhotoSummary");
+
+  if (storyPhotoTrigger && storyPhotoInput) {
+    storyPhotoTrigger.addEventListener("click", () => {
+      storyPhotoInput.click();
+    });
+
+    storyPhotoInput.addEventListener("change", () => {
+      const files = storyPhotoInput.files;
+      if (!storyPhotoSummary) {
+        return;
+      }
+      if (!files || files.length === 0) {
+        storyPhotoSummary.textContent = "No photo selected yet.";
+        return;
+      }
+      storyPhotoSummary.textContent = `Selected: ${files[0].name}`;
+    });
+  }
 
   const stars = document.querySelectorAll(".rating-star");
   const ratingInput = document.getElementById("visitorRating");

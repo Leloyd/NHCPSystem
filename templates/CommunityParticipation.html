@@ -294,36 +294,55 @@
     <div id="submissionModal" class="fixed inset-0 z-[70] hidden items-center justify-center p-4 sm:p-6" role="dialog" aria-modal="true" aria-hidden="true" aria-labelledby="submissionModalTitle">
       <button type="button" class="absolute inset-0 bg-stone-900/70 backdrop-blur-sm" data-close-modal aria-label="Close modal overlay"></button>
 
-      <div class="relative w-full max-w-4xl max-h-[90vh] overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-2xl">
-        <div class="px-6 py-5 bg-gradient-to-r from-green-700 to-emerald-700 text-white flex items-start justify-between gap-4">
-          <div>
-            <p class="text-xs uppercase tracking-wider text-green-100">E-Participation Form</p>
-            <h3 id="submissionModalTitle" class="text-2xl font-serif">Submission Form</h3>
-            <p id="submissionModalDescription" class="text-sm text-green-50 mt-1">Select a participation channel to begin.</p>
+      <div class="relative w-full max-w-2xl max-h-[90vh] overflow-hidden rounded-2xl bg-white shadow-2xl submission-modal-shell">
+        <div class="sticky top-0 z-10 bg-white border-b border-[#F0EBE4] px-6 pt-6 pb-4">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex items-center gap-3">
+              <div id="submissionModalIcon" class="submission-modal-icon" aria-hidden="true"></div>
+              <div>
+                <p id="submissionModalEyebrow" class="text-[11px] uppercase tracking-[0.18em] text-[#9CA3AF]">E-Participation</p>
+                <h3 id="submissionModalTitle" class="text-[#1E3A5F] font-serif text-2xl">Submission Form</h3>
+                <p id="submissionModalDescription" class="text-sm text-[#9CA3AF] mt-1">Select a participation channel to begin.</p>
+              </div>
+            </div>
+            <button type="button" class="submission-close" data-close-modal aria-label="Close submission modal">
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M6 6 18 18M18 6 6 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path>
+              </svg>
+            </button>
           </div>
-          <button type="button" class="w-10 h-10 rounded-full border border-white/40 hover:bg-white/10 transition text-white text-xl leading-none" data-close-modal aria-label="Close submission modal">×</button>
         </div>
 
         <div class="p-6 sm:p-8 overflow-y-auto max-h-[calc(90vh-120px)]">
           <!-- Visitor Feedback Form -->
           <form class="space-y-5" data-modal-form="visitor-feedback" action="#" method="post" novalidate>
             <div class="flex items-start justify-between gap-4">
-              <h4 class="text-xl font-serif text-green-900">Visitor Feedback</h4>
-              <span class="text-xs bg-green-100 text-green-800 px-3 py-1 rounded-full">On-site &amp; Website</span>
+              <h4 class="text-xl font-serif text-[#1E3A5F]">Visitor Feedback</h4>
+              <span class="submission-badge" style="background: rgba(197, 151, 58, 0.15); color: #92680A;">Quick &amp; Easy</span>
             </div>
 
             <div>
-              <label for="visitMode" class="block text-gray-900 mb-2">Visit mode</label>
-              <select id="visitMode" name="visit_mode" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                <option value="">Select mode</option>
-                <option value="on-site">On-site visit</option>
-                <option value="website">Website visit</option>
-              </select>
+              <label class="submission-label">How did you visit us?</label>
+              <div class="flex flex-wrap gap-3">
+                <button type="button" class="submission-pill active" data-visit-mode="on-site">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 21s7-4.35 7-11a7 7 0 1 0-14 0c0 6.65 7 11 7 11Zm0-8.5a2.5 2.5 0 1 1 0-5 2.5 2.5 0 0 1 0 5Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <span>On-Site Visit</span>
+                </button>
+                <button type="button" class="submission-pill" data-visit-mode="website">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M3 12h18M12 3a15.3 15.3 0 0 1 4 9 15.3 15.3 0 0 1-4 9 15.3 15.3 0 0 1-4-9 15.3 15.3 0 0 1 4-9Zm0 0c4.97 0 9 4.03 9 9s-4.03 9-9 9-9-4.03-9-9 4.03-9 9-9Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <span>Website Visit</span>
+                </button>
+              </div>
+              <input id="visitMode" name="visit_mode" type="hidden" value="on-site" />
             </div>
 
             <div>
-              <label for="visitedModule" class="block text-gray-900 mb-2">Module visited</label>
-              <select id="visitedModule" name="visited_module" class="w-full p-3 border border-gray-300 rounded-lg" required>
+              <label for="visitedModule" class="submission-label">Module visited</label>
+              <select id="visitedModule" name="visited_module" class="submission-select" required>
                 <option value="">Select module</option>
                 <option value="core-information">Core Information</option>
                 <option value="digital-exhibits">Digital Exhibits</option>
@@ -335,7 +354,7 @@
             </div>
 
             <div>
-              <label class="block text-gray-900 mb-2">How was your experience?</label>
+              <label class="submission-label">Overall Experience</label>
               <div class="flex gap-2" id="ratingStars">
                 <button type="button" class="text-3xl transition-colors rating-star text-gray-300" data-rating="1" aria-label="Rate 1" aria-pressed="false">★</button>
                 <button type="button" class="text-3xl transition-colors rating-star text-gray-300" data-rating="2" aria-label="Rate 2" aria-pressed="false">★</button>
@@ -348,34 +367,52 @@
             </div>
 
             <div>
-              <label for="visitorFeedback" class="block text-gray-900 mb-2">Feedback</label>
-              <textarea id="visitorFeedback" name="feedback" class="w-full p-3 border border-gray-300 rounded-lg" rows="4" placeholder="Share your comments..." required></textarea>
+              <label for="visitorFeedback" class="submission-label">Comments &amp; Suggestions</label>
+              <textarea id="visitorFeedback" name="feedback" class="submission-textarea" rows="4" placeholder="Share your thoughts, suggestions, or experience..." required></textarea>
             </div>
 
             <div>
-              <label for="visitorEmail" class="block text-gray-900 mb-2">Email (optional)</label>
-              <input id="visitorEmail" name="email" type="email" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="your.email@example.com" />
+              <label for="visitorEmail" class="submission-label">Email <span class="submission-label-muted">(optional)</span></label>
+              <input id="visitorEmail" name="email" type="email" class="submission-input" placeholder="your.email@example.com" />
             </div>
 
-            <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Submit Feedback</button>
-            <p class="text-xs text-gray-500">Template mode: submit action will be activated once backend endpoint is connected.</p>
+            <button type="button" class="submission-submit submission-submit--navy">Submit Feedback</button>
+            <p class="submission-helper">Template mode: submit action will be activated once backend endpoint is connected.</p>
           </form>
 
           <!-- Teacher Corner Form -->
           <form class="space-y-5 hidden" data-modal-form="teacher-corner" action="#" method="post" enctype="multipart/form-data" novalidate>
             <div class="flex items-start justify-between gap-4">
-              <h4 class="text-xl font-serif text-green-900">Teacher Corner Upload</h4>
-              <span class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full">Pending Admin Review</span>
+              <h4 class="text-xl font-serif text-[#1E3A5F]">Teacher Corner Upload</h4>
+              <span class="submission-badge" style="background: rgba(30, 58, 95, 0.12); color: #1E3A5F;">For Educators</span>
+            </div>
+
+            <div>
+              <label class="submission-label">Upload Materials</label>
+              <button id="teacherUploadTrigger" type="button" class="submission-upload-zone">
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M12 16V4m0 0-4 4m4-4 4 4M5 16v1a3 3 0 0 0 3 3h8a3 3 0 0 0 3-3v-1" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                </svg>
+                <span class="submission-upload-title">Drop files here or click to browse</span>
+                <span class="submission-upload-copy">Accepted: PDF, DOCX, DOC, PPTX, PPT</span>
+                <span class="submission-upload-badges">
+                  <span class="submission-format-badge submission-format-badge--pdf">PDF</span>
+                  <span class="submission-format-badge submission-format-badge--doc">DOCX</span>
+                  <span class="submission-format-badge submission-format-badge--slides">Slides</span>
+                </span>
+              </button>
+              <input id="resourceFile" name="resource_file" type="file" class="hidden" accept=".pdf,.doc,.docx,.ppt,.pptx" required />
+              <p id="teacherUploadSummary" class="submission-helper mt-2">No file selected yet.</p>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label for="teacherName" class="block text-gray-900 mb-2">Full name</label>
-                <input id="teacherName" name="teacher_name" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Enter your full name" required />
+                <label for="teacherName" class="submission-label">Full name</label>
+                <input id="teacherName" name="teacher_name" type="text" class="submission-input" placeholder="Enter your full name" required />
               </div>
               <div>
-                <label for="teacherRole" class="block text-gray-900 mb-2">Role</label>
-                <select id="teacherRole" name="teacher_role" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                <label for="teacherRole" class="submission-label">Role</label>
+                <select id="teacherRole" name="teacher_role" class="submission-select" required>
                   <option value="">Select role</option>
                   <option value="teacher">Teacher</option>
                   <option value="educator">Educator</option>
@@ -387,30 +424,30 @@
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label for="teacherSchool" class="block text-gray-900 mb-2">School / Institution</label>
-                <input id="teacherSchool" name="school" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="School or organization" required />
+                <label for="teacherSchool" class="submission-label">School / Institution</label>
+                <input id="teacherSchool" name="school" type="text" class="submission-input" placeholder="School or organization" required />
               </div>
               <div>
-                <label for="resourceTitle" class="block text-gray-900 mb-2">Resource title</label>
-                <input id="resourceTitle" name="resource_title" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Title of your resource" required />
-              </div>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label for="subjectArea" class="block text-gray-900 mb-2">Subject area</label>
-                <input id="subjectArea" name="subject_area" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="History, AP, Social Studies..." required />
-              </div>
-              <div>
-                <label for="gradeLevel" class="block text-gray-900 mb-2">Grade level</label>
-                <input id="gradeLevel" name="grade_level" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Grade 6, Grade 10, SHS..." required />
+                <label for="resourceTitle" class="submission-label">Resource title</label>
+                <input id="resourceTitle" name="resource_title" type="text" class="submission-input" placeholder="Title of your resource" required />
               </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label for="moduleMapping" class="block text-gray-900 mb-2">Recommended module</label>
-                <select id="moduleMapping" name="module_mapping" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                <label for="subjectArea" class="submission-label">Subject area</label>
+                <input id="subjectArea" name="subject_area" type="text" class="submission-input" placeholder="History, AP, Social Studies..." required />
+              </div>
+              <div>
+                <label for="gradeLevel" class="submission-label">Grade level</label>
+                <input id="gradeLevel" name="grade_level" type="text" class="submission-input" placeholder="Grade 6, Grade 10, SHS..." required />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label for="moduleMapping" class="submission-label">Recommended module</label>
+                <select id="moduleMapping" name="module_mapping" class="submission-select" required>
                   <option value="">Select module</option>
                   <option value="online-gallery">Online Gallery</option>
                   <option value="virtual-tour">Virtual Tour</option>
@@ -420,8 +457,8 @@
                 </select>
               </div>
               <div>
-                <label for="resourceFormat" class="block text-gray-900 mb-2">File format</label>
-                <select id="resourceFormat" name="resource_format" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                <label for="resourceFormat" class="submission-label">File format</label>
+                <select id="resourceFormat" name="resource_format" class="submission-select" required>
                   <option value="">Select format</option>
                   <option value="pdf">PDF</option>
                   <option value="docx">DOCX</option>
@@ -431,59 +468,54 @@
             </div>
 
             <div>
-              <label for="resourceObjective" class="block text-gray-900 mb-2">Learning objective</label>
-              <textarea id="resourceObjective" name="learning_objective" class="w-full p-3 border border-gray-300 rounded-lg" rows="3" placeholder="What should students learn from this material?" required></textarea>
+              <label for="resourceObjective" class="submission-label">Learning objective</label>
+              <textarea id="resourceObjective" name="learning_objective" class="submission-textarea" rows="3" placeholder="What should students learn from this material?" required></textarea>
             </div>
 
             <div>
-              <label for="resourceTags" class="block text-gray-900 mb-2">Tags (optional)</label>
-              <input id="resourceTags" name="resource_tags" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Example: timeline, worksheet, heritage" />
+              <label for="resourceTags" class="submission-label">Tags <span class="submission-label-muted">(optional)</span></label>
+              <input id="resourceTags" name="resource_tags" type="text" class="submission-input" placeholder="Example: timeline, worksheet, heritage" />
             </div>
 
-            <div>
-              <label for="resourceFile" class="block text-gray-900 mb-2">Upload file</label>
-              <input id="resourceFile" name="resource_file" type="file" class="w-full p-3 border border-gray-300 rounded-lg" accept=".pdf,.doc,.docx,.ppt,.pptx" required />
-              <p class="text-xs text-gray-500 mt-2">Accepted formats: PDF, DOCX, PPT/PPTX. File size and security checks will be enforced in backend.</p>
-            </div>
-
-            <label class="flex items-start gap-2 text-sm text-gray-700">
+            <label class="submission-check">
               <input type="checkbox" class="mt-1" required />
               <span>I confirm that I own this content or have permission to share it for educational use.</span>
             </label>
-            <label class="flex items-start gap-2 text-sm text-gray-700">
+            <label class="submission-check">
               <input type="checkbox" class="mt-1" required />
               <span>I understand this submission will remain pending until approved by an admin before it appears in Edu Resources.</span>
             </label>
 
-            <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Submit Resource</button>
+            <button type="button" class="submission-submit submission-submit--navy">Submit Materials</button>
           </form>
 
           <!-- Stories Submit Form -->
           <form class="space-y-5 hidden" data-modal-form="stories-submit" action="#" method="post" enctype="multipart/form-data" novalidate>
             <div class="flex items-start justify-between gap-4">
-              <h4 class="text-xl font-serif text-green-900">Stories Submit</h4>
-              <span class="text-xs bg-amber-100 text-amber-800 px-3 py-1 rounded-full">Includes Optional Photo</span>
+              <h4 class="text-xl font-serif text-[#1E3A5F]">Stories Submit</h4>
+              <span class="submission-badge" style="background: rgba(124, 58, 237, 0.12); color: #5B21B6;">Share Stories</span>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="submission-label">Story Category</label>
+              <div class="flex flex-wrap gap-2">
+                <button type="button" class="submission-chip" data-story-category="on-site">On-site experience</button>
+                <button type="button" class="submission-chip" data-story-category="website">Website experience</button>
+                <button type="button" class="submission-chip" data-story-category="family-crypt">Relative buried in crypts</button>
+                <button type="button" class="submission-chip" data-story-category="local-memory">Local heritage memory</button>
+                <button type="button" class="submission-chip" data-story-category="other">Other</button>
+              </div>
+              <input id="storyCategory" name="story_category" type="hidden" value="" required />
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label for="storyName" class="block text-gray-900 mb-2">Name or pseudonym</label>
-                <input id="storyName" name="story_name" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="How should we call you?" required />
+                <label for="storyName" class="submission-label">Name or pseudonym</label>
+                <input id="storyName" name="story_name" type="text" class="submission-input" placeholder="How should we call you?" required />
               </div>
               <div>
-                <label for="storyCategory" class="block text-gray-900 mb-2">Story category</label>
-                <select id="storyCategory" name="story_category" class="w-full p-3 border border-gray-300 rounded-lg" required>
-                  <option value="">Select category</option>
-                  <option value="on-site">On-site experience</option>
-                  <option value="website">Website experience</option>
-                  <option value="family-crypt">Relative buried in crypts</option>
-                  <option value="local-memory">Local heritage memory</option>
-                  <option value="other">Other</option>
-                </select>
-              </div>
-              <div>
-                <label for="displayPreference" class="block text-gray-900 mb-2">Display preference</label>
-                <select id="displayPreference" name="display_preference" class="w-full p-3 border border-gray-300 rounded-lg" required>
+                <label for="displayPreference" class="submission-label">Display preference</label>
+                <select id="displayPreference" name="display_preference" class="submission-select" required>
                   <option value="">Select preference</option>
                   <option value="public-name">Publish with my name</option>
                   <option value="anonymous">Publish anonymously</option>
@@ -492,36 +524,43 @@
             </div>
 
             <div>
-              <label for="storyTitle" class="block text-gray-900 mb-2">Story title</label>
-              <input id="storyTitle" name="story_title" type="text" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="Enter your story title" required />
+              <label for="storyTitle" class="submission-label">Story title</label>
+              <input id="storyTitle" name="story_title" type="text" class="submission-input" placeholder="Enter your story title" required />
             </div>
 
             <div>
-              <label for="storyBody" class="block text-gray-900 mb-2">Your story</label>
-              <textarea id="storyBody" name="story_body" class="w-full p-3 border border-gray-300 rounded-lg" rows="6" placeholder="Share your experience, memory, or family narrative..." required></textarea>
+              <label for="storyBody" class="submission-label">Your story</label>
+              <textarea id="storyBody" name="story_body" class="submission-textarea" rows="6" placeholder="Share your experience, memory, or family narrative..." required></textarea>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <label for="storyPhoto" class="block text-gray-900 mb-2">Attach photo (optional)</label>
-                <input id="storyPhoto" name="story_photo" type="file" class="w-full p-3 border border-gray-300 rounded-lg" accept=".jpg,.jpeg,.png,.webp" />
+                <label class="submission-label">Add Photo <span class="submission-label-muted">(optional)</span></label>
+                <button id="storyPhotoTrigger" type="button" class="submission-photo-zone">
+                  <svg viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M4 7.5A2.5 2.5 0 0 1 6.5 5h11A2.5 2.5 0 0 1 20 7.5v9A2.5 2.5 0 0 1 17.5 19h-11A2.5 2.5 0 0 1 4 16.5v-9ZM8.75 9.5a1.75 1.75 0 1 0 0 3.5 1.75 1.75 0 0 0 0-3.5Zm9.75 6.75-3.2-4.1a1 1 0 0 0-1.57-.02l-2.1 2.63-1.48-1.67a1 1 0 0 0-1.5.04L5.5 16.25h13Z" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path>
+                  </svg>
+                  <span>Click to add a photo</span>
+                </button>
+                <input id="storyPhoto" name="story_photo" type="file" class="hidden" accept=".jpg,.jpeg,.png,.webp" />
+                <p id="storyPhotoSummary" class="submission-helper mt-2">No photo selected yet.</p>
               </div>
               <div>
-                <label for="storyEmail" class="block text-gray-900 mb-2">Email (optional)</label>
-                <input id="storyEmail" name="story_email" type="email" class="w-full p-3 border border-gray-300 rounded-lg" placeholder="For follow-up updates" />
+                <label for="storyEmail" class="submission-label">Email <span class="submission-label-muted">(optional)</span></label>
+                <input id="storyEmail" name="story_email" type="email" class="submission-input" placeholder="For follow-up updates" />
               </div>
             </div>
 
-            <label class="flex items-start gap-2 text-sm text-gray-700">
+            <label class="submission-check">
               <input type="checkbox" class="mt-1" required />
               <span>I allow the museum to review and potentially publish this story based on moderation guidelines.</span>
             </label>
-            <label class="flex items-start gap-2 text-sm text-gray-700">
+            <label class="submission-check">
               <input type="checkbox" class="mt-1" required />
               <span>I confirm this story and attached media do not violate privacy, copyright, or community standards.</span>
             </label>
 
-            <button type="button" class="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg transition">Submit Story</button>
+            <button type="button" class="submission-submit submission-submit--gold">Share My Story</button>
           </form>
         </div>
       </div>
