@@ -1,4 +1,18 @@
 (function () {
+  function ensureFavicon() {
+    var faviconHref = "/static/images/UndergroundLogo.jpg";
+    var faviconLink = document.querySelector("link[rel='icon']") || document.querySelector("link[rel='shortcut icon']");
+
+    if (!faviconLink) {
+      faviconLink = document.createElement("link");
+      faviconLink.rel = "icon";
+      document.head.appendChild(faviconLink);
+    }
+
+    faviconLink.type = "image/jpeg";
+    faviconLink.href = faviconHref;
+  }
+
   function initExhibitsCarousel() {
     var carousel = document.querySelector("[data-exhibits-carousel]");
     if (!carousel) {
@@ -119,6 +133,7 @@
     window.lucide.createIcons();
   }
 
+  ensureFavicon();
   initExhibitsCarousel();
   initGsapReveal();
 })();
