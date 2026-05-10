@@ -513,26 +513,22 @@ def register_community_content_routes(
     def community_highlight_detail(slug):
         highlight_item = load_published_community_highlight(slug)
         if highlight_item is None:
-            return redirect(url_for("community_participation"))
+            return redirect(url_for("news"))
         return render_template("CommunityHighlightDetail.html", highlight_item=highlight_item)
 
     @app.route("/community-events/<slug>")
     def community_event_detail(slug):
         event_item = load_published_community_event(slug)
         if event_item is None:
-            return redirect(url_for("community_participation"))
+            return redirect(url_for("news"))
         return render_template("CommunityEventDetail.html", event_item=event_item)
-
-    @app.route("/community-participation")
-    def community_participation():
-        community_highlights_items = load_news_community_highlights(limit=12)
-        community_events_items = load_news_community_events(limit=12)
-        return render_template(
-            "CommunityParticipation.html",
-            community_highlights_items=community_highlights_items,
-            community_events_items=community_events_items,
-        )
 
     @app.route("/news")
     def news():
-        return redirect(url_for("community_participation"))
+        community_highlights_items = load_news_community_highlights(limit=12)
+        community_events_items = load_news_community_events(limit=12)
+        return render_template(
+            "News.html",
+            community_highlights_items=community_highlights_items,
+            community_events_items=community_events_items,
+        )

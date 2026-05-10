@@ -9,7 +9,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}" />
   </head>
   <body class="bg-stone-50 text-gray-900">
-    {% set public_active_page = 'community-participation' %}
+    {% set public_active_page = 'news' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
@@ -36,9 +36,9 @@
             </div>
 
             <div class="news-detail-content">
-              <a href="{{ url_for('community_participation') }}" class="news-detail-back mb-8">
+              <a href="{{ url_for('news') }}" class="news-detail-back mb-8">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
-                <span>Back to Community Participation</span>
+                <span>Back to Community &amp; Events</span>
               </a>
 
               <p class="news-detail-tag">Upcoming Event</p>
