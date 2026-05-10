@@ -178,36 +178,6 @@ h1, h2, h3, h4, h5, h6 {
   background: rgba(255, 255, 255, 0.8) !important;
 }
 
-.participation-card {
-  background: #F0FDF4;
-  padding: 1.5rem;
-  border-radius: 0.5rem;
-  border: 1px solid #BBF7D0;
-  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
-  transition: box-shadow 0.3s;
-}
-
-.participation-card:hover {
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
-}
-
-.participation-icon {
-  color: #15803D;
-  margin-bottom: 1rem;
-}
-
-.participation-btn {
-  margin-top: 1rem;
-  display: inline-flex;
-  align-items: center;
-  color: #15803D;
-  font-weight: 600;
-  transition: color 0.2s;
-}
-
-.participation-btn:hover {
-  color: #166534;
-}
 
 .event-card {
   padding: 1rem 1.25rem;
