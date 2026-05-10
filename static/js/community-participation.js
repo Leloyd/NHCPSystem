@@ -595,6 +595,15 @@ function initParticipationModals() {
   const modalButtons = document.querySelectorAll('[data-open-modal]');
   const modal = document.getElementById('participationModal');
   const closeBtn = document.getElementById('closeParticipationModal');
+  const modalTitle = document.getElementById('modalTitle');
+  const modalDescription = document.getElementById('modalDescription');
+  const modalIconBox = document.getElementById('modalIconBox');
+
+  const panels = {
+    'visitor-feedback': document.getElementById('visitorFeedbackPanel'),
+    'teacher-corner': document.getElementById('teacherCornerPanel'),
+    'stories-submit': document.getElementById('storiesSubmitPanel'),
+  };
 
   const forms = {
     'visitor-feedback': document.getElementById('visitorFeedbackForm'),
@@ -602,40 +611,146 @@ function initParticipationModals() {
     'stories-submit': document.getElementById('storiesSubmitForm'),
   };
 
-  const titles = {
-    'visitor-feedback': 'Visitor Feedback',
-    'teacher-corner': 'Teacher Corner',
-    'stories-submit': 'Stories Submit',
+  const successes = {
+    'visitor-feedback': document.getElementById('visitorFeedbackSuccess'),
+    'teacher-corner': document.getElementById('teacherCornerSuccess'),
+    'stories-submit': document.getElementById('storiesSubmitSuccess'),
   };
 
-  const descriptions = {
-    'visitor-feedback': 'Share your experience and help us improve',
-    'teacher-corner': 'Submit educational resources for review',
-    'stories-submit': 'Share your memories and stories with the community',
+  const modalConfigs = {
+    'visitor-feedback': {
+      title: 'Visitor Feedback',
+      description: 'Share your experience with us! Rate your visit and leave comments that help us improve the quality and usability of our museum services.',
+      iconBackground: '#FFF7ED',
+      iconColor: '#C5973A',
+      iconMarkup: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118L2.98 10.1c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.616-4.673z"></path></svg>',
+    },
+    'teacher-corner': {
+      title: 'Teacher Corner',
+      description: 'Educators are invited to submit classroom-ready learning materials in PDF, DOCX, and slide formats to build our curated educational resource library.',
+      iconBackground: '#EEF4FF',
+      iconColor: '#1E3A5F',
+      iconMarkup: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>',
+    },
+    'stories-submit': {
+      title: 'Stories Submit',
+      description: 'Community members are welcome to share experiences, memories, and personal stories with optional photos to help preserve public and family narratives.',
+      iconBackground: '#F5F3FF',
+      iconColor: '#7C3AED',
+      iconMarkup: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8h2a2 2 0 012 2v10a2 2 0 01-2 2H5a2 2 0 01-2-2V10a2 2 0 012-2h2m10 0V6a5 5 0 00-10 0v2m10 0H7"></path></svg>',
+    },
   };
+
+  function resetPanels() {
+    Object.values(panels).forEach((panel) => {
+      if (panel) {
+        panel.style.display = 'none';
+      }
+    });
+
+    Object.entries(forms).forEach(([key, form]) => {
+      if (form) {
+        form.classList.remove('hidden');
+        form.reset();
+      }
+
+      const success = successes[key];
+      if (success) {
+        success.classList.add('hidden');
+      }
+    });
+
+    const visitTypeInput = document.getElementById('visitType');
+    const visitTypeButtons = document.querySelectorAll('.visit-type-btn');
+    visitTypeButtons.forEach((button) => button.classList.remove('active'));
+    if (visitTypeButtons[0]) {
+      visitTypeButtons[0].classList.add('active');
+    }
+    if (visitTypeInput) {
+      visitTypeInput.value = 'on-site';
+    }
+
+    const starButtons = document.querySelectorAll('.star-btn');
+    starButtons.forEach((button) => button.classList.remove('filled'));
+    const ratingInput = document.getElementById('rating');
+    const ratingText = document.getElementById('ratingText');
+    if (ratingInput) {
+      ratingInput.value = '';
+    }
+    if (ratingText) {
+      ratingText.textContent = '';
+      ratingText.style.display = 'none';
+      ratingText.style.color = '#C5973A';
+    }
+    if (typeof window.resetParticipationFeedbackState === 'function') {
+      window.resetParticipationFeedbackState();
+    }
+
+    const categoryButtons = document.querySelectorAll('.category-btn');
+    const categoryInput = document.getElementById('storyCategory');
+    categoryButtons.forEach((button) => button.classList.remove('active'));
+    if (categoryInput) {
+      categoryInput.value = '';
+    }
+
+    const storyCharacterCount = document.getElementById('storyCharacterCount');
+    if (storyCharacterCount) {
+      storyCharacterCount.textContent = '0 characters';
+    }
+
+    const photoPreview = document.getElementById('photoPreview');
+    const photoUploadPrompt = document.getElementById('photoUploadPrompt');
+    const storyPhotoInput = document.getElementById('storyPhoto');
+    const photoPreviewImg = document.getElementById('photoPreviewImg');
+    if (storyPhotoInput) {
+      storyPhotoInput.value = '';
+    }
+    if (photoPreviewImg) {
+      photoPreviewImg.src = '';
+    }
+    if (photoPreview) {
+      photoPreview.classList.add('hidden');
+    }
+    if (photoUploadPrompt) {
+      photoUploadPrompt.classList.remove('hidden');
+    }
+    if (typeof window.resetParticipationTeacherState === 'function') {
+      window.resetParticipationTeacherState();
+    }
+  }
+
+  function closeParticipationModal() {
+    modal.style.display = 'none';
+    resetPanels();
+  }
 
   modalButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       const formType = btn.dataset.openModal;
-      
-      Object.values(forms).forEach(form => form.style.display = 'none');
-      
-      if (forms[formType]) {
-        forms[formType].style.display = 'flex';
-        document.getElementById('modalTitle').textContent = titles[formType];
-        document.getElementById('modalDescription').textContent = descriptions[formType];
+
+      resetPanels();
+
+      if (panels[formType] && modalConfigs[formType]) {
+        panels[formType].style.display = 'block';
+        modalTitle.textContent = modalConfigs[formType].title;
+        modalDescription.textContent = modalConfigs[formType].description;
+        modalIconBox.style.background = modalConfigs[formType].iconBackground;
+        modalIconBox.style.color = modalConfigs[formType].iconColor;
+        modalIconBox.innerHTML = modalConfigs[formType].iconMarkup;
         modal.style.display = 'flex';
       }
     });
   });
 
-  closeBtn.addEventListener('click', () => {
-    modal.style.display = 'none';
+  closeBtn.addEventListener('click', closeParticipationModal);
+
+  document.querySelectorAll('[data-close-participation]').forEach((button) => {
+    button.addEventListener('click', closeParticipationModal);
   });
 
   modal.addEventListener('click', (e) => {
     if (e.target === modal) {
-      modal.style.display = 'none';
+      closeParticipationModal();
     }
   });
 
@@ -685,6 +800,7 @@ function initFormInteractions() {
       if (ratingText) {
         ratingText.textContent = ratingLabels[currentRating];
         ratingText.style.display = 'block';
+        ratingText.style.color = '#C5973A';
       }
     });
   });
@@ -698,6 +814,11 @@ function initFormInteractions() {
       }
     });
   });
+
+  window.resetParticipationFeedbackState = () => {
+    currentRating = 0;
+    starBtns.forEach((button) => button.classList.remove('filled'));
+  };
 
   // File Drop Zone
   const fileDropZone = document.getElementById('fileDropZone');
@@ -763,6 +884,13 @@ function initFormInteractions() {
       uploadedFiles.splice(index, 1);
       renderFileList();
     };
+
+    window.resetParticipationTeacherState = () => {
+      uploadedFiles = [];
+      resourceFileInput.value = '';
+      fileDropZone.classList.remove('drag-over');
+      renderFileList();
+    };
   }
 
   // Category Buttons
@@ -786,6 +914,60 @@ function initFormInteractions() {
   const photoPreviewImg = document.getElementById('photoPreviewImg');
   const photoUploadPrompt = document.getElementById('photoUploadPrompt');
   const removePhotoBtn = document.getElementById('removePhoto');
+  const storyContent = document.getElementById('storyContent');
+  const storyCharacterCount = document.getElementById('storyCharacterCount');
+
+  const visitorFeedbackForm = document.getElementById('visitorFeedbackForm');
+  const visitorFeedbackSuccess = document.getElementById('visitorFeedbackSuccess');
+  const teacherCornerForm = document.getElementById('teacherCornerForm');
+  const teacherCornerSuccess = document.getElementById('teacherCornerSuccess');
+  const storiesSubmitForm = document.getElementById('storiesSubmitForm');
+  const storiesSubmitSuccess = document.getElementById('storiesSubmitSuccess');
+
+  if (storyContent && storyCharacterCount) {
+    storyContent.addEventListener('input', () => {
+      storyCharacterCount.textContent = `${storyContent.value.length} characters`;
+    });
+  }
+
+  if (visitorFeedbackForm) {
+    visitorFeedbackForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (!ratingInput || !ratingInput.value) {
+        if (ratingText) {
+          ratingText.textContent = 'Please select a rating before submitting.';
+          ratingText.style.display = 'block';
+          ratingText.style.color = '#DC2626';
+        }
+        return;
+      }
+
+      visitorFeedbackForm.classList.add('hidden');
+      visitorFeedbackSuccess.classList.remove('hidden');
+    });
+  }
+
+  if (teacherCornerForm) {
+    teacherCornerForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      if (uploadedFiles.length === 0) {
+        fileDropZone.classList.add('drag-over');
+        setTimeout(() => fileDropZone.classList.remove('drag-over'), 800);
+        return;
+      }
+
+      teacherCornerForm.classList.add('hidden');
+      teacherCornerSuccess.classList.remove('hidden');
+    });
+  }
+
+  if (storiesSubmitForm) {
+    storiesSubmitForm.addEventListener('submit', (e) => {
+      e.preventDefault();
+      storiesSubmitForm.classList.add('hidden');
+      storiesSubmitSuccess.classList.remove('hidden');
+    });
+  }
 
   if (photoUploadZone && storyPhotoInput) {
     photoUploadZone.addEventListener('click', () => {
