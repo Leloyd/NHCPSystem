@@ -1,0 +1,265 @@
+body {
+  font-family: 'Inter', sans-serif;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Playfair Display', serif;
+}
+
+.filter-tab {
+  padding: 0.5rem 1rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  border: 1px solid #E8E0D5;
+  background: #F9F7F4;
+  color: #6B7280;
+}
+
+.filter-tab:hover {
+  background: #F0EBE4;
+}
+
+.filter-tab.active {
+  background: linear-gradient(135deg, #1E3A5F, #2A5A8A);
+  color: white;
+  border-color: transparent;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.highlight-card {
+  border-radius: 1rem;
+  overflow: hidden;
+  border: 1px solid #E8E0D5;
+  background: white;
+  transition: all 0.3s;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.highlight-card:hover {
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.highlight-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s;
+}
+
+.highlight-card:hover img {
+  transform: scale(1.05);
+}
+
+.category-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 9999px;
+  background: white;
+  border: 1px solid #E8E0D5;
+  font-size: 0.75rem;
+  color: #6B7280;
+}
+
+.legend-dot {
+  width: 0.5rem;
+  height: 0.5rem;
+  border-radius: 9999px;
+}
+
+.calendar-header {
+  background: linear-gradient(135deg, #1E3A5F, #2A5A8A);
+}
+
+.calendar-nav-btn {
+  width: 2rem;
+  height: 2rem;
+  border-radius: 0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.7);
+  transition: all 0.2s;
+}
+
+.calendar-nav-btn:hover {
+  color: white;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.day-header {
+  padding: 0.75rem;
+  text-align: center;
+  font-size: 0.75rem;
+  color: #9CA3AF;
+  font-weight: 600;
+}
+
+.calendar-day {
+  position: relative;
+  height: 3.5rem;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
+  padding-top: 0.375rem;
+  transition: all 0.2s;
+  cursor: pointer;
+}
+
+.calendar-day:hover {
+  background: #F0F4FF;
+}
+
+.calendar-day.selected {
+  background: #1E3A5F;
+  color: white;
+}
+
+.calendar-day.selected:hover {
+  background: #1E3A5F;
+}
+
+.calendar-day.today {
+  border: 2px solid #C5973A;
+}
+
+.calendar-day-number {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+.calendar-day.selected .calendar-day-number,
+.calendar-day.today .calendar-day-number {
+  font-weight: 600;
+}
+
+.calendar-day.today .calendar-day-number {
+  color: #C5973A;
+}
+
+.calendar-day.selected .calendar-day-number {
+  color: white;
+}
+
+.event-dots {
+  display: flex;
+  gap: 0.125rem;
+  margin-top: 0.25rem;
+  flex-wrap: wrap;
+  justify-content: center;
+  padding: 0 0.125rem;
+}
+
+.event-dot {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 9999px;
+}
+
+.calendar-day.selected .event-dot {
+  background: rgba(255, 255, 255, 0.8) !important;
+}
+
+.participation-card {
+  background: #F0FDF4;
+  padding: 1.5rem;
+  border-radius: 0.5rem;
+  border: 1px solid #BBF7D0;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  transition: box-shadow 0.3s;
+}
+
+.participation-card:hover {
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.participation-icon {
+  color: #15803D;
+  margin-bottom: 1rem;
+}
+
+.participation-btn {
+  margin-top: 1rem;
+  display: inline-flex;
+  align-items: center;
+  color: #15803D;
+  font-weight: 600;
+  transition: color 0.2s;
+}
+
+.participation-btn:hover {
+  color: #166534;
+}
+
+.event-card {
+  padding: 1rem 1.25rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.event-card:hover {
+  background: #F9F7F4;
+}
+
+.event-date-box {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.event-date-month {
+  font-size: 0.75rem;
+  line-height: 1;
+  font-weight: 700;
+}
+
+.event-date-day {
+  margin-top: 0.125rem;
+  font-family: 'Playfair Display', serif;
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1;
+}
+
+.capacity-bar {
+  width: 100%;
+  height: 0.25rem;
+  border-radius: 9999px;
+  background: #F0EBE4;
+  overflow: hidden;
+}
+
+.capacity-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: all 0.3s;
+}
+
+@media (min-width: 768px) {
+  .calendar-day {
+    height: 4rem;
+  }
+}

@@ -720,9 +720,9 @@ def online_gallery_uploaded_image(filename):
     return send_from_directory(str(ONLINE_GALLERY_UPLOAD_DIR), filename)
 
 
-@app.route("/participation")
-def participation():
-    return render_template("Participation.html")
+@app.route("/community-participation")
+def community_participation():
+    return render_template("CommunityParticipation.html")
 
 
 @app.route("/support")

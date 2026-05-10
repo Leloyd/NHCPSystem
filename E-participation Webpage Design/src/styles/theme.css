@@ -126,7 +126,6 @@
 
   body {
     @apply bg-background text-foreground;
-    font-family: 'Inter', system-ui, sans-serif;
   }
 
   /**
@@ -179,26 +178,4 @@
     font-weight: var(--font-weight-normal);
     line-height: 1.5;
   }
-}
-
-/* Scrollbar hide utility */
-.scrollbar-none {
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-.scrollbar-none::-webkit-scrollbar {
-  display: none;
-}
-
-/* High Contrast overrides */
-.high-contrast body {
-  background: #000 !important;
-  color: #fff !important;
-}
-
-/* Reduce Motion */
-.reduce-motion * {
-  animation-duration: 0.01ms !important;
-  animation-iteration-count: 1 !important;
-  transition-duration: 0.01ms !important;
 }
