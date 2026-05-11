@@ -5,362 +5,442 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Museo ng Libingan sa Ilalim ng Lupa | Nagcarlan</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
   </head>
-  <body class="bg-stone-50 text-gray-900">
+  <body class="min-h-screen overflow-x-hidden" style="background-color: #FAF7F2;">
     {% set public_active_page = 'home' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="pt-20">
-      <section class="relative h-screen min-h-[680px]">
-        <img
-          src="/images/UndergroundBG.png"
-          alt="Nagcarlan Underground Cemetery"
-          class="absolute inset-0 h-full w-full object-cover"
-        />
-        <div class="absolute inset-0 bg-gradient-to-b from-black/60 via-black/40 to-black/70"></div>
+    <main>
+      <!-- Hero Section -->
+      <section id="hero" class="relative min-h-screen flex items-center justify-center overflow-hidden">
+        <!-- Background image -->
+        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('/images/UndergroundBG.png');"></div>
+        <!-- Deep gradient overlay -->
+        <div class="absolute inset-0 bg-gradient-to-b from-[#0D0A04]/80 via-[#1C1208]/65 to-[#0D0A04]/90"></div>
+        <!-- Subtle texture overlay -->
+        <div class="absolute inset-0 opacity-20" style="background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0,0,0,0.05) 2px, rgba(0,0,0,0.05) 4px);"></div>
 
-        <div class="relative h-full flex items-center justify-center text-white px-4">
-          <div class="text-center max-w-4xl">
-            <h1 class="text-5xl md:text-7xl font-serif mb-6 tracking-tight">Museo ng Libingan sa Ilalim ng Lupa</h1>
-            <p class="text-xl md:text-2xl mb-4 text-stone-200">Nagcarlan Underground Cemetery Museum</p>
-            <p class="text-lg md:text-xl max-w-2xl mx-auto mb-8 text-stone-300">
-              Discover the unique architectural and cultural heritage of the Philippines' only underground cemetery,
-              a National Historical Landmark.
-            </p>
-            <div class="flex flex-wrap justify-center gap-4">
-              <a
-                href="#exhibits"
-                class="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-8 py-3 rounded-lg transition border border-white/30"
-              >
-                Explore Exhibits
-              </a>
+        <!-- Content -->
+        <div class="relative z-10 text-center px-6 max-w-4xl mx-auto">
+          <!-- Badge -->
+          <div class="inline-flex items-center gap-2 mb-8">
+            <div class="h-px w-12 bg-[#D4AF6A]"></div>
+            <span class="text-[#D4AF6A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">National Historical Landmark</span>
+            <div class="h-px w-12 bg-[#D4AF6A]"></div>
+          </div>
+
+          <!-- Title -->
+          <h1 class="text-white mb-3 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(2.2rem, 6vw, 4.5rem); font-weight: 500; line-height: 1.15;">
+            Museo ng Libingan<br />
+            <em style="font-style: italic; color: #D4AF6A;">sa Ilalim ng Lupa</em>
+          </h1>
+
+          <p class="text-white/60 text-sm tracking-[0.25em] uppercase mb-6" style="font-family: 'Inter', sans-serif;">Nagcarlan Underground Cemetery Museum</p>
+
+          <!-- Thin gold divider -->
+          <div class="flex justify-center mb-8">
+            <div class="h-px w-24 bg-gradient-to-r from-transparent via-[#D4AF6A] to-transparent"></div>
+          </div>
+
+          <!-- Tagline -->
+          <p class="text-white/75 max-w-2xl mx-auto mb-12 leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: clamp(1rem, 2.5vw, 1.3rem);">
+            Discover the unique architectural and cultural heritage of the Philippines' only underground cemetery, a National Historical Landmark.
+          </p>
+
+          <!-- CTA Button -->
+          <button onclick="document.querySelector('#about').scrollIntoView({ behavior: 'smooth' });" class="group inline-flex items-center gap-3 px-10 py-4 bg-[#D4AF6A] text-[#1C1208] hover:bg-[#E8C97A] transition-all duration-300 text-sm tracking-[0.2em] uppercase cursor-pointer" style="font-family: 'Inter', sans-serif; font-weight: 600;">
+            <span>Start Heritage Trail</span>
+            <svg class="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            </svg>
+          </button>
+
+          <p class="mt-4 text-white/35 text-xs tracking-wider" style="font-family: 'Inter', sans-serif;">Est. 1845 · Nagcarlan, Laguna · Philippines</p>
+        </div>
+
+        <!-- Scroll indicator -->
+        <button onclick="document.querySelector('#testament').scrollIntoView({ behavior: 'smooth' });" class="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-2 text-white/40 hover:text-white/70 transition-colors cursor-pointer">
+          <span class="text-xs tracking-widest uppercase" style="font-family: 'Inter', sans-serif;">Scroll</span>
+          <div class="w-px h-12 bg-gradient-to-b from-white/40 to-transparent"></div>
+        </button>
+      </section>
+
+      <!-- Testament Section -->
+      <section id="testament" style="background-color: #FAF7F2;">
+        <!-- Top image band -->
+        <div class="h-64 md:h-80 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1722197913440-0128aff38a9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2xvbmlhbCUyMGVyYSUyMGJyaWNrJTIwdmF1bHQlMjBhcmNod2F5JTIwaGVyaXRhZ2V8ZW58MXx8fHwxNzc4NTE0NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080');">
+          <div class="absolute inset-0 bg-gradient-to-b from-[#0D0A04]/30 to-[#FAF7F2]"></div>
+        </div>
+
+        <div class="max-w-6xl mx-auto px-6 -mt-16 pb-20 relative z-10">
+          <!-- Section label -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="h-px w-10 bg-[#B8923A]"></div>
+            <span class="text-[#B8923A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Living Testament to History</span>
+          </div>
+
+          <div class="grid md:grid-cols-2 gap-12 items-start">
+            <div>
+              <h2 class="text-[#1C1208] mb-6 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
+                A Living Testament<br />
+                <em style="font-style: italic; color: #6B4F3A;">to History</em>
+              </h2>
+              <p class="text-[#4A3B2E] leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: 1.15rem;">
+                The Nagcarlan Underground Cemetery is a unique colonial-era structure built in 1845. This architectural marvel features an underground crypt system, showcasing the ingenuity and craftsmanship of our ancestors. Today, it stands as a National Historical Landmark and a proud symbol of Filipino heritage.
+              </p>
+            </div>
+
+            <div class="space-y-6 pt-2">
+              <!-- Stat 1 -->
+              <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                  <svg class="w-[18px] h-[18px] text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="text-[#1C1208] mb-1" style="font-family: 'Playfair Display', serif; font-weight: 500;">National Landmark</h4>
+                  <p class="text-[#6B4F3A] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">Declared a National Historical Landmark, preserving centuries of heritage</p>
+                </div>
+              </div>
+
+              <!-- Stat 2 -->
+              <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                  <svg class="w-[18px] h-[18px] text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="text-[#1C1208] mb-1" style="font-family: 'Playfair Display', serif; font-weight: 500;">Est. 1845</h4>
+                  <p class="text-[#6B4F3A] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">Nearly two centuries of history preserved for future generations</p>
+                </div>
+              </div>
+
+              <!-- Stat 3 -->
+              <div class="flex items-start gap-4">
+                <div class="flex-shrink-0 w-10 h-10 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                  <svg class="w-[18px] h-[18px] text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path>
+                  </svg>
+                </div>
+                <div>
+                  <h4 class="text-[#1C1208] mb-1" style="font-family: 'Playfair Display', serif; font-weight: 500;">Cultural Heritage</h4>
+                  <p class="text-[#6B4F3A] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">A testament to Filipino ingenuity and colonial-era architecture</p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="py-16 bg-white">
-        <div class="container mx-auto px-4">
-          <div class="max-w-4xl mx-auto text-center mb-12">
-            <h2 class="text-4xl font-serif text-amber-900 mb-6">A Living Testament to History</h2>
-            <p class="text-lg text-gray-700 leading-relaxed">
-              The Nagcarlan Underground Cemetery is a unique colonial-era structure built in 1845. This architectural
-              marvel features an underground crypt system, showcasing the ingenuity and craftsmanship of our ancestors.
-              Today, it stands as a National Historical Landmark and a proud symbol of Filipino heritage.
-            </p>
+      <!-- About Site Section -->
+      <section id="about" class="py-20" style="background-color: #FFFFFF;">
+        <div class="max-w-6xl mx-auto px-6">
+          <!-- Section label -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="h-px w-10 bg-[#B8923A]"></div>
+            <span class="text-[#B8923A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Heritage Overview</span>
           </div>
 
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <div class="text-center p-6 bg-amber-50 rounded-lg">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="landmark" class="text-white w-8 h-8"></i>
-              </div>
-              <h3 class="text-xl font-serif text-amber-900 mb-2">National Landmark</h3>
-              <p class="text-gray-700">Declared a National Historical Landmark, preserving centuries of heritage</p>
-            </div>
-
-            <div class="text-center p-6 bg-amber-50 rounded-lg">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="history" class="text-white w-8 h-8"></i>
-              </div>
-              <h3 class="text-xl font-serif text-amber-900 mb-2">Est. 1845</h3>
-              <p class="text-gray-700">Nearly two centuries of history preserved for future generations</p>
-            </div>
-
-            <div class="text-center p-6 bg-amber-50 rounded-lg">
-              <div class="w-16 h-16 bg-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                <i data-lucide="users" class="text-white w-8 h-8"></i>
-              </div>
-              <h3 class="text-xl font-serif text-amber-900 mb-2">Cultural Heritage</h3>
-              <p class="text-gray-700">A testament to Filipino ingenuity and colonial-era architecture</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section id="exhibits" class="py-20 bg-stone-50">
-        <div class="container mx-auto px-4">
-          <div class="exhibits-section-panel">
-            <div class="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between mb-12">
-              <div class="max-w-2xl exhibits-reveal">
-                <p class="exhibits-section-kicker">Museum Highlights</p>
-                <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Current Exhibits &amp; News</h2>
-                <p class="text-gray-700 text-lg leading-relaxed">
-                  Discover the latest stories, exhibitions, and preservation milestones curated by the museum team.
+          <div class="grid md:grid-cols-2 gap-12 items-start">
+            <!-- Text column -->
+            <div>
+              <h2 class="text-[#1C1208] mb-6 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
+                About the<br />
+                <em style="font-style: italic; color: #6B4F3A;">Historic Site</em>
+              </h2>
+              <div class="space-y-4 text-[#4A3B2E] leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">
+                <p>
+                  The Nagcarlan Underground Cemetery is a rare architectural gem built during the Spanish colonial period in 1845. Constructed under the supervision of Franciscan friars, this unique structure served as both a cemetery and a chapel, featuring an underground crypt system that was revolutionary for its time.
+                </p>
+                <p>
+                  The cemetery's brick vaults and arched passages demonstrate the sophisticated engineering and architectural knowledge of the period. Its design reflects a blend of European cemetery traditions adapted to the tropical Philippine climate.
+                </p>
+                <p>
+                  During the Philippine Revolution, the underground chambers served as a secret meeting place for the Katipuneros, adding another layer of historical significance to this remarkable structure.
                 </p>
               </div>
+            </div>
 
-              <div class="exhibits-section-meta exhibits-reveal">
-              
-                <a href="{{ url_for('current_exhibits_news') }}" class="exhibits-section-button">
-                  Show All Current Exhibits &amp; News
-                </a>
+            <!-- Image column -->
+            <div class="relative">
+              <div class="relative border-4 border-[#D4AF6A]/30">
+                <img src="https://images.unsplash.com/photo-1722197913440-0128aff38a9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2xvbmlhbCUyMGVyYSUyMGJyaWNrJTIwdmF1bHQlMjBhcmNod2F5JTIwaGVyaXRhZ2V8ZW58MXx8fHwxNzc4NTE0NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080" alt="Underground Cemetery Architecture" class="w-full h-auto" />
+                <div class="absolute -bottom-4 -right-4 w-full h-full border border-[#B8923A]/20 -z-10"></div>
               </div>
-            </div>
-
-            {% if exhibits_news_items %}
-            <div class="exhibits-carousel-shell exhibits-reveal" data-exhibits-carousel>
-              <div class="exhibits-carousel-window">
-                <div class="exhibits-carousel-track" data-exhibits-track>
-                  {% for exhibit_item in exhibits_news_items %}
-                  <article class="exhibit-card" data-exhibit-card>
-                    <a href="{{ exhibit_item.detail_url }}" class="exhibit-card-link">
-                      <div class="exhibit-card-media{% if not exhibit_item.image_url %} is-placeholder{% endif %}">
-                        {% if exhibit_item.image_url %}
-                        <img src="{{ exhibit_item.image_url }}" alt="{{ exhibit_item.title }}" loading="lazy" />
-                        {% else %}
-                        <div class="exhibit-card-placeholder-glow"></div>
-                        {% endif %}
-                        <span class="exhibit-card-chip">Featured Story</span>
-                      </div>
-                      <div class="exhibit-card-content">
-                        <div class="exhibit-card-meta-row">
-                          <div class="flex items-center space-x-2 text-sm text-amber-700">
-                            <i data-lucide="calendar" class="w-4 h-4"></i>
-                            <span>{{ exhibit_item.display_date }}</span>
-                          </div>
-                          <span class="exhibit-card-meta-tag">Museum Update</span>
-                        </div>
-                        <h3 class="text-2xl font-serif text-gray-900 mb-3">{{ exhibit_item.title }}</h3>
-                        <p class="text-gray-700 mb-6 leading-relaxed">{{ exhibit_item.short_description }}</p>
-                        <span class="exhibit-card-action">
-                          <span>Learn More</span>
-                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
-                        </span>
-                      </div>
-                    </a>
-                  </article>
-                  {% endfor %}
-                </div>
-              </div>
-
-              {% if exhibits_news_items|length > 3 %}
-              <div class="exhibits-carousel-controls" data-exhibits-controls>
-                <button type="button" class="exhibits-arrow is-prev" data-exhibits-prev aria-label="Show previous exhibits">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
-                </button>
-                <button type="button" class="exhibits-arrow" data-exhibits-next aria-label="Show more exhibits">
-                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M13.5 5.5 20 12l-6.5 6.5-1.4-1.4 4.1-4.1H4v-2h12.2l-4.1-4.1Z"></path></svg>
-                </button>
-              </div>
-              {% endif %}
-            </div>
-            {% else %}
-            <div class="exhibits-empty-state exhibits-reveal">
-              <div class="exhibits-empty-icon">
-                <i data-lucide="newspaper" class="w-7 h-7"></i>
-              </div>
-              <h3 class="text-2xl font-serif text-amber-900 mb-3">No current exhibits yet</h3>
-              <p class="text-gray-700 max-w-2xl mx-auto leading-relaxed">
-                Once the admin adds published exhibit or news cards, they will appear here automatically.
-              </p>
-            </div>
-            {% endif %}
-          </div>
-        </div>
-      </section>
-
-      <section id="visitor-info" class="py-20 bg-white">
-        <div class="container mx-auto px-4">
-          <div class="landing-section-shell">
-            <div class="landing-section-heading text-center max-w-3xl mx-auto">
-              <p class="landing-section-kicker">Plan Your Visit</p>
-              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Visitor Information</h2>
-              <p class="text-lg text-gray-700 leading-relaxed">
-                Everything you need before exploring the museum grounds, exhibits, and heritage spaces.
-              </p>
-            </div>
-
-            <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 max-w-6xl mx-auto">
-              <article class="landing-info-card">
-                <div class="landing-info-icon">
-                  <i data-lucide="clock" class="text-amber-700 w-8 h-8"></i>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-3">Hours</h3>
-                <p class="text-gray-700">Tuesday - Sunday</p>
-                <p class="text-gray-700">8:00 AM - 5:00 PM</p>
-                <p class="text-sm text-amber-700 mt-2">Closed on Mondays</p>
-              </article>
-
-              <article class="landing-info-card">
-                <div class="landing-info-icon">
-                  <i data-lucide="map-pin" class="text-amber-700 w-8 h-8"></i>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-3">Location</h3>
-                <p class="text-gray-700">Rizal Ave., Barangay Bambang, Nagcarlan, Laguna, 4002</p>
-                <p class="text-gray-700">Philippines</p>
-                <a href="https://www.google.com/maps/place/NHCP+Museo+ng+Libingan+sa+Ilalim+ng+Lupa+ng+Nagcarlan/@14.1310486,121.4141209,548m/data=!3m1!1e3!4m6!3m5!1s0x33bd5a26f2223a8b:0xb0f711a572efc1e8!8m2!3d14.1311373!4d121.4151153!16s%2Fm%2F01113j70?entry=ttu&g_ep=EgoyMDI2MDQxMi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" class="text-sm text-amber-700 mt-2 inline-flex">View Map →</a>
-              </article>
-
-              <article class="landing-info-card">
-                <div class="landing-info-icon">
-                  <i data-lucide="users" class="text-amber-700 w-8 h-8"></i>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-3">Admission</h3>
-                <p class="text-gray-700">Free for All</p>
-                
-                
-              </article>
-
-              <article class="landing-info-card">
-                <div class="landing-info-icon">
-                  <i data-lucide="info" class="text-amber-700 w-8 h-8"></i>
-                </div>
-                <h3 class="text-xl font-serif text-gray-900 mb-3">Contact</h3>
-                <p class="text-gray-700">+63 915 249 1151</p>
-                <p class="text-gray-700 text-sm break-all leading-relaxed px-4">museum.undergroundnagcarlan@gmail.com</p>
-              </article>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <section class="py-20 bg-amber-50">
-        <div class="container mx-auto px-4">
-          <div class="landing-section-shell landing-section-shell-soft max-w-5xl mx-auto">
-            <div class="landing-section-heading text-center max-w-3xl mx-auto">
-              <p class="landing-section-kicker">Heritage Overview</p>
-              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">About the Site</h2>
-            </div>
-            <div class="landing-content-panel">
-              <p class="text-lg text-gray-700 leading-relaxed mb-4">
-                The Nagcarlan Underground Cemetery is a rare architectural gem built during the Spanish colonial
-                period in 1845. Constructed under the supervision of Franciscan friars, this unique structure served
-                as both a cemetery and a chapel, featuring an underground crypt system that was revolutionary for its
-                time.
-              </p>
-              <p class="text-lg text-gray-700 leading-relaxed mb-4">
-                The cemetery's brick vaults and arched passages demonstrate the sophisticated engineering and
-                architectural knowledge of the period. Its design reflects a blend of European cemetery traditions
-                adapted to the tropical Philippine climate.
-              </p>
-              <p class="text-lg text-gray-700 leading-relaxed">
-                During the Philippine Revolution, the underground chambers served as a secret meeting place for the
-                Katipuneros, adding another layer of historical significance to this remarkable structure.
+              <p class="mt-4 text-[#6B4F3A] text-sm italic" style="font-family: 'Cormorant Garamond', serif;">
+                The underground crypt system showcases 19th-century architectural ingenuity
               </p>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="py-20 bg-white">
-        <div class="container mx-auto px-4">
-          <div class="landing-section-shell max-w-5xl mx-auto">
-            <div class="landing-section-heading text-center max-w-3xl mx-auto">
-              <p class="landing-section-kicker">Historical Journey</p>
-              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">Cemetery History</h2>
-            </div>
+      <!-- History Timeline Section -->
+      <section id="history" class="py-20" style="background-color: #FAF7F2;">
+        <div class="max-w-5xl mx-auto px-6">
+          <!-- Section label -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="h-px w-10 bg-[#B8923A]"></div>
+            <span class="text-[#B8923A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Historical Journey</span>
+          </div>
 
-            <div class="max-w-4xl mx-auto space-y-6">
-            <div class="timeline-row">
-              <div class="timeline-year">1845</div>
-              <div class="timeline-content">
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Construction Era</h3>
-                <p class="text-gray-700">
-                  Built under the direction of Franciscan friars as a modern burial ground featuring underground
-                  crypts. The structure represented a significant advancement in cemetery architecture in the
-                  Philippines.
-                </p>
-              </div>
-            </div>
+          <h2 class="text-[#1C1208] mb-12 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
+            Cemetery<br />
+            <em style="font-style: italic; color: #6B4F3A;">History</em>
+          </h2>
 
-            <div class="timeline-row">
-              <div class="timeline-year">1896</div>
-              <div class="timeline-content">
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Revolutionary Period</h3>
-                <p class="text-gray-700">
-                  The underground chambers became a secret meeting place for members of the Katipunan during the
-                  Philippine Revolution against Spanish colonial rule.
-                </p>
-              </div>
-            </div>
+          <div class="relative">
+            <!-- Vertical timeline line -->
+            <div class="absolute left-0 md:left-1/2 top-0 bottom-0 w-px bg-[#D4AF6A]/30 hidden md:block"></div>
 
-            <div class="timeline-row">
-              <div class="timeline-year">1973</div>
-              <div class="timeline-content">
-                <h3 class="text-xl font-serif text-gray-900 mb-2">National Landmark</h3>
-                <p class="text-gray-700">
-                  Declared a National Historical Landmark by the National Historical Institute, recognizing its unique
-                  architectural and historical significance.
-                </p>
+            <div class="space-y-16">
+              <!-- Timeline item 1 -->
+              <div class="relative grid md:grid-cols-2 gap-8 items-start">
+                <div class="md:text-right md:pr-12">
+                  <div class="inline-block px-4 py-2 border border-[#B8923A]/40 mb-4" style="background-color: #F5EDD8;">
+                    <span class="text-[#B8923A] font-semibold" style="font-family: 'Playfair Display', serif; font-size: 1.5rem;">1845</span>
+                  </div>
+                </div>
+                <div class="md:pl-12">
+                  <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 500;">Construction Era</h3>
+                  <p class="text-[#4A3B2E] leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">
+                    Built under the direction of Franciscan friars as a modern burial ground featuring underground crypts. The structure represented a significant advancement in cemetery architecture in the Philippines.
+                  </p>
+                </div>
+                <div class="absolute left-0 md:left-1/2 top-3 w-3 h-3 bg-[#D4AF6A] rounded-full -translate-x-1/2 hidden md:block"></div>
               </div>
-            </div>
 
-            <div class="timeline-row">
-              <div class="timeline-year">Today</div>
-              <div class="timeline-content">
-                <h3 class="text-xl font-serif text-gray-900 mb-2">Museum &amp; Heritage Site</h3>
-                <p class="text-gray-700">
-                  Now serves as a museum and cultural heritage site, welcoming visitors from around the world to
-                  experience this unique piece of Philippine history.
-                </p>
+              <!-- Timeline item 2 -->
+              <div class="relative grid md:grid-cols-2 gap-8 items-start">
+                <div class="md:text-right md:pr-12 md:order-1">
+                  <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 500;">Revolutionary Period</h3>
+                  <p class="text-[#4A3B2E] leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">
+                    The underground chambers became a secret meeting place for members of the Katipunan during the Philippine Revolution against Spanish colonial rule.
+                  </p>
+                </div>
+                <div class="md:pl-12 md:order-2">
+                  <div class="inline-block px-4 py-2 border border-[#B8923A]/40 mb-4" style="background-color: #F5EDD8;">
+                    <span class="text-[#B8923A] font-semibold" style="font-family: 'Playfair Display', serif; font-size: 1.5rem;">1896</span>
+                  </div>
+                </div>
+                <div class="absolute left-0 md:left-1/2 top-3 w-3 h-3 bg-[#D4AF6A] rounded-full -translate-x-1/2 hidden md:block"></div>
               </div>
-            </div>
+
+              <!-- Timeline item 3 -->
+              <div class="relative grid md:grid-cols-2 gap-8 items-start">
+                <div class="md:text-right md:pr-12">
+                  <div class="inline-block px-4 py-2 border border-[#B8923A]/40 mb-4" style="background-color: #F5EDD8;">
+                    <span class="text-[#B8923A] font-semibold" style="font-family: 'Playfair Display', serif; font-size: 1.5rem;">1973</span>
+                  </div>
+                </div>
+                <div class="md:pl-12">
+                  <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 500;">National Landmark</h3>
+                  <p class="text-[#4A3B2E] leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">
+                    Declared a National Historical Landmark by the National Historical Institute, recognizing its unique architectural and historical significance.
+                  </p>
+                </div>
+                <div class="absolute left-0 md:left-1/2 top-3 w-3 h-3 bg-[#D4AF6A] rounded-full -translate-x-1/2 hidden md:block"></div>
+              </div>
+
+              <!-- Timeline item 4 -->
+              <div class="relative grid md:grid-cols-2 gap-8 items-start">
+                <div class="md:text-right md:pr-12 md:order-1">
+                  <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.4rem; font-weight: 500;">Museum & Heritage Site</h3>
+                  <p class="text-[#4A3B2E] leading-relaxed" style="font-family: 'Cormorant Garamond', serif; font-size: 1.05rem;">
+                    Now serves as a museum and cultural heritage site, welcoming visitors from around the world to experience this unique piece of Philippine history.
+                  </p>
+                </div>
+                <div class="md:pl-12 md:order-2">
+                  <div class="inline-block px-4 py-2 border border-[#B8923A]/40 mb-4" style="background-color: #F5EDD8;">
+                    <span class="text-[#B8923A] font-semibold" style="font-family: 'Playfair Display', serif; font-size: 1.5rem;">Today</span>
+                  </div>
+                </div>
+                <div class="absolute left-0 md:left-1/2 top-3 w-3 h-3 bg-[#D4AF6A] rounded-full -translate-x-1/2 hidden md:block"></div>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="py-20 bg-stone-50">
-        <div class="container mx-auto px-4">
-          <div class="landing-section-shell landing-section-shell-soft max-w-5xl mx-auto">
-            <div class="landing-section-heading text-center max-w-3xl mx-auto">
-              <p class="landing-section-kicker">Responsible Visiting</p>
-              <h2 class="text-4xl md:text-5xl font-serif text-amber-900 mb-4">House Rules</h2>
+      <!-- Visitor Info Section -->
+      <section id="visitor-info" class="relative py-20 overflow-hidden">
+        <!-- Background image with overlay -->
+        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1722197913440-0128aff38a9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2xvbmlhbCUyMGVyYSUyMGJyaWNrJTIwdmF1bHQlMjBhcmNod2F5JTIwaGVyaXRhZ2V8ZW58MXx8fHwxNzc4NTE0NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080');"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-[#1C1208]/90 via-[#0D0A04]/85 to-[#1C1208]/90"></div>
+
+        <div class="relative z-10 max-w-6xl mx-auto px-6">
+          <!-- Section label -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="h-px w-10 bg-[#D4AF6A]"></div>
+            <span class="text-[#D4AF6A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Plan Your Visit</span>
+          </div>
+
+          <h2 class="text-white mb-12 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
+            Visitor<br />
+            <em style="font-style: italic; color: #D4AF6A;">Information</em>
+          </h2>
+
+          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+            <!-- Hours card -->
+            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
+              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Hours</h3>
+              <p class="text-[#4A3B2E] text-sm mb-1" style="font-family: 'Inter', sans-serif;">Tuesday - Sunday</p>
+              <p class="text-[#4A3B2E] text-sm mb-2" style="font-family: 'Inter', sans-serif;">8:00 AM - 5:00 PM</p>
+              <p class="text-[#B8923A] text-xs" style="font-family: 'Inter', sans-serif;">Closed on Mondays</p>
             </div>
 
-            <div class="landing-rules-panel max-w-4xl mx-auto">
-            <div class="landing-rule-item">
-              <i data-lucide="shield" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
+            <!-- Location card -->
+            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
+              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </div>
+              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Location</h3>
+              <p class="text-[#4A3B2E] text-sm mb-2" style="font-family: 'Inter', sans-serif;">Rizal Ave., Barangay Bambang, Nagcarlan, Laguna, 4002</p>
+              <a href="https://www.google.com/maps/place/NHCP+Museo+ng+Libingan+sa+Ilalim+ng+Lupa+ng+Nagcarlan/@14.1310486,121.4141209,548m/data=!3m1!1e3!4m6!3m5!1s0x33bd5a26f2223a8b:0xb0f711a572efc1e8!8m2!3d14.1311373!4d121.4151153!16s%2Fm%2F01113j70?entry=ttu&g_ep=EgoyMDI2MDQxMi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" class="text-[#B8923A] text-xs hover:text-[#D4AF6A] transition-colors" style="font-family: 'Inter', sans-serif;">View Map →</a>
+            </div>
+
+            <!-- Admission card -->
+            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
+              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+              </div>
+              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Admission</h3>
+              <p class="text-[#4A3B2E] text-sm" style="font-family: 'Inter', sans-serif;">Free for All</p>
+            </div>
+
+            <!-- Contact card -->
+            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
+              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                </svg>
+              </div>
+              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Contact</h3>
+              <p class="text-[#4A3B2E] text-sm mb-1" style="font-family: 'Inter', sans-serif;">+63 915 249 1151</p>
+              <p class="text-[#4A3B2E] text-xs break-all" style="font-family: 'Inter', sans-serif;">museum.undergroundnagcarlan@gmail.com</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- House Rules Section -->
+      <section id="rules" class="py-20" style="background-color: #FAF7F2;">
+        <div class="max-w-6xl mx-auto px-6">
+          <!-- Section label -->
+          <div class="flex items-center gap-3 mb-5">
+            <div class="h-px w-10 bg-[#B8923A]"></div>
+            <span class="text-[#B8923A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Responsible Visiting</span>
+          </div>
+
+          <h2 class="text-[#1C1208] mb-12 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
+            House<br />
+            <em style="font-style: italic; color: #6B4F3A;">Rules</em>
+          </h2>
+
+          <div class="grid md:grid-cols-2 gap-8">
+            <!-- Rule 1 -->
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+                </svg>
+              </div>
               <div>
-                <h3 class="text-lg font-serif text-gray-900 mb-1">Respect the Heritage</h3>
-                <p class="text-gray-700">
+                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Respect the Heritage</h3>
+                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
                   This is a sacred historical site. Please maintain a respectful demeanor and speak in moderate tones.
                 </p>
               </div>
             </div>
 
-            <div class="landing-rule-item">
-              <i data-lucide="image" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
+            <!-- Rule 2 -->
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                </svg>
+              </div>
               <div>
-                <h3 class="text-lg font-serif text-gray-900 mb-1">Photography Guidelines</h3>
-                <p class="text-gray-700">
-                  Photography is allowed without flash. Please do not touch or lean on historical artifacts and
-                  structures.
+                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Photography Guidelines</h3>
+                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
+                  Photography is allowed without flash. Please do not touch or lean on historical artifacts and structures.
                 </p>
               </div>
             </div>
 
-            <div class="landing-rule-item">
-              <i data-lucide="users" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
+            <!-- Rule 3 -->
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                </svg>
+              </div>
               <div>
-                <h3 class="text-lg font-serif text-gray-900 mb-1">Group Tours</h3>
-                <p class="text-gray-700">
-                  Groups of 10 or more must arrange guided tours in advance. Follow your guide's instructions at all
-                  times.
+                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Group Tours</h3>
+                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
+                  Groups of 10 or more must arrange guided tours in advance. Follow your guide's instructions at all times.
                 </p>
               </div>
             </div>
 
-            <div class="landing-rule-item">
-              <i data-lucide="lock" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
+            <!-- Rule 4 -->
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+              </div>
               <div>
-                <h3 class="text-lg font-serif text-gray-900 mb-1">Preservation</h3>
-                <p class="text-gray-700">
-                  Do not touch, write on, or damage any part of the structure. Help us preserve this heritage site for
-                  future generations.
+                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Preservation</h3>
+                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
+                  Do not touch, write on, or damage any part of the structure. Help us preserve this heritage site for future generations.
                 </p>
               </div>
             </div>
 
-            <div class="landing-rule-item">
-              <i data-lucide="info" class="text-amber-700 flex-shrink-0 mt-1 w-6 h-6"></i>
+            <!-- Rule 5 -->
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+              </div>
               <div>
-                <h3 class="text-lg font-serif text-gray-900 mb-1">Safety First</h3>
-                <p class="text-gray-700">
-                  Watch your step, especially in the underground areas. Children must be accompanied by adults at all
-                  times.
+                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Safety First</h3>
+                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
+                  Watch your step, especially in the underground areas. Children must be accompanied by adults at all times.
+                </p>
+              </div>
+            </div>
+
+            <!-- Rule 6 -->
+            <div class="flex gap-4 items-start">
+              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
+                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+              </div>
+              <div>
+                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Ask Questions</h3>
+                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
+                  Our staff and guides are here to help. Feel free to ask questions about the site's history and significance.
                 </p>
               </div>
             </div>
