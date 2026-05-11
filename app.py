@@ -722,7 +722,7 @@ def online_gallery_uploaded_image(filename):
 
 @app.route("/participation")
 def participation():
-    return render_template("Participation.html")
+    return redirect(url_for("community_participation"))
 
 
 @app.route("/community-participation")

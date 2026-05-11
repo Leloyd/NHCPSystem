@@ -6,10 +6,10 @@
     <title>{{ highlight_item.title }} | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/news.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/community-detail.css') }}" />
   </head>
   <body class="bg-stone-50 text-gray-900">
-    {% set public_active_page = 'news' %}
+    {% set public_active_page = 'community-participation' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
@@ -36,9 +36,9 @@
             </div>
 
             <div class="news-detail-content">
-              <a href="{{ url_for('news') }}" class="news-detail-back mb-8">
+              <a href="{{ url_for('community_participation') }}" class="news-detail-back mb-8">
                 <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
-                <span>Back to Community &amp; Events</span>
+                <span>Back to Community Participation</span>
               </a>
 
               <p class="news-detail-tag">Community Highlight</p>
@@ -57,6 +57,6 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="{{ url_for('static', filename='js/news.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/community-detail.js') }}"></script>
   </body>
 </html>
