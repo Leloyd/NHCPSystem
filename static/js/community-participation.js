@@ -1,46 +1,47 @@
 function readCommunityParticipationData() {
   const payloadElement = document.getElementById('communityParticipationData');
   if (!payloadElement) {
-    return { highlights: [] };
+    return { highlights: [], events: [] };
   }
 
   try {
     return JSON.parse(payloadElement.textContent || '{}');
   } catch (error) {
     console.error('Failed to parse community participation data.', error);
-    return { highlights: [] };
+    return { highlights: [], events: [] };
   }
 }
 
 const communityParticipationData = readCommunityParticipationData();
 const highlights = Array.isArray(communityParticipationData.highlights) ? communityParticipationData.highlights : [];
+const events = Array.isArray(communityParticipationData.events) ? communityParticipationData.events : [];
 
 const categoryConfig = {
-  orientation: {
-    label: "Orientation",
+  "Booked Tour (former Orientation)": {
+    label: "Booked Tour (former Orientation)",
     color: "#1E3A5F",
     bg: "rgba(30, 58, 95, 0.1)",
     dot: "#1E3A5F",
   },
-  gathering: {
+  "Community Gathering": {
     label: "Community Gathering",
     color: "#16A34A",
     bg: "rgba(22, 163, 74, 0.1)",
     dot: "#16A34A",
   },
-  student: {
+  "Student Activity": {
     label: "Student Activity",
     color: "#C5973A",
     bg: "rgba(197, 151, 58, 0.1)",
     dot: "#C5973A",
   },
-  heritage: {
+  "Heritage Session": {
     label: "Heritage Session",
     color: "#7C3AED",
     bg: "rgba(124, 58, 237, 0.1)",
     dot: "#7C3AED",
   },
-  workshop: {
+  "Workshop": {
     label: "Workshop",
     color: "#DC2626",
     bg: "rgba(220, 38, 38, 0.08)",
@@ -48,121 +49,38 @@ const categoryConfig = {
   },
 };
 
-const events = [
-  {
-    id: 1,
-    title: "Museum Orientation for Schools",
-    date: "2026-05-15",
-    time: "9:00 AM – 11:00 AM",
-    location: "Main Hall, Museum Complex",
-    category: "orientation",
-    description: "An introductory orientation for new school groups visiting the heritage museum. Teachers and students will be given a comprehensive tour of the facilities and exhibits.",
-    capacity: 80,
-    registered: 62,
-  },
-  {
-    id: 2,
-    title: "Community Story Sharing Session",
-    date: "2026-05-18",
-    time: "2:00 PM – 5:00 PM",
-    location: "Community Room, Annex Building",
-    category: "gathering",
-    description: "An open session where community members can share personal stories, memories, and family histories. Light refreshments will be served.",
-    capacity: 50,
-    registered: 34,
-  },
-  {
-    id: 3,
-    title: "Heritage Photography Workshop",
-    date: "2026-05-22",
-    time: "10:00 AM – 12:00 PM",
-    location: "Heritage Zone A",
-    category: "workshop",
-    description: "Learn to document cultural heritage through photography. Participants will explore the outdoor heritage zones with professional guidance on heritage documentation.",
-    capacity: 30,
-    registered: 28,
-  },
-  {
-    id: 4,
-    title: "Student Historical Research Day",
-    date: "2026-05-25",
-    time: "8:00 AM – 4:00 PM",
-    location: "Archive Library",
-    category: "student",
-    description: "High school and college students are invited to spend the day in our archive library conducting primary research on local history with the guidance of our curators.",
-    capacity: 40,
-    registered: 22,
-  },
-  {
-    id: 5,
-    title: "June Community Day",
-    date: "2026-06-01",
-    time: "8:00 AM – 6:00 PM",
-    location: "Museum Grounds",
-    category: "gathering",
-    description: "Our annual Community Day celebration featuring cultural performances, craft workshops, storytelling, and guided heritage tours open to the public.",
-    capacity: 500,
-    registered: 280,
-  },
-  {
-    id: 6,
-    title: "Guided Heritage Walk",
-    date: "2026-06-08",
-    time: "7:00 AM – 10:00 AM",
-    location: "Heritage Trail, Site B",
-    category: "heritage",
-    description: "A guided early morning walk through the heritage trail covering pre-colonial and colonial-era sites with expert narration from our resident archaeologist.",
-    capacity: 25,
-    registered: 20,
-  },
-  {
-    id: 7,
-    title: "Teacher Resource Workshop",
-    date: "2026-06-14",
-    time: "1:00 PM – 4:00 PM",
-    location: "Learning Center",
-    category: "workshop",
-    description: "An exclusive workshop for educators on integrating local heritage into classroom lessons. Teachers will leave with ready-to-use materials and curriculum guides.",
-    capacity: 45,
-    registered: 31,
-  },
-  {
-    id: 8,
-    title: "Family History Exhibit Opening",
-    date: "2026-06-20",
-    time: "5:00 PM – 8:00 PM",
-    location: "Gallery Hall 2",
-    category: "heritage",
-    description: "Grand opening of our new Family History Exhibit featuring digitized photographs, documents, and oral history recordings contributed by the community.",
-    capacity: 200,
-    registered: 150,
-  },
-  {
-    id: 9,
-    title: "Youth Heritage Ambassador Training",
-    date: "2026-06-28",
-    time: "9:00 AM – 3:00 PM",
-    location: "Training Room",
-    category: "orientation",
-    description: "First training session for newly selected Youth Heritage Ambassadors. Participants will be oriented on heritage preservation, museum operations, and community engagement.",
-    capacity: 30,
-    registered: 30,
-  },
-];
-
 const MONTHS = [
   "January", "February", "March", "April", "May", "June",
   "July", "August", "September", "October", "November", "December",
 ];
 
+const today = new Date();
+const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
+const initialCalendarDate = (() => {
+  const sortedDates = events
+    .map((event) => new Date(`${event.date}T00:00:00`))
+    .filter((value) => !Number.isNaN(value.getTime()))
+    .sort((a, b) => a.getTime() - b.getTime());
+
+  return sortedDates.find((value) => formatDateKey(value) >= todayKey) || sortedDates[0] || today;
+})();
+
 const INITIAL_HIGHLIGHTS_TOTAL = 7;
 
-let currentYear = 2026;
-let currentMonth = 4;
+let currentYear = initialCalendarDate.getFullYear();
+let currentMonth = initialCalendarDate.getMonth();
 let selectedDate = null;
 let activeFilter = "all";
 let selectedEvent = null;
 let areAllHighlightsVisible = false;
+
+function formatDateKey(value) {
+  return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
+}
+
+function getCategoryConfig(category) {
+  return categoryConfig[category] || categoryConfig["Booked Tour (former Orientation)"];
+}
 
 function initHighlights() {
   const filterButtons = document.querySelectorAll('#highlightFilters .filter-tab');
@@ -343,7 +261,7 @@ function renderCalendar() {
   for (let day = 1; day <= daysInMonth; day++) {
     const dateStr = `${currentYear}-${String(currentMonth + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
     const dayEvents = getEventsForDate(day);
-    const isToday = dateStr === "2026-05-10";
+    const isToday = dateStr === todayKey;
     const isSelected = dateStr === selectedDate;
 
     let classes = 'calendar-day';
@@ -356,7 +274,7 @@ function renderCalendar() {
         ${dayEvents.length > 0 ? `
           <div class="calendar-day-dots">
             ${dayEvents.slice(0, 3).map(ev => `
-              <span class="calendar-event-dot" style="background: ${isSelected ? 'rgba(255,255,255,0.8)' : categoryConfig[ev.category].dot};"></span>
+              <span class="calendar-event-dot" style="background: ${isSelected ? 'rgba(255,255,255,0.8)' : getCategoryConfig(ev.category).dot};"></span>
             `).join('')}
           </div>
         ` : ''}
@@ -412,7 +330,7 @@ function renderSelectedDateEvents() {
         </div>
         <div class="space-y-3">
           ${dateEvents.map(ev => {
-            const cfg = categoryConfig[ev.category];
+            const cfg = getCategoryConfig(ev.category);
             return `
               <div class="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-blue-200 cursor-pointer transition-all" onclick="openEventModal(${ev.id})">
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: ${cfg.bg};">
@@ -435,18 +353,21 @@ function renderSelectedDateEvents() {
 
 function renderUpcomingEvents() {
   const upcoming = events
-    .filter(e => e.date >= "2026-05-10")
+    .filter(e => e.date >= todayKey)
     .sort((a, b) => a.date.localeCompare(b.date))
     .slice(0, 5);
 
   const container = document.getElementById('upcomingEventsList');
+  if (upcoming.length === 0) {
+    container.innerHTML = '<div class="text-sm text-gray-400 text-center py-8">No upcoming events available right now.</div>';
+    return;
+  }
+
   container.innerHTML = upcoming.map(ev => {
-    const cfg = categoryConfig[ev.category];
+    const cfg = getCategoryConfig(ev.category);
     const d = new Date(ev.date + "T00:00:00");
     const dayNum = d.getDate();
     const monthShort = d.toLocaleString("en-US", { month: "short" });
-    const fillPercent = ev.capacity ? Math.round(((ev.registered || 0) / ev.capacity) * 100) : 0;
-    const fillColor = fillPercent >= 90 ? "#DC2626" : fillPercent >= 60 ? "#C5973A" : "#16A34A";
 
     return `
       <button class="upcoming-event-item" onclick="openEventModal(${ev.id})">
@@ -459,19 +380,8 @@ function renderUpcomingEvents() {
             <p class="upcoming-event-title">${ev.title}</p>
             <div class="upcoming-event-time">
               <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-              <span>${ev.time.split("–")[0].trim()}</span>
+              <span>${ev.time}</span>
             </div>
-            ${ev.capacity ? `
-              <div class="upcoming-event-capacity">
-                <div class="upcoming-event-capacity-text">
-                  <span>${ev.registered}/${ev.capacity} registered</span>
-                  <span>${fillPercent}%</span>
-                </div>
-                <div class="upcoming-event-capacity-bar">
-                  <div class="upcoming-event-capacity-fill" style="width: ${fillPercent}%; background: ${fillColor};"></div>
-                </div>
-              </div>
-            ` : ''}
           </div>
         </div>
       </button>
@@ -483,7 +393,7 @@ function openEventModal(eventId) {
   selectedEvent = events.find(e => e.id === eventId);
   if (!selectedEvent) return;
 
-  const cfg = categoryConfig[selectedEvent.category];
+  const cfg = getCategoryConfig(selectedEvent.category);
   const modal = document.getElementById('eventModal');
   const content = document.getElementById('eventModalContent');
 
@@ -538,27 +448,7 @@ function openEventModal(eventId) {
             <p class="text-gray-700 text-sm font-medium">${selectedEvent.location}</p>
           </div>
         </div>
-        ${selectedEvent.capacity ? `
-          <div class="flex items-center gap-3 text-sm">
-            <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
-              <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-            </div>
-            <div class="flex-1">
-              <p class="text-gray-400 text-xs uppercase tracking-wider mb-1">Capacity</p>
-              <div class="flex items-center gap-2">
-                <div class="flex-1 h-1.5 rounded-full bg-gray-200 overflow-hidden">
-                  <div class="h-full rounded-full" style="width: ${Math.round(((selectedEvent.registered || 0) / selectedEvent.capacity) * 100)}%; background: ${cfg.dot};"></div>
-                </div>
-                <span class="text-gray-700 text-xs font-medium">${selectedEvent.registered}/${selectedEvent.capacity}</span>
-              </div>
-            </div>
-          </div>
-        ` : ''}
       </div>
-
-      <button class="w-full py-3 rounded-xl text-white text-sm mt-2 transition-all hover:opacity-90" style="background: linear-gradient(135deg, #C5973A, #D4A843); font-weight: 500;">
-        Register for this Event
-      </button>
     </div>
   `;
 

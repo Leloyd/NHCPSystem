@@ -59,7 +59,7 @@
             <span class="community-section-kicker">Events Calendar</span>
             <h2 class="community-section-title">Upcoming Programs &amp; Events</h2>
             <p class="community-section-description">
-              Explore orientations, community gatherings, student activities, and guided heritage
+              Explore booked tours, community gatherings, student activities, and guided heritage
               sessions in one shared public calendar.
             </p>
           </div>
@@ -67,7 +67,7 @@
           <div class="flex flex-wrap justify-center gap-3 mb-10">
             <div class="event-legend-item">
               <span class="event-dot" style="background: #1E3A5F;"></span>
-              Orientation
+              Booked Tour (former Orientation)
             </div>
             <div class="event-legend-item">
               <span class="event-dot" style="background: #16A34A;"></span>
@@ -460,7 +460,7 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script id="communityParticipationData" type="application/json">{{ {'highlights': community_highlights_items or []}|tojson }}</script>
+    <script id="communityParticipationData" type="application/json">{{ {'highlights': community_highlights_items or [], 'events': community_events_items or []}|tojson }}</script>
     <script>
       lucide.createIcons();
     </script>

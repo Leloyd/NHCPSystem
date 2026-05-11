@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'events' %}
 {% set admin_topbar_title = 'Events Calendar' %}
-{% set admin_topbar_subtitle = 'Manage scheduled event cards shown on the Community & Events page and public event detail pages.' %}
+{% set admin_topbar_subtitle = 'Manage scheduled event cards shown in the Community Participation Events Calendar and event modal.' %}
 {% set admin_topbar_tool_href = url_for('admin_event_new') %}
 {% set admin_topbar_tool_label = 'Create Event Card' %}
 {% set admin_topbar_tool_class = 'admin-primary-action' %}
@@ -24,66 +24,184 @@
           </section>
           {% endif %}
 
+          {% if events_items %}
           <section class="admin-panel admin-panel-wide admin-resource-panel">
             <div class="admin-panel-head">
               <div>
-                <h3>Published and Draft Event Cards</h3>
-                <p>These entries feed the Events Calendar carousel and each event detail page.</p>
+                <h3>Active Event Cards</h3>
+                <p>Manage the cards shown in the redesigned Events Calendar and public event modal.</p>
               </div>
               <a href="{{ url_for('admin_event_new') }}" class="admin-text-link">Add New</a>
             </div>
 
-            {% if events_items %}
             <div class="admin-resource-table-wrap">
               <table class="admin-resource-table">
                 <thead>
                   <tr>
-                    <th>Event</th>
-                    <th>Date</th>
+                    <th>Overview</th>
+                    <th>Category</th>
+                    <th>Schedule</th>
                     <th>Status</th>
-                    <th>Image</th>
+                    <th>Location</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for event_item in events_items %}
+                  {% for event_item in active_events_items %}
                   <tr>
                     <td>
                       <div class="admin-resource-main">
                         <strong>{{ event_item.title }}</strong>
                         <span>{{ event_item.short_description }}</span>
-                        <span>{{ event_item.long_description|truncate(120) }}</span>
+                        <span>{{ event_item.display_date }}{% if event_item.event_time %} · {{ event_item.event_time }}{% endif %}</span>
                       </div>
                     </td>
-                    <td>{{ event_item.display_date }}</td>
+                    <td>{{ event_item.category }}</td>
+                    <td>{{ event_item.display_date }}{% if event_item.event_time %}<br /><span>{{ event_item.event_time }}</span>{% endif %}</td>
                     <td>
-                      <span class="admin-status-badge {% if event_item.is_published %}is-published{% else %}is-draft{% endif %}">
-                        {% if event_item.is_published %}Published{% else %}Draft{% endif %}
-                      </span>
+                      <span class="admin-status-badge is-published">Active</span>
                     </td>
-                    <td>{{ event_item.image_filename or 'No image' }}</td>
+                    <td>{{ event_item.location }}</td>
                     <td>
                       <div class="admin-resource-actions">
                         <a href="{{ url_for('community_event_detail', slug=event_item.slug) }}" class="admin-inline-link">View</a>
                         <a href="{{ url_for('admin_event_edit', event_id=event_item.id) }}" class="admin-inline-link">Edit</a>
                         <form method="post" action="{{ url_for('admin_event_delete', event_id=event_item.id) }}">
                           <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                          <button type="submit" class="admin-inline-link admin-inline-link-danger">Delete</button>
+                          <button type="submit" class="admin-inline-link admin-inline-link-danger">Archive</button>
                         </form>
                       </div>
                     </td>
                   </tr>
                   {% endfor %}
+                  {% if not active_events_items %}
+                  <tr>
+                    <td colspan="6">
+                      <div class="admin-empty-state">
+                        <h3>No active cards</h3>
+                        <p>Change a draft to Active to show it in the public Events Calendar.</p>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endif %}
                 </tbody>
               </table>
             </div>
-            {% else %}
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Draft Cards</h3>
+                <p>These event cards are saved but hidden until you mark them active.</p>
+              </div>
+            </div>
+
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Overview</th>
+                    <th>Category</th>
+                    <th>Schedule</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for event_item in draft_events_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ event_item.title }}</strong>
+                        <span>{{ event_item.short_description }}</span>
+                        <span>{{ event_item.display_date }}{% if event_item.event_time %} · {{ event_item.event_time }}{% endif %}</span>
+                      </div>
+                    </td>
+                    <td>{{ event_item.category }}</td>
+                    <td>{{ event_item.display_date }}{% if event_item.event_time %}<br /><span>{{ event_item.event_time }}</span>{% endif %}</td>
+                    <td><span class="admin-status-badge is-draft">Draft</span></td>
+                    <td>{{ event_item.location }}</td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('admin_event_edit', event_id=event_item.id) }}" class="admin-inline-link">Edit</a>
+                        <form method="post" action="{{ url_for('admin_event_delete', event_id=event_item.id) }}">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                          <button type="submit" class="admin-inline-link admin-inline-link-danger">Archive</button>
+                        </form>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not draft_events_items %}
+                  <tr>
+                    <td colspan="6">No draft cards yet.</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Archived Cards</h3>
+                <p>Archived event cards are kept for editing history and can be restored by changing the status in the edit form.</p>
+              </div>
+            </div>
+
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Overview</th>
+                    <th>Category</th>
+                    <th>Schedule</th>
+                    <th>Status</th>
+                    <th>Location</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for event_item in archived_events_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ event_item.title }}</strong>
+                        <span>{{ event_item.short_description }}</span>
+                        <span>{{ event_item.display_date }}{% if event_item.event_time %} · {{ event_item.event_time }}{% endif %}</span>
+                      </div>
+                    </td>
+                    <td>{{ event_item.category }}</td>
+                    <td>{{ event_item.display_date }}{% if event_item.event_time %}<br /><span>{{ event_item.event_time }}</span>{% endif %}</td>
+                    <td><span class="admin-status-badge is-draft">Archived</span></td>
+                    <td>{{ event_item.location }}</td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('admin_event_edit', event_id=event_item.id) }}" class="admin-inline-link">Edit</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not archived_events_items %}
+                  <tr>
+                    <td colspan="6">No archived cards.</td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% else %}
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
             <div class="admin-empty-state">
               <div class="admin-empty-state-icon">+</div>
               <h3>No event cards yet</h3>
-              <p>Create your first Events Calendar card to publish it on the public Community &amp; Events page.</p>
+              <p>Create your first Events Calendar card to show it in the redesigned public calendar and event modal.</p>
               <a href="{{ url_for('admin_event_new') }}" class="admin-primary-action">Create First Event</a>
             </div>
-            {% endif %}
           </section>
+          {% endif %}
 {% endblock %}

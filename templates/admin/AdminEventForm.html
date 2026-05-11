@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'events' %}
 {% set admin_topbar_title = form_title %}
-{% set admin_topbar_subtitle = 'Create or update the event card content shown inside the public Events Calendar.' %}
+{% set admin_topbar_subtitle = 'Create or update event cards shown in the redesigned public Events Calendar.' %}
 {% set admin_topbar_tool_href = url_for('admin_events') %}
 {% set admin_topbar_tool_label = 'Back to list' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
@@ -28,39 +28,44 @@
                 </div>
 
                 <div class="admin-form-field">
+                  <label for="eventCategory">Category</label>
+                  <select id="eventCategory" name="category" required>
+                    {% for category_option in category_options %}
+                    <option value="{{ category_option }}" {% if event_form.category == category_option %}selected{% endif %}>{{ category_option }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="admin-form-field">
                   <label for="eventDate">Date</label>
                   <input id="eventDate" name="event_date" type="date" required value="{{ event_form.event_date }}" />
                 </div>
 
+                <div class="admin-form-field">
+                  <label for="eventTime">Time</label>
+                  <input id="eventTime" name="event_time" type="text" maxlength="120" required value="{{ event_form.event_time }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="eventStatus">Status</label>
+                  <select id="eventStatus" name="status" required>
+                    {% for status_option in status_options %}
+                    <option value="{{ status_option }}" {% if event_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="eventShortDescription">Short Description</label>
+                  <label for="eventLocation">Location</label>
+                  <input id="eventLocation" name="location" type="text" maxlength="180" required value="{{ event_form.location }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="eventShortDescription">Details / Short Description</label>
                   <textarea id="eventShortDescription" name="short_description" rows="4" required>{{ event_form.short_description }}</textarea>
+                  <p class="admin-field-hint">This appears in the event cards, calendar list, and modal.</p>
                 </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="eventLongDescription">Long Description</label>
-                  <textarea id="eventLongDescription" name="long_description" rows="10" required>{{ event_form.long_description }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="eventImage">Card Image (JPG or PNG)</label>
-                  <input id="eventImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                  {% if event_form.image_filename %}
-                  <p class="admin-field-hint">Current image: <strong>{{ event_form.image_filename }}</strong></p>
-                  {% endif %}
-                </div>
-
-                <label class="admin-checkbox-field admin-form-field-wide">
-                  <input name="is_published" type="checkbox" value="1" {% if event_form.is_published %}checked{% endif %} />
-                  <span>Publish this card on the public site</span>
-                </label>
               </div>
-
-              {% if event_form.image_url %}
-              <div class="admin-image-preview-card">
-                <img src="{{ event_form.image_url }}" alt="Current event preview" />
-              </div>
-              {% endif %}
 
               <div class="admin-form-actions">
                 <a href="{{ url_for('admin_events') }}" class="admin-secondary-action">Cancel</a>

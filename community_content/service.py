@@ -37,11 +37,30 @@ COMMUNITY_HIGHLIGHT_STATUS_OPTIONS = (
     "draft",
     "archived",
 )
+COMMUNITY_EVENT_CATEGORIES = (
+    "Booked Tour (former Orientation)",
+    "Community Gathering",
+    "Student Activity",
+    "Heritage Session",
+    "Workshop",
+)
+COMMUNITY_EVENT_STATUS_OPTIONS = (
+    "active",
+    "draft",
+    "archived",
+)
 COMMUNITY_HIGHLIGHT_CATEGORY_STYLES = {
     "Museum Programs": {"color": "#1E3A5F", "bg": "rgba(30, 58, 95, 0.1)"},
     "School Engagement": {"color": "#C5973A", "bg": "rgba(197, 151, 58, 0.1)"},
     "Public Activity": {"color": "#16A34A", "bg": "rgba(22, 163, 74, 0.1)"},
     "Public Advisory": {"color": "#DC2626", "bg": "rgba(220, 38, 38, 0.08)"},
+}
+COMMUNITY_EVENT_CATEGORY_STYLES = {
+    "Booked Tour (former Orientation)": {"color": "#1E3A5F", "bg": "rgba(30, 58, 95, 0.1)"},
+    "Community Gathering": {"color": "#16A34A", "bg": "rgba(22, 163, 74, 0.1)"},
+    "Student Activity": {"color": "#C5973A", "bg": "rgba(197, 151, 58, 0.1)"},
+    "Heritage Session": {"color": "#7C3AED", "bg": "rgba(124, 58, 237, 0.1)"},
+    "Workshop": {"color": "#DC2626", "bg": "rgba(220, 38, 38, 0.08)"},
 }
 
 
@@ -115,14 +134,24 @@ def prepare_community_highlight_items(items: list[dict[str, Any]] | None) -> lis
 
 def prepare_community_event_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared = dict(item or {})
+    raw_status = str(prepared.get("status") or "").strip().lower()
+    status = raw_status if raw_status in COMMUNITY_EVENT_STATUS_OPTIONS else ("active" if prepared.get("is_published") else "draft")
+    category = str(prepared.get("category") or COMMUNITY_EVENT_CATEGORIES[0]).strip() or COMMUNITY_EVENT_CATEGORIES[0]
+    category_style = COMMUNITY_EVENT_CATEGORY_STYLES.get(category, COMMUNITY_EVENT_CATEGORY_STYLES[COMMUNITY_EVENT_CATEGORIES[0]])
+    event_time = str(prepared.get("event_time") or "").strip()
+    location = str(prepared.get("location") or "").strip()
+    short_description = str(prepared.get("short_description") or "").strip()
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_event_detail", slug=prepared.get("slug", ""))
-    prepared["image_url"] = resolve_community_upload_image_url(
-        prepared.get("image_filename"),
-        upload_dir=COMMUNITY_EVENTS_UPLOAD_DIR,
-        upload_folder_name="events",
-        storage_prefix=COMMUNITY_EVENTS_STORAGE_PREFIX,
-    )
+    prepared["category"] = category
+    prepared["category_color"] = category_style["color"]
+    prepared["category_bg"] = category_style["bg"]
+    prepared["status"] = status
+    prepared["event_time"] = event_time
+    prepared["location"] = location
+    prepared["date"] = str(prepared.get("event_date") or "").strip()
+    prepared["time"] = event_time
+    prepared["description"] = short_description
     return prepared
 
 
@@ -274,14 +303,17 @@ def build_community_highlight_form_state(source: dict[str, Any] | None = None) -
 
 def build_community_event_form_state(source: dict[str, Any] | None = None) -> dict[str, Any]:
     source = source or {}
+    raw_category = str(source.get("category") or "").strip()
+    raw_status = str(source.get("status") or "").strip().lower()
     return {
         "title": str(source.get("title") or "").strip(),
+        "category": raw_category if raw_category in COMMUNITY_EVENT_CATEGORIES else COMMUNITY_EVENT_CATEGORIES[0],
+        "status": raw_status if raw_status in COMMUNITY_EVENT_STATUS_OPTIONS else "draft",
         "event_date": str(source.get("event_date") or "").strip(),
+        "event_time": str(source.get("event_time") or "").strip(),
+        "location": str(source.get("location") or "").strip(),
         "short_description": str(source.get("short_description") or "").strip(),
-        "long_description": str(source.get("long_description") or "").strip(),
         "is_published": bool(source.get("is_published")),
-        "image_filename": str(source.get("image_filename") or "").strip(),
-        "image_url": source.get("image_url"),
     }
 
 
@@ -300,7 +332,7 @@ def get_community_events_status_message(status_key: Any) -> str | None:
     mapping = {
         "created": "Event card created successfully.",
         "updated": "Event card updated successfully.",
-        "deleted": "Event card deleted successfully.",
+        "archived": "Event card archived successfully.",
     }
     return mapping.get(str(status_key or "").strip().lower())
 
@@ -353,5 +385,7 @@ def render_admin_event_form(
         submit_label=submit_label,
         form_action=form_action,
         event_form=event_form,
+        category_options=COMMUNITY_EVENT_CATEGORIES,
+        status_options=COMMUNITY_EVENT_STATUS_OPTIONS,
         error_message=error_message,
     )

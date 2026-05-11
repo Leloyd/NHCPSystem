@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 COMMUNITY_EVENTS_TABLE = "community_events"
 COMMUNITY_EVENTS_SELECT_FIELDS = (
-    "id, title, slug, event_date, short_description, long_description, image_filename, is_published, created_at, updated_at"
+    "id, title, slug, category, event_date, event_time, location, short_description, status, is_published, created_at, updated_at"
 )
 
 
