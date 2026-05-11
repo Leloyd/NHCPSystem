@@ -1,37 +1,38 @@
-<header class="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-sm shadow-sm">
+<header id="publicNavHeader" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 {% if public_active_page == 'home' %}bg-transparent{% else %}bg-white/95 backdrop-blur-sm shadow-sm{% endif %}" data-nav-mode="{% if public_active_page == 'home' %}transparent{% else %}solid{% endif %}">
   <div class="container mx-auto px-4">
     <div class="flex items-center justify-between h-20">
       <a href="{{ url_for('index') }}" class="flex items-center space-x-3">
         <img
           src="/images/UndergroundLogo.jpg"
           alt="Museo ng Libingan sa Ilalim ng Lupa logo"
-          class="museum-logo"
+          class="museum-logo transition-opacity duration-300"
+          id="navLogo"
         />
-        <div class="text-2xl font-serif text-amber-800">Museo ng Libingan sa Ilalim ng Lupa</div>
+        <div class="text-2xl font-serif transition-colors duration-300 {% if public_active_page == 'home' %}text-white{% else %}text-amber-800{% endif %}" id="navTitle">Museo ng Libingan sa Ilalim ng Lupa</div>
       </a>
 
-      <nav class="hidden lg:flex items-center space-x-8">
-        <a href="{{ url_for('index') }}" class="{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Home</a>
-        <a href="{{ url_for('digital_exhibits') }}" class="{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
-        <a href="{{ url_for('interactive') }}" class="{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
-        <a href="{{ url_for('heritage_trail') }}" class="{% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Heritage Trail</a>
-        <a href="{{ url_for('community_participation') }}" class="{% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community Participation</a>
-        <a href="{{ url_for('support') }}" class="{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Support</a>
+      <nav class="hidden lg:flex items-center space-x-8" id="navLinks">
+        <a href="{{ url_for('index') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'home' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Home</a>
+        <a href="{{ url_for('digital_exhibits') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'digital-exhibits' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Digital Exhibits</a>
+        <a href="{{ url_for('interactive') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'interactive' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Interactive</a>
+        <a href="{{ url_for('heritage_trail') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'heritage-trail' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Heritage Trail</a>
+        <a href="{{ url_for('community_participation') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'community-participation' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Community Participation</a>
+        <a href="{{ url_for('support') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'support' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Support</a>
       </nav>
 
-      <button id="menuToggle" class="lg:hidden p-2 text-gray-700" type="button" aria-label="Toggle menu">
+      <button id="menuToggle" class="lg:hidden p-2 transition-colors duration-300 {% if public_active_page == 'home' %}text-white{% else %}text-gray-700{% endif %}" type="button" aria-label="Toggle menu" data-nav-toggle>
         <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
         <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
       </button>
     </div>
 
-    <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden">
-      <a href="{{ url_for('index') }}" class="block {% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Home</a>
-      <a href="{{ url_for('digital_exhibits') }}" class="block {% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Digital Exhibits</a>
-      <a href="{{ url_for('interactive') }}" class="block {% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Interactive</a>
-      <a href="{{ url_for('heritage_trail') }}" class="block {% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Heritage Trail</a>
-      <a href="{{ url_for('community_participation') }}" class="block {% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Community Participation</a>
-      <a href="{{ url_for('support') }}" class="block {% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800 transition{% endif %}">Support</a>
+    <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden {% if public_active_page == 'home' %}border-white/20{% else %}border-gray-200{% endif %}">
+      <a href="{{ url_for('index') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'home' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Home</a>
+      <a href="{{ url_for('digital_exhibits') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'digital-exhibits' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Digital Exhibits</a>
+      <a href="{{ url_for('interactive') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'interactive' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Interactive</a>
+      <a href="{{ url_for('heritage_trail') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'heritage-trail' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Heritage Trail</a>
+      <a href="{{ url_for('community_participation') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'community-participation' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Community Participation</a>
+      <a href="{{ url_for('support') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'support' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Support</a>
     </nav>
   </div>
 </header>
