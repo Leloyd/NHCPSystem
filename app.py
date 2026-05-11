@@ -694,7 +694,7 @@ def participation():
 
 @app.route("/community-participation")
 def community_participation():
-    community_highlights_items = load_news_community_highlights(limit=12)
+    community_highlights_items = load_news_community_highlights(limit=24)
     return render_template("CommunityParticipation.html", community_highlights_items=community_highlights_items)
 
 

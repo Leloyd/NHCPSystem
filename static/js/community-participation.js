@@ -155,22 +155,35 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
+const INITIAL_HIGHLIGHTS_TOTAL = 7;
+
 let currentYear = 2026;
 let currentMonth = 4;
 let selectedDate = null;
 let activeFilter = "all";
 let selectedEvent = null;
+let areAllHighlightsVisible = false;
 
 function initHighlights() {
   const filterButtons = document.querySelectorAll('#highlightFilters .filter-tab');
+  const viewAllButton = document.getElementById('viewAllHighlightsBtn');
+
   filterButtons.forEach(btn => {
     btn.addEventListener('click', () => {
       filterButtons.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
       activeFilter = btn.dataset.filter;
+      areAllHighlightsVisible = false;
       renderHighlights();
     });
   });
+
+  if (viewAllButton) {
+    viewAllButton.addEventListener('click', () => {
+      areAllHighlightsVisible = true;
+      renderHighlights();
+    });
+  }
 
   renderHighlights();
 }
@@ -182,6 +195,7 @@ function renderHighlights() {
 
   const featuredContainer = document.getElementById('highlightsFeatured');
   const gridContainer = document.getElementById('highlightsGrid');
+  const viewAllButton = document.getElementById('viewAllHighlightsBtn');
 
   if (filtered.length === 0) {
     featuredContainer.innerHTML = '';
@@ -190,6 +204,9 @@ function renderHighlights() {
         No community highlights are available in this category yet.
       </div>
     `;
+    if (viewAllButton) {
+      viewAllButton.classList.add('hidden');
+    }
     return;
   }
 
@@ -229,7 +246,17 @@ function renderHighlights() {
     featuredContainer.innerHTML = '';
   }
 
-  const itemsToShow = activeFilter === "all" ? rest : filtered;
+  const limit = featured && activeFilter === "all"
+    ? Math.max(INITIAL_HIGHLIGHTS_TOTAL - 1, 0)
+    : INITIAL_HIGHLIGHTS_TOTAL;
+  const sourceItems = activeFilter === "all" ? rest : filtered;
+  const itemsToShow = areAllHighlightsVisible ? sourceItems : sourceItems.slice(0, limit);
+
+  if (viewAllButton) {
+    const hasMoreItems = sourceItems.length > itemsToShow.length;
+    viewAllButton.classList.toggle('hidden', !hasMoreItems);
+  }
+
   gridContainer.innerHTML = itemsToShow.map(item => `
     <div class="highlight-card">
       <div class="highlight-card-image">
