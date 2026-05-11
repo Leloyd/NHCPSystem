@@ -89,6 +89,24 @@
     });
   }
 
+  function initDetailMediaZoom() {
+    var zoomToggle = document.querySelector("[data-detail-zoom-toggle]");
+    var zoomHint = zoomToggle ? zoomToggle.querySelector("[data-detail-zoom-hint]") : null;
+
+    if (!zoomToggle) {
+      return;
+    }
+
+    zoomToggle.addEventListener("click", function () {
+      var isZoomed = zoomToggle.classList.toggle("is-zoomed");
+      zoomToggle.setAttribute("aria-pressed", isZoomed ? "true" : "false");
+
+      if (zoomHint) {
+        zoomHint.textContent = isZoomed ? "Click to zoom out" : "Click to zoom in";
+      }
+    });
+  }
+
   function initGsapReveal() {
     if (typeof window.gsap === "undefined") {
       return;
@@ -126,5 +144,6 @@
 
   ensureFavicon();
   initNewsCarousels();
+  initDetailMediaZoom();
   initGsapReveal();
 })();

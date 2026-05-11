@@ -6,57 +6,168 @@
     <title>{{ highlight_item.title }} | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/community-detail.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
   </head>
-  <body class="bg-stone-50 text-gray-900">
+  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'community-participation' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="pt-20">
-      <section class="news-detail-hero py-20 text-white">
-        <div class="container mx-auto px-4 relative z-10">
-          <div class="max-w-3xl news-reveal">
-            <p class="news-detail-kicker">{{ highlight_item.category }}</p>
-            <h1 class="text-5xl md:text-6xl font-serif mb-5">{{ highlight_item.title }}</h1>
-            <div class="flex items-center gap-3 text-stone-200 text-lg">
-              <i data-lucide="calendar" class="w-5 h-5"></i>
-              <span>{{ highlight_item.display_date }}</span>
+    <main class="pt-20 ogd-detail-page">
+      <section class="ogd-detail-topbar">
+        <div class="container mx-auto px-4">
+          <div class="ogd-detail-topbar__inner">
+            <nav class="ogd-breadcrumb" aria-label="Breadcrumb">
+              <a href="/">Home</a>
+              <span aria-hidden="true">/</span>
+              <a href="{{ url_for('community_participation') }}">Community Participation</a>
+              <span aria-hidden="true">/</span>
+              <span aria-current="page">{{ highlight_item.title }}</span>
+            </nav>
+
+            <div class="ogd-detail-nav">
+              <a href="{{ url_for('community_participation') }}" class="ogd-detail-nav__button" aria-label="Back to Community Participation">
+                <i data-lucide="arrow-left" aria-hidden="true"></i>
+              </a>
             </div>
           </div>
         </div>
       </section>
 
-      <section class="py-16 bg-stone-50">
+      <section class="ogd-detail-main">
         <div class="container mx-auto px-4">
-          <div class="max-w-6xl mx-auto news-detail-card news-reveal grid grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
-            <div class="news-detail-visual{% if not highlight_item.image_url %} is-placeholder{% endif %}">
-              {% if highlight_item.image_url %}
-              <img src="{{ highlight_item.image_url }}" alt="{{ highlight_item.title }}" loading="eager" />
-              {% endif %}
+          <div class="ogd-detail-layout">
+            <div class="ogd-detail-media-column">
+              <div class="ogd-detail-media-sticky">
+                <button id="highlightDetailZoomToggle" data-detail-zoom-toggle class="ogd-detail-media" type="button" aria-label="Click to zoom image" aria-pressed="false">
+                  <div class="ogd-detail-media__frame">
+                    {% if highlight_item.image_url %}
+                    <img src="{{ highlight_item.image_url }}" alt="{{ highlight_item.title }}" class="ogd-detail-media__image" loading="eager" />
+                    {% else %}
+                    <div class="ogd-detail-media__fallback">{{ (highlight_item.title or 'C')[:1]|upper }}</div>
+                    {% endif %}
+                  </div>
+                  <span class="ogd-detail-media__badge{% if highlight_item.is_featured %} bg-stone-900 text-white{% endif %}">
+                    {% if highlight_item.is_featured %}Featured{% else %}{{ highlight_item.category }}{% endif %}
+                  </span>
+                  <span class="ogd-detail-media__hint">
+                    <i data-lucide="zoom-in" aria-hidden="true"></i>
+                    <span data-detail-zoom-hint>Click to zoom in</span>
+                  </span>
+                </button>
+              </div>
             </div>
 
-            <div class="news-detail-content">
-              <a href="{{ url_for('community_participation') }}" class="news-detail-back mb-8">
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m10.5 5.5 1.4 1.4-4.1 4.1H20v2H7.8l4.1 4.1-1.4 1.4L4 12l6.5-6.5Z"></path></svg>
-                <span>Back to Community Participation</span>
-              </a>
+            <div class="ogd-detail-content">
+              <p class="ogd-detail-counter">{% if highlight_item.is_featured %}Featured Community Highlight{% else %}Community Highlight{% endif %}</p>
+              <h1 class="ogd-detail-title font-serif">{{ highlight_item.title }}</h1>
 
-              <p class="news-detail-tag">Community Highlight</p>
-              <p class="text-xl text-gray-700 leading-relaxed mb-8">{{ highlight_item.short_description }}</p>
+              <div class="ogd-detail-meta-row">
+                <span class="ogd-detail-category-pill">{{ highlight_item.category }}</span>
+                <span class="ogd-detail-meta">{{ highlight_item.display_date }} · {{ highlight_item.estimated_read_label }}</span>
+              </div>
 
-              <div class="w-20 h-px bg-orange-200 mb-8"></div>
+              <section class="ogd-detail-section-card">
+                <h2 class="ogd-detail-section-card__title">Overview</h2>
+                <p class="ogd-detail-description">{{ highlight_item.short_description }}</p>
+              </section>
 
-              <div class="news-detail-body whitespace-pre-line">{{ highlight_item.long_description }}</div>
+              <section class="ogd-detail-section-card">
+                <h2 class="ogd-detail-section-card__title">Full Description</h2>
+                <p class="ogd-detail-description">{{ highlight_item.long_description }}</p>
+              </section>
+
+              <section class="ogd-detail-facts">
+                <h2 class="ogd-detail-section-card__title">Highlight Details</h2>
+                <div class="ogd-detail-facts__list">
+                  <div class="ogd-detail-fact">
+                    <div class="ogd-detail-fact__icon">
+                      <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    </div>
+                    <div class="ogd-detail-fact__content">
+                      <p class="ogd-detail-fact__label">Event Date</p>
+                      <p class="ogd-detail-fact__value">{{ highlight_item.display_date }}</p>
+                    </div>
+                  </div>
+                  <div class="ogd-detail-fact">
+                    <div class="ogd-detail-fact__icon">
+                      <i data-lucide="tag" aria-hidden="true"></i>
+                    </div>
+                    <div class="ogd-detail-fact__content">
+                      <p class="ogd-detail-fact__label">Category</p>
+                      <p class="ogd-detail-fact__value">{{ highlight_item.category }}</p>
+                    </div>
+                  </div>
+                  <div class="ogd-detail-fact">
+                    <div class="ogd-detail-fact__icon">
+                      <i data-lucide="clock-3" aria-hidden="true"></i>
+                    </div>
+                    <div class="ogd-detail-fact__content">
+                      <p class="ogd-detail-fact__label">Estimated Read Time</p>
+                      <p class="ogd-detail-fact__value">{{ highlight_item.estimated_read_label }}</p>
+                    </div>
+                  </div>
+                  <div class="ogd-detail-fact">
+                    <div class="ogd-detail-fact__icon">
+                      <i data-lucide="star" aria-hidden="true"></i>
+                    </div>
+                    <div class="ogd-detail-fact__content">
+                      <p class="ogd-detail-fact__label">Placement</p>
+                      <p class="ogd-detail-fact__value">{% if highlight_item.is_featured %}Featured highlight{% else %}Standard highlight{% endif %}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <div class="ogd-detail-back-row">
+                <a href="{{ url_for('community_participation') }}" class="ogd-detail-back-button">
+                  <i data-lucide="arrow-left" aria-hidden="true"></i>
+                  <span>Back to Community Participation</span>
+                </a>
+              </div>
             </div>
           </div>
         </div>
       </section>
     </main>
 
+    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
+      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Accessibility controls">
+        <div class="ogd-accessibility-panel__header">
+          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Accessibility Controls</h2>
+          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Close accessibility panel">
+            <i data-lucide="x" aria-hidden="true"></i>
+          </button>
+        </div>
+
+        <div class="ogd-accessibility-panel__group">
+          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Text Size</p>
+          <div class="ogd-accessibility-segmented" role="group" aria-label="Text size options">
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Small</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Medium</button>
+            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Large</button>
+          </div>
+        </div>
+
+        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
+          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">High Contrast</span>
+          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
+        </button>
+
+        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Switch language">
+          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Language</span>
+          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">EN</span>
+        </button>
+      </div>
+
+      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Open accessibility panel" aria-expanded="false" aria-haspopup="dialog">
+        <i data-lucide="accessibility" aria-hidden="true"></i>
+      </button>
+    </div>
+
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
     <script src="{{ url_for('static', filename='js/community-detail.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
   </body>
 </html>
