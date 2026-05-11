@@ -25,69 +25,94 @@
     var navLinks = document.querySelectorAll("[data-nav-link]");
     var navToggle = document.querySelector("[data-nav-toggle]");
     var mobileMenu = document.getElementById("mobileMenu");
+    var menuToggle = document.getElementById("menuToggle");
     var scrollThreshold = 100;
     var isScrolled = false;
+    var isMobileMenuOpen = false;
+
+    function applyWhiteBackground() {
+      navHeader.classList.remove("bg-transparent");
+      navHeader.classList.add("bg-white/95", "backdrop-blur-sm", "shadow-sm");
+
+      if (navTitle) {
+        navTitle.classList.remove("text-white");
+        navTitle.classList.add("text-amber-800");
+      }
+
+      navLinks.forEach(function (link) {
+        link.classList.remove("text-white/90", "hover:text-white", "text-[#D4AF6A]");
+        if (link.textContent.trim() === "Home") {
+          link.classList.add("text-amber-800", "font-semibold");
+        } else {
+          link.classList.add("text-gray-700", "hover:text-amber-800");
+        }
+      });
+
+      if (navToggle) {
+        navToggle.classList.remove("text-white");
+        navToggle.classList.add("text-gray-700");
+      }
+
+      if (mobileMenu) {
+        mobileMenu.classList.remove("border-white/20");
+        mobileMenu.classList.add("border-gray-200");
+      }
+    }
+
+    function applyTransparentBackground() {
+      navHeader.classList.add("bg-transparent");
+      navHeader.classList.remove("bg-white/95", "backdrop-blur-sm", "shadow-sm");
+
+      if (navTitle) {
+        navTitle.classList.add("text-white");
+        navTitle.classList.remove("text-amber-800");
+      }
+
+      navLinks.forEach(function (link) {
+        link.classList.remove("text-gray-700", "hover:text-amber-800", "text-amber-800");
+        if (link.textContent.trim() === "Home") {
+          link.classList.add("text-[#D4AF6A]", "font-semibold");
+        } else {
+          link.classList.add("text-white/90", "hover:text-white");
+        }
+      });
+
+      if (navToggle) {
+        navToggle.classList.add("text-white");
+        navToggle.classList.remove("text-gray-700");
+      }
+
+      if (mobileMenu) {
+        mobileMenu.classList.add("border-white/20");
+        mobileMenu.classList.remove("border-gray-200");
+      }
+    }
 
     function updateNavOnScroll() {
       var scrollY = window.pageYOffset || document.documentElement.scrollTop;
 
       if (scrollY > scrollThreshold && !isScrolled) {
         isScrolled = true;
-        navHeader.classList.remove("bg-transparent");
-        navHeader.classList.add("bg-white/95", "backdrop-blur-sm", "shadow-sm");
-
-        if (navTitle) {
-          navTitle.classList.remove("text-white");
-          navTitle.classList.add("text-amber-800");
-        }
-
-        navLinks.forEach(function (link) {
-          link.classList.remove("text-white/90", "hover:text-white", "text-[#D4AF6A]");
-          if (link.textContent.trim() === "Home") {
-            link.classList.add("text-amber-800", "font-semibold");
-          } else {
-            link.classList.add("text-gray-700", "hover:text-amber-800");
-          }
-        });
-
-        if (navToggle) {
-          navToggle.classList.remove("text-white");
-          navToggle.classList.add("text-gray-700");
-        }
-
-        if (mobileMenu) {
-          mobileMenu.classList.remove("border-white/20");
-          mobileMenu.classList.add("border-gray-200");
-        }
-      } else if (scrollY <= scrollThreshold && isScrolled) {
+        applyWhiteBackground();
+      } else if (scrollY <= scrollThreshold && isScrolled && !isMobileMenuOpen) {
         isScrolled = false;
-        navHeader.classList.add("bg-transparent");
-        navHeader.classList.remove("bg-white/95", "backdrop-blur-sm", "shadow-sm");
-
-        if (navTitle) {
-          navTitle.classList.add("text-white");
-          navTitle.classList.remove("text-amber-800");
-        }
-
-        navLinks.forEach(function (link) {
-          link.classList.remove("text-gray-700", "hover:text-amber-800", "text-amber-800");
-          if (link.textContent.trim() === "Home") {
-            link.classList.add("text-[#D4AF6A]", "font-semibold");
-          } else {
-            link.classList.add("text-white/90", "hover:text-white");
-          }
-        });
-
-        if (navToggle) {
-          navToggle.classList.add("text-white");
-          navToggle.classList.remove("text-gray-700");
-        }
-
-        if (mobileMenu) {
-          mobileMenu.classList.add("border-white/20");
-          mobileMenu.classList.remove("border-gray-200");
-        }
+        applyTransparentBackground();
       }
+    }
+
+    if (menuToggle && mobileMenu) {
+      menuToggle.addEventListener("click", function () {
+        isMobileMenuOpen = !mobileMenu.classList.contains("hidden");
+        
+        if (isMobileMenuOpen) {
+          applyWhiteBackground();
+        } else {
+          var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+          if (scrollY <= scrollThreshold) {
+            applyTransparentBackground();
+          }
+        }
+      });
     }
 
     window.addEventListener("scroll", updateNavOnScroll, { passive: true });
