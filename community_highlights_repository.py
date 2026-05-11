@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 COMMUNITY_HIGHLIGHTS_TABLE = "community_highlights"
 COMMUNITY_HIGHLIGHTS_SELECT_FIELDS = (
-    "id, title, slug, category, event_date, short_description, long_description, image_filename, is_published, created_at, updated_at"
+    "id, title, slug, category, event_date, short_description, long_description, image_filename, status, is_featured, is_published, created_at, updated_at"
 )
 
 
@@ -14,7 +14,8 @@ def list_published_community_highlights(limit: int | None = None) -> list[dict[s
     query = (
         client.table(COMMUNITY_HIGHLIGHTS_TABLE)
         .select(COMMUNITY_HIGHLIGHTS_SELECT_FIELDS)
-        .eq("is_published", True)
+        .eq("status", "active")
+        .order("is_featured", desc=True)
         .order("event_date", desc=True)
         .order("created_at", desc=True)
     )
@@ -31,6 +32,7 @@ def list_all_community_highlights() -> list[dict[str, Any]]:
     response = (
         client.table(COMMUNITY_HIGHLIGHTS_TABLE)
         .select(COMMUNITY_HIGHLIGHTS_SELECT_FIELDS)
+        .order("is_featured", desc=True)
         .order("event_date", desc=True)
         .order("created_at", desc=True)
         .execute()
@@ -59,7 +61,7 @@ def get_published_community_highlight_by_slug(slug: str) -> dict[str, Any] | Non
         client.table(COMMUNITY_HIGHLIGHTS_TABLE)
         .select(COMMUNITY_HIGHLIGHTS_SELECT_FIELDS)
         .eq("slug", str(slug or "").strip())
-        .eq("is_published", True)
+        .eq("status", "active")
         .limit(1)
         .execute()
     )
@@ -85,6 +87,14 @@ def update_community_highlight(highlight_id: int, payload: dict[str, Any]) -> di
     if not rows:
         raise RuntimeError("Supabase did not return the updated community highlight row.")
     return rows[0]
+
+
+def clear_featured_community_highlights(*, exclude_id: int | None = None) -> None:
+    client = get_supabase_client()
+    query = client.table(COMMUNITY_HIGHLIGHTS_TABLE).update({"is_featured": False}).eq("is_featured", True)
+    if exclude_id is not None:
+        query = query.neq("id", int(exclude_id))
+    query.execute()
 
 
 def delete_community_highlight(highlight_id: int) -> None:

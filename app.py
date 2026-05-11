@@ -13,7 +13,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_username
-from community_content import register_community_content_routes
+from community_content import load_news_community_highlights, register_community_content_routes
 from online_gallery_content import (
     ONLINE_GALLERY_UPLOAD_DIR,
     load_public_online_gallery_categories,
@@ -694,7 +694,8 @@ def participation():
 
 @app.route("/community-participation")
 def community_participation():
-    return render_template("CommunityParticipation.html")
+    community_highlights_items = load_news_community_highlights(limit=12)
+    return render_template("CommunityParticipation.html", community_highlights_items=community_highlights_items)
 
 
 @app.route("/support")

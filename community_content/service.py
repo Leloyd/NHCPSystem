@@ -27,10 +27,22 @@ COMMUNITY_EVENTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "events").r
 COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX = "community-highlights"
 COMMUNITY_EVENTS_STORAGE_PREFIX = "events"
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
-    "Education Program",
-    "Community Activity",
+    "Museum Programs",
+    "School Engagement",
+    "Public Activity",
     "Public Advisory",
 )
+COMMUNITY_HIGHLIGHT_STATUS_OPTIONS = (
+    "active",
+    "draft",
+    "archived",
+)
+COMMUNITY_HIGHLIGHT_CATEGORY_STYLES = {
+    "Museum Programs": {"color": "#1E3A5F", "bg": "rgba(30, 58, 95, 0.1)"},
+    "School Engagement": {"color": "#C5973A", "bg": "rgba(197, 151, 58, 0.1)"},
+    "Public Activity": {"color": "#16A34A", "bg": "rgba(22, 163, 74, 0.1)"},
+    "Public Advisory": {"color": "#DC2626", "bg": "rgba(220, 38, 38, 0.08)"},
+}
 
 
 def format_community_date(raw_value: Any) -> str:
@@ -73,6 +85,12 @@ def resolve_community_upload_image_url(image_filename: Any, *, upload_dir: Path,
 
 def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared = dict(item or {})
+    raw_status = str(prepared.get("status") or "").strip().lower()
+    status = raw_status if raw_status in COMMUNITY_HIGHLIGHT_STATUS_OPTIONS else ("active" if prepared.get("is_published") else "draft")
+    category = str(prepared.get("category") or COMMUNITY_HIGHLIGHT_CATEGORIES[0]).strip() or COMMUNITY_HIGHLIGHT_CATEGORIES[0]
+    category_style = COMMUNITY_HIGHLIGHT_CATEGORY_STYLES.get(category, COMMUNITY_HIGHLIGHT_CATEGORY_STYLES[COMMUNITY_HIGHLIGHT_CATEGORIES[0]])
+    word_count = len(str(prepared.get("long_description") or "").split())
+    estimated_read_minutes = max(1, round(word_count / 180))
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_highlight_detail", slug=prepared.get("slug", ""))
     prepared["image_url"] = resolve_community_upload_image_url(
@@ -81,7 +99,13 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
         upload_folder_name="community-highlights",
         storage_prefix=COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX,
     )
-    prepared["category"] = str(prepared.get("category") or COMMUNITY_HIGHLIGHT_CATEGORIES[0]).strip() or COMMUNITY_HIGHLIGHT_CATEGORIES[0]
+    prepared["category"] = category
+    prepared["category_color"] = category_style["color"]
+    prepared["category_bg"] = category_style["bg"]
+    prepared["status"] = status
+    prepared["is_featured"] = bool(prepared.get("is_featured")) and status == "active"
+    prepared["estimated_read_minutes"] = estimated_read_minutes
+    prepared["estimated_read_label"] = f"{estimated_read_minutes} min read"
     return prepared
 
 
@@ -233,13 +257,16 @@ def load_admin_community_event(event_id: int) -> dict[str, Any] | None:
 def build_community_highlight_form_state(source: dict[str, Any] | None = None) -> dict[str, Any]:
     source = source or {}
     raw_category = str(source.get("category") or "").strip()
+    raw_status = str(source.get("status") or "").strip().lower()
     return {
         "title": str(source.get("title") or "").strip(),
         "category": raw_category if raw_category in COMMUNITY_HIGHLIGHT_CATEGORIES else COMMUNITY_HIGHLIGHT_CATEGORIES[0],
+        "status": raw_status if raw_status in COMMUNITY_HIGHLIGHT_STATUS_OPTIONS else "draft",
         "event_date": str(source.get("event_date") or "").strip(),
         "short_description": str(source.get("short_description") or "").strip(),
         "long_description": str(source.get("long_description") or "").strip(),
         "is_published": bool(source.get("is_published")),
+        "is_featured": bool(source.get("is_featured")),
         "image_filename": str(source.get("image_filename") or "").strip(),
         "image_url": source.get("image_url"),
     }
@@ -262,7 +289,9 @@ def get_community_highlights_status_message(status_key: Any) -> str | None:
     mapping = {
         "created": "Community highlight created successfully.",
         "updated": "Community highlight updated successfully.",
-        "deleted": "Community highlight deleted successfully.",
+        "archived": "Community highlight archived successfully.",
+        "featured": "Community highlight marked as featured.",
+        "unfeatured": "Community highlight removed from the featured slot.",
     }
     return mapping.get(str(status_key or "").strip().lower())
 
@@ -298,6 +327,7 @@ def render_admin_community_highlight_form(
         form_action=form_action,
         highlight_form=highlight_form,
         category_options=COMMUNITY_HIGHLIGHT_CATEGORIES,
+        status_options=COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
         error_message=error_message,
     )
 

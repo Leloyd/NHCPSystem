@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'community-highlights' %}
 {% set admin_topbar_title = form_title %}
-{% set admin_topbar_subtitle = 'Create or update the featured card content shown inside Community Highlights.' %}
+{% set admin_topbar_subtitle = 'Create or update Community Highlight cards shown in the Community Participation page.' %}
 {% set admin_topbar_tool_href = url_for('admin_community_highlights') %}
 {% set admin_topbar_tool_label = 'Back to list' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
@@ -41,14 +41,25 @@
                   <input id="highlightDate" name="event_date" type="date" required value="{{ highlight_form.event_date }}" />
                 </div>
 
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="highlightShortDescription">Short Description</label>
-                  <textarea id="highlightShortDescription" name="short_description" rows="4" required>{{ highlight_form.short_description }}</textarea>
+                <div class="admin-form-field">
+                  <label for="highlightStatus">Status</label>
+                  <select id="highlightStatus" name="status" required>
+                    {% for status_option in status_options %}
+                    <option value="{{ status_option }}" {% if highlight_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
+                    {% endfor %}
+                  </select>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
-                  <label for="highlightLongDescription">Long Description</label>
+                  <label for="highlightShortDescription">Short Description</label>
+                  <textarea id="highlightShortDescription" name="short_description" rows="4" required>{{ highlight_form.short_description }}</textarea>
+                  <p class="admin-field-hint">This appears on the Community Highlights card preview.</p>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="highlightLongDescription">Full Description</label>
                   <textarea id="highlightLongDescription" name="long_description" rows="10" required>{{ highlight_form.long_description }}</textarea>
+                  <p class="admin-field-hint">This appears on the public read more page for the selected highlight.</p>
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
@@ -56,13 +67,18 @@
                   <input id="highlightImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
                   {% if highlight_form.image_filename %}
                   <p class="admin-field-hint">Current image: <strong>{{ highlight_form.image_filename }}</strong></p>
+                  {% else %}
+                  <p class="admin-field-hint">Upload an image for the highlight card and detail page.</p>
                   {% endif %}
                 </div>
 
-                <label class="admin-checkbox-field admin-form-field-wide">
-                  <input name="is_published" type="checkbox" value="1" {% if highlight_form.is_published %}checked{% endif %} />
-                  <span>Publish this card on the public site</span>
-                </label>
+                <div class="admin-form-field admin-form-field-wide">
+                  <label>Featured placement</label>
+                  <p class="admin-field-hint">
+                    Featured highlights are managed from the Active Cards section in the list view. Only one active card can be featured at a time.
+                    {% if highlight_form.is_featured %}<strong>This card is currently featured.</strong>{% endif %}
+                  </p>
+                </div>
               </div>
 
               {% if highlight_form.image_url %}

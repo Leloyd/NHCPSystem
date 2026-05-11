@@ -5,13 +5,14 @@ from typing import Any, Callable
 from flask import redirect, render_template, request, session, url_for
 
 from community_events_repository import create_community_event, delete_community_event, list_all_community_events, update_community_event
-from community_highlights_repository import create_community_highlight, delete_community_highlight, list_all_community_highlights, update_community_highlight
+from community_highlights_repository import clear_featured_community_highlights, create_community_highlight, list_all_community_highlights, update_community_highlight
 from supabase_client import is_supabase_configured
 
 from .service import (
     COMMUNITY_EVENTS_UPLOAD_DIR,
     COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
     COMMUNITY_HIGHLIGHT_CATEGORIES,
+    COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
     build_community_event_form_state,
     build_community_highlight_form_state,
     get_community_events_status_message,
@@ -20,8 +21,6 @@ from .service import (
     load_admin_community_events,
     load_admin_community_highlight,
     load_admin_community_highlights,
-    load_news_community_events,
-    load_news_community_highlights,
     load_published_community_event,
     load_published_community_highlight,
     render_admin_community_highlight_form,
@@ -73,6 +72,7 @@ def _build_unique_community_event_slug(title: str, *, current_id: int | None, sl
 def _build_community_highlight_form_payload(form, files, *, current_item, normalize_checkbox, validate_event_date, save_uploaded_image, slugify_text):
     title = str(form.get("title") or "").strip()
     category = str(form.get("category") or "").strip()
+    status = str(form.get("status") or "draft").strip().lower()
     short_description = str(form.get("short_description") or "").strip()
     long_description = str(form.get("long_description") or "").strip()
 
@@ -80,6 +80,8 @@ def _build_community_highlight_form_payload(form, files, *, current_item, normal
         raise ValueError("Title must be at least 3 characters.")
     if category not in COMMUNITY_HIGHLIGHT_CATEGORIES:
         raise ValueError("Please choose a valid category.")
+    if status not in COMMUNITY_HIGHLIGHT_STATUS_OPTIONS:
+        raise ValueError("Please choose a valid publishing status.")
     if len(short_description) < 12:
         raise ValueError("Short description must be at least 12 characters.")
     if len(long_description) < 24:
@@ -93,10 +95,12 @@ def _build_community_highlight_form_payload(form, files, *, current_item, normal
             slugify_text=slugify_text,
         ),
         "category": category,
+        "status": status,
         "event_date": validate_event_date(form.get("event_date")),
         "short_description": short_description,
         "long_description": long_description,
-        "is_published": normalize_checkbox(form.get("is_published")),
+        "is_published": status == "active",
+        "is_featured": bool(current_item and current_item.get("is_featured") and status == "active"),
     }
 
     uploaded_file = files.get("image_file")
@@ -169,6 +173,9 @@ def register_community_content_routes(
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
         highlights_items = load_admin_community_highlights()
+        active_highlights_items = [item for item in highlights_items if item.get("status") == "active"]
+        draft_highlights_items = [item for item in highlights_items if item.get("status") == "draft"]
+        archived_highlights_items = [item for item in highlights_items if item.get("status") == "archived"]
         status_message = get_community_highlights_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase community highlights integration is not configured."
         return render_template(
@@ -176,6 +183,9 @@ def register_community_content_routes(
             csrf_token=csrf_token,
             admin_username=current_admin_username,
             highlights_items=highlights_items,
+            active_highlights_items=active_highlights_items,
+            draft_highlights_items=draft_highlights_items,
+            archived_highlights_items=archived_highlights_items,
             status_message=status_message,
             config_error=config_error,
         )
@@ -191,7 +201,7 @@ def register_community_content_routes(
                 form_title="Create Community Highlight",
                 submit_label="Create Highlight",
                 form_action=url_for("admin_community_highlight_new"),
-                highlight_form=build_community_highlight_form_state({"is_published": True, "category": COMMUNITY_HIGHLIGHT_CATEGORIES[0]}),
+                highlight_form=build_community_highlight_form_state({"status": "draft", "category": COMMUNITY_HIGHLIGHT_CATEGORIES[0]}),
             )
 
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
@@ -231,7 +241,7 @@ def register_community_content_routes(
                 form_title="Create Community Highlight",
                 submit_label="Create Highlight",
                 form_action=url_for("admin_community_highlight_new"),
-                highlight_form=build_community_highlight_form_state({**request.form, "is_published": normalize_checkbox(request.form.get("is_published"))}),
+                highlight_form=build_community_highlight_form_state(request.form),
                 error_message=str(exc),
             )
         except Exception as exc:
@@ -245,7 +255,7 @@ def register_community_content_routes(
                 form_title="Create Community Highlight",
                 submit_label="Create Highlight",
                 form_action=url_for("admin_community_highlight_new"),
-                highlight_form=build_community_highlight_form_state({**request.form, "is_published": normalize_checkbox(request.form.get("is_published"))}),
+                highlight_form=build_community_highlight_form_state(request.form),
                 error_message="Could not create the community highlight right now.",
             )
 
@@ -297,7 +307,7 @@ def register_community_content_routes(
                 form_title="Edit Community Highlight",
                 submit_label="Save Changes",
                 form_action=url_for("admin_community_highlight_edit", highlight_id=highlight_id),
-                highlight_form=build_community_highlight_form_state({**current_item, **request.form, "is_published": normalize_checkbox(request.form.get("is_published"))}),
+                highlight_form=build_community_highlight_form_state({**current_item, **request.form}),
                 error_message=str(exc),
             )
         except Exception as exc:
@@ -311,11 +321,39 @@ def register_community_content_routes(
                 form_title="Edit Community Highlight",
                 submit_label="Save Changes",
                 form_action=url_for("admin_community_highlight_edit", highlight_id=highlight_id),
-                highlight_form=build_community_highlight_form_state({**current_item, **request.form, "is_published": normalize_checkbox(request.form.get("is_published"))}),
+                highlight_form=build_community_highlight_form_state({**current_item, **request.form}),
                 error_message="Could not update the community highlight right now.",
             )
 
         return redirect(url_for("admin_community_highlights", status="updated"))
+
+    @app.route(f"{admin_route_prefix}/community-highlights/<int:highlight_id>/feature", methods=["POST"])
+    @admin_required
+    def admin_community_highlight_feature(highlight_id):
+        if not is_admin_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("admin_community_highlights"))
+
+        current_item = load_admin_community_highlight(highlight_id)
+        if current_item is None:
+            return redirect(url_for("admin_community_highlights"))
+
+        if current_item.get("status") != "active":
+            return redirect(url_for("admin_community_highlights"))
+
+        feature_action = str(request.form.get("feature_action") or "set").strip().lower()
+
+        try:
+            if feature_action == "remove":
+                update_community_highlight(highlight_id, {"is_featured": False})
+                return redirect(url_for("admin_community_highlights", status="unfeatured"))
+
+            clear_featured_community_highlights(exclude_id=highlight_id)
+            update_community_highlight(highlight_id, {"is_featured": True, "status": "active", "is_published": True})
+        except Exception as exc:
+            app.logger.exception("Failed to update featured community highlight %s: %s", highlight_id, exc)
+            return redirect(url_for("admin_community_highlights"))
+
+        return redirect(url_for("admin_community_highlights", status="featured"))
 
     @app.route(f"{admin_route_prefix}/community-highlights/<int:highlight_id>/delete", methods=["POST"])
     @admin_required
@@ -328,13 +366,12 @@ def register_community_content_routes(
             return redirect(url_for("admin_community_highlights"))
 
         try:
-            delete_community_highlight(highlight_id)
-            delete_local_image(current_item.get("image_filename"), COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            update_community_highlight(highlight_id, {"status": "archived", "is_published": False, "is_featured": False})
         except Exception as exc:
-            app.logger.exception("Failed to delete community highlight %s: %s", highlight_id, exc)
+            app.logger.exception("Failed to archive community highlight %s: %s", highlight_id, exc)
             return redirect(url_for("admin_community_highlights"))
 
-        return redirect(url_for("admin_community_highlights", status="deleted"))
+        return redirect(url_for("admin_community_highlights", status="archived"))
 
     @app.route(f"{admin_route_prefix}/events")
     @admin_required

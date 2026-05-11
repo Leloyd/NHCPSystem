@@ -1,77 +1,19 @@
-const highlights = [
-  {
-    id: 1,
-    category: "Museum Programs",
-    categoryColor: "#1E3A5F",
-    categoryBg: "rgba(30, 58, 95, 0.1)",
-    title: "Heritage Walk: Rediscovering Our Roots",
-    excerpt: "Join our guided immersive walk through the archaeological site where local guides share the living history of the community and its ancestors.",
-    date: "May 8, 2026",
-    readTime: "3 min read",
-    image: "https://images.unsplash.com/photo-1773601104029-24b985b7f460?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
-    featured: true,
-  },
-  {
-    id: 2,
-    category: "School Engagement",
-    categoryColor: "#C5973A",
-    categoryBg: "rgba(197, 151, 58, 0.1)",
-    title: "School Partnership Program Expands to 65 Schools",
-    excerpt: "Our annual school engagement program has reached a milestone, connecting over 65 local schools with our heritage resources and on-site educational activities.",
-    date: "May 5, 2026",
-    readTime: "4 min read",
-    image: "https://images.unsplash.com/photo-1758270704524-596810e891b5?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
-    featured: false,
-  },
-  {
-    id: 3,
-    category: "Public Activity",
-    categoryColor: "#16A34A",
-    categoryBg: "rgba(22, 163, 74, 0.1)",
-    title: "Community Day Celebration Draws 2,400 Visitors",
-    excerpt: "Last month's Community Day was a vibrant success, featuring local performers, craft workshops, storytelling sessions, and guided heritage tours for all ages.",
-    date: "Apr 28, 2026",
-    readTime: "5 min read",
-    image: "https://images.unsplash.com/photo-1768776179834-93e6cafc6d97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
-    featured: false,
-  },
-  {
-    id: 4,
-    category: "Public Advisory",
-    categoryColor: "#DC2626",
-    categoryBg: "rgba(220, 38, 38, 0.08)",
-    title: "Advisory: New Visitor Guidelines for Heritage Zone B",
-    excerpt: "Effective June 1, 2026, visitors to Heritage Zone B are reminded to follow updated access protocols to protect the newly excavated pre-colonial artifacts.",
-    date: "Apr 22, 2026",
-    readTime: "2 min read",
-    image: "https://images.unsplash.com/photo-1763224810010-4e5d23f261af?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
-    featured: false,
-  },
-  {
-    id: 5,
-    category: "Museum Programs",
-    categoryColor: "#1E3A5F",
-    categoryBg: "rgba(30, 58, 95, 0.1)",
-    title: "Youth Heritage Ambassadors Program – Applications Open",
-    excerpt: "We are proud to open applications for our Youth Heritage Ambassadors, inviting students aged 15–22 to be trained as community educators and heritage advocates.",
-    date: "Apr 15, 2026",
-    readTime: "3 min read",
-    image: "https://images.unsplash.com/photo-1759409972741-57859a437f41?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
-    featured: false,
-  },
-  {
-    id: 6,
-    category: "Public Activity",
-    categoryColor: "#16A34A",
-    categoryBg: "rgba(22, 163, 74, 0.1)",
-    title: "Family History Documentation Drive This June",
-    excerpt: "Bring your old family photographs and documents to the museum this June. Our team will help digitize and archive them for the community record.",
-    date: "Apr 10, 2026",
-    readTime: "3 min read",
-    image: "https://images.unsplash.com/photo-1768776179834-93e6cafc6d97?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=600",
-    featured: false,
-  },
-];
+function readCommunityParticipationData() {
+  const payloadElement = document.getElementById('communityParticipationData');
+  if (!payloadElement) {
+    return { highlights: [] };
+  }
+
+  try {
+    return JSON.parse(payloadElement.textContent || '{}');
+  } catch (error) {
+    console.error('Failed to parse community participation data.', error);
+    return { highlights: [] };
+  }
+}
+
+const communityParticipationData = readCommunityParticipationData();
+const highlights = Array.isArray(communityParticipationData.highlights) ? communityParticipationData.highlights : [];
 
 const categoryConfig = {
   orientation: {
@@ -235,39 +177,49 @@ function initHighlights() {
 
 function renderHighlights() {
   const filtered = highlights.filter(h => activeFilter === "all" || h.category === activeFilter);
-  const featured = filtered.find(h => h.featured);
-  const rest = filtered.filter(h => !h.featured);
+  const featured = filtered.find(h => h.is_featured);
+  const rest = filtered.filter(h => !h.is_featured);
 
   const featuredContainer = document.getElementById('highlightsFeatured');
   const gridContainer = document.getElementById('highlightsGrid');
+
+  if (filtered.length === 0) {
+    featuredContainer.innerHTML = '';
+    gridContainer.innerHTML = `
+      <div class="col-span-full bg-stone-50 border border-stone-200 rounded-3xl px-6 py-12 text-center text-gray-500">
+        No community highlights are available in this category yet.
+      </div>
+    `;
+    return;
+  }
 
   if (featured && activeFilter === "all") {
     featuredContainer.innerHTML = `
       <div class="featured-highlight">
         <div class="featured-highlight-grid">
           <div class="featured-highlight-image">
-            <img src="${featured.image}" alt="${featured.title}" loading="lazy" />
+            ${featured.image_url ? `<img src="${featured.image_url}" alt="${featured.title}" loading="lazy" />` : '<div class="highlight-card-overlay"></div>'}
             <div style="position: absolute; inset: 0; background: linear-gradient(to right, rgba(15,30,50,0.3), transparent);"></div>
             <span class="featured-badge">✦ Featured</span>
           </div>
           <div class="featured-highlight-content">
             <div>
-              <span class="highlight-category-badge" style="background: ${featured.categoryBg}; color: ${featured.categoryColor};">
+              <span class="highlight-category-badge" style="background: ${featured.category_bg}; color: ${featured.category_color};">
                 ${featured.category}
               </span>
               <h3 class="highlight-card-title" style="font-size: 1.4rem; margin-bottom: 0.75rem;">${featured.title}</h3>
-              <p class="highlight-card-excerpt">${featured.excerpt}</p>
+              <p class="highlight-card-excerpt">${featured.short_description}</p>
             </div>
             <div class="highlight-card-footer">
               <div class="highlight-card-meta">
                 <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                <span>${featured.date}</span>
-                <span style="margin-left: 0.5rem;">${featured.readTime}</span>
+                <span>${featured.display_date}</span>
+                <span style="margin-left: 0.5rem;">${featured.estimated_read_label}</span>
               </div>
-              <button class="highlight-card-action" style="color: ${featured.categoryColor};">
+              <a href="${featured.detail_url}" class="highlight-card-action" style="color: ${featured.category_color};">
                 Read More
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path></svg>
-              </button>
+              </a>
             </div>
           </div>
         </div>
@@ -281,24 +233,24 @@ function renderHighlights() {
   gridContainer.innerHTML = itemsToShow.map(item => `
     <div class="highlight-card">
       <div class="highlight-card-image">
-        <img src="${item.image}" alt="${item.title}" loading="lazy" />
+        ${item.image_url ? `<img src="${item.image_url}" alt="${item.title}" loading="lazy" />` : ''}
         <div class="highlight-card-overlay"></div>
       </div>
       <div class="highlight-card-content">
-        <span class="highlight-category-badge" style="background: ${item.categoryBg}; color: ${item.categoryColor};">
+        <span class="highlight-category-badge" style="background: ${item.category_bg}; color: ${item.category_color};">
           ${item.category}
         </span>
         <h3 class="highlight-card-title">${item.title}</h3>
-        <p class="highlight-card-excerpt">${item.excerpt.slice(0, 100)}...</p>
+        <p class="highlight-card-excerpt">${item.short_description}</p>
         <div class="highlight-card-footer">
           <span class="highlight-card-meta">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-            ${item.date}
+            ${item.display_date}
           </span>
-          <button class="highlight-card-action" style="color: ${item.categoryColor};">
+          <a href="${item.detail_url}" class="highlight-card-action" style="color: ${item.category_color};">
             Read
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
-          </button>
+          </a>
         </div>
       </div>
     </div>
