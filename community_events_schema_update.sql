@@ -6,6 +6,20 @@ alter table if exists public.community_events
   add column if not exists location text default 'Museo ng Libingan sa Ilalim ng Lupa',
   add column if not exists status text default 'active';
 
+do $$
+begin
+  if exists (
+    select 1
+    from information_schema.columns
+    where table_schema = 'public'
+      and table_name = 'community_events'
+      and column_name = 'long_description'
+  ) then
+    execute 'update public.community_events set long_description = coalesce(nullif(trim(coalesce(long_description, '''')), ''''), short_description)';
+    execute 'alter table public.community_events alter column long_description drop not null';
+  end if;
+end $$;
+
 alter table if exists public.community_events
   drop constraint if exists community_events_category_check,
   drop constraint if exists community_events_status_check;
@@ -44,5 +58,83 @@ alter table if exists public.community_events
 alter table if exists public.community_events
   add constraint community_events_category_check check (category in ('Booked Tour (former Orientation)', 'Community Gathering', 'Student Activity', 'Heritage Session', 'Workshop')),
   add constraint community_events_status_check check (status in ('active', 'draft', 'archived'));
+
+insert into public.community_events (
+  title,
+  slug,
+  category,
+  event_date,
+  event_time,
+  location,
+  short_description,
+  status,
+  is_published
+)
+values
+  (
+    'School Heritage Booked Tour',
+    'school-heritage-booked-tour',
+    'Booked Tour (former Orientation)',
+    '2026-06-10',
+    '9:00 AM - 11:00 AM',
+    'Museo ng Libingan sa Ilalim ng Lupa',
+    'A guided booked tour for student visitors exploring the museum grounds, site history, and orientation stops.',
+    'active',
+    true
+  ),
+  (
+    'Barangay Community Story Circle',
+    'barangay-community-story-circle',
+    'Community Gathering',
+    '2026-06-15',
+    '2:00 PM - 4:00 PM',
+    'Community Hall',
+    'Residents are invited to share local memories and community narratives connected to the heritage site.',
+    'active',
+    true
+  ),
+  (
+    'Student Local History Quiz Bee',
+    'student-local-history-quiz-bee',
+    'Student Activity',
+    '2026-06-20',
+    '1:00 PM - 3:00 PM',
+    'Learning Activity Room',
+    'A student-focused quiz activity designed to reinforce key historical facts and museum learning prompts.',
+    'draft',
+    false
+  ),
+  (
+    'Underground Cemetery Heritage Talk',
+    'underground-cemetery-heritage-talk',
+    'Heritage Session',
+    '2026-06-25',
+    '10:00 AM - 12:00 PM',
+    'Main Program Hall',
+    'A public heritage session discussing the history, meaning, and preservation of the Underground Cemetery.',
+    'active',
+    true
+  ),
+  (
+    'Cultural Mapping Workshop',
+    'cultural-mapping-workshop',
+    'Workshop',
+    '2026-06-30',
+    '8:30 AM - 11:30 AM',
+    'Workshop Room',
+    'Participants will learn how to document important places, stories, and traditions through a cultural mapping workshop.',
+    'archived',
+    false
+  )
+on conflict (slug) do update
+set
+  title = excluded.title,
+  category = excluded.category,
+  event_date = excluded.event_date,
+  event_time = excluded.event_time,
+  location = excluded.location,
+  short_description = excluded.short_description,
+  status = excluded.status,
+  is_published = excluded.is_published;
 
 commit;

@@ -151,6 +151,7 @@ def _build_community_event_form_payload(form, files, *, current_item, normalize_
         "event_time": event_time,
         "location": location,
         "short_description": short_description,
+        "long_description": short_description,
         "is_published": status == "active",
     }
 
