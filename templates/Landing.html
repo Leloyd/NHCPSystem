@@ -52,12 +52,12 @@
           </p>
 
           <!-- CTA Button -->
-          <button onclick="document.querySelector('#about').scrollIntoView({ behavior: 'smooth' });" class="group inline-flex items-center gap-3 px-10 py-4 bg-[#D4AF6A] text-[#1C1208] hover:bg-[#E8C97A] transition-all duration-300 text-sm tracking-[0.2em] uppercase cursor-pointer" style="font-family: 'Inter', sans-serif; font-weight: 600;">
+          <a href="{{ url_for('heritage_trail') }}" class="group inline-flex items-center gap-3 px-10 py-4 bg-[#D4AF6A] text-[#1C1208] hover:bg-[#E8C97A] transition-all duration-300 text-sm tracking-[0.2em] uppercase" style="font-family: 'Inter', sans-serif; font-weight: 600; text-decoration: none;">
             <span>Start Heritage Trail</span>
-            <svg class="w-4 h-4 group-hover:translate-y-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+            <svg class="w-4 h-4 group-hover:translate-x-1 transition-transform duration-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
             </svg>
-          </button>
+          </a>
 
           <p class="mt-4 text-white/35 text-xs tracking-wider" style="font-family: 'Inter', sans-serif;">Est. 1845 · Nagcarlan, Laguna · Philippines</p>
         </div>
