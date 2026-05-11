@@ -1,4 +1,18 @@
 (function () {
+  function initAutoDismissAlerts() {
+    var successAlerts = document.querySelectorAll(".admin-alert-success");
+
+    successAlerts.forEach(function (alertElement) {
+      window.setTimeout(function () {
+        alertElement.classList.add("admin-alert-is-hiding");
+
+        window.setTimeout(function () {
+          alertElement.classList.add("admin-alert-is-hidden");
+        }, 300);
+      }, 2000);
+    });
+  }
+
   function setSidebarState(isOpen) {
     document.body.classList.toggle("sidebar-open", Boolean(isOpen));
   }
@@ -35,6 +49,8 @@
         }
       });
     });
+
+    initAutoDismissAlerts();
   }
 
   if (document.readyState === "loading") {

@@ -1086,10 +1086,27 @@ a.admin-text-link {
   border-radius: 1rem;
   border: 1px solid transparent;
   font-size: 0.9rem;
+  opacity: 1;
+  transform: translateY(0);
+  transition: opacity 0.3s ease, transform 0.3s ease, max-height 0.3s ease, margin 0.3s ease, padding 0.3s ease;
 }
 
 .admin-alert strong {
   font-size: 0.88rem;
+}
+
+.admin-alert.admin-alert-is-hiding {
+  opacity: 0;
+  transform: translateY(-8px);
+}
+
+.admin-alert.admin-alert-is-hidden {
+  max-height: 0;
+  margin: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+  overflow: hidden;
+  border-width: 0;
 }
 
 .admin-alert-success {
