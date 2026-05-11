@@ -126,6 +126,50 @@
               </div>
             </div>
           </div>
+
+          {% if related_highlights %}
+          <section class="ogd-related-section">
+            <div class="ogd-related-header">
+              <div>
+                <span class="ogd-related-header__kicker">You May Also Like</span>
+                <h2 class="ogd-related-header__title font-serif">More Community Highlights</h2>
+              </div>
+              <a href="{{ url_for('community_participation') }}" class="ogd-related-header__link">View All</a>
+            </div>
+
+            <div class="ogd-related-grid">
+              {% for related_item in related_highlights %}
+              <article class="ogd-artifact-card">
+                <a href="{{ related_item.detail_url }}" class="ogd-artifact-card__media">
+                  {% if related_item.image_url %}
+                  <img src="{{ related_item.image_url }}" alt="{{ related_item.title }}" class="ogd-artifact-card__image" loading="lazy" />
+                  {% else %}
+                  <div class="ogd-artifact-card__fallback">{{ (related_item.title or 'C')[:1]|upper }}</div>
+                  {% endif %}
+                  <span class="ogd-artifact-card__badge">{% if related_item.is_featured %}Featured{% else %}{{ related_item.category }}{% endif %}</span>
+                </a>
+
+                <div class="ogd-artifact-card__body">
+                  <h3 class="ogd-artifact-card__title font-serif">{{ related_item.title }}</h3>
+                  <p class="ogd-artifact-card__summary">{{ related_item.short_description }}</p>
+
+                  <div class="ogd-artifact-card__meta">
+                    <i data-lucide="calendar-days" aria-hidden="true"></i>
+                    <span>{{ related_item.display_date }}</span>
+                    <span aria-hidden="true">·</span>
+                    <span>{{ related_item.estimated_read_label }}</span>
+                  </div>
+
+                  <a href="{{ related_item.detail_url }}" class="ogd-artifact-card__action">
+                    <span>Read More</span>
+                    <i data-lucide="arrow-right" aria-hidden="true"></i>
+                  </a>
+                </div>
+              </article>
+              {% endfor %}
+            </div>
+          </section>
+          {% endif %}
         </div>
       </section>
     </main>

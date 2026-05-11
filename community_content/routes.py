@@ -21,6 +21,7 @@ from .service import (
     load_admin_community_events,
     load_admin_community_highlight,
     load_admin_community_highlights,
+    load_news_community_highlights,
     load_published_community_event,
     load_published_community_highlight,
     render_admin_community_highlight_form,
@@ -551,7 +552,16 @@ def register_community_content_routes(
         highlight_item = load_published_community_highlight(slug)
         if highlight_item is None:
             return redirect(url_for("community_participation"))
-        return render_template("CommunityHighlightDetail.html", highlight_item=highlight_item)
+        related_highlights = [
+            item
+            for item in load_news_community_highlights(limit=8)
+            if str(item.get("slug") or "").strip() != str(highlight_item.get("slug") or "").strip()
+        ][:4]
+        return render_template(
+            "CommunityHighlightDetail.html",
+            highlight_item=highlight_item,
+            related_highlights=related_highlights,
+        )
 
     @app.route("/community-events/<slug>")
     def community_event_detail(slug):
