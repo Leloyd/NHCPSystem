@@ -14,7 +14,6 @@ from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_username
 from community_content import register_community_content_routes
-from exhibits_content import EXHIBITS_UPLOAD_DIR, load_landing_exhibits, register_exhibits_content_routes
 from online_gallery_content import (
     ONLINE_GALLERY_UPLOAD_DIR,
     load_public_online_gallery_categories,
@@ -32,7 +31,6 @@ except ModuleNotFoundError:  # pragma: no cover - optional in some environments
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
-ALLOWED_EXHIBIT_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 if load_dotenv is not None:
     load_dotenv(dotenv_path=PROJECT_ROOT / ".env", override=False)
@@ -430,23 +428,6 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
-register_exhibits_content_routes(
-    app,
-    admin_route_prefix=ADMIN_ROUTE_PREFIX,
-    admin_required=_admin_required,
-    ensure_admin_csrf_token=_ensure_admin_csrf_token,
-    is_admin_csrf_valid=_is_admin_csrf_valid,
-    admin_session_user_key=ADMIN_SESSION_USER_KEY,
-    admin_username=ADMIN_DEFAULT_USERNAME,
-    normalize_checkbox=_normalize_checkbox,
-    validate_event_date=_validate_event_date,
-    save_uploaded_image=_save_uploaded_image,
-    delete_local_image=_delete_local_image,
-    current_exhibits_news_url="/current-exhibits-news",
-    slugify_text=_slugify_text,
-)
-
-
 register_community_content_routes(
     app,
     admin_route_prefix=ADMIN_ROUTE_PREFIX,
@@ -479,8 +460,7 @@ register_online_gallery_content_routes(
 
 @app.route("/")
 def index():
-    exhibits_news_items = load_landing_exhibits(limit=12)
-    return render_template("Landing.html", exhibits_news_items=exhibits_news_items)
+    return render_template("Landing.html")
 
 
 @app.route("/digital-exhibits")
@@ -692,19 +672,6 @@ def webxr_image_asset(image_path):
         return jsonify({"error": f"Image asset not found: {image_path}"}), 404
 
     return send_from_directory(str(images_dir), image_path)
-
-
-@app.route("/uploads/exhibits/<path:filename>")
-def exhibit_uploaded_image(filename):
-    candidate_path = _resolve_safe_path(EXHIBITS_UPLOAD_DIR, filename)
-
-    if candidate_path is None:
-        return jsonify({"error": "Invalid exhibit upload path"}), 400
-
-    if not candidate_path.exists() or not candidate_path.is_file():
-        return jsonify({"error": f"Exhibit upload not found: {filename}"}), 404
-
-    return send_from_directory(str(EXHIBITS_UPLOAD_DIR), filename)
 
 
 @app.route("/uploads/online-gallery/<path:filename>")

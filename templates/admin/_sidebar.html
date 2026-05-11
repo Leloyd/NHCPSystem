@@ -24,15 +24,6 @@
       </span>
       <span>Dashboard</span>
     </a>
-    <a href="{{ url_for('admin_exhibits') }}" class="admin-nav-link{% if admin_active_page == 'exhibits' %} is-active{% endif %}">
-      {% if admin_active_page == 'exhibits' %}
-      <span class="admin-nav-indicator" aria-hidden="true"></span>
-      {% endif %}
-      <span class="admin-nav-icon" aria-hidden="true">
-        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm2 2h8v2H8Zm0 4h5v2H8Z"></path></svg>
-      </span>
-      <span>Exhibits &amp; News</span>
-    </a>
     <a href="{{ url_for('admin_community_highlights') }}" class="admin-nav-link{% if admin_active_page == 'community-highlights' %} is-active{% endif %}">
       {% if admin_active_page == 'community-highlights' %}
       <span class="admin-nav-indicator" aria-hidden="true"></span>
