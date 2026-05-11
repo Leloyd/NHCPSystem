@@ -41,33 +41,26 @@
           <div class="ogd-toolbar">
             <div id="resourceTypeTabs" class="ogd-category-tabs" role="tablist" aria-label="I-filter ang mga resource ayon sa uri">
               <button type="button" class="ogd-category-tabs__button is-active" data-resource-type-filter="all" data-label-en="All Resources" data-label-tl="Lahat ng Resource" aria-pressed="true" aria-selected="true">Lahat ng Resource</button>
-              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Lesson Plan" data-label-en="Lesson Plan" data-label-tl="Banghay-Aralin" aria-pressed="false" aria-selected="false">Banghay-Aralin</button>
-              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Worksheet" data-label-en="Worksheet" data-label-tl="Worksheet" aria-pressed="false" aria-selected="false">Worksheet</button>
-              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Discussion" data-label-en="Discussion" data-label-tl="Talakayan" aria-pressed="false" aria-selected="false">Talakayan</button>
-              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Assessment" data-label-en="Assessment" data-label-tl="Pagtataya" aria-pressed="false" aria-selected="false">Pagtataya</button>
-              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Reflection" data-label-en="Reflection" data-label-tl="Pagninilay" aria-pressed="false" aria-selected="false">Pagninilay</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="PPT" data-label-en="PPT" data-label-tl="PPT" aria-pressed="false" aria-selected="false">PPT</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="Books" data-label-en="Books" data-label-tl="Books" aria-pressed="false" aria-selected="false">Books</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="DOCS" data-label-en="DOCS" data-label-tl="DOCS" aria-pressed="false" aria-selected="false">DOCS</button>
+              <button type="button" class="ogd-category-tabs__button" data-resource-type-filter="PDF" data-label-en="PDF" data-label-tl="PDF" aria-pressed="false" aria-selected="false">PDF</button>
             </div>
 
             <div class="ogd-toolbar__controls flex-wrap justify-end">
-              <label id="resourceAudienceLabel" class="sr-only" for="resourceAudienceFilter">I-filter ayon sa audience</label>
+              <label id="resourceAudienceLabel" class="sr-only" for="resourceAudienceFilter">I-filter ayon sa baitang</label>
               <div class="ogd-sort-control">
                 <i data-lucide="users" class="ogd-sort-control__icon" aria-hidden="true"></i>
-                <select id="resourceAudienceFilter" class="ogd-sort-control__select" aria-label="I-filter ayon sa audience">
-                  <option value="all">Lahat ng Audience</option>
-                  <option value="Students">Mga Estudyante</option>
-                  <option value="Teachers">Mga Guro</option>
-                  <option value="Mixed">Pinaghalong Klase</option>
+                <select id="resourceAudienceFilter" class="ogd-sort-control__select" aria-label="I-filter ayon sa baitang">
+                  <option value="all">Lahat ng Baitang</option>
                 </select>
               </div>
 
-              <label id="resourceFormatLabel" class="sr-only" for="resourceFormatFilter">I-filter ayon sa format</label>
+              <label id="resourceFormatLabel" class="sr-only" for="resourceFormatFilter">I-filter ayon sa paksa</label>
               <div class="ogd-sort-control">
                 <i data-lucide="file-text" class="ogd-sort-control__icon" aria-hidden="true"></i>
-                <select id="resourceFormatFilter" class="ogd-sort-control__select" aria-label="I-filter ayon sa format">
-                  <option value="all">Lahat ng Format</option>
-                  <option value="PDF">PDF</option>
-                  <option value="DOCX">DOCX</option>
-                  <option value="Slides">Slides</option>
+                <select id="resourceFormatFilter" class="ogd-sort-control__select" aria-label="I-filter ayon sa paksa">
+                  <option value="all">Lahat ng Paksa</option>
                 </select>
               </div>
 
@@ -77,8 +70,8 @@
                 <select id="resourceSortFilter" class="ogd-sort-control__select" aria-label="Ayusin ang mga resource">
                   <option value="newest">Pinakabago</option>
                   <option value="oldest">Pinakaluma</option>
-                  <option value="most-used">Pinakaginagamit</option>
-                  <option value="curated">Kurado</option>
+                  <option value="title-asc">Pamagat A-Z</option>
+                  <option value="title-desc">Pamagat Z-A</option>
                 </select>
               </div>
 
@@ -146,10 +139,10 @@
 
     {% include 'partials/_public_footer.html' %}
 
+    <script id="eduResourcesData" type="application/json">{{ edu_resources_items|tojson }}</script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/edu-resources-data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/edu-resources.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edu-resources-live.js') }}"></script>
   </body>
 </html>

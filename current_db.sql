@@ -81,3 +81,22 @@ CREATE TABLE public.online_gallery_items (
   CONSTRAINT online_gallery_items_pkey PRIMARY KEY (id),
   CONSTRAINT online_gallery_items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.online_gallery_categories(id)
 );
+CREATE TABLE public.edu_resources (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  title text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  category text NOT NULL CHECK (category = ANY (ARRAY['PPT'::text, 'Books'::text, 'DOCS'::text, 'PDF'::text])),
+  educator_name text NOT NULL DEFAULT ''::text,
+  grade_level text NOT NULL DEFAULT ''::text,
+  subject_topic text NOT NULL DEFAULT ''::text,
+  author text NOT NULL DEFAULT ''::text,
+  year_label text NOT NULL DEFAULT ''::text,
+  description text NOT NULL,
+  file_filename text,
+  cover_image_filename text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),
+  is_published boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT edu_resources_pkey PRIMARY KEY (id)
+);

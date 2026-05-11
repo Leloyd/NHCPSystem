@@ -1,0 +1,111 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = form_title ~ ' | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'edu-resources' %}
+{% set admin_topbar_title = form_title %}
+{% set admin_topbar_subtitle = 'Create or update learning materials shown in the public Edu Resources page.' %}
+{% set admin_topbar_tool_href = url_for('admin_edu_resources') %}
+{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+
+              <div class="admin-form-grid">
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="resourceTitle">Title</label>
+                  <input id="resourceTitle" name="title" type="text" maxlength="180" required value="{{ resource_form.title }}" />
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="resourceCategory">Category</label>
+                  <select id="resourceCategory" name="category" required>
+                    {% for category_option in category_options %}
+                    <option value="{{ category_option }}" {% if resource_form.category == category_option %}selected{% endif %}>{{ category_option }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="admin-form-field">
+                  <label for="resourceStatus">Status</label>
+                  <select id="resourceStatus" name="status" required>
+                    {% for status_option in status_options %}
+                    <option value="{{ status_option }}" {% if resource_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide" data-resource-field="book_meta" hidden>
+                  <div class="admin-form-grid">
+                    <div class="admin-form-field">
+                      <label for="resourceAuthor">Author</label>
+                      <input id="resourceAuthor" name="author" type="text" maxlength="180" value="{{ resource_form.author }}" />
+                    </div>
+                    <div class="admin-form-field">
+                      <label for="resourceYear">Year</label>
+                      <input id="resourceYear" name="year_label" type="text" maxlength="20" value="{{ resource_form.year_label }}" />
+                    </div>
+                  </div>
+                </div>
+
+                <div class="admin-form-field" data-resource-field="material_meta">
+                  <label for="resourceEducatorName">Educator Name / Source</label>
+                  <input id="resourceEducatorName" name="educator_name" type="text" maxlength="180" value="{{ resource_form.educator_name }}" />
+                </div>
+
+                <div class="admin-form-field" data-resource-field="material_meta">
+                  <label for="resourceGradeLevel">Grade Level</label>
+                  <input id="resourceGradeLevel" name="grade_level" type="text" maxlength="120" value="{{ resource_form.grade_level }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide" data-resource-field="material_meta">
+                  <label for="resourceSubjectTopic">Subject / Topic</label>
+                  <input id="resourceSubjectTopic" name="subject_topic" type="text" maxlength="180" value="{{ resource_form.subject_topic }}" />
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="resourceDescription">Description</label>
+                  <textarea id="resourceDescription" name="description" rows="5" required>{{ resource_form.description }}</textarea>
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide" data-resource-field="material_upload">
+                  <label for="resourceFile">Upload Resource File</label>
+                  <input id="resourceFile" name="resource_file" type="file" />
+                  {% if resource_form.file_filename %}
+                  <p class="admin-field-hint">Current file: <strong>{{ resource_form.file_filename }}</strong></p>
+                  {% endif %}
+                </div>
+
+                <div class="admin-form-field admin-form-field-wide" data-resource-field="book_upload" hidden>
+                  <label for="resourceCoverImage">Book Cover Image (JPG or PNG)</label>
+                  <input id="resourceCoverImage" name="cover_image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
+                  {% if resource_form.cover_image_filename %}
+                  <p class="admin-field-hint">Current cover image: <strong>{{ resource_form.cover_image_filename }}</strong></p>
+                  {% endif %}
+                </div>
+              </div>
+
+              {% if resource_form.cover_image_url %}
+              <div class="admin-image-preview-card">
+                <img src="{{ resource_form.cover_image_url }}" alt="Current book cover preview" />
+              </div>
+              {% endif %}
+
+              <div class="admin-form-actions">
+                <a href="{{ url_for('admin_edu_resources') }}" class="admin-secondary-action">Cancel</a>
+                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
+              </div>
+            </form>
+          </section>
+          <script defer src="{{ url_for('static', filename='admin/js/admin-edu-resource-form.js') }}"></script>
+{% endblock %}

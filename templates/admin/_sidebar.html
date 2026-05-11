@@ -51,6 +51,15 @@
       </span>
       <span>Online Gallery</span>
     </a>
+    <a href="{{ url_for('admin_edu_resources') }}" class="admin-nav-link{% if admin_active_page == 'edu-resources' %} is-active{% endif %}">
+      {% if admin_active_page == 'edu-resources' %}
+      <span class="admin-nav-indicator" aria-hidden="true"></span>
+      {% endif %}
+      <span class="admin-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M6 4h9a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2Zm1 3v2h8V7Zm0 4v2h8v-2Zm0 4v2h5v-2Zm11-8h2v10h-2Z"></path></svg>
+      </span>
+      <span>Edu Resources</span>
+    </a>
     <a href="#" class="admin-nav-link">
       <span class="admin-nav-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M5 5h2v14H5Zm6 4h2v10h-2Zm6-6h2v16h-2Z"></path></svg>

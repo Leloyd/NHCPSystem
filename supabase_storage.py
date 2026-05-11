@@ -10,6 +10,7 @@ from supabase_client import get_supabase_client
 DEFAULT_MEDIA_BUCKET = "nhcp-media"
 EXHIBITS_STORAGE_PREFIX = "exhibits"
 ONLINE_GALLERY_STORAGE_PREFIX = "online-gallery"
+EDU_RESOURCES_STORAGE_PREFIX = "edu-resources"
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}
 
 
@@ -33,23 +34,31 @@ def _guess_content_type(extension: str) -> str:
         return "image/jpeg"
     if normalized_extension == ".png":
         return "image/png"
+    if normalized_extension == ".pdf":
+        return "application/pdf"
+    if normalized_extension == ".docx":
+        return "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+    if normalized_extension == ".ppt":
+        return "application/vnd.ms-powerpoint"
+    if normalized_extension == ".pptx":
+        return "application/vnd.openxmlformats-officedocument.presentationml.presentation"
     return "application/octet-stream"
 
 
-def upload_public_image(file_storage, *, title: str, folder_prefix: str, slugify_text: Callable[[str, str], str]) -> str | None:
+def _upload_public_object(file_storage, *, title: str, folder_prefix: str, slugify_text: Callable[[str, str], str], allowed_extensions: set[str], invalid_type_message: str) -> str | None:
     if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
         return None
 
     original_name = secure_filename(str(file_storage.filename or "").strip())
     extension = Path(original_name).suffix.lower()
-    if extension not in ALLOWED_IMAGE_EXTENSIONS:
-        raise ValueError("Image must be a JPG or PNG file.")
+    if extension not in allowed_extensions:
+        raise ValueError(invalid_type_message)
 
     file_bytes = file_storage.read()
     if hasattr(file_storage, "stream"):
         file_storage.stream.seek(0)
     if not file_bytes:
-        raise ValueError("Please choose a non-empty image file.")
+        raise ValueError("Please choose a non-empty file.")
 
     timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
     safe_title = slugify_text(title, fallback="image")
@@ -64,6 +73,31 @@ def upload_public_image(file_storage, *, title: str, folder_prefix: str, slugify
         file_options={"content-type": content_type, "upsert": "false"},
     )
     return object_path
+
+
+def upload_public_image(file_storage, *, title: str, folder_prefix: str, slugify_text: Callable[[str, str], str]) -> str | None:
+    return _upload_public_object(
+        file_storage,
+        title=title,
+        folder_prefix=folder_prefix,
+        slugify_text=slugify_text,
+        allowed_extensions=ALLOWED_IMAGE_EXTENSIONS,
+        invalid_type_message="Image must be a JPG or PNG file.",
+    )
+
+
+def upload_public_file(file_storage, *, title: str, folder_prefix: str, slugify_text: Callable[[str, str], str], allowed_extensions: set[str], invalid_type_message: str) -> str | None:
+    normalized_extensions = {str(extension or "").strip().lower() for extension in set(allowed_extensions or set()) if str(extension or "").strip()}
+    if not normalized_extensions:
+        raise ValueError("Please choose a valid upload file type.")
+    return _upload_public_object(
+        file_storage,
+        title=title,
+        folder_prefix=folder_prefix,
+        slugify_text=slugify_text,
+        allowed_extensions=normalized_extensions,
+        invalid_type_message=invalid_type_message,
+    )
 
 
 def delete_public_image(object_path: Any, *, folder_prefix: str | None = None) -> bool:

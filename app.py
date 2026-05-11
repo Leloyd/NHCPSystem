@@ -14,13 +14,14 @@ from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_username
 from community_content import load_news_community_events, load_news_community_highlights, register_community_content_routes
+from edu_resources_content import load_public_edu_resources, register_edu_resources_routes
 from online_gallery_content import (
     ONLINE_GALLERY_UPLOAD_DIR,
     load_public_online_gallery_categories,
     load_public_online_gallery_items,
     register_online_gallery_content_routes,
 )
-from supabase_storage import delete_public_image, upload_public_image
+from supabase_storage import delete_public_image, upload_public_file, upload_public_image
 from supabase_client import is_supabase_configured
 
 try:
@@ -184,6 +185,18 @@ def _save_uploaded_image(file_storage, title, upload_dir):
         title=title,
         folder_prefix=folder_prefix,
         slugify_text=_slugify_text,
+    )
+
+
+def _save_uploaded_file(file_storage, title, upload_dir, allowed_extensions, invalid_type_message):
+    folder_prefix = Path(upload_dir).name.strip() or "uploads"
+    return upload_public_file(
+        file_storage,
+        title=title,
+        folder_prefix=folder_prefix,
+        slugify_text=_slugify_text,
+        allowed_extensions=allowed_extensions,
+        invalid_type_message=invalid_type_message,
     )
 
 
@@ -458,6 +471,21 @@ register_online_gallery_content_routes(
 )
 
 
+register_edu_resources_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    ensure_admin_csrf_token=_ensure_admin_csrf_token,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    admin_session_user_key=ADMIN_SESSION_USER_KEY,
+    admin_username=ADMIN_DEFAULT_USERNAME,
+    save_uploaded_image=_save_uploaded_image,
+    save_uploaded_file=_save_uploaded_file,
+    delete_local_image=_delete_local_image,
+    slugify_text=_slugify_text,
+)
+
+
 @app.route("/")
 def index():
     return render_template("Landing.html")
@@ -492,12 +520,12 @@ def virtual_tour():
 
 @app.route("/edu-resources")
 def edu_resources():
-    return render_template("EduResources.html")
+    return render_template("EduResources.html", edu_resources_items=load_public_edu_resources())
 
 
 @app.route("/edu-resources/details")
 def edu_resources_details():
-    return render_template("EduResourceDetails.html")
+    return render_template("EduResourceDetails.html", edu_resources_items=load_public_edu_resources())
 
 
 @app.route("/ar-content-detection")

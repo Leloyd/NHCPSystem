@@ -81,6 +81,13 @@
                 <div id="detailFacts" class="ogd-detail-facts__list"></div>
               </section>
 
+              <div id="detailDownloadRow" class="ogd-detail-back-row" hidden>
+                <a id="detailDownloadLink" href="#" class="ogd-detail-back-button" target="_blank" rel="noopener noreferrer">
+                  <i data-lucide="download" aria-hidden="true"></i>
+                  <span id="detailDownloadText">I-download ang Resource</span>
+                </a>
+              </div>
+
               <div class="ogd-detail-back-row">
                 <a href="/edu-resources" class="ogd-detail-back-button">
                   <i data-lucide="arrow-left" aria-hidden="true"></i>
@@ -140,10 +147,10 @@
 
     {% include 'partials/_public_footer.html' %}
 
+    <script id="eduResourcesData" type="application/json">{{ edu_resources_items|tojson }}</script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/edu-resources-data.js') }}"></script>
     <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/edu-resource-detail.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/edu-resource-detail-live.js') }}"></script>
   </body>
 </html>
