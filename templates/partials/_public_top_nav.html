@@ -26,8 +26,8 @@
       </button>
     </div>
 
-    <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden bg-white/98 backdrop-blur-sm {% if public_active_page == 'home' %}border-white/20{% else %}border-gray-200{% endif %}">
-      <a href="{{ url_for('index') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Home</a>
+    <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden bg-white/95 backdrop-blur-sm {% if public_active_page == 'home' %}border-gray-200{% else %}border-gray-200{% endif %}">
+      <a href="{{ url_for('index') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}text-amber-800 font-semibold{% else %}{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}">Home</a>
       <a href="{{ url_for('digital_exhibits') }}" class="block transition-colors duration-300 {% if public_active_page == 'digital-exhibits' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Digital Exhibits</a>
       <a href="{{ url_for('interactive') }}" class="block transition-colors duration-300 {% if public_active_page == 'interactive' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Interactive</a>
       <a href="{{ url_for('heritage_trail') }}" class="block transition-colors duration-300 {% if public_active_page == 'heritage-trail' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Heritage Trail</a>
