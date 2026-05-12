@@ -59,7 +59,7 @@
             </svg>
           </a>
 
-          <p class="mt-4 text-white/35 text-xs tracking-wider" style="font-family: 'Inter', sans-serif;">Est. 1845 · Nagcarlan, Laguna · Philippines</p>
+          <p class="mt-4 text-white/35 text-xs tracking-wider" style="font-family: 'Inter', sans-serif;">Nagcarlan, Laguna · Philippines</p>
         </div>
 
         <!-- Scroll indicator -->
@@ -72,7 +72,8 @@
       <!-- Testament Section -->
       <section id="testament" style="background-color: #FAF7F2;">
         <!-- Top image band -->
-        <div class="h-64 md:h-80 bg-cover bg-center relative" style="background-image: url('https://images.unsplash.com/photo-1722197913440-0128aff38a9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2xvbmlhbCUyMGVyYSUyMGJyaWNrJTIwdmF1bHQlMjBhcmNod2F5JTIwaGVyaXRhZ2V8ZW58MXx8fHwxNzc4NTE0NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080');">
+        <div class="h-64 md:h-80 relative overflow-hidden">
+          <img src="{{ url_for('static', filename='images/living-testament.jpg') }}" alt="Living Testament to History" class="absolute inset-0 h-full w-full object-cover" />
           <div class="absolute inset-0 bg-gradient-to-b from-[#0D0A04]/30 to-[#FAF7F2]"></div>
         </div>
 
@@ -170,7 +171,7 @@
             <!-- Image column -->
             <div class="relative">
               <div class="relative border-4 border-[#D4AF6A]/30">
-                <img src="https://images.unsplash.com/photo-1722197913440-0128aff38a9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2xvbmlhbCUyMGVyYSUyMGJyaWNrJTIwdmF1bHQlMjBhcmNod2F5JTIwaGVyaXRhZ2V8ZW58MXx8fHwxNzc4NTE0NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080" alt="Underground Cemetery Architecture" class="w-full h-auto" />
+                <img src="{{ url_for('static', filename='images/about-site.jpg') }}" alt="Underground Cemetery Architecture" class="w-full h-auto" />
                 <div class="absolute -bottom-4 -right-4 w-full h-full border border-[#B8923A]/20 -z-10"></div>
               </div>
               <p class="mt-4 text-[#6B4F3A] text-sm italic" style="font-family: 'Cormorant Garamond', serif;">
@@ -271,7 +272,7 @@
       <!-- Visitor Info Section -->
       <section id="visitor-info" class="relative py-20 overflow-hidden">
         <!-- Background image with overlay -->
-        <div class="absolute inset-0 bg-cover bg-center" style="background-image: url('https://images.unsplash.com/photo-1722197913440-0128aff38a9d?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxjb2xvbmlhbCUyMGVyYSUyMGJyaWNrJTIwdmF1bHQlMjBhcmNod2F5JTIwaGVyaXRhZ2V8ZW58MXx8fHwxNzc4NTE0NzEyfDA&ixlib=rb-4.1.0&q=80&w=1080');"></div>
+        <img src="{{ url_for('static', filename='images/visitors-info.jpg') }}" alt="Visitor information" class="absolute inset-0 h-full w-full object-cover" />
         <div class="absolute inset-0 bg-gradient-to-br from-[#1C1208]/90 via-[#0D0A04]/85 to-[#1C1208]/90"></div>
 
         <div class="relative z-10 max-w-6xl mx-auto px-6">
