@@ -60,6 +60,15 @@
       </span>
       <span>Edu Resources</span>
     </a>
+    <a href="{{ url_for('admin_participation_submissions') }}" class="admin-nav-link{% if admin_active_page == 'community-participation-submissions' %} is-active{% endif %}">
+      {% if admin_active_page == 'community-participation-submissions' %}
+      <span class="admin-nav-indicator" aria-hidden="true"></span>
+      {% endif %}
+      <span class="admin-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7ZM8 9h8v2H8Zm0 4h5v2H8Z"></path></svg>
+      </span>
+      <span>Participation Submissions</span>
+    </a>
     <a href="#" class="admin-nav-link">
       <span class="admin-nav-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M5 5h2v14H5Zm6 4h2v10h-2Zm6-6h2v16h-2Z"></path></svg>

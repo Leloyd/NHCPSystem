@@ -100,3 +100,29 @@ CREATE TABLE public.edu_resources (
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT edu_resources_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.community_participation_submissions (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  submission_type text NOT NULL CHECK (submission_type = ANY (ARRAY['teacher_corner'::text, 'story_submit'::text])),
+  title text NOT NULL,
+  resource_category text NOT NULL DEFAULT ''::text,
+  story_category text NOT NULL DEFAULT ''::text,
+  submitter_name text NOT NULL,
+  submitter_email text NOT NULL,
+  grade_level text NOT NULL DEFAULT ''::text,
+  subject_topic text NOT NULL DEFAULT ''::text,
+  description text NOT NULL DEFAULT ''::text,
+  story_content text NOT NULL DEFAULT ''::text,
+  resource_file_filename text,
+  photo_filename text,
+  is_private boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'pending_verification'::text CHECK (status = ANY (ARRAY['pending_verification'::text, 'pending_review'::text, 'active'::text, 'archived'::text])),
+  verification_code_hash text,
+  verification_sent_at timestamp with time zone,
+  verification_expires_at timestamp with time zone,
+  verified_at timestamp with time zone,
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT community_participation_submissions_pkey PRIMARY KEY (id)
+);

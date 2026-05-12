@@ -147,7 +147,7 @@
     if (!Number.isNaN(candidate)) {
       return candidate;
     }
-    return Number(item.id || 0);
+    return Number(String(item.id || "").replace(/[^0-9]/g, "") || 0);
   }
 
   function sortResources(data, mode) {

@@ -21,6 +21,7 @@ from online_gallery_content import (
     load_public_online_gallery_items,
     register_online_gallery_content_routes,
 )
+from participation_submissions_content import register_participation_submission_routes
 from supabase_storage import delete_public_image, upload_public_file, upload_public_image
 from supabase_client import is_supabase_configured
 
@@ -454,6 +455,20 @@ register_community_content_routes(
     save_uploaded_image=_save_uploaded_image,
     delete_local_image=_delete_local_image,
     slugify_text=_slugify_text,
+)
+
+
+register_participation_submission_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    ensure_admin_csrf_token=_ensure_admin_csrf_token,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    admin_session_user_key=ADMIN_SESSION_USER_KEY,
+    admin_username=ADMIN_DEFAULT_USERNAME,
+    save_uploaded_image=_save_uploaded_image,
+    save_uploaded_file=_save_uploaded_file,
+    delete_local_image=_delete_local_image,
 )
 
 

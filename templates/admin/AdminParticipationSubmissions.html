@@ -1,0 +1,232 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Community Participation Submissions | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'community-participation-submissions' %}
+{% set admin_topbar_title = 'Community Participation Submissions' %}
+{% set admin_topbar_subtitle = 'Review Teacher Corner materials and Story Submit entries before publishing them into the Edu Resources experience.' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          {% if config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Configuration issue</strong>
+            <span>{{ config_error }}</span>
+          </section>
+          {% endif %}
+
+          {% if email_config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Email verification issue</strong>
+            <span>{{ email_config_error }}</span>
+          </section>
+          {% endif %}
+
+          {% if submissions_items %}
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Pending Review</h3>
+                <p>These submissions finished email verification and are waiting for an admin decision.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Overview</th>
+                    <th>Type</th>
+                    <th>Contributor</th>
+                    <th>Privacy</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for submission_item in pending_review_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ submission_item.title }}</strong>
+                        <span>{{ submission_item.preview_text }}</span>
+                        <span>{{ submission_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ submission_item.submission_type_label }}</td>
+                    <td>{{ submission_item.submitter_name }}<br /><span>{{ submission_item.submitter_email }}</span></td>
+                    <td>{% if submission_item.is_private %}Private{% else %}Public attribution{% endif %}</td>
+                    <td><span class="admin-status-badge is-draft">Pending Review</span></td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}" class="admin-inline-link">Review</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not pending_review_items %}
+                  <tr><td colspan="6">No submissions waiting for review.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Approved and Published</h3>
+                <p>Approved submissions are now visible from the Edu Resources public page.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Overview</th>
+                    <th>Type</th>
+                    <th>Contributor</th>
+                    <th>Privacy</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for submission_item in active_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ submission_item.title }}</strong>
+                        <span>{{ submission_item.preview_text }}</span>
+                        <span>{{ submission_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ submission_item.submission_type_label }}</td>
+                    <td>{{ submission_item.contributor_display }}<br /><span>{{ submission_item.email_display }}</span></td>
+                    <td>{% if submission_item.is_private %}Private{% else %}Public attribution{% endif %}</td>
+                    <td><span class="admin-status-badge is-published">Published</span></td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}" class="admin-inline-link">Review</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not active_items %}
+                  <tr><td colspan="6">No approved submissions yet.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Archived Submissions</h3>
+                <p>Rejected or archived submissions are kept here for reference.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Overview</th>
+                    <th>Type</th>
+                    <th>Contributor</th>
+                    <th>Privacy</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for submission_item in archived_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ submission_item.title }}</strong>
+                        <span>{{ submission_item.preview_text }}</span>
+                        <span>{{ submission_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ submission_item.submission_type_label }}</td>
+                    <td>{{ submission_item.contributor_display }}<br /><span>{{ submission_item.email_display }}</span></td>
+                    <td>{% if submission_item.is_private %}Private{% else %}Public attribution{% endif %}</td>
+                    <td><span class="admin-status-badge is-draft">Archived</span></td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}" class="admin-inline-link">Review</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not archived_items %}
+                  <tr><td colspan="6">No archived submissions.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Awaiting Verification</h3>
+                <p>These entries started submission but have not completed email verification yet.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Overview</th>
+                    <th>Type</th>
+                    <th>Contributor</th>
+                    <th>Privacy</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for submission_item in awaiting_verification_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ submission_item.title }}</strong>
+                        <span>{{ submission_item.preview_text }}</span>
+                        <span>{{ submission_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ submission_item.submission_type_label }}</td>
+                    <td>{{ submission_item.submitter_name }}<br /><span>{{ submission_item.submitter_email }}</span></td>
+                    <td>{% if submission_item.is_private %}Private{% else %}Public attribution{% endif %}</td>
+                    <td><span class="admin-status-badge is-draft">Awaiting Verification</span></td>
+                    <td>
+                      <div class="admin-resource-actions">
+                        <a href="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}" class="admin-inline-link">Review</a>
+                      </div>
+                    </td>
+                  </tr>
+                  {% endfor %}
+                  {% if not awaiting_verification_items %}
+                  <tr><td colspan="6">No unverified submissions.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% else %}
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-empty-state">
+              <div class="admin-empty-state-icon">+</div>
+              <h3>No participation submissions yet</h3>
+              <p>Teacher Corner and Story Submit entries will appear here after visitors start sending them.</p>
+            </div>
+          </section>
+          {% endif %}
+{% endblock %}

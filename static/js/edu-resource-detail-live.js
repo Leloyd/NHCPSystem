@@ -264,9 +264,9 @@
   }
 
   const params = new URLSearchParams(window.location.search);
-  const requestedId = Number(params.get("item"));
+  const requestedId = String(params.get("item") || "").trim();
 
-  activeIndex = items.findIndex((item) => Number(item.id) === requestedId);
+  activeIndex = items.findIndex((item) => String(item.id) === requestedId);
   if (activeIndex < 0) {
     activeIndex = 0;
   }
@@ -286,6 +286,7 @@
     const strings = getStrings();
     const category = item.category || strings.fallbackCategory;
     const metaText = getMetaText(item);
+    const detailText = item.full_text || item.description || "";
 
     activeIndex = index;
     setZoomState(false);
@@ -297,7 +298,7 @@
     if (metaEl) metaEl.textContent = metaText || strings.metadataUnavailable;
     if (imageEl) imageEl.innerHTML = buildImageMarkup(item);
     if (imageBadgeEl) imageBadgeEl.textContent = category;
-    if (descEl) descEl.textContent = item.description || "";
+    if (descEl) descEl.textContent = detailText;
 
     if (tagsEl && tagsSectionEl) {
       tagsEl.innerHTML = "";

@@ -31,3 +31,95 @@ drop trigger if exists set_edu_resources_updated_at on public.edu_resources;
 create trigger set_edu_resources_updated_at
 before update on public.edu_resources
 for each row execute function public.set_current_timestamp_updated_at();
+
+insert into public.edu_resources (
+  title,
+  slug,
+  category,
+  educator_name,
+  grade_level,
+  subject_topic,
+  author,
+  year_label,
+  description,
+  file_filename,
+  cover_image_filename,
+  status,
+  is_published
+) values
+  (
+    'Underground Cemetery Storybook',
+    'underground-cemetery-storybook',
+    'Books',
+    '',
+    '',
+    '',
+    'NHCP Education Team',
+    '2024',
+    'An illustrated reading resource introducing learners to the history, symbolism, and cultural value of the Underground Cemetery.',
+    null,
+    null,
+    'active',
+    true
+  ),
+  (
+    'Grade 6 Heritage Awareness Slides',
+    'grade-6-heritage-awareness-slides',
+    'PPT',
+    'NHCP Museum Education Unit',
+    'Grade 6',
+    'Heritage Awareness',
+    '',
+    '',
+    'A classroom presentation for introducing heritage conservation, local history, and museum appreciation to intermediate learners.',
+    null,
+    null,
+    'active',
+    true
+  ),
+  (
+    'Museum Visit Reflection Worksheet',
+    'museum-visit-reflection-worksheet',
+    'DOCS',
+    'School Programs Office',
+    'Junior High School',
+    'Reflection Activity',
+    '',
+    '',
+    'A downloadable reflection guide for students after visiting the museum, focused on observation, interpretation, and personal insight.',
+    null,
+    null,
+    'draft',
+    false
+  ),
+  (
+    'Philippine Colonial Churches Reading Pack',
+    'philippine-colonial-churches-reading-pack',
+    'PDF',
+    'NHCP Research and Publications',
+    'Senior High School',
+    'Philippine Church Architecture',
+    '',
+    '',
+    'A reference packet covering the development of colonial church architecture in the Philippines, with discussion prompts for classroom use.',
+    null,
+    null,
+    'active',
+    true
+  ),
+  (
+    'Historic Sites Reading Companion',
+    'historic-sites-reading-companion',
+    'Books',
+    '',
+    '',
+    '',
+    'Leloyd Historical Learning Series',
+    '2023',
+    'A companion resource featuring selected historic sites, short contextual readings, and guide questions for heritage-based learning.',
+    null,
+    null,
+    'archived',
+    false
+  )
+on conflict (slug) do nothing;

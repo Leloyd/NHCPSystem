@@ -1,0 +1,100 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Review Participation Submission | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'community-participation-submissions' %}
+{% set admin_topbar_title = 'Review Participation Submission' %}
+{% set admin_topbar_subtitle = 'Inspect the submission details, privacy setting, and moderation decision before publishing to Edu Resources.' %}
+{% set admin_topbar_tool_href = url_for('admin_participation_submissions') %}
+{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>{{ submission_item.title }}</h3>
+                <p>{{ submission_item.submission_type_label }} · {{ submission_item.display_date }}</p>
+              </div>
+              <span class="admin-status-badge {% if submission_item.status == 'active' %}is-published{% else %}is-draft{% endif %}">{{ submission_item.status|replace('_', ' ')|title }}</span>
+            </div>
+
+            <div class="admin-form-grid">
+              <div class="admin-form-field admin-form-field-wide">
+                <label>Contributor</label>
+                {% if submission_item.is_private and submission_item.status == 'active' %}
+                <p class="admin-field-hint"><strong>Hidden by privacy request</strong></p>
+                <p class="admin-field-hint">Name and email are hidden after approval.</p>
+                {% else %}
+                <p class="admin-field-hint"><strong>{{ submission_item.submitter_name }}</strong></p>
+                <p class="admin-field-hint">{{ submission_item.submitter_email }}</p>
+                {% endif %}
+                {% if submission_item.is_private %}
+                <p class="admin-field-hint"><strong>Privacy requested:</strong> public pages will hide the contributor name and email after approval.</p>
+                {% endif %}
+              </div>
+
+              <div class="admin-form-field">
+                <label>Submission Type</label>
+                <p class="admin-field-hint">{{ submission_item.submission_type_label }}</p>
+              </div>
+
+              <div class="admin-form-field">
+                <label>Resource Category</label>
+                <p class="admin-field-hint">{{ submission_item.resource_category or 'Books' }}</p>
+              </div>
+
+              {% if submission_item.grade_level %}
+              <div class="admin-form-field">
+                <label>Grade Level</label>
+                <p class="admin-field-hint">{{ submission_item.grade_level }}</p>
+              </div>
+              {% endif %}
+
+              {% if submission_item.subject_topic or submission_item.story_category %}
+              <div class="admin-form-field">
+                <label>Subject / Story Category</label>
+                <p class="admin-field-hint">{{ submission_item.subject_topic or submission_item.story_category }}</p>
+              </div>
+              {% endif %}
+
+              <div class="admin-form-field admin-form-field-wide">
+                <label>Summary</label>
+                <p class="admin-field-hint">{{ submission_item.description or submission_item.preview_text }}</p>
+              </div>
+
+              {% if submission_item.story_content %}
+              <div class="admin-form-field admin-form-field-wide">
+                <label>Story Content</label>
+                <div class="admin-field-hint" style="white-space: pre-wrap;">{{ submission_item.story_content }}</div>
+              </div>
+              {% endif %}
+
+              {% if submission_item.resource_file_url %}
+              <div class="admin-form-field admin-form-field-wide">
+                <label>Attached Resource File</label>
+                <p class="admin-field-hint"><a href="{{ submission_item.resource_file_url }}" target="_blank" rel="noopener noreferrer">Open uploaded file</a></p>
+              </div>
+              {% endif %}
+            </div>
+
+            {% if submission_item.photo_url %}
+            <div class="admin-image-preview-card">
+              <img src="{{ submission_item.photo_url }}" alt="Submission preview image" />
+            </div>
+            {% endif %}
+
+            <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}" class="admin-form-actions">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" name="moderation_action" value="archive" class="admin-secondary-action">Archive / Reject</button>
+              <button type="submit" name="moderation_action" value="approve" class="admin-primary-action">Approve and Publish</button>
+            </form>
+          </section>
+{% endblock %}

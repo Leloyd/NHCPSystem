@@ -6,6 +6,7 @@ from typing import Any
 from flask import current_app, render_template, session
 
 from edu_resources_repository import get_edu_resource_by_id, list_all_edu_resources, list_published_edu_resources
+from participation_submissions_content import load_public_approved_participation_submission_resources
 from supabase_client import SupabaseConfigError, is_supabase_configured
 from supabase_storage import EDU_RESOURCES_STORAGE_PREFIX, is_storage_object_path, resolve_public_image_url
 
@@ -60,6 +61,7 @@ def prepare_edu_resource_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared["grade_level"] = str(prepared.get("grade_level") or "").strip()
     prepared["subject_topic"] = str(prepared.get("subject_topic") or "").strip()
     prepared["description"] = str(prepared.get("description") or "").strip()
+    prepared["full_text"] = str(prepared.get("full_text") or prepared.get("description") or "").strip()
     prepared["metadata_label"] = "Author" if category == "Books" else "Educator / Source"
     prepared["metadata_value"] = prepared["author"] if category == "Books" else prepared["educator_name"]
     return prepared
@@ -70,17 +72,28 @@ def prepare_edu_resource_items(items: list[dict[str, Any]] | None) -> list[dict[
 
 
 def load_public_edu_resources() -> list[dict[str, Any]]:
-    if not is_supabase_configured():
-        return []
+    published_items: list[dict[str, Any]] = []
+    approved_submission_items: list[dict[str, Any]] = []
+
+    if is_supabase_configured():
+        try:
+            published_items = prepare_edu_resource_items(list_published_edu_resources())
+        except SupabaseConfigError:
+            current_app.logger.warning("Supabase edu resources integration is not fully configured.")
+        except Exception as exc:
+            current_app.logger.exception("Failed to load edu resources from Supabase: %s", exc)
 
     try:
-        return prepare_edu_resource_items(list_published_edu_resources())
-    except SupabaseConfigError:
-        current_app.logger.warning("Supabase edu resources integration is not fully configured.")
+        approved_submission_items = load_public_approved_participation_submission_resources()
     except Exception as exc:
-        current_app.logger.exception("Failed to load edu resources from Supabase: %s", exc)
+        current_app.logger.exception("Failed to merge participation submissions into Edu Resources: %s", exc)
 
-    return []
+    combined_items = list(published_items) + list(approved_submission_items)
+    return sorted(
+        combined_items,
+        key=lambda item: str(item.get("created_at") or item.get("updated_at") or ""),
+        reverse=True,
+    )
 
 
 def load_admin_edu_resources() -> list[dict[str, Any]]:

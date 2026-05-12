@@ -586,6 +586,9 @@ function initParticipationModals() {
     if (typeof window.resetParticipationTeacherState === 'function') {
       window.resetParticipationTeacherState();
     }
+    if (typeof window.resetParticipationSubmissionState === 'function') {
+      window.resetParticipationSubmissionState();
+    }
   }
 
   function closeParticipationModal() {
@@ -720,11 +723,15 @@ function initFormInteractions() {
     });
 
     function handleFiles(files) {
-      const acceptedFormats = ['.pdf', '.docx', '.doc', '.pptx', '.ppt'];
-      const validFiles = files.filter(f => 
-        acceptedFormats.some(ext => f.name.toLowerCase().endsWith(ext))
-      );
-      uploadedFiles = [...uploadedFiles, ...validFiles];
+      const acceptedFormats = ['.pdf', '.docx', '.pptx', '.ppt'];
+      const firstValidFile = files.find(f => acceptedFormats.some(ext => f.name.toLowerCase().endsWith(ext)));
+      if (!firstValidFile) {
+        return;
+      }
+      const transfer = new DataTransfer();
+      transfer.items.add(firstValidFile);
+      resourceFileInput.files = transfer.files;
+      uploadedFiles = [firstValidFile];
       renderFileList();
     }
 
@@ -751,6 +758,8 @@ function initFormInteractions() {
 
     window.removeFile = (index) => {
       uploadedFiles.splice(index, 1);
+      const transfer = new DataTransfer();
+      resourceFileInput.files = transfer.files;
       renderFileList();
     };
 
@@ -790,8 +799,199 @@ function initFormInteractions() {
   const visitorFeedbackSuccess = document.getElementById('visitorFeedbackSuccess');
   const teacherCornerForm = document.getElementById('teacherCornerForm');
   const teacherCornerSuccess = document.getElementById('teacherCornerSuccess');
+  const teacherCornerVerification = document.getElementById('teacherCornerVerification');
+  const teacherCornerVerificationEmail = document.getElementById('teacherCornerVerificationEmail');
+  const teacherCornerVerificationCode = document.getElementById('teacherCornerVerificationCode');
+  const teacherCornerVerifyButton = document.getElementById('teacherCornerVerifyButton');
+  const teacherCornerBackButton = document.getElementById('teacherCornerBackButton');
+  const teacherCornerFormMessage = document.getElementById('teacherCornerFormMessage');
+  const teacherCornerVerificationMessage = document.getElementById('teacherCornerVerificationMessage');
   const storiesSubmitForm = document.getElementById('storiesSubmitForm');
   const storiesSubmitSuccess = document.getElementById('storiesSubmitSuccess');
+  const storiesSubmitVerification = document.getElementById('storiesSubmitVerification');
+  const storiesSubmitVerificationEmail = document.getElementById('storiesSubmitVerificationEmail');
+  const storiesSubmitVerificationCode = document.getElementById('storiesSubmitVerificationCode');
+  const storiesSubmitVerifyButton = document.getElementById('storiesSubmitVerifyButton');
+  const storiesSubmitBackButton = document.getElementById('storiesSubmitBackButton');
+  const storiesSubmitFormMessage = document.getElementById('storiesSubmitFormMessage');
+  const storiesSubmitVerificationMessage = document.getElementById('storiesSubmitVerificationMessage');
+  const submissionState = {
+    'teacher-corner': { submissionId: null, email: '' },
+    'stories-submit': { submissionId: null, email: '' },
+  };
+
+  function setSubmissionMessage(element, message, tone = 'error') {
+    if (!element) {
+      return;
+    }
+    element.textContent = message || '';
+    element.classList.toggle('hidden', !message);
+    element.classList.remove('is-error', 'is-success');
+    if (message) {
+      element.classList.add(tone === 'success' ? 'is-success' : 'is-error');
+    }
+  }
+
+  function resetSubmissionState() {
+    submissionState['teacher-corner'] = { submissionId: null, email: '' };
+    submissionState['stories-submit'] = { submissionId: null, email: '' };
+    if (teacherCornerVerification) {
+      teacherCornerVerification.classList.add('hidden');
+    }
+    if (storiesSubmitVerification) {
+      storiesSubmitVerification.classList.add('hidden');
+    }
+    if (teacherCornerVerificationCode) {
+      teacherCornerVerificationCode.value = '';
+    }
+    if (storiesSubmitVerificationCode) {
+      storiesSubmitVerificationCode.value = '';
+    }
+    setSubmissionMessage(teacherCornerFormMessage, '');
+    setSubmissionMessage(teacherCornerVerificationMessage, '');
+    setSubmissionMessage(storiesSubmitFormMessage, '');
+    setSubmissionMessage(storiesSubmitVerificationMessage, '');
+  }
+
+  window.resetParticipationSubmissionState = resetSubmissionState;
+
+  async function postForm(url, formData) {
+    const response = await fetch(url, {
+      method: 'POST',
+      body: formData,
+      headers: {
+        'X-Requested-With': 'XMLHttpRequest',
+      },
+    });
+
+    let payload = {};
+    try {
+      payload = await response.json();
+    } catch (error) {
+      payload = { ok: false, error: 'Unexpected server response.' };
+    }
+
+    return { response, payload };
+  }
+
+  function openVerificationStep(type, email, submissionId, message) {
+    const isTeacher = type === 'teacher-corner';
+    const form = isTeacher ? teacherCornerForm : storiesSubmitForm;
+    const verification = isTeacher ? teacherCornerVerification : storiesSubmitVerification;
+    const emailLabel = isTeacher ? teacherCornerVerificationEmail : storiesSubmitVerificationEmail;
+    const verifyMessage = isTeacher ? teacherCornerVerificationMessage : storiesSubmitVerificationMessage;
+    const codeInput = isTeacher ? teacherCornerVerificationCode : storiesSubmitVerificationCode;
+
+    submissionState[type] = { submissionId, email };
+    if (emailLabel) {
+      emailLabel.textContent = email;
+    }
+    if (form) {
+      form.classList.add('hidden');
+    }
+    if (verification) {
+      verification.classList.remove('hidden');
+    }
+    if (codeInput) {
+      codeInput.value = '';
+      codeInput.focus();
+    }
+    setSubmissionMessage(verifyMessage, message || 'Enter the verification code sent to your email.', 'success');
+  }
+
+  function returnToForm(type) {
+    const isTeacher = type === 'teacher-corner';
+    const form = isTeacher ? teacherCornerForm : storiesSubmitForm;
+    const verification = isTeacher ? teacherCornerVerification : storiesSubmitVerification;
+    const verifyMessage = isTeacher ? teacherCornerVerificationMessage : storiesSubmitVerificationMessage;
+    if (verification) {
+      verification.classList.add('hidden');
+    }
+    if (form) {
+      form.classList.remove('hidden');
+    }
+    setSubmissionMessage(verifyMessage, '');
+  }
+
+  async function requestSubmissionVerification(type) {
+    const isTeacher = type === 'teacher-corner';
+    const form = isTeacher ? teacherCornerForm : storiesSubmitForm;
+    const formMessage = isTeacher ? teacherCornerFormMessage : storiesSubmitFormMessage;
+    if (!form) {
+      return;
+    }
+
+    if (isTeacher && uploadedFiles.length === 0) {
+      fileDropZone.classList.add('drag-over');
+      setTimeout(() => fileDropZone.classList.remove('drag-over'), 800);
+      setSubmissionMessage(formMessage, 'Please upload a file before submitting.');
+      return;
+    }
+
+    const formData = new FormData(form);
+    const email = String(formData.get('submitter_email') || '').trim();
+    setSubmissionMessage(formMessage, '');
+
+    try {
+      const { response, payload } = await postForm('/community-participation/submissions/request-verification', formData);
+      if (payload.ok) {
+        openVerificationStep(type, email, payload.submission_id, payload.message);
+        return;
+      }
+
+      if (response.status === 429 && payload.requires_verification && payload.submission_id) {
+        openVerificationStep(type, email, payload.submission_id, payload.error);
+        return;
+      }
+
+      setSubmissionMessage(formMessage, payload.error || 'Could not start email verification right now.');
+    } catch (error) {
+      setSubmissionMessage(formMessage, 'Could not reach the server right now. Please try again.');
+    }
+  }
+
+  async function verifySubmission(type) {
+    const isTeacher = type === 'teacher-corner';
+    const verifyMessage = isTeacher ? teacherCornerVerificationMessage : storiesSubmitVerificationMessage;
+    const successBox = isTeacher ? teacherCornerSuccess : storiesSubmitSuccess;
+    const verification = isTeacher ? teacherCornerVerification : storiesSubmitVerification;
+    const codeInput = isTeacher ? teacherCornerVerificationCode : storiesSubmitVerificationCode;
+    const state = submissionState[type];
+
+    if (!state || !state.submissionId) {
+      setSubmissionMessage(verifyMessage, 'Your submission session has expired. Please submit the form again.');
+      return;
+    }
+
+    const verificationCode = String(codeInput?.value || '').trim();
+    if (!verificationCode) {
+      setSubmissionMessage(verifyMessage, 'Please enter the verification code.');
+      return;
+    }
+
+    const formData = new FormData();
+    formData.set('submission_id', String(state.submissionId));
+    formData.set('submitter_email', state.email);
+    formData.set('verification_code', verificationCode);
+
+    try {
+      const { payload } = await postForm('/community-participation/submissions/verify', formData);
+      if (!payload.ok) {
+        setSubmissionMessage(verifyMessage, payload.error || 'Could not verify your submission right now.');
+        return;
+      }
+
+      setSubmissionMessage(verifyMessage, payload.message || 'Submission verified successfully.', 'success');
+      if (verification) {
+        verification.classList.add('hidden');
+      }
+      if (successBox) {
+        successBox.classList.remove('hidden');
+      }
+    } catch (error) {
+      setSubmissionMessage(verifyMessage, 'Could not reach the server right now. Please try again.');
+    }
+  }
 
   if (storyContent && storyCharacterCount) {
     storyContent.addEventListener('input', () => {
@@ -819,24 +1019,32 @@ function initFormInteractions() {
   if (teacherCornerForm) {
     teacherCornerForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      if (uploadedFiles.length === 0) {
-        fileDropZone.classList.add('drag-over');
-        setTimeout(() => fileDropZone.classList.remove('drag-over'), 800);
-        return;
-      }
-
-      teacherCornerForm.classList.add('hidden');
-      teacherCornerSuccess.classList.remove('hidden');
+      requestSubmissionVerification('teacher-corner');
     });
   }
 
   if (storiesSubmitForm) {
     storiesSubmitForm.addEventListener('submit', (e) => {
       e.preventDefault();
-      storiesSubmitForm.classList.add('hidden');
-      storiesSubmitSuccess.classList.remove('hidden');
+      requestSubmissionVerification('stories-submit');
     });
   }
+
+  teacherCornerVerifyButton?.addEventListener('click', () => {
+    verifySubmission('teacher-corner');
+  });
+
+  storiesSubmitVerifyButton?.addEventListener('click', () => {
+    verifySubmission('stories-submit');
+  });
+
+  teacherCornerBackButton?.addEventListener('click', () => {
+    returnToForm('teacher-corner');
+  });
+
+  storiesSubmitBackButton?.addEventListener('click', () => {
+    returnToForm('stories-submit');
+  });
 
   if (photoUploadZone && storyPhotoInput) {
     photoUploadZone.addEventListener('click', () => {
