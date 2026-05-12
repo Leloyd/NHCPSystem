@@ -64,7 +64,7 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
   },
 ];
 const CHURCH_FLOATING_LABEL_IMAGES = {
-  'hotspot-1': '/webxr/images/IMG_2628.jpg',
+  'hotspot-1': new URL('../../../images/IMG_2628.jpg', import.meta.url).href,
 };
 const CHURCH_HOTSPOT_INFO_TEXT = {
   'hotspot-1':
