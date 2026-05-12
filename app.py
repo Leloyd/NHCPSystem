@@ -494,6 +494,7 @@ register_online_gallery_content_routes(
     admin_username=ADMIN_DEFAULT_USERNAME,
     normalize_checkbox=_normalize_checkbox,
     save_uploaded_image=_save_uploaded_image,
+    save_uploaded_file=_save_uploaded_file,
     delete_local_image=_delete_local_image,
 )
 

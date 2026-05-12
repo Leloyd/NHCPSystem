@@ -16,8 +16,14 @@
   const categoryPillEl = document.getElementById("detailCategoryPill");
   const imageEl = document.getElementById("detailImage");
   const imageBadgeEl = document.getElementById("detailImageBadge");
+  const mediaToggleRowEl = document.getElementById("detailMediaToggleRow");
+  const photoTabEl = document.getElementById("detailPhotoTab");
+  const modelTabEl = document.getElementById("detailModelTab");
   const zoomToggleEl = document.getElementById("detailZoomToggle");
   const zoomHintTextEl = document.getElementById("detailZoomHintText");
+  const modelPanelEl = document.getElementById("detailModelPanel");
+  const modelFrameEl = document.getElementById("detailModelFrame");
+  const modelBadgeEl = document.getElementById("detailModelBadge");
   const descEl = document.getElementById("detailDesc");
   const descHeadingEl = document.getElementById("detailDescriptionHeading");
   const tagsEl = document.getElementById("detailTags");
@@ -39,6 +45,7 @@
   const relatedItemsGrid = document.getElementById("relatedItemsGrid");
   let activeIndex = 0;
   let isZoomed = false;
+  let activeMediaMode = "photo";
 
   const i18n = {
     english: {
@@ -70,6 +77,11 @@
       fallbackCategory: "Online Gallery",
       viewDetails: "View More",
       detailTitleSuffix: "Online Gallery",
+      photo: "Photo",
+      object3d: "3D Object",
+      interactive3d: "Interactive 3D Object",
+      viewIn3d: "View in 3D",
+      rotatePrompt: "Drag to rotate. Scroll or pinch to zoom.",
     },
     filipino: {
       home: "Tahanan",
@@ -100,6 +112,11 @@
       fallbackCategory: "Online Gallery",
       viewDetails: "Tingnan Pa",
       detailTitleSuffix: "Online Gallery",
+      photo: "Larawan",
+      object3d: "3D Object",
+      interactive3d: "Interaktibong 3D Object",
+      viewIn3d: "Tingnan sa 3D",
+      rotatePrompt: "I-drag para iikot. Mag-scroll o pinch para mag-zoom.",
     },
   };
 
@@ -159,6 +176,10 @@
     return getLocalizedField(item, "location");
   }
 
+  function hasModel(item) {
+    return Boolean(normalizeText(item && item.model_url));
+  }
+
   function setZoomState(nextZoomed) {
     isZoomed = Boolean(nextZoomed);
     if (!zoomToggleEl || !zoomHintTextEl) {
@@ -172,12 +193,71 @@
     zoomHintTextEl.textContent = label;
   }
 
+  function setMediaMode(mode, item) {
+    const nextMode = mode === "model" && hasModel(item) ? "model" : "photo";
+    activeMediaMode = nextMode;
+
+    if (mediaToggleRowEl) {
+      mediaToggleRowEl.hidden = !hasModel(item);
+    }
+
+    if (photoTabEl) {
+      const isPhoto = nextMode === "photo";
+      photoTabEl.classList.toggle("is-active", isPhoto);
+      photoTabEl.setAttribute("aria-pressed", isPhoto ? "true" : "false");
+    }
+
+    if (modelTabEl) {
+      const isModel = nextMode === "model";
+      modelTabEl.classList.toggle("is-active", isModel);
+      modelTabEl.setAttribute("aria-pressed", isModel ? "true" : "false");
+    }
+
+    if (zoomToggleEl) {
+      const isPhoto = nextMode === "photo";
+      zoomToggleEl.hidden = !isPhoto;
+      zoomToggleEl.disabled = !isPhoto;
+      if (!isPhoto) {
+        setZoomState(false);
+      }
+    }
+
+    if (modelPanelEl) {
+      modelPanelEl.hidden = nextMode !== "model";
+    }
+  }
+
   function buildDetailImage(item) {
     const title = getLocalizedTitle(item);
     const category = getLocalizedCategory(item) || getStrings().fallbackCategory;
     return item.image_url
       ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(title)}" class="ogd-detail-media__image" />`
       : `<div class="ogd-detail-media__fallback"><span>${escapeHtml(category)}</span></div>`;
+  }
+
+  function buildDetailModel(item) {
+    const strings = getStrings();
+    const title = getLocalizedTitle(item);
+    const category = getLocalizedCategory(item) || strings.fallbackCategory;
+    if (!hasModel(item)) {
+      return `<div class="ogd-detail-media__fallback"><span>${escapeHtml(category)}</span></div>`;
+    }
+    return `
+      <model-viewer
+        src="${escapeHtml(item.model_url)}"
+        alt="${escapeHtml(title)}"
+        class="ogd-detail-model-viewer"
+        camera-controls
+        touch-action="pan-y"
+        shadow-intensity="0.9"
+        exposure="1"
+        interaction-prompt="auto"
+        ar-status="not-presenting"
+      >
+        <button class="ogd-detail-model-prompt" slot="interaction-prompt-button" type="button">${escapeHtml(strings.viewIn3d)}</button>
+        <div class="ogd-detail-model-help" slot="poster">${escapeHtml(strings.rotatePrompt)}</div>
+      </model-viewer>
+    `;
   }
 
   function buildFactItem(iconName, label, value) {
@@ -254,6 +334,8 @@
     if (relatedSectionKickerEl) relatedSectionKickerEl.textContent = strings.relatedKicker;
     if (relatedSectionTitleEl) relatedSectionTitleEl.textContent = strings.relatedTitle;
     if (relatedSectionLinkEl) relatedSectionLinkEl.textContent = strings.relatedLink;
+    if (photoTabEl) photoTabEl.textContent = strings.photo;
+    if (modelTabEl) modelTabEl.textContent = strings.object3d;
     setZoomState(isZoomed);
   }
 
@@ -270,6 +352,8 @@
     if (prevBtn) prevBtn.disabled = true;
     if (nextBtn) nextBtn.disabled = true;
     if (zoomToggleEl) zoomToggleEl.disabled = true;
+    if (modelPanelEl) modelPanelEl.hidden = true;
+    if (mediaToggleRowEl) mediaToggleRowEl.hidden = true;
     updateStaticLabels();
     return;
   }
@@ -318,6 +402,11 @@
       imageEl.innerHTML = buildDetailImage(item);
     }
     if (imageBadgeEl) imageBadgeEl.textContent = category;
+    if (modelFrameEl) {
+      modelFrameEl.innerHTML = buildDetailModel(item);
+    }
+    if (modelBadgeEl) modelBadgeEl.textContent = category;
+    setMediaMode(hasModel(item) && activeMediaMode === "model" ? "model" : "photo", item);
 
     if (descEl) {
       descEl.textContent = description;
@@ -378,6 +467,26 @@
   if (zoomToggleEl) {
     zoomToggleEl.addEventListener("click", () => {
       setZoomState(!isZoomed);
+    });
+  }
+
+  if (photoTabEl) {
+    photoTabEl.addEventListener("click", () => {
+      const item = items[activeIndex];
+      if (!item) {
+        return;
+      }
+      setMediaMode("photo", item);
+    });
+  }
+
+  if (modelTabEl) {
+    modelTabEl.addEventListener("click", () => {
+      const item = items[activeIndex];
+      if (!item) {
+        return;
+      }
+      setMediaMode("model", item);
     });
   }
 

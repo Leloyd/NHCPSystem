@@ -66,6 +66,7 @@ CREATE TABLE public.online_gallery_items (
   teaching_note text NOT NULL DEFAULT ''::text,
   tags jsonb NOT NULL DEFAULT '[]'::jsonb,
   image_filename text,
+  model_filename text,
   is_published boolean NOT NULL DEFAULT true,
   sort_order integer NOT NULL DEFAULT 0,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),

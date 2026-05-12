@@ -18,9 +18,11 @@ from .service import (
 
 CATEGORY_REQUIRES_LOCATION = {"mga-rehiyunal-na-kaugalian-regional-customs"}
 CATEGORY_REQUIRES_YEAR = {"kasaysayan-history"}
+ONLINE_GALLERY_MODEL_ALLOWED_EXTENSIONS = {".glb"}
+ONLINE_GALLERY_MODEL_INVALID_TYPE_MESSAGE = "3D object must be a GLB file."
 
 
-def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image):
+def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image, save_uploaded_file):
     title_en = str(form.get("title_en") or form.get("title") or "").strip()
     title_tl = str(form.get("title_tl") or form.get("title") or "").strip()
     year_label = str(form.get("year_label") or "").strip()
@@ -101,10 +103,25 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     else:
         payload["image_filename"] = None
 
+    uploaded_model_file = files.get("model_file")
+    new_model_filename = save_uploaded_file(
+        uploaded_model_file,
+        title_en or title_tl,
+        ONLINE_GALLERY_UPLOAD_DIR,
+        ONLINE_GALLERY_MODEL_ALLOWED_EXTENSIONS,
+        ONLINE_GALLERY_MODEL_INVALID_TYPE_MESSAGE,
+    )
+    if new_model_filename:
+        payload["model_filename"] = new_model_filename
+    elif current_item:
+        payload["model_filename"] = current_item.get("model_filename")
+    else:
+        payload["model_filename"] = None
+
     if not payload.get("image_filename"):
         raise ValueError("Please upload a gallery image.")
 
-    return payload, new_image_filename
+    return payload, new_image_filename, new_model_filename
 
 
 def register_online_gallery_content_routes(
@@ -118,6 +135,7 @@ def register_online_gallery_content_routes(
     admin_username: str,
     normalize_checkbox,
     save_uploaded_image,
+    save_uploaded_file,
     delete_local_image,
 ):
     @app.route(f"{admin_route_prefix}/online-gallery")
@@ -171,19 +189,23 @@ def register_online_gallery_content_routes(
             )
 
         new_image_filename = None
+        new_model_filename = None
         try:
-            payload, new_image_filename = _build_online_gallery_form_payload(
+            payload, new_image_filename, new_model_filename = _build_online_gallery_form_payload(
                 request.form,
                 request.files,
                 current_item=None,
                 categories=categories,
                 normalize_checkbox=normalize_checkbox,
                 save_uploaded_image=save_uploaded_image,
+                save_uploaded_file=save_uploaded_file,
             )
             create_online_gallery_item(payload)
         except ValueError as exc:
             if new_image_filename:
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            if new_model_filename:
+                delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -201,6 +223,8 @@ def register_online_gallery_content_routes(
         except Exception as exc:
             if new_image_filename:
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            if new_model_filename:
+                delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
             app.logger.exception("Failed to create online gallery item: %s", exc)
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -244,22 +268,29 @@ def register_online_gallery_content_routes(
             return redirect(url_for("admin_online_gallery"))
 
         new_image_filename = None
+        new_model_filename = None
         previous_image_filename = current_item.get("image_filename")
+        previous_model_filename = current_item.get("model_filename")
         try:
-            payload, new_image_filename = _build_online_gallery_form_payload(
+            payload, new_image_filename, new_model_filename = _build_online_gallery_form_payload(
                 request.form,
                 request.files,
                 current_item=current_item,
                 categories=categories,
                 normalize_checkbox=normalize_checkbox,
                 save_uploaded_image=save_uploaded_image,
+                save_uploaded_file=save_uploaded_file,
             )
             update_online_gallery_item(item_id, payload)
             if new_image_filename and previous_image_filename and previous_image_filename != new_image_filename:
                 delete_local_image(previous_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            if new_model_filename and previous_model_filename and previous_model_filename != new_model_filename:
+                delete_local_image(previous_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
         except ValueError as exc:
             if new_image_filename:
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            if new_model_filename:
+                delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -277,6 +308,8 @@ def register_online_gallery_content_routes(
         except Exception as exc:
             if new_image_filename:
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            if new_model_filename:
+                delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
             app.logger.exception("Failed to update online gallery item %s: %s", item_id, exc)
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -308,6 +341,7 @@ def register_online_gallery_content_routes(
         try:
             delete_online_gallery_item(item_id)
             delete_local_image(current_item.get("image_filename"), ONLINE_GALLERY_UPLOAD_DIR)
+            delete_local_image(current_item.get("model_filename"), ONLINE_GALLERY_UPLOAD_DIR)
         except Exception as exc:
             app.logger.exception("Failed to delete online gallery item %s: %s", item_id, exc)
             return redirect(url_for("admin_online_gallery"))

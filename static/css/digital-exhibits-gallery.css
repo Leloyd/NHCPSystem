@@ -1260,6 +1260,12 @@
   top: 7rem;
 }
 
+.ogd-detail-media-toggle-row {
+  display: flex;
+  gap: 0.8rem;
+  margin-bottom: 1rem;
+}
+
 .ogd-detail-media {
   width: 100%;
   display: block;
@@ -1275,10 +1281,18 @@
   cursor: zoom-out;
 }
 
+.ogd-detail-media--viewer {
+  cursor: default;
+}
+
 .ogd-detail-media__frame {
   aspect-ratio: 4 / 3;
   overflow: hidden;
   background: linear-gradient(135deg, #d1a46f, #6c4b2d);
+}
+
+.ogd-detail-media__frame--viewer {
+  background: radial-gradient(circle at top, #f5efe6 0%, #eadfce 42%, #d8c3a3 100%);
 }
 
 .ogd-detail-media__image,
@@ -1304,6 +1318,51 @@
   color: #6b6560;
   font-size: 0.78rem;
   font-weight: 600;
+}
+
+.ogd-detail-model-viewer {
+  width: 100%;
+  height: 100%;
+  display: block;
+  background: transparent;
+  --progress-bar-color: #b8945a;
+  --poster-color: transparent;
+}
+
+.ogd-detail-model-help {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  width: min(90%, 18rem);
+  padding: 0.7rem 0.9rem;
+  border-radius: 0.85rem;
+  background: rgba(255, 255, 255, 0.92);
+  color: #6b6560;
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  line-height: 1.45;
+  box-shadow: 0 10px 24px rgba(28, 25, 23, 0.12);
+}
+
+.ogd-detail-model-prompt {
+  position: absolute;
+  left: 50%;
+  bottom: 1rem;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 2.7rem;
+  padding: 0.7rem 1rem;
+  border-radius: 999px;
+  border: 1px solid rgba(184, 148, 90, 0.24);
+  background: rgba(255, 255, 255, 0.94);
+  color: #b8945a;
+  font-size: 0.85rem;
+  font-weight: 700;
+  box-shadow: 0 10px 24px rgba(28, 25, 23, 0.12);
 }
 
 .ogd-detail-actions-row {
@@ -1865,6 +1924,24 @@ html.ogd-high-contrast .ogd-accessibility-toggle.is-active .ogd-accessibility-to
 
   .ogd-detail-media__frame {
     aspect-ratio: 16 / 11;
+  }
+
+  .ogd-detail-media-toggle-row {
+    flex-direction: column;
+  }
+
+  .ogd-detail-model-help {
+    bottom: 0.85rem;
+    font-size: 0.76rem;
+  }
+
+  .ogd-detail-model-prompt {
+    width: calc(100% - 2rem);
+    max-width: 16rem;
+  }
+
+  .ogd-detail-content {
+    order: 2;
   }
 
   .ogd-detail-back-button {

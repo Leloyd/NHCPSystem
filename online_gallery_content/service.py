@@ -60,12 +60,20 @@ ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS = {
 }
 
 
-def resolve_online_gallery_image_url(image_filename: Any) -> str | None:
-    if is_storage_object_path(image_filename, folder_prefix=ONLINE_GALLERY_STORAGE_PREFIX):
-        remote_url = resolve_public_image_url(image_filename)
+def resolve_online_gallery_asset_url(filename: Any) -> str | None:
+    if is_storage_object_path(filename, folder_prefix=ONLINE_GALLERY_STORAGE_PREFIX):
+        remote_url = resolve_public_image_url(filename)
         if remote_url:
             return remote_url
-    return resolve_local_upload_image_url(ONLINE_GALLERY_UPLOAD_DIR, "online-gallery", image_filename)
+    return resolve_local_upload_image_url(ONLINE_GALLERY_UPLOAD_DIR, "online-gallery", filename)
+
+
+def resolve_online_gallery_image_url(image_filename: Any) -> str | None:
+    return resolve_online_gallery_asset_url(image_filename)
+
+
+def resolve_online_gallery_model_url(model_filename: Any) -> str | None:
+    return resolve_online_gallery_asset_url(model_filename)
 
 
 def _prepare_tags(raw_tags: Any) -> list[str]:
@@ -146,6 +154,7 @@ def prepare_online_gallery_item(item: dict[str, Any] | None, *, categories_by_id
     prepared["full_description_tl"] = _normalize_text(prepared.get("full_description_tl")) or _normalize_text(prepared.get("full_description"))
     prepared["tags"] = _prepare_tags(prepared.get("tags"))
     prepared["image_url"] = resolve_online_gallery_image_url(prepared.get("image_filename"))
+    prepared["model_url"] = resolve_online_gallery_model_url(prepared.get("model_filename"))
     prepared["teaching_note"] = str(prepared.get("teaching_note") or "").strip()
     return prepared
 
@@ -271,6 +280,8 @@ def build_online_gallery_form_state(source: dict[str, Any] | None = None, *, cat
         "is_published": bool(source.get("is_published")),
         "image_filename": str(source.get("image_filename") or "").strip(),
         "image_url": source.get("image_url"),
+        "model_filename": str(source.get("model_filename") or "").strip(),
+        "model_url": source.get("model_url"),
     }
 
 
