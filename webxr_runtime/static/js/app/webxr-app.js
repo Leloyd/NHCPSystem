@@ -63,9 +63,7 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     radius: 0.07,
   },
 ];
-const CHURCH_FLOATING_LABEL_IMAGES = {
-  'hotspot-1': new URL('../../../images/IMG_2628.jpg', import.meta.url).href,
-};
+const CHURCH_FLOATING_LABEL_IMAGES = {};
 const CHURCH_HOTSPOT_INFO_TEXT = {
   'hotspot-1':
     'Sample exhibit: glazed azulejo tilework from Philippine heritage craftsmanship, often used for decorative floors and wall accents in historic structures.',
