@@ -1,0 +1,162 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Visitor Feedback | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'visitor-feedback' %}
+{% set admin_topbar_title = 'Visitor Feedback' %}
+{% set admin_topbar_subtitle = 'Review visitor feedback from on-site and website visitors and keep a record of what has already been checked.' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          {% if config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Configuration issue</strong>
+            <span>{{ config_error }}</span>
+          </section>
+          {% endif %}
+
+          {% if feedback_items %}
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>New Feedback</h3>
+                <p>Fresh visitor feedback waiting for review.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Visitor</th>
+                    <th>Visit Type</th>
+                    <th>Rating</th>
+                    <th>Comments</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for feedback_item in new_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ feedback_item.visitor_display }}</strong>
+                        <span>{{ feedback_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ feedback_item.visit_type_label }}</td>
+                    <td>{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</td>
+                    <td>{{ feedback_item.preview_text }}</td>
+                    <td><span class="admin-status-badge is-draft">New</span></td>
+                    <td><a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-inline-link">Review</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not new_items %}
+                  <tr><td colspan="6">No new visitor feedback entries.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Reviewed Feedback</h3>
+                <p>Visitor feedback that has already been checked by admin.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Visitor</th>
+                    <th>Visit Type</th>
+                    <th>Rating</th>
+                    <th>Comments</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for feedback_item in reviewed_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ feedback_item.visitor_display }}</strong>
+                        <span>{{ feedback_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ feedback_item.visit_type_label }}</td>
+                    <td>{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</td>
+                    <td>{{ feedback_item.preview_text }}</td>
+                    <td><span class="admin-status-badge is-published">Reviewed</span></td>
+                    <td><a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-inline-link">View</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not reviewed_items %}
+                  <tr><td colspan="6">No reviewed feedback yet.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Archived Feedback</h3>
+                <p>Entries you no longer want in the active review queue.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Visitor</th>
+                    <th>Visit Type</th>
+                    <th>Rating</th>
+                    <th>Comments</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for feedback_item in archived_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ feedback_item.visitor_display }}</strong>
+                        <span>{{ feedback_item.display_date }}</span>
+                      </div>
+                    </td>
+                    <td>{{ feedback_item.visit_type_label }}</td>
+                    <td>{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</td>
+                    <td>{{ feedback_item.preview_text }}</td>
+                    <td><span class="admin-status-badge is-draft">Archived</span></td>
+                    <td><a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-inline-link">View</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not archived_items %}
+                  <tr><td colspan="6">No archived feedback.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          {% else %}
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-empty-state">
+              <div class="admin-empty-state-icon">+</div>
+              <h3>No visitor feedback yet</h3>
+              <p>Visitor feedback submissions from Community Participation will appear here once people start sending them.</p>
+            </div>
+          </section>
+          {% endif %}
+{% endblock %}

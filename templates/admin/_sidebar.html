@@ -69,6 +69,15 @@
       </span>
       <span>Participation Submissions</span>
     </a>
+    <a href="{{ url_for('admin_visitor_feedback') }}" class="admin-nav-link{% if admin_active_page == 'visitor-feedback' %} is-active{% endif %}">
+      {% if admin_active_page == 'visitor-feedback' %}
+      <span class="admin-nav-indicator" aria-hidden="true"></span>
+      {% endif %}
+      <span class="admin-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M5 6h14v10H9l-4 3Zm2 2v6.17L8.34 13H17V8Zm2 1h6v2H9Zm0 3h4v2H9Z"></path></svg>
+      </span>
+      <span>Visitor Feedback</span>
+    </a>
     <a href="#" class="admin-nav-link">
       <span class="admin-nav-icon" aria-hidden="true">
         <svg viewBox="0 0 24 24"><path d="M5 5h2v14H5Zm6 4h2v10h-2Zm6-6h2v16h-2Z"></path></svg>

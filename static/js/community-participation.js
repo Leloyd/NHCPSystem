@@ -551,6 +551,12 @@ function initParticipationModals() {
       ratingText.style.display = 'none';
       ratingText.style.color = '#C5973A';
     }
+    const visitorFeedbackFormMessage = document.getElementById('visitorFeedbackFormMessage');
+    if (visitorFeedbackFormMessage) {
+      visitorFeedbackFormMessage.textContent = '';
+      visitorFeedbackFormMessage.classList.add('hidden');
+      visitorFeedbackFormMessage.classList.remove('is-error', 'is-success');
+    }
     if (typeof window.resetParticipationFeedbackState === 'function') {
       window.resetParticipationFeedbackState();
     }
@@ -797,6 +803,7 @@ function initFormInteractions() {
 
   const visitorFeedbackForm = document.getElementById('visitorFeedbackForm');
   const visitorFeedbackSuccess = document.getElementById('visitorFeedbackSuccess');
+  const visitorFeedbackFormMessage = document.getElementById('visitorFeedbackFormMessage');
   const teacherCornerForm = document.getElementById('teacherCornerForm');
   const teacherCornerSuccess = document.getElementById('teacherCornerSuccess');
   const teacherCornerVerification = document.getElementById('teacherCornerVerification');
@@ -1000,7 +1007,7 @@ function initFormInteractions() {
   }
 
   if (visitorFeedbackForm) {
-    visitorFeedbackForm.addEventListener('submit', (e) => {
+    visitorFeedbackForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       if (!ratingInput || !ratingInput.value) {
         if (ratingText) {
@@ -1008,11 +1015,25 @@ function initFormInteractions() {
           ratingText.style.display = 'block';
           ratingText.style.color = '#DC2626';
         }
+        setSubmissionMessage(visitorFeedbackFormMessage, 'Please select a rating before submitting.');
         return;
       }
 
-      visitorFeedbackForm.classList.add('hidden');
-      visitorFeedbackSuccess.classList.remove('hidden');
+      const formData = new FormData(visitorFeedbackForm);
+      setSubmissionMessage(visitorFeedbackFormMessage, '');
+
+      try {
+        const { payload } = await postForm('/community-participation/visitor-feedback', formData);
+        if (!payload.ok) {
+          setSubmissionMessage(visitorFeedbackFormMessage, payload.error || 'Could not submit your feedback right now.');
+          return;
+        }
+
+        visitorFeedbackForm.classList.add('hidden');
+        visitorFeedbackSuccess.classList.remove('hidden');
+      } catch (error) {
+        setSubmissionMessage(visitorFeedbackFormMessage, 'Could not reach the server right now. Please try again.');
+      }
     });
   }
 

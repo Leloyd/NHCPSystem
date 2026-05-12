@@ -126,3 +126,16 @@ CREATE TABLE public.community_participation_submissions (
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT community_participation_submissions_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.visitor_feedback (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  visit_type text NOT NULL CHECK (visit_type = ANY (ARRAY['on-site'::text, 'website'::text])),
+  rating integer NOT NULL CHECK ((rating >= 1) AND (rating <= 5)),
+  visitor_name text NOT NULL DEFAULT ''::text,
+  comments text NOT NULL DEFAULT ''::text,
+  status text NOT NULL DEFAULT 'new'::text CHECK (status = ANY (ARRAY['new'::text, 'reviewed'::text, 'archived'::text])),
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT visitor_feedback_pkey PRIMARY KEY (id)
+);

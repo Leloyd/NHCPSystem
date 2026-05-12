@@ -1,0 +1,62 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Review Visitor Feedback | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'visitor-feedback' %}
+{% set admin_topbar_title = 'Review Visitor Feedback' %}
+{% set admin_topbar_subtitle = 'Inspect the visitor feedback details and mark each entry as reviewed or archived.' %}
+{% set admin_topbar_tool_href = url_for('admin_visitor_feedback') %}
+{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>{{ feedback_item.visitor_display }}</h3>
+                <p>{{ feedback_item.visit_type_label }} · {{ feedback_item.display_date }}</p>
+              </div>
+              <span class="admin-status-badge {% if feedback_item.status == 'reviewed' %}is-published{% else %}is-draft{% endif %}">{{ feedback_item.status|title }}</span>
+            </div>
+
+            <div class="admin-form-grid">
+              <div class="admin-form-field">
+                <label>Visitor Name</label>
+                <p class="admin-field-hint">{{ feedback_item.visitor_display }}</p>
+              </div>
+
+              <div class="admin-form-field">
+                <label>Visit Type</label>
+                <p class="admin-field-hint">{{ feedback_item.visit_type_label }}</p>
+              </div>
+
+              <div class="admin-form-field">
+                <label>Rating</label>
+                <p class="admin-field-hint">{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</p>
+              </div>
+
+              <div class="admin-form-field">
+                <label>Reviewed</label>
+                <p class="admin-field-hint">{{ feedback_item.reviewed_display_date }}</p>
+              </div>
+
+              <div class="admin-form-field admin-form-field-wide">
+                <label>Comments &amp; Suggestions</label>
+                <div class="admin-field-hint" style="white-space: pre-wrap;">{{ feedback_item.comments or 'No comments provided.' }}</div>
+              </div>
+            </div>
+
+            <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-form-actions">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <button type="submit" name="moderation_action" value="archive" class="admin-secondary-action">Archive</button>
+              <button type="submit" name="moderation_action" value="reviewed" class="admin-primary-action">Mark as Reviewed</button>
+            </form>
+          </section>
+{% endblock %}
