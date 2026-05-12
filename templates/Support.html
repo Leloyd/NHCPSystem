@@ -6,62 +6,654 @@
     <title>Support & Governance | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <style>
+      :root {
+        --support-bg: #f9f5ef;
+        --support-surface: #ffffff;
+        --support-surface-alt: #faf7f2;
+        --support-ink: #1a1208;
+        --support-muted: #6b5a40;
+        --support-muted-2: #9a8060;
+        --support-gold: #c9a550;
+        --support-gold-soft: rgba(201, 165, 80, 0.12);
+        --support-gold-border: rgba(201, 165, 80, 0.22);
+        --support-dark: #1a1208;
+      }
+
+      .support-page {
+        background: var(--support-bg);
+      }
+
+      .support-shell {
+        margin: 0 auto;
+        max-width: 80rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      .support-hero {
+        border-bottom: 1px solid rgba(201, 165, 80, 0.18);
+        background: var(--support-dark);
+      }
+
+      .support-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--support-muted-2);
+      }
+
+      .support-breadcrumb a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .support-breadcrumb a:hover {
+        color: var(--support-gold);
+      }
+
+      .support-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(201, 165, 80, 0.3);
+        border-radius: 9999px;
+        background: rgba(201, 165, 80, 0.15);
+        color: var(--support-gold);
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
+        padding: 0.45rem 0.9rem;
+        text-transform: uppercase;
+      }
+
+      .support-hero-title {
+        color: #f5ede0;
+        font-size: clamp(2rem, 4.2vw, 3.4rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      .support-hero-title span {
+        color: var(--support-gold);
+      }
+
+      .support-hero-copy {
+        max-width: 40rem;
+        color: #c8b89a;
+        font-size: 0.97rem;
+        line-height: 1.8;
+      }
+
+      .support-section {
+        padding: 4rem 0;
+      }
+
+      .support-section-alt {
+        background: var(--support-bg);
+      }
+
+      .support-section-white {
+        background: var(--support-surface);
+      }
+
+      .support-section-head {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .support-section-heading {
+        color: var(--support-ink);
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        line-height: 1.15;
+      }
+
+      .support-section-copy {
+        color: var(--support-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+
+      .support-search-wrap {
+        position: relative;
+        width: 100%;
+        max-width: 22rem;
+      }
+
+      .support-search-input {
+        width: 100%;
+        border: 1.5px solid rgba(201, 165, 80, 0.3);
+        border-radius: 0.85rem;
+        background: #fff;
+        color: var(--support-ink);
+        font-size: 0.95rem;
+        outline: none;
+        padding: 0.85rem 1rem 0.85rem 2.8rem;
+        transition: border-color 0.2s ease, box-shadow 0.2s ease;
+      }
+
+      .support-search-input:focus {
+        border-color: rgba(201, 165, 80, 0.65);
+        box-shadow: 0 0 0 4px rgba(201, 165, 80, 0.12);
+      }
+
+      .support-search-icon {
+        left: 0.95rem;
+        position: absolute;
+        top: 50%;
+        transform: translateY(-50%);
+        color: var(--support-muted-2);
+      }
+
+      .support-faq-tabs {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.65rem;
+        margin-bottom: 2rem;
+      }
+
+      .support-faq-tab {
+        align-items: center;
+        background: #fff;
+        border: 1.5px solid rgba(201, 165, 80, 0.2);
+        border-radius: 9999px;
+        color: var(--support-muted);
+        cursor: pointer;
+        display: inline-flex;
+        gap: 0.55rem;
+        font-size: 0.92rem;
+        padding: 0.75rem 1.1rem;
+        transition: all 0.2s ease;
+      }
+
+      .support-faq-tab:hover {
+        border-color: rgba(201, 165, 80, 0.4);
+        color: var(--support-ink);
+      }
+
+      .support-faq-tab.is-active {
+        background: var(--support-dark);
+        border-color: var(--support-gold);
+        box-shadow: 0 2px 8px rgba(201, 165, 80, 0.15);
+        color: var(--support-gold);
+      }
+
+      .support-faq-layout {
+        display: grid;
+        gap: 2rem;
+        grid-template-columns: minmax(0, 2fr) minmax(17rem, 1fr);
+      }
+
+      .support-results-card {
+        background: #fff;
+        border: 1px solid rgba(201, 165, 80, 0.2);
+        border-radius: 1.2rem;
+        overflow: hidden;
+      }
+
+      .support-empty-state {
+        padding: 3rem 1.5rem;
+        text-align: center;
+      }
+
+      .support-empty-state p {
+        color: var(--support-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+      }
+
+      .support-faq-item {
+        border-bottom: 1px solid rgba(201, 165, 80, 0.15);
+      }
+
+      .support-faq-item:last-child {
+        border-bottom: 0;
+      }
+
+      .support-faq-question {
+        align-items: flex-start;
+        background: transparent;
+        border: 0;
+        color: var(--support-ink);
+        cursor: pointer;
+        display: flex;
+        font-size: 0.98rem;
+        gap: 1rem;
+        justify-content: space-between;
+        padding: 1.2rem 1.25rem;
+        text-align: left;
+        width: 100%;
+      }
+
+      .support-faq-question-text {
+        align-items: flex-start;
+        display: flex;
+        gap: 0.85rem;
+        line-height: 1.6;
+      }
+
+      .support-faq-index {
+        align-items: center;
+        background: rgba(201, 165, 80, 0.15);
+        border-radius: 9999px;
+        color: var(--support-gold);
+        display: inline-flex;
+        flex: 0 0 auto;
+        font-size: 0.78rem;
+        height: 1.35rem;
+        justify-content: center;
+        margin-top: 0.1rem;
+        width: 1.35rem;
+      }
+
+      .support-faq-chevron {
+        color: var(--support-muted-2);
+        flex: 0 0 auto;
+        transition: transform 0.2s ease;
+      }
+
+      .support-faq-item.is-open .support-faq-chevron {
+        transform: rotate(180deg);
+      }
+
+      .support-faq-answer {
+        color: #5a4a30;
+        display: none;
+        font-size: 0.94rem;
+        line-height: 1.8;
+        padding: 0 1.25rem 1.25rem 3.45rem;
+      }
+
+      .support-faq-item.is-open .support-faq-answer {
+        display: block;
+      }
+
+      .support-side-card {
+        border-radius: 1.2rem;
+        overflow: hidden;
+      }
+
+      .support-contact-card {
+        background: var(--support-dark);
+        border: 1px solid rgba(201, 165, 80, 0.2);
+        padding: 1.5rem;
+      }
+
+      .support-contact-title {
+        color: var(--support-gold);
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+      }
+
+      .support-contact-copy {
+        color: #c8b89a;
+        font-size: 0.82rem;
+        line-height: 1.7;
+        margin-bottom: 1rem;
+      }
+
+      .support-contact-link,
+      .support-contact-static {
+        align-items: center;
+        border: 1px solid rgba(201, 165, 80, 0.2);
+        border-radius: 0.9rem;
+        color: inherit;
+        display: flex;
+        gap: 0.85rem;
+        margin-bottom: 0.75rem;
+        padding: 0.85rem 0.95rem;
+        text-decoration: none;
+        transition: background 0.2s ease;
+      }
+
+      .support-contact-link:hover {
+        background: rgba(201, 165, 80, 0.08);
+      }
+
+      .support-contact-label {
+        color: var(--support-gold);
+        font-size: 0.78rem;
+      }
+
+      .support-contact-value {
+        color: var(--support-muted-2);
+        font-size: 0.8rem;
+      }
+
+      .support-visit-card {
+        background: linear-gradient(180deg, #2a1d10 0%, #1a1208 100%);
+        border: 1px solid rgba(201, 165, 80, 0.2);
+        padding: 1.5rem;
+      }
+
+      .support-visit-eyebrow {
+        color: var(--support-gold);
+        font-size: 0.72rem;
+        letter-spacing: 0.2em;
+        margin-bottom: 0.45rem;
+        text-transform: uppercase;
+      }
+
+      .support-visit-title {
+        color: #f5ede0;
+        font-size: 1.1rem;
+        margin-bottom: 0.45rem;
+      }
+
+      .support-visit-copy {
+        color: #c8b89a;
+        font-size: 0.82rem;
+        line-height: 1.7;
+        margin-bottom: 1rem;
+      }
+
+      .support-visit-link {
+        align-items: center;
+        background: rgba(201, 165, 80, 0.92);
+        border-radius: 0.55rem;
+        color: var(--support-ink);
+        display: inline-flex;
+        font-size: 0.8rem;
+        gap: 0.35rem;
+        padding: 0.55rem 0.9rem;
+        text-decoration: none;
+      }
+
+      .support-policy-actions {
+        display: flex;
+        align-items: center;
+        gap: 1rem;
+        flex-wrap: wrap;
+      }
+
+      .support-policy-download {
+        align-items: center;
+        background: var(--support-dark);
+        border: 1px solid rgba(201, 165, 80, 0.3);
+        border-radius: 0.85rem;
+        color: var(--support-gold);
+        display: inline-flex;
+        font-size: 0.92rem;
+        gap: 0.55rem;
+        padding: 0.85rem 1rem;
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .support-policy-download:hover {
+        opacity: 0.9;
+      }
+
+      .support-policy-grid {
+        display: grid;
+        gap: 1.25rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .support-policy-card {
+        background: var(--support-surface-alt);
+        border: 1.5px solid rgba(201, 165, 80, 0.15);
+        border-radius: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 0.9rem;
+        min-height: 100%;
+        padding: 1.5rem;
+        transition: box-shadow 0.2s ease;
+      }
+
+      .support-policy-card:hover {
+        box-shadow: 0 12px 30px rgba(0, 0, 0, 0.06);
+      }
+
+      .support-policy-top {
+        align-items: flex-start;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: space-between;
+      }
+
+      .support-policy-icon {
+        align-items: center;
+        background: rgba(201, 165, 80, 0.12);
+        border: 1px solid rgba(201, 165, 80, 0.25);
+        border-radius: 0.75rem;
+        color: var(--support-gold);
+        display: inline-flex;
+        height: 2.5rem;
+        justify-content: center;
+        width: 2.5rem;
+      }
+
+      .support-policy-title {
+        color: var(--support-ink);
+        font-size: 0.97rem;
+        line-height: 1.45;
+        margin-bottom: 0.25rem;
+      }
+
+      .support-policy-subtitle {
+        color: var(--support-gold);
+        font-size: 0.78rem;
+        font-weight: 500;
+        margin-bottom: 0.65rem;
+      }
+
+      .support-policy-copy {
+        color: var(--support-muted);
+        font-size: 0.82rem;
+        line-height: 1.7;
+      }
+
+      .support-policy-footer {
+        border-top: 1px solid rgba(201, 165, 80, 0.1);
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.9rem;
+        margin-top: auto;
+        padding-top: 0.8rem;
+      }
+
+      .support-policy-link {
+        align-items: center;
+        color: #8b6914;
+        display: inline-flex;
+        font-size: 0.78rem;
+        gap: 0.3rem;
+        text-decoration: none;
+      }
+
+      .support-policy-link:hover {
+        color: #b8891e;
+      }
+
+      .support-disclaimer {
+        align-items: flex-start;
+        background: rgba(201, 165, 80, 0.06);
+        border: 1px solid rgba(201, 165, 80, 0.2);
+        border-radius: 1.2rem;
+        display: flex;
+        gap: 1rem;
+        margin-top: 2rem;
+        padding: 1.3rem 1.4rem;
+      }
+
+      .support-disclaimer p {
+        color: var(--support-muted);
+        font-size: 0.83rem;
+        line-height: 1.75;
+      }
+
+      .support-disclaimer strong {
+        color: var(--support-ink);
+      }
+
+      .support-disclaimer a {
+        color: #8b6914;
+        text-decoration: underline;
+      }
+
+      .support-disclaimer a:hover {
+        color: #b8891e;
+      }
+
+      @media (min-width: 768px) {
+        .support-shell {
+          padding-left: 1.5rem;
+          padding-right: 1.5rem;
+        }
+
+        .support-section-head {
+          align-items: flex-end;
+          flex-direction: row;
+          justify-content: space-between;
+        }
+      }
+
+      @media (max-width: 1023px) {
+        .support-faq-layout,
+        .support-policy-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .support-shell {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+
+        .support-section {
+          padding: 3rem 0;
+        }
+
+        .support-faq-question {
+          font-size: 0.93rem;
+          padding: 1rem;
+        }
+
+        .support-faq-answer {
+          padding: 0 1rem 1rem 3rem;
+        }
+
+        .support-disclaimer {
+          flex-direction: column;
+        }
+
+        .support-policy-footer {
+          flex-direction: column;
+        }
+      }
+    </style>
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900">
+  <body class="support-page min-h-screen text-gray-900">
     {% set public_active_page = 'support' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="bg-gradient-to-br from-teal-600 to-teal-800 text-white py-20">
-        <div class="container mx-auto px-4 text-center">
-          <h1 class="text-5xl font-serif mb-4">Support &amp; Governance</h1>
-          <p class="text-xl max-w-2xl mx-auto">Find FAQs, policy references, and contact channels to support visitors, educators, and community contributors.</p>
+      <section class="support-hero">
+        <div class="support-shell py-16 sm:py-20">
+          <div class="support-breadcrumb mb-4">
+            <a href="/">Home</a>
+            <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+            <span class="text-[#c9a550]">Support &amp; Governance</span>
+          </div>
+          <div class="support-pill mb-4">
+            <i data-lucide="help-circle" class="h-4 w-4"></i>
+            <span>Visitor Support Portal</span>
+          </div>
+          <h1 class="support-hero-title mb-4">Support &amp; <span>Governance</span></h1>
+          <p class="support-hero-copy">Your resource center for visiting the Nagcarlan Underground Cemetery — a National Cultural Treasure. Find answers to frequently asked questions, review applicable heritage policies, or chat with our Heritage Assistant.</p>
         </div>
       </section>
 
-      <section class="py-16 bg-white">
-        <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-teal-900 mb-10 text-center">Frequently Asked Questions</h2>
-          <div class="max-w-4xl mx-auto space-y-4">
-            <details class="bg-stone-50 rounded-lg p-5">
-              <summary class="font-semibold text-gray-900 cursor-pointer">How do I access the virtual/WebXR experience?</summary>
-              <p class="mt-3 text-gray-700">Go to the Interactive module and choose either the WebXR experience or fallback mode if your device/browser does not support WebXR.</p>
-            </details>
-            <details class="bg-stone-50 rounded-lg p-5">
-              <summary class="font-semibold text-gray-900 cursor-pointer">Can I use this platform on a mobile phone?</summary>
-              <p class="mt-3 text-gray-700">Yes. The platform is mobile-responsive and designed for low- to mid-range devices, with non-XR alternatives when needed.</p>
-            </details>
-            <details class="bg-stone-50 rounded-lg p-5">
-              <summary class="font-semibold text-gray-900 cursor-pointer">How can teachers use this in class?</summary>
-              <p class="mt-3 text-gray-700">Teachers can use digital exhibits, guided trails, and quizzes for classroom discussions, blended learning, and assignments.</p>
-            </details>
-            <details class="bg-stone-50 rounded-lg p-5">
-              <summary class="font-semibold text-gray-900 cursor-pointer">How do I submit a story or feedback?</summary>
-              <p class="mt-3 text-gray-700">Visit E-Participation and use the Story Submission or Feedback form. You will receive a confirmation after submission.</p>
-            </details>
+      <section class="support-section support-section-alt">
+        <div class="support-shell">
+          <div class="support-section-head">
+            <div>
+              <div class="support-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
+                <i data-lucide="help-circle" class="h-4 w-4"></i>
+                <span>Frequently Asked Questions</span>
+              </div>
+              <h2 class="support-section-heading mb-2">How can we help you?</h2>
+              <p class="support-section-copy">Browse by category or search for specific topics.</p>
+            </div>
+            <div class="support-search-wrap">
+              <i data-lucide="search" class="support-search-icon h-4 w-4"></i>
+              <input id="supportFaqSearch" class="support-search-input" type="text" placeholder="Search FAQs…" />
+            </div>
+          </div>
+          <div id="supportFaqTabs" class="support-faq-tabs"></div>
+          <div class="support-faq-layout">
+            <div id="supportFaqResults" class="support-results-card"></div>
+            <div class="flex flex-col gap-4">
+              <div class="support-side-card support-contact-card">
+                <h3 class="support-contact-title">Still have questions?</h3>
+                <p class="support-contact-copy">Our heritage officers are available to assist you with specific inquiries about the site.</p>
+                <a class="support-contact-link" href="mailto:info@nhcp.gov.ph">
+                  <i data-lucide="mail" class="h-4 w-4 text-[#c9a550]"></i>
+                  <div>
+                    <p class="support-contact-label">Email Us</p>
+                    <p class="support-contact-value">info@nhcp.gov.ph</p>
+                  </div>
+                </a>
+                <a class="support-contact-link" href="tel:0285273225">
+                  <i data-lucide="phone" class="h-4 w-4 text-[#c9a550]"></i>
+                  <div>
+                    <p class="support-contact-label">Call Us</p>
+                    <p class="support-contact-value">(02) 8527-3225</p>
+                  </div>
+                </a>
+                <div class="support-contact-static">
+                  <i data-lucide="clock-3" class="h-4 w-4 text-[#c9a550]"></i>
+                  <div>
+                    <p class="support-contact-label">Office Hours</p>
+                    <p class="support-contact-value">Mon–Fri, 8AM–5PM</p>
+                  </div>
+                </div>
+              </div>
+              <div class="support-side-card support-visit-card">
+                <p class="support-visit-eyebrow">Plan Your Visit</p>
+                <h4 class="support-visit-title">Nagcarlan, Laguna</h4>
+                <p class="support-visit-copy">Tue–Sun · 8:00 AM – 5:00 PM. Prepare your visit and explore the site before you arrive.</p>
+                <a class="support-visit-link" href="https://maps.google.com/?q=Nagcarlan+Underground+Cemetery" target="_blank" rel="noopener noreferrer">
+                  Get Directions
+                  <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
+                </a>
+              </div>
+            </div>
           </div>
         </div>
       </section>
 
-      <section class="py-16 bg-stone-50">
-        <div class="container mx-auto px-4">
-          <h2 class="text-3xl font-serif text-teal-900 mb-10 text-center">Policies & Governance</h2>
-          <div class="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <i data-lucide="shield-check" class="w-8 h-8 text-teal-700 mb-3"></i>
-              <h3 class="text-xl font-serif text-gray-900 mb-2">Privacy Notice</h3>
-              <p class="text-gray-700 text-sm">How visitor data and analytics are handled in line with privacy and ethical research practices.</p>
+      <section class="support-section support-section-white">
+        <div class="support-shell">
+          <div class="support-section-head">
+            <div>
+              <div class="support-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
+                <i data-lucide="shield-check" class="h-4 w-4"></i>
+                <span>Policy References</span>
+              </div>
+              <h2 class="support-section-heading mb-2">Governance &amp; Legal Framework</h2>
+              <p class="support-section-copy max-w-2xl">The Nagcarlan Underground Cemetery is protected under national and international heritage laws. Review the applicable policies and regulations below.</p>
             </div>
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <i data-lucide="book-open-check" class="w-8 h-8 text-teal-700 mb-3"></i>
-              <h3 class="text-xl font-serif text-gray-900 mb-2">Content Use Policy</h3>
-              <p class="text-gray-700 text-sm">Guidelines for educational use, attribution, and respectful sharing of heritage content.</p>
+            <div class="support-policy-actions">
+              <a class="support-policy-download" href="#supportPolicyGrid">
+                <i data-lucide="download" class="h-4 w-4"></i>
+                <span>Download All Policies</span>
+              </a>
             </div>
-            <div class="bg-white rounded-lg p-6 shadow-sm">
-              <i data-lucide="users-round" class="w-8 h-8 text-teal-700 mb-3"></i>
-              <h3 class="text-xl font-serif text-gray-900 mb-2">Community Conduct</h3>
-              <p class="text-gray-700 text-sm">Standards for submitting stories, feedback, and participating in community interactions.</p>
-            </div>
+          </div>
+          <div id="supportPolicyGrid" class="support-policy-grid"></div>
+          <div class="support-disclaimer">
+            <i data-lucide="alert-circle" class="mt-0.5 h-5 w-5 flex-shrink-0 text-[#c9a550]"></i>
+            <p><strong>Legal Disclaimer:</strong> The policy documents provided here are for reference purposes only. For the official and most current versions, please visit the Official Gazette of the Republic of the Philippines at <a href="https://www.officialgazette.gov.ph" target="_blank" rel="noopener noreferrer">www.officialgazette.gov.ph</a> or the NHCP official website at <a href="https://nhcp.gov.ph" target="_blank" rel="noopener noreferrer">nhcp.gov.ph</a>.</p>
           </div>
         </div>
       </section>
@@ -70,6 +662,295 @@
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      document.addEventListener("DOMContentLoaded", function () {
+        const faqCategories = [
+          { id: "visit", label: "Visiting & Access", icon: "map-pin" },
+          { id: "heritage", label: "Heritage & History", icon: "landmark" },
+          { id: "policy", label: "Policies & Rules", icon: "shield-check" },
+          { id: "digital", label: "Digital Services", icon: "globe" },
+        ];
+
+        const faqs = {
+          visit: [
+            {
+              q: "What are the visiting hours of the Nagcarlan Underground Cemetery?",
+              a: "The Nagcarlan Underground Cemetery is open to the public from Tuesday to Sunday, 8:00 AM to 5:00 PM. It is closed every Monday and on major public holidays. Guided tours are available throughout operating hours.",
+            },
+            {
+              q: "Is there an entrance fee to visit the cemetery?",
+              a: "Filipino nationals are charged ₱30.00, while foreign nationals are charged ₱100.00. Senior citizens and persons with disabilities (PWDs) with valid IDs are entitled to a 20% discount as prescribed by law.",
+            },
+            {
+              q: "How do I get to the Nagcarlan Underground Cemetery?",
+              a: "The cemetery is located in Nagcarlan, Laguna. From Manila, take the South Luzon Expressway (SLEX) to Santa Cruz exit, then proceed to Nagcarlan. By bus, take Tritran or JAC Liner buses bound for Nagcarlan from Buendia or Cubao terminal.",
+            },
+            {
+              q: "Are there accessibility provisions for visitors with disabilities?",
+              a: "The NHCP provides reasonable accommodations for visitors with disabilities. Wheelchair ramps are available at the main entrance. Please contact us in advance so we can best assist you during your visit.",
+            },
+          ],
+          heritage: [
+            {
+              q: "What is the historical significance of the Nagcarlan Underground Cemetery?",
+              a: "The Nagcarlan Underground Cemetery (Libingan sa Ilalim ng Lupa) was built in 1845 under the supervision of Fray Isidoro Salcedo, an Augustinian Recollect priest. It served as the burial site for Spanish-era priests and prominent townspeople. It is one of the few remaining underground cemeteries in the Philippines and is declared a National Cultural Treasure.",
+            },
+            {
+              q: "Why is it called an 'underground cemetery'?",
+              a: "The cemetery features a circular underground ossuary (crypt) beneath a central chapel. The subterranean chamber contains niches along its walls where the remains of early Spanish friars and prominent citizens were interred, which is why it is referred to as an 'underground' cemetery.",
+            },
+            {
+              q: "Is the Nagcarlan Underground Cemetery a National Cultural Treasure?",
+              a: "Yes. The Nagcarlan Underground Cemetery has been declared a National Cultural Treasure by the National Historical Commission of the Philippines (NHCP) under Republic Act No. 10066, also known as the National Cultural Heritage Act of 2009.",
+            },
+            {
+              q: "Did the cemetery play a role in the Philippine Revolution?",
+              a: "Yes. Historical accounts indicate that Katipunan members used the underground crypt as a secret meeting place during the Philippine Revolution against Spanish colonialism in the late 19th century, adding another layer of patriotic significance to the site.",
+            },
+          ],
+          policy: [
+            {
+              q: "What are the prohibited activities within the cemetery grounds?",
+              a: "Visitors are prohibited from littering or defacing the structures, using flash photography inside the crypt, bringing food and drinks within the heritage zone, smoking or vaping on the premises, removing or damaging any artifacts or natural materials, and conducting commercial activities without prior NHCP authorization.",
+            },
+            {
+              q: "Can I conduct academic research or documentation inside the cemetery?",
+              a: "Academic researchers and documentarians must secure a formal Research and Documentation Permit from the NHCP Central Office. Submit a letter of intent, research proposal, institutional endorsement, and valid government ID. The permit process typically takes 10–15 working days.",
+            },
+            {
+              q: "Are drones or aerial photography allowed at the site?",
+              a: "Drone operations and aerial photography require a special permit from the NHCP and must comply with CAAP regulations. Commercial drone use is strictly regulated. Submit a written request at least 30 days before your intended date of operation.",
+            },
+            {
+              q: "What is the NHCP's policy on souvenir or merchandise selling?",
+              a: "Only NHCP-accredited vendors are permitted to sell souvenirs within the designated commercial areas. Unauthorized vending is strictly prohibited. Accreditation applications can be submitted to the Site Administrator.",
+            },
+          ],
+          digital: [
+            {
+              q: "What digital services does the NHCP provide for this heritage site?",
+              a: "The NHCP provides virtual tours, a digital archive, an online permit application portal, an educational resource library, and this interactive Heritage Portal. The digital services aim to expand access to the cultural significance of the site to audiences worldwide.",
+            },
+            {
+              q: "How do I apply for a permit online?",
+              a: "Visit the NHCP Permit Portal at permits.nhcp.gov.ph to apply for research, documentation, filming, or commercial permits online. Create an account, complete the application form, upload required documents, and pay the applicable fees through the online payment gateway.",
+            },
+            {
+              q: "Is the virtual tour of the cemetery available for free?",
+              a: "Yes. The virtual 360° tour of the Nagcarlan Underground Cemetery is freely accessible through this Heritage Portal. Educational institutions may request premium access with narration and supplementary learning materials at no cost by submitting an institutional request.",
+            },
+            {
+              q: "How can I report a technical issue with the Heritage Portal?",
+              a: "Report technical issues through the Support Ticket form available on this page, or email digital@nhcp.gov.ph with a description of the issue, your device/browser information, and screenshots if possible. Our technical team responds within 2 business days.",
+            },
+          ],
+        };
+
+        const policies = [
+          {
+            icon: "shield-check",
+            title: "Republic Act No. 10066",
+            subtitle: "National Cultural Heritage Act of 2009",
+            description: "The primary legislation governing the protection, preservation, and promotion of the cultural heritage of the Philippines. Declares penalties for destroying or damaging cultural properties.",
+            tag: "National Law",
+            tagClass: "bg-amber-100 text-amber-800",
+            link: "https://www.officialgazette.gov.ph/2010/03/26/republic-act-no-10066/",
+          },
+          {
+            icon: "file-text",
+            title: "NHCP Administrative Order No. 1",
+            subtitle: "Guidelines on the Administration of National Shrines",
+            description: "Outlines the operational, preservation, and visitor management standards for all National Shrines and Cultural Treasures under NHCP administration.",
+            tag: "Administrative Order",
+            tagClass: "bg-stone-100 text-stone-700",
+            link: "https://nhcp.gov.ph/",
+          },
+          {
+            icon: "book-open",
+            title: "NHCP Memorandum Circular No. 2023-04",
+            subtitle: "Digital Heritage Access and Use Policy",
+            description: "Governs the use, reproduction, and distribution of digital content derived from NHCP-managed heritage sites, including virtual tours, archives, and digital publications.",
+            tag: "Digital Policy",
+            tagClass: "bg-green-100 text-green-800",
+            link: "https://nhcp.gov.ph/",
+          },
+          {
+            icon: "alert-circle",
+            title: "Executive Order No. 374",
+            subtitle: "Declaring All Historical Landmarks as Protected Zones",
+            description: "Executive order establishing buffer zones and protection boundaries around declared National Cultural Treasures, prohibiting incompatible land use.",
+            tag: "Executive Order",
+            tagClass: "bg-blue-100 text-blue-800",
+            link: "https://www.officialgazette.gov.ph/",
+          },
+          {
+            icon: "globe",
+            title: "UNESCO World Heritage Convention",
+            subtitle: "Convention Concerning the Protection of World Cultural Heritage",
+            description: "International treaty to which the Philippines is a State Party, committing to identify, protect, and preserve cultural and natural heritage of outstanding universal value.",
+            tag: "International Treaty",
+            tagClass: "bg-purple-100 text-purple-800",
+            link: "https://whc.unesco.org/en/conventiontext/",
+          },
+          {
+            icon: "download",
+            title: "Site Visitor Regulations",
+            subtitle: "Nagcarlan Underground Cemetery Site Rules (2024 Edition)",
+            description: "Complete rules and regulations for visitors, researchers, media, and commercial entities accessing the Nagcarlan Underground Cemetery premises.",
+            tag: "Site Regulation",
+            tagClass: "bg-red-100 text-red-700",
+            link: "https://nhcp.gov.ph/",
+            downloadable: true,
+          },
+        ];
+
+        const faqTabs = document.getElementById("supportFaqTabs");
+        const faqResults = document.getElementById("supportFaqResults");
+        const faqSearch = document.getElementById("supportFaqSearch");
+        const policyGrid = document.getElementById("supportPolicyGrid");
+
+        let activeCategory = "visit";
+
+        function iconMarkup(name, extraClass) {
+          return '<i data-lucide="' + name + '" class="' + extraClass + '"></i>';
+        }
+
+        function flattenFaqs() {
+          return Object.values(faqs).flat();
+        }
+
+        function renderTabs() {
+          if (!faqTabs) {
+            return;
+          }
+
+          faqTabs.innerHTML = faqCategories
+            .map(function (category) {
+              const activeClass = category.id === activeCategory ? " is-active" : "";
+              return '<button class="support-faq-tab' + activeClass + '" type="button" data-category="' + category.id + '">' + iconMarkup(category.icon, 'h-4 w-4') + '<span>' + category.label + '</span></button>';
+            })
+            .join("");
+
+          faqTabs.querySelectorAll("[data-category]").forEach(function (button) {
+            button.addEventListener("click", function () {
+              activeCategory = button.getAttribute("data-category") || "visit";
+              renderTabs();
+              renderFaqs();
+            });
+          });
+        }
+
+        function renderFaqs() {
+          if (!faqResults) {
+            return;
+          }
+
+          const query = faqSearch && faqSearch.value ? faqSearch.value.trim().toLowerCase() : "";
+          const items = query
+            ? flattenFaqs().filter(function (item) {
+                return item.q.toLowerCase().includes(query) || item.a.toLowerCase().includes(query);
+              })
+            : faqs[activeCategory] || [];
+
+          if (faqTabs) {
+            faqTabs.classList.toggle("hidden", Boolean(query));
+          }
+
+          if (!items.length) {
+            faqResults.innerHTML = '<div class="support-empty-state">' + iconMarkup('help-circle', 'mx-auto mb-3 h-10 w-10 text-[#c9a550]') + '<p>No results found for <strong>' + (faqSearch ? faqSearch.value : '') + '</strong>. Try a different keyword or browse by category.</p></div>';
+            if (window.lucide) {
+              window.lucide.createIcons();
+            }
+            return;
+          }
+
+          faqResults.innerHTML = items
+            .map(function (item, index) {
+              return '<article class="support-faq-item">' +
+                '<button type="button" class="support-faq-question" aria-expanded="false">' +
+                  '<span class="support-faq-question-text">' +
+                    '<span class="support-faq-index">' + (index + 1) + '</span>' +
+                    '<span>' + item.q + '</span>' +
+                  '</span>' +
+                  '<span class="support-faq-chevron">' + iconMarkup('chevron-down', 'h-4 w-4') + '</span>' +
+                '</button>' +
+                '<div class="support-faq-answer">' + item.a + '</div>' +
+              '</article>';
+            })
+            .join("");
+
+          faqResults.querySelectorAll(".support-faq-question").forEach(function (button) {
+            button.addEventListener("click", function () {
+              const item = button.parentElement;
+              const isOpen = item.classList.contains("is-open");
+
+              faqResults.querySelectorAll(".support-faq-item").forEach(function (entry) {
+                entry.classList.remove("is-open");
+                const trigger = entry.querySelector(".support-faq-question");
+                if (trigger) {
+                  trigger.setAttribute("aria-expanded", "false");
+                }
+              });
+
+              if (!isOpen) {
+                item.classList.add("is-open");
+                button.setAttribute("aria-expanded", "true");
+              }
+            });
+          });
+
+          if (window.lucide) {
+            window.lucide.createIcons();
+          }
+        }
+
+        function renderPolicies() {
+          if (!policyGrid) {
+            return;
+          }
+
+          policyGrid.innerHTML = policies
+            .map(function (policy) {
+              const downloadLink = policy.downloadable
+                ? '<a class="support-policy-link" href="' + policy.link + '" target="_blank" rel="noopener noreferrer">' + iconMarkup('download', 'h-3.5 w-3.5') + '<span>Download PDF</span></a>'
+                : '';
+
+              return '<article class="support-policy-card">' +
+                '<div class="support-policy-top">' +
+                  '<div class="support-policy-icon">' + iconMarkup(policy.icon, 'h-5 w-5') + '</div>' +
+                  '<span class="rounded-full px-2.5 py-1 text-xs ' + policy.tagClass + '">' + policy.tag + '</span>' +
+                '</div>' +
+                '<div>' +
+                  '<h3 class="support-policy-title">' + policy.title + '</h3>' +
+                  '<p class="support-policy-subtitle">' + policy.subtitle + '</p>' +
+                  '<p class="support-policy-copy">' + policy.description + '</p>' +
+                '</div>' +
+                '<div class="support-policy-footer">' +
+                  '<a class="support-policy-link" href="' + policy.link + '" target="_blank" rel="noopener noreferrer">' + iconMarkup('external-link', 'h-3.5 w-3.5') + '<span>View Full Text</span></a>' +
+                  downloadLink +
+                '</div>' +
+              '</article>';
+            })
+            .join("");
+
+          if (window.lucide) {
+            window.lucide.createIcons();
+          }
+        }
+
+        if (faqSearch) {
+          faqSearch.addEventListener("input", renderFaqs);
+        }
+
+        renderTabs();
+        renderFaqs();
+        renderPolicies();
+
+        if (window.lucide) {
+          window.lucide.createIcons();
+        }
+      });
+    </script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>
