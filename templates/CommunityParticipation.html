@@ -50,40 +50,23 @@
             </button>
           </div>
         </div>
-      </section>
+     </section>
 
-      <!-- Events Calendar Section -->
+      <!-- Booking Calendar Section -->
       <section id="events-calendar" class="py-20 lg:py-28 bg-stone-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center max-w-2xl mx-auto mb-14">
-            <span class="community-section-kicker">Events Calendar</span>
-            <h2 class="community-section-title">Upcoming Programs &amp; Events</h2>
+            <span class="community-section-kicker">Booking Calendar</span>
+            <h2 class="community-section-title">Approved Tour Visits</h2>
             <p class="community-section-description">
-              Explore booked tours, community gatherings, student activities, and guided heritage
-              sessions in one shared public calendar.
+              View approved tour schedules and send your own booking request through your user account.
             </p>
           </div>
 
           <div class="flex flex-wrap justify-center gap-3 mb-10">
             <div class="event-legend-item">
               <span class="event-dot" style="background: #1E3A5F;"></span>
-              Booked Tour (former Orientation)
-            </div>
-            <div class="event-legend-item">
-              <span class="event-dot" style="background: #16A34A;"></span>
-              Community Gathering
-            </div>
-            <div class="event-legend-item">
-              <span class="event-dot" style="background: #C5973A;"></span>
-              Student Activity
-            </div>
-            <div class="event-legend-item">
-              <span class="event-dot" style="background: #7C3AED;"></span>
-              Heritage Session
-            </div>
-            <div class="event-legend-item">
-              <span class="event-dot" style="background: #DC2626;"></span>
-              Workshop
+              Approved Booking
             </div>
           </div>
 
@@ -123,12 +106,12 @@
             <div>
               <div class="upcoming-events-sidebar">
                 <div class="upcoming-events-header">
-                  <h3 class="upcoming-events-title">Upcoming Events</h3>
+                  <h3 class="upcoming-events-title">Upcoming Bookings</h3>
                 </div>
                 <div id="upcomingEventsList" class="upcoming-events-list"></div>
                 <div class="upcoming-events-footer">
-                  <button class="upcoming-events-view-all">
-                    View All Events
+                  <button type="button" class="upcoming-events-view-all" data-open-modal="booking-request">
+                    Request a Booking
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -243,9 +226,79 @@
         </div>
 
         <div class="participation-modal-body">
+          <div id="bookingRequestPanel" class="participation-panel" style="display: none;">
+          <form id="bookingRequestForm" class="participation-form" action="#" method="post">
+            <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div class="form-group sm:col-span-2">
+                <label for="bookingDisplayTitle" class="form-label">Booking Title</label>
+                <input type="text" id="bookingDisplayTitle" name="display_title" class="form-input" required placeholder="e.g. Grade 6 Guided Heritage Tour" />
+              </div>
+              <div class="form-group">
+                <label for="bookingType" class="form-label">Booking Type</label>
+                <select id="bookingType" name="booking_type" class="form-input" required>
+                  <option value="">Select type</option>
+                  <option value="school_group">School Group</option>
+                  <option value="community_group">Community Group</option>
+                  <option value="family_group">Family Group</option>
+                  <option value="research_visit">Research Visit</option>
+                  <option value="general_tour">General Tour</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label for="bookingVisitDate" class="form-label">Visit Date</label>
+                <input type="date" id="bookingVisitDate" name="visit_date" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="bookingStartTime" class="form-label">Start Time</label>
+                <input type="time" id="bookingStartTime" name="start_time" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="bookingEndTime" class="form-label">End Time</label>
+                <input type="time" id="bookingEndTime" name="end_time" class="form-input" required />
+              </div>
+              <div class="form-group">
+                <label for="bookingGroupSize" class="form-label">Group Size</label>
+                <input type="number" id="bookingGroupSize" name="group_size" class="form-input" min="1" max="500" required placeholder="How many visitors?" />
+              </div>
+              <div class="form-group">
+                <label for="bookingContactNumber" class="form-label">Contact Number</label>
+                <input type="text" id="bookingContactNumber" name="contact_number" class="form-input" value="{{ current_public_user.phone_number if current_public_user else '' }}" placeholder="Primary contact number" />
+              </div>
+              <div class="form-group sm:col-span-2">
+                <label for="bookingInstitutionName" class="form-label">Institution / School / Group</label>
+                <input type="text" id="bookingInstitutionName" name="institution_name" class="form-input" value="{{ current_public_user.organization if current_public_user else '' }}" placeholder="Name of school, organization, or group" />
+              </div>
+              <div class="form-group sm:col-span-2">
+                <label for="bookingPurpose" class="form-label">Purpose of Visit</label>
+                <textarea id="bookingPurpose" name="purpose" class="form-textarea" rows="3" required placeholder="Describe the purpose and expected learning or visit goals..."></textarea>
+              </div>
+              <div class="form-group sm:col-span-2">
+                <label for="bookingNotes" class="form-label">Additional Notes</label>
+                <textarea id="bookingNotes" name="notes" class="form-textarea" rows="3" placeholder="Accessibility, coordination, or scheduling notes..."></textarea>
+              </div>
+            </div>
+
+            <p id="bookingRequestFormMessage" class="participation-form-message hidden"></p>
+            <button type="submit" class="form-submit-btn form-submit-btn--primary">Send Booking Request</button>
+          </form>
+          <div id="bookingRequestSuccess" class="participation-success hidden">
+            <div class="participation-success-icon participation-success-icon--teacher">
+              <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+              </svg>
+            </div>
+            <h3 class="participation-success-title">Booking Request Sent!</h3>
+            <p class="participation-success-copy">Your request is now waiting for admin review. Approved visits will appear on the booking calendar.</p>
+            <button type="button" class="success-close-btn success-close-btn--primary" data-close-participation>Close</button>
+          </div>
+          </div>
+
           <!-- Visitor Feedback Form -->
           <div id="visitorFeedbackPanel" class="participation-panel" style="display: none;">
           <form id="visitorFeedbackForm" class="participation-form" action="#" method="post">
+            <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
             
             <div class="form-group">
               <label class="form-label">How did you visit us?</label>
@@ -329,6 +382,7 @@
           <!-- Teacher Corner Form -->
           <div id="teacherCornerPanel" class="participation-panel" style="display: none;">
           <form id="teacherCornerForm" class="participation-form" action="#" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
             <input type="hidden" name="submission_type" value="teacher_corner" />
             
             <div class="form-group">
@@ -356,13 +410,13 @@
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="form-group">
-                <label for="teacherName" class="form-label">Teacher / Educator Name</label>
-                <input type="text" id="teacherName" name="submitter_name" class="form-input" required placeholder="Your full name" />
+                <label for="teacherName" class="form-label">Account Name</label>
+                <input type="text" id="teacherName" name="submitter_name" class="form-input" value="{{ current_public_user.full_name if current_public_user else '' }}" readonly placeholder="Sign in to use your account details" />
               </div>
               <div class="form-group">
-                <label for="teacherEmail" class="form-label">Email Address</label>
-                <input type="email" id="teacherEmail" name="submitter_email" class="form-input" required placeholder="you@example.com" />
-                <p class="form-helper">We will send a verification code to this email before your submission reaches admin.</p>
+                <label for="teacherEmail" class="form-label">Account Email</label>
+                <input type="email" id="teacherEmail" name="submitter_email" class="form-input" value="{{ current_public_user.email if current_public_user else '' }}" readonly placeholder="Sign in to use your account email" />
+                <p class="form-helper">Your signed-in account details will be used for this submission.</p>
               </div>
             </div>
 
@@ -422,7 +476,7 @@
               </svg>
             </div>
             <h3 class="participation-success-title">Materials Submitted!</h3>
-            <p class="participation-success-copy">Your email has been verified and your classroom material is now under admin review for Edu Resources.</p>
+            <p class="participation-success-copy">Your classroom material is now under admin review for Edu Resources.</p>
             <button type="button" class="success-close-btn success-close-btn--primary" data-close-participation>Close</button>
           </div>
           </div>
@@ -430,6 +484,7 @@
           <!-- Stories Submit Form -->
           <div id="storiesSubmitPanel" class="participation-panel" style="display: none;">
           <form id="storiesSubmitForm" class="participation-form" action="#" method="post" enctype="multipart/form-data">
+            <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
             <input type="hidden" name="submission_type" value="story_submit" />
             
             <div class="form-group">
@@ -450,14 +505,14 @@
             </div>
 
             <div class="form-group">
-              <label for="storyAuthor" class="form-label">Your Name</label>
-              <input type="text" id="storyAuthor" name="submitter_name" class="form-input form-input--accent" required placeholder="Enter your full name" />
+              <label for="storyAuthor" class="form-label">Account Name</label>
+              <input type="text" id="storyAuthor" name="submitter_name" class="form-input form-input--accent" value="{{ current_public_user.full_name if current_public_user else '' }}" readonly placeholder="Sign in to use your account details" />
             </div>
 
             <div class="form-group">
-              <label for="storyEmail" class="form-label">Email Address</label>
-              <input type="email" id="storyEmail" name="submitter_email" class="form-input form-input--accent" required placeholder="you@example.com" />
-              <p class="form-helper">We will send a verification code to this email before your story reaches admin.</p>
+              <label for="storyEmail" class="form-label">Account Email</label>
+              <input type="email" id="storyEmail" name="submitter_email" class="form-input form-input--accent" value="{{ current_public_user.email if current_public_user else '' }}" readonly placeholder="Sign in to use your account email" />
+              <p class="form-helper">Your signed-in account details will be used for this submission.</p>
             </div>
 
             <div class="form-group">
@@ -519,7 +574,7 @@
               </svg>
             </div>
             <h3 class="participation-success-title">Story Shared!</h3>
-            <p class="participation-success-copy">Your email has been verified and your story is now under admin review for Edu Resources.</p>
+            <p class="participation-success-copy">Your story is now under admin review for Edu Resources.</p>
             <button type="button" class="success-close-btn success-close-btn--accent" data-close-participation>Close</button>
           </div>
           </div>
@@ -529,7 +584,9 @@
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script id="communityParticipationData" type="application/json">{{ {'highlights': community_highlights_items or [], 'events': community_events_items or []}|tojson }}</script>
+    <script id="communityParticipationAuthData" type="application/json">{{ {'isAuthenticated': current_public_user is not none, 'loginUrl': url_for('public_login', next=url_for('community_participation'))}|tojson }}</script>
     <script>
+      window.communityParticipationAuth = JSON.parse(document.getElementById('communityParticipationAuthData').textContent || '{}');
       lucide.createIcons();
     </script>
     <script src="{{ url_for('static', filename='js/community-participation.js') }}"></script>

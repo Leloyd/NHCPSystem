@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 VISITOR_FEEDBACK_TABLE = "visitor_feedback"
 VISITOR_FEEDBACK_SELECT_FIELDS = (
-    "id, visit_type, rating, visitor_name, comments, status, reviewed_at, reviewed_by, created_at, updated_at"
+    "id, user_id, visit_type, rating, visitor_name, comments, status, reviewed_at, reviewed_by, created_at, updated_at"
 )
 
 
@@ -14,6 +14,18 @@ def list_all_visitor_feedback() -> list[dict[str, Any]]:
     response = (
         client.table(VISITOR_FEEDBACK_TABLE)
         .select(VISITOR_FEEDBACK_SELECT_FIELDS)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return list(response.data or [])
+
+
+def list_visitor_feedback_for_user(user_id: int) -> list[dict[str, Any]]:
+    client = get_supabase_client()
+    response = (
+        client.table(VISITOR_FEEDBACK_TABLE)
+        .select(VISITOR_FEEDBACK_SELECT_FIELDS)
+        .eq("user_id", int(user_id))
         .order("created_at", desc=True)
         .execute()
     )

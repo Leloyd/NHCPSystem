@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 PARTICIPATION_SUBMISSIONS_TABLE = "community_participation_submissions"
 PARTICIPATION_SUBMISSIONS_SELECT_FIELDS = (
-    "id, submission_type, title, resource_category, story_category, submitter_name, submitter_email, grade_level, subject_topic, description, story_content, resource_file_filename, photo_filename, is_private, status, verification_code_hash, verification_sent_at, verification_expires_at, verified_at, reviewed_at, reviewed_by, created_at, updated_at"
+    "id, user_id, submission_type, title, resource_category, story_category, submitter_name, submitter_email, grade_level, subject_topic, description, story_content, resource_file_filename, photo_filename, is_private, status, verification_code_hash, verification_sent_at, verification_expires_at, verified_at, reviewed_at, reviewed_by, created_at, updated_at"
 )
 
 
@@ -14,6 +14,18 @@ def list_all_participation_submissions() -> list[dict[str, Any]]:
     response = (
         client.table(PARTICIPATION_SUBMISSIONS_TABLE)
         .select(PARTICIPATION_SUBMISSIONS_SELECT_FIELDS)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return list(response.data or [])
+
+
+def list_participation_submissions_for_user(user_id: int) -> list[dict[str, Any]]:
+    client = get_supabase_client()
+    response = (
+        client.table(PARTICIPATION_SUBMISSIONS_TABLE)
+        .select(PARTICIPATION_SUBMISSIONS_SELECT_FIELDS)
+        .eq("user_id", int(user_id))
         .order("created_at", desc=True)
         .execute()
     )

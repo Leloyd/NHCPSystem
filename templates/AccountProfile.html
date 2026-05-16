@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>My Account | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-100 text-stone-900">
+    {% set public_active_page = '' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="pt-28 pb-16 px-4">
+      <div class="max-w-7xl mx-auto space-y-8">
+        <section class="rounded-3xl bg-gradient-to-r from-stone-900 to-amber-900 text-white px-8 py-8 shadow-xl">
+          <p class="text-xs uppercase tracking-[0.3em] text-amber-200">User Dashboard</p>
+          <h1 class="mt-3 text-4xl font-serif">{{ current_public_user.full_name or current_public_user.username }}</h1>
+          <p class="mt-3 text-stone-200 max-w-3xl">Track your bookmarks, booking requests, participation submissions, and visitor feedback from one secure session-based account.</p>
+        </section>
+
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-5">
+          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
+            <p class="text-sm text-stone-500">Bookmarked Artifacts</p>
+            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.bookmarked_items|length }}</p>
+          </article>
+          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
+            <p class="text-sm text-stone-500">Tour Bookings</p>
+            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.tour_bookings|length }}</p>
+          </article>
+          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
+            <p class="text-sm text-stone-500">Participation Submissions</p>
+            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.participation_submissions|length }}</p>
+          </article>
+          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
+            <p class="text-sm text-stone-500">Visitor Feedback</p>
+            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.visitor_feedback|length }}</p>
+          </article>
+        </section>
+
+        <section class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-stone-200">
+              <h2 class="text-2xl font-serif text-stone-900">My Bookmarks</h2>
+            </div>
+            <div class="p-6 space-y-4">
+              {% if account_dashboard.bookmarked_items %}
+                {% for item in account_dashboard.bookmarked_items %}
+                <a href="/online-gallery/details?item={{ item.id }}" class="block rounded-2xl border border-stone-200 p-4 hover:border-amber-400 hover:bg-amber-50/40 transition-colors">
+                  <p class="text-xs uppercase tracking-[0.2em] text-amber-700">{{ item.category_tl or item.category }}</p>
+                  <h3 class="mt-2 text-lg font-semibold text-stone-900">{{ item.title_tl or item.title }}</h3>
+                  <p class="mt-2 text-sm text-stone-600">{{ item.short_caption_tl or item.short_caption }}</p>
+                </a>
+                {% endfor %}
+              {% else %}
+                <p class="text-sm text-stone-500">You have not bookmarked any artifacts yet.</p>
+              {% endif %}
+            </div>
+          </article>
+
+          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-stone-200">
+              <h2 class="text-2xl font-serif text-stone-900">My Tour Bookings</h2>
+            </div>
+            <div class="p-6 space-y-4">
+              {% if account_dashboard.tour_bookings %}
+                {% for booking in account_dashboard.tour_bookings %}
+                <div class="rounded-2xl border border-stone-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 class="text-lg font-semibold text-stone-900">{{ booking.display_title }}</h3>
+                      <p class="mt-1 text-sm text-stone-600">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p>
+                      <p class="mt-2 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} visitors</p>
+                    </div>
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'approved' %}bg-green-100 text-green-800{% elif booking.status == 'rejected' %}bg-red-100 text-red-700{% elif booking.status == 'cancelled' %}bg-stone-200 text-stone-700{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
+                  </div>
+                </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-sm text-stone-500">No booking requests yet.</p>
+              {% endif %}
+            </div>
+          </article>
+        </section>
+
+        <section class="grid grid-cols-1 xl:grid-cols-2 gap-8">
+          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-stone-200">
+              <h2 class="text-2xl font-serif text-stone-900">Participation History</h2>
+            </div>
+            <div class="p-6 space-y-4">
+              {% if account_dashboard.participation_submissions %}
+                {% for submission in account_dashboard.participation_submissions %}
+                <div class="rounded-2xl border border-stone-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <p class="text-xs uppercase tracking-[0.2em] text-amber-700">{{ submission.submission_type|replace('_', ' ') }}</p>
+                      <h3 class="mt-2 text-lg font-semibold text-stone-900">{{ submission.title }}</h3>
+                      <p class="mt-2 text-sm text-stone-600">{{ submission.description or submission.story_content }}</p>
+                    </div>
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-stone-100 text-stone-700">{{ submission.status|replace('_', ' ') }}</span>
+                  </div>
+                </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-sm text-stone-500">No participation submissions yet.</p>
+              {% endif %}
+            </div>
+          </article>
+
+          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
+            <div class="px-6 py-5 border-b border-stone-200">
+              <h2 class="text-2xl font-serif text-stone-900">Visitor Feedback History</h2>
+            </div>
+            <div class="p-6 space-y-4">
+              {% if account_dashboard.visitor_feedback %}
+                {% for feedback in account_dashboard.visitor_feedback %}
+                <div class="rounded-2xl border border-stone-200 p-4">
+                  <div class="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 class="text-lg font-semibold text-stone-900">{{ feedback.visit_type|replace('-', ' ')|title }} · {{ feedback.rating }}/5</h3>
+                      <p class="mt-2 text-sm text-stone-600">{{ feedback.comments }}</p>
+                    </div>
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-stone-100 text-stone-700">{{ feedback.status|title }}</span>
+                  </div>
+                </div>
+                {% endfor %}
+              {% else %}
+                <p class="text-sm text-stone-500">No visitor feedback submitted yet.</p>
+              {% endif %}
+            </div>
+          </article>
+        </section>
+      </div>
+    </main>
+
+    {% include 'partials/_public_footer.html' %}
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>

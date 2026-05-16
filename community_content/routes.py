@@ -167,6 +167,7 @@ def register_community_content_routes(
     is_admin_csrf_valid,
     admin_session_user_key: str,
     admin_username: str,
+    public_login_required,
     normalize_checkbox,
     validate_event_date,
     save_uploaded_image,
@@ -379,172 +380,8 @@ def register_community_content_routes(
 
         return redirect(url_for("admin_community_highlights", status="archived"))
 
-    @app.route(f"{admin_route_prefix}/events")
-    @admin_required
-    def admin_events():
-        csrf_token = ensure_admin_csrf_token()
-        current_admin_username = session.get(admin_session_user_key, admin_username)
-        events_items = load_admin_community_events()
-        active_events_items = [item for item in events_items if item.get("status") == "active"]
-        draft_events_items = [item for item in events_items if item.get("status") == "draft"]
-        archived_events_items = [item for item in events_items if item.get("status") == "archived"]
-        status_message = get_community_events_status_message(request.args.get("status"))
-        config_error = None if is_supabase_configured() else "Supabase community events integration is not configured."
-        return render_template(
-            "admin/AdminEvents.html",
-            csrf_token=csrf_token,
-            admin_username=current_admin_username,
-            events_items=events_items,
-            active_events_items=active_events_items,
-            draft_events_items=draft_events_items,
-            archived_events_items=archived_events_items,
-            status_message=status_message,
-            config_error=config_error,
-        )
-
-    @app.route(f"{admin_route_prefix}/events/new", methods=["GET", "POST"])
-    @admin_required
-    def admin_event_new():
-        if request.method == "GET":
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Create Event Card",
-                submit_label="Create Event",
-                form_action=url_for("admin_event_new"),
-                event_form=build_community_event_form_state({"status": "draft", "category": COMMUNITY_EVENT_CATEGORIES[0]}),
-            )
-
-        if not is_admin_csrf_valid(request.form.get("csrf_token")):
-            return redirect(url_for("admin_events"))
-
-        if not is_supabase_configured():
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Create Event Card",
-                submit_label="Create Event",
-                form_action=url_for("admin_event_new"),
-                event_form=build_community_event_form_state(request.form),
-                error_message="Supabase community events integration is not configured.",
-            )
-
-        try:
-            payload, _ = _build_community_event_form_payload(
-                request.form,
-                request.files,
-                current_item=None,
-                normalize_checkbox=normalize_checkbox,
-                validate_event_date=validate_event_date,
-                save_uploaded_image=save_uploaded_image,
-                slugify_text=slugify_text,
-            )
-            create_community_event(payload)
-        except ValueError as exc:
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Create Event Card",
-                submit_label="Create Event",
-                form_action=url_for("admin_event_new"),
-                event_form=build_community_event_form_state(request.form),
-                error_message=str(exc),
-            )
-        except Exception as exc:
-            app.logger.exception("Failed to create community event: %s", exc)
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Create Event Card",
-                submit_label="Create Event",
-                form_action=url_for("admin_event_new"),
-                event_form=build_community_event_form_state(request.form),
-                error_message="Could not create the event card right now.",
-            )
-
-        return redirect(url_for("admin_events", status="created"))
-
-    @app.route(f"{admin_route_prefix}/events/<int:event_id>/edit", methods=["GET", "POST"])
-    @admin_required
-    def admin_event_edit(event_id):
-        current_item = load_admin_community_event(event_id)
-        if current_item is None:
-            return redirect(url_for("admin_events"))
-
-        if request.method == "GET":
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Edit Event Card",
-                submit_label="Save Changes",
-                form_action=url_for("admin_event_edit", event_id=event_id),
-                event_form=build_community_event_form_state(current_item),
-            )
-
-        if not is_admin_csrf_valid(request.form.get("csrf_token")):
-            return redirect(url_for("admin_events"))
-
-        try:
-            payload, _ = _build_community_event_form_payload(
-                request.form,
-                request.files,
-                current_item=current_item,
-                normalize_checkbox=normalize_checkbox,
-                validate_event_date=validate_event_date,
-                save_uploaded_image=save_uploaded_image,
-                slugify_text=slugify_text,
-            )
-            update_community_event(event_id, payload)
-        except ValueError as exc:
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Edit Event Card",
-                submit_label="Save Changes",
-                form_action=url_for("admin_event_edit", event_id=event_id),
-                event_form=build_community_event_form_state({**current_item, **request.form}),
-                error_message=str(exc),
-            )
-        except Exception as exc:
-            app.logger.exception("Failed to update community event %s: %s", event_id, exc)
-            return render_admin_event_form(
-                ensure_admin_csrf_token=ensure_admin_csrf_token,
-                admin_session_user_key=admin_session_user_key,
-                admin_username=admin_username,
-                form_title="Edit Event Card",
-                submit_label="Save Changes",
-                form_action=url_for("admin_event_edit", event_id=event_id),
-                event_form=build_community_event_form_state({**current_item, **request.form}),
-                error_message="Could not update the event card right now.",
-            )
-
-        return redirect(url_for("admin_events", status="updated"))
-
-    @app.route(f"{admin_route_prefix}/events/<int:event_id>/delete", methods=["POST"])
-    @admin_required
-    def admin_event_delete(event_id):
-        if not is_admin_csrf_valid(request.form.get("csrf_token")):
-            return redirect(url_for("admin_events"))
-
-        current_item = load_admin_community_event(event_id)
-        if current_item is None:
-            return redirect(url_for("admin_events"))
-
-        try:
-            update_community_event(event_id, {"status": "archived", "is_published": False})
-        except Exception as exc:
-            app.logger.exception("Failed to archive community event %s: %s", event_id, exc)
-            return redirect(url_for("admin_events"))
-
-        return redirect(url_for("admin_events", status="archived"))
-
     @app.route("/community-highlights/<slug>")
+    @public_login_required
     def community_highlight_detail(slug):
         highlight_item = load_published_community_highlight(slug)
         if highlight_item is None:
@@ -561,6 +398,7 @@ def register_community_content_routes(
         )
 
     @app.route("/community-events/<slug>")
+    @public_login_required
     def community_event_detail(slug):
         event_item = load_published_community_event(slug)
         if event_item is None:

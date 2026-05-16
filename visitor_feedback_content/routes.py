@@ -61,14 +61,32 @@ def register_visitor_feedback_routes(
     is_admin_csrf_valid,
     admin_session_user_key: str,
     admin_username: str,
+    public_login_required,
+    is_public_csrf_valid,
+    get_current_public_user,
+    consume_public_action_rate_limit,
 ):
     @app.route("/community-participation/visitor-feedback", methods=["POST"])
+    @public_login_required
     def community_participation_submit_visitor_feedback():
         if not is_supabase_configured():
             return jsonify({"ok": False, "error": "Supabase visitor feedback integration is not configured."}), 503
+        if not is_public_csrf_valid(request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")):
+            return jsonify({"ok": False, "error": "Invalid request."}), 400
+
+        retry_after = consume_public_action_rate_limit("visitor-feedback")
+        if retry_after:
+            return jsonify({"ok": False, "error": f"Too many feedback submissions. Try again in {retry_after} seconds."}), 429
+
+        current_user = get_current_public_user()
+        if not current_user:
+            return jsonify({"ok": False, "error": "Please sign in to submit feedback.", "login_required": True}), 401
 
         try:
             payload = _validate_visitor_feedback_payload(request.form)
+            payload["user_id"] = int(current_user.get("id"))
+            if not str(payload.get("visitor_name") or "").strip():
+                payload["visitor_name"] = str(current_user.get("full_name") or "").strip()
             create_visitor_feedback(payload)
             return jsonify({"ok": True, "message": "Thank you for sharing your experience. Your feedback was received."})
         except ValueError as exc:

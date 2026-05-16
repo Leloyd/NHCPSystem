@@ -1,0 +1,143 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Manage Booking Calendar | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'bookings' %}
+{% set admin_topbar_title = 'Booking Calendar' %}
+{% set admin_topbar_subtitle = 'Review user booking requests and publish approved visits to the public booking calendar.' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          {% if config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Configuration issue</strong>
+            <span>{{ config_error }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Pending Requests</h3>
+                <p>Approve or reject new tour booking requests from logged-in users.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Booking</th>
+                    <th>Type</th>
+                    <th>Schedule</th>
+                    <th>Group</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for booking_item in pending_items %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ booking_item.display_title }}</strong>
+                        <span>{{ booking_item.institution_name or booking_item.location }}</span>
+                        <span>{{ booking_item.purpose }}</span>
+                      </div>
+                    </td>
+                    <td>{{ booking_item.booking_type_label }}</td>
+                    <td>{{ booking_item.display_date }}<br /><span>{{ booking_item.time }}</span></td>
+                    <td>{{ booking_item.group_size }}</td>
+                    <td><span class="admin-status-badge is-draft">Pending</span></td>
+                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">Review</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not pending_items %}
+                  <tr><td colspan="6">No pending booking requests.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Approved Bookings</h3>
+                <p>These approved entries are visible in the public booking calendar.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Booking</th>
+                    <th>Type</th>
+                    <th>Schedule</th>
+                    <th>Group</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for booking_item in approved_items %}
+                  <tr>
+                    <td><div class="admin-resource-main"><strong>{{ booking_item.display_title }}</strong><span>{{ booking_item.institution_name or booking_item.location }}</span></div></td>
+                    <td>{{ booking_item.booking_type_label }}</td>
+                    <td>{{ booking_item.display_date }}<br /><span>{{ booking_item.time }}</span></td>
+                    <td>{{ booking_item.group_size }}</td>
+                    <td><span class="admin-status-badge is-published">Approved</span></td>
+                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not approved_items %}
+                  <tr><td colspan="6">No approved bookings yet.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Rejected or Cancelled</h3>
+                <p>Past decisions remain here for review history.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Booking</th>
+                    <th>Type</th>
+                    <th>Schedule</th>
+                    <th>Group</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for booking_item in rejected_items + cancelled_items %}
+                  <tr>
+                    <td><div class="admin-resource-main"><strong>{{ booking_item.display_title }}</strong><span>{{ booking_item.institution_name or booking_item.location }}</span></div></td>
+                    <td>{{ booking_item.booking_type_label }}</td>
+                    <td>{{ booking_item.display_date }}<br /><span>{{ booking_item.time }}</span></td>
+                    <td>{{ booking_item.group_size }}</td>
+                    <td><span class="admin-status-badge is-draft">{{ booking_item.status_label }}</span></td>
+                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not rejected_items and not cancelled_items %}
+                  <tr><td colspan="6">No rejected or cancelled requests.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+{% endblock %}

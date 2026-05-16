@@ -51,20 +51,21 @@ def _is_valid_email(value: Any) -> bool:
     return bool(EMAIL_PATTERN.match(str(value or "").strip()))
 
 
-def _validate_public_submission(form, files, *, save_uploaded_image, save_uploaded_file):
+def _validate_public_submission(form, files, current_user, *, save_uploaded_image, save_uploaded_file):
     submission_type = str(form.get("submission_type") or "").strip().lower()
-    submitter_name = str(form.get("submitter_name") or "").strip()
-    submitter_email = str(form.get("submitter_email") or "").strip().lower()
     is_private = str(form.get("is_private") or "").strip().lower() in {"1", "true", "on", "yes"}
 
     if submission_type not in {"teacher_corner", "story_submit"}:
         raise ValueError("Please choose a valid submission type.")
+    submitter_name = str(current_user.get("full_name") or "").strip()
+    submitter_email = str(current_user.get("email") or "").strip().lower()
     if len(submitter_name) < 2:
-        raise ValueError("Name must be at least 2 characters.")
+        raise ValueError("Your account needs a valid name before you can submit.")
     if not _is_valid_email(submitter_email):
-        raise ValueError("Please provide a valid email address.")
+        raise ValueError("Your account needs a valid email before you can submit.")
 
     payload = {
+        "user_id": int(current_user.get("id")),
         "submission_type": submission_type,
         "submitter_name": submitter_name,
         "submitter_email": submitter_email,
@@ -153,29 +154,26 @@ def register_participation_submission_routes(
     save_uploaded_image,
     save_uploaded_file,
     delete_local_image,
+    public_login_required,
+    is_public_csrf_valid,
+    get_current_public_user,
+    consume_public_action_rate_limit,
 ):
-    @app.route("/community-participation/submissions/request-verification", methods=["POST"])
-    def community_participation_request_verification():
+    @app.route("/community-participation/submissions", methods=["POST"])
+    @public_login_required
+    def community_participation_create_submission():
         if not is_supabase_configured():
             return jsonify({"ok": False, "error": "Supabase participation submissions integration is not configured."}), 503
-        if not is_participation_email_configured():
-            return jsonify({"ok": False, "error": "Email verification is not configured yet. Set the SMTP environment variables first."}), 503
+        if not is_public_csrf_valid(request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")):
+            return jsonify({"ok": False, "error": "Invalid request."}), 400
 
-        recent_window_start = (_utcnow() - timedelta(minutes=VERIFICATION_WINDOW_MINUTES)).isoformat()
-        recent_submission = find_recent_participation_submission_by_email(
-            str(request.form.get("submitter_email") or "").strip().lower(),
-            since_iso=recent_window_start,
-        )
-        if recent_submission is not None:
-            can_verify = str(recent_submission.get("status") or "") == "pending_verification"
-            return jsonify(
-                {
-                    "ok": False,
-                    "error": "A verification code was already sent to this email within the last 30 minutes.",
-                    "submission_id": recent_submission.get("id"),
-                    "requires_verification": can_verify,
-                }
-            ), 429
+        retry_after = consume_public_action_rate_limit("participation-submission")
+        if retry_after:
+            return jsonify({"ok": False, "error": f"Too many submissions. Try again in {retry_after} seconds."}), 429
+
+        current_user = get_current_public_user()
+        if not current_user:
+            return jsonify({"ok": False, "error": "Please sign in to submit participation content.", "login_required": True}), 401
 
         uploaded_file_name = None
         uploaded_photo_name = None
@@ -183,101 +181,38 @@ def register_participation_submission_routes(
             payload, uploaded_file_name, uploaded_photo_name = _validate_public_submission(
                 request.form,
                 request.files,
+                current_user,
                 save_uploaded_image=save_uploaded_image,
                 save_uploaded_file=save_uploaded_file,
             )
-            verification_code = _generate_verification_code()
-            expires_at = _utcnow() + timedelta(minutes=VERIFICATION_WINDOW_MINUTES)
             payload.update(
                 {
-                    "status": "pending_verification",
-                    "verification_code_hash": _hash_verification_code(verification_code),
-                    "verification_sent_at": _utcnow().isoformat(),
-                    "verification_expires_at": expires_at.isoformat(),
+                    "status": "pending_review",
+                    "verification_code_hash": None,
+                    "verification_sent_at": None,
+                    "verification_expires_at": None,
+                    "verified_at": _utcnow().isoformat(),
                 }
             )
-            created_submission = create_participation_submission(payload)
-            send_participation_verification_email(
-                to_email=payload["submitter_email"],
-                recipient_name=payload["submitter_name"],
-                verification_code=verification_code,
-                valid_minutes=VERIFICATION_WINDOW_MINUTES,
-            )
-            return jsonify(
-                {
-                    "ok": True,
-                    "submission_id": created_submission.get("id"),
-                    "message": "We sent a verification code to your email. Enter it below to complete your submission.",
-                }
-            )
+            create_participation_submission(payload)
+            return jsonify({"ok": True, "message": "Your submission has been sent to admin for review."})
         except ValueError as exc:
             if uploaded_file_name:
                 delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
             if uploaded_photo_name:
                 delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
             return jsonify({"ok": False, "error": str(exc)}), 400
-        except EmailDeliveryError as exc:
-            if uploaded_file_name:
-                delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
-            if uploaded_photo_name:
-                delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
-            if 'created_submission' in locals() and created_submission.get("id"):
-                delete_participation_submission(int(created_submission.get("id")))
-            return jsonify({"ok": False, "error": str(exc)}), 503
         except Exception as exc:
             if uploaded_file_name:
                 delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
             if uploaded_photo_name:
                 delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
-            if 'created_submission' in locals() and created_submission.get("id"):
-                delete_participation_submission(int(created_submission.get("id")))
             app.logger.exception("Failed to create community participation submission: %s", exc)
-            return jsonify({"ok": False, "error": "Could not start the verification right now."}), 500
+            return jsonify({"ok": False, "error": "Could not submit your participation content right now."}), 500
 
     @app.route("/community-participation/submissions/verify", methods=["POST"])
     def community_participation_verify_submission():
-        if not is_supabase_configured():
-            return jsonify({"ok": False, "error": "Supabase participation submissions integration is not configured."}), 503
-
-        submission_id = request.form.get("submission_id")
-        email = str(request.form.get("submitter_email") or "").strip().lower()
-        verification_code = str(request.form.get("verification_code") or "").strip()
-        if not str(submission_id or "").strip().isdigit():
-            return jsonify({"ok": False, "error": "Invalid submission reference."}), 400
-        if not _is_valid_email(email):
-            return jsonify({"ok": False, "error": "Please provide a valid email address."}), 400
-        if not verification_code:
-            return jsonify({"ok": False, "error": "Please enter the verification code."}), 400
-
-        submission = get_participation_submission_by_id(int(submission_id))
-        if submission is None:
-            return jsonify({"ok": False, "error": "Submission not found."}), 404
-        if str(submission.get("submitter_email") or "").strip().lower() != email:
-            return jsonify({"ok": False, "error": "The email address does not match this submission."}), 400
-        if str(submission.get("status") or "") != "pending_verification":
-            return jsonify({"ok": False, "error": "This submission no longer needs verification."}), 400
-
-        expires_at_raw = str(submission.get("verification_expires_at") or "").strip()
-        expires_at = None
-        if expires_at_raw:
-            try:
-                expires_at = datetime.fromisoformat(expires_at_raw.replace("Z", "+00:00"))
-            except ValueError:
-                expires_at = None
-        if expires_at is not None and expires_at < _utcnow():
-            return jsonify({"ok": False, "error": "Your verification code has expired. Please wait and submit again after 30 minutes."}), 400
-        if _hash_verification_code(verification_code) != str(submission.get("verification_code_hash") or ""):
-            return jsonify({"ok": False, "error": "The verification code is incorrect."}), 400
-
-        update_participation_submission(
-            int(submission_id),
-            {
-                "status": "pending_review",
-                "verified_at": _utcnow().isoformat(),
-                "verification_code_hash": None,
-            },
-        )
-        return jsonify({"ok": True, "message": "Your submission has been verified and sent to admin for review."})
+        return jsonify({"ok": False, "error": "Email verification is no longer required. Submit while signed in instead."}), 410
 
     @app.route(f"{admin_route_prefix}/community-participation-submissions")
     @admin_required
@@ -291,7 +226,7 @@ def register_participation_submission_routes(
         awaiting_verification_items = [item for item in submissions_items if item.get("status") == "pending_verification"]
         status_message = get_participation_submissions_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase participation submissions integration is not configured."
-        email_config_error = None if is_participation_email_configured() else "SMTP email verification is not configured yet."
+        email_config_error = None
         return render_template(
             "admin/AdminParticipationSubmissions.html",
             csrf_token=csrf_token,

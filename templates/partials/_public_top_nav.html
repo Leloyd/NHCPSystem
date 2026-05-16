@@ -20,6 +20,19 @@
         <a href="{{ url_for('support') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'support' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Support</a>
       </nav>
 
+      <div class="hidden lg:flex items-center gap-3">
+        {% if current_public_user %}
+        <a href="{{ url_for('account_profile') }}" class="inline-flex items-center rounded-full border border-amber-700 px-4 py-2 text-sm font-semibold {% if public_active_page == 'home' %}text-white border-white/40 hover:bg-white/10{% else %}text-amber-800 hover:bg-amber-50{% endif %}">My Account</a>
+        <form method="post" action="{{ url_for('public_logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <button type="submit" class="inline-flex items-center rounded-full bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">Logout</button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('public_login') }}" class="inline-flex items-center rounded-full border border-amber-700 px-4 py-2 text-sm font-semibold {% if public_active_page == 'home' %}text-white border-white/40 hover:bg-white/10{% else %}text-amber-800 hover:bg-amber-50{% endif %}">Login</a>
+        <a href="{{ url_for('public_signup') }}" class="inline-flex items-center rounded-full bg-amber-700 px-4 py-2 text-sm font-semibold text-white hover:bg-amber-800">Sign Up</a>
+        {% endif %}
+      </div>
+
       <button id="menuToggle" class="lg:hidden p-2 transition-colors duration-300 {% if public_active_page == 'home' %}text-white{% else %}text-gray-700{% endif %}" type="button" aria-label="Toggle menu" data-nav-toggle>
         <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
         <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
@@ -33,6 +46,18 @@
       <a href="{{ url_for('heritage_trail') }}" class="block transition-colors duration-300 {% if public_active_page == 'heritage-trail' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Heritage Trail</a>
       <a href="{{ url_for('community_participation') }}" class="block transition-colors duration-300 {% if public_active_page == 'community-participation' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Community Participation</a>
       <a href="{{ url_for('support') }}" class="block transition-colors duration-300 {% if public_active_page == 'support' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Support</a>
+      <div class="pt-3 border-t border-stone-200 space-y-3">
+        {% if current_public_user %}
+        <a href="{{ url_for('account_profile') }}" class="block text-amber-800 font-semibold">My Account</a>
+        <form method="post" action="{{ url_for('public_logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <button type="submit" class="block text-left text-red-700 font-semibold">Logout</button>
+        </form>
+        {% else %}
+        <a href="{{ url_for('public_login') }}" class="block text-amber-800 font-semibold">Login</a>
+        <a href="{{ url_for('public_signup') }}" class="block text-amber-800 font-semibold">Sign Up</a>
+        {% endif %}
+      </div>
     </nav>
   </div>
 </header>

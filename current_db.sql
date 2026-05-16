@@ -10,6 +10,52 @@ CREATE TABLE public.admin_users (
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT admin_users_pkey PRIMARY KEY (id)
 );
+CREATE TABLE public.public_users (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  email text NOT NULL UNIQUE,
+  username text NOT NULL UNIQUE,
+  password_hash text NOT NULL,
+  full_name text NOT NULL,
+  phone_number text NOT NULL DEFAULT ''::text,
+  organization text NOT NULL DEFAULT ''::text,
+  is_active boolean NOT NULL DEFAULT true,
+  last_login_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT public_users_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.user_bookmarks (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  item_type text NOT NULL CHECK (item_type = ANY (ARRAY['online_gallery'::text])),
+  item_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT user_bookmarks_pkey PRIMARY KEY (id),
+  CONSTRAINT user_bookmarks_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
+CREATE TABLE public.tour_bookings (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  display_title text NOT NULL,
+  booking_type text NOT NULL CHECK (booking_type = ANY (ARRAY['school_group'::text, 'community_group'::text, 'family_group'::text, 'research_visit'::text, 'general_tour'::text])),
+  visit_date date NOT NULL,
+  start_time text NOT NULL,
+  end_time text NOT NULL,
+  group_size integer NOT NULL CHECK ((group_size >= 1) AND (group_size <= 500)),
+  institution_name text NOT NULL DEFAULT ''::text,
+  contact_number text NOT NULL DEFAULT ''::text,
+  purpose text NOT NULL,
+  notes text NOT NULL DEFAULT ''::text,
+  location text NOT NULL DEFAULT 'Museo ng Libingan sa Ilalim ng Lupa'::text,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'approved'::text, 'rejected'::text, 'cancelled'::text])),
+  admin_notes text NOT NULL DEFAULT ''::text,
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT tour_bookings_pkey PRIMARY KEY (id),
+  CONSTRAINT tour_bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
 CREATE TABLE public.community_events (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   title text NOT NULL,
@@ -103,6 +149,7 @@ CREATE TABLE public.edu_resources (
 );
 CREATE TABLE public.community_participation_submissions (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint,
   submission_type text NOT NULL CHECK (submission_type = ANY (ARRAY['teacher_corner'::text, 'story_submit'::text])),
   title text NOT NULL,
   resource_category text NOT NULL DEFAULT ''::text,
@@ -116,7 +163,7 @@ CREATE TABLE public.community_participation_submissions (
   resource_file_filename text,
   photo_filename text,
   is_private boolean NOT NULL DEFAULT false,
-  status text NOT NULL DEFAULT 'pending_verification'::text CHECK (status = ANY (ARRAY['pending_verification'::text, 'pending_review'::text, 'active'::text, 'archived'::text])),
+  status text NOT NULL DEFAULT 'pending_review'::text CHECK (status = ANY (ARRAY['pending_verification'::text, 'pending_review'::text, 'active'::text, 'archived'::text])),
   verification_code_hash text,
   verification_sent_at timestamp with time zone,
   verification_expires_at timestamp with time zone,
@@ -125,10 +172,12 @@ CREATE TABLE public.community_participation_submissions (
   reviewed_by text NOT NULL DEFAULT ''::text,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-  CONSTRAINT community_participation_submissions_pkey PRIMARY KEY (id)
+  CONSTRAINT community_participation_submissions_pkey PRIMARY KEY (id),
+  CONSTRAINT community_participation_submissions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
 );
 CREATE TABLE public.visitor_feedback (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint,
   visit_type text NOT NULL CHECK (visit_type = ANY (ARRAY['on-site'::text, 'website'::text])),
   rating integer NOT NULL CHECK ((rating >= 1) AND (rating <= 5)),
   visitor_name text NOT NULL DEFAULT ''::text,
@@ -138,5 +187,6 @@ CREATE TABLE public.visitor_feedback (
   reviewed_by text NOT NULL DEFAULT ''::text,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-  CONSTRAINT visitor_feedback_pkey PRIMARY KEY (id)
+  CONSTRAINT visitor_feedback_pkey PRIMARY KEY (id),
+  CONSTRAINT visitor_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
 );

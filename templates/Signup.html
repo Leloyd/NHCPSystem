@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sign Up | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-100 text-stone-900">
+    {% set public_active_page = '' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="pt-28 pb-16 px-4">
+      <div class="max-w-2xl mx-auto bg-white rounded-3xl shadow-xl border border-stone-200 overflow-hidden">
+        <div class="px-8 pt-8 pb-6 bg-gradient-to-br from-stone-900 to-amber-900 text-white">
+          <p class="text-xs uppercase tracking-[0.3em] text-amber-200">NHCP User Account</p>
+          <h1 class="mt-3 text-3xl font-serif">Create your account</h1>
+          <p class="mt-2 text-sm text-stone-200">Use one secure profile for bookings, bookmarks, feedback, and community participation.</p>
+        </div>
+
+        <form method="post" action="{{ url_for('public_signup') }}" class="px-8 py-8 space-y-5">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <input type="hidden" name="next" value="{{ next_url }}" />
+
+          {% if error_message %}
+          <div class="rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error_message }}</div>
+          {% endif %}
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="md:col-span-2">
+              <label for="signupFullName" class="block text-sm font-semibold text-stone-700 mb-2">Full name</label>
+              <input id="signupFullName" name="full_name" type="text" required maxlength="160" class="w-full rounded-2xl border border-stone-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+            <div>
+              <label for="signupEmail" class="block text-sm font-semibold text-stone-700 mb-2">Email address</label>
+              <input id="signupEmail" name="email" type="email" required maxlength="160" class="w-full rounded-2xl border border-stone-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+            <div>
+              <label for="signupUsername" class="block text-sm font-semibold text-stone-700 mb-2">Username</label>
+              <input id="signupUsername" name="username" type="text" required maxlength="32" class="w-full rounded-2xl border border-stone-300 px-4 py-3 lowercase focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+            <div>
+              <label for="signupPhone" class="block text-sm font-semibold text-stone-700 mb-2">Phone number</label>
+              <input id="signupPhone" name="phone_number" type="text" maxlength="64" class="w-full rounded-2xl border border-stone-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+            <div>
+              <label for="signupOrganization" class="block text-sm font-semibold text-stone-700 mb-2">Organization or school</label>
+              <input id="signupOrganization" name="organization" type="text" maxlength="180" class="w-full rounded-2xl border border-stone-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+            <div>
+              <label for="signupPassword" class="block text-sm font-semibold text-stone-700 mb-2">Password</label>
+              <input id="signupPassword" name="password" type="password" required maxlength="128" class="w-full rounded-2xl border border-stone-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+            <div>
+              <label for="signupConfirmPassword" class="block text-sm font-semibold text-stone-700 mb-2">Confirm password</label>
+              <input id="signupConfirmPassword" name="confirm_password" type="password" required maxlength="128" class="w-full rounded-2xl border border-stone-300 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600" />
+            </div>
+          </div>
+
+          <button type="submit" class="w-full rounded-2xl bg-amber-700 hover:bg-amber-800 text-white font-semibold px-5 py-3 transition-colors">Create account</button>
+
+          <p class="text-sm text-stone-600 text-center">
+            Already registered?
+            <a href="{{ url_for('public_login', next=next_url) }}" class="font-semibold text-amber-800 hover:text-amber-900">Sign in instead</a>
+          </p>
+        </form>
+      </div>
+    </main>
+
+    {% include 'partials/_public_footer.html' %}
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>

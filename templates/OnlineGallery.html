@@ -125,6 +125,8 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script id="onlineGalleryItemsData" type="application/json">{{ gallery_items|tojson }}</script>
+    <script id="onlineGalleryBookmarkIdsData" type="application/json">{{ bookmarked_gallery_item_ids|default([], true)|tojson }}</script>
+    <script id="onlineGalleryAuthData" type="application/json">{{ {'isAuthenticated': current_public_user is not none, 'loginUrl': url_for('public_login', next=url_for('online_gallery')), 'csrfToken': public_csrf_token}|tojson }}</script>
     <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
     <script src="{{ url_for('static', filename='js/online-gallery-list.js') }}"></script>
   </body>

@@ -15,37 +15,14 @@ function readCommunityParticipationData() {
 const communityParticipationData = readCommunityParticipationData();
 const highlights = Array.isArray(communityParticipationData.highlights) ? communityParticipationData.highlights : [];
 const events = Array.isArray(communityParticipationData.events) ? communityParticipationData.events : [];
+const authConfig = window.communityParticipationAuth || { isAuthenticated: false, loginUrl: '/login' };
 
 const categoryConfig = {
-  "Booked Tour (former Orientation)": {
-    label: "Booked Tour (former Orientation)",
+  "Approved Booking": {
+    label: "Approved Booking",
     color: "#1E3A5F",
     bg: "rgba(30, 58, 95, 0.1)",
     dot: "#1E3A5F",
-  },
-  "Community Gathering": {
-    label: "Community Gathering",
-    color: "#16A34A",
-    bg: "rgba(22, 163, 74, 0.1)",
-    dot: "#16A34A",
-  },
-  "Student Activity": {
-    label: "Student Activity",
-    color: "#C5973A",
-    bg: "rgba(197, 151, 58, 0.1)",
-    dot: "#C5973A",
-  },
-  "Heritage Session": {
-    label: "Heritage Session",
-    color: "#7C3AED",
-    bg: "rgba(124, 58, 237, 0.1)",
-    dot: "#7C3AED",
-  },
-  "Workshop": {
-    label: "Workshop",
-    color: "#DC2626",
-    bg: "rgba(220, 38, 38, 0.08)",
-    dot: "#DC2626",
   },
 };
 
@@ -54,32 +31,12 @@ const MONTHS = [
   "July", "August", "September", "October", "November", "December",
 ];
 
-const today = new Date();
-const todayKey = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
-const initialCalendarDate = (() => {
-  const sortedDates = events
-    .map((event) => new Date(`${event.date}T00:00:00`))
-    .filter((value) => !Number.isNaN(value.getTime()))
-    .sort((a, b) => a.getTime() - b.getTime());
-
-  return sortedDates.find((value) => formatDateKey(value) >= todayKey) || sortedDates[0] || today;
-})();
-
-const INITIAL_HIGHLIGHTS_TOTAL = 7;
-
-let currentYear = initialCalendarDate.getFullYear();
-let currentMonth = initialCalendarDate.getMonth();
-let selectedDate = null;
-let activeFilter = "all";
-let selectedEvent = null;
-let areAllHighlightsVisible = false;
-
 function formatDateKey(value) {
   return `${value.getFullYear()}-${String(value.getMonth() + 1).padStart(2, "0")}-${String(value.getDate()).padStart(2, "0")}`;
 }
 
 function getCategoryConfig(category) {
-  return categoryConfig[category] || categoryConfig["Booked Tour (former Orientation)"];
+  return categoryConfig[category] || categoryConfig["Approved Booking"];
 }
 
 function initHighlights() {
@@ -423,7 +380,7 @@ function openEventModal(eventId) {
       <div class="space-y-2.5">
         <div class="flex items-center gap-3 text-sm">
           <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
-            <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+            <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           </div>
           <div>
             <p class="text-gray-400 text-xs uppercase tracking-wider">Date</p>
@@ -469,24 +426,34 @@ function initParticipationModals() {
   const modalIconBox = document.getElementById('modalIconBox');
 
   const panels = {
+    'booking-request': document.getElementById('bookingRequestPanel'),
     'visitor-feedback': document.getElementById('visitorFeedbackPanel'),
     'teacher-corner': document.getElementById('teacherCornerPanel'),
     'stories-submit': document.getElementById('storiesSubmitPanel'),
   };
 
   const forms = {
+    'booking-request': document.getElementById('bookingRequestForm'),
     'visitor-feedback': document.getElementById('visitorFeedbackForm'),
     'teacher-corner': document.getElementById('teacherCornerForm'),
     'stories-submit': document.getElementById('storiesSubmitForm'),
   };
 
   const successes = {
+    'booking-request': document.getElementById('bookingRequestSuccess'),
     'visitor-feedback': document.getElementById('visitorFeedbackSuccess'),
     'teacher-corner': document.getElementById('teacherCornerSuccess'),
     'stories-submit': document.getElementById('storiesSubmitSuccess'),
   };
 
   const modalConfigs = {
+    'booking-request': {
+      title: 'Booking Request',
+      description: 'Request a guided visit through your account. Admin will approve or reject the booking and approved visits will appear on the calendar.',
+      iconBackground: '#EEF4FF',
+      iconColor: '#1E3A5F',
+      iconMarkup: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
+    },
     'visitor-feedback': {
       title: 'Visitor Feedback',
       description: 'Share your experience with us! Rate your visit and leave comments that help us improve the quality and usability of our museum services.',
@@ -552,10 +519,16 @@ function initParticipationModals() {
       ratingText.style.color = '#C5973A';
     }
     const visitorFeedbackFormMessage = document.getElementById('visitorFeedbackFormMessage');
+    const bookingRequestFormMessage = document.getElementById('bookingRequestFormMessage');
     if (visitorFeedbackFormMessage) {
       visitorFeedbackFormMessage.textContent = '';
       visitorFeedbackFormMessage.classList.add('hidden');
       visitorFeedbackFormMessage.classList.remove('is-error', 'is-success');
+    }
+    if (bookingRequestFormMessage) {
+      bookingRequestFormMessage.textContent = '';
+      bookingRequestFormMessage.classList.add('hidden');
+      bookingRequestFormMessage.classList.remove('is-error', 'is-success');
     }
     if (typeof window.resetParticipationFeedbackState === 'function') {
       window.resetParticipationFeedbackState();
@@ -643,7 +616,7 @@ function initFormInteractions() {
   // Visit Type Buttons
   const visitTypeBtns = document.querySelectorAll('.visit-type-btn');
   const visitTypeInput = document.getElementById('visitType');
-  
+
   visitTypeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       visitTypeBtns.forEach(b => b.classList.remove('active'));
@@ -802,6 +775,9 @@ function initFormInteractions() {
   const storyCharacterCount = document.getElementById('storyCharacterCount');
 
   const visitorFeedbackForm = document.getElementById('visitorFeedbackForm');
+  const bookingRequestForm = document.getElementById('bookingRequestForm');
+  const bookingRequestSuccess = document.getElementById('bookingRequestSuccess');
+  const bookingRequestFormMessage = document.getElementById('bookingRequestFormMessage');
   const visitorFeedbackSuccess = document.getElementById('visitorFeedbackSuccess');
   const visitorFeedbackFormMessage = document.getElementById('visitorFeedbackFormMessage');
   const teacherCornerForm = document.getElementById('teacherCornerForm');
@@ -923,6 +899,7 @@ function initFormInteractions() {
   async function requestSubmissionVerification(type) {
     const isTeacher = type === 'teacher-corner';
     const form = isTeacher ? teacherCornerForm : storiesSubmitForm;
+    const successBox = isTeacher ? teacherCornerSuccess : storiesSubmitSuccess;
     const formMessage = isTeacher ? teacherCornerFormMessage : storiesSubmitFormMessage;
     if (!form) {
       return;
@@ -936,22 +913,22 @@ function initFormInteractions() {
     }
 
     const formData = new FormData(form);
-    const email = String(formData.get('submitter_email') || '').trim();
     setSubmissionMessage(formMessage, '');
 
     try {
-      const { response, payload } = await postForm('/community-participation/submissions/request-verification', formData);
+      const { response, payload } = await postForm('/community-participation/submissions', formData);
+      if (response.status === 401 && payload.login_required && payload.login_url) {
+        window.location.href = payload.login_url;
+        return;
+      }
+
       if (payload.ok) {
-        openVerificationStep(type, email, payload.submission_id, payload.message);
+        form.classList.add('hidden');
+        successBox?.classList.remove('hidden');
         return;
       }
 
-      if (response.status === 429 && payload.requires_verification && payload.submission_id) {
-        openVerificationStep(type, email, payload.submission_id, payload.error);
-        return;
-      }
-
-      setSubmissionMessage(formMessage, payload.error || 'Could not start email verification right now.');
+      setSubmissionMessage(formMessage, payload.error || 'Could not submit your participation content right now.');
     } catch (error) {
       setSubmissionMessage(formMessage, 'Could not reach the server right now. Please try again.');
     }
@@ -1023,7 +1000,11 @@ function initFormInteractions() {
       setSubmissionMessage(visitorFeedbackFormMessage, '');
 
       try {
-        const { payload } = await postForm('/community-participation/visitor-feedback', formData);
+        const { response, payload } = await postForm('/community-participation/visitor-feedback', formData);
+        if (response.status === 401 && payload.login_required && payload.login_url) {
+          window.location.href = payload.login_url;
+          return;
+        }
         if (!payload.ok) {
           setSubmissionMessage(visitorFeedbackFormMessage, payload.error || 'Could not submit your feedback right now.');
           return;
@@ -1033,6 +1014,31 @@ function initFormInteractions() {
         visitorFeedbackSuccess.classList.remove('hidden');
       } catch (error) {
         setSubmissionMessage(visitorFeedbackFormMessage, 'Could not reach the server right now. Please try again.');
+      }
+    });
+  }
+
+  if (bookingRequestForm) {
+    bookingRequestForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const formData = new FormData(bookingRequestForm);
+      setSubmissionMessage(bookingRequestFormMessage, '');
+
+      try {
+        const { response, payload } = await postForm('/community-participation/bookings/request', formData);
+        if (response.status === 401 && payload.login_required && payload.login_url) {
+          window.location.href = payload.login_url;
+          return;
+        }
+        if (!payload.ok) {
+          setSubmissionMessage(bookingRequestFormMessage, payload.error || 'Could not submit your booking request right now.');
+          return;
+        }
+
+        bookingRequestForm.classList.add('hidden');
+        bookingRequestSuccess?.classList.remove('hidden');
+      } catch (error) {
+        setSubmissionMessage(bookingRequestFormMessage, 'Could not reach the server right now. Please try again.');
       }
     });
   }

@@ -1,11 +1,27 @@
 (function () {
   const itemsDataScript = document.getElementById("onlineGalleryItemsData");
+  const bookmarkIdsScript = document.getElementById("onlineGalleryBookmarkIdsData");
+  const authDataScript = document.getElementById("onlineGalleryAuthData");
   let items = [];
+  let bookmarkedItemIds = new Set();
+  let authConfig = { isAuthenticated: false, loginUrl: "/login", csrfToken: "" };
   try {
     const parsedItems = itemsDataScript ? JSON.parse(itemsDataScript.textContent || "[]") : window.ONLINE_GALLERY_ITEMS;
     items = Array.isArray(parsedItems) ? [...parsedItems] : [];
   } catch (_error) {
     items = [];
+  }
+  try {
+    const parsedBookmarkIds = bookmarkIdsScript ? JSON.parse(bookmarkIdsScript.textContent || "[]") : [];
+    bookmarkedItemIds = new Set(Array.isArray(parsedBookmarkIds) ? parsedBookmarkIds.map((value) => Number(value)) : []);
+  } catch (_error) {
+    bookmarkedItemIds = new Set();
+  }
+  try {
+    const parsedAuth = authDataScript ? JSON.parse(authDataScript.textContent || "{}") : {};
+    authConfig = { ...authConfig, ...(parsedAuth || {}) };
+  } catch (_error) {
+    authConfig = { isAuthenticated: false, loginUrl: "/login", csrfToken: "" };
   }
 
   const galleryGrid = document.getElementById("galleryGrid");
@@ -179,6 +195,29 @@
     return [normalizeText(item.year), getLocalizedLocation(item)].filter((value) => normalizeText(value));
   }
 
+  function isBookmarked(itemId) {
+    return bookmarkedItemIds.has(Number(itemId));
+  }
+
+  function buildBookmarkButton(item) {
+    const bookmarked = isBookmarked(item.id);
+    const title = getLocalizedTitle(item);
+    return `
+      <button
+        type="button"
+        class="ogd-bookmark-btn"
+        data-bookmark-item-id="${item.id}"
+        data-bookmarked="${bookmarked ? "true" : "false"}"
+        aria-pressed="${bookmarked ? "true" : "false"}"
+        aria-label="${escapeHtml(bookmarked ? `Remove bookmark for ${title}` : `Bookmark ${title}`)}"
+        style="display:inline-flex;align-items:center;gap:.45rem;border-radius:9999px;border:1px solid ${bookmarked ? '#92400e' : '#d6d3d1'};padding:.55rem .9rem;font-size:.85rem;font-weight:600;background:${bookmarked ? '#fef3c7' : '#ffffff'};color:${bookmarked ? '#92400e' : '#44403c'};transition:all .2s ease;"
+      >
+        <i data-lucide="bookmark${bookmarked ? '-check' : ''}" aria-hidden="true"></i>
+        <span>${escapeHtml(bookmarked ? 'Bookmarked' : 'Bookmark')}</span>
+      </button>
+    `;
+  }
+
   function buildCard(item) {
     const strings = getStrings();
     const title = getLocalizedTitle(item);
@@ -203,10 +242,13 @@
             <span>${escapeHtml(yearText)}</span>
             ${(metaParts.length > 1 || secondaryMeta) ? `<span aria-hidden="true">·</span><span>${escapeHtml(metaParts[1] || secondaryMeta)}</span>` : ""}
           </div>
-          <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__action" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
-            <span>${escapeHtml(strings.viewDetails)}</span>
-            <i data-lucide="arrow-right" aria-hidden="true"></i>
-          </a>
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;">
+            ${buildBookmarkButton(item)}
+            <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__action" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
+              <span>${escapeHtml(strings.viewDetails)}</span>
+              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            </a>
+          </div>
         </div>
       </article>
     `;
@@ -235,8 +277,73 @@
             <p class="ogd-list-item__meta">${escapeHtml(metaText)}</p>
           </div>
         </a>
+        <div style="padding:0 1rem 1rem;display:flex;justify-content:flex-end;">
+          ${buildBookmarkButton(item)}
+        </div>
       </article>
     `;
+  }
+
+  async function updateBookmark(itemId, shouldBookmark) {
+    const response = await fetch(`/api/account/bookmarks/online-gallery/${itemId}`, {
+      method: shouldBookmark ? "POST" : "DELETE",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRF-Token": authConfig.csrfToken || "",
+      },
+    });
+
+    let payload = {};
+    try {
+      payload = await response.json();
+    } catch (_error) {
+      payload = { ok: false, error: "Unexpected server response." };
+    }
+
+    if (response.status === 401 && payload.login_required) {
+      window.location.href = payload.login_url || authConfig.loginUrl || "/login";
+      return false;
+    }
+    if (!payload.ok) {
+      throw new Error(payload.error || "Could not update bookmark.");
+    }
+    return Boolean(payload.bookmarked);
+  }
+
+  function bindBookmarkButtons() {
+    const bookmarkButtons = Array.from(document.querySelectorAll("[data-bookmark-item-id]"));
+    bookmarkButtons.forEach((button) => {
+      if (button.dataset.bookmarkBound === "true") {
+        return;
+      }
+      button.dataset.bookmarkBound = "true";
+      button.addEventListener("click", async () => {
+        const itemId = Number(button.dataset.bookmarkItemId || "0");
+        if (!itemId) {
+          return;
+        }
+        if (!authConfig.isAuthenticated) {
+          window.location.href = authConfig.loginUrl || "/login";
+          return;
+        }
+
+        const currentlyBookmarked = button.dataset.bookmarked === "true";
+        button.disabled = true;
+        try {
+          const nextBookmarked = await updateBookmark(itemId, !currentlyBookmarked);
+          if (nextBookmarked) {
+            bookmarkedItemIds.add(itemId);
+          } else {
+            bookmarkedItemIds.delete(itemId);
+          }
+          applyFilters();
+        } catch (error) {
+          window.alert(error.message || "Could not update bookmark right now.");
+        } finally {
+          button.disabled = false;
+        }
+      });
+    });
   }
 
   function updateStaticLabels() {
@@ -305,6 +412,7 @@
     if (window.lucide && typeof window.lucide.createIcons === "function") {
       window.lucide.createIcons();
     }
+    bindBookmarkButtons();
   }
 
   function sortItems(data) {
