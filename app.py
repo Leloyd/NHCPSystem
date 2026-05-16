@@ -764,6 +764,11 @@ def digital_exhibits():
     return render_template("DigitalExhibits.html")
 
 
+@app.route("/interactive")
+def interactive():
+    return render_template("Interactive.html")
+
+
 @app.route("/online-gallery")
 def online_gallery():
     gallery_categories = load_public_online_gallery_categories()
@@ -789,6 +794,11 @@ def online_gallery_details():
 @app.route("/virtual-tour")
 def virtual_tour():
     return render_template("VirtualTour.html")
+
+
+@app.route("/heritage-trail")
+def heritage_trail():
+    return render_template("HeritageTrail.html")
 
 
 @app.route("/edu-resources")
