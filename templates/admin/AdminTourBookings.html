@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'bookings' %}
 {% set admin_topbar_title = 'Booking Calendar' %}
-{% set admin_topbar_subtitle = 'Review user booking requests and publish approved visits to the public booking calendar.' %}
+{% set admin_topbar_subtitle = 'Review booking requests, manage booking schedules, and track confirmed visits on the staff calendar.' %}
 
 {% block admin_content %}
           {% if status_message %}
@@ -24,8 +24,43 @@
           <section class="admin-panel admin-panel-wide admin-resource-panel">
             <div class="admin-panel-head">
               <div>
+                <h3>Booking Management Calendar</h3>
+                <p>Use the calendar to see every booking request by date. Selecting a date shows complete booking details for museum staff only.</p>
+              </div>
+            </div>
+            <div class="admin-booking-calendar-shell">
+              <div class="admin-booking-calendar-panel">
+                <div class="admin-booking-calendar-header">
+                  <button type="button" id="adminBookingPrevMonth" class="admin-booking-calendar-nav" aria-label="Previous month">&larr;</button>
+                  <h4 id="adminBookingMonthLabel" class="admin-booking-calendar-title"></h4>
+                  <button type="button" id="adminBookingNextMonth" class="admin-booking-calendar-nav" aria-label="Next month">&rarr;</button>
+                </div>
+                <div class="admin-booking-calendar-legend">
+                  <span><span class="admin-booking-calendar-dot is-pending"></span>Pending</span>
+                  <span><span class="admin-booking-calendar-dot is-confirmed"></span>Confirmed</span>
+                  <span><span class="admin-booking-calendar-dot is-rescheduled"></span>Rescheduled</span>
+                  <span><span class="admin-booking-calendar-dot is-cancelled"></span>Cancelled</span>
+                </div>
+                <div class="admin-booking-calendar-weekdays">
+                  <span>Sun</span>
+                  <span>Mon</span>
+                  <span>Tue</span>
+                  <span>Wed</span>
+                  <span>Thu</span>
+                  <span>Fri</span>
+                  <span>Sat</span>
+                </div>
+                <div id="adminBookingCalendarGrid" class="admin-booking-calendar-grid"></div>
+              </div>
+              <div id="adminBookingCalendarDetails" class="admin-booking-calendar-details"></div>
+            </div>
+          </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
                 <h3>Pending Requests</h3>
-                <p>Approve or reject new tour booking requests from logged-in users.</p>
+                <p>Review new booking requests submitted by logged-in users.</p>
               </div>
             </div>
             <div class="admin-resource-table-wrap">
@@ -33,9 +68,9 @@
                 <thead>
                   <tr>
                     <th>Booking</th>
-                    <th>Type</th>
+                    <th>Contact</th>
                     <th>Schedule</th>
-                    <th>Group</th>
+                    <th>Visitors</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -45,14 +80,14 @@
                   <tr>
                     <td>
                       <div class="admin-resource-main">
-                        <strong>{{ booking_item.display_title }}</strong>
-                        <span>{{ booking_item.institution_name or booking_item.location }}</span>
-                        <span>{{ booking_item.purpose }}</span>
+                        <strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong>
+                        <span>{{ booking_item.institution_name }}</span>
+                        <span>{{ booking_item.tour_agency or 'No tour agency specified' }}</span>
                       </div>
                     </td>
-                    <td>{{ booking_item.booking_type_label }}</td>
-                    <td>{{ booking_item.display_date }}<br /><span>{{ booking_item.time }}</span></td>
-                    <td>{{ booking_item.group_size }}</td>
+                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
+                    <td>{{ booking_item.display_date }}</td>
+                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
                     <td><span class="admin-status-badge is-draft">Pending</span></td>
                     <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">Review</a></td>
                   </tr>
@@ -68,8 +103,8 @@
           <section class="admin-panel admin-panel-wide admin-resource-panel">
             <div class="admin-panel-head">
               <div>
-                <h3>Approved Bookings</h3>
-                <p>These approved entries are visible in the public booking calendar.</p>
+                <h3>Confirmed Bookings</h3>
+                <p>These confirmed entries are the ones reflected in the public booking calendar.</p>
               </div>
             </div>
             <div class="admin-resource-table-wrap">
@@ -77,26 +112,26 @@
                 <thead>
                   <tr>
                     <th>Booking</th>
-                    <th>Type</th>
+                    <th>Contact</th>
                     <th>Schedule</th>
-                    <th>Group</th>
+                    <th>Visitors</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for booking_item in approved_items %}
+                  {% for booking_item in confirmed_items %}
                   <tr>
-                    <td><div class="admin-resource-main"><strong>{{ booking_item.display_title }}</strong><span>{{ booking_item.institution_name or booking_item.location }}</span></div></td>
-                    <td>{{ booking_item.booking_type_label }}</td>
-                    <td>{{ booking_item.display_date }}<br /><span>{{ booking_item.time }}</span></td>
-                    <td>{{ booking_item.group_size }}</td>
-                    <td><span class="admin-status-badge is-published">Approved</span></td>
+                    <td><div class="admin-resource-main"><strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong><span>{{ booking_item.institution_name }}</span></div></td>
+                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
+                    <td>{{ booking_item.display_date }}</td>
+                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
+                    <td><span class="admin-status-badge is-published">Confirmed</span></td>
                     <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
                   </tr>
                   {% endfor %}
-                  {% if not approved_items %}
-                  <tr><td colspan="6">No approved bookings yet.</td></tr>
+                  {% if not confirmed_items %}
+                  <tr><td colspan="6">No confirmed bookings yet.</td></tr>
                   {% endif %}
                 </tbody>
               </table>
@@ -106,8 +141,8 @@
           <section class="admin-panel admin-panel-wide admin-resource-panel">
             <div class="admin-panel-head">
               <div>
-                <h3>Rejected or Cancelled</h3>
-                <p>Past decisions remain here for review history.</p>
+                <h3>Rescheduled Bookings</h3>
+                <p>Bookings that need a new schedule remain here until they are confirmed again.</p>
               </div>
             </div>
             <div class="admin-resource-table-wrap">
@@ -115,29 +150,203 @@
                 <thead>
                   <tr>
                     <th>Booking</th>
-                    <th>Type</th>
+                    <th>Contact</th>
                     <th>Schedule</th>
-                    <th>Group</th>
+                    <th>Visitors</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {% for booking_item in rejected_items + cancelled_items %}
+                  {% for booking_item in rescheduled_items %}
                   <tr>
-                    <td><div class="admin-resource-main"><strong>{{ booking_item.display_title }}</strong><span>{{ booking_item.institution_name or booking_item.location }}</span></div></td>
-                    <td>{{ booking_item.booking_type_label }}</td>
-                    <td>{{ booking_item.display_date }}<br /><span>{{ booking_item.time }}</span></td>
-                    <td>{{ booking_item.group_size }}</td>
-                    <td><span class="admin-status-badge is-draft">{{ booking_item.status_label }}</span></td>
+                    <td><div class="admin-resource-main"><strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong><span>{{ booking_item.institution_name }}</span><span>{{ booking_item.decision_reason or 'Waiting for updated confirmation' }}</span></div></td>
+                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
+                    <td>{{ booking_item.display_date }}{% if booking_item.rescheduled_display_date %}<br /><span>New date: {{ booking_item.rescheduled_display_date }}</span>{% endif %}</td>
+                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
+                    <td><span class="admin-status-badge is-rescheduled">{{ booking_item.status_label }}</span></td>
                     <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
                   </tr>
                   {% endfor %}
-                  {% if not rejected_items and not cancelled_items %}
-                  <tr><td colspan="6">No rejected or cancelled requests.</td></tr>
+                  {% if not rescheduled_items %}
+                  <tr><td colspan="6">No rescheduled bookings yet.</td></tr>
                   {% endif %}
                 </tbody>
               </table>
             </div>
           </section>
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Cancelled Bookings</h3>
+                <p>Cancelled requests remain here for history and reporting.</p>
+              </div>
+            </div>
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>Booking</th>
+                    <th>Contact</th>
+                    <th>Schedule</th>
+                    <th>Visitors</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for booking_item in cancelled_items %}
+                  <tr>
+                    <td><div class="admin-resource-main"><strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong><span>{{ booking_item.institution_name }}</span><span>{{ booking_item.decision_reason or 'Cancelled by admin' }}</span></div></td>
+                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
+                    <td>{{ booking_item.display_date }}</td>
+                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
+                    <td><span class="admin-status-badge is-cancelled">{{ booking_item.status_label }}</span></td>
+                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not cancelled_items %}
+                  <tr><td colspan="6">No cancelled bookings yet.</td></tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+          <script id="adminBookingCalendarData" type="application/json">{{ booking_items|tojson }}</script>
+          <script>
+            (() => {
+              const payload = document.getElementById('adminBookingCalendarData');
+              const bookings = payload ? JSON.parse(payload.textContent || '[]') : [];
+              const grid = document.getElementById('adminBookingCalendarGrid');
+              const label = document.getElementById('adminBookingMonthLabel');
+              const details = document.getElementById('adminBookingCalendarDetails');
+              const prevButton = document.getElementById('adminBookingPrevMonth');
+              const nextButton = document.getElementById('adminBookingNextMonth');
+              const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+              const now = new Date();
+              let currentMonth = now.getMonth();
+              let currentYear = now.getFullYear();
+              let selectedDate = null;
+
+              function getEffectiveDate(booking) {
+                if (booking.status === 'rescheduled' && booking.rescheduled_date) {
+                  return booking.rescheduled_date;
+                }
+                return booking.date || '';
+              }
+
+              function getBookingsForDate(dateText) {
+                return bookings.filter((booking) => getEffectiveDate(booking) === dateText);
+              }
+
+              function getStatusClass(status) {
+                if (status === 'confirmed') return 'is-confirmed';
+                if (status === 'rescheduled') return 'is-rescheduled';
+                if (status === 'cancelled') return 'is-cancelled';
+                return 'is-pending';
+              }
+
+              function renderDetails() {
+                if (!selectedDate) {
+                  details.innerHTML = '<div class="admin-booking-calendar-empty">Select a booking date to see the full request details.</div>';
+                  return;
+                }
+
+                const dateBookings = getBookingsForDate(selectedDate);
+                if (dateBookings.length === 0) {
+                  details.innerHTML = `<div class="admin-booking-calendar-empty">No bookings are mapped to ${selectedDate}.</div>`;
+                  return;
+                }
+
+                details.innerHTML = `
+                  <div class="admin-booking-calendar-detail-head">
+                    <h4>${selectedDate}</h4>
+                    <p>${dateBookings.length} booking request${dateBookings.length === 1 ? '' : 's'} on this date</p>
+                  </div>
+                  <div class="admin-booking-calendar-detail-list">
+                    ${dateBookings.map((booking) => `
+                      <div class="admin-booking-calendar-card ${getStatusClass(booking.status)}">
+                        <div class="admin-booking-calendar-card-head">
+                          <div>
+                            <strong>${booking.scheduled_tour || booking.display_title}</strong>
+                            <p>${booking.institution_name || 'No institution provided'}</p>
+                          </div>
+                          <span class="admin-status-badge ${booking.status === 'confirmed' ? 'is-published' : booking.status === 'cancelled' ? 'is-cancelled' : booking.status === 'rescheduled' ? 'is-rescheduled' : 'is-draft'}">${booking.status_label}</span>
+                        </div>
+                        <dl class="admin-booking-calendar-meta">
+                          <div><dt>Contact Person</dt><dd>${booking.contact_person || 'N/A'}</dd></div>
+                          <div><dt>Contact Number</dt><dd>${booking.contact_number || 'N/A'}</dd></div>
+                          <div><dt>Tour Agency</dt><dd>${booking.tour_agency || 'None'}</dd></div>
+                          <div><dt>Visitors</dt><dd>${booking.total_visitors} total · ${booking.male_visitors} male · ${booking.female_visitors} female · ${booking.pwd_visitors} PWD</dd></div>
+                          <div><dt>Requested Date</dt><dd>${booking.display_date}</dd></div>
+                          <div><dt>Rescheduled Date</dt><dd>${booking.rescheduled_display_date || '—'}</dd></div>
+                          <div><dt>Decision Reason</dt><dd>${booking.decision_reason || '—'}</dd></div>
+                          <div><dt>Admin Notes</dt><dd>${booking.admin_notes || '—'}</dd></div>
+                        </dl>
+                        <a href="{{ url_for('admin_tour_bookings') }}/${booking.id}" class="admin-inline-link">Open booking</a>
+                      </div>
+                    `).join('')}
+                  </div>
+                `;
+              }
+
+              function renderCalendar() {
+                label.textContent = `${monthNames[currentMonth]} ${currentYear}`;
+                const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+                const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+                let html = '';
+
+                for (let index = 0; index < firstDay; index += 1) {
+                  html += '<div class="admin-booking-calendar-spacer"></div>';
+                }
+
+                for (let day = 1; day <= daysInMonth; day += 1) {
+                  const dateText = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                  const dayBookings = getBookingsForDate(dateText);
+                  html += `
+                    <button type="button" class="admin-booking-calendar-day ${selectedDate === dateText ? 'is-selected' : ''}" data-date="${dateText}">
+                      <span class="admin-booking-calendar-day-number">${day}</span>
+                      <span class="admin-booking-calendar-day-count">${dayBookings.length > 0 ? `${dayBookings.length} booking${dayBookings.length === 1 ? '' : 's'}` : ''}</span>
+                      <span class="admin-booking-calendar-day-markers">
+                        ${dayBookings.slice(0, 4).map((booking) => `<span class="admin-booking-calendar-dot ${getStatusClass(booking.status)}"></span>`).join('')}
+                      </span>
+                    </button>
+                  `;
+                }
+
+                grid.innerHTML = html;
+                grid.querySelectorAll('.admin-booking-calendar-day').forEach((button) => {
+                  button.addEventListener('click', () => {
+                    selectedDate = button.dataset.date;
+                    renderCalendar();
+                    renderDetails();
+                  });
+                });
+              }
+
+              prevButton?.addEventListener('click', () => {
+                if (currentMonth === 0) {
+                  currentMonth = 11;
+                  currentYear -= 1;
+                } else {
+                  currentMonth -= 1;
+                }
+                renderCalendar();
+              });
+
+              nextButton?.addEventListener('click', () => {
+                if (currentMonth === 11) {
+                  currentMonth = 0;
+                  currentYear += 1;
+                } else {
+                  currentMonth += 1;
+                }
+                renderCalendar();
+              });
+
+              renderCalendar();
+              renderDetails();
+            })();
+          </script>
 {% endblock %}

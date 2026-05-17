@@ -27,8 +27,8 @@ let selectedDate = null;
 let selectedEvent = null;
 
 const categoryConfig = {
-  "Approved Booking": {
-    label: "Approved Booking",
+  "Confirmed Booking": {
+    label: "Confirmed Booking",
     color: "#1E3A5F",
     bg: "rgba(30, 58, 95, 0.1)",
     dot: "#1E3A5F",
@@ -45,7 +45,7 @@ function formatDateKey(value) {
 }
 
 function getCategoryConfig(category) {
-  return categoryConfig[category] || categoryConfig["Approved Booking"];
+  return categoryConfig[category] || categoryConfig["Confirmed Booking"];
 }
 
 function initHighlights() {
@@ -467,7 +467,7 @@ function initParticipationModals() {
   const modalConfigs = {
     'booking-request': {
       title: 'Booking Request',
-      description: 'Request a guided visit through your account. Admin will approve or reject the booking and approved visits will appear on the calendar.',
+      description: 'Request a guided visit through your account. Admin may confirm, cancel, or reschedule the booking, and confirmed visits will appear on the calendar.',
       iconBackground: '#EEF4FF',
       iconColor: '#1E3A5F',
       iconMarkup: '<svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>',
@@ -597,6 +597,11 @@ function initParticipationModals() {
     btn.addEventListener('click', () => {
       const formType = btn.dataset.openModal;
 
+      if (formType === 'booking-request' && !authConfig.isAuthenticated) {
+        window.location.href = authConfig.loginUrl;
+        return;
+      }
+
       resetPanels();
 
       if (panels[formType] && modalConfigs[formType]) {
@@ -631,9 +636,29 @@ function initParticipationModals() {
 }
 
 function initFormInteractions() {
-  // Visit Type Buttons
   const visitTypeBtns = document.querySelectorAll('.visit-type-btn');
   const visitTypeInput = document.getElementById('visitType');
+  const bookingVisitDate = document.getElementById('bookingVisitDate');
+  const bookingMaleVisitors = document.getElementById('bookingMaleVisitors');
+  const bookingFemaleVisitors = document.getElementById('bookingFemaleVisitors');
+  const bookingTotalVisitors = document.getElementById('bookingTotalVisitors');
+
+  if (bookingVisitDate) {
+    bookingVisitDate.min = todayKey;
+  }
+
+  function syncBookingTotalVisitors() {
+    if (!bookingTotalVisitors) {
+      return;
+    }
+    const maleCount = Number.parseInt(bookingMaleVisitors?.value || '0', 10) || 0;
+    const femaleCount = Number.parseInt(bookingFemaleVisitors?.value || '0', 10) || 0;
+    const total = Math.max(maleCount + femaleCount, 0);
+    bookingTotalVisitors.value = total > 0 ? String(total) : '';
+  }
+
+  bookingMaleVisitors?.addEventListener('input', syncBookingTotalVisitors);
+  bookingFemaleVisitors?.addEventListener('input', syncBookingTotalVisitors);
 
   visitTypeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -645,7 +670,6 @@ function initFormInteractions() {
     });
   });
 
-  // Star Rating
   const starBtns = document.querySelectorAll('.star-btn');
   const ratingInput = document.getElementById('rating');
   const ratingText = document.getElementById('ratingText');
@@ -689,7 +713,6 @@ function initFormInteractions() {
     starBtns.forEach((button) => button.classList.remove('filled'));
   };
 
-  // File Drop Zone
   const fileDropZone = document.getElementById('fileDropZone');
   const resourceFileInput = document.getElementById('resourceFile');
   const fileList = document.getElementById('fileList');
@@ -768,7 +791,6 @@ function initFormInteractions() {
     };
   }
 
-  // Category Buttons
   const categoryBtns = document.querySelectorAll('.category-btn');
   const categoryInput = document.getElementById('storyCategory');
 
@@ -782,7 +804,6 @@ function initFormInteractions() {
     });
   });
 
-  // Photo Upload with Preview
   const photoUploadZone = document.getElementById('photoUploadZone');
   const storyPhotoInput = document.getElementById('storyPhoto');
   const photoPreview = document.getElementById('photoPreview');

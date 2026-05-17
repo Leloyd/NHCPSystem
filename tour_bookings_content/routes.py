@@ -5,12 +5,15 @@ from typing import Any
 
 from flask import jsonify, redirect, render_template, request, session, url_for
 
+from public_users_repository import get_public_user_profile_by_id
 from supabase_client import is_supabase_configured
 from tour_bookings_repository import create_tour_booking, update_tour_booking
 
+from .emailer import BookingEmailError, is_booking_email_configured, send_booking_status_email
 from .service import (
     TOUR_BOOKING_STATUS_OPTIONS,
     TOUR_BOOKING_TYPES,
+    format_booking_date,
     get_tour_bookings_status_message,
     load_admin_tour_booking,
     load_admin_tour_bookings,
@@ -22,58 +25,82 @@ def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
 
+def _parse_nonnegative_int(raw_value: Any, *, label: str) -> int:
+    raw_text = str(raw_value or "").strip()
+    if not raw_text:
+        raise ValueError(f"{label} is required.")
+    try:
+        parsed = int(raw_text)
+    except ValueError as exc:
+        raise ValueError(f"{label} must be a whole number.") from exc
+    if parsed < 0:
+        raise ValueError(f"{label} cannot be negative.")
+    return parsed
+
+
 def _validate_tour_booking_payload(form, *, current_user: dict[str, Any]) -> dict[str, Any]:
     visit_date = str(form.get("visit_date") or "").strip()
-    start_time = str(form.get("start_time") or "").strip()
-    end_time = str(form.get("end_time") or "").strip()
     booking_type = str(form.get("booking_type") or "general_tour").strip().lower()
+    scheduled_tour = str(form.get("scheduled_tour") or form.get("display_title") or "").strip()
     institution_name = str(form.get("institution_name") or current_user.get("organization") or "").strip()
+    contact_person = str(form.get("contact_person") or current_user.get("full_name") or "").strip()
     contact_number = str(form.get("contact_number") or current_user.get("phone_number") or "").strip()
-    purpose = str(form.get("purpose") or "").strip()
-    notes = str(form.get("notes") or "").strip()
+    tour_agency = str(form.get("tour_agency") or "").strip()
     location = str(form.get("location") or "Museo ng Libingan sa Ilalim ng Lupa").strip()
-    display_title = str(form.get("display_title") or "Guided Tour Booking").strip()
-
-    try:
-        group_size = int(str(form.get("group_size") or "").strip())
-    except ValueError as exc:
-        raise ValueError("Group size must be a whole number.") from exc
+    male_visitors = _parse_nonnegative_int(form.get("male_visitors"), label="Male visitors")
+    female_visitors = _parse_nonnegative_int(form.get("female_visitors"), label="Female visitors")
+    pwd_visitors = _parse_nonnegative_int(form.get("pwd_visitors"), label="PWD visitors")
+    total_visitors = _parse_nonnegative_int(form.get("total_visitors"), label="Total visitors")
 
     if booking_type not in TOUR_BOOKING_TYPES:
         raise ValueError("Please choose a valid booking type.")
     if not visit_date:
         raise ValueError("Visit date is required.")
-    if not start_time:
-        raise ValueError("Start time is required.")
-    if not end_time:
-        raise ValueError("End time is required.")
-    if group_size < 1 or group_size > 500:
-        raise ValueError("Group size must be between 1 and 500.")
-    if len(display_title) < 3:
-        raise ValueError("Display title must be at least 3 characters.")
-    if len(purpose) < 8:
-        raise ValueError("Purpose must be at least 8 characters.")
-    if len(notes) > 2000:
-        raise ValueError("Notes must be 2000 characters or fewer.")
+    if len(scheduled_tour) < 3:
+        raise ValueError("Scheduled tour must be at least 3 characters.")
+    if total_visitors < 1 or total_visitors > 500:
+        raise ValueError("Total visitors must be between 1 and 500.")
+    if male_visitors + female_visitors != total_visitors:
+        raise ValueError("Total visitors must match the combined male and female visitor count.")
+    if pwd_visitors > total_visitors:
+        raise ValueError("PWD visitors cannot be greater than the total visitors.")
+    if len(contact_person) < 3:
+        raise ValueError("Contact person must be at least 3 characters.")
+    if len(institution_name) < 3:
+        raise ValueError("Institution or organization must be at least 3 characters.")
     if len(institution_name) > 180:
         raise ValueError("Institution name must be 180 characters or fewer.")
+    if len(contact_person) > 160:
+        raise ValueError("Contact person must be 160 characters or fewer.")
     if len(contact_number) > 64:
         raise ValueError("Contact number must be 64 characters or fewer.")
+    if not contact_number:
+        raise ValueError("Contact number is required.")
+    if len(tour_agency) > 180:
+        raise ValueError("Tour agency must be 180 characters or fewer.")
 
     return {
         "user_id": int(current_user.get("id")),
-        "display_title": display_title,
+        "display_title": scheduled_tour,
+        "scheduled_tour": scheduled_tour,
         "booking_type": booking_type,
         "visit_date": visit_date,
-        "start_time": start_time,
-        "end_time": end_time,
-        "group_size": group_size,
+        "start_time": "",
+        "end_time": "",
+        "group_size": total_visitors,
         "institution_name": institution_name,
+        "contact_person": contact_person,
         "contact_number": contact_number,
-        "purpose": purpose,
-        "notes": notes,
+        "tour_agency": tour_agency,
+        "male_visitors": male_visitors,
+        "female_visitors": female_visitors,
+        "pwd_visitors": pwd_visitors,
+        "total_visitors": total_visitors,
+        "purpose": f"Booking request for {scheduled_tour}",
+        "notes": "",
         "location": location,
         "status": TOUR_BOOKING_STATUS_OPTIONS[0],
+        "decision_reason": "",
     }
 
 
@@ -105,7 +132,7 @@ def register_tour_booking_routes(
 
         current_user = get_current_public_user()
         if not current_user:
-            return jsonify({"ok": False, "error": "Please sign in to request a booking.", "login_required": True}), 401
+            return jsonify({"ok": False, "error": "Please sign in to request a booking.", "login_required": True, "login_url": url_for("public_login", next=url_for("community_participation"))}), 401
 
         try:
             payload = _validate_tour_booking_payload(request.form, current_user=current_user)
@@ -124,9 +151,9 @@ def register_tour_booking_routes(
         current_admin_username = session.get(admin_session_user_key, admin_username)
         booking_items = load_admin_tour_bookings()
         pending_items = [item for item in booking_items if item.get("status") == "pending"]
-        approved_items = [item for item in booking_items if item.get("status") == "approved"]
-        rejected_items = [item for item in booking_items if item.get("status") == "rejected"]
+        confirmed_items = [item for item in booking_items if item.get("status") == "confirmed"]
         cancelled_items = [item for item in booking_items if item.get("status") == "cancelled"]
+        rescheduled_items = [item for item in booking_items if item.get("status") == "rescheduled"]
         status_message = get_tour_bookings_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase tour bookings integration is not configured."
         return render_template(
@@ -135,9 +162,9 @@ def register_tour_booking_routes(
             admin_username=current_admin_username,
             booking_items=booking_items,
             pending_items=pending_items,
-            approved_items=approved_items,
-            rejected_items=rejected_items,
+            confirmed_items=confirmed_items,
             cancelled_items=cancelled_items,
+            rescheduled_items=rescheduled_items,
             status_message=status_message,
             config_error=config_error,
         )
@@ -161,7 +188,7 @@ def register_tour_booking_routes(
             return redirect(url_for("admin_tour_bookings"))
 
         moderation_action = str(request.form.get("moderation_action") or "").strip().lower()
-        if moderation_action not in {"approve", "reject", "cancel"}:
+        if moderation_action not in {"confirm", "cancel", "reschedule"}:
             return render_admin_tour_booking_review(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -170,22 +197,53 @@ def register_tour_booking_routes(
                 error_message="Please choose a valid moderation action.",
             )
 
+        decision_reason = str(request.form.get("decision_reason") or "").strip()
+        rescheduled_visit_date = str(request.form.get("rescheduled_visit_date") or "").strip()
+        admin_notes = str(request.form.get("admin_notes") or "").strip()
+
+        if moderation_action in {"cancel", "reschedule"} and len(decision_reason) < 3:
+            return render_admin_tour_booking_review(
+                ensure_admin_csrf_token=ensure_admin_csrf_token,
+                admin_session_user_key=admin_session_user_key,
+                admin_username=admin_username,
+                booking_item=booking_item,
+                error_message="Please provide a reason for cancellation or reschedule.",
+            )
+
+        if moderation_action == "reschedule" and not rescheduled_visit_date:
+            return render_admin_tour_booking_review(
+                ensure_admin_csrf_token=ensure_admin_csrf_token,
+                admin_session_user_key=admin_session_user_key,
+                admin_username=admin_username,
+                booking_item=booking_item,
+                error_message="Please choose the new date for a rescheduled booking.",
+            )
+
         next_status = {
-            "approve": "approved",
-            "reject": "rejected",
+            "confirm": "confirmed",
             "cancel": "cancelled",
+            "reschedule": "rescheduled",
         }[moderation_action]
 
+        update_payload = {
+            "status": next_status,
+            "admin_notes": admin_notes,
+            "decision_reason": decision_reason if moderation_action in {"cancel", "reschedule"} else "",
+            "reviewed_at": _utcnow().isoformat(),
+            "reviewed_by": session.get(admin_session_user_key, admin_username),
+        }
+
+        if moderation_action == "confirm":
+            if booking_item.get("rescheduled_date"):
+                update_payload["visit_date"] = booking_item.get("rescheduled_date")
+            update_payload["rescheduled_visit_date"] = None
+        elif moderation_action == "reschedule":
+            update_payload["rescheduled_visit_date"] = rescheduled_visit_date
+
         try:
-            update_tour_booking(
-                booking_id,
-                {
-                    "status": next_status,
-                    "admin_notes": str(request.form.get("admin_notes") or "").strip(),
-                    "reviewed_at": _utcnow().isoformat(),
-                    "reviewed_by": session.get(admin_session_user_key, admin_username),
-                },
-            )
+            update_tour_booking(booking_id, update_payload)
+            updated_booking = load_admin_tour_booking(booking_id)
+            user_profile = get_public_user_profile_by_id(int(booking_item.get("user_id") or 0)) if booking_item.get("user_id") else None
         except Exception as exc:
             app.logger.exception("Failed to moderate booking %s: %s", booking_id, exc)
             return render_admin_tour_booking_review(
@@ -195,5 +253,19 @@ def register_tour_booking_routes(
                 booking_item=booking_item,
                 error_message="Could not update the booking right now.",
             )
+
+        if updated_booking and user_profile and user_profile.get("email") and is_booking_email_configured():
+            try:
+                send_booking_status_email(
+                    to_email=str(user_profile.get("email") or "").strip(),
+                    recipient_name=str(user_profile.get("full_name") or user_profile.get("username") or user_profile.get("email") or "Visitor").strip(),
+                    scheduled_tour=str(updated_booking.get("scheduled_tour") or updated_booking.get("display_title") or "Museum Tour Booking").strip(),
+                    status_label=str(updated_booking.get("status_label") or next_status.title()).strip(),
+                    visit_date_label=format_booking_date(updated_booking.get("date")),
+                    reason=decision_reason if moderation_action in {"cancel", "reschedule"} else "",
+                    rescheduled_date_label=updated_booking.get("rescheduled_display_date") if moderation_action == "reschedule" else "",
+                )
+            except BookingEmailError as exc:
+                app.logger.exception("Failed to send booking status email for booking %s: %s", booking_id, exc)
 
         return redirect(url_for("admin_tour_bookings", status=next_status))

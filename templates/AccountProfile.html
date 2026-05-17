@@ -71,8 +71,14 @@
                       <h3 class="text-lg font-semibold text-stone-900">{{ booking.display_title }}</h3>
                       <p class="mt-1 text-sm text-stone-600">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p>
                       <p class="mt-2 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} visitors</p>
+                      {% if booking.rescheduled_display_date %}
+                      <p class="mt-2 text-sm text-stone-600">Rescheduled date: {{ booking.rescheduled_display_date }}</p>
+                      {% endif %}
+                      {% if booking.decision_reason %}
+                      <p class="mt-2 text-sm text-stone-600">Reason: {{ booking.decision_reason }}</p>
+                      {% endif %}
                     </div>
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'approved' %}bg-green-100 text-green-800{% elif booking.status == 'rejected' %}bg-red-100 text-red-700{% elif booking.status == 'cancelled' %}bg-stone-200 text-stone-700{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
+                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'confirmed' %}bg-green-100 text-green-800{% elif booking.status == 'cancelled' %}bg-red-100 text-red-700{% elif booking.status == 'rescheduled' %}bg-blue-100 text-blue-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
                   </div>
                 </div>
                 {% endfor %}

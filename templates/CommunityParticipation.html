@@ -57,16 +57,16 @@
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center max-w-2xl mx-auto mb-14">
             <span class="community-section-kicker">Booking Calendar</span>
-            <h2 class="community-section-title">Approved Tour Visits</h2>
+            <h2 class="community-section-title">Confirmed Tour Visits</h2>
             <p class="community-section-description">
-              View approved tour schedules and send your own booking request through your user account.
+              View confirmed tour schedules and send your own booking request through your user account.
             </p>
           </div>
 
           <div class="flex flex-wrap justify-center gap-3 mb-10">
             <div class="event-legend-item">
               <span class="event-dot" style="background: #1E3A5F;"></span>
-              Approved Booking
+              Confirmed Booking
             </div>
           </div>
 
@@ -229,54 +229,54 @@
           <div id="bookingRequestPanel" class="participation-panel" style="display: none;">
           <form id="bookingRequestForm" class="participation-form" action="#" method="post">
             <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+            <input type="hidden" name="booking_type" value="general_tour" />
+            <input type="hidden" name="location" value="Museo ng Libingan sa Ilalim ng Lupa" />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div class="form-group sm:col-span-2">
-                <label for="bookingDisplayTitle" class="form-label">Booking Title</label>
-                <input type="text" id="bookingDisplayTitle" name="display_title" class="form-input" required placeholder="e.g. Grade 6 Guided Heritage Tour" />
-              </div>
               <div class="form-group">
-                <label for="bookingType" class="form-label">Booking Type</label>
-                <select id="bookingType" name="booking_type" class="form-input" required>
-                  <option value="">Select type</option>
-                  <option value="school_group">School Group</option>
-                  <option value="community_group">Community Group</option>
-                  <option value="family_group">Family Group</option>
-                  <option value="research_visit">Research Visit</option>
-                  <option value="general_tour">General Tour</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label for="bookingVisitDate" class="form-label">Visit Date</label>
+                <label for="bookingVisitDate" class="form-label">Date of Booking</label>
                 <input type="date" id="bookingVisitDate" name="visit_date" class="form-input" required />
               </div>
               <div class="form-group">
-                <label for="bookingStartTime" class="form-label">Start Time</label>
-                <input type="time" id="bookingStartTime" name="start_time" class="form-input" required />
+                <label for="bookingScheduledTour" class="form-label">Scheduled Tour</label>
+                <input type="text" id="bookingScheduledTour" name="scheduled_tour" class="form-input" required placeholder="e.g. Guided Heritage Tour" />
+              </div>
+              <div class="form-group sm:col-span-2">
+                <label for="bookingInstitutionName" class="form-label">Institution / Organization</label>
+                <input type="text" id="bookingInstitutionName" name="institution_name" class="form-input" value="{{ current_public_user.organization if current_public_user else '' }}" required placeholder="Name of school, organization, or group" />
               </div>
               <div class="form-group">
-                <label for="bookingEndTime" class="form-label">End Time</label>
-                <input type="time" id="bookingEndTime" name="end_time" class="form-input" required />
-              </div>
-              <div class="form-group">
-                <label for="bookingGroupSize" class="form-label">Group Size</label>
-                <input type="number" id="bookingGroupSize" name="group_size" class="form-input" min="1" max="500" required placeholder="How many visitors?" />
+                <label for="bookingContactPerson" class="form-label">Contact Person</label>
+                <input type="text" id="bookingContactPerson" name="contact_person" class="form-input" value="{{ current_public_user.full_name if current_public_user else '' }}" required placeholder="Name of contact person" />
               </div>
               <div class="form-group">
                 <label for="bookingContactNumber" class="form-label">Contact Number</label>
-                <input type="text" id="bookingContactNumber" name="contact_number" class="form-input" value="{{ current_public_user.phone_number if current_public_user else '' }}" placeholder="Primary contact number" />
+                <input type="text" id="bookingContactNumber" name="contact_number" class="form-input" value="{{ current_public_user.phone_number if current_public_user else '' }}" required placeholder="Primary contact number" />
               </div>
               <div class="form-group sm:col-span-2">
-                <label for="bookingInstitutionName" class="form-label">Institution / School / Group</label>
-                <input type="text" id="bookingInstitutionName" name="institution_name" class="form-input" value="{{ current_public_user.organization if current_public_user else '' }}" placeholder="Name of school, organization, or group" />
+                <label for="bookingTourAgency" class="form-label">Tour Agency (if any)</label>
+                <input type="text" id="bookingTourAgency" name="tour_agency" class="form-input" placeholder="Agency name, if applicable" />
               </div>
               <div class="form-group sm:col-span-2">
-                <label for="bookingPurpose" class="form-label">Purpose of Visit</label>
-                <textarea id="bookingPurpose" name="purpose" class="form-textarea" rows="3" required placeholder="Describe the purpose and expected learning or visit goals..."></textarea>
-              </div>
-              <div class="form-group sm:col-span-2">
-                <label for="bookingNotes" class="form-label">Additional Notes</label>
-                <textarea id="bookingNotes" name="notes" class="form-textarea" rows="3" placeholder="Accessibility, coordination, or scheduling notes..."></textarea>
+                <label class="form-label">Number of Visitors</label>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div class="form-group">
+                    <label for="bookingMaleVisitors" class="form-label">Male</label>
+                    <input type="number" id="bookingMaleVisitors" name="male_visitors" class="form-input" min="0" max="500" required placeholder="0" />
+                  </div>
+                  <div class="form-group">
+                    <label for="bookingFemaleVisitors" class="form-label">Female</label>
+                    <input type="number" id="bookingFemaleVisitors" name="female_visitors" class="form-input" min="0" max="500" required placeholder="0" />
+                  </div>
+                  <div class="form-group">
+                    <label for="bookingPwdVisitors" class="form-label">PWD</label>
+                    <input type="number" id="bookingPwdVisitors" name="pwd_visitors" class="form-input" min="0" max="500" required placeholder="0" />
+                  </div>
+                  <div class="form-group">
+                    <label for="bookingTotalVisitors" class="form-label">Total</label>
+                    <input type="number" id="bookingTotalVisitors" name="total_visitors" class="form-input" min="1" max="500" required readonly placeholder="0" />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -290,7 +290,7 @@
               </svg>
             </div>
             <h3 class="participation-success-title">Booking Request Sent!</h3>
-            <p class="participation-success-copy">Your request is now waiting for admin review. Approved visits will appear on the booking calendar.</p>
+            <p class="participation-success-copy">Your request is now waiting for admin review. Confirmed visits will appear on the booking calendar.</p>
             <button type="button" class="success-close-btn success-close-btn--primary" data-close-participation>Close</button>
           </div>
           </div>

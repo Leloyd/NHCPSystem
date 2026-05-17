@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'bookings' %}
 {% set admin_topbar_title = 'Review Booking Request' %}
-{% set admin_topbar_subtitle = 'Approve or reject an individual booking request.' %}
+{% set admin_topbar_subtitle = 'Confirm, cancel, or reschedule an individual booking request.' %}
 {% set admin_topbar_tool_href = url_for('admin_tour_bookings') %}
 {% set admin_topbar_tool_label = 'Back to list' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
@@ -23,36 +23,52 @@
 
               <div class="admin-form-grid">
                 <div class="admin-form-field admin-form-field-wide">
-                  <label>Display title</label>
-                  <input type="text" value="{{ booking_item.display_title }}" disabled />
-                </div>
-                <div class="admin-form-field">
-                  <label>Booking type</label>
-                  <input type="text" value="{{ booking_item.booking_type_label }}" disabled />
+                  <label>Scheduled tour</label>
+                  <input type="text" value="{{ booking_item.scheduled_tour or booking_item.display_title }}" disabled />
                 </div>
                 <div class="admin-form-field">
                   <label>Status</label>
                   <input type="text" value="{{ booking_item.status_label }}" disabled />
                 </div>
                 <div class="admin-form-field">
-                  <label>Visit date</label>
+                  <label>Requested date</label>
                   <input type="text" value="{{ booking_item.display_date }}" disabled />
                 </div>
                 <div class="admin-form-field">
-                  <label>Time</label>
-                  <input type="text" value="{{ booking_item.time }}" disabled />
+                  <label>Contact person</label>
+                  <input type="text" value="{{ booking_item.contact_person }}" disabled />
                 </div>
                 <div class="admin-form-field">
-                  <label>Group size</label>
-                  <input type="text" value="{{ booking_item.group_size }}" disabled />
+                  <label>Contact number</label>
+                  <input type="text" value="{{ booking_item.contact_number }}" disabled />
+                </div>
+                <div class="admin-form-field">
+                  <label>Total visitors</label>
+                  <input type="text" value="{{ booking_item.total_visitors }}" disabled />
+                </div>
+                <div class="admin-form-field">
+                  <label>Male visitors</label>
+                  <input type="text" value="{{ booking_item.male_visitors }}" disabled />
+                </div>
+                <div class="admin-form-field">
+                  <label>Female visitors</label>
+                  <input type="text" value="{{ booking_item.female_visitors }}" disabled />
+                </div>
+                <div class="admin-form-field">
+                  <label>PWD visitors</label>
+                  <input type="text" value="{{ booking_item.pwd_visitors }}" disabled />
                 </div>
                 <div class="admin-form-field admin-form-field-wide">
-                  <label>Institution or school</label>
+                  <label>Institution or organization</label>
                   <input type="text" value="{{ booking_item.institution_name }}" disabled />
                 </div>
                 <div class="admin-form-field admin-form-field-wide">
-                  <label>Purpose</label>
-                  <textarea rows="4" disabled>{{ booking_item.purpose }}</textarea>
+                  <label>Tour agency</label>
+                  <input type="text" value="{{ booking_item.tour_agency or 'No tour agency specified' }}" disabled />
+                </div>
+                <div class="admin-form-field admin-form-field-wide">
+                  <label>Current decision reason</label>
+                  <textarea rows="3" disabled>{{ booking_item.decision_reason or 'No decision reason recorded yet.' }}</textarea>
                 </div>
                 <div class="admin-form-field admin-form-field-wide">
                   <label for="adminNotes">Admin notes</label>
@@ -61,10 +77,18 @@
                 <div class="admin-form-field admin-form-field-wide">
                   <label for="moderationAction">Decision</label>
                   <select id="moderationAction" name="moderation_action" required>
-                    <option value="approve">Approve booking</option>
-                    <option value="reject">Reject booking</option>
+                    <option value="confirm">Confirm booking</option>
                     <option value="cancel">Cancel booking</option>
+                    <option value="reschedule">Reschedule booking</option>
                   </select>
+                </div>
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="decisionReason">Reason for cancellation or reschedule</label>
+                  <textarea id="decisionReason" name="decision_reason" rows="4" placeholder="Explain why the booking is being cancelled or rescheduled."></textarea>
+                </div>
+                <div class="admin-form-field admin-form-field-wide">
+                  <label for="rescheduledVisitDate">New date for rescheduled booking</label>
+                  <input type="date" id="rescheduledVisitDate" name="rescheduled_visit_date" value="{{ booking_item.rescheduled_date or '' }}" />
                 </div>
               </div>
 

@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 TOUR_BOOKINGS_TABLE = "tour_bookings"
 TOUR_BOOKINGS_SELECT_FIELDS = (
-    "id, user_id, display_title, booking_type, visit_date, start_time, end_time, group_size, institution_name, contact_number, purpose, notes, location, status, admin_notes, reviewed_at, reviewed_by, created_at, updated_at"
+    "id, user_id, display_title, scheduled_tour, booking_type, visit_date, rescheduled_visit_date, start_time, end_time, group_size, institution_name, contact_person, contact_number, tour_agency, male_visitors, female_visitors, pwd_visitors, total_visitors, purpose, notes, location, status, admin_notes, decision_reason, reviewed_at, reviewed_by, created_at, updated_at"
 )
 
 
@@ -14,7 +14,7 @@ def list_public_approved_tour_bookings(limit: int | None = None) -> list[dict[st
     query = (
         client.table(TOUR_BOOKINGS_TABLE)
         .select(TOUR_BOOKINGS_SELECT_FIELDS)
-        .eq("status", "approved")
+        .eq("status", "confirmed")
         .order("visit_date", desc=False)
         .order("start_time", desc=False)
     )
