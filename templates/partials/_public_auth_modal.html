@@ -1,0 +1,179 @@
+{% if not current_public_user %}
+{% set auth_modal_next_url = auth_next_url if auth_next_url is defined and auth_next_url else (request.full_path[:-1] if request.full_path.endswith('?') else request.full_path) %}
+{% set auth_modal_default_view = auth_default_view if auth_default_view is defined and auth_default_view else 'login' %}
+{% set auth_modal_auto_open = auth_auto_open if auth_auto_open is defined and auth_auto_open else false %}
+<div id="publicAuthModal" class="public-auth-modal hidden" aria-hidden="true" data-auth-default-view="{{ auth_modal_default_view }}" data-auth-auto-open="{{ 'true' if auth_modal_auto_open else 'false' }}">
+  <div class="public-auth-backdrop" data-auth-close></div>
+  <div class="public-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="publicAuthTitle" tabindex="-1">
+    <div class="public-auth-card">
+      <div class="public-auth-accent"></div>
+      <button type="button" class="public-auth-close" aria-label="Close" data-auth-close>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M6 18L18 6"></path></svg>
+      </button>
+
+      <section class="public-auth-panel" data-auth-view="login">
+        <div class="public-auth-heading">
+          <div class="public-auth-heading-icon">🏛️</div>
+          <h2 id="publicAuthTitle" class="public-auth-title">Welcome Back</h2>
+          <p class="public-auth-subtitle">Continue your digital heritage experience.</p>
+        </div>
+
+        <button type="button" class="public-auth-social" data-auth-google>
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"></path><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"></path><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"></path><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"></path></svg>
+          Continue with Google
+        </button>
+
+        <div class="public-auth-divider"><span>or</span></div>
+
+        <form id="publicAuthLoginForm" class="public-auth-form" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
+          <label class="public-auth-label" for="publicAuthLoginIdentifier">Email address</label>
+          <div class="public-auth-input-wrap">
+            <span class="public-auth-input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
+            </span>
+            <input id="publicAuthLoginIdentifier" class="public-auth-input" type="email" name="identifier" placeholder="you@example.com" maxlength="160" required />
+          </div>
+
+          <label class="public-auth-label" for="publicAuthLoginPassword">Password</label>
+          <div class="public-auth-input-wrap">
+            <span class="public-auth-input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V8a5 5 0 0 1 10 0v3"></path></svg>
+            </span>
+            <input id="publicAuthLoginPassword" class="public-auth-input public-auth-input-password" type="password" name="password" placeholder="••••••••" maxlength="128" required />
+            <button type="button" class="public-auth-password-toggle" data-password-toggle="publicAuthLoginPassword" aria-label="Show password">
+              <svg class="password-icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="password-icon-hide hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 3 18 18"></path><path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2 2 0 1 0 2.83 2.83"></path><path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-5.17 5.94"></path><path stroke-linecap="round" stroke-linejoin="round" d="M6.61 6.61A21.75 21.75 0 0 0 1 12s4 7 11 7a10.94 10.94 0 0 0 5.09-1.12"></path></svg>
+            </button>
+          </div>
+
+          <p class="public-auth-message hidden" data-auth-message="login"></p>
+
+          <button type="button" class="public-auth-inline-link" data-auth-view-target="forgot">Forgot Password?</button>
+          <button type="submit" class="public-auth-submit">Login</button>
+        </form>
+
+        <p class="public-auth-footer-text">Don't have an account? <button type="button" class="public-auth-footer-link" data-auth-view-target="signup">Sign up</button></p>
+      </section>
+
+      <section class="public-auth-panel hidden" data-auth-view="signup">
+        <div class="public-auth-heading">
+          <div class="public-auth-heading-icon">✨</div>
+          <h2 class="public-auth-title">Create Your Account</h2>
+          <p class="public-auth-subtitle">Join the digital heritage experience.</p>
+        </div>
+
+        <button type="button" class="public-auth-social" data-auth-google>
+          <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"></path><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"></path><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"></path><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"></path></svg>
+          Continue with Google
+        </button>
+
+        <div class="public-auth-divider"><span>or</span></div>
+
+        <form id="publicAuthSignupForm" class="public-auth-form" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
+          <label class="public-auth-label" for="publicAuthSignupEmail">Email address <span class="public-auth-required">*</span></label>
+          <div class="public-auth-input-wrap">
+            <span class="public-auth-input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
+            </span>
+            <input id="publicAuthSignupEmail" class="public-auth-input" type="email" name="email" placeholder="you@example.com" maxlength="160" required />
+          </div>
+
+          <label class="public-auth-label" for="publicAuthSignupPassword">Password <span class="public-auth-required">*</span></label>
+          <div class="public-auth-input-wrap">
+            <span class="public-auth-input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V8a5 5 0 0 1 10 0v3"></path></svg>
+            </span>
+            <input id="publicAuthSignupPassword" class="public-auth-input public-auth-input-password" type="password" name="password" placeholder="Min. 8 characters" maxlength="128" required />
+            <button type="button" class="public-auth-password-toggle" data-password-toggle="publicAuthSignupPassword" aria-label="Show password">
+              <svg class="password-icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="password-icon-hide hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 3 18 18"></path><path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2 2 0 1 0 2.83 2.83"></path><path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-5.17 5.94"></path><path stroke-linecap="round" stroke-linejoin="round" d="M6.61 6.61A21.75 21.75 0 0 0 1 12s4 7 11 7a10.94 10.94 0 0 0 5.09-1.12"></path></svg>
+            </button>
+          </div>
+
+          <label class="public-auth-label" for="publicAuthSignupConfirm">Confirm Password</label>
+          <div class="public-auth-input-wrap">
+            <span class="public-auth-input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V8a5 5 0 0 1 10 0v3"></path></svg>
+            </span>
+            <input id="publicAuthSignupConfirm" class="public-auth-input public-auth-input-password" type="password" name="confirm_password" placeholder="Repeat your password" maxlength="128" required />
+            <button type="button" class="public-auth-password-toggle" data-password-toggle="publicAuthSignupConfirm" aria-label="Show password">
+              <svg class="password-icon-show" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8S1 12 1 12Z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+              <svg class="password-icon-hide hidden" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m3 3 18 18"></path><path stroke-linecap="round" stroke-linejoin="round" d="M10.58 10.58a2 2 0 1 0 2.83 2.83"></path><path stroke-linecap="round" stroke-linejoin="round" d="M9.88 5.09A10.94 10.94 0 0 1 12 5c7 0 11 7 11 7a21.8 21.8 0 0 1-5.17 5.94"></path><path stroke-linecap="round" stroke-linejoin="round" d="M6.61 6.61A21.75 21.75 0 0 0 1 12s4 7 11 7a10.94 10.94 0 0 0 5.09-1.12"></path></svg>
+            </button>
+          </div>
+
+          <p class="public-auth-hint">A verification email will be sent to confirm your account.</p>
+          <p class="public-auth-message hidden" data-auth-message="signup"></p>
+          <button type="submit" class="public-auth-submit">Sign Up</button>
+        </form>
+
+        <p class="public-auth-footer-text">Already have an account? <button type="button" class="public-auth-footer-link" data-auth-view-target="login">Login</button></p>
+      </section>
+
+      <section class="public-auth-panel hidden" data-auth-view="forgot">
+        <div class="public-auth-heading">
+          <div class="public-auth-heading-icon">🔒</div>
+          <h2 class="public-auth-title">Reset Your Password</h2>
+          <p class="public-auth-subtitle">Enter your email and we'll send you a reset link.</p>
+        </div>
+
+        <form id="publicAuthForgotForm" class="public-auth-form" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
+          <label class="public-auth-label" for="publicAuthForgotEmail">Email address</label>
+          <div class="public-auth-input-wrap">
+            <span class="public-auth-input-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
+            </span>
+            <input id="publicAuthForgotEmail" class="public-auth-input" type="email" name="email" placeholder="you@example.com" maxlength="160" required />
+          </div>
+          <p class="public-auth-message hidden" data-auth-message="forgot"></p>
+          <button type="submit" class="public-auth-submit">Send Reset Link</button>
+        </form>
+
+        <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login">Back to Login</button>
+      </section>
+
+      <section class="public-auth-panel hidden" data-auth-view="forgot-success">
+        <div class="public-auth-status-icon public-auth-status-icon-success">✓</div>
+        <h2 class="public-auth-title public-auth-title-center">Check Your Inbox</h2>
+        <p class="public-auth-subtitle public-auth-subtitle-center">Password reset link sent to <strong data-auth-email-display="forgot-success"></strong>. Please check your inbox.</p>
+        <button type="button" class="public-auth-submit" data-auth-view-target="login">Back to Login</button>
+      </section>
+
+      <section class="public-auth-panel hidden" data-auth-view="verify">
+        <div class="public-auth-status-icon">✉️</div>
+        <h2 class="public-auth-title public-auth-title-center">Check Your Inbox</h2>
+        <p class="public-auth-subtitle public-auth-subtitle-center">We sent a verification email to <strong data-auth-email-display="verify"></strong>. Please open the email and click the verification button to continue.</p>
+        <p class="public-auth-message hidden" data-auth-message="verify"></p>
+        <button type="button" class="public-auth-secondary" data-auth-resend>Resend Verification Email</button>
+        <div class="public-auth-stack-links">
+          <button type="button" class="public-auth-inline-link" data-auth-use-another-email>Use another email</button>
+          <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login">Back to Login</button>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<script id="publicAuthConfigData" type="application/json">{{ {
+  'loginEndpoint': url_for('api_public_login'),
+  'signupEndpoint': url_for('api_public_signup'),
+  'resendEndpoint': url_for('api_public_signup_resend'),
+  'forgotEndpoint': url_for('api_public_forgot_password'),
+  'csrfToken': public_csrf_token,
+  'loginUrl': url_for('public_login', next=auth_modal_next_url),
+  'signupUrl': url_for('public_signup', next=auth_modal_next_url),
+  'googleEnabled': false,
+  'defaultView': auth_modal_default_view,
+  'autoOpen': auth_modal_auto_open,
+  'nextUrl': auth_modal_next_url,
+  'statusMessage': auth_status_message if auth_status_message is defined else '',
+  'errorMessage': auth_error_message if auth_error_message is defined else '',
+  'emailEnabled': public_auth_email_enabled if public_auth_email_enabled is defined else false
+}|tojson }}</script>
+<script src="{{ url_for('static', filename='js/public-auth-modal.js') }}"></script>
+{% endif %}

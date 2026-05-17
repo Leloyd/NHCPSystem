@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{ auth_page_title }}</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  </head>
+  <body class="min-h-screen bg-stone-950 text-stone-100">
+    {% set public_active_page = '' %}
+    {% set auth_auto_open = true %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="min-h-screen flex items-center justify-center px-4 pt-28 pb-10">
+      <div class="max-w-3xl text-center">
+        <p class="text-xs uppercase tracking-[0.3em] text-amber-300">NHCP User Access</p>
+        <h1 class="mt-4 text-4xl md:text-5xl font-serif text-white">Your account starts here</h1>
+        <p class="mt-4 text-stone-300 text-lg">Sign in or create your NHCP account to manage bookings, bookmarks, community participation, and more.</p>
+      </div>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>

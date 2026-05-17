@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Complete Your Profile | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+  </head>
+  <body class="min-h-screen bg-[#FAF6EF] text-stone-900">
+    {% set public_active_page = '' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main class="min-h-screen pt-24 lg:pt-20">
+      <div class="min-h-screen lg:flex">
+        <aside class="hidden lg:flex lg:w-80 xl:w-96 flex-col justify-between px-10 py-12 text-stone-100" style="background: linear-gradient(160deg, #2C1A0E 0%, #1C1008 100%);">
+          <div>
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-8" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">🏛️</div>
+            <h1 class="text-3xl font-serif leading-tight">Welcome to the Museo ng Libingan</h1>
+            <p class="mt-4 text-sm leading-7 text-stone-300">Your profile helps us personalize your digital heritage experience and connect you with the right resources.</p>
+          </div>
+          <div class="space-y-4">
+            <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-500/15">🎭</div><span class="text-sm text-stone-300">Personalized exhibits</span></div>
+            <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-500/15">🗺️</div><span class="text-sm text-stone-300">Tailored virtual tours</span></div>
+            <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-500/15">📚</div><span class="text-sm text-stone-300">Curated resources</span></div>
+          </div>
+        </aside>
+
+        <section class="flex-1 flex items-center justify-center px-4 py-10 md:px-8">
+          <div class="w-full max-w-3xl rounded-[2rem] border border-amber-200/60 bg-white/90 shadow-2xl p-6 md:p-10">
+            <div class="flex items-center gap-2 mb-8 text-[12px] tracking-[0.18em] uppercase text-amber-700"><span class="h-[2px] w-10 bg-amber-700"></span>Setup Your Profile</div>
+            <h2 class="text-3xl md:text-4xl font-serif text-stone-900">Complete Your Profile</h2>
+            <p class="mt-3 text-stone-600">Help us personalize your digital heritage experience.</p>
+
+            <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-stone-700">
+              Signed up as <strong class="text-stone-900">{{ current_public_user.email }}</strong>
+            </div>
+
+            {% if error_message %}
+            <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error_message }}</div>
+            {% endif %}
+
+            <form method="post" class="mt-8 space-y-8">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              <input type="hidden" name="next" value="{{ next_url }}" />
+
+              <div>
+                <label for="setupFullName" class="block text-sm font-semibold text-stone-900 mb-2">Full Name <span class="text-red-600">*</span></label>
+                <input id="setupFullName" name="full_name" type="text" required maxlength="160" value="{{ request.form.get('full_name', current_public_user.full_name or '') }}" class="w-full rounded-2xl border border-amber-200 bg-[#F0E6CC] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter your full name" />
+              </div>
+
+              <div>
+                <p class="block text-sm font-semibold text-stone-900 mb-3">How do you plan to use the website? <span class="text-red-600">*</span></p>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {% set selected_use_case = request.form.get('website_use_case', current_public_user.website_use_case or '') %}
+                  {% for option in use_case_options %}
+                  <label class="cursor-pointer">
+                    <input type="radio" name="website_use_case" value="{{ option }}" class="sr-only peer" {% if selected_use_case == option %}checked{% endif %} />
+                    <span class="flex items-center gap-3 rounded-2xl border border-amber-200 bg-[#F0E6CC] px-4 py-3 text-sm text-stone-700 transition peer-checked:border-amber-600 peer-checked:bg-amber-100 peer-checked:text-stone-900">{{ option }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div>
+                <p class="block text-sm font-semibold text-stone-900 mb-2">Which roles best describe you? <span class="text-red-600">*</span></p>
+                <p class="text-sm text-stone-500 mb-4">Select all that apply.</p>
+                <div class="flex flex-wrap gap-3">
+                  {% for role in role_options %}
+                  <label class="cursor-pointer">
+                    <input type="checkbox" name="profile_roles" value="{{ role }}" class="sr-only peer" {% if role in selected_roles %}checked{% endif %} />
+                    <span class="inline-flex items-center rounded-full border border-amber-200 bg-[#F0E6CC] px-4 py-2 text-sm text-stone-700 transition peer-checked:border-transparent peer-checked:bg-gradient-to-br peer-checked:from-stone-900 peer-checked:to-stone-800 peer-checked:text-stone-100">{{ role }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </div>
+
+              <div>
+                <label for="setupLocation" class="block text-sm font-semibold text-stone-900 mb-2">Where are you from? <span class="text-red-600">*</span></label>
+                <input id="setupLocation" name="location_text" type="text" required maxlength="160" value="{{ request.form.get('location_text', current_public_user.location_text or '') }}" class="w-full rounded-2xl border border-amber-200 bg-[#F0E6CC] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="City / Province / Country" />
+              </div>
+
+              <button type="submit" class="w-full rounded-2xl px-6 py-4 font-semibold text-stone-950 transition hover:opacity-90" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">Finish Setup</button>
+            </form>
+          </div>
+        </section>
+      </div>
+    </main>
+
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>
