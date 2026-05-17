@@ -204,6 +204,69 @@
     return getLocalizedField(item, "location");
   }
 
+  function getYearText(item) {
+    return normalizeText(item.year) || normalizeText(item.year_label);
+  }
+
+  function getCategoryDisplayMode(item) {
+    const categorySlug = normalizeText(item.category_slug).toLowerCase();
+    const categoryNames = [normalizeText(item.category), normalizeText(item.category_en), normalizeText(item.category_tl)]
+      .map((value) => value.toLowerCase())
+      .filter(Boolean);
+
+    if (categorySlug === "regional-customs" || categoryNames.includes("regional customs")) {
+      return "location_only";
+    }
+    if (categorySlug === "beliefs-across-the-nation" || categoryNames.includes("beliefs across the nation")) {
+      return "none";
+    }
+    if (categorySlug === "history" || categoryNames.includes("history")) {
+      return "year_only";
+    }
+    if (categorySlug === "material" || categoryNames.includes("material") || categoryNames.includes("materials")) {
+      return "none";
+    }
+    return "year_and_location";
+  }
+
+  function getDisplayMeta(item) {
+    const yearText = getYearText(item);
+    const locationText = getLocalizedLocation(item);
+    const displayMode = getCategoryDisplayMode(item);
+
+    if (displayMode === "location_only") {
+      return locationText ? [{ icon: "map-pin", value: locationText }] : [];
+    }
+    if (displayMode === "year_only") {
+      return yearText ? [{ icon: "calendar-days", value: yearText }] : [];
+    }
+    if (displayMode === "none") {
+      return [];
+    }
+
+    return [
+      yearText ? { icon: "calendar-days", value: yearText } : null,
+      locationText ? { icon: "map-pin", value: locationText } : null,
+    ].filter(Boolean);
+  }
+
+  function buildCardMetaMarkup(item) {
+    const metaParts = getDisplayMeta(item);
+    if (!metaParts.length) {
+      return `<div class="ogd-artifact-card__meta ogd-artifact-card__meta--empty"></div>`;
+    }
+    return `
+      <div class="ogd-artifact-card__meta">
+        ${metaParts.map((part) => `
+          <span class="ogd-artifact-card__meta-pill">
+            <i data-lucide="${part.icon}" aria-hidden="true"></i>
+            <span>${escapeHtml(part.value)}</span>
+          </span>
+        `).join("")}
+      </div>
+    `;
+  }
+
   function hasModel(item) {
     return Boolean(normalizeText(item && item.model_url));
   }
@@ -353,8 +416,6 @@
     const title = getLocalizedTitle(item);
     const summary = getLocalizedSummary(item);
     const category = getLocalizedCategory(item) || strings.fallbackCategory;
-    const yearText = normalizeText(item.year) || strings.dateUnavailable;
-    const locationText = getLocalizedLocation(item);
     const imageMarkup = item.image_url
       ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(title)}" class="ogd-artifact-card__image" loading="lazy" />`
       : `<div class="ogd-artifact-card__fallback"><span>${escapeHtml(category)}</span></div>`;
@@ -367,10 +428,7 @@
         <div class="ogd-artifact-card__body">
           <h3 class="ogd-artifact-card__title font-serif">${escapeHtml(title)}</h3>
           <p class="ogd-artifact-card__summary">${escapeHtml(summary)}</p>
-          <div class="ogd-artifact-card__meta">
-            <span>${escapeHtml(yearText)}</span>
-            ${locationText ? `<span aria-hidden="true">·</span><span>${escapeHtml(locationText)}</span>` : ""}
-          </div>
+          ${buildCardMetaMarkup(item)}
           <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__action" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
             <span>${escapeHtml(strings.viewDetails)}</span>
             <i data-lucide="arrow-right" aria-hidden="true"></i>
