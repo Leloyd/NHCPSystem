@@ -540,7 +540,7 @@
     const title = getLocalizedTitle(item);
     const category = getLocalizedCategory(item) || strings.fallbackCategory;
     const location = getLocalizedLocation(item);
-    const year = normalizeText(item.year) || strings.dateUnavailable;
+    const year = getYearText(item);
     const summary = getLocalizedSummary(item);
     const description = getLocalizedDescription(item);
 
@@ -586,9 +586,8 @@
     if (factsEl) {
       const factMarkup = [
         buildFactItem("tag", strings.category, category),
-        buildFactItem("calendar", strings.year, year),
-        buildFactItem("map-pin", strings.location, location || strings.locationUnavailable),
-        buildFactItem("star", strings.record, strings.recordValue.replace("{id}", String(item.id))),
+        year ? buildFactItem("calendar", strings.year, year) : "",
+        location ? buildFactItem("map-pin", strings.location, location) : "",
       ].join("");
       factsEl.innerHTML = factMarkup;
     }
