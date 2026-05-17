@@ -267,6 +267,23 @@
     `;
   }
 
+  function buildCardBookmarkButton(item) {
+    const bookmarked = isBookmarked(item.id);
+    const title = getLocalizedTitle(item);
+    return `
+      <button
+        type="button"
+        class="ogd-bookmark-btn ogd-bookmark-btn--icon"
+        data-bookmark-item-id="${item.id}"
+        data-bookmarked="${bookmarked ? "true" : "false"}"
+        aria-pressed="${bookmarked ? "true" : "false"}"
+        aria-label="${escapeHtml(bookmarked ? `Remove bookmark for ${title}` : `Bookmark ${title}`)}"
+      >
+        <i data-lucide="bookmark${bookmarked ? "-check" : ""}" aria-hidden="true"></i>
+      </button>
+    `;
+  }
+
   function hasModel(item) {
     return Boolean(normalizeText(item && item.model_url));
   }
@@ -429,10 +446,13 @@
           <h3 class="ogd-artifact-card__title font-serif">${escapeHtml(title)}</h3>
           <p class="ogd-artifact-card__summary">${escapeHtml(summary)}</p>
           ${buildCardMetaMarkup(item)}
-          <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__action" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
-            <span>${escapeHtml(strings.viewDetails)}</span>
-            <i data-lucide="arrow-right" aria-hidden="true"></i>
-          </a>
+          <div class="ogd-artifact-card__footer">
+            ${buildCardBookmarkButton(item)}
+            <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__action" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
+              <span>${escapeHtml(strings.viewDetails)}</span>
+              <i data-lucide="arrow-right" aria-hidden="true"></i>
+            </a>
+          </div>
         </div>
       </article>
     `;
