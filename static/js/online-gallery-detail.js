@@ -1,11 +1,27 @@
 (function () {
   const itemsDataScript = document.getElementById("onlineGalleryItemsData");
+  const bookmarkIdsScript = document.getElementById("onlineGalleryBookmarkIdsData");
+  const authDataScript = document.getElementById("onlineGalleryAuthData");
   let items = [];
+  let bookmarkedItemIds = new Set();
+  let authConfig = { isAuthenticated: false, loginUrl: "/login", csrfToken: "" };
   try {
     const parsedItems = itemsDataScript ? JSON.parse(itemsDataScript.textContent || "[]") : window.ONLINE_GALLERY_ITEMS;
     items = Array.isArray(parsedItems) ? [...parsedItems] : [];
   } catch (_error) {
     items = [];
+  }
+  try {
+    const parsedBookmarkIds = bookmarkIdsScript ? JSON.parse(bookmarkIdsScript.textContent || "[]") : [];
+    bookmarkedItemIds = new Set(Array.isArray(parsedBookmarkIds) ? parsedBookmarkIds.map((value) => Number(value)) : []);
+  } catch (_error) {
+    bookmarkedItemIds = new Set();
+  }
+  try {
+    const parsedAuth = authDataScript ? JSON.parse(authDataScript.textContent || "{}") : {};
+    authConfig = { ...authConfig, ...(parsedAuth || {}) };
+  } catch (_error) {
+    authConfig = { isAuthenticated: false, loginUrl: "/login", csrfToken: "" };
   }
 
   const titleEl = document.getElementById("detailTitle");
@@ -21,6 +37,8 @@
   const modelTabEl = document.getElementById("detailModelTab");
   const zoomToggleEl = document.getElementById("detailZoomToggle");
   const zoomHintTextEl = document.getElementById("detailZoomHintText");
+  const bookmarkButtonEl = document.getElementById("detailBookmarkButton");
+  const bookmarkTextEl = document.getElementById("detailBookmarkText");
   const modelPanelEl = document.getElementById("detailModelPanel");
   const modelFrameEl = document.getElementById("detailModelFrame");
   const modelBadgeEl = document.getElementById("detailModelBadge");
@@ -82,6 +100,11 @@
       interactive3d: "Interactive 3D Object",
       viewIn3d: "View in 3D",
       rotatePrompt: "Drag to rotate. Scroll or pinch to zoom.",
+      bookmark: "Bookmark",
+      bookmarked: "Bookmarked",
+      bookmarkItem: "Bookmark {title}",
+      removeBookmarkItem: "Remove bookmark for {title}",
+      bookmarkUpdateError: "Could not update bookmark right now.",
     },
     filipino: {
       home: "Tahanan",
@@ -117,6 +140,11 @@
       interactive3d: "Interaktibong 3D Object",
       viewIn3d: "Tingnan sa 3D",
       rotatePrompt: "I-drag para iikot. Mag-scroll o pinch para mag-zoom.",
+      bookmark: "Bookmark",
+      bookmarked: "Naka-bookmark",
+      bookmarkItem: "I-bookmark ang {title}",
+      removeBookmarkItem: "Alisin sa bookmark ang {title}",
+      bookmarkUpdateError: "Hindi ma-update ang bookmark sa ngayon.",
     },
   };
 
@@ -178,6 +206,54 @@
 
   function hasModel(item) {
     return Boolean(normalizeText(item && item.model_url));
+  }
+
+  function isBookmarked(itemId) {
+    return bookmarkedItemIds.has(Number(itemId));
+  }
+
+  async function updateBookmark(itemId, shouldBookmark) {
+    const response = await fetch(`/api/account/bookmarks/online-gallery/${itemId}`, {
+      method: shouldBookmark ? "POST" : "DELETE",
+      headers: {
+        "X-Requested-With": "XMLHttpRequest",
+        "X-CSRF-Token": authConfig.csrfToken || "",
+      },
+    });
+
+    let payload = {};
+    try {
+      payload = await response.json();
+    } catch (_error) {
+      payload = { ok: false, error: "Unexpected server response." };
+    }
+
+    if (response.status === 401 && payload.login_required) {
+      window.location.href = payload.login_url || authConfig.loginUrl || "/login";
+      return false;
+    }
+    if (!payload.ok) {
+      throw new Error(payload.error || getStrings().bookmarkUpdateError);
+    }
+    return Boolean(payload.bookmarked);
+  }
+
+  function syncBookmarkButton(item) {
+    if (!bookmarkButtonEl || !bookmarkTextEl || !item) {
+      return;
+    }
+    const strings = getStrings();
+    const title = getLocalizedTitle(item);
+    const bookmarked = isBookmarked(item.id);
+    bookmarkButtonEl.classList.toggle("is-active", bookmarked);
+    bookmarkButtonEl.setAttribute("aria-pressed", bookmarked ? "true" : "false");
+    bookmarkButtonEl.setAttribute("aria-label", (bookmarked ? strings.removeBookmarkItem : strings.bookmarkItem).replace("{title}", title));
+    bookmarkButtonEl.dataset.bookmarked = bookmarked ? "true" : "false";
+    bookmarkTextEl.textContent = bookmarked ? strings.bookmarked : strings.bookmark;
+    const icon = bookmarkButtonEl.querySelector("i");
+    if (icon) {
+      icon.setAttribute("data-lucide", bookmarked ? "bookmark-check" : "bookmark");
+    }
   }
 
   function setZoomState(nextZoomed) {
@@ -336,6 +412,10 @@
     if (relatedSectionLinkEl) relatedSectionLinkEl.textContent = strings.relatedLink;
     if (photoTabEl) photoTabEl.textContent = strings.photo;
     if (modelTabEl) modelTabEl.textContent = strings.object3d;
+    const activeItem = items[activeIndex];
+    if (activeItem) {
+      syncBookmarkButton(activeItem);
+    }
     setZoomState(isZoomed);
   }
 
@@ -407,6 +487,7 @@
     }
     if (modelBadgeEl) modelBadgeEl.textContent = category;
     setMediaMode(hasModel(item) && activeMediaMode === "model" ? "model" : "photo", item);
+    syncBookmarkButton(item);
 
     if (descEl) {
       descEl.textContent = description;
@@ -487,6 +568,38 @@
         return;
       }
       setMediaMode("model", item);
+    });
+  }
+
+  if (bookmarkButtonEl) {
+    bookmarkButtonEl.addEventListener("click", async () => {
+      const item = items[activeIndex];
+      if (!item) {
+        return;
+      }
+      if (!authConfig.isAuthenticated) {
+        window.location.href = authConfig.loginUrl || "/login";
+        return;
+      }
+
+      const currentlyBookmarked = isBookmarked(item.id);
+      bookmarkButtonEl.disabled = true;
+      try {
+        const nextBookmarked = await updateBookmark(item.id, !currentlyBookmarked);
+        if (nextBookmarked) {
+          bookmarkedItemIds.add(Number(item.id));
+        } else {
+          bookmarkedItemIds.delete(Number(item.id));
+        }
+        syncBookmarkButton(item);
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      } catch (error) {
+        window.alert(error.message || getStrings().bookmarkUpdateError);
+      } finally {
+        bookmarkButtonEl.disabled = false;
+      }
     });
   }
 

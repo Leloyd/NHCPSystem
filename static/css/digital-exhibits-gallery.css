@@ -1361,8 +1361,27 @@
   background: linear-gradient(135deg, #d1a46f, #6c4b2d);
 }
 
+.ogd-detail-media__frame--image {
+  aspect-ratio: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #ffffff;
+}
+
 .ogd-detail-media__frame--viewer {
   background: radial-gradient(circle at top, #f5efe6 0%, #eadfce 42%, #d8c3a3 100%);
+}
+
+.ogd-detail-media__frame--image .ogd-detail-media__image {
+  width: 100%;
+  height: auto;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+.ogd-detail-media__frame--image .ogd-detail-media__fallback {
+  min-height: 20rem;
 }
 
 .ogd-detail-media__image,
@@ -1440,6 +1459,10 @@
   align-items: center;
   gap: 0.8rem;
   margin-top: 1rem;
+}
+
+.ogd-detail-action-button--bookmark {
+  width: 100%;
 }
 
 .ogd-detail-action-button,
