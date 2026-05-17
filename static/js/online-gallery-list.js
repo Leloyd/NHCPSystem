@@ -148,6 +148,69 @@
     return getLocalizedField(item, "short_caption");
   }
 
+  function getYearText(item) {
+    return normalizeText(item.year) || normalizeText(item.year_label);
+  }
+
+  function getCategoryDisplayMode(item) {
+    const categorySlug = normalizeText(item.category_slug).toLowerCase();
+    const categoryNames = [normalizeText(item.category), normalizeText(item.category_en), normalizeText(item.category_tl)]
+      .map((value) => value.toLowerCase())
+      .filter(Boolean);
+
+    if (categorySlug === "regional-customs" || categoryNames.includes("regional customs")) {
+      return "location_only";
+    }
+    if (categorySlug === "beliefs-across-the-nation" || categoryNames.includes("beliefs across the nation")) {
+      return "none";
+    }
+    if (categorySlug === "history" || categoryNames.includes("history")) {
+      return "year_only";
+    }
+    if (categorySlug === "material" || categoryNames.includes("material") || categoryNames.includes("materials")) {
+      return "none";
+    }
+    return "year_and_location";
+  }
+
+  function getDisplayMeta(item) {
+    const yearText = getYearText(item);
+    const locationText = getLocalizedLocation(item);
+    const displayMode = getCategoryDisplayMode(item);
+
+    if (displayMode === "location_only") {
+      return locationText ? [{ icon: "map-pin", value: locationText }] : [];
+    }
+    if (displayMode === "year_only") {
+      return yearText ? [{ icon: "calendar-days", value: yearText }] : [];
+    }
+    if (displayMode === "none") {
+      return [];
+    }
+
+    return [
+      yearText ? { icon: "calendar-days", value: yearText } : null,
+      locationText ? { icon: "map-pin", value: locationText } : null,
+    ].filter(Boolean);
+  }
+
+  function buildMetaMarkup(item, emptyClassName) {
+    const metaParts = getDisplayMeta(item);
+    if (!metaParts.length) {
+      return `<div class="${emptyClassName}"></div>`;
+    }
+    return `
+      <div class="ogd-artifact-card__meta">
+        ${metaParts.map((part) => `
+          <span class="ogd-artifact-card__meta-pill">
+            <i data-lucide="${part.icon}" aria-hidden="true"></i>
+            <span>${escapeHtml(part.value)}</span>
+          </span>
+        `).join("")}
+      </div>
+    `;
+  }
+
   function updateQueryString() {
     const nextUrl = new URL(window.location.href);
     const query = normalizeText(searchInput?.value);
@@ -191,10 +254,6 @@
     return normalizeText(searchInput?.value).toLowerCase();
   }
 
-  function getDisplayMeta(item) {
-    return [normalizeText(item.year), getLocalizedLocation(item)].filter((value) => normalizeText(value));
-  }
-
   function isBookmarked(itemId) {
     return bookmarkedItemIds.has(Number(itemId));
   }
@@ -205,15 +264,13 @@
     return `
       <button
         type="button"
-        class="ogd-bookmark-btn"
+        class="ogd-bookmark-btn ogd-bookmark-btn--icon"
         data-bookmark-item-id="${item.id}"
         data-bookmarked="${bookmarked ? "true" : "false"}"
         aria-pressed="${bookmarked ? "true" : "false"}"
         aria-label="${escapeHtml(bookmarked ? `Remove bookmark for ${title}` : `Bookmark ${title}`)}"
-        style="display:inline-flex;align-items:center;gap:.45rem;border-radius:9999px;border:1px solid ${bookmarked ? '#92400e' : '#d6d3d1'};padding:.55rem .9rem;font-size:.85rem;font-weight:600;background:${bookmarked ? '#fef3c7' : '#ffffff'};color:${bookmarked ? '#92400e' : '#44403c'};transition:all .2s ease;"
       >
         <i data-lucide="bookmark${bookmarked ? '-check' : ''}" aria-hidden="true"></i>
-        <span>${escapeHtml(bookmarked ? 'Bookmarked' : 'Bookmark')}</span>
       </button>
     `;
   }
@@ -223,13 +280,9 @@
     const title = getLocalizedTitle(item);
     const summary = getLocalizedSummary(item);
     const category = getLocalizedCategory(item) || strings.fallbackCategory;
-    const location = getLocalizedLocation(item);
     const imageMarkup = item.image_url
       ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(title)}" class="ogd-artifact-card__image" loading="lazy" />`
       : `<div class="ogd-artifact-card__fallback"><span>${escapeHtml(category)}</span></div>`;
-    const metaParts = getDisplayMeta(item);
-    const yearText = normalizeText(item.year) || strings.dateUnavailable;
-    const secondaryMeta = location || strings.locationUnavailable;
     return `
       <article class="ogd-artifact-card">
         <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__media" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
@@ -238,11 +291,8 @@
         <div class="ogd-artifact-card__body">
           <h2 class="ogd-artifact-card__title font-serif">${escapeHtml(title)}</h2>
           <p class="ogd-artifact-card__summary">${escapeHtml(summary)}</p>
-          <div class="ogd-artifact-card__meta">
-            <span>${escapeHtml(yearText)}</span>
-            ${(metaParts.length > 1 || secondaryMeta) ? `<span aria-hidden="true">·</span><span>${escapeHtml(metaParts[1] || secondaryMeta)}</span>` : ""}
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;gap:.75rem;flex-wrap:wrap;">
+          ${buildMetaMarkup(item, "ogd-artifact-card__meta ogd-artifact-card__meta--empty")}
+          <div class="ogd-artifact-card__footer">
             ${buildBookmarkButton(item)}
             <a href="/online-gallery/details?item=${item.id}" class="ogd-artifact-card__action" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(title)}">
               <span>${escapeHtml(strings.viewDetails)}</span>
@@ -260,7 +310,7 @@
     const summary = getLocalizedSummary(item);
     const category = getLocalizedCategory(item) || strings.fallbackCategory;
     const metaParts = getDisplayMeta(item);
-    const metaText = metaParts.join(" • ") || strings.metadataUnavailable;
+    const metaText = metaParts.map((part) => part.value).join(" • ");
     const imageMarkup = item.image_url
       ? `<img src="${escapeHtml(item.image_url)}" alt="${escapeHtml(title)}" class="ogd-list-item__image" loading="lazy" />`
       : `<div class="ogd-list-item__fallback"><span>${escapeHtml(category)}</span></div>`;
@@ -274,7 +324,7 @@
               <span class="ogd-list-item__badge">${escapeHtml(category)}</span>
             </div>
             <p class="ogd-list-item__summary">${escapeHtml(summary)}</p>
-            <p class="ogd-list-item__meta">${escapeHtml(metaText)}</p>
+            ${metaText ? `<p class="ogd-list-item__meta">${escapeHtml(metaText)}</p>` : ""}
           </div>
         </a>
         <div style="padding:0 1rem 1rem;display:flex;justify-content:flex-end;">
