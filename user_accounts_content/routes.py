@@ -191,6 +191,9 @@ def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str]:
         "website_use_case": "",
         "profile_roles": _serialize_role_values([]),
         "location_text": "",
+        "country_text": "",
+        "province_text": "",
+        "city_text": "",
         "auth_provider": "password",
     }, email
 
@@ -198,7 +201,9 @@ def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str]:
 def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]:
     full_name = str(form.get("full_name") or "").strip()
     website_use_case = str(form.get("website_use_case") or "").strip()
-    location_text = str(form.get("location_text") or "").strip()
+    country_text = str(form.get("country_text") or "").strip()
+    province_text = str(form.get("province_text") or "").strip()
+    city_text = str(form.get("city_text") or "").strip()
 
     if len(full_name) < 3 or len(full_name) > 160:
         raise ValueError("Full name must be between 3 and 160 characters.")
@@ -206,8 +211,14 @@ def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]
         raise ValueError("Please select how you plan to use the website.")
     if not role_values:
         raise ValueError("Please select at least one role.")
-    if len(location_text) < 2 or len(location_text) > 160:
-        raise ValueError("Please tell us where you are from.")
+    if len(country_text) < 2 or len(country_text) > 120:
+        raise ValueError("Please select your country.")
+    if len(province_text) < 2 or len(province_text) > 120:
+        raise ValueError("Please select your province.")
+    if len(city_text) < 2 or len(city_text) > 120:
+        raise ValueError("Please select your city.")
+
+    location_text = f"{city_text}, {province_text}, {country_text}"
 
     now = _utcnow().isoformat()
     return {
@@ -215,9 +226,30 @@ def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]
         "website_use_case": website_use_case,
         "profile_roles": _serialize_role_values(role_values),
         "location_text": location_text,
+        "country_text": country_text,
+        "province_text": province_text,
+        "city_text": city_text,
         "onboarding_completed_at": now,
         "updated_at": now,
     }
+
+
+def _resolve_onboarding_step_index(form, role_values: list[str]) -> int:
+    full_name = str(form.get("full_name") or "").strip()
+    website_use_case = str(form.get("website_use_case") or "").strip()
+    country_text = str(form.get("country_text") or "").strip()
+    province_text = str(form.get("province_text") or "").strip()
+    city_text = str(form.get("city_text") or "").strip()
+
+    if len(full_name) < 3:
+        return 0
+    if len(website_use_case) < 3:
+        return 1
+    if not role_values:
+        return 2
+    if len(country_text) < 2 or len(province_text) < 2 or len(city_text) < 2:
+        return 3
+    return 3
 
 
 def register_user_account_routes(
@@ -442,6 +474,7 @@ def register_user_account_routes(
 
         error_message = None
         role_values = _normalize_role_values(request.form.getlist("profile_roles")) if request.method == "POST" else _normalize_role_values(current_user.get("profile_roles"))
+        step_index = _resolve_onboarding_step_index(request.form, role_values) if request.method == "POST" else 0
         if request.method == "POST":
             if not is_public_csrf_valid(request.form.get("csrf_token")):
                 error_message = "Invalid request."
@@ -464,6 +497,7 @@ def register_user_account_routes(
             use_case_options=ONBOARDING_USE_CASE_OPTIONS,
             role_options=ONBOARDING_ROLE_OPTIONS,
             selected_roles=role_values,
+            onboarding_step_index=step_index,
         )
 
     @app.route("/api/auth/forgot-password", methods=["POST"])

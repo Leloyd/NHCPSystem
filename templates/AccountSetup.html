@@ -7,87 +7,173 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
   </head>
-  <body class="min-h-screen bg-[#FAF6EF] text-stone-900">
+  <body class="min-h-screen bg-[#F7F1E4] text-stone-900">
     {% set public_active_page = '' %}
+    {% set selected_use_case = request.form.get('website_use_case', current_public_user.website_use_case or '') %}
+    {% set selected_country = request.form.get('country_text', current_public_user.country_text or 'Philippines') %}
+    {% set selected_province = request.form.get('province_text', current_public_user.province_text or '') %}
+    {% set selected_city = request.form.get('city_text', current_public_user.city_text or '') %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="min-h-screen pt-24 lg:pt-20">
-      <div class="min-h-screen lg:flex">
-        <aside class="hidden lg:flex lg:w-80 xl:w-96 flex-col justify-between px-10 py-12 text-stone-100" style="background: linear-gradient(160deg, #2C1A0E 0%, #1C1008 100%);">
-          <div>
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-8" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">🏛️</div>
-            <h1 class="text-3xl font-serif leading-tight">Welcome to the Museo ng Libingan</h1>
-            <p class="mt-4 text-sm leading-7 text-stone-300">Your profile helps us personalize your digital heritage experience and connect you with the right resources.</p>
-          </div>
-          <div class="space-y-4">
-            <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-500/15">🎭</div><span class="text-sm text-stone-300">Personalized exhibits</span></div>
-            <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-500/15">🗺️</div><span class="text-sm text-stone-300">Tailored virtual tours</span></div>
-            <div class="flex items-center gap-3"><div class="w-9 h-9 rounded-lg flex items-center justify-center bg-amber-500/15">📚</div><span class="text-sm text-stone-300">Curated resources</span></div>
-          </div>
-        </aside>
+    <main class="pt-20 min-h-screen">
+      <form id="accountSetupForm" method="post" class="min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row">
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+        <input type="hidden" name="next" value="{{ next_url }}" />
+        <input type="hidden" id="setupCountryHidden" name="country_text" value="{{ selected_country }}" />
+        <input type="hidden" id="setupProvinceHidden" name="province_text" value="{{ selected_province }}" />
+        <input type="hidden" id="setupCityHidden" name="city_text" value="{{ selected_city }}" />
 
-        <section class="flex-1 flex items-center justify-center px-4 py-10 md:px-8">
-          <div class="w-full max-w-3xl rounded-[2rem] border border-amber-200/60 bg-white/90 shadow-2xl p-6 md:p-10">
-            <div class="flex items-center gap-2 mb-8 text-[12px] tracking-[0.18em] uppercase text-amber-700"><span class="h-[2px] w-10 bg-amber-700"></span>Setup Your Profile</div>
-            <h2 class="text-3xl md:text-4xl font-serif text-stone-900">Complete Your Profile</h2>
-            <p class="mt-3 text-stone-600">Help us personalize your digital heritage experience.</p>
+        <section class="w-full lg:w-[40%] xl:w-[36%] px-5 sm:px-8 lg:px-12 py-8 lg:py-12 text-stone-100" style="background: linear-gradient(160deg, #2C1A0E 0%, #1A1008 100%);">
+          <div class="h-full flex flex-col">
+            <div>
+              <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl text-xl mb-8" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">🏛️</div>
+              <p class="text-[11px] tracking-[0.28em] uppercase text-amber-200/80">Profile Setup</p>
+              <h1 class="mt-4 text-4xl md:text-5xl font-serif leading-tight">Let’s set up your museum profile</h1>
+              <p class="mt-5 max-w-xl text-sm md:text-base leading-7 text-stone-300">Answer a few quick questions so we can personalize your digital heritage experience, recommend the right resources, and make your account feel more useful from the start.</p>
+              <div class="mt-8 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-stone-200">
+                Signed up as <strong class="ml-2 text-white">{{ current_public_user.email }}</strong>
+              </div>
+            </div>
 
-            <div class="mt-6 rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-stone-700">
-              Signed up as <strong class="text-stone-900">{{ current_public_user.email }}</strong>
+            <div class="mt-10 lg:mt-auto space-y-4">
+              <div class="flex items-start gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="w-11 h-11 rounded-2xl bg-amber-500/15 flex items-center justify-center text-lg">�</div>
+                <div>
+                  <p class="font-semibold text-white">One step at a time</p>
+                  <p class="mt-1 text-sm leading-6 text-stone-300">You’ll move through name, purpose, roles, and location with a clear progress line.</p>
+                </div>
+              </div>
+              <div class="flex items-start gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4">
+                <div class="w-11 h-11 rounded-2xl bg-amber-500/15 flex items-center justify-center text-lg">�</div>
+                <div>
+                  <p class="font-semibold text-white">Structured location</p>
+                  <p class="mt-1 text-sm leading-6 text-stone-300">Country comes from a global list, while Philippine province and city choices use your local dataset.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section class="flex-1 px-5 sm:px-8 lg:px-12 py-8 lg:py-12 bg-[#F7F1E4] flex flex-col">
+          <div class="w-full max-w-4xl mx-auto flex-1 flex flex-col">
+            <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
+              <div>
+                <p id="accountSetupStepLabel" class="text-[11px] tracking-[0.24em] uppercase text-amber-700">Step 1 of 4</p>
+                <h2 id="accountSetupStepTitle" class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">What should we call you?</h2>
+                <p id="accountSetupStepDescription" class="mt-3 max-w-2xl text-sm md:text-base leading-7 text-stone-600">Start with your name so your profile feels personal from the first screen.</p>
+              </div>
+              <div class="sm:text-right">
+                <p class="text-sm font-medium text-stone-500">Progress</p>
+                <p id="accountSetupProgressText" class="mt-1 text-lg font-semibold text-stone-900">25%</p>
+              </div>
+            </div>
+
+            <div class="mt-6 h-1.5 w-full rounded-full bg-amber-100 overflow-hidden">
+              <div id="accountSetupProgressBar" class="h-full rounded-full transition-all duration-300" style="width: 25%; background: linear-gradient(90deg, #B8963E, #C9A84C);"></div>
             </div>
 
             {% if error_message %}
-            <div class="mt-6 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">{{ error_message }}</div>
+            <div id="accountSetupServerError" class="mt-6 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">{{ error_message }}</div>
+            {% else %}
+            <div id="accountSetupServerError" class="hidden mt-6 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"></div>
             {% endif %}
+            <div id="accountSetupClientError" class="hidden mt-4 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"></div>
 
-            <form method="post" class="mt-8 space-y-8">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-              <input type="hidden" name="next" value="{{ next_url }}" />
+            <div class="flex-1 flex items-center py-10 lg:py-14">
+              <div class="w-full">
+                <section data-setup-step="0" data-step-title="What should we call you?" data-step-description="Start with your name so your profile feels personal from the first screen." class="space-y-6">
+                  <div class="max-w-2xl">
+                    <label for="setupFullName" class="block text-sm font-semibold text-stone-900 mb-3">Full Name <span class="text-red-600">*</span></label>
+                    <input id="setupFullName" name="full_name" type="text" required maxlength="160" value="{{ request.form.get('full_name', current_public_user.full_name or '') }}" class="w-full rounded-[1.75rem] border border-amber-200 bg-white px-5 py-5 text-lg text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter your full name" />
+                    <p class="mt-4 text-sm leading-7 text-stone-500">Use the name you want to see on your NHCP account.</p>
+                  </div>
+                </section>
 
-              <div>
-                <label for="setupFullName" class="block text-sm font-semibold text-stone-900 mb-2">Full Name <span class="text-red-600">*</span></label>
-                <input id="setupFullName" name="full_name" type="text" required maxlength="160" value="{{ request.form.get('full_name', current_public_user.full_name or '') }}" class="w-full rounded-2xl border border-amber-200 bg-[#F0E6CC] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter your full name" />
+                <section data-setup-step="1" data-step-title="How do you plan to use the website?" data-step-description="Tell us your main purpose so we can shape the experience around what you need most." class="hidden space-y-4">
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
+                    {% for option in use_case_options %}
+                    <label class="group cursor-pointer">
+                      <input type="radio" name="website_use_case" value="{{ option }}" class="sr-only peer" {% if selected_use_case == option %}checked{% endif %} />
+                      <span class="flex min-h-[120px] items-end rounded-[1.75rem] border border-amber-200 bg-white px-5 py-5 text-base font-medium leading-7 text-stone-700 shadow-sm transition peer-checked:border-transparent peer-checked:bg-gradient-to-br peer-checked:from-stone-900 peer-checked:to-stone-800 peer-checked:text-stone-100 group-hover:-translate-y-0.5">{{ option }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </section>
+
+                <section data-setup-step="2" data-step-title="Which roles best describe you?" data-step-description="Choose all roles that match you. This helps us tailor your resources and recommendations." class="hidden space-y-6">
+                  <div class="flex flex-wrap gap-3 max-w-4xl">
+                    {% for role in role_options %}
+                    <label class="cursor-pointer">
+                      <input type="checkbox" name="profile_roles" value="{{ role }}" class="sr-only peer" {% if role in selected_roles %}checked{% endif %} />
+                      <span class="inline-flex min-h-[54px] items-center rounded-full border border-amber-200 bg-white px-5 py-3 text-sm sm:text-base font-medium text-stone-700 shadow-sm transition peer-checked:border-transparent peer-checked:bg-gradient-to-br peer-checked:from-stone-900 peer-checked:to-stone-800 peer-checked:text-stone-100">{{ role }}</span>
+                    </label>
+                    {% endfor %}
+                  </div>
+                </section>
+
+                <section data-setup-step="3" data-step-title="Where are you from?" data-step-description="Select your location to help us understand your local context and audience better." class="hidden space-y-6">
+                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 max-w-5xl">
+                    <div>
+                      <label for="setupCountrySelect" class="block text-sm font-semibold text-stone-900 mb-3">Country <span class="text-red-600">*</span></label>
+                      <select id="setupCountrySelect" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30">
+                        <option value="">Select country</option>
+                      </select>
+                    </div>
+
+                    <div id="setupProvinceSelectWrap">
+                      <label for="setupProvinceSelect" class="block text-sm font-semibold text-stone-900 mb-3">Province <span class="text-red-600">*</span></label>
+                      <select id="setupProvinceSelect" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" disabled>
+                        <option value="">Select province</option>
+                      </select>
+                    </div>
+
+                    <div id="setupCitySelectWrap">
+                      <label for="setupCitySelect" class="block text-sm font-semibold text-stone-900 mb-3">City <span class="text-red-600">*</span></label>
+                      <select id="setupCitySelect" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" disabled>
+                        <option value="">Select city</option>
+                      </select>
+                    </div>
+
+                    <div id="setupProvinceManualWrap" class="hidden lg:col-span-1">
+                      <label for="setupProvinceManual" class="block text-sm font-semibold text-stone-900 mb-3">Province / State <span class="text-red-600">*</span></label>
+                      <input id="setupProvinceManual" type="text" maxlength="120" value="{{ selected_province if selected_country != 'Philippines' else '' }}" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter province or state" />
+                    </div>
+
+                    <div id="setupCityManualWrap" class="hidden lg:col-span-1">
+                      <label for="setupCityManual" class="block text-sm font-semibold text-stone-900 mb-3">City <span class="text-red-600">*</span></label>
+                      <input id="setupCityManual" type="text" maxlength="120" value="{{ selected_city if selected_country != 'Philippines' else '' }}" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter city" />
+                    </div>
+                  </div>
+
+                  <p id="setupLocationHelper" class="text-sm leading-7 text-stone-500 max-w-3xl">Choose a country first. Philippine province and city selections use your local dataset. For other countries, you can type your province/state and city manually.</p>
+                </section>
               </div>
+            </div>
 
-              <div>
-                <p class="block text-sm font-semibold text-stone-900 mb-3">How do you plan to use the website? <span class="text-red-600">*</span></p>
-                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {% set selected_use_case = request.form.get('website_use_case', current_public_user.website_use_case or '') %}
-                  {% for option in use_case_options %}
-                  <label class="cursor-pointer">
-                    <input type="radio" name="website_use_case" value="{{ option }}" class="sr-only peer" {% if selected_use_case == option %}checked{% endif %} />
-                    <span class="flex items-center gap-3 rounded-2xl border border-amber-200 bg-[#F0E6CC] px-4 py-3 text-sm text-stone-700 transition peer-checked:border-amber-600 peer-checked:bg-amber-100 peer-checked:text-stone-900">{{ option }}</span>
-                  </label>
-                  {% endfor %}
-                </div>
+            <div class="pt-4 border-t border-amber-200 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <button type="button" id="accountSetupPrevButton" class="hidden sm:inline-flex items-center justify-center rounded-full border border-stone-300 px-6 py-3 text-sm font-semibold text-stone-700 transition hover:bg-white">Back</button>
+              <div class="flex w-full sm:w-auto gap-3 sm:ml-auto">
+                <button type="button" id="accountSetupPrevButtonMobile" class="hidden sm:hidden rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:bg-white">Back</button>
+                <button type="button" id="accountSetupNextButton" class="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold text-stone-950 transition hover:opacity-95" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">Next</button>
               </div>
-
-              <div>
-                <p class="block text-sm font-semibold text-stone-900 mb-2">Which roles best describe you? <span class="text-red-600">*</span></p>
-                <p class="text-sm text-stone-500 mb-4">Select all that apply.</p>
-                <div class="flex flex-wrap gap-3">
-                  {% for role in role_options %}
-                  <label class="cursor-pointer">
-                    <input type="checkbox" name="profile_roles" value="{{ role }}" class="sr-only peer" {% if role in selected_roles %}checked{% endif %} />
-                    <span class="inline-flex items-center rounded-full border border-amber-200 bg-[#F0E6CC] px-4 py-2 text-sm text-stone-700 transition peer-checked:border-transparent peer-checked:bg-gradient-to-br peer-checked:from-stone-900 peer-checked:to-stone-800 peer-checked:text-stone-100">{{ role }}</span>
-                  </label>
-                  {% endfor %}
-                </div>
-              </div>
-
-              <div>
-                <label for="setupLocation" class="block text-sm font-semibold text-stone-900 mb-2">Where are you from? <span class="text-red-600">*</span></label>
-                <input id="setupLocation" name="location_text" type="text" required maxlength="160" value="{{ request.form.get('location_text', current_public_user.location_text or '') }}" class="w-full rounded-2xl border border-amber-200 bg-[#F0E6CC] px-4 py-3 focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="City / Province / Country" />
-              </div>
-
-              <button type="submit" class="w-full rounded-2xl px-6 py-4 font-semibold text-stone-950 transition hover:opacity-90" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">Finish Setup</button>
-            </form>
+            </div>
           </div>
         </section>
-      </div>
+      </form>
     </main>
 
+    <script id="accountSetupConfig" type="application/json">{{ {
+      'selectedCountry': selected_country,
+      'selectedProvince': selected_province,
+      'selectedCity': selected_city,
+      'stepIndex': onboarding_step_index if onboarding_step_index is defined else 0,
+      'provinceJsonUrl': url_for('static', filename='ph-json/province.json'),
+      'cityJsonUrl': url_for('static', filename='ph-json/city.json'),
+      'countryJsonUrl': url_for('static', filename='ph-json/countries.json'),
+      'hasServerError': true if error_message else false
+    }|tojson }}</script>
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/account-setup.js') }}"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>

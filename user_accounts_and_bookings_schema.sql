@@ -15,6 +15,9 @@ CREATE TABLE IF NOT EXISTS public.public_users (
   website_use_case text NOT NULL DEFAULT ''::text,
   profile_roles text NOT NULL DEFAULT '[]'::text,
   location_text text NOT NULL DEFAULT ''::text,
+  country_text text NOT NULL DEFAULT ''::text,
+  province_text text NOT NULL DEFAULT ''::text,
+  city_text text NOT NULL DEFAULT ''::text,
   auth_provider text NOT NULL DEFAULT 'password'::text,
   password_reset_token_hash text,
   password_reset_expires_at timestamp with time zone,
@@ -24,8 +27,6 @@ CREATE TABLE IF NOT EXISTS public.public_users (
 
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_email_unique_idx ON public.public_users (lower(email));
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_username_unique_idx ON public.public_users (lower(username));
-CREATE INDEX IF NOT EXISTS public_users_verification_token_idx ON public.public_users (email_verification_token_hash);
-CREATE INDEX IF NOT EXISTS public_users_password_reset_token_idx ON public.public_users (password_reset_token_hash);
 
 CREATE TABLE IF NOT EXISTS public.user_bookmarks (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -85,6 +86,15 @@ ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS location_text text NOT NULL DEFAULT ''::text;
 
 ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS country_text text NOT NULL DEFAULT ''::text;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS province_text text NOT NULL DEFAULT ''::text;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS city_text text NOT NULL DEFAULT ''::text;
+
+ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS auth_provider text NOT NULL DEFAULT 'password'::text;
 
 ALTER TABLE public.public_users
@@ -92,6 +102,9 @@ ALTER TABLE public.public_users
 
 ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS password_reset_expires_at timestamp with time zone;
+
+CREATE INDEX IF NOT EXISTS public_users_verification_token_idx ON public.public_users (email_verification_token_hash);
+CREATE INDEX IF NOT EXISTS public_users_password_reset_token_idx ON public.public_users (password_reset_token_hash);
 
 ALTER TABLE public.community_participation_submissions
   ADD COLUMN IF NOT EXISTS user_id bigint REFERENCES public.public_users(id) ON DELETE SET NULL;
