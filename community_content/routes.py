@@ -381,7 +381,6 @@ def register_community_content_routes(
         return redirect(url_for("admin_community_highlights", status="archived"))
 
     @app.route("/community-highlights/<slug>")
-    @public_login_required
     def community_highlight_detail(slug):
         highlight_item = load_published_community_highlight(slug)
         if highlight_item is None:
