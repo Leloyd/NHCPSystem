@@ -106,8 +106,6 @@
     mapInfoMeta: document.getElementById("mapInfoMeta"),
     stopMedia: document.getElementById("mapInfoMedia"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
-    coordHelper: document.getElementById("mapCoordHelper"),
-    coordHelperCopy: document.getElementById("mapCoordHelperCopy"),
   };
 
   if (!elements.mapRoot || !window.L) {
@@ -333,54 +331,6 @@
     return state.activeViewMode === "360";
   }
 
-  function updateCoordinateHelper(message) {
-    if (!elements.coordHelper || !elements.coordHelperCopy) {
-      return;
-    }
-
-    elements.coordHelper.hidden = !is360ViewActive();
-    if (message) {
-      elements.coordHelperCopy.textContent = message;
-    } else if (is360ViewActive()) {
-      elements.coordHelperCopy.textContent = "Tap anywhere on the 360 aerial panorama to copy the hotspot pitch and yaw.";
-    }
-  }
-
-  function copyCoordinateSnippet(snippet) {
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      return navigator.clipboard.writeText(snippet);
-    }
-
-    return Promise.reject(new Error("Clipboard unavailable"));
-  }
-
-  function handle360CoordinatePick(event) {
-    if (!is360ViewActive() || !state.panoramaViewer || !event || typeof state.panoramaViewer.mouseEventToCoords !== "function") {
-      return;
-    }
-
-    if (event.target && typeof event.target.closest === "function" && event.target.closest(".site-map-panorama-hotspot")) {
-      return;
-    }
-
-    var coords = state.panoramaViewer.mouseEventToCoords(event);
-    if (!coords || coords.length < 2) {
-      return;
-    }
-
-    var pitch = Number(Number(coords[0]).toFixed(2));
-    var yaw = Number(Number(coords[1]).toFixed(2));
-    var coordinateSnippet = '"pitch": ' + String(pitch) + ', "yaw": ' + String(yaw);
-
-    copyCoordinateSnippet(coordinateSnippet)
-      .then(function () {
-        updateCoordinateHelper("Copied coordinates: " + coordinateSnippet);
-      })
-      .catch(function () {
-        updateCoordinateHelper("Coordinates: " + coordinateSnippet + " (copy manually)");
-      });
-  }
-
   function playHotspotAudio(stop) {
     stopIntroAudio();
     stopHotspotAudio();
@@ -414,7 +364,7 @@
   }
 
   function getHotspotMarkerHtml() {
-    return '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><span class="map-pin__core"></span></span></span>';
+    return '<span class="tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon" aria-hidden="true"></span>';
   }
 
   function getPanoramaStops() {
@@ -611,7 +561,6 @@
 
     if (state.panoramaViewer && state.panoramaOriginalUrl === panoramaSrc) {
       setLoadingState(false);
-      updateCoordinateHelper("");
       focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
       renderPanoramaHotspots();
       return Promise.resolve(state.panoramaViewer);
@@ -654,12 +603,9 @@
       if (state.panoramaViewer && typeof state.panoramaViewer.on === "function") {
         state.panoramaViewer.on("load", function () {
           setLoadingState(false);
-          updateCoordinateHelper("");
           renderPanoramaHotspots();
           focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
         });
-
-        state.panoramaViewer.on("mousedown", handle360CoordinatePick);
       }
 
       return state.panoramaViewer;
@@ -743,7 +689,6 @@
       setLeafletVisibility(false);
       setPanoramaVisibility(true);
       updateHotspotToggleButton();
-      updateCoordinateHelper("");
 
       return createPanoramaViewer(state.alternateImageUrl)
         .then(function () {
@@ -756,7 +701,6 @@
           state.activeViewMode = "default";
           setPanoramaVisibility(false);
           setLeafletVisibility(true);
-          updateCoordinateHelper("");
           updateHotspotToggleButton();
           renderAll();
           setLoadingState(false);
@@ -769,7 +713,6 @@
       if (state.map) {
         state.map.invalidateSize(false);
       }
-      updateCoordinateHelper("");
       updateHotspotToggleButton();
       resetMapView();
       renderAll();
@@ -1323,7 +1266,6 @@
         }
         updateLanguageButton();
         updateHotspotToggleButton();
-        updateCoordinateHelper("");
         setLeafletVisibility(true);
         setPanoramaVisibility(false);
         renderAll();
