@@ -521,8 +521,13 @@
       var img = document.createElement("img");
       img.className = "stop-media-item";
       img.loading = "lazy";
-      img.src = String(media.src);
+      img.src = appendCacheBuster(String(media.src));
       img.alt = String(media.alt || stop.title);
+      img.addEventListener("load", function () {
+        if (state.infoStopId === stop.id) {
+          positionMapInfoOverlay(stop);
+        }
+      });
       elements.stopMedia.appendChild(img);
     });
   }
@@ -628,9 +633,11 @@
       return;
     }
 
-    elements.mapInfoRoute.textContent = "Hotspot Information";
+    elements.mapInfoRoute.textContent = "";
+    elements.mapInfoRoute.hidden = true;
     elements.mapInfoTitle.textContent = stop.title;
-    elements.mapInfoMeta.textContent = stop.category + " · " + String(Math.round(stop.x)) + ", " + String(Math.round(stop.y));
+    elements.mapInfoMeta.textContent = "";
+    elements.mapInfoMeta.hidden = true;
     renderMedia(stop);
     elements.mapInfoSummary.textContent = stop.description;
 
