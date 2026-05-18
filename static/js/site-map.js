@@ -85,6 +85,7 @@
     mapInfoRoute: document.getElementById("mapInfoRoute"),
     mapInfoTitle: document.getElementById("mapInfoTitle"),
     mapInfoMeta: document.getElementById("mapInfoMeta"),
+    stopMedia: document.getElementById("mapInfoMedia"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
   };
 
@@ -503,8 +504,11 @@
     elements.stopMedia.innerHTML = "";
 
     if (!stop || !Array.isArray(stop.media) || !stop.media.length) {
+      elements.stopMedia.hidden = true;
       return;
     }
+
+    elements.stopMedia.hidden = false;
 
     stop.media.slice(0, 4).forEach(function (media) {
       if (!media || !media.src) {
@@ -617,6 +621,7 @@
     elements.mapInfoRoute.textContent = "Hotspot Information";
     elements.mapInfoTitle.textContent = stop.title;
     elements.mapInfoMeta.textContent = stop.category + " · " + String(Math.round(stop.x)) + ", " + String(Math.round(stop.y));
+    renderMedia(stop);
     elements.mapInfoSummary.textContent = stop.description;
 
     positionMapInfoOverlay(stop);

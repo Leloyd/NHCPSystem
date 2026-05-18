@@ -11,8 +11,13 @@
       "category": "Access",
       "x": 1492,
       "y": 520,
-      "description": "Front Gate hotspot.",
-      "media": []
+      "description": "The front gate is the opening frame of the Nagcarlan Underground Cemetery. From this point, visitors can immediately understand the site as a planned circular enclosure rather than a single isolated structure. The entrance, the perimeter wall, the central chapel, and the approach path all work together to prepare visitors for a place shaped by ritual, memory, and community history.",
+      "media": [
+        {
+          "src": "/static/SiteMap/FrontGate/FrontGate.png",
+          "alt": "Front Gate of the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "flag-pole",
