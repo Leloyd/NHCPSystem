@@ -26,7 +26,7 @@
               </p>
               <div class="mt-8 flex flex-wrap justify-center gap-4">
                 <a href="#interactive-experiences" class="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-purple-900 transition hover:bg-purple-50">Explore interactive features</a>
-                <a href="/3d-environment" class="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Launch 3D environment</a>
+                <a href="{{ url_for('three_d_environment') }}" class="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Launch 3D environment</a>
               </div>
             </div>
           </div>
@@ -63,7 +63,7 @@
                       <div class="rounded-2xl bg-stone-50 px-4 py-3">Helpful wayfinding support</div>
                     </div>
                     <div class="mt-8">
-                      <a href="/site-map" class="inline-flex items-center rounded-full bg-purple-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-800">Open Site Map →</a>
+                      <a href="{{ url_for('site_map') }}" class="inline-flex items-center rounded-full bg-purple-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-purple-800">Open Site Map →</a>
                     </div>
                   </div>
                 </div>
@@ -82,7 +82,7 @@
                       <div class="rounded-2xl bg-stone-50 px-4 py-3">Immersive heritage spaces</div>
                     </div>
                     <div class="mt-8">
-                      <a href="/3d-environment" class="inline-flex items-center rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-800">Launch 3D Environment →</a>
+                      <a href="{{ url_for('three_d_environment') }}" class="inline-flex items-center rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-800">Launch 3D Environment →</a>
                     </div>
                   </div>
                   <div class="order-1 flex items-center justify-center bg-gradient-to-br from-stone-100 to-purple-100 p-10 md:p-12 lg:order-2">

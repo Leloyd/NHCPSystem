@@ -801,6 +801,63 @@ def heritage_trail():
     return render_template("HeritageTrail.html")
 
 
+@app.route("/site-map")
+def site_map():
+    return render_template("SiteMap.html")
+
+
+@app.route("/3d-environment")
+def three_d_environment():
+    return render_template("WebXREnvironment.html")
+
+
+@app.route("/api/webxr/scene")
+def webxr_scene_metadata():
+    if not _ensure_webxr_runtime_initialized():
+        return jsonify({"error": "WebXR runtime is unavailable.", "details": WEBXR_INIT_ERROR}), 503
+
+    zip_override = (request.args.get("zip") or "").strip() or None
+    scene_description = WEBXR_RUNTIME_SCENE.get_scene_description(zip_override=zip_override)
+    payload = {
+        "app": {
+            "name": _get_webxr_config_value("APP_NAME", "Marble WebXR Viewer"),
+            "debug": bool(_get_webxr_config_value("DEBUG", False)),
+        },
+        "player": _get_webxr_config_value("PLAYER_SETTINGS", {}),
+        "quality": {
+            "default": _get_webxr_config_value("DEFAULT_QUALITY", "auto"),
+            "options": ["auto", "low", "medium", "high"],
+        },
+        "debug": {
+            "collision": bool(_get_webxr_config_value("DEBUG_COLLISION", False)),
+        },
+        "scene": scene_description,
+    }
+    return jsonify(payload)
+
+
+@app.route("/webxr/runtime/<path:asset_path>")
+def webxr_runtime_asset(asset_path):
+    runtime_dir = Path(_get_webxr_config_value("RUNTIME_DIR", WEBXR_BASE_DIR / "runtime")).resolve()
+    candidate_path = _resolve_safe_path(runtime_dir, asset_path)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid WebXR runtime asset path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"WebXR runtime asset not found: {asset_path}"}), 404
+    return send_from_directory(str(runtime_dir), asset_path)
+
+
+@app.route("/webxr/static/<path:filename>")
+def webxr_static_file(filename):
+    webxr_static_dir = (WEBXR_BASE_DIR / "static").resolve()
+    candidate_path = _resolve_safe_path(webxr_static_dir, filename)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid WebXR static asset path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"WebXR static asset not found: {filename}"}), 404
+    return send_from_directory(str(webxr_static_dir), filename)
+
+
 @app.route("/edu-resources")
 def edu_resources():
     return render_template("EduResources.html", edu_resources_items=load_public_edu_resources())
