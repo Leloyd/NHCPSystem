@@ -819,6 +819,15 @@ def ar_content_detection():
     return render_template("ARContentDetection.html", analytics_endpoint=url_for("ar_analytics"))
 
 
+@app.route("/api/ar/analytics", methods=["POST"])
+def ar_analytics():
+    payload = request.get_json(silent=True)
+    if not isinstance(payload, dict):
+        payload = {}
+    app.logger.info("AR analytics event received", extra={"ar_event": payload})
+    return jsonify({"ok": True}), 200
+
+
 @app.route("/participation")
 def participation():
     return redirect(url_for("community_participation"))
