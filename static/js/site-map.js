@@ -462,12 +462,14 @@
       id: stop.id,
       pitch: stop.panorama.pitch,
       yaw: stop.panorama.yaw,
+      type: "info",
+      text: "",
       cssClass: "site-map-panorama-hotspot",
       createTooltipFunc: function (hotSpotDiv, spotData) {
-        hotSpotDiv.innerHTML = getHotspotMarkerHtml();
         hotSpotDiv.setAttribute("tabindex", "0");
         hotSpotDiv.setAttribute("role", "button");
         hotSpotDiv.setAttribute("aria-label", spotData.title);
+        hotSpotDiv.setAttribute("title", spotData.title);
         hotSpotDiv.dataset.stopMarker = spotData.id;
         hotSpotDiv.addEventListener("mouseenter", function () {
           if (state.stopId !== spotData.id) {
