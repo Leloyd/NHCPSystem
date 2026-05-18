@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from typing import Any
 
 from flask import jsonify, redirect, render_template, request, session, url_for
@@ -41,7 +41,6 @@ def _parse_nonnegative_int(raw_value: Any, *, label: str) -> int:
 def _validate_tour_booking_payload(form, *, current_user: dict[str, Any]) -> dict[str, Any]:
     visit_date = str(form.get("visit_date") or "").strip()
     booking_type = str(form.get("booking_type") or "general_tour").strip().lower()
-    scheduled_tour = str(form.get("scheduled_tour") or form.get("display_title") or "").strip()
     institution_name = str(form.get("institution_name") or current_user.get("organization") or "").strip()
     contact_person = str(form.get("contact_person") or current_user.get("full_name") or "").strip()
     contact_number = str(form.get("contact_number") or current_user.get("phone_number") or "").strip()
@@ -50,18 +49,20 @@ def _validate_tour_booking_payload(form, *, current_user: dict[str, Any]) -> dic
     male_visitors = _parse_nonnegative_int(form.get("male_visitors"), label="Male visitors")
     female_visitors = _parse_nonnegative_int(form.get("female_visitors"), label="Female visitors")
     pwd_visitors = _parse_nonnegative_int(form.get("pwd_visitors"), label="PWD visitors")
-    total_visitors = _parse_nonnegative_int(form.get("total_visitors"), label="Total visitors")
+    total_visitors = male_visitors + female_visitors
 
     if booking_type not in TOUR_BOOKING_TYPES:
         raise ValueError("Please choose a valid booking type.")
     if not visit_date:
         raise ValueError("Visit date is required.")
-    if len(scheduled_tour) < 3:
-        raise ValueError("Scheduled tour must be at least 3 characters.")
+    try:
+        parsed_visit_date = date.fromisoformat(visit_date)
+    except ValueError as exc:
+        raise ValueError("Scheduled tour date is invalid.") from exc
+    if parsed_visit_date <= date.today():
+        raise ValueError("Scheduled tour date must be after today.")
     if total_visitors < 1 or total_visitors > 500:
         raise ValueError("Total visitors must be between 1 and 500.")
-    if male_visitors + female_visitors != total_visitors:
-        raise ValueError("Total visitors must match the combined male and female visitor count.")
     if pwd_visitors > total_visitors:
         raise ValueError("PWD visitors cannot be greater than the total visitors.")
     if len(contact_person) < 3:
@@ -81,8 +82,8 @@ def _validate_tour_booking_payload(form, *, current_user: dict[str, Any]) -> dic
 
     return {
         "user_id": int(current_user.get("id")),
-        "display_title": scheduled_tour,
-        "scheduled_tour": scheduled_tour,
+        "display_title": institution_name,
+        "scheduled_tour": format_booking_date(visit_date),
         "booking_type": booking_type,
         "visit_date": visit_date,
         "start_time": "",
@@ -96,7 +97,7 @@ def _validate_tour_booking_payload(form, *, current_user: dict[str, Any]) -> dic
         "female_visitors": female_visitors,
         "pwd_visitors": pwd_visitors,
         "total_visitors": total_visitors,
-        "purpose": f"Booking request for {scheduled_tour}",
+        "purpose": f"Booking request for {format_booking_date(visit_date)}",
         "notes": "",
         "location": location,
         "status": TOUR_BOOKING_STATUS_OPTIONS[0],

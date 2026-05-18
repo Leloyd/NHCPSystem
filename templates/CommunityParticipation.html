@@ -231,15 +231,16 @@
             <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
             <input type="hidden" name="booking_type" value="general_tour" />
             <input type="hidden" name="location" value="Museo ng Libingan sa Ilalim ng Lupa" />
+            <input type="hidden" name="scheduled_tour" value="Museum Tour Booking" />
 
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div class="form-group">
-                <label for="bookingVisitDate" class="form-label">Date of Booking</label>
-                <input type="date" id="bookingVisitDate" name="visit_date" class="form-input" required />
+                <label for="bookingRequestDate" class="form-label">Date of Booking</label>
+                <input type="date" id="bookingRequestDate" class="form-input" readonly />
               </div>
               <div class="form-group">
-                <label for="bookingScheduledTour" class="form-label">Scheduled Tour</label>
-                <input type="text" id="bookingScheduledTour" name="scheduled_tour" class="form-input" required placeholder="e.g. Guided Heritage Tour" />
+                <label for="bookingVisitDate" class="form-label">Scheduled Tour</label>
+                <input type="date" id="bookingVisitDate" name="visit_date" class="form-input" required />
               </div>
               <div class="form-group sm:col-span-2">
                 <label for="bookingInstitutionName" class="form-label">Institution / Organization</label>

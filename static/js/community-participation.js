@@ -19,6 +19,9 @@ const authConfig = window.communityParticipationAuth || { isAuthenticated: false
 const INITIAL_HIGHLIGHTS_TOTAL = 7;
 const now = new Date();
 const todayKey = formatDateKey(now);
+const tomorrow = new Date(now);
+tomorrow.setDate(tomorrow.getDate() + 1);
+const tomorrowKey = formatDateKey(tomorrow);
 let activeFilter = 'all';
 let areAllHighlightsVisible = false;
 let currentMonth = now.getMonth();
@@ -638,13 +641,19 @@ function initParticipationModals() {
 function initFormInteractions() {
   const visitTypeBtns = document.querySelectorAll('.visit-type-btn');
   const visitTypeInput = document.getElementById('visitType');
+  const bookingRequestDate = document.getElementById('bookingRequestDate');
   const bookingVisitDate = document.getElementById('bookingVisitDate');
   const bookingMaleVisitors = document.getElementById('bookingMaleVisitors');
   const bookingFemaleVisitors = document.getElementById('bookingFemaleVisitors');
+  const bookingPwdVisitors = document.getElementById('bookingPwdVisitors');
   const bookingTotalVisitors = document.getElementById('bookingTotalVisitors');
 
+  if (bookingRequestDate) {
+    bookingRequestDate.value = todayKey;
+  }
+
   if (bookingVisitDate) {
-    bookingVisitDate.min = todayKey;
+    bookingVisitDate.min = tomorrowKey;
   }
 
   function syncBookingTotalVisitors() {
@@ -659,6 +668,7 @@ function initFormInteractions() {
 
   bookingMaleVisitors?.addEventListener('input', syncBookingTotalVisitors);
   bookingFemaleVisitors?.addEventListener('input', syncBookingTotalVisitors);
+  bookingPwdVisitors?.addEventListener('input', syncBookingTotalVisitors);
 
   visitTypeBtns.forEach(btn => {
     btn.addEventListener('click', () => {
@@ -1060,7 +1070,18 @@ function initFormInteractions() {
   if (bookingRequestForm) {
     bookingRequestForm.addEventListener('submit', async (e) => {
       e.preventDefault();
+      const maleCount = Number.parseInt(document.getElementById('bookingMaleVisitors')?.value || '0', 10) || 0;
+      const femaleCount = Number.parseInt(document.getElementById('bookingFemaleVisitors')?.value || '0', 10) || 0;
+      const selectedVisitDate = document.getElementById('bookingVisitDate')?.value || '';
+      const computedTotal = Math.max(maleCount + femaleCount, 0);
+
+      if (!selectedVisitDate || selectedVisitDate <= todayKey) {
+        setSubmissionMessage(bookingRequestFormMessage, 'Scheduled tour date must be after today.');
+        return;
+      }
+
       const formData = new FormData(bookingRequestForm);
+      formData.set('total_visitors', String(computedTotal));
       setSubmissionMessage(bookingRequestFormMessage, '');
 
       try {
