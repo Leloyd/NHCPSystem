@@ -281,7 +281,7 @@ html {
   padding: 0.625rem 1rem;
   border-radius: 0.9rem;
   border: 0;
-  background: linear-gradient(135deg, #b8963e, #c9a84c);
+  background: #d4af6a;
   color: #1c1008;
   font-size: 0.875rem;
   font-weight: 600;
@@ -293,6 +293,7 @@ html {
 
 .public-auth-entry-button:hover,
 .public-auth-entry-button:focus-visible {
+  background: #e8c97a;
   opacity: 0.94;
   transform: translateY(-1px);
 }
