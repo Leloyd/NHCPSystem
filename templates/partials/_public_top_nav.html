@@ -26,7 +26,7 @@
          {% if current_public_user %}
          {% set user_label = current_public_user.full_name or current_public_user.username or current_public_user.email %}
          <div class="relative" id="publicAccountDropdownRoot">
-           <button type="button" id="publicAccountDropdownToggle" class="public-account-trigger hidden sm:inline-flex" aria-expanded="false" aria-haspopup="true">
+           <button type="button" id="publicAccountDropdownToggle" class="public-account-trigger hidden sm:inline-flex {% if public_active_page == 'home' %}is-home-top{% endif %}" aria-expanded="false" aria-haspopup="true">
              <span class="public-account-avatar">{{ user_label[:1]|upper }}</span>
              <span class="hidden md:inline">Hi, {{ user_label.split(' ')[0] }}</span>
              <svg class="public-account-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path></svg>

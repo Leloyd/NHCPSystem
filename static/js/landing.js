@@ -24,6 +24,7 @@
     var navTitle = document.getElementById("navTitle");
     var navLinks = document.querySelectorAll("[data-nav-link]");
     var navToggle = document.querySelector("[data-nav-toggle]");
+    var publicAccountToggle = document.getElementById("publicAccountDropdownToggle");
     var mobileMenu = document.getElementById("mobileMenu");
     var menuToggle = document.getElementById("menuToggle");
     var scrollThreshold = 100;
@@ -53,6 +54,10 @@
         navToggle.classList.add("text-gray-700");
       }
 
+      if (publicAccountToggle) {
+        publicAccountToggle.classList.remove("is-home-top");
+      }
+
       if (mobileMenu) {
         mobileMenu.classList.remove("border-white/20");
         mobileMenu.classList.add("border-gray-200");
@@ -80,6 +85,10 @@
       if (navToggle) {
         navToggle.classList.add("text-white");
         navToggle.classList.remove("text-gray-700");
+      }
+
+      if (publicAccountToggle) {
+        publicAccountToggle.classList.add("is-home-top");
       }
 
       if (mobileMenu) {

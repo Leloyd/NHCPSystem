@@ -313,9 +313,21 @@ html {
   transition: background-color 180ms ease, transform 180ms ease;
 }
 
+.public-account-trigger.is-home-top {
+  background: transparent;
+  color: rgba(255, 255, 255, 0.9);
+  box-shadow: none;
+}
+
 .public-account-trigger:hover,
 .public-account-trigger:focus-visible {
   background: #f3e6c9;
+}
+
+.public-account-trigger.is-home-top:hover,
+.public-account-trigger.is-home-top:focus-visible {
+  background: transparent;
+  color: #ffffff;
 }
 
 .public-account-avatar {
@@ -330,10 +342,20 @@ html {
   font-weight: 700;
 }
 
+.public-account-trigger.is-home-top .public-account-avatar {
+  background: rgba(212, 175, 106, 0.18);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+}
+
 .public-account-chevron {
   width: 0.9rem;
   height: 0.9rem;
   color: #9e8b72;
+}
+
+.public-account-trigger.is-home-top .public-account-chevron {
+  color: rgba(255, 255, 255, 0.82);
 }
 
 .public-account-menu {
