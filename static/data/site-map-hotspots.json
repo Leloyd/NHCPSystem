@@ -4,5 +4,123 @@
     "coordinateWidth": 3840,
     "coordinateHeight": 2160
   },
-  "hotspots": []
+  "hotspots": [
+    {
+      "id": "front-gate",
+      "title": "Front Gate",
+      "category": "Access",
+      "x": 1492,
+      "y": 520,
+      "description": "Front Gate hotspot.",
+      "media": []
+    },
+    {
+      "id": "flag-pole",
+      "title": "Flag Pole",
+      "category": "Landmark",
+      "x": 1185,
+      "y": 891,
+      "description": "Flag Pole hotspot.",
+      "media": []
+    },
+    {
+      "id": "parking",
+      "title": "Parking",
+      "category": "Visitor Zone",
+      "x": 918,
+      "y": 730,
+      "description": "Parking hotspot.",
+      "media": []
+    },
+    {
+      "id": "museum-entrance",
+      "title": "Museum",
+      "category": "Access",
+      "x": 950,
+      "y": 1092,
+      "description": "Museum hotspot.",
+      "media": []
+    },
+    {
+      "id": "resource-center-office",
+      "title": "Resource Center",
+      "category": "Visitor Zone",
+      "x": 1142,
+      "y": 1164,
+      "description": "Resource Center hotspot.",
+      "media": []
+    },
+    {
+      "id": "middle-ground",
+      "title": "Middle",
+      "category": "Landmark",
+      "x": 2122,
+      "y": 1242,
+      "description": "Middle hotspot.",
+      "media": []
+    },
+    {
+      "id": "left-side-inside",
+      "title": "Left",
+      "category": "Access",
+      "x": 1569,
+      "y": 1682,
+      "description": "Left hotspot.",
+      "media": []
+    },
+    {
+      "id": "right-side-inside",
+      "title": "Right",
+      "category": "Access",
+      "x": 3006,
+      "y": 877,
+      "description": "Right hotspot.",
+      "media": []
+    },
+    {
+      "id": "right-tombs",
+      "title": "Right Tombs",
+      "category": "Tombs",
+      "x": 3006,
+      "y": 1388,
+      "description": "Right Tombs hotspot.",
+      "media": []
+    },
+    {
+      "id": "left-tombs",
+      "title": "Left Tombs",
+      "category": "Tombs",
+      "x": 2034,
+      "y": 1839,
+      "description": "Left Tombs hotspot.",
+      "media": []
+    },
+    {
+      "id": "church-front",
+      "title": "Front Chapel",
+      "category": "Church",
+      "x": 2509,
+      "y": 1661,
+      "description": "Front Chapel hotspot.",
+      "media": []
+    },
+    {
+      "id": "church",
+      "title": "Chapel",
+      "category": "Church",
+      "x": 2695,
+      "y": 1952,
+      "description": "Chapel hotspot.",
+      "media": []
+    },
+    {
+      "id": "underground-crypts",
+      "title": "Underground Crypts",
+      "category": "Tombs",
+      "x": 2824,
+      "y": 1794,
+      "description": "Underground Crypts hotspot.",
+      "media": []
+    }
+  ]
 }

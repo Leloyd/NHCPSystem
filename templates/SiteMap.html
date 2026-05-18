@@ -35,36 +35,6 @@
         </section>
       </div>
 
-      <aside class="site-map-picker-guide" id="mapPickerGuide" hidden aria-live="polite">
-        <p class="site-map-picker-guide__kicker">Coordinate Picker</p>
-        <h2 class="site-map-picker-guide__title font-serif">Tap any area to copy coordinates</h2>
-        <p class="site-map-picker-guide__copy">Touch or click any part of the image. The site map will automatically copy the `x` and `y` coordinates you can paste into `site-map-hotspots.json`.</p>
-        <p class="site-map-picker-guide__status" id="mapCoordinateStatus">No coordinates copied yet.</p>
-      </aside>
-
-      <div class="site-map-overlay site-map-overlay--center" id="mapSearchOverlay" hidden>
-        <section class="site-map-search-panel" role="dialog" aria-modal="true" aria-label="Coordinate picker guide">
-          <div class="site-map-search-panel__header">
-            <div>
-              <p class="site-map-search-panel__kicker">Coordinate guide</p>
-              <h2 class="site-map-search-panel__title font-serif">How to replace hotspots</h2>
-            </div>
-            <button id="mapSearchCloseBtn" type="button" class="site-map-search-panel__close" aria-label="Close guide">×</button>
-          </div>
-
-          <div class="site-map-search-guide">
-            <p class="site-map-search-guide__step"><strong>1.</strong> Tap or click the exact area on the map image.</p>
-            <p class="site-map-search-guide__step"><strong>2.</strong> The coordinates are copied to your clipboard automatically.</p>
-            <p class="site-map-search-guide__step"><strong>3.</strong> Paste the copied `x` and `y` into each hotspot entry inside `site-map-hotspots.json`.</p>
-            <p class="site-map-search-guide__status" id="mapCoordinateGuideValue">Last copied: none yet.</p>
-          </div>
-
-          <div class="site-map-search-panel__actions">
-            <button id="resetViewBtn" type="button" class="site-map-search-action">Reset View</button>
-          </div>
-        </section>
-      </div>
-
       <div class="site-map-control-dock" aria-label="Site map controls" id="mapControlDock" hidden>
         <button class="site-map-control-dock__action is-disabled" type="button" aria-disabled="true">
           <span class="site-map-control-dock__icon" aria-hidden="true">
@@ -82,20 +52,20 @@
           </span>
           <span class="site-map-control-dock__label">Underground</span>
         </button>
-        <button class="site-map-control-dock__camera" id="mapSearchOpenBtn" type="button" aria-label="Open coordinate guide">
+        <button class="site-map-control-dock__camera" id="resetViewBtn" type="button" aria-label="Reset view">
           <span class="site-map-control-dock__camera-icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
-              <path d="M10.03 4.97a7 7 0 1 1-4.95 11.95 7 7 0 0 1 4.95-11.95Zm0 1.5a5.5 5.5 0 1 0 3.89 9.39 5.5 5.5 0 0 0-3.89-9.39Zm8.44 11.88 2.31 2.31a.75.75 0 1 1-1.06 1.06l-2.31-2.31a.75.75 0 1 1 1.06-1.06Z" fill="currentColor"></path>
+              <path d="M12 3.25a8.75 8.75 0 1 1-8.67 7.54.75.75 0 1 1 1.49.2A7.25 7.25 0 1 0 7.4 5.78H10a.75.75 0 0 1 0 1.5H4.75A.75.75 0 0 1 4 6.53V1.28a.75.75 0 0 1 1.5 0V4.7A8.7 8.7 0 0 1 12 3.25Z" fill="currentColor"></path>
             </svg>
           </span>
         </button>
-        <button class="site-map-control-dock__action is-active is-disabled" type="button" aria-disabled="true">
+        <button class="site-map-control-dock__action is-active" id="mapToggleHotspotsBtn" type="button" aria-label="Toggle hotspot visibility" aria-pressed="true">
           <span class="site-map-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
-              <path d="M12 3.25a.75.75 0 0 1 .75.75v6.25H19a.75.75 0 0 1 0 1.5h-6.25V18a.75.75 0 0 1-1.5 0v-6.25H5a.75.75 0 0 1 0-1.5h6.25V4a.75.75 0 0 1 .75-.75Z" fill="currentColor"></path>
+              <path d="M12 5c5.23 0 9.57 3.14 11 7-1.43 3.86-5.77 7-11 7S2.43 15.86 1 12c1.43-3.86 5.77-7 11-7Zm0 1.5c-4.32 0-7.98 2.48-9.37 5.5 1.39 3.02 5.05 5.5 9.37 5.5s7.98-2.48 9.37-5.5C19.98 8.98 16.32 6.5 12 6.5Zm0 2.25A3.25 3.25 0 1 1 8.75 12 3.25 3.25 0 0 1 12 8.75Zm0 1.5A1.75 1.75 0 1 0 13.75 12 1.75 1.75 0 0 0 12 10.25Z" fill="currentColor"></path>
             </svg>
           </span>
-          <span class="site-map-control-dock__label">Tap Copy</span>
+          <span class="site-map-control-dock__label">Hotspots</span>
         </button>
         <a class="site-map-control-dock__action" href="/interactive" aria-label="Back to Interactive">
           <span class="site-map-control-dock__icon" aria-hidden="true">
