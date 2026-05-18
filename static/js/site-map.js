@@ -351,7 +351,11 @@
       }),
     });
 
-    marker.on("click", function () {
+    marker.on("click", function (event) {
+      if (event && event.originalEvent && window.L && window.L.DomEvent) {
+        window.L.DomEvent.stopPropagation(event.originalEvent);
+      }
+
       setActiveStop(spot.id, true);
     });
 
@@ -564,6 +568,12 @@
     state.infoStopId = "";
   }
 
+  function clearActiveSelection() {
+    state.stopId = "";
+    hideMapInfoOverlay();
+    clearMarkerStyles();
+  }
+
   function updateHotspotToggleButton() {
     if (!elements.toggleHotspotsBtn) {
       return;
@@ -692,9 +702,13 @@
     }
 
     if (state.map) {
+      state.map.on("click", function () {
+        clearActiveSelection();
+      });
+
       ["move", "zoom", "resize"].forEach(function (eventName) {
         state.map.on(eventName, function () {
-          var activeStop = state.hotspotsById[state.stopId] || null;
+          var activeStop = state.infoStopId ? state.hotspotsById[state.infoStopId] || null : null;
           if (activeStop) {
             positionMapInfoOverlay(activeStop);
           }
