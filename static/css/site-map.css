@@ -511,11 +511,6 @@
   outline: none;
 }
 
-.site-map-panorama-hotspot-anchor {
-  width: 0;
-  height: 0;
-}
-
 .site-map-panorama-hotspot {
   position: relative;
   display: inline-flex;
@@ -523,12 +518,11 @@
   justify-content: center;
   width: 36px;
   height: 36px;
-  margin-left: -18px;
-  margin-top: -18px;
   background: transparent;
   border: 0;
   cursor: pointer;
   pointer-events: auto;
+  transform: translate(-50%, -50%);
 }
 
 .site-map-panorama-hotspot,
@@ -566,7 +560,6 @@
   box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.24), 0 12px 24px rgba(122, 63, 16, 0.24);
 }
 
-.site-map-panorama.is-hotspots-hidden .site-map-panorama-hotspot-anchor,
 .site-map-panorama.is-hotspots-hidden .site-map-panorama-hotspot {
   opacity: 0;
   pointer-events: none;

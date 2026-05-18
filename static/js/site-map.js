@@ -462,9 +462,8 @@
       id: stop.id,
       pitch: stop.panorama.pitch,
       yaw: stop.panorama.yaw,
-      cssClass: "site-map-panorama-hotspot-anchor",
+      cssClass: "site-map-panorama-hotspot",
       createTooltipFunc: function (hotSpotDiv, spotData) {
-        hotSpotDiv.classList.add("site-map-panorama-hotspot");
         hotSpotDiv.innerHTML = getHotspotMarkerHtml();
         hotSpotDiv.setAttribute("tabindex", "0");
         hotSpotDiv.setAttribute("role", "button");
