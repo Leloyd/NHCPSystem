@@ -12,8 +12,8 @@
       "x": 1492,
       "y": 520,
       "panorama": {
-        "pitch": -68.2,
-        "yaw": -33.26
+        "pitch": -68.05,
+        "yaw": -33.59
       },
       "description": "The front gate is the opening frame of the Nagcarlan Underground Cemetery.",
       "translations": {
@@ -38,10 +38,6 @@
       "category": "Landmark",
       "x": 1185,
       "y": 891,
-      "panorama": {
-        "pitch": -50.41,
-        "yaw": -44.51
-      },
       "description": "Flag Pole hotspot.",
       "media": []
     },
@@ -51,10 +47,6 @@
       "category": "Visitor Zone",
       "x": 918,
       "y": 730,
-      "panorama": {
-        "pitch": -50.52,
-        "yaw": -59.9
-      },
       "description": "Parking hotspot.",
       "media": []
     },
@@ -64,10 +56,6 @@
       "category": "Access",
       "x": 950,
       "y": 1092,
-      "panorama": {
-        "pitch": -41.35,
-        "yaw": -48.97
-      },
       "description": "Museum hotspot.",
       "media": []
     },
@@ -77,10 +65,6 @@
       "category": "Visitor Zone",
       "x": 1142,
       "y": 1164,
-      "panorama": {
-        "pitch": -41.91,
-        "yaw": -40.4
-      },
       "description": "Resource Center hotspot.",
       "media": []
     },
@@ -90,10 +74,6 @@
       "category": "Landmark",
       "x": 2122,
       "y": 1242,
-      "panorama": {
-        "pitch": -40.74,
-        "yaw": 5.77
-      },
       "description": "Middle hotspot.",
       "media": []
     },
@@ -103,10 +83,6 @@
       "category": "Access",
       "x": 1569,
       "y": 1682,
-      "panorama": {
-        "pitch": -30.76,
-        "yaw": -21.04
-      },
       "description": "Left hotspot.",
       "media": []
     },
@@ -116,10 +92,6 @@
       "category": "Access",
       "x": 3006,
       "y": 877,
-      "panorama": {
-        "pitch": -37.15,
-        "yaw": 43.55
-      },
       "description": "Right hotspot.",
       "media": []
     },
@@ -129,10 +101,6 @@
       "category": "Tombs",
       "x": 3006,
       "y": 1388,
-      "panorama": {
-        "pitch": -29.48,
-        "yaw": 29.7
-      },
       "description": "Right Tombs hotspot.",
       "media": []
     },
@@ -142,10 +110,6 @@
       "category": "Tombs",
       "x": 2034,
       "y": 1839,
-      "panorama": {
-        "pitch": -25.93,
-        "yaw": -3.79
-      },
       "description": "Left Tombs hotspot.",
       "media": []
     },
@@ -155,10 +119,6 @@
       "category": "Church",
       "x": 2509,
       "y": 1661,
-      "panorama": {
-        "pitch": -28.27,
-        "yaw": 12.08
-      },
       "description": "Front Chapel hotspot.",
       "media": []
     },
@@ -168,10 +128,6 @@
       "category": "Church",
       "x": 2695,
       "y": 1952,
-      "panorama": {
-        "pitch": -20.11,
-        "yaw": 14.24
-      },
       "description": "Chapel hotspot.",
       "media": []
     },
@@ -181,10 +137,6 @@
       "category": "Tombs",
       "x": 2824,
       "y": 1794,
-      "panorama": {
-        "pitch": -23.49,
-        "yaw": 18.12
-      },
       "description": "Underground Crypts hotspot.",
       "media": []
     }
