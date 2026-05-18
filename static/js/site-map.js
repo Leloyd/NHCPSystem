@@ -237,13 +237,13 @@
     });
   }
 
-  function calculateFittedMinZoom() {
+  function calculateCoverMinZoom() {
     if (!state.map || !state.imageBounds) {
       return -2;
     }
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    var fittedZoom = state.map.getBoundsZoom(bounds, false);
+    var fittedZoom = state.map.getBoundsZoom(bounds, true);
 
     if (!isFinite(fittedZoom)) {
       return -2;
@@ -258,7 +258,7 @@
     }
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    var nextMinZoom = calculateFittedMinZoom();
+    var nextMinZoom = calculateCoverMinZoom();
 
     if (!isFinite(nextMinZoom)) {
       nextMinZoom = -2;
@@ -287,7 +287,8 @@
     applyMapBoundsConstraints();
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    state.map.fitBounds(bounds, { animate: false, padding: [0, 0] });
+    state.map.setView(bounds.getCenter(), state.minZoom, { animate: false });
+    state.map.panInsideBounds(bounds, { animate: false });
 
     if (state.map.getZoom() < state.minZoom) {
       state.map.setZoom(state.minZoom, { animate: false });
