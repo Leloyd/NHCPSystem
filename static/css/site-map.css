@@ -70,6 +70,53 @@
   display: none;
 }
 
+.site-map-picker-guide {
+  position: fixed;
+  top: calc(var(--site-map-safe-top) + 1rem);
+  right: calc(var(--site-map-safe-right) + 1rem);
+  z-index: 24;
+  width: min(24rem, calc(100vw - 2rem));
+  padding: 1rem 1.05rem;
+  border-radius: 1.4rem;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  background: rgba(17, 24, 39, 0.58);
+  color: #f9fafb;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.28);
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+}
+
+.site-map-picker-guide[hidden] {
+  display: none;
+}
+
+.site-map-picker-guide__kicker {
+  margin: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(250, 204, 21, 0.92);
+}
+
+.site-map-picker-guide__title {
+  margin: 0.35rem 0 0;
+  font-size: 1.4rem;
+  line-height: 1.1;
+}
+
+.site-map-picker-guide__copy,
+.site-map-picker-guide__status {
+  margin: 0.55rem 0 0;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.site-map-picker-guide__status {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 700;
+}
+
 .site-map-loading__card {
   width: min(24rem, calc(100vw - 2rem));
   padding: 1.25rem 1.2rem;
@@ -279,6 +326,23 @@
   display: flex;
   justify-content: flex-end;
   margin-top: 1rem;
+}
+
+.site-map-search-guide__step,
+.site-map-search-guide__status {
+  margin: 0.75rem 0 0;
+  font-size: 0.95rem;
+  line-height: 1.65;
+  color: #3f352b;
+}
+
+.site-map-search-guide__step:first-child {
+  margin-top: 1rem;
+}
+
+.site-map-search-guide__status {
+  font-weight: 700;
+  color: #9a670d;
 }
 
 .site-map-search-action {
@@ -557,6 +621,14 @@
     min-height: 100dvh;
   }
 
+  .site-map-picker-guide {
+    top: calc(var(--site-map-safe-top) + 0.75rem);
+    left: calc(var(--site-map-safe-left) + 0.75rem);
+    right: calc(var(--site-map-safe-right) + 0.75rem);
+    width: auto;
+    padding: 0.9rem 0.95rem;
+  }
+
   .site-map-topbar {
     top: calc(var(--site-map-safe-top) + 4.8rem);
     left: calc(var(--site-map-safe-left) + 0.75rem);
@@ -583,6 +655,17 @@
 }
 
 @media (max-width: 640px) {
+  .site-map-picker-guide__title {
+    font-size: 1.2rem;
+  }
+
+  .site-map-picker-guide__copy,
+  .site-map-picker-guide__status,
+  .site-map-search-guide__step,
+  .site-map-search-guide__status {
+    font-size: 0.84rem;
+  }
+
   .site-map-topbar__title {
     font-size: 1.8rem;
   }

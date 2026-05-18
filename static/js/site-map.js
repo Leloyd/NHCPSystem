@@ -75,12 +75,10 @@
 
   var elements = {
     mapRoot: document.getElementById("interactiveMap"),
-    searchInput: document.getElementById("mapSearchInput"),
     resetViewBtn: document.getElementById("resetViewBtn"),
     searchOverlay: document.getElementById("mapSearchOverlay"),
     searchOpenBtn: document.getElementById("mapSearchOpenBtn"),
     searchCloseBtn: document.getElementById("mapSearchCloseBtn"),
-    toggleHotspotsBtn: document.getElementById("mapToggleHotspotsBtn"),
     controlDock: document.getElementById("mapControlDock"),
     loadingOverlay: document.getElementById("mapLoadingOverlay"),
     loadingTitle: document.getElementById("mapLoadingTitle"),
@@ -91,6 +89,9 @@
     mapInfoTitle: document.getElementById("mapInfoTitle"),
     mapInfoMeta: document.getElementById("mapInfoMeta"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
+    pickerGuide: document.getElementById("mapPickerGuide"),
+    coordinateStatus: document.getElementById("mapCoordinateStatus"),
+    coordinateGuideValue: document.getElementById("mapCoordinateGuideValue"),
   };
 
   if (!elements.mapRoot || !window.L) {
@@ -112,6 +113,10 @@
 
     if (elements.controlDock) {
       elements.controlDock.hidden = !!isLoading;
+    }
+
+    if (elements.pickerGuide) {
+      elements.pickerGuide.hidden = !!isLoading;
     }
   }
 
@@ -170,6 +175,92 @@
           categories[spot.category] = true;
         });
         state.selectedCategories = categories;
+        state.hotspotsVisible = false;
+      });
+  }
+
+  function clampCoordinate(value, maxValue) {
+    var coordinate = Number(value);
+    var max = Number(maxValue);
+
+    if (!isFinite(coordinate)) {
+      coordinate = 0;
+    }
+
+    if (!isFinite(max) || max < 0) {
+      return Math.max(0, Math.round(coordinate));
+    }
+
+    return Math.max(0, Math.min(Math.round(coordinate), Math.round(max)));
+  }
+
+  function buildCoordinatePayload(latlng) {
+    if (!latlng || !state.imageSize) {
+      return null;
+    }
+
+    var coordinateSpace = state.sourceCoordinateSpace || state.imageSize;
+    var scaleX = coordinateSpace.width / state.imageSize.width;
+    var scaleY = coordinateSpace.height / state.imageSize.height;
+    var x = clampCoordinate(latlng.lng * scaleX, coordinateSpace.width);
+    var y = clampCoordinate(latlng.lat * scaleY, coordinateSpace.height);
+
+    return {
+      x: x,
+      y: y,
+      text: '"x": ' + x + ', "y": ' + y,
+    };
+  }
+
+  function setCoordinateStatus(message) {
+    if (elements.coordinateStatus) {
+      elements.coordinateStatus.textContent = message;
+    }
+
+    if (elements.coordinateGuideValue) {
+      elements.coordinateGuideValue.textContent = message;
+    }
+  }
+
+  function copyTextToClipboard(text) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(text);
+    }
+
+    return new Promise(function (resolve, reject) {
+      var textArea = document.createElement("textarea");
+      textArea.value = text;
+      textArea.setAttribute("readonly", "readonly");
+      textArea.style.position = "fixed";
+      textArea.style.opacity = "0";
+      document.body.appendChild(textArea);
+      textArea.select();
+
+      try {
+        document.execCommand("copy");
+        document.body.removeChild(textArea);
+        resolve();
+      } catch (error) {
+        document.body.removeChild(textArea);
+        reject(error);
+      }
+    });
+  }
+
+  function handleCoordinatePick(latlng) {
+    var payload = buildCoordinatePayload(latlng);
+
+    if (!payload) {
+      setCoordinateStatus("Unable to read coordinates from that position.");
+      return;
+    }
+
+    copyTextToClipboard(payload.text)
+      .then(function () {
+        setCoordinateStatus("Last copied: " + payload.text);
+      })
+      .catch(function () {
+        setCoordinateStatus("Copy failed. Use these coordinates manually: " + payload.text);
       });
   }
 
@@ -563,12 +654,7 @@
   }
 
   function updateHotspotToggleButton() {
-    if (!elements.toggleHotspotsBtn) {
-      return;
-    }
-
-    elements.toggleHotspotsBtn.classList.toggle("is-active", state.hotspotsVisible);
-    elements.toggleHotspotsBtn.setAttribute("aria-pressed", state.hotspotsVisible ? "true" : "false");
+    return;
   }
 
   function setSearchOverlayOpen(isOpen) {
@@ -705,15 +791,6 @@
   }
 
   function bindEvents() {
-    if (elements.searchInput) {
-      elements.searchInput.addEventListener("input", function () {
-        state.searchText = elements.searchInput.value || "";
-        state.storyIndex = 0;
-        stopStoryMode();
-        renderAll();
-      });
-    }
-
     if (elements.resetViewBtn) {
       elements.resetViewBtn.addEventListener("click", function () {
         resetMapView();
@@ -740,15 +817,13 @@
       });
     }
 
-    if (elements.toggleHotspotsBtn) {
-      elements.toggleHotspotsBtn.addEventListener("click", function () {
-        state.hotspotsVisible = !state.hotspotsVisible;
-        updateHotspotToggleButton();
-        renderAll();
-      });
-    }
-
     if (state.map) {
+      state.map.on("click", function (event) {
+        if (event && event.latlng) {
+          handleCoordinatePick(event.latlng);
+        }
+      });
+
       ["move", "zoom", "resize"].forEach(function (eventName) {
         state.map.on(eventName, function () {
           var activeStop = state.hotspotsById[state.stopId] || null;
@@ -780,6 +855,7 @@
         if (initialStops.length) {
           state.stopId = initialStops[0].id;
         }
+        setCoordinateStatus("Last copied: none yet.");
         updateHotspotToggleButton();
         setSearchOverlayOpen(false);
         renderAll();
