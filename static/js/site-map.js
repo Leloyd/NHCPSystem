@@ -364,7 +364,7 @@
   }
 
   function getHotspotMarkerHtml() {
-    return '<span class="tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon" aria-hidden="true"></span>';
+    return '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><span class="map-pin__core"></span></span></span>';
   }
 
   function getPanoramaStops() {
@@ -373,15 +373,57 @@
     });
   }
 
+  function cachePanoramaHotspotNodes() {
+    if (!elements.panoramaRoot) {
+      return;
+    }
+
+    var panoramaStops = getPanoramaStops();
+    var hotspotNodes = elements.panoramaRoot.querySelectorAll(".tour-ground-hotspot");
+
+    if (!hotspotNodes.length) {
+      return;
+    }
+
+    state.panoramaHotspotNodesById = {};
+
+    panoramaStops.forEach(function (stop, index) {
+      var node = hotspotNodes[index] || null;
+      if (!node) {
+        return;
+      }
+
+      state.panoramaHotspotNodesById[stop.id] = node;
+      node.dataset.stopMarker = stop.id;
+      node.setAttribute("tabindex", "0");
+      node.setAttribute("role", "button");
+      node.setAttribute("aria-label", stop.title);
+    });
+  }
+
   function syncPanoramaHotspotVisibility() {
     if (!elements.panoramaRoot) {
       return;
     }
 
+    cachePanoramaHotspotNodes();
     elements.panoramaRoot.classList.toggle("is-hotspots-hidden", !state.hotspotsVisible);
+
+    Object.keys(state.panoramaHotspotNodesById).forEach(function (id) {
+      var node = state.panoramaHotspotNodesById[id];
+      if (!node) {
+        return;
+      }
+
+      node.style.opacity = state.hotspotsVisible ? "" : "0";
+      node.style.pointerEvents = state.hotspotsVisible ? "" : "none";
+      node.style.visibility = state.hotspotsVisible ? "" : "hidden";
+    });
   }
 
   function syncPanoramaHotspotStyles() {
+    cachePanoramaHotspotNodes();
+
     Object.keys(state.panoramaHotspotNodesById).forEach(function (id) {
       var node = state.panoramaHotspotNodesById[id];
       if (!node) {
@@ -1066,14 +1108,10 @@
       }
 
       elements.mapInfoOverlay.hidden = false;
+      elements.mapInfoCard.style.left = "50%";
+      elements.mapInfoCard.style.top = "12px";
+      elements.mapInfoCard.style.transform = "translateX(-50%)";
 
-      var panoramaCardWidth = elements.mapInfoCard.offsetWidth || Math.min(320, Math.max(220, panoramaWidth - 24));
-      var panoramaCardHeight = elements.mapInfoCard.offsetHeight || 140;
-      var panoramaLeft = Math.max(12, Math.min(16, panoramaWidth - panoramaCardWidth - 12));
-      var panoramaTop = Math.max(12, Math.min(16, panoramaHeight - panoramaCardHeight - 12));
-
-      elements.mapInfoCard.style.left = panoramaLeft + "px";
-      elements.mapInfoCard.style.top = panoramaTop + "px";
       return;
     }
 
@@ -1109,6 +1147,7 @@
 
     elements.mapInfoCard.style.left = cardLeft + "px";
     elements.mapInfoCard.style.top = cardTop + "px";
+    elements.mapInfoCard.style.transform = "";
   }
 
   function renderMapInfo(stop) {
