@@ -463,8 +463,8 @@
       pitch: stop.panorama.pitch,
       yaw: stop.panorama.yaw,
       type: "info",
-      text: stop.title || "Hotspot",
-      cssClass: "site-map-panorama-hotspot",
+      text: "",
+      cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
       clickHandlerFunc: function (event, args) {
         if (event) {
           if (typeof event.preventDefault === "function") {
@@ -612,6 +612,7 @@
     if (state.panoramaViewer && state.panoramaOriginalUrl === panoramaSrc) {
       setLoadingState(false);
       updateCoordinateHelper("");
+      focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
       renderPanoramaHotspots();
       return Promise.resolve(state.panoramaViewer);
     }
@@ -655,6 +656,7 @@
           setLoadingState(false);
           updateCoordinateHelper("");
           renderPanoramaHotspots();
+          focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
         });
 
         state.panoramaViewer.on("mousedown", handle360CoordinatePick);
@@ -662,6 +664,36 @@
 
       return state.panoramaViewer;
     });
+  }
+
+  function focusPanoramaOnStop(stop) {
+    if (!state.panoramaViewer || !stop || !stop.panorama) {
+      return;
+    }
+
+    var pitch = Number(stop.panorama.pitch);
+    var yaw = Number(stop.panorama.yaw);
+
+    if (!isFinite(pitch) || !isFinite(yaw)) {
+      return;
+    }
+
+    if (typeof state.panoramaViewer.lookAt === "function") {
+      state.panoramaViewer.lookAt(pitch, yaw, 110, 0);
+      return;
+    }
+
+    if (typeof state.panoramaViewer.setPitch === "function") {
+      state.panoramaViewer.setPitch(pitch);
+    }
+
+    if (typeof state.panoramaViewer.setYaw === "function") {
+      state.panoramaViewer.setYaw(yaw);
+    }
+
+    if (typeof state.panoramaViewer.setHfov === "function") {
+      state.panoramaViewer.setHfov(110);
+    }
   }
 
   function updateImageOverlay(nextUrl) {
@@ -715,6 +747,8 @@
 
       return createPanoramaViewer(state.alternateImageUrl)
         .then(function () {
+          focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
+          renderPanoramaHotspots();
           renderAll();
           playIntroAudio();
         })
@@ -1241,7 +1275,11 @@
           return;
         }
 
-        if (event.target && typeof event.target.closest === "function" && event.target.closest(".site-map-panorama-hotspot")) {
+        if (
+          event.target &&
+          typeof event.target.closest === "function" &&
+          event.target.closest(".site-map-panorama-hotspot, .tour-ground-hotspot")
+        ) {
           return;
         }
 
