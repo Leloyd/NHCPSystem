@@ -1,6 +1,8 @@
 {
   "image": {
-    "url": "/static/images/site-map/aerial-view.jpg"
+    "url": "/static/images/site-map/aerial-view.jpg",
+    "coordinateWidth": 3840,
+    "coordinateHeight": 2160
   },
   "hotspots": [
     {

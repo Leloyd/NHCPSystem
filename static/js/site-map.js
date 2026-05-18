@@ -54,6 +54,7 @@
     map: null,
     imageBounds: null,
     imageSize: null,
+    sourceCoordinateSpace: null,
     imageUrl: DEFAULT_IMAGE_URL,
     minZoom: -2,
     routeId: "orientation",
@@ -157,6 +158,7 @@
           });
 
         state.imageUrl = payload && payload.image && payload.image.url ? String(payload.image.url) : DEFAULT_IMAGE_URL;
+        state.sourceCoordinateSpace = normalizeCoordinateSpace(payload && payload.image);
         state.hotspotsById = {};
 
         state.hotspots.forEach(function (spot) {
@@ -171,6 +173,29 @@
       });
   }
 
+  function normalizePositiveNumber(value) {
+    var number = Number(value);
+    return isFinite(number) && number > 0 ? number : 0;
+  }
+
+  function normalizeCoordinateSpace(imageMeta) {
+    if (!imageMeta) {
+      return null;
+    }
+
+    var width = normalizePositiveNumber(imageMeta.coordinateWidth || imageMeta.width);
+    var height = normalizePositiveNumber(imageMeta.coordinateHeight || imageMeta.height);
+
+    if (!width || !height) {
+      return null;
+    }
+
+    return {
+      width: width,
+      height: height,
+    };
+  }
+
   function normalizeHotspot(raw) {
     if (!raw || !raw.id || typeof raw.x !== "number" || typeof raw.y !== "number") {
       return null;
@@ -180,6 +205,8 @@
       id: String(raw.id),
       title: String(raw.title || raw.id),
       category: String(raw.category || "General"),
+      sourceX: Number(raw.x),
+      sourceY: Number(raw.y),
       x: Number(raw.x),
       y: Number(raw.y),
       era: String(raw.era || "-"),
@@ -195,20 +222,34 @@
     };
   }
 
-  function calculateHeightBoundMinZoom() {
-    if (!state.map || !state.imageSize || !state.imageSize.height) {
+  function applyHotspotCoordinateScale() {
+    if (!state.imageSize) {
+      return;
+    }
+
+    var coordinateSpace = state.sourceCoordinateSpace || state.imageSize;
+    var scaleX = state.imageSize.width / coordinateSpace.width;
+    var scaleY = state.imageSize.height / coordinateSpace.height;
+
+    state.hotspots.forEach(function (spot) {
+      spot.x = spot.sourceX * scaleX;
+      spot.y = spot.sourceY * scaleY;
+    });
+  }
+
+  function calculateFittedMinZoom() {
+    if (!state.map || !state.imageBounds) {
       return -2;
     }
 
-    var mapSize = state.map.getSize();
-    var containerHeight = mapSize && mapSize.y ? mapSize.y : elements.mapRoot.clientHeight;
-    var ratio = containerHeight / state.imageSize.height;
+    var bounds = window.L.latLngBounds(state.imageBounds);
+    var fittedZoom = state.map.getBoundsZoom(bounds, false);
 
-    if (!ratio || ratio <= 0) {
+    if (!isFinite(fittedZoom)) {
       return -2;
     }
 
-    return Math.log(ratio) / Math.LN2;
+    return fittedZoom;
   }
 
   function applyMapBoundsConstraints() {
@@ -217,7 +258,7 @@
     }
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    var nextMinZoom = calculateHeightBoundMinZoom();
+    var nextMinZoom = calculateFittedMinZoom();
 
     if (!isFinite(nextMinZoom)) {
       nextMinZoom = -2;
@@ -246,7 +287,11 @@
     applyMapBoundsConstraints();
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    state.map.setView(bounds.getCenter(), state.minZoom, { animate: false });
+    state.map.fitBounds(bounds, { animate: false, padding: [0, 0] });
+
+    if (state.map.getZoom() < state.minZoom) {
+      state.map.setZoom(state.minZoom, { animate: false });
+    }
   }
 
   function initLeafletMap() {
@@ -265,6 +310,7 @@
 
         state.imageBounds = bounds;
         state.imageSize = dims;
+        applyHotspotCoordinateScale();
         state.map = window.L.map(elements.mapRoot, {
           crs: window.L.CRS.Simple,
           minZoom: -2,
