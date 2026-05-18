@@ -46,14 +46,23 @@
   };
 
   var DEFAULT_IMAGE_URL = "/static/images/site-map/aerial-view.jpg";
+  var ALT_IMAGE_URL = "/static/images/site-map/360aerial_view.jpg";
   var HOTSPOT_DATA_URL = "/static/data/site-map-hotspots.json";
+  var INTRO_AUDIO_BY_LANGUAGE = {
+    en: "/static/images/site-map/SiteMapIntroEng.mp3",
+    tl: "/static/images/site-map/SiteMapIntroTag.mp3",
+  };
 
   var state = {
     map: null,
+    imageOverlay: null,
     imageBounds: null,
     imageSize: null,
     sourceCoordinateSpace: null,
     imageUrl: DEFAULT_IMAGE_URL,
+    defaultImageUrl: DEFAULT_IMAGE_URL,
+    alternateImageUrl: ALT_IMAGE_URL,
+    activeViewMode: "default",
     minZoom: -2,
     routeId: "orientation",
     stopId: "",
@@ -67,6 +76,7 @@
     markerNodesBound: {},
     routeLayer: null,
     audioPlayer: null,
+    introAudioPlayer: null,
     storyTimer: null,
     storyIndex: 0,
     calibrationEnabled: false,
@@ -91,6 +101,8 @@
     mapInfoMeta: document.getElementById("mapInfoMeta"),
     stopMedia: document.getElementById("mapInfoMedia"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
+    coordHelper: document.getElementById("mapCoordHelper"),
+    coordHelperCopy: document.getElementById("mapCoordHelperCopy"),
   };
 
   if (!elements.mapRoot || !window.L) {
@@ -157,7 +169,9 @@
             return item;
           });
 
-        state.imageUrl = payload && payload.image && payload.image.url ? String(payload.image.url) : DEFAULT_IMAGE_URL;
+        state.defaultImageUrl = payload && payload.image && payload.image.url ? String(payload.image.url) : DEFAULT_IMAGE_URL;
+        state.imageUrl = state.defaultImageUrl;
+        state.alternateImageUrl = ALT_IMAGE_URL;
         state.sourceCoordinateSpace = normalizeCoordinateSpace(payload && payload.image);
         state.hotspotsById = {};
 
@@ -258,7 +272,84 @@
     }
   }
 
+  function stopIntroAudio() {
+    if (!state.introAudioPlayer) {
+      return;
+    }
+
+    try {
+      state.introAudioPlayer.pause();
+      state.introAudioPlayer.currentTime = 0;
+    } catch (_error) {
+      return;
+    } finally {
+      state.introAudioPlayer = null;
+    }
+  }
+
+  function playIntroAudio() {
+    stopIntroAudio();
+
+    var language = getCurrentLanguage();
+    var audioUrl = INTRO_AUDIO_BY_LANGUAGE[language] || INTRO_AUDIO_BY_LANGUAGE.en;
+    if (!audioUrl) {
+      return;
+    }
+
+    state.introAudioPlayer = new Audio(appendCacheBuster(audioUrl));
+    state.introAudioPlayer.preload = "auto";
+
+    var playPromise = state.introAudioPlayer.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(function () {});
+    }
+  }
+
+  function is360ViewActive() {
+    return state.activeViewMode === "360";
+  }
+
+  function updateCoordinateHelper(message) {
+    if (!elements.coordHelper || !elements.coordHelperCopy) {
+      return;
+    }
+
+    elements.coordHelper.hidden = !is360ViewActive();
+    if (message) {
+      elements.coordHelperCopy.textContent = message;
+    } else if (is360ViewActive()) {
+      elements.coordHelperCopy.textContent = "Tap anywhere on the 360 aerial view to copy the hotspot coordinates.";
+    }
+  }
+
+  function copyCoordinateSnippet(snippet) {
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      return navigator.clipboard.writeText(snippet);
+    }
+
+    return Promise.reject(new Error("Clipboard unavailable"));
+  }
+
+  function handle360CoordinateClick(event) {
+    if (!is360ViewActive() || !event || !event.latlng) {
+      return;
+    }
+
+    var x = Math.round(event.latlng.lng);
+    var y = Math.round(event.latlng.lat);
+    var coordinateSnippet = '"x": ' + String(x) + ', "y": ' + String(y);
+
+    copyCoordinateSnippet(coordinateSnippet)
+      .then(function () {
+        updateCoordinateHelper("Copied coordinates: " + coordinateSnippet);
+      })
+      .catch(function () {
+        updateCoordinateHelper("Coordinates: " + coordinateSnippet + " (copy manually)");
+      });
+  }
+
   function playHotspotAudio(stop) {
+    stopIntroAudio();
     stopHotspotAudio();
 
     if (!stop) {
@@ -346,6 +437,67 @@
     }
   }
 
+  function updateImageOverlay(nextUrl) {
+    if (!state.map || !nextUrl) {
+      return Promise.resolve();
+    }
+
+    setLoadingState(true, "Switching Site Map View...", "Preparing the selected aerial image.");
+
+    return loadImageDimensions(nextUrl)
+      .then(function (imageMeta) {
+        var dims = {
+          width: imageMeta.width,
+          height: imageMeta.height,
+        };
+        var nextBounds = [
+          [0, 0],
+          [dims.height, dims.width],
+        ];
+
+        state.imageUrl = imageMeta.url;
+        state.imageBounds = nextBounds;
+        state.imageSize = dims;
+        applyHotspotCoordinateScale();
+
+        if (state.imageOverlay) {
+          state.map.removeLayer(state.imageOverlay);
+        }
+
+        state.imageOverlay = window.L.imageOverlay(state.imageUrl, nextBounds).addTo(state.map);
+        resetMapView();
+        renderAll();
+        setLoadingState(false);
+      })
+      .catch(function () {
+        setLoadingState(true, "Unable to switch Site Map view", "Please refresh the page and try again.");
+      });
+  }
+
+  function setViewMode(mode) {
+    var nextMode = mode === "360" ? "360" : "default";
+    var nextUrl = nextMode === "360" ? state.alternateImageUrl : state.defaultImageUrl;
+
+    state.activeViewMode = nextMode;
+
+    if (nextMode === "360") {
+      state.hotspotsVisible = false;
+      clearActiveSelection();
+    } else {
+      stopIntroAudio();
+      state.hotspotsVisible = true;
+      updateCoordinateHelper("");
+    }
+
+    updateHotspotToggleButton();
+    updateCoordinateHelper("");
+    return updateImageOverlay(nextUrl).then(function () {
+      if (nextMode === "360") {
+        playIntroAudio();
+      }
+    });
+  }
+
   function resetMapView() {
     if (!state.map || !state.imageBounds) {
       return;
@@ -389,7 +541,7 @@
           attributionControl: false,
         });
 
-        window.L.imageOverlay(state.imageUrl, bounds).addTo(state.map);
+        state.imageOverlay = window.L.imageOverlay(state.imageUrl, bounds).addTo(state.map);
         resetMapView();
 
         state.map.on("resize", function () {
@@ -483,6 +635,10 @@
   }
 
   function getVisibleStops() {
+    if (is360ViewActive() || !state.hotspotsVisible) {
+      return [];
+    }
+
     var search = state.searchText.trim().toLowerCase();
     return state.hotspots.filter(function (spot) {
       var bySearch = !search || spot.title.toLowerCase().indexOf(search) !== -1;
@@ -655,8 +811,11 @@
       return;
     }
 
-    elements.toggleHotspotsBtn.classList.toggle("is-active", state.hotspotsVisible);
-    elements.toggleHotspotsBtn.setAttribute("aria-pressed", state.hotspotsVisible ? "true" : "false");
+    var enabled = state.hotspotsVisible && !is360ViewActive();
+    elements.toggleHotspotsBtn.classList.toggle("is-active", enabled);
+    elements.toggleHotspotsBtn.classList.toggle("is-disabled", is360ViewActive());
+    elements.toggleHotspotsBtn.setAttribute("aria-pressed", enabled ? "true" : "false");
+    elements.toggleHotspotsBtn.setAttribute("aria-disabled", is360ViewActive() ? "true" : "false");
   }
 
   function updateLanguageButton() {
@@ -779,7 +938,8 @@
   function bindEvents() {
     if (elements.resetViewBtn) {
       elements.resetViewBtn.addEventListener("click", function () {
-        resetMapView();
+        var nextMode = is360ViewActive() ? "default" : "360";
+        setViewMode(nextMode);
       });
     }
 
@@ -788,7 +948,9 @@
         state.language = getCurrentLanguage() === "en" ? "tl" : "en";
         updateLanguageButton();
 
-        if (state.infoStopId) {
+        if (is360ViewActive()) {
+          playIntroAudio();
+        } else if (state.infoStopId) {
           renderAll();
         }
       });
@@ -796,6 +958,10 @@
 
     if (elements.toggleHotspotsBtn) {
       elements.toggleHotspotsBtn.addEventListener("click", function () {
+        if (is360ViewActive()) {
+          return;
+        }
+
         state.hotspotsVisible = !state.hotspotsVisible;
         updateHotspotToggleButton();
         renderAll();
@@ -804,8 +970,14 @@
 
     if (state.map) {
       state.map.on("click", function () {
+        if (is360ViewActive()) {
+          return;
+        }
+
         clearActiveSelection();
       });
+
+      state.map.on("click", handle360CoordinateClick);
 
       ["move", "zoom", "resize"].forEach(function (eventName) {
         state.map.on(eventName, function () {
@@ -834,8 +1006,10 @@
         }
         updateLanguageButton();
         updateHotspotToggleButton();
+        updateCoordinateHelper("");
         renderAll();
         setLoadingState(false);
+        playIntroAudio();
       })
       .catch(function () {
         setLoadingState(true, "Unable to load Site Map", "Please refresh the page and try again.");
