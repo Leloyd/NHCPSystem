@@ -47,7 +47,6 @@
 
   var DEFAULT_IMAGE_URL = "/static/images/site-map/aerial-view.jpg";
   var HOTSPOT_DATA_URL = "/static/data/site-map-hotspots.json";
-  var MAP_INFO_MIN_ZOOM_OFFSET = 1.25;
 
   var state = {
     map: null,
@@ -58,6 +57,7 @@
     minZoom: -2,
     routeId: "orientation",
     stopId: "",
+    infoStopId: "",
     searchText: "",
     selectedCategories: {},
     hotspots: [],
@@ -556,6 +556,8 @@
     if (elements.mapInfoOverlay) {
       elements.mapInfoOverlay.hidden = true;
     }
+
+    state.infoStopId = "";
   }
 
   function updateHotspotToggleButton() {
@@ -567,21 +569,8 @@
     elements.toggleHotspotsBtn.setAttribute("aria-pressed", state.hotspotsVisible ? "true" : "false");
   }
 
-  function isMapInfoVisibleForCurrentZoom() {
-    if (!state.map) {
-      return false;
-    }
-
-    return state.map.getZoom() >= state.minZoom + MAP_INFO_MIN_ZOOM_OFFSET;
-  }
-
   function positionMapInfoOverlay(stop) {
     if (!stop || !state.map || !elements.mapInfoOverlay || !elements.mapInfoCard) {
-      return;
-    }
-
-    if (!isMapInfoVisibleForCurrentZoom()) {
-      hideMapInfoOverlay();
       return;
     }
 
@@ -620,12 +609,7 @@
       return;
     }
 
-    if (!stop || !state.hotspotsVisible) {
-      hideMapInfoOverlay();
-      return;
-    }
-
-    if (!isMapInfoVisibleForCurrentZoom()) {
+    if (!stop || !state.hotspotsVisible || !state.infoStopId || state.infoStopId !== stop.id) {
       hideMapInfoOverlay();
       return;
     }
@@ -641,6 +625,7 @@
   function ensureActiveStop(visibleStops) {
     if (!visibleStops.length) {
       state.stopId = "";
+      state.infoStopId = "";
       return;
     }
 
@@ -675,6 +660,7 @@
     }
 
     state.stopId = target.id;
+    state.infoStopId = target.id;
     renderAll();
 
     if (panTo && state.map) {
