@@ -6,6 +6,7 @@
     <title>Site Map | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/site-map.css') }}" />
   </head>
@@ -18,6 +19,7 @@
       data-hotspots-url="{{ url_for('static', filename='data/site-map-hotspots.json') }}"
     >
       <div id="interactiveMap" class="site-map-canvas" role="region" aria-label="Aerial map of the Nagcarlan Underground Cemetery"></div>
+      <div id="panoramaMap" class="site-map-canvas site-map-panorama" role="region" aria-label="360 aerial panorama of the Nagcarlan Underground Cemetery" hidden></div>
 
       <div id="mapInfoOverlay" class="map-info-overlay" hidden aria-live="polite">
         <div id="mapInfoCard" class="map-info-card">
@@ -31,7 +33,7 @@
 
       <div id="mapCoordHelper" class="site-map-coord-helper" hidden aria-live="polite">
         <p class="site-map-coord-helper__title">360 Coordinate Helper</p>
-        <p class="site-map-coord-helper__copy" id="mapCoordHelperCopy">Tap anywhere on the 360 aerial view to copy the hotspot coordinates.</p>
+        <p class="site-map-coord-helper__copy" id="mapCoordHelperCopy">Tap anywhere on the 360 aerial panorama to copy the hotspot pitch and yaw.</p>
       </div>
 
       <div class="site-map-loading" id="mapLoadingOverlay" aria-live="polite">
@@ -87,6 +89,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <script src="{{ url_for('static', filename='js/site-map.js') }}"></script>
   </body>
 </html>

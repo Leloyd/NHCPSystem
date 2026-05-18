@@ -56,6 +56,9 @@
   var state = {
     map: null,
     imageOverlay: null,
+    panoramaViewer: null,
+    panoramaOriginalUrl: "",
+    panoramaSourceUrl: "",
     imageBounds: null,
     imageSize: null,
     sourceCoordinateSpace: null,
@@ -86,6 +89,7 @@
 
   var elements = {
     mapRoot: document.getElementById("interactiveMap"),
+    panoramaRoot: document.getElementById("panoramaMap"),
     resetViewBtn: document.getElementById("resetViewBtn"),
     languageBtn: document.getElementById("mapLanguageBtn"),
     languageLabel: document.getElementById("mapLanguageLabel"),
@@ -318,7 +322,7 @@
     if (message) {
       elements.coordHelperCopy.textContent = message;
     } else if (is360ViewActive()) {
-      elements.coordHelperCopy.textContent = "Tap anywhere on the 360 aerial view to copy the hotspot coordinates.";
+      elements.coordHelperCopy.textContent = "Tap anywhere on the 360 aerial panorama to copy the hotspot pitch and yaw.";
     }
   }
 
@@ -330,14 +334,19 @@
     return Promise.reject(new Error("Clipboard unavailable"));
   }
 
-  function handle360CoordinateClick(event) {
-    if (!is360ViewActive() || !event || !event.latlng) {
+  function handle360CoordinatePick(event) {
+    if (!is360ViewActive() || !state.panoramaViewer || !event || typeof state.panoramaViewer.mouseEventToCoords !== "function") {
       return;
     }
 
-    var x = Math.round(event.latlng.lng);
-    var y = Math.round(event.latlng.lat);
-    var coordinateSnippet = '"x": ' + String(x) + ', "y": ' + String(y);
+    var coords = state.panoramaViewer.mouseEventToCoords(event);
+    if (!coords || coords.length < 2) {
+      return;
+    }
+
+    var pitch = Number(Number(coords[0]).toFixed(2));
+    var yaw = Number(Number(coords[1]).toFixed(2));
+    var coordinateSnippet = '"pitch": ' + String(pitch) + ', "yaw": ' + String(yaw);
 
     copyCoordinateSnippet(coordinateSnippet)
       .then(function () {
@@ -437,6 +446,123 @@
     }
   }
 
+  function setLeafletVisibility(isVisible) {
+    if (elements.mapRoot) {
+      elements.mapRoot.hidden = !isVisible;
+    }
+  }
+
+  function setPanoramaVisibility(isVisible) {
+    if (elements.panoramaRoot) {
+      elements.panoramaRoot.hidden = !isVisible;
+    }
+  }
+
+  function getSafeTextureLimit() {
+    try {
+      var canvas = document.createElement("canvas");
+      var gl = canvas.getContext("webgl") || canvas.getContext("experimental-webgl");
+      var maxTextureSize = gl ? gl.getParameter(gl.MAX_TEXTURE_SIZE) : 4096;
+      return Math.max(2048, Math.min(maxTextureSize || 4096, 8192));
+    } catch (_error) {
+      return 4096;
+    }
+  }
+
+  function loadRawImage(src) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+      image.decoding = "async";
+      image.onload = function () {
+        resolve(image);
+      };
+      image.onerror = function () {
+        reject(new Error("Unable to load panorama source."));
+      };
+      image.src = src;
+    });
+  }
+
+  function buildSafePanoramaSource(src, maxTextureSize) {
+    return loadRawImage(src).then(function (image) {
+      var longestSide = Math.max(image.naturalWidth || image.width, image.naturalHeight || image.height);
+
+      if (longestSide <= maxTextureSize) {
+        return src;
+      }
+
+      var scale = maxTextureSize / longestSide;
+      var targetWidth = Math.max(1, Math.round((image.naturalWidth || image.width) * scale));
+      var targetHeight = Math.max(1, Math.round((image.naturalHeight || image.height) * scale));
+      var canvas = document.createElement("canvas");
+      var context = canvas.getContext("2d", { alpha: false });
+
+      if (!context) {
+        return src;
+      }
+
+      canvas.width = targetWidth;
+      canvas.height = targetHeight;
+      context.imageSmoothingEnabled = true;
+      context.imageSmoothingQuality = "high";
+      context.drawImage(image, 0, 0, targetWidth, targetHeight);
+
+      return canvas.toDataURL("image/jpeg", 0.92);
+    });
+  }
+
+  function createPanoramaViewer(panoramaSrc) {
+    if (!elements.panoramaRoot || !window.pannellum) {
+      return Promise.reject(new Error("Pannellum is unavailable."));
+    }
+
+    if (state.panoramaViewer && state.panoramaOriginalUrl === panoramaSrc) {
+      setLoadingState(false);
+      updateCoordinateHelper("");
+      return Promise.resolve(state.panoramaViewer);
+    }
+
+    setLoadingState(true, "Loading 360 view...", "Preparing the panoramic scene for smooth navigation.");
+
+    var safeTextureLimit = getSafeTextureLimit();
+    return buildSafePanoramaSource(panoramaSrc, safeTextureLimit).then(function (safePanoramaSrc) {
+      state.panoramaOriginalUrl = panoramaSrc;
+      state.panoramaSourceUrl = safePanoramaSrc;
+      elements.panoramaRoot.innerHTML = "";
+
+      state.panoramaViewer = window.pannellum.viewer("panoramaMap", {
+        type: "equirectangular",
+        panorama: safePanoramaSrc,
+        autoLoad: true,
+        showControls: true,
+        compass: false,
+        autoRotate: 0,
+        pitch: 0,
+        yaw: 0,
+        hfov: 110,
+        minHfov: 50,
+        maxHfov: 140,
+        mouseZoom: true,
+        draggable: true,
+        disableKeyboardCtrl: false,
+        showZoomCtrl: true,
+        showFullscreenCtrl: true,
+        loadingText: "Loading 360 view...",
+      });
+
+      if (state.panoramaViewer && typeof state.panoramaViewer.on === "function") {
+        state.panoramaViewer.on("load", function () {
+          setLoadingState(false);
+          updateCoordinateHelper("");
+        });
+
+        state.panoramaViewer.on("mousedown", handle360CoordinatePick);
+      }
+
+      return state.panoramaViewer;
+    });
+  }
+
   function updateImageOverlay(nextUrl) {
     if (!state.map || !nextUrl) {
       return Promise.resolve();
@@ -476,26 +602,45 @@
 
   function setViewMode(mode) {
     var nextMode = mode === "360" ? "360" : "default";
-    var nextUrl = nextMode === "360" ? state.alternateImageUrl : state.defaultImageUrl;
 
     state.activeViewMode = nextMode;
 
     if (nextMode === "360") {
       state.hotspotsVisible = false;
       clearActiveSelection();
+      setLeafletVisibility(false);
+      setPanoramaVisibility(true);
+      updateHotspotToggleButton();
+      updateCoordinateHelper("");
+
+      return createPanoramaViewer(state.alternateImageUrl)
+        .then(function () {
+          playIntroAudio();
+        })
+        .catch(function () {
+          state.activeViewMode = "default";
+          state.hotspotsVisible = true;
+          setPanoramaVisibility(false);
+          setLeafletVisibility(true);
+          updateCoordinateHelper("");
+          updateHotspotToggleButton();
+          renderAll();
+          setLoadingState(false);
+        });
     } else {
       stopIntroAudio();
       state.hotspotsVisible = true;
-      updateCoordinateHelper("");
-    }
-
-    updateHotspotToggleButton();
-    updateCoordinateHelper("");
-    return updateImageOverlay(nextUrl).then(function () {
-      if (nextMode === "360") {
-        playIntroAudio();
+      setPanoramaVisibility(false);
+      setLeafletVisibility(true);
+      if (state.map) {
+        state.map.invalidateSize(false);
       }
-    });
+      updateCoordinateHelper("");
+      updateHotspotToggleButton();
+      resetMapView();
+      renderAll();
+      return Promise.resolve();
+    }
   }
 
   function resetMapView() {
@@ -977,8 +1122,6 @@
         clearActiveSelection();
       });
 
-      state.map.on("click", handle360CoordinateClick);
-
       ["move", "zoom", "resize"].forEach(function (eventName) {
         state.map.on(eventName, function () {
           var activeStop = state.infoStopId ? state.hotspotsById[state.infoStopId] || null : null;
@@ -1007,6 +1150,8 @@
         updateLanguageButton();
         updateHotspotToggleButton();
         updateCoordinateHelper("");
+        setLeafletVisibility(true);
+        setPanoramaVisibility(false);
         renderAll();
         setLoadingState(false);
         playIntroAudio();

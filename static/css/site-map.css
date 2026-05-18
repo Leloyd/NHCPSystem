@@ -49,6 +49,14 @@
   display: block;
 }
 
+.site-map-panorama {
+  background: #111827;
+}
+
+.site-map-panorama[hidden] {
+  display: none;
+}
+
 #interactiveMap.leaflet-container {
   background: #111827;
 }
