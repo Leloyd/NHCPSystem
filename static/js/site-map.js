@@ -463,33 +463,8 @@
       pitch: stop.panorama.pitch,
       yaw: stop.panorama.yaw,
       type: "info",
-      text: "",
+      text: stop.title || "Hotspot",
       cssClass: "site-map-panorama-hotspot",
-      createTooltipFunc: function (hotSpotDiv, spotData) {
-        hotSpotDiv.setAttribute("tabindex", "0");
-        hotSpotDiv.setAttribute("role", "button");
-        hotSpotDiv.setAttribute("aria-label", spotData.title);
-        hotSpotDiv.setAttribute("title", spotData.title);
-        hotSpotDiv.dataset.stopMarker = spotData.id;
-        hotSpotDiv.addEventListener("mouseenter", function () {
-          if (state.stopId !== spotData.id) {
-            hotSpotDiv.classList.add("is-hover");
-          }
-        });
-        hotSpotDiv.addEventListener("mouseleave", function () {
-          if (state.stopId !== spotData.id) {
-            hotSpotDiv.classList.remove("is-hover");
-          }
-        });
-        hotSpotDiv.addEventListener("keydown", function (event) {
-          if (event.key === "Enter" || event.key === " ") {
-            event.preventDefault();
-            setActiveStop(spotData.id, false);
-          }
-        });
-        state.panoramaHotspotNodesById[spotData.id] = hotSpotDiv;
-      },
-      createTooltipArgs: stop,
       clickHandlerFunc: function (event, args) {
         if (event) {
           if (typeof event.preventDefault === "function") {
