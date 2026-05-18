@@ -77,6 +77,7 @@
     hotspotsById: {},
     markerById: {},
     markerNodesBound: {},
+    panoramaHotspotNodesById: {},
     routeLayer: null,
     audioPlayer: null,
     introAudioPlayer: null,
@@ -215,6 +216,24 @@
     };
   }
 
+  function normalizePanoramaCoordinates(panoramaMeta) {
+    if (!panoramaMeta || typeof panoramaMeta !== "object") {
+      return null;
+    }
+
+    var pitch = Number(panoramaMeta.pitch);
+    var yaw = Number(panoramaMeta.yaw);
+
+    if (!isFinite(pitch) || !isFinite(yaw)) {
+      return null;
+    }
+
+    return {
+      pitch: pitch,
+      yaw: yaw,
+    };
+  }
+
   function normalizeHotspot(raw) {
     if (!raw || !raw.id || typeof raw.x !== "number" || typeof raw.y !== "number") {
       return null;
@@ -233,6 +252,7 @@
       prompt: String(raw.prompt || "-"),
       description: String(raw.description || "No description available."),
       translations: raw.translations && typeof raw.translations === "object" ? raw.translations : {},
+      panorama: normalizePanoramaCoordinates(raw.panorama),
       media: Array.isArray(raw.media) ? raw.media : [],
       learnMore: raw.learnMore ? String(raw.learnMore) : "",
       view360: raw.view360 ? String(raw.view360) : "",
@@ -339,6 +359,10 @@
       return;
     }
 
+    if (event.target && typeof event.target.closest === "function" && event.target.closest(".site-map-panorama-hotspot")) {
+      return;
+    }
+
     var coords = state.panoramaViewer.mouseEventToCoords(event);
     if (!coords || coords.length < 2) {
       return;
@@ -387,6 +411,99 @@
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(function () {});
     }
+  }
+
+  function getHotspotMarkerHtml() {
+    return '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><span class="map-pin__core"></span></span></span>';
+  }
+
+  function getPanoramaStops() {
+    return state.hotspots.filter(function (spot) {
+      return !!(spot && spot.panorama && isFinite(spot.panorama.pitch) && isFinite(spot.panorama.yaw));
+    });
+  }
+
+  function syncPanoramaHotspotVisibility() {
+    if (!elements.panoramaRoot) {
+      return;
+    }
+
+    elements.panoramaRoot.classList.toggle("is-hotspots-hidden", !state.hotspotsVisible);
+  }
+
+  function syncPanoramaHotspotStyles() {
+    Object.keys(state.panoramaHotspotNodesById).forEach(function (id) {
+      var node = state.panoramaHotspotNodesById[id];
+      if (!node) {
+        return;
+      }
+
+      var isActive = state.hotspotsVisible && state.stopId === id;
+      node.classList.toggle("is-active", isActive);
+      if (isActive) {
+        node.setAttribute("aria-current", "true");
+      } else {
+        node.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  function renderPanoramaHotspots() {
+    syncPanoramaHotspotVisibility();
+    syncPanoramaHotspotStyles();
+  }
+
+  function buildPanoramaHotspotDefinition(stop) {
+    if (!stop || !stop.panorama) {
+      return null;
+    }
+
+    return {
+      id: stop.id,
+      pitch: stop.panorama.pitch,
+      yaw: stop.panorama.yaw,
+      cssClass: "site-map-panorama-hotspot-anchor",
+      createTooltipFunc: function (hotSpotDiv, spotData) {
+        hotSpotDiv.classList.add("site-map-panorama-hotspot");
+        hotSpotDiv.innerHTML = getHotspotMarkerHtml();
+        hotSpotDiv.setAttribute("tabindex", "0");
+        hotSpotDiv.setAttribute("role", "button");
+        hotSpotDiv.setAttribute("aria-label", spotData.title);
+        hotSpotDiv.dataset.stopMarker = spotData.id;
+        hotSpotDiv.addEventListener("mouseenter", function () {
+          if (state.stopId !== spotData.id) {
+            hotSpotDiv.classList.add("is-hover");
+          }
+        });
+        hotSpotDiv.addEventListener("mouseleave", function () {
+          if (state.stopId !== spotData.id) {
+            hotSpotDiv.classList.remove("is-hover");
+          }
+        });
+        hotSpotDiv.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") {
+            event.preventDefault();
+            setActiveStop(spotData.id, false);
+          }
+        });
+        state.panoramaHotspotNodesById[spotData.id] = hotSpotDiv;
+      },
+      createTooltipArgs: stop,
+      clickHandlerFunc: function (event, args) {
+        if (event) {
+          if (typeof event.preventDefault === "function") {
+            event.preventDefault();
+          }
+          if (typeof event.stopPropagation === "function") {
+            event.stopPropagation();
+          }
+        }
+        setActiveStop(args.stopId, false);
+      },
+      clickHandlerArgs: {
+        stopId: stop.id,
+      },
+    };
   }
 
   function applyHotspotCoordinateScale() {
@@ -519,6 +636,7 @@
     if (state.panoramaViewer && state.panoramaOriginalUrl === panoramaSrc) {
       setLoadingState(false);
       updateCoordinateHelper("");
+      renderPanoramaHotspots();
       return Promise.resolve(state.panoramaViewer);
     }
 
@@ -528,11 +646,17 @@
     return buildSafePanoramaSource(panoramaSrc, safeTextureLimit).then(function (safePanoramaSrc) {
       state.panoramaOriginalUrl = panoramaSrc;
       state.panoramaSourceUrl = safePanoramaSrc;
+      state.panoramaHotspotNodesById = {};
       elements.panoramaRoot.innerHTML = "";
 
       state.panoramaViewer = window.pannellum.viewer("panoramaMap", {
         type: "equirectangular",
         panorama: safePanoramaSrc,
+        hotSpots: getPanoramaStops()
+          .map(buildPanoramaHotspotDefinition)
+          .filter(function (item) {
+            return item;
+          }),
         autoLoad: true,
         showControls: true,
         compass: false,
@@ -554,6 +678,7 @@
         state.panoramaViewer.on("load", function () {
           setLoadingState(false);
           updateCoordinateHelper("");
+          renderPanoramaHotspots();
         });
 
         state.panoramaViewer.on("mousedown", handle360CoordinatePick);
@@ -606,7 +731,6 @@
     state.activeViewMode = nextMode;
 
     if (nextMode === "360") {
-      state.hotspotsVisible = false;
       clearActiveSelection();
       setLeafletVisibility(false);
       setPanoramaVisibility(true);
@@ -615,11 +739,11 @@
 
       return createPanoramaViewer(state.alternateImageUrl)
         .then(function () {
+          renderAll();
           playIntroAudio();
         })
         .catch(function () {
           state.activeViewMode = "default";
-          state.hotspotsVisible = true;
           setPanoramaVisibility(false);
           setLeafletVisibility(true);
           updateCoordinateHelper("");
@@ -628,8 +752,8 @@
           setLoadingState(false);
         });
     } else {
+      clearActiveSelection();
       stopIntroAudio();
-      state.hotspotsVisible = true;
       setPanoramaVisibility(false);
       setLeafletVisibility(true);
       if (state.map) {
@@ -639,6 +763,7 @@
       updateHotspotToggleButton();
       resetMapView();
       renderAll();
+      playIntroAudio();
       return Promise.resolve();
     }
   }
@@ -711,8 +836,7 @@
       keyboard: false,
       icon: window.L.divIcon({
         className: "map-pin-marker",
-        html:
-          '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><span class="map-pin__core"></span></span></span>',
+        html: getHotspotMarkerHtml(),
         iconSize: [36, 36],
         iconAnchor: [18, 18],
       }),
@@ -780,7 +904,7 @@
   }
 
   function getVisibleStops() {
-    if (is360ViewActive() || !state.hotspotsVisible) {
+    if (!state.hotspotsVisible) {
       return [];
     }
 
@@ -956,11 +1080,11 @@
       return;
     }
 
-    var enabled = state.hotspotsVisible && !is360ViewActive();
+    var enabled = state.hotspotsVisible;
     elements.toggleHotspotsBtn.classList.toggle("is-active", enabled);
-    elements.toggleHotspotsBtn.classList.toggle("is-disabled", is360ViewActive());
+    elements.toggleHotspotsBtn.classList.remove("is-disabled");
     elements.toggleHotspotsBtn.setAttribute("aria-pressed", enabled ? "true" : "false");
-    elements.toggleHotspotsBtn.setAttribute("aria-disabled", is360ViewActive() ? "true" : "false");
+    elements.toggleHotspotsBtn.setAttribute("aria-disabled", "false");
   }
 
   function updateLanguageButton() {
@@ -975,7 +1099,32 @@
   }
 
   function positionMapInfoOverlay(stop) {
-    if (!stop || !state.map || !elements.mapInfoOverlay || !elements.mapInfoCard) {
+    if (!stop || !elements.mapInfoOverlay || !elements.mapInfoCard) {
+      return;
+    }
+
+    if (is360ViewActive()) {
+      var panoramaWidth = elements.panoramaRoot ? elements.panoramaRoot.clientWidth || 0 : 0;
+      var panoramaHeight = elements.panoramaRoot ? elements.panoramaRoot.clientHeight || 0 : 0;
+
+      if (!panoramaWidth || !panoramaHeight) {
+        hideMapInfoOverlay();
+        return;
+      }
+
+      elements.mapInfoOverlay.hidden = false;
+
+      var panoramaCardWidth = elements.mapInfoCard.offsetWidth || Math.min(320, Math.max(220, panoramaWidth - 24));
+      var panoramaCardHeight = elements.mapInfoCard.offsetHeight || 140;
+      var panoramaLeft = Math.max(12, Math.min(16, panoramaWidth - panoramaCardWidth - 12));
+      var panoramaTop = Math.max(12, Math.min(16, panoramaHeight - panoramaCardHeight - 12));
+
+      elements.mapInfoCard.style.left = panoramaLeft + "px";
+      elements.mapInfoCard.style.top = panoramaTop + "px";
+      return;
+    }
+
+    if (!state.map) {
       return;
     }
 
@@ -1052,6 +1201,7 @@
 
     ensureActiveStop(visibleStops);
     renderMarkers(visibleStops);
+    renderPanoramaHotspots();
     drawRouteLine(visibleStops);
 
     var activeStop = state.hotspotsById[state.stopId] || null;
@@ -1093,23 +1243,33 @@
         state.language = getCurrentLanguage() === "en" ? "tl" : "en";
         updateLanguageButton();
 
-        if (is360ViewActive()) {
-          playIntroAudio();
-        } else if (state.infoStopId) {
+        if (state.infoStopId) {
           renderAll();
+        } else {
+          playIntroAudio();
         }
       });
     }
 
     if (elements.toggleHotspotsBtn) {
       elements.toggleHotspotsBtn.addEventListener("click", function () {
-        if (is360ViewActive()) {
-          return;
-        }
-
         state.hotspotsVisible = !state.hotspotsVisible;
         updateHotspotToggleButton();
         renderAll();
+      });
+    }
+
+    if (elements.panoramaRoot) {
+      elements.panoramaRoot.addEventListener("click", function (event) {
+        if (!is360ViewActive()) {
+          return;
+        }
+
+        if (event.target && typeof event.target.closest === "function" && event.target.closest(".site-map-panorama-hotspot")) {
+          return;
+        }
+
+        clearActiveSelection();
       });
     }
 
