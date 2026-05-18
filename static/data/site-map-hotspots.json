@@ -12,6 +12,15 @@
       "x": 1492,
       "y": 520,
       "description": "The front gate is the opening frame of the Nagcarlan Underground Cemetery.",
+      "translations": {
+        "tl": {
+          "description": "Ang front gate ang nagsisilbing panimulang tanawin ng Nagcarlan Underground Cemetery."
+        }
+      },
+      "audioByLanguage": {
+        "en": "/static/SiteMap/FrontGate/FrontGateEnglish.mp3",
+        "tl": "/static/SiteMap/FrontGate/FrontGateTagalog.mp3"
+      },
       "media": [
         {
           "src": "/static/SiteMap/FrontGate/FrontGate.png",

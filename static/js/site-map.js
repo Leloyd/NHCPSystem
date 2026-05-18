@@ -58,6 +58,7 @@
     routeId: "orientation",
     stopId: "",
     infoStopId: "",
+    language: "en",
     searchText: "",
     selectedCategories: {},
     hotspots: [],
@@ -65,6 +66,7 @@
     markerById: {},
     markerNodesBound: {},
     routeLayer: null,
+    audioPlayer: null,
     storyTimer: null,
     storyIndex: 0,
     calibrationEnabled: false,
@@ -75,6 +77,8 @@
   var elements = {
     mapRoot: document.getElementById("interactiveMap"),
     resetViewBtn: document.getElementById("resetViewBtn"),
+    languageBtn: document.getElementById("mapLanguageBtn"),
+    languageLabel: document.getElementById("mapLanguageLabel"),
     toggleHotspotsBtn: document.getElementById("mapToggleHotspotsBtn"),
     controlDock: document.getElementById("mapControlDock"),
     loadingOverlay: document.getElementById("mapLoadingOverlay"),
@@ -210,13 +214,79 @@
       focus: String(raw.focus || "-"),
       prompt: String(raw.prompt || "-"),
       description: String(raw.description || "No description available."),
+      translations: raw.translations && typeof raw.translations === "object" ? raw.translations : {},
       media: Array.isArray(raw.media) ? raw.media : [],
       learnMore: raw.learnMore ? String(raw.learnMore) : "",
       view360: raw.view360 ? String(raw.view360) : "",
       arModel: raw.arModel ? String(raw.arModel) : "",
       audio: raw.audio ? String(raw.audio) : "",
+      audioByLanguage: raw.audioByLanguage && typeof raw.audioByLanguage === "object" ? raw.audioByLanguage : {},
       videoEmbed: raw.videoEmbed ? String(raw.videoEmbed) : "",
     };
+  }
+
+  function getCurrentLanguage() {
+    return state.language === "tl" ? "tl" : "en";
+  }
+
+  function getLocalizedDescription(stop) {
+    if (!stop) {
+      return "";
+    }
+
+    var language = getCurrentLanguage();
+    var translation = stop.translations && stop.translations[language];
+    if (translation && translation.description) {
+      return String(translation.description);
+    }
+
+    return String(stop.description || "No description available.");
+  }
+
+  function stopHotspotAudio() {
+    if (!state.audioPlayer) {
+      return;
+    }
+
+    try {
+      state.audioPlayer.pause();
+      state.audioPlayer.currentTime = 0;
+    } catch (_error) {
+      return;
+    } finally {
+      state.audioPlayer = null;
+    }
+  }
+
+  function playHotspotAudio(stop) {
+    stopHotspotAudio();
+
+    if (!stop) {
+      return;
+    }
+
+    var language = getCurrentLanguage();
+    var audioUrl = "";
+
+    if (stop.audioByLanguage && stop.audioByLanguage[language]) {
+      audioUrl = String(stop.audioByLanguage[language]);
+    } else if (stop.audioByLanguage && stop.audioByLanguage.en) {
+      audioUrl = String(stop.audioByLanguage.en);
+    } else if (stop.audio) {
+      audioUrl = String(stop.audio);
+    }
+
+    if (!audioUrl) {
+      return;
+    }
+
+    state.audioPlayer = new Audio(appendCacheBuster(audioUrl));
+    state.audioPlayer.preload = "auto";
+
+    var playPromise = state.audioPlayer.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(function () {});
+    }
   }
 
   function applyHotspotCoordinateScale() {
@@ -570,6 +640,7 @@
       elements.mapInfoOverlay.hidden = true;
     }
 
+    stopHotspotAudio();
     state.infoStopId = "";
   }
 
@@ -586,6 +657,17 @@
 
     elements.toggleHotspotsBtn.classList.toggle("is-active", state.hotspotsVisible);
     elements.toggleHotspotsBtn.setAttribute("aria-pressed", state.hotspotsVisible ? "true" : "false");
+  }
+
+  function updateLanguageButton() {
+    if (!elements.languageBtn || !elements.languageLabel) {
+      return;
+    }
+
+    var isTagalog = getCurrentLanguage() === "tl";
+    elements.languageLabel.textContent = isTagalog ? "Tagalog" : "English";
+    elements.languageBtn.classList.toggle("is-active", isTagalog);
+    elements.languageBtn.setAttribute("aria-pressed", isTagalog ? "true" : "false");
   }
 
   function positionMapInfoOverlay(stop) {
@@ -639,7 +721,8 @@
     elements.mapInfoMeta.textContent = "";
     elements.mapInfoMeta.hidden = true;
     renderMedia(stop);
-    elements.mapInfoSummary.textContent = stop.description;
+    elements.mapInfoSummary.textContent = getLocalizedDescription(stop);
+    playHotspotAudio(stop);
 
     positionMapInfoOverlay(stop);
   }
@@ -700,6 +783,17 @@
       });
     }
 
+    if (elements.languageBtn) {
+      elements.languageBtn.addEventListener("click", function () {
+        state.language = getCurrentLanguage() === "en" ? "tl" : "en";
+        updateLanguageButton();
+
+        if (state.infoStopId) {
+          renderAll();
+        }
+      });
+    }
+
     if (elements.toggleHotspotsBtn) {
       elements.toggleHotspotsBtn.addEventListener("click", function () {
         state.hotspotsVisible = !state.hotspotsVisible;
@@ -738,6 +832,7 @@
         if (initialStops.length) {
           state.stopId = initialStops[0].id;
         }
+        updateLanguageButton();
         updateHotspotToggleButton();
         renderAll();
         setLoadingState(false);
