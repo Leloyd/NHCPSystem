@@ -14,20 +14,22 @@ from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_username
 from community_content import load_news_community_highlights, register_community_content_routes
-from edu_resources_content import load_public_edu_resources, register_edu_resources_routes
+from community_content.service import load_admin_community_highlights
+from edu_resources_content import load_admin_edu_resources, load_public_edu_resources, register_edu_resources_routes
 from online_gallery_content import (
     ONLINE_GALLERY_UPLOAD_DIR,
     load_public_online_gallery_categories,
     load_public_online_gallery_items,
     register_online_gallery_content_routes,
 )
-from participation_submissions_content import register_participation_submission_routes
+from online_gallery_content.service import load_admin_online_gallery_items
+from participation_submissions_content import load_admin_participation_submissions, register_participation_submission_routes
 from public_users_repository import get_public_user_profile_by_id
 from supabase_storage import delete_public_image, upload_public_file, upload_public_image
 from supabase_client import is_supabase_configured
-from tour_bookings_content import load_public_tour_bookings, register_tour_booking_routes
+from tour_bookings_content import load_admin_tour_bookings, load_public_tour_bookings, register_tour_booking_routes
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
-from visitor_feedback_content import register_visitor_feedback_routes
+from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
 
 try:
     from dotenv import load_dotenv
@@ -182,6 +184,460 @@ def _validate_event_date(raw_value):
         return datetime.strptime(raw_text, "%Y-%m-%d").date().isoformat()
     except ValueError as exc:
         raise ValueError("Event date must use YYYY-MM-DD format.") from exc
+
+
+def _parse_dashboard_datetime(raw_value):
+    raw_text = str(raw_value or "").strip()
+    if not raw_text:
+        return None
+
+    try:
+        return datetime.fromisoformat(raw_text.replace("Z", "+00:00"))
+    except ValueError:
+        pass
+
+    try:
+        return datetime.strptime(raw_text, "%Y-%m-%d")
+    except ValueError:
+        return None
+
+
+def _format_dashboard_datetime(raw_value):
+    parsed = _parse_dashboard_datetime(raw_value)
+    if parsed is not None:
+        return parsed.strftime("%b %d, %Y")
+
+    raw_text = str(raw_value or "").strip()
+    return raw_text or "Date unavailable"
+
+
+def _dashboard_sort_key(*raw_values):
+    for raw_value in raw_values:
+        parsed = _parse_dashboard_datetime(raw_value)
+        if parsed is not None:
+            return (1, parsed.timestamp())
+
+        raw_text = str(raw_value or "").strip()
+        if raw_text:
+            return (0, raw_text)
+
+    return (0, "")
+
+
+def _dashboard_status_class(status):
+    status_key = str(status or "").strip().lower()
+    if status_key in {"active", "published", "confirmed", "reviewed"}:
+        return "is-published"
+    if status_key == "cancelled":
+        return "is-cancelled"
+    if status_key == "rescheduled":
+        return "is-rescheduled"
+    return "is-draft"
+
+
+def _dashboard_status_label(status, fallback="Unknown"):
+    raw_text = str(status or "").strip().replace("_", " ")
+    return raw_text.title() if raw_text else fallback
+
+
+def _build_admin_dashboard_context():
+    highlights_items = load_admin_community_highlights()
+    gallery_items = load_admin_online_gallery_items()
+    resources_items = load_admin_edu_resources()
+    booking_items = load_admin_tour_bookings()
+    submission_items = load_admin_participation_submissions()
+    feedback_items = load_admin_visitor_feedback()
+
+    active_highlights = [item for item in highlights_items if item.get("status") == "active"]
+    draft_highlights = [item for item in highlights_items if item.get("status") == "draft"]
+    archived_highlights = [item for item in highlights_items if item.get("status") == "archived"]
+
+    published_gallery = [item for item in gallery_items if bool(item.get("is_published"))]
+    draft_gallery = [item for item in gallery_items if not bool(item.get("is_published"))]
+
+    active_resources = [item for item in resources_items if item.get("status") == "active"]
+    draft_resources = [item for item in resources_items if item.get("status") == "draft"]
+    archived_resources = [item for item in resources_items if item.get("status") == "archived"]
+
+    pending_bookings = [item for item in booking_items if item.get("status") == "pending"]
+    confirmed_bookings = [item for item in booking_items if item.get("status") == "confirmed"]
+    rescheduled_bookings = [item for item in booking_items if item.get("status") == "rescheduled"]
+    cancelled_bookings = [item for item in booking_items if item.get("status") == "cancelled"]
+
+    pending_review_submissions = [item for item in submission_items if item.get("status") == "pending_review"]
+    awaiting_verification_submissions = [item for item in submission_items if item.get("status") == "pending_verification"]
+    active_submissions = [item for item in submission_items if item.get("status") == "active"]
+    archived_submissions = [item for item in submission_items if item.get("status") == "archived"]
+
+    new_feedback = [item for item in feedback_items if item.get("status") == "new"]
+    reviewed_feedback = [item for item in feedback_items if item.get("status") == "reviewed"]
+    archived_feedback = [item for item in feedback_items if item.get("status") == "archived"]
+
+    open_review_total = (
+        len(pending_bookings)
+        + len(pending_review_submissions)
+        + len(awaiting_verification_submissions)
+        + len(new_feedback)
+    )
+
+    dashboard_stat_cards = [
+        {
+            "icon_class": "posts",
+            "label": "Community Highlights",
+            "value": len(highlights_items),
+            "summary": f"{len(active_highlights)} active · {len(draft_highlights)} draft",
+            "href": url_for("admin_community_highlights"),
+            "action_label": "Manage",
+        },
+        {
+            "icon_class": "views",
+            "label": "Gallery Cards",
+            "value": len(gallery_items),
+            "summary": f"{len(published_gallery)} published · {len(draft_gallery)} draft",
+            "href": url_for("admin_online_gallery"),
+            "action_label": "Open gallery",
+        },
+        {
+            "icon_class": "media",
+            "label": "Edu Resources",
+            "value": len(resources_items),
+            "summary": f"{len(active_resources)} active · {len(draft_resources)} draft",
+            "href": url_for("admin_edu_resources"),
+            "action_label": "Manage resources",
+        },
+        {
+            "icon_class": "visitors",
+            "label": "Open Review Queue",
+            "value": open_review_total,
+            "summary": (
+                f"{len(pending_bookings)} bookings · "
+                f"{len(pending_review_submissions) + len(awaiting_verification_submissions)} submissions · "
+                f"{len(new_feedback)} feedback"
+            ),
+            "href": "#dashboard-review-queue",
+            "action_label": "See queue",
+        },
+    ]
+
+    dashboard_content_breakdown = [
+        {
+            "label": "Highlights",
+            "count": len(highlights_items),
+            "legend_class": "legend-news",
+            "color": "#1b4332",
+            "href": url_for("admin_community_highlights"),
+        },
+        {
+            "label": "Submissions",
+            "count": len(submission_items),
+            "legend_class": "legend-events",
+            "color": "#c9a84c",
+            "href": url_for("admin_participation_submissions"),
+        },
+        {
+            "label": "Gallery",
+            "count": len(gallery_items),
+            "legend_class": "legend-gallery",
+            "color": "#2d6a4f",
+            "href": url_for("admin_online_gallery"),
+        },
+        {
+            "label": "Edu Resources",
+            "count": len(resources_items),
+            "legend_class": "legend-articles",
+            "color": "#a07830",
+            "href": url_for("admin_edu_resources"),
+        },
+    ]
+    dashboard_content_total = sum(item["count"] for item in dashboard_content_breakdown)
+    if dashboard_content_total > 0:
+        range_start = 0.0
+        chart_segments = []
+        for index, item in enumerate(dashboard_content_breakdown):
+            percentage = (item["count"] / dashboard_content_total) * 100
+            range_end = 100.0 if index == len(dashboard_content_breakdown) - 1 else range_start + percentage
+            item["percentage_value"] = percentage
+            item["percentage_label"] = f"{round(percentage)}%"
+            chart_segments.append(f"{item['color']} {range_start:.2f}% {range_end:.2f}%")
+            range_start = range_end
+        dashboard_content_chart = f"conic-gradient({', '.join(chart_segments)})"
+    else:
+        for item in dashboard_content_breakdown:
+            item["percentage_value"] = 0
+            item["percentage_label"] = "0%"
+        dashboard_content_chart = "conic-gradient(#e5e7eb 0 100%)"
+
+    dashboard_review_queue = []
+    for booking_item in pending_bookings:
+        dashboard_review_queue.append(
+            {
+                "title": booking_item.get("display_title") or booking_item.get("scheduled_tour") or "Booking Request",
+                "module_label": "Bookings",
+                "meta_label": (
+                    f"{booking_item.get('contact_person') or 'No contact'} · "
+                    f"{booking_item.get('total_visitors') or booking_item.get('group_size') or 0} visitors"
+                ),
+                "date_label": booking_item.get("display_date") or _format_dashboard_datetime(booking_item.get("visit_date")),
+                "status_label": booking_item.get("status_label") or "Pending Review",
+                "status_class": _dashboard_status_class(booking_item.get("status")),
+                "action_href": url_for("admin_tour_booking_review", booking_id=booking_item.get("id")),
+                "action_label": "Review",
+                "sort_key": _dashboard_sort_key(
+                    booking_item.get("created_at"),
+                    booking_item.get("updated_at"),
+                    booking_item.get("visit_date"),
+                ),
+            }
+        )
+
+    for submission_item in pending_review_submissions + awaiting_verification_submissions:
+        dashboard_review_queue.append(
+            {
+                "title": submission_item.get("title") or "Community Submission",
+                "module_label": "Submissions",
+                "meta_label": (
+                    f"{submission_item.get('submission_type_label') or 'Submission'} · "
+                    f"{submission_item.get('submitter_name') or submission_item.get('contributor_display') or 'Anonymous'}"
+                ),
+                "date_label": submission_item.get("display_date") or _format_dashboard_datetime(submission_item.get("created_at")),
+                "status_label": _dashboard_status_label(submission_item.get("status"), "Pending Review"),
+                "status_class": _dashboard_status_class(submission_item.get("status")),
+                "action_href": url_for("admin_participation_submission_review", submission_id=submission_item.get("id")),
+                "action_label": "Review",
+                "sort_key": _dashboard_sort_key(submission_item.get("created_at"), submission_item.get("updated_at")),
+            }
+        )
+
+    for feedback_item in new_feedback:
+        dashboard_review_queue.append(
+            {
+                "title": feedback_item.get("visitor_display") or "Visitor Feedback",
+                "module_label": "Feedback",
+                "meta_label": (
+                    f"{feedback_item.get('visit_type_label') or 'Visitor feedback'} · "
+                    f"{feedback_item.get('rating_label') or 'Unrated'}"
+                ),
+                "date_label": feedback_item.get("display_date") or _format_dashboard_datetime(feedback_item.get("created_at")),
+                "status_label": "New",
+                "status_class": _dashboard_status_class(feedback_item.get("status")),
+                "action_href": url_for("admin_visitor_feedback_review", feedback_id=feedback_item.get("id")),
+                "action_label": "Review",
+                "sort_key": _dashboard_sort_key(feedback_item.get("created_at"), feedback_item.get("updated_at")),
+            }
+        )
+    dashboard_review_queue.sort(key=lambda item: item["sort_key"], reverse=True)
+    dashboard_review_queue = dashboard_review_queue[:8]
+
+    dashboard_recent_activity = []
+    for highlight_item in highlights_items:
+        dashboard_recent_activity.append(
+            {
+                "title": highlight_item.get("title") or "Community Highlight",
+                "module_label": "Highlights",
+                "meta_label": highlight_item.get("category") or "Community highlight",
+                "date_label": highlight_item.get("display_date") or _format_dashboard_datetime(highlight_item.get("updated_at") or highlight_item.get("created_at")),
+                "status_label": _dashboard_status_label(highlight_item.get("status"), "Draft"),
+                "status_class": _dashboard_status_class(highlight_item.get("status")),
+                "action_href": url_for("admin_community_highlight_edit", highlight_id=highlight_item.get("id")),
+                "action_label": "Edit",
+                "sort_key": _dashboard_sort_key(
+                    highlight_item.get("updated_at"),
+                    highlight_item.get("created_at"),
+                    highlight_item.get("event_date"),
+                ),
+            }
+        )
+
+    for gallery_item in gallery_items:
+        dashboard_recent_activity.append(
+            {
+                "title": gallery_item.get("title") or gallery_item.get("title_tl") or gallery_item.get("title_en") or "Gallery Card",
+                "module_label": "Gallery",
+                "meta_label": gallery_item.get("category") or "Online Gallery",
+                "date_label": _format_dashboard_datetime(gallery_item.get("updated_at") or gallery_item.get("created_at")),
+                "status_label": "Published" if gallery_item.get("is_published") else "Draft",
+                "status_class": _dashboard_status_class("published" if gallery_item.get("is_published") else "draft"),
+                "action_href": url_for("admin_online_gallery_edit", item_id=gallery_item.get("id")),
+                "action_label": "Edit",
+                "sort_key": _dashboard_sort_key(gallery_item.get("updated_at"), gallery_item.get("created_at")),
+            }
+        )
+
+    for resource_item in resources_items:
+        dashboard_recent_activity.append(
+            {
+                "title": resource_item.get("title") or "Edu Resource",
+                "module_label": "Edu Resources",
+                "meta_label": resource_item.get("category") or resource_item.get("metadata_value") or "Resource",
+                "date_label": _format_dashboard_datetime(resource_item.get("updated_at") or resource_item.get("created_at")),
+                "status_label": _dashboard_status_label(resource_item.get("status"), "Draft"),
+                "status_class": _dashboard_status_class(resource_item.get("status")),
+                "action_href": url_for("admin_edu_resource_edit", item_id=resource_item.get("id")),
+                "action_label": "Edit",
+                "sort_key": _dashboard_sort_key(resource_item.get("updated_at"), resource_item.get("created_at")),
+            }
+        )
+
+    for submission_item in submission_items:
+        dashboard_recent_activity.append(
+            {
+                "title": submission_item.get("title") or "Participation Submission",
+                "module_label": "Submissions",
+                "meta_label": submission_item.get("submission_type_label") or "Community Participation",
+                "date_label": submission_item.get("display_date") or _format_dashboard_datetime(submission_item.get("created_at")),
+                "status_label": _dashboard_status_label(submission_item.get("status"), "Pending Review"),
+                "status_class": _dashboard_status_class(submission_item.get("status")),
+                "action_href": url_for("admin_participation_submission_review", submission_id=submission_item.get("id")),
+                "action_label": "Review",
+                "sort_key": _dashboard_sort_key(submission_item.get("updated_at"), submission_item.get("created_at")),
+            }
+        )
+
+    for booking_item in booking_items:
+        dashboard_recent_activity.append(
+            {
+                "title": booking_item.get("display_title") or booking_item.get("scheduled_tour") or "Tour Booking",
+                "module_label": "Bookings",
+                "meta_label": booking_item.get("booking_type_label") or "Tour Booking",
+                "date_label": booking_item.get("display_date") or _format_dashboard_datetime(booking_item.get("visit_date")),
+                "status_label": booking_item.get("status_label") or _dashboard_status_label(booking_item.get("status"), "Pending Review"),
+                "status_class": _dashboard_status_class(booking_item.get("status")),
+                "action_href": url_for("admin_tour_booking_review", booking_id=booking_item.get("id")),
+                "action_label": "Open",
+                "sort_key": _dashboard_sort_key(
+                    booking_item.get("updated_at"),
+                    booking_item.get("created_at"),
+                    booking_item.get("visit_date"),
+                ),
+            }
+        )
+
+    for feedback_item in feedback_items:
+        dashboard_recent_activity.append(
+            {
+                "title": feedback_item.get("visitor_display") or "Visitor Feedback",
+                "module_label": "Feedback",
+                "meta_label": feedback_item.get("visit_type_label") or "Visitor feedback",
+                "date_label": feedback_item.get("display_date") or _format_dashboard_datetime(feedback_item.get("created_at")),
+                "status_label": _dashboard_status_label(feedback_item.get("status"), "New"),
+                "status_class": _dashboard_status_class(feedback_item.get("status")),
+                "action_href": url_for("admin_visitor_feedback_review", feedback_id=feedback_item.get("id")),
+                "action_label": "Open",
+                "sort_key": _dashboard_sort_key(feedback_item.get("updated_at"), feedback_item.get("created_at")),
+            }
+        )
+    dashboard_recent_activity.sort(key=lambda item: item["sort_key"], reverse=True)
+    dashboard_recent_activity = dashboard_recent_activity[:8]
+
+    dashboard_workspace_rows = [
+        {
+            "short_label": "Highlights",
+            "count": len(highlights_items),
+            "href": url_for("admin_community_highlights"),
+        },
+        {
+            "short_label": "Gallery",
+            "count": len(gallery_items),
+            "href": url_for("admin_online_gallery"),
+        },
+        {
+            "short_label": "Resources",
+            "count": len(resources_items),
+            "href": url_for("admin_edu_resources"),
+        },
+        {
+            "short_label": "Bookings",
+            "count": len(booking_items),
+            "href": url_for("admin_tour_bookings"),
+        },
+        {
+            "short_label": "Submissions",
+            "count": len(submission_items),
+            "href": url_for("admin_participation_submissions"),
+        },
+        {
+            "short_label": "Feedback",
+            "count": len(feedback_items),
+            "href": url_for("admin_visitor_feedback"),
+        },
+    ]
+    workspace_max_count = max((item["count"] for item in dashboard_workspace_rows), default=0)
+    for item in dashboard_workspace_rows:
+        if workspace_max_count <= 0 or item["count"] <= 0:
+            item["bar_width"] = 0
+        else:
+            item["bar_width"] = max(12, round((item["count"] / workspace_max_count) * 100))
+
+    dashboard_overview_rows = [
+        {
+            "label": "Community Highlights",
+            "description": "Public stories, updates, and featured museum content.",
+            "count": len(highlights_items),
+            "summary": f"{len(active_highlights)} active · {len(draft_highlights)} draft · {len(archived_highlights)} archived",
+            "action_href": url_for("admin_community_highlights"),
+            "action_label": "Manage",
+        },
+        {
+            "label": "Online Gallery",
+            "description": "Gallery cards connected to your public artifact archive.",
+            "count": len(gallery_items),
+            "summary": f"{len(published_gallery)} published · {len(draft_gallery)} draft",
+            "action_href": url_for("admin_online_gallery"),
+            "action_label": "Open",
+        },
+        {
+            "label": "Edu Resources",
+            "description": "Learning materials and downloadable resources for visitors and educators.",
+            "count": len(resources_items),
+            "summary": f"{len(active_resources)} active · {len(draft_resources)} draft · {len(archived_resources)} archived",
+            "action_href": url_for("admin_edu_resources"),
+            "action_label": "Manage",
+        },
+        {
+            "label": "Tour Bookings",
+            "description": "Scheduled visits, pending requests, and rescheduled tours.",
+            "count": len(booking_items),
+            "summary": (
+                f"{len(pending_bookings)} pending · {len(confirmed_bookings)} confirmed · "
+                f"{len(rescheduled_bookings)} rescheduled · {len(cancelled_bookings)} cancelled"
+            ),
+            "action_href": url_for("admin_tour_bookings"),
+            "action_label": "Review",
+        },
+        {
+            "label": "Participation Submissions",
+            "description": "Teacher Corner and Story Submit contributions from the public.",
+            "count": len(submission_items),
+            "summary": (
+                f"{len(pending_review_submissions)} pending review · {len(awaiting_verification_submissions)} awaiting verification · "
+                f"{len(active_submissions)} active · {len(archived_submissions)} archived"
+            ),
+            "action_href": url_for("admin_participation_submissions"),
+            "action_label": "Open",
+        },
+        {
+            "label": "Visitor Feedback",
+            "description": "Moderation queue for on-site and website visitor responses.",
+            "count": len(feedback_items),
+            "summary": f"{len(new_feedback)} new · {len(reviewed_feedback)} reviewed · {len(archived_feedback)} archived",
+            "action_href": url_for("admin_visitor_feedback"),
+            "action_label": "Review",
+        },
+    ]
+
+    return {
+        "dashboard_config_error": None
+        if is_supabase_configured()
+        else "Supabase admin content integrations are not configured. Dashboard queues and counts will remain empty until configuration is complete.",
+        "dashboard_stat_cards": dashboard_stat_cards,
+        "dashboard_content_breakdown": dashboard_content_breakdown,
+        "dashboard_content_breakdown_total": dashboard_content_total,
+        "dashboard_content_breakdown_chart": dashboard_content_chart,
+        "dashboard_review_queue": dashboard_review_queue,
+        "dashboard_recent_activity": dashboard_recent_activity,
+        "dashboard_workspace_rows": dashboard_workspace_rows,
+        "dashboard_overview_rows": dashboard_overview_rows,
+    }
 
 
 def _delete_local_image(image_filename, upload_dir):
@@ -451,10 +907,12 @@ def admin_login():
 def admin_dashboard():
     csrf_token = _ensure_admin_csrf_token()
     admin_username = session.get(ADMIN_SESSION_USER_KEY, ADMIN_DEFAULT_USERNAME)
+    dashboard_context = _build_admin_dashboard_context()
     return render_template(
         "admin/AdminDashboard.html",
         csrf_token=csrf_token,
         admin_username=admin_username,
+        **dashboard_context,
     )
 
 

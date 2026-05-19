@@ -73,6 +73,24 @@
     });
   }
 
+  function initDashboardVisuals() {
+    var chartElements = document.querySelectorAll("[data-dashboard-chart]");
+    var barElements = document.querySelectorAll("[data-dashboard-bar-value]");
+
+    chartElements.forEach(function (element) {
+      var chartValue = String(element.getAttribute("data-dashboard-chart") || "").trim();
+      if (chartValue) {
+        element.style.background = chartValue;
+      }
+    });
+
+    barElements.forEach(function (element) {
+      var rawValue = Number(element.getAttribute("data-dashboard-bar-value") || 0);
+      var clampedValue = Math.max(0, Math.min(100, rawValue));
+      element.style.width = clampedValue + "%";
+    });
+  }
+
   function initDashboardUi() {
     var toggle = document.querySelector("[data-sidebar-toggle]");
     var overlay = document.querySelector("[data-sidebar-overlay]");
@@ -106,6 +124,7 @@
       });
     });
 
+    initDashboardVisuals();
     initDashboardSearch();
     initAutoDismissAlerts();
   }

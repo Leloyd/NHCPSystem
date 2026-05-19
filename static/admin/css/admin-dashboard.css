@@ -602,6 +602,11 @@ a.admin-text-link {
   line-height: 1.1;
 }
 
+.admin-dashboard-card-link {
+  display: inline-flex;
+  margin-top: 0.7rem;
+}
+
 .admin-trend {
   display: inline-flex;
   margin-top: 0.3rem;
@@ -831,6 +836,12 @@ a.admin-text-link {
 .admin-content-breakdown li {
   justify-content: space-between;
   font-size: 0.84rem;
+}
+
+.admin-content-breakdown li span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.2rem;
 }
 
 .admin-content-breakdown strong,
@@ -1176,6 +1187,10 @@ a.admin-text-link {
 .admin-top-page-row span:first-child {
   width: 4rem;
   flex: 0 0 auto;
+}
+
+.admin-top-page-row .admin-inline-link {
+  font-size: 0.8rem;
 }
 
 .admin-top-page-bar {
