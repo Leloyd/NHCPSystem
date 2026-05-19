@@ -329,12 +329,8 @@
     audioToggleButton: audioToggleButton,
     activeAudioEntry: null,
     audioLanguage: "tl",
-    currentAudioMode: "narration",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
-    raycaster: null,
-    pointerNdc: new THREE_NS.Vector2(),
-    sceneInteractionHandler: null,
     destroyed: false,
   };
 
@@ -405,12 +401,6 @@
             ? {
                 tl: String(item.audioByLanguage.tl || ""),
                 en: String(item.audioByLanguage.en || ""),
-              }
-            : null,
-          specialAudio: item && item.specialAudio && typeof item.specialAudio === "object"
-            ? {
-                label: String(item.specialAudio.label || ""),
-                url: String(item.specialAudio.url || ""),
               }
             : null,
           infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
@@ -836,22 +826,6 @@
     return entry.audioByLanguage;
   }
 
-  function getEntrySpecialAudio(entry) {
-    if (!entry || !entry.specialAudio || typeof entry.specialAudio !== "object") {
-      return null;
-    }
-
-    var url = String(entry.specialAudio.url || "").trim();
-    if (!url) {
-      return null;
-    }
-
-    return {
-      label: String(entry.specialAudio.label || "").trim() || "Special audio",
-      url: url,
-    };
-  }
-
   function resolveAudioSource(audioConfig, language) {
     if (!audioConfig) {
       return "";
@@ -931,7 +905,6 @@
   function stopActiveAudio(resetTime) {
     removePendingAudioUnlockHandler();
     runtime.pendingAudioSrc = "";
-    runtime.currentAudioMode = "narration";
 
     if (!runtime.audioElement) {
       return;
@@ -945,46 +918,6 @@
         return;
       }
     }
-  }
-
-  function playAudioSource(sourceUrl, shouldRestart) {
-    var nextSrc = String(sourceUrl || "").trim();
-    if (!nextSrc) {
-      stopActiveAudio(true);
-      return false;
-    }
-
-    var audioEl = ensureAudioElement();
-    var currentSrc = audioEl.getAttribute("data-audio-src") || "";
-
-    if (shouldRestart || currentSrc !== nextSrc) {
-      audioEl.pause();
-      audioEl.src = nextSrc;
-      audioEl.setAttribute("data-audio-src", nextSrc);
-      try {
-        audioEl.currentTime = 0;
-      } catch (error) {
-        return false;
-      }
-    }
-
-    runtime.pendingAudioSrc = nextSrc;
-
-    var playResult = audioEl.play();
-    if (!playResult || typeof playResult.then !== "function") {
-      runtime.pendingAudioSrc = "";
-      return true;
-    }
-
-    playResult
-      .then(function () {
-        runtime.pendingAudioSrc = "";
-      })
-      .catch(function () {
-        schedulePendingAudioRetry();
-      });
-
-    return true;
   }
 
   function updateAudioToggleButton() {
@@ -1012,118 +945,51 @@
     runtime.audioToggleButton.setAttribute("aria-label", "Switch audio to " + label + " for " + runtime.activeAudioEntry.key);
   }
 
-  function updateAudioControls() {
-    updateAudioToggleButton();
-  }
-
   function playAudioForEntry(entry, language, shouldRestart) {
     var audioConfig = getEntryAudioConfig(entry);
     var nextSrc = resolveAudioSource(audioConfig, language);
     if (!nextSrc) {
       stopActiveAudio(true);
-      updateAudioControls();
+      updateAudioToggleButton();
       return;
     }
 
     var preferredLanguage = language === "en" ? "en" : "tl";
     var resolvedLanguage = String(audioConfig[preferredLanguage] || "").trim() ? preferredLanguage : preferredLanguage === "tl" ? "en" : "tl";
+    var audioEl = ensureAudioElement();
+    var currentSrc = audioEl.getAttribute("data-audio-src") || "";
 
     runtime.audioLanguage = resolvedLanguage;
-    runtime.currentAudioMode = "narration";
 
-    playAudioSource(nextSrc, shouldRestart);
-    updateAudioControls();
-  }
-
-  function playSpecialAudioForEntry(entry) {
-    var specialAudio = getEntrySpecialAudio(entry);
-    if (!specialAudio) {
-      updateAudioControls();
-      return;
-    }
-
-    runtime.currentAudioMode = "special";
-    playAudioSource(specialAudio.url, true);
-    updateAudioControls();
-  }
-
-  function getSpecialAudioInteractableEntries() {
-    return runtime.markerEntries.filter(function (entry) {
-      return Boolean(
-        entry &&
-          entry.key === "pahimakas" &&
-          entry.modelLoaded &&
-          entry.isVisibleStable &&
-          entry.renderRoot &&
-          entry.renderRoot.visible &&
-          entry.modelScene &&
-          getEntrySpecialAudio(entry)
-      );
-    });
-  }
-
-  function handleSceneInteraction(event) {
-    if (!event || !runtime.renderer || !runtime.camera || !runtime.raycaster) {
-      return;
-    }
-
-    if (typeof event.button === "number" && event.button !== 0) {
-      return;
-    }
-
-    var interactableEntries = getSpecialAudioInteractableEntries();
-    if (!interactableEntries.length) {
-      return;
-    }
-
-    var canvasEl = runtime.renderer.domElement;
-    if (!canvasEl) {
-      return;
-    }
-
-    var rect = canvasEl.getBoundingClientRect();
-    if (!rect.width || !rect.height) {
-      return;
-    }
-
-    var clientX = Number(event.clientX);
-    var clientY = Number(event.clientY);
-    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) {
-      return;
-    }
-
-    runtime.pointerNdc.set(((clientX - rect.left) / rect.width) * 2 - 1, -(((clientY - rect.top) / rect.height) * 2 - 1));
-    runtime.raycaster.setFromCamera(runtime.pointerNdc, runtime.camera);
-
-    var hitEntry = null;
-    var hitDistance = Number.POSITIVE_INFINITY;
-
-    interactableEntries.forEach(function (entry) {
-      entry.renderRoot.updateMatrixWorld(true);
-      var intersections = runtime.raycaster.intersectObject(entry.modelScene, true);
-      if (!intersections.length || intersections[0].distance >= hitDistance) {
+    if (shouldRestart || currentSrc !== nextSrc) {
+      audioEl.pause();
+      audioEl.src = nextSrc;
+      audioEl.setAttribute("data-audio-src", nextSrc);
+      try {
+        audioEl.currentTime = 0;
+      } catch (error) {
         return;
       }
-
-      hitEntry = entry;
-      hitDistance = intersections[0].distance;
-    });
-
-    if (hitEntry) {
-      playSpecialAudioForEntry(hitEntry);
     }
-  }
 
-  function bindSceneInteraction() {
-    if (!runtime.renderer || !runtime.renderer.domElement || runtime.sceneInteractionHandler) {
+    runtime.pendingAudioSrc = nextSrc;
+
+    var playResult = audioEl.play();
+    if (!playResult || typeof playResult.then !== "function") {
+      runtime.pendingAudioSrc = "";
+      updateAudioToggleButton();
       return;
     }
 
-    runtime.sceneInteractionHandler = function (event) {
-      handleSceneInteraction(event);
-    };
+    playResult
+      .then(function () {
+        runtime.pendingAudioSrc = "";
+      })
+      .catch(function () {
+        schedulePendingAudioRetry();
+      });
 
-    runtime.renderer.domElement.addEventListener("pointerup", runtime.sceneInteractionHandler, { passive: true });
+    updateAudioToggleButton();
   }
 
   function getPreferredAudioEntry() {
@@ -1161,7 +1027,7 @@
         runtime.audioLanguage = "tl";
         stopActiveAudio(true);
       }
-      updateAudioControls();
+      updateAudioToggleButton();
       return;
     }
 
@@ -1172,7 +1038,7 @@
       return;
     }
 
-    updateAudioControls();
+    updateAudioToggleButton();
   }
 
   function handleAudioToggleClick() {
@@ -1191,7 +1057,7 @@
 
     runtime.audioToggleButton.dataset.bound = "1";
     runtime.audioToggleButton.addEventListener("click", handleAudioToggleClick);
-    updateAudioControls();
+    updateAudioToggleButton();
   }
 
   function updateSmoothedPose(entry, nowMs) {
@@ -1482,7 +1348,6 @@
         modelContainer: modelContainer,
         modelScene: null,
         audioByLanguage: markerConfig.audioByLanguage || null,
-        specialAudio: markerConfig.specialAudio || null,
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -1536,9 +1401,6 @@
     runtime.scene.add(directionalLightB);
 
     runtime.loader = new THREE_NS.GLTFLoader();
-    runtime.raycaster = new THREE_NS.Raycaster();
-    runtime.raycaster.layers.set(CONTENT_LAYER);
-    bindSceneInteraction();
   }
 
   function initArToolkit() {
@@ -1739,11 +1601,6 @@
     if (runtime.videoWatcherIntervalId) {
       window.clearInterval(runtime.videoWatcherIntervalId);
       runtime.videoWatcherIntervalId = 0;
-    }
-
-    if (runtime.renderer && runtime.renderer.domElement && runtime.sceneInteractionHandler) {
-      runtime.renderer.domElement.removeEventListener("pointerup", runtime.sceneInteractionHandler);
-      runtime.sceneInteractionHandler = null;
     }
 
     runtime.markerEntries.forEach(function (entry) {
