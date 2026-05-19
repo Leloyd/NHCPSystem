@@ -19,7 +19,39 @@
     return;
   }
 
+  var ACCESSIBILITY_STORAGE_KEY = "heritage-trail-accessibility";
   var FONT_SIZES = { sm: "13px", md: "16px", lg: "19px", xl: "23px" };
+
+  function loadAccessibilitySettings() {
+    try {
+      var parsed = JSON.parse(window.localStorage.getItem(ACCESSIBILITY_STORAGE_KEY) || "{}");
+      return {
+        fontSize: Object.prototype.hasOwnProperty.call(FONT_SIZES, parsed.fontSize) ? parsed.fontSize : "md",
+        highContrast: !!parsed.highContrast,
+        textOnly: !!parsed.textOnly,
+      };
+    } catch (_error) {
+      return {
+        fontSize: "md",
+        highContrast: false,
+        textOnly: false,
+      };
+    }
+  }
+
+  function saveAccessibilitySettings() {
+    try {
+      window.localStorage.setItem(ACCESSIBILITY_STORAGE_KEY, JSON.stringify({
+        fontSize: state.fontSize,
+        highContrast: state.highContrast,
+        textOnly: state.textOnly,
+      }));
+    } catch (_error) {
+      return;
+    }
+  }
+
+  var persistedAccessibility = loadAccessibilitySettings();
 
   var STOPS = [
     { id: 1, title: "Orientation", short: "Front Gates" },
@@ -230,9 +262,9 @@
   var state = {
     currentStop: 0,
     completedStops: {},
-    fontSize: "md",
-    highContrast: false,
-    textOnly: false,
+    fontSize: persistedAccessibility.fontSize,
+    highContrast: persistedAccessibility.highContrast,
+    textOnly: persistedAccessibility.textOnly,
     showTranscript: false,
     accessibilityOpen: false,
     quizAnswers: {},
@@ -267,6 +299,8 @@
   function setFontSize() {
     shell.style.setProperty("--heritage-font-size", FONT_SIZES[state.fontSize] || FONT_SIZES.md);
     shell.dataset.contrast = state.highContrast ? "high" : "default";
+    document.body.classList.toggle("ogd-high-contrast-page", !!state.highContrast);
+    document.body.classList.toggle("heritage-high-contrast-page", !!state.highContrast);
   }
 
   function markCurrentStopComplete() {
@@ -694,10 +728,10 @@
       '<div class="heritage-access__header"><p class="heritage-label heritage-small">Accessibility Settings</p><button type="button" class="heritage-inline-button" data-action="close-access">Close</button></div>' +
       '<div class="heritage-access__body heritage-stack">' +
         '<div class="heritage-stack"><p class="heritage-small">Text Size</p><div class="heritage-access__grid">' + ['sm', 'md', 'lg', 'xl'].map(function (size) {
-          return '<button type="button" class="heritage-option ' + (state.fontSize === size ? 'is-active' : '') + '" data-action="set-font-size" data-size="' + size + '">' + size.toUpperCase() + '</button>';
+          return '<button type="button" class="heritage-option ' + (state.fontSize === size ? 'is-active' : '') + '" data-action="set-font-size" data-size="' + size + '" aria-pressed="' + (state.fontSize === size ? 'true' : 'false') + '">' + size.toUpperCase() + '</button>';
         }).join('') + '</div></div>' +
-        '<button type="button" class="heritage-toggle ' + (state.highContrast ? 'is-active' : '') + '" data-action="toggle-contrast">High Contrast</button>' +
-        '<button type="button" class="heritage-toggle ' + (state.textOnly ? 'is-active' : '') + '" data-action="toggle-text-only">Text-Only Mode</button>' +
+        '<button type="button" class="heritage-toggle ' + (state.highContrast ? 'is-active' : '') + '" data-action="toggle-contrast" role="switch" aria-checked="' + (state.highContrast ? 'true' : 'false') + '">High Contrast</button>' +
+        '<button type="button" class="heritage-toggle ' + (state.textOnly ? 'is-active' : '') + '" data-action="toggle-text-only" aria-pressed="' + (state.textOnly ? 'true' : 'false') + '">Text-Only Mode</button>' +
         '<p class="heritage-copy">This trail supports a readable text scale, higher contrast, and text-only mode so the experience remains usable for more visitors.</p>' +
       '</div>' +
     '</aside>';
@@ -1211,18 +1245,21 @@
 
     if (action === 'set-font-size') {
       state.fontSize = trigger.getAttribute('data-size') || 'md';
+      saveAccessibilitySettings();
       render();
       return;
     }
 
     if (action === 'toggle-contrast') {
       state.highContrast = !state.highContrast;
+      saveAccessibilitySettings();
       render();
       return;
     }
 
     if (action === 'toggle-text-only') {
       state.textOnly = !state.textOnly;
+      saveAccessibilitySettings();
       render();
       return;
     }

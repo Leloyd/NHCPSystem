@@ -73,6 +73,152 @@
   --heritage-shadow-soft: none;
 }
 
+.heritage-page.heritage-high-contrast-page {
+  background: #000000;
+  color: #ffffff;
+}
+
+.heritage-shell[data-contrast="high"]::before,
+.heritage-shell[data-contrast="high"] .heritage-hero::before,
+.heritage-shell[data-contrast="high"] .heritage-hero::after,
+.heritage-shell[data-contrast="high"] .heritage-stop-hero::before {
+  display: none;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-hero,
+.heritage-shell[data-contrast="high"] .heritage-progress,
+.heritage-shell[data-contrast="high"] .heritage-access,
+.heritage-shell[data-contrast="high"] .heritage-panel,
+.heritage-shell[data-contrast="high"] .heritage-stop-hero,
+.heritage-shell[data-contrast="high"] .heritage-stop-hero__header,
+.heritage-shell[data-contrast="high"] .heritage-stop-feature,
+.heritage-shell[data-contrast="high"] .heritage-card,
+.heritage-shell[data-contrast="high"] .heritage-stat,
+.heritage-shell[data-contrast="high"] .heritage-callout,
+.heritage-shell[data-contrast="high"] .heritage-detail,
+.heritage-shell[data-contrast="high"] .heritage-result,
+.heritage-shell[data-contrast="high"] .heritage-rule,
+.heritage-shell[data-contrast="high"] .heritage-accordion__item,
+.heritage-shell[data-contrast="high"] .heritage-card-button,
+.heritage-shell[data-contrast="high"] .heritage-option,
+.heritage-shell[data-contrast="high"] .heritage-toggle,
+.heritage-shell[data-contrast="high"] .heritage-chip,
+.heritage-shell[data-contrast="high"] .heritage-nav-button,
+.heritage-shell[data-contrast="high"] .heritage-gallery__caption,
+.heritage-shell[data-contrast="high"] .heritage-transcript,
+.heritage-shell[data-contrast="high"] .heritage-form input,
+.heritage-shell[data-contrast="high"] .heritage-form select,
+.heritage-shell[data-contrast="high"] .heritage-quiz-option {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #facc15 !important;
+  box-shadow: none !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-stop-hero__image,
+.heritage-shell[data-contrast="high"] .heritage-gallery__frame,
+.heritage-shell[data-contrast="high"] .heritage-hero__panorama,
+.heritage-shell[data-contrast="high"] .heritage-hero__panorama-view,
+.heritage-shell[data-contrast="high"] .heritage-hero__panorama .pnlm-container {
+  background: #000000 !important;
+  border-color: #facc15 !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-stop-hero__image::after {
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, rgba(0, 0, 0, 0.42) 48%, rgba(0, 0, 0, 0.94) 100%);
+}
+
+.heritage-shell[data-contrast="high"] .heritage-hero__title,
+.heritage-shell[data-contrast="high"] .heritage-hero__copy,
+.heritage-shell[data-contrast="high"] .heritage-eyebrow,
+.heritage-shell[data-contrast="high"] .heritage-stop-title,
+.heritage-shell[data-contrast="high"] .heritage-stop-subtitle,
+.heritage-shell[data-contrast="high"] .heritage-copy,
+.heritage-shell[data-contrast="high"] .heritage-accordion__content,
+.heritage-shell[data-contrast="high"] .heritage-card-button__copy,
+.heritage-shell[data-contrast="high"] .heritage-card-button__title,
+.heritage-shell[data-contrast="high"] .heritage-form label,
+.heritage-shell[data-contrast="high"] .heritage-form legend,
+.heritage-shell[data-contrast="high"] .heritage-form .heritage-small,
+.heritage-shell[data-contrast="high"] .heritage-rule__title,
+.heritage-shell[data-contrast="high"] .heritage-footer-note,
+.heritage-shell[data-contrast="high"] .heritage-progress__meta,
+.heritage-shell[data-contrast="high"] .heritage-stat__label,
+.heritage-shell[data-contrast="high"] .heritage-gallery__caption {
+  color: #ffffff !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-label,
+.heritage-shell[data-contrast="high"] .heritage-progress__title,
+.heritage-shell[data-contrast="high"] .heritage-card-button__meta,
+.heritage-shell[data-contrast="high"] .heritage-card-button__hint,
+.heritage-shell[data-contrast="high"] .heritage-small,
+.heritage-shell[data-contrast="high"] .heritage-inline-button,
+.heritage-shell[data-contrast="high"] .heritage-stop-panorama .heritage-label {
+  color: #facc15 !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-button,
+.heritage-shell[data-contrast="high"] .heritage-nav-button--primary,
+.heritage-shell[data-contrast="high"] .heritage-progress-mini span.is-filled,
+.heritage-shell[data-contrast="high"] .heritage-gallery__dot.is-active,
+.heritage-shell[data-contrast="high"] .heritage-segment.is-current .heritage-segment__bar,
+.heritage-shell[data-contrast="high"] .heritage-segment.is-complete .heritage-segment__bar {
+  background: #facc15 !important;
+  color: #000000 !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-button--ghost,
+.heritage-shell[data-contrast="high"] .heritage-nav-button,
+.heritage-shell[data-contrast="high"] .heritage-progress__action,
+.heritage-shell[data-contrast="high"] .heritage-gallery__nav {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #facc15 !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-option.is-active,
+.heritage-shell[data-contrast="high"] .heritage-toggle.is-active,
+.heritage-shell[data-contrast="high"] .heritage-chip.is-active,
+.heritage-shell[data-contrast="high"] .heritage-card-button.is-active,
+.heritage-shell[data-contrast="high"] .heritage-quiz-option.is-selected {
+  background: #1a1a1a !important;
+  color: #facc15 !important;
+  border-color: #facc15 !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-progress-mini span,
+.heritage-shell[data-contrast="high"] .heritage-gallery__dot,
+.heritage-shell[data-contrast="high"] .heritage-segment__bar,
+.heritage-shell[data-contrast="high"] .heritage-divider::before,
+.heritage-shell[data-contrast="high"] .heritage-divider::after,
+.heritage-shell[data-contrast="high"] .heritage-kicker-row::after {
+  background: rgba(250, 204, 21, 0.38) !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-divider__diamond,
+.heritage-shell[data-contrast="high"] .heritage-pill,
+.heritage-shell[data-contrast="high"] .heritage-callout__icon,
+.heritage-shell[data-contrast="high"] .heritage-gallery__nav:focus-visible,
+.heritage-shell[data-contrast="high"] .heritage-gallery__dot:focus-visible {
+  border-color: #facc15 !important;
+  color: #facc15 !important;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-hero__panorama .tour-ground-hotspot {
+  border-color: #facc15;
+  background: radial-gradient(circle at center, rgba(250, 204, 21, 0.22) 0%, rgba(250, 204, 21, 0.12) 58%, rgba(250, 204, 21, 0) 72%);
+}
+
+.heritage-shell[data-contrast="high"] .heritage-hero__panorama .tour-ground-hotspot::before {
+  border-top-color: #facc15;
+  border-right-color: #facc15;
+}
+
+.heritage-shell[data-contrast="high"] .heritage-hero__panorama .tour-ground-hotspot::after {
+  background: rgba(250, 204, 21, 0.12);
+}
+
 .heritage-skip-link {
   position: absolute;
   left: -9999px;
