@@ -2479,13 +2479,14 @@
     imageButton.type = "button";
 
     const showAlternateAudioButton = args.sourceHotspotId === "museum3-pahimakas-marker" && Boolean(args.alternateAudioSrc);
-
-    const alternateAudioButton = document.createElement("button");
-    alternateAudioButton.className = "tour-floating-media-window-audio-button";
-    alternateAudioButton.type = "button";
-    alternateAudioButton.setAttribute("aria-label", "Play Pahimakas march audio");
-    alternateAudioButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path></svg>';
-    alternateAudioButton.hidden = !showAlternateAudioButton;
+    let alternateAudioButton = null;
+    if (showAlternateAudioButton) {
+      alternateAudioButton = document.createElement("button");
+      alternateAudioButton.className = "tour-floating-media-window-audio-button";
+      alternateAudioButton.type = "button";
+      alternateAudioButton.setAttribute("aria-label", "Play Pahimakas march audio");
+      alternateAudioButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path></svg>';
+    }
 
     const image = document.createElement("img");
     image.className = "tour-floating-image-window";
@@ -2541,7 +2542,9 @@
       const showModelNav = !isImageView && glbSources.length > 1;
       const currentGlbIndex = getArtifactGlbIndex(args);
 
-      alternateAudioButton.hidden = !showAlternateAudioButton || !isImageView;
+      if (alternateAudioButton) {
+        alternateAudioButton.hidden = !isImageView;
+      }
       imageButton.hidden = !isImageView;
       imageButton.style.display = isImageView ? "block" : "none";
       image.hidden = !isImageView;
@@ -2573,16 +2576,14 @@
       syncView(currentView === "image" ? "glb" : "image");
     });
 
-    alternateAudioButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!showAlternateAudioButton) {
-        return;
-      }
-
-      stopFloatingImageAudio();
-      playFloatingImageAudio(args.alternateAudioSrc);
-    });
+    if (alternateAudioButton) {
+      alternateAudioButton.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+        stopFloatingImageAudio();
+        playFloatingImageAudio(args.alternateAudioSrc);
+      });
+    }
 
     prevButton.addEventListener("click", function (event) {
       event.preventDefault();
@@ -2651,7 +2652,9 @@
     switchButton.appendChild(switchIcon);
     switchButton.appendChild(switchLabel);
     panel.appendChild(switchButton);
-    panel.appendChild(alternateAudioButton);
+    if (alternateAudioButton) {
+      panel.appendChild(alternateAudioButton);
+    }
     panel.appendChild(imageButton);
     panel.appendChild(model);
     modelNav.appendChild(prevButton);
