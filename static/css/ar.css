@@ -97,6 +97,14 @@ video {
   justify-content: center;
 }
 
+.ar-control-row {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
 .ar-overlay--artifact {
   top: 0;
   bottom: auto;
@@ -218,6 +226,26 @@ video {
 }
 
 .ar-btn--translation[disabled] {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.ar-btn--special-audio {
+  min-width: min(12.5rem, calc(100vw - 2rem));
+  padding-inline: 1rem;
+  background: rgba(102, 34, 12, 0.86);
+  border-color: rgba(251, 191, 36, 0.3);
+  color: #fff7ed;
+}
+
+.ar-btn--special-audio:hover,
+.ar-btn--special-audio:focus-visible,
+.ar-btn--special-audio.is-active {
+  background: rgba(140, 48, 13, 0.94);
+}
+
+.ar-btn--special-audio[disabled] {
   opacity: 0.62;
   cursor: not-allowed;
   transform: none;

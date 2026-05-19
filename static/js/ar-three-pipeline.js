@@ -4,6 +4,7 @@
   var body = document.body;
   var rootEl = document.getElementById("arScene");
   var audioToggleButton = document.getElementById("arAudioLanguageToggle");
+  var pahimakasSpecialAudioButton = document.getElementById("arPahimakasSpecialAudioButton");
   if (!body || !rootEl) {
     return;
   }
@@ -327,8 +328,10 @@
     rafId: 0,
     audioElement: null,
     audioToggleButton: audioToggleButton,
+    specialAudioButton: pahimakasSpecialAudioButton,
     activeAudioEntry: null,
     audioLanguage: "tl",
+    currentAudioMode: "narration",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
     destroyed: false,
@@ -401,6 +404,12 @@
             ? {
                 tl: String(item.audioByLanguage.tl || ""),
                 en: String(item.audioByLanguage.en || ""),
+              }
+            : null,
+          specialAudio: item && item.specialAudio && typeof item.specialAudio === "object"
+            ? {
+                label: String(item.specialAudio.label || ""),
+                url: String(item.specialAudio.url || ""),
               }
             : null,
           infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
@@ -826,6 +835,22 @@
     return entry.audioByLanguage;
   }
 
+  function getEntrySpecialAudio(entry) {
+    if (!entry || !entry.specialAudio || typeof entry.specialAudio !== "object") {
+      return null;
+    }
+
+    var url = String(entry.specialAudio.url || "").trim();
+    if (!url) {
+      return null;
+    }
+
+    return {
+      label: String(entry.specialAudio.label || "").trim() || "Special audio",
+      url: url,
+    };
+  }
+
   function resolveAudioSource(audioConfig, language) {
     if (!audioConfig) {
       return "";
@@ -905,6 +930,7 @@
   function stopActiveAudio(resetTime) {
     removePendingAudioUnlockHandler();
     runtime.pendingAudioSrc = "";
+    runtime.currentAudioMode = "narration";
 
     if (!runtime.audioElement) {
       return;
@@ -918,6 +944,46 @@
         return;
       }
     }
+  }
+
+  function playAudioSource(sourceUrl, shouldRestart) {
+    var nextSrc = String(sourceUrl || "").trim();
+    if (!nextSrc) {
+      stopActiveAudio(true);
+      return false;
+    }
+
+    var audioEl = ensureAudioElement();
+    var currentSrc = audioEl.getAttribute("data-audio-src") || "";
+
+    if (shouldRestart || currentSrc !== nextSrc) {
+      audioEl.pause();
+      audioEl.src = nextSrc;
+      audioEl.setAttribute("data-audio-src", nextSrc);
+      try {
+        audioEl.currentTime = 0;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    runtime.pendingAudioSrc = nextSrc;
+
+    var playResult = audioEl.play();
+    if (!playResult || typeof playResult.then !== "function") {
+      runtime.pendingAudioSrc = "";
+      return true;
+    }
+
+    playResult
+      .then(function () {
+        runtime.pendingAudioSrc = "";
+      })
+      .catch(function () {
+        schedulePendingAudioRetry();
+      });
+
+    return true;
   }
 
   function updateAudioToggleButton() {
@@ -945,51 +1011,64 @@
     runtime.audioToggleButton.setAttribute("aria-label", "Switch audio to " + label + " for " + runtime.activeAudioEntry.key);
   }
 
+  function updateSpecialAudioButton() {
+    if (!runtime.specialAudioButton) {
+      return;
+    }
+
+    var specialAudio = getEntrySpecialAudio(runtime.activeAudioEntry);
+    var isEnabled = Boolean(runtime.activeAudioEntry && specialAudio);
+
+    runtime.specialAudioButton.hidden = !isEnabled;
+    runtime.specialAudioButton.disabled = !isEnabled;
+    runtime.specialAudioButton.setAttribute("aria-disabled", isEnabled ? "false" : "true");
+    runtime.specialAudioButton.setAttribute("aria-pressed", isEnabled && runtime.currentAudioMode === "special" ? "true" : "false");
+    runtime.specialAudioButton.classList.toggle("is-active", isEnabled && runtime.currentAudioMode === "special");
+
+    if (!isEnabled) {
+      runtime.specialAudioButton.textContent = "Marche funébre";
+      runtime.specialAudioButton.setAttribute("aria-label", "Pahimakas special audio unavailable");
+      return;
+    }
+
+    runtime.specialAudioButton.textContent = specialAudio.label;
+    runtime.specialAudioButton.setAttribute("aria-label", "Play " + specialAudio.label + " for " + runtime.activeAudioEntry.key);
+  }
+
+  function updateAudioControls() {
+    updateAudioToggleButton();
+    updateSpecialAudioButton();
+  }
+
   function playAudioForEntry(entry, language, shouldRestart) {
     var audioConfig = getEntryAudioConfig(entry);
     var nextSrc = resolveAudioSource(audioConfig, language);
     if (!nextSrc) {
       stopActiveAudio(true);
-      updateAudioToggleButton();
+      updateAudioControls();
       return;
     }
 
     var preferredLanguage = language === "en" ? "en" : "tl";
     var resolvedLanguage = String(audioConfig[preferredLanguage] || "").trim() ? preferredLanguage : preferredLanguage === "tl" ? "en" : "tl";
-    var audioEl = ensureAudioElement();
-    var currentSrc = audioEl.getAttribute("data-audio-src") || "";
 
     runtime.audioLanguage = resolvedLanguage;
+    runtime.currentAudioMode = "narration";
 
-    if (shouldRestart || currentSrc !== nextSrc) {
-      audioEl.pause();
-      audioEl.src = nextSrc;
-      audioEl.setAttribute("data-audio-src", nextSrc);
-      try {
-        audioEl.currentTime = 0;
-      } catch (error) {
-        return;
-      }
-    }
+    playAudioSource(nextSrc, shouldRestart);
+    updateAudioControls();
+  }
 
-    runtime.pendingAudioSrc = nextSrc;
-
-    var playResult = audioEl.play();
-    if (!playResult || typeof playResult.then !== "function") {
-      runtime.pendingAudioSrc = "";
-      updateAudioToggleButton();
+  function playSpecialAudioForEntry(entry) {
+    var specialAudio = getEntrySpecialAudio(entry);
+    if (!specialAudio) {
+      updateAudioControls();
       return;
     }
 
-    playResult
-      .then(function () {
-        runtime.pendingAudioSrc = "";
-      })
-      .catch(function () {
-        schedulePendingAudioRetry();
-      });
-
-    updateAudioToggleButton();
+    runtime.currentAudioMode = "special";
+    playAudioSource(specialAudio.url, true);
+    updateAudioControls();
   }
 
   function getPreferredAudioEntry() {
@@ -1027,7 +1106,7 @@
         runtime.audioLanguage = "tl";
         stopActiveAudio(true);
       }
-      updateAudioToggleButton();
+      updateAudioControls();
       return;
     }
 
@@ -1038,7 +1117,7 @@
       return;
     }
 
-    updateAudioToggleButton();
+    updateAudioControls();
   }
 
   function handleAudioToggleClick() {
@@ -1050,6 +1129,14 @@
     playAudioForEntry(runtime.activeAudioEntry, nextLanguage, true);
   }
 
+  function handleSpecialAudioButtonClick() {
+    if (!runtime.activeAudioEntry) {
+      return;
+    }
+
+    playSpecialAudioForEntry(runtime.activeAudioEntry);
+  }
+
   function bindAudioToggleButton() {
     if (!runtime.audioToggleButton || runtime.audioToggleButton.dataset.bound === "1") {
       return;
@@ -1057,7 +1144,17 @@
 
     runtime.audioToggleButton.dataset.bound = "1";
     runtime.audioToggleButton.addEventListener("click", handleAudioToggleClick);
-    updateAudioToggleButton();
+    updateAudioControls();
+  }
+
+  function bindSpecialAudioButton() {
+    if (!runtime.specialAudioButton || runtime.specialAudioButton.dataset.bound === "1") {
+      return;
+    }
+
+    runtime.specialAudioButton.dataset.bound = "1";
+    runtime.specialAudioButton.addEventListener("click", handleSpecialAudioButtonClick);
+    updateAudioControls();
   }
 
   function updateSmoothedPose(entry, nowMs) {
@@ -1348,6 +1445,7 @@
         modelContainer: modelContainer,
         modelScene: null,
         audioByLanguage: markerConfig.audioByLanguage || null,
+        specialAudio: markerConfig.specialAudio || null,
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -1642,6 +1740,7 @@
     );
 
     bindAudioToggleButton();
+    bindSpecialAudioButton();
     initRendererScene();
     initArToolkit();
     buildMarkerEntries(enabledMarkers);
