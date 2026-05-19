@@ -32,6 +32,10 @@
   const kabaongGlbSrc = app ? app.dataset.kabaongGlbSrc : "";
   const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
   const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
+  const kabilaImageSrc = app ? app.dataset.kabilaImageSrc : "";
+  const bangaImageSrc = app ? app.dataset.bangaImageSrc : "";
+  const bangaGlbSrc = app ? app.dataset.bangaGlbSrc : "";
+  const jarImageSrc = app ? app.dataset.jarImageSrc : "";
   const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
   const frontGateHotspotH1AudioSrc = app ? app.dataset.frontGateHotspotH1AudioSrc : "";
   const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
@@ -1409,6 +1413,59 @@
       yaw: 80,
       hfov: 100,
       hotSpots: [
+        {
+          id: "museum2-kabila-marker",
+          pitch: -20.36,
+          yaw: 47.56,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openFloatingArtifactOverlay,
+          clickHandlerArgs: {
+            sourceHotspotId: "museum2-kabila-marker",
+            windowHotspotId: "museum2-kabila-marker-window",
+            imageSrc: kabilaImageSrc,
+            imageAlt: "Kabila",
+            windowPitch: -20.36,
+            windowYaw: 47.56,
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+        },
+        {
+          id: "museum2-banga-marker",
+          pitch: -17.11,
+          yaw: 169.7,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openFloatingArtifactOverlay,
+          clickHandlerArgs: {
+            sourceHotspotId: "museum2-banga-marker",
+            windowHotspotId: "museum2-banga-marker-window",
+            imageSrc: bangaImageSrc,
+            imageAlt: "Banga",
+            glbSrc: bangaGlbSrc,
+            glbAlt: "Banga 3D model",
+            windowPitch: -17.11,
+            windowYaw: 169.7,
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+        },
+        {
+          id: "museum2-jar-marker",
+          pitch: -29.35,
+          yaw: 169.12,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openFloatingArtifactOverlay,
+          clickHandlerArgs: {
+            sourceHotspotId: "museum2-jar-marker",
+            windowHotspotId: "museum2-jar-marker-window",
+            imageSrc: jarImageSrc,
+            imageAlt: "Jar",
+            windowPitch: -29.35,
+            windowYaw: 169.12,
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+        },
         {
           id: "go-museum-3",
           pitch: -23,
