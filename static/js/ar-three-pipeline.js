@@ -25,7 +25,6 @@
   var CONTENT_LAYER = 0;
   var OCCLUSION_LAYER = 1;
   var BALANGHAY_KEY = "balanghay";
-  var TAUSUG_KEY = "tausug";
 
   var MODEL_CONFIG = {
     balanghay: {
@@ -43,7 +42,7 @@
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, -90, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -54,7 +53,7 @@
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, -90, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -65,7 +64,7 @@
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, -90, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -76,7 +75,7 @@
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, -90, 0],
+      rotation: [0, -130, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -102,14 +101,14 @@
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
-        yOffset: -0.02,
+        yOffset: -0.001,
       },
     },
     pagpag: {
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, -90, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -120,7 +119,7 @@
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, -90, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -160,7 +159,84 @@
         yOffset: 0.001,
       },
     },
+    luksa: {
+      targetSize: 0.8,
+      scaleMultiplier: 2.5,
+      position: [0, 0, 0],
+      rotation: [0, -180, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    pagtubas: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, -90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    pahiwatig: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, -120, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    recuerdos: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, -90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    sabwag: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0, 0],
+      rotation: [0, -90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    sisiw: {
+      targetSize: 0.8,
+      scaleMultiplier: 2.5,
+      position: [0, 0, 0],
+      rotation: [0, 0, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
     tausug: {
+      targetSize: 0.8,
+      scaleMultiplier: 2.5,
+      position: [0, 0, 0],
+      rotation: [0, -90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
+    tboli: {
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
@@ -248,8 +324,6 @@
     videoWatcherIntervalId: 0,
     markerFilter: "all",
     rafId: 0,
-    tausugSwitcher: null,
-    activeTausugEntry: null,
     destroyed: false,
   };
 
@@ -305,27 +379,6 @@
     return markerValue || "all";
   }
 
-  function getMarkerModelUrls(item) {
-    var urls = [];
-
-    if (Array.isArray(item && item.modelUrls)) {
-      urls = item.modelUrls
-        .map(function (value) {
-          return String(value || "").trim();
-        })
-        .filter(Boolean);
-    }
-
-    if (!urls.length) {
-      var fallbackUrl = String(item && item.modelUrl ? item.modelUrl : "").trim();
-      if (fallbackUrl) {
-        urls.push(fallbackUrl);
-      }
-    }
-
-    return urls;
-  }
-
   function getEnabledMarkers(rawMarkers) {
     var requestedFilter = getMarkerFilter();
     runtime.markerFilter = requestedFilter;
@@ -336,14 +389,13 @@
           key: String(item && item.key ? item.key : "").toLowerCase(),
           patternUrl: String(item && item.patternUrl ? item.patternUrl : ""),
           modelUrl: String(item && item.modelUrl ? item.modelUrl : ""),
-          modelUrls: getMarkerModelUrls(item),
           imageUrl: String(item && item.imageUrl ? item.imageUrl : ""),
           infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
           infoText: String(item && item.infoText ? item.infoText : ""),
         };
       })
       .filter(function (item) {
-        return Boolean(item.key && item.patternUrl && item.modelUrls.length);
+        return Boolean(item.key && item.patternUrl && item.modelUrl);
       });
 
     if (!markers.length) {
@@ -434,182 +486,6 @@
     }).catch(function () {
       return undefined;
     });
-  }
-
-  function disposeMaterialTextures(material) {
-    if (!material) {
-      return;
-    }
-
-    ["map", "alphaMap", "aoMap", "bumpMap", "displacementMap", "emissiveMap", "envMap", "lightMap", "metalnessMap", "normalMap", "roughnessMap"].forEach(function (textureKey) {
-      var texture = material[textureKey];
-      if (texture && typeof texture.dispose === "function") {
-        texture.dispose();
-      }
-    });
-
-    if (typeof material.dispose === "function") {
-      material.dispose();
-    }
-  }
-
-  function disposeSceneGraph(root) {
-    if (!root || typeof root.traverse !== "function") {
-      return;
-    }
-
-    root.traverse(function (node) {
-      if (!node || !node.isMesh) {
-        return;
-      }
-
-      if (node.geometry && typeof node.geometry.dispose === "function") {
-        node.geometry.dispose();
-      }
-
-      if (Array.isArray(node.material)) {
-        node.material.forEach(disposeMaterialTextures);
-        return;
-      }
-
-      disposeMaterialTextures(node.material);
-    });
-  }
-
-  function clearEntryModelScene(entry) {
-    if (!entry || !entry.modelScene || !entry.modelContainer) {
-      return;
-    }
-
-    entry.modelContainer.remove(entry.modelScene);
-    disposeSceneGraph(entry.modelScene);
-    entry.modelScene = null;
-    entry.modelLoaded = false;
-  }
-
-  function getEntryModelUrls(entry) {
-    if (!entry) {
-      return [];
-    }
-
-    if (Array.isArray(entry.modelUrls) && entry.modelUrls.length) {
-      return entry.modelUrls;
-    }
-
-    if (entry.markerConfig && entry.markerConfig.modelUrl) {
-      return [entry.markerConfig.modelUrl];
-    }
-
-    return [];
-  }
-
-  function getActivelyVisibleEntries() {
-    return runtime.markerEntries.filter(function (entry) {
-      return Boolean(
-        entry &&
-          entry.trackingRoot &&
-          entry.trackingRoot.visible &&
-          entry.renderRoot &&
-          entry.renderRoot.visible &&
-          entry.modelLoaded
-      );
-    });
-  }
-
-  function getVisibleTausugEntry() {
-    var visibleEntries = getActivelyVisibleEntries();
-    if (visibleEntries.length !== 1) {
-      return null;
-    }
-
-    return visibleEntries[0].key === TAUSUG_KEY ? visibleEntries[0] : null;
-  }
-
-  function updateTausugSwitcherVisibility() {
-    if (!runtime.tausugSwitcher) {
-      return;
-    }
-
-    var activeEntry = getVisibleTausugEntry();
-    runtime.activeTausugEntry = activeEntry;
-
-    var modelUrls = getEntryModelUrls(activeEntry);
-    var shouldShow = Boolean(activeEntry && modelUrls.length > 1);
-    runtime.tausugSwitcher.container.hidden = !shouldShow;
-
-    if (!shouldShow) {
-      return;
-    }
-
-    var disableButtons = Boolean(activeEntry.modelLoading);
-    runtime.tausugSwitcher.previous.disabled = disableButtons;
-    runtime.tausugSwitcher.next.disabled = disableButtons;
-  }
-
-  function createTausugSwitcher() {
-    if (runtime.tausugSwitcher) {
-      return;
-    }
-
-    var hasTausugVariants = runtime.markerEntries.some(function (entry) {
-      return entry && entry.key === TAUSUG_KEY && getEntryModelUrls(entry).length > 1;
-    });
-
-    if (!hasTausugVariants) {
-      return;
-    }
-
-    var overlay = document.createElement("div");
-    overlay.className = "ar-overlay ar-overlay--tausug-nav";
-    overlay.hidden = true;
-
-    var controls = document.createElement("div");
-    controls.className = "ar-tausug-nav";
-
-    var previousButton = document.createElement("button");
-    previousButton.type = "button";
-    previousButton.className = "ar-btn ar-btn--icon";
-    previousButton.setAttribute("aria-label", "Previous Tausug model");
-    previousButton.textContent = "‹";
-
-    var nextButton = document.createElement("button");
-    nextButton.type = "button";
-    nextButton.className = "ar-btn ar-btn--icon";
-    nextButton.setAttribute("aria-label", "Next Tausug model");
-    nextButton.textContent = "›";
-
-    controls.appendChild(previousButton);
-    controls.appendChild(nextButton);
-    overlay.appendChild(controls);
-    body.appendChild(overlay);
-
-    runtime.tausugSwitcher = {
-      container: overlay,
-      previous: previousButton,
-      next: nextButton,
-    };
-
-    previousButton.addEventListener("click", function () {
-      stepTausugModel(-1);
-    });
-
-    nextButton.addEventListener("click", function () {
-      stepTausugModel(1);
-    });
-
-    updateTausugSwitcherVisibility();
-  }
-
-  function stepTausugModel(direction) {
-    var entry = runtime.activeTausugEntry;
-    var modelUrls = getEntryModelUrls(entry);
-    if (!entry || modelUrls.length < 2 || entry.modelLoading) {
-      return;
-    }
-
-    var step = direction < 0 ? -1 : 1;
-    var nextIndex = (entry.activeModelIndex + step + modelUrls.length) % modelUrls.length;
-    loadMarkerModel(entry, entry.markerConfig, nextIndex);
   }
 
   function showCameraError(rawError) {
@@ -1005,8 +881,6 @@
 
       scheduleMarkerLost(entry);
     });
-
-    updateTausugSwitcherVisibility();
   }
 
   function updateGroundOccluder(entry, modelSettings, size, fitScale) {
@@ -1143,39 +1017,14 @@
     updateGroundOccluder(entry, modelSettings, size, fitScale);
   }
 
-  function loadMarkerModel(entry, markerConfig, requestedModelIndex) {
+  function loadMarkerModel(entry, markerConfig) {
     if (!runtime.loader || !entry) {
       return;
     }
 
-    var modelUrls = getEntryModelUrls(entry);
-    if (!modelUrls.length) {
-      return;
-    }
-
-    var safeIndex = ((Math.round(Number(requestedModelIndex)) || 0) + modelUrls.length) % modelUrls.length;
-    var modelUrl = modelUrls[safeIndex];
-    if (!modelUrl) {
-      return;
-    }
-
-    var loadToken = (entry.pendingLoadToken || 0) + 1;
-    entry.pendingLoadToken = loadToken;
-    entry.activeModelIndex = safeIndex;
-    entry.modelLoading = true;
-    entry.modelLoaded = false;
-    clearEntryModelScene(entry);
-    updateTausugSwitcherVisibility();
-
     runtime.loader.load(
-      modelUrl,
+      markerConfig.modelUrl,
       function (gltf) {
-        if (entry.pendingLoadToken !== loadToken) {
-          var staleScene = gltf && (gltf.scene || (gltf.scenes && gltf.scenes[0]));
-          disposeSceneGraph(staleScene);
-          return;
-        }
-
         var scene = gltf && (gltf.scene || (gltf.scenes && gltf.scenes[0]));
         if (!scene) {
           throw new Error("GLB scene is empty.");
@@ -1186,23 +1035,14 @@
         entry.modelScene = scene;
         entry.modelContainer.add(scene);
         normalizeModel(entry, scene, modelSettings);
-        entry.modelLoading = false;
         entry.modelLoaded = true;
-        updateTausugSwitcherVisibility();
 
-        sendAnalytics("model_loaded", { model: entry.key, variant: safeIndex + 1 });
+        sendAnalytics("model_loaded", { model: entry.key });
       },
       undefined,
       function (error) {
-        if (entry.pendingLoadToken !== loadToken) {
-          return;
-        }
-
-        entry.modelLoading = false;
-        updateTausugSwitcherVisibility();
         sendAnalytics("model_error", {
           model: entry.key,
-          variant: safeIndex + 1,
           error: parseErrorMessage(error),
         });
       }
@@ -1242,11 +1082,6 @@
 
       var entry = {
         key: markerConfig.key,
-        markerConfig: markerConfig,
-        modelUrls: Array.isArray(markerConfig.modelUrls) ? markerConfig.modelUrls.slice() : getMarkerModelUrls(markerConfig),
-        activeModelIndex: 0,
-        pendingLoadToken: 0,
-        modelLoading: false,
         trackingRoot: trackingRoot,
         renderRoot: renderRoot,
         occluderRoot: occluderRoot,
@@ -1271,8 +1106,6 @@
       loadMarkerModel(entry, markerConfig);
       runtime.markerEntries.push(entry);
     });
-
-    createTausugSwitcher();
   }
 
   function initRendererScene() {
@@ -1503,7 +1336,6 @@
 
     runtime.markerEntries.forEach(function (entry) {
       clearMarkerLostTimer(entry);
-      clearEntryModelScene(entry);
 
       if (entry.occluderMesh) {
         if (entry.occluderMesh.geometry) {
@@ -1516,13 +1348,6 @@
         }
       }
     });
-
-    if (runtime.tausugSwitcher && runtime.tausugSwitcher.container && runtime.tausugSwitcher.container.parentNode) {
-      runtime.tausugSwitcher.container.parentNode.removeChild(runtime.tausugSwitcher.container);
-    }
-
-    runtime.tausugSwitcher = null;
-    runtime.activeTausugEntry = null;
 
     if (runtime.arSource && typeof runtime.arSource.dispose === "function") {
       runtime.arSource.dispose();
