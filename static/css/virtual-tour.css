@@ -345,6 +345,35 @@ body {
   object-fit: contain;
 }
 
+.tour-floating-image-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 26;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 1.5rem;
+  pointer-events: auto;
+}
+
+.tour-floating-image-overlay[hidden] {
+  display: none !important;
+}
+
+.tour-floating-image {
+  display: block;
+  width: min(30rem, calc(100vw - 3rem));
+  max-width: 100%;
+  max-height: calc(100vh - 3rem);
+  height: auto;
+  object-fit: contain;
+  border-radius: 1.5rem;
+  box-shadow:
+    0 1.2rem 3rem rgba(0, 0, 0, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
 .tour-sr-only {
   position: absolute;
   width: 1px;
@@ -628,6 +657,15 @@ body {
 
 .tour-ground-hotspot--pulse::after {
   background: rgba(251, 191, 36, 0.18);
+}
+
+.tour-ground-hotspot--floating-image-trigger {
+  border-color: rgba(255, 255, 255, 0.86);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.3) 0%, rgba(251, 191, 36, 0.18) 45%, rgba(251, 191, 36, 0) 74%);
+}
+
+.tour-ground-hotspot--floating-image-trigger::after {
+  background: rgba(255, 255, 255, 0.24);
 }
 
 @keyframes tour-hotspot-pulse {

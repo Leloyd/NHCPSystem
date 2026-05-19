@@ -32,6 +32,7 @@
   const kabaongGlbSrc = app ? app.dataset.kabaongGlbSrc : "";
   const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
   const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
+  const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
   const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
   const artifactPanes = Array.from(document.querySelectorAll("[data-artifact-pane]"));
   let sceneHotspotsVisible = true;
@@ -40,6 +41,8 @@
   let resolvedScenes = null;
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
+  let floatingImageOverlay = null;
+  let floatingImageElement = null;
   const balanghayArtifactCopy = {
     tagalogTitle: "Ang Balanghay",
     tagalogText:
@@ -113,6 +116,19 @@
           text: "Move inside the front gate",
           sceneId: "insideFrontGate",
           cssClass: "tour-ground-hotspot",
+        },
+        {
+          id: "front-gate-hotspot-h1",
+          pitch: 1.06,
+          yaw: 24.41,
+          type: "info",
+          text: "",
+          clickHandlerFunc: openFloatingImageOverlay,
+          clickHandlerArgs: {
+            imageSrc: frontGateHotspotH1Src,
+            imageAlt: "Front Gate hotspot image",
+          },
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon tour-ground-hotspot--floating-image-trigger",
         },
       ],
     },
@@ -1554,6 +1570,64 @@
     capturePreviewOverlay.hidden = false;
   }
 
+  function ensureFloatingImageOverlay() {
+    if (floatingImageOverlay && floatingImageElement) {
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "tour-floating-image-overlay";
+    overlay.hidden = true;
+    overlay.id = "tourFloatingImageOverlay";
+
+    const image = document.createElement("img");
+    image.className = "tour-floating-image";
+    image.alt = "";
+
+    overlay.appendChild(image);
+    app.appendChild(overlay);
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeFloatingImageOverlay();
+      }
+    });
+
+    floatingImageOverlay = overlay;
+    floatingImageElement = image;
+  }
+
+  function openFloatingImageOverlay(event, args) {
+    if (event && typeof event.preventDefault === "function") {
+      event.preventDefault();
+    }
+
+    if (!args || !args.imageSrc) {
+      return;
+    }
+
+    ensureFloatingImageOverlay();
+
+    if (!floatingImageOverlay || !floatingImageElement) {
+      return;
+    }
+
+    floatingImageElement.src = args.imageSrc;
+    floatingImageElement.alt = args.imageAlt || "Hotspot image";
+    floatingImageOverlay.hidden = false;
+  }
+
+  function closeFloatingImageOverlay() {
+    if (floatingImageOverlay) {
+      floatingImageOverlay.hidden = true;
+    }
+
+    if (floatingImageElement) {
+      floatingImageElement.removeAttribute("src");
+      floatingImageElement.alt = "";
+    }
+  }
+
   function downloadImageDataUrl(dataUrl) {
     if (isIOSChrome || isIOSDevice) {
       showCapturePreview(dataUrl);
@@ -1817,6 +1891,10 @@
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape" && artifactOverlay && !artifactOverlay.hidden) {
       closeArtifactOverlay();
+    }
+
+    if (event.key === "Escape" && floatingImageOverlay && !floatingImageOverlay.hidden) {
+      closeFloatingImageOverlay();
     }
 
     if (event.key === "Escape" && capturePreviewOverlay && !capturePreviewOverlay.hidden) {
