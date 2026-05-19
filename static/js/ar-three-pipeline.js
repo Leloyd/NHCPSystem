@@ -4,7 +4,6 @@
   var body = document.body;
   var rootEl = document.getElementById("arScene");
   var audioToggleButton = document.getElementById("arAudioLanguageToggle");
-  var pahimakasSpecialAudioButton = document.getElementById("arPahimakasSpecialAudioButton");
   if (!body || !rootEl) {
     return;
   }
@@ -328,12 +327,14 @@
     rafId: 0,
     audioElement: null,
     audioToggleButton: audioToggleButton,
-    specialAudioButton: pahimakasSpecialAudioButton,
     activeAudioEntry: null,
     audioLanguage: "tl",
     currentAudioMode: "narration",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
+    raycaster: null,
+    pointerNdc: new THREE_NS.Vector2(),
+    sceneInteractionHandler: null,
     destroyed: false,
   };
 
@@ -1011,34 +1012,8 @@
     runtime.audioToggleButton.setAttribute("aria-label", "Switch audio to " + label + " for " + runtime.activeAudioEntry.key);
   }
 
-  function updateSpecialAudioButton() {
-    if (!runtime.specialAudioButton) {
-      return;
-    }
-
-    var specialAudio = getEntrySpecialAudio(runtime.activeAudioEntry);
-    var isPahimakasActive = Boolean(runtime.activeAudioEntry && runtime.activeAudioEntry.key === "pahimakas");
-    var isEnabled = Boolean(isPahimakasActive && specialAudio);
-
-    runtime.specialAudioButton.hidden = !isEnabled;
-    runtime.specialAudioButton.disabled = !isEnabled;
-    runtime.specialAudioButton.setAttribute("aria-disabled", isEnabled ? "false" : "true");
-    runtime.specialAudioButton.setAttribute("aria-pressed", isEnabled && runtime.currentAudioMode === "special" ? "true" : "false");
-    runtime.specialAudioButton.classList.toggle("is-active", isEnabled && runtime.currentAudioMode === "special");
-
-    if (!isEnabled) {
-      runtime.specialAudioButton.textContent = "Marche funébre";
-      runtime.specialAudioButton.setAttribute("aria-label", "Pahimakas special audio unavailable");
-      return;
-    }
-
-    runtime.specialAudioButton.textContent = specialAudio.label;
-    runtime.specialAudioButton.setAttribute("aria-label", "Play " + specialAudio.label + " for " + runtime.activeAudioEntry.key);
-  }
-
   function updateAudioControls() {
     updateAudioToggleButton();
-    updateSpecialAudioButton();
   }
 
   function playAudioForEntry(entry, language, shouldRestart) {
@@ -1070,6 +1045,85 @@
     runtime.currentAudioMode = "special";
     playAudioSource(specialAudio.url, true);
     updateAudioControls();
+  }
+
+  function getSpecialAudioInteractableEntries() {
+    return runtime.markerEntries.filter(function (entry) {
+      return Boolean(
+        entry &&
+          entry.key === "pahimakas" &&
+          entry.modelLoaded &&
+          entry.isVisibleStable &&
+          entry.renderRoot &&
+          entry.renderRoot.visible &&
+          entry.modelScene &&
+          getEntrySpecialAudio(entry)
+      );
+    });
+  }
+
+  function handleSceneInteraction(event) {
+    if (!event || !runtime.renderer || !runtime.camera || !runtime.raycaster) {
+      return;
+    }
+
+    if (typeof event.button === "number" && event.button !== 0) {
+      return;
+    }
+
+    var interactableEntries = getSpecialAudioInteractableEntries();
+    if (!interactableEntries.length) {
+      return;
+    }
+
+    var canvasEl = runtime.renderer.domElement;
+    if (!canvasEl) {
+      return;
+    }
+
+    var rect = canvasEl.getBoundingClientRect();
+    if (!rect.width || !rect.height) {
+      return;
+    }
+
+    var clientX = Number(event.clientX);
+    var clientY = Number(event.clientY);
+    if (!Number.isFinite(clientX) || !Number.isFinite(clientY)) {
+      return;
+    }
+
+    runtime.pointerNdc.set(((clientX - rect.left) / rect.width) * 2 - 1, -(((clientY - rect.top) / rect.height) * 2 - 1));
+    runtime.raycaster.setFromCamera(runtime.pointerNdc, runtime.camera);
+
+    var hitEntry = null;
+    var hitDistance = Number.POSITIVE_INFINITY;
+
+    interactableEntries.forEach(function (entry) {
+      entry.renderRoot.updateMatrixWorld(true);
+      var intersections = runtime.raycaster.intersectObject(entry.modelScene, true);
+      if (!intersections.length || intersections[0].distance >= hitDistance) {
+        return;
+      }
+
+      hitEntry = entry;
+      hitDistance = intersections[0].distance;
+    });
+
+    if (hitEntry) {
+      playSpecialAudioForEntry(hitEntry);
+    }
+  }
+
+  function bindSceneInteraction() {
+    if (!runtime.renderer || !runtime.renderer.domElement || runtime.sceneInteractionHandler) {
+      return;
+    }
+
+    runtime.sceneInteractionHandler = function (event) {
+      handleSceneInteraction(event);
+    };
+
+    runtime.renderer.domElement.addEventListener("pointerup", runtime.sceneInteractionHandler, { passive: true });
   }
 
   function getPreferredAudioEntry() {
@@ -1130,14 +1184,6 @@
     playAudioForEntry(runtime.activeAudioEntry, nextLanguage, true);
   }
 
-  function handleSpecialAudioButtonClick() {
-    if (!runtime.activeAudioEntry) {
-      return;
-    }
-
-    playSpecialAudioForEntry(runtime.activeAudioEntry);
-  }
-
   function bindAudioToggleButton() {
     if (!runtime.audioToggleButton || runtime.audioToggleButton.dataset.bound === "1") {
       return;
@@ -1145,16 +1191,6 @@
 
     runtime.audioToggleButton.dataset.bound = "1";
     runtime.audioToggleButton.addEventListener("click", handleAudioToggleClick);
-    updateAudioControls();
-  }
-
-  function bindSpecialAudioButton() {
-    if (!runtime.specialAudioButton || runtime.specialAudioButton.dataset.bound === "1") {
-      return;
-    }
-
-    runtime.specialAudioButton.dataset.bound = "1";
-    runtime.specialAudioButton.addEventListener("click", handleSpecialAudioButtonClick);
     updateAudioControls();
   }
 
@@ -1500,6 +1536,9 @@
     runtime.scene.add(directionalLightB);
 
     runtime.loader = new THREE_NS.GLTFLoader();
+    runtime.raycaster = new THREE_NS.Raycaster();
+    runtime.raycaster.layers.set(CONTENT_LAYER);
+    bindSceneInteraction();
   }
 
   function initArToolkit() {
@@ -1702,6 +1741,11 @@
       runtime.videoWatcherIntervalId = 0;
     }
 
+    if (runtime.renderer && runtime.renderer.domElement && runtime.sceneInteractionHandler) {
+      runtime.renderer.domElement.removeEventListener("pointerup", runtime.sceneInteractionHandler);
+      runtime.sceneInteractionHandler = null;
+    }
+
     runtime.markerEntries.forEach(function (entry) {
       clearMarkerLostTimer(entry);
 
@@ -1741,7 +1785,6 @@
     );
 
     bindAudioToggleButton();
-    bindSpecialAudioButton();
     initRendererScene();
     initArToolkit();
     buildMarkerEntries(enabledMarkers);
