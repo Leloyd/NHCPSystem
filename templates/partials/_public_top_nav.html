@@ -117,9 +117,12 @@
       if (!mobileMenu) {
         return;
       }
-
+ 
       mobileMenu.classList.toggle("hidden", !isOpen);
-
+      window.dispatchEvent(new CustomEvent("public-nav-mobile-menu-state", {
+        detail: { isOpen: isOpen }
+      }));
+ 
       if (iconMenu && iconClose) {
         iconMenu.classList.toggle("hidden", isOpen);
         iconClose.classList.toggle("hidden", !isOpen);

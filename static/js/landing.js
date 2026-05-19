@@ -124,6 +124,24 @@
       });
     }
 
+    window.addEventListener("public-nav-mobile-menu-state", function (event) {
+      isMobileMenuOpen = Boolean(event && event.detail && event.detail.isOpen);
+
+      if (isMobileMenuOpen) {
+        applyWhiteBackground();
+        return;
+      }
+
+      var scrollY = window.pageYOffset || document.documentElement.scrollTop;
+      if (scrollY <= scrollThreshold) {
+        isScrolled = false;
+        applyTransparentBackground();
+      } else {
+        isScrolled = true;
+        applyWhiteBackground();
+      }
+    });
+
     window.addEventListener("scroll", updateNavOnScroll, { passive: true });
     updateNavOnScroll();
   }
