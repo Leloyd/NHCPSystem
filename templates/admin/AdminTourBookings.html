@@ -30,27 +30,42 @@
             </div>
             <div class="admin-booking-calendar-shell">
               <div class="admin-booking-calendar-panel">
-                <div class="admin-booking-calendar-header">
-                  <button type="button" id="adminBookingPrevMonth" class="admin-booking-calendar-nav" aria-label="Previous month">&larr;</button>
-                  <h4 id="adminBookingMonthLabel" class="admin-booking-calendar-title"></h4>
-                  <button type="button" id="adminBookingNextMonth" class="admin-booking-calendar-nav" aria-label="Next month">&rarr;</button>
+                <div class="admin-booking-calendar-panel-head">
+                  <h4 class="admin-booking-calendar-title">Public Community Calendar</h4>
+                  <p>This calendar mirrors the confirmed booking calendar shown on the public Community Participation page.</p>
                 </div>
-                <div class="admin-booking-calendar-legend">
-                  <span><span class="admin-booking-calendar-dot is-pending"></span>Pending</span>
-                  <span><span class="admin-booking-calendar-dot is-confirmed"></span>Confirmed</span>
-                  <span><span class="admin-booking-calendar-dot is-rescheduled"></span>Rescheduled</span>
-                  <span><span class="admin-booking-calendar-dot is-cancelled"></span>Cancelled</span>
+
+                <div class="admin-booking-calendar-legend is-public-calendar">
+                  <span><span class="calendar-event-dot"></span>Confirmed Booking</span>
                 </div>
-                <div class="admin-booking-calendar-weekdays">
-                  <span>Sun</span>
-                  <span>Mon</span>
-                  <span>Tue</span>
-                  <span>Wed</span>
-                  <span>Thu</span>
-                  <span>Fri</span>
-                  <span>Sat</span>
+
+                <div class="calendar-container">
+                  <div class="calendar-header">
+                    <button type="button" id="adminBookingPrevMonth" class="calendar-nav-btn" aria-label="Previous month">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
+                      </svg>
+                    </button>
+                    <h4 id="adminBookingMonthLabel" class="calendar-month-title"></h4>
+                    <button type="button" id="adminBookingNextMonth" class="calendar-nav-btn" aria-label="Next month">
+                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
+                      </svg>
+                    </button>
+                  </div>
+
+                  <div class="calendar-days-header">
+                    <div class="calendar-day-label">Sun</div>
+                    <div class="calendar-day-label">Mon</div>
+                    <div class="calendar-day-label">Tue</div>
+                    <div class="calendar-day-label">Wed</div>
+                    <div class="calendar-day-label">Thu</div>
+                    <div class="calendar-day-label">Fri</div>
+                    <div class="calendar-day-label">Sat</div>
+                  </div>
+
+                  <div id="adminBookingCalendarGrid" class="calendar-grid"></div>
                 </div>
-                <div id="adminBookingCalendarGrid" class="admin-booking-calendar-grid"></div>
               </div>
               <div id="adminBookingCalendarDetails" class="admin-booking-calendar-details"></div>
             </div>
@@ -218,6 +233,7 @@
             (() => {
               const payload = document.getElementById('adminBookingCalendarData');
               const bookings = payload ? JSON.parse(payload.textContent || '[]') : [];
+              const publicCalendarBookings = bookings.filter((booking) => booking.status === 'confirmed');
               const grid = document.getElementById('adminBookingCalendarGrid');
               const label = document.getElementById('adminBookingMonthLabel');
               const details = document.getElementById('adminBookingCalendarDetails');
@@ -225,15 +241,30 @@
               const nextButton = document.getElementById('adminBookingNextMonth');
               const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
               const now = new Date();
+              const todayKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
               let currentMonth = now.getMonth();
               let currentYear = now.getFullYear();
               let selectedDate = null;
+
+              function formatDateDisplay(dateText) {
+                const parsed = new Date(`${dateText}T00:00:00`);
+                return parsed.toLocaleDateString('en-US', {
+                  weekday: 'long',
+                  month: 'long',
+                  day: 'numeric',
+                  year: 'numeric',
+                });
+              }
 
               function getEffectiveDate(booking) {
                 if (booking.status === 'rescheduled' && booking.rescheduled_date) {
                   return booking.rescheduled_date;
                 }
                 return booking.date || '';
+              }
+
+              function getPublicCalendarBookingsForDate(dateText) {
+                return publicCalendarBookings.filter((booking) => booking.date === dateText);
               }
 
               function getBookingsForDate(dateText) {
@@ -249,19 +280,19 @@
 
               function renderDetails() {
                 if (!selectedDate) {
-                  details.innerHTML = '<div class="admin-booking-calendar-empty">Select a booking date to see the full request details.</div>';
+                  details.innerHTML = '<div class="admin-booking-calendar-empty">Select a date on the public calendar to see the full staff booking details for that day.</div>';
                   return;
                 }
 
                 const dateBookings = getBookingsForDate(selectedDate);
                 if (dateBookings.length === 0) {
-                  details.innerHTML = `<div class="admin-booking-calendar-empty">No bookings are mapped to ${selectedDate}.</div>`;
+                  details.innerHTML = `<div class="admin-booking-calendar-empty">No booking requests are mapped to ${formatDateDisplay(selectedDate)}.</div>`;
                   return;
                 }
 
                 details.innerHTML = `
                   <div class="admin-booking-calendar-detail-head">
-                    <h4>${selectedDate}</h4>
+                    <h4>${formatDateDisplay(selectedDate)}</h4>
                     <p>${dateBookings.length} booking request${dateBookings.length === 1 ? '' : 's'} on this date</p>
                   </div>
                   <div class="admin-booking-calendar-detail-list">
@@ -298,27 +329,30 @@
                 let html = '';
 
                 for (let index = 0; index < firstDay; index += 1) {
-                  html += '<div class="admin-booking-calendar-spacer"></div>';
+                  html += '<div class="calendar-day-spacer" aria-hidden="true"></div>';
                 }
 
                 for (let day = 1; day <= daysInMonth; day += 1) {
                   const dateText = `${currentYear}-${String(currentMonth + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
-                  const dayBookings = getBookingsForDate(dateText);
+                  const dayBookings = getPublicCalendarBookingsForDate(dateText);
+                  const isToday = dateText === todayKey;
                   html += `
-                    <button type="button" class="admin-booking-calendar-day ${selectedDate === dateText ? 'is-selected' : ''}" data-date="${dateText}">
-                      <span class="admin-booking-calendar-day-number">${day}</span>
-                      <span class="admin-booking-calendar-day-count">${dayBookings.length > 0 ? `${dayBookings.length} booking${dayBookings.length === 1 ? '' : 's'}` : ''}</span>
-                      <span class="admin-booking-calendar-day-markers">
-                        ${dayBookings.slice(0, 4).map((booking) => `<span class="admin-booking-calendar-dot ${getStatusClass(booking.status)}"></span>`).join('')}
-                      </span>
+                    <button type="button" class="calendar-day ${isToday ? 'today' : ''} ${selectedDate === dateText ? 'selected' : ''}" data-date="${dateText}">
+                      <span class="calendar-day-number">${day}</span>
+                      ${dayBookings.length > 0 ? `
+                      <div class="calendar-day-dots">
+                        ${dayBookings.slice(0, 3).map(() => '<span class="calendar-event-dot"></span>').join('')}
+                      </div>
+                      ` : ''}
                     </button>
                   `;
                 }
 
                 grid.innerHTML = html;
-                grid.querySelectorAll('.admin-booking-calendar-day').forEach((button) => {
+                grid.querySelectorAll('.calendar-day').forEach((button) => {
                   button.addEventListener('click', () => {
-                    selectedDate = button.dataset.date;
+                    const clickedDate = button.dataset.date;
+                    selectedDate = selectedDate === clickedDate ? null : clickedDate;
                     renderCalendar();
                     renderDetails();
                   });
