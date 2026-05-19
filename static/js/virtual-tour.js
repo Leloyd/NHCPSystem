@@ -2721,6 +2721,7 @@
     const nextHotspotId = args.windowHotspotId || `${args.sourceHotspotId || "floating-artifact"}-window`;
     const artifactHotspotKey = `${sceneId}::${nextHotspotId}`;
     const isSameFloatingWindowOpen = floatingArtifactHotspots.has(artifactHotspotKey);
+    const artifactAudioByLanguage = args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null;
 
     if (isSameFloatingWindowOpen) {
       forceCloseAllFloatingOverlays();
@@ -2728,6 +2729,12 @@
     }
 
     forceCloseAllFloatingOverlays();
+
+    if (artifactAudioByLanguage && (artifactAudioByLanguage.tl || artifactAudioByLanguage.en)) {
+      playFloatingArtifactAudio(artifactAudioByLanguage, "tl");
+    } else {
+      clearFloatingArtifactAudioState();
+    }
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
@@ -2742,7 +2749,7 @@
         imageAlt: args.imageAlt || "Artifact image",
         glbSrc: args.glbSrc || "",
         glbSources: Array.isArray(args.glbSources) ? args.glbSources.filter(Boolean) : [],
-        audioByLanguage: args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null,
+        audioByLanguage: artifactAudioByLanguage,
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
         currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,
@@ -2756,14 +2763,10 @@
       floatingArtifactHotspots.set(artifactHotspotKey, {
         hotspotId: nextHotspotId,
         sceneId,
-        audioByLanguage: args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null,
+        audioByLanguage: artifactAudioByLanguage,
       });
-      if (args.audioByLanguage && (args.audioByLanguage.tl || args.audioByLanguage.en)) {
-        playFloatingArtifactAudio(args.audioByLanguage, "tl");
-      } else {
-        clearFloatingArtifactAudioState();
-      }
     } catch (error) {
+      clearFloatingArtifactAudioState();
       console.error("Unable to open floating artifact.", error);
     }
   }
