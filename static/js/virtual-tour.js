@@ -36,80 +36,6 @@
   const bangaImageSrc = app ? app.dataset.bangaImageSrc : "";
   const bangaGlbSrc = app ? app.dataset.bangaGlbSrc : "";
   const jarImageSrc = app ? app.dataset.jarImageSrc : "";
-  const museum3ArtifactAssets = {
-    kagamitan: {
-      imageSrc: app ? app.dataset.kagamitanImageSrc : "",
-      glbSrc: app ? app.dataset.kagamitanGlbSrc : "",
-    },
-    bagongon: {
-      imageSrc: app ? app.dataset.bagongonImageSrc : "",
-      glbSrc: app ? app.dataset.bagongonGlbSrc : "",
-    },
-    bogwa: {
-      imageSrc: app ? app.dataset.bogwaImageSrc : "",
-      glbSrc: app ? app.dataset.bogwaGlbSrc : "",
-    },
-    pagpag: {
-      imageSrc: app ? app.dataset.pagpagImageSrc : "",
-      glbSrc: app ? app.dataset.pagpagGlbSrc : "",
-    },
-    pahimakas: {
-      imageSrc: app ? app.dataset.pahimakasImageSrc : "",
-      glbSrc: app ? app.dataset.pahimakasGlbSrc : "",
-    },
-    alay: {
-      imageSrc: app ? app.dataset.alayImageSrc : "",
-      glbSrc: app ? app.dataset.alayGlbSrc : "",
-    },
-    antuk: {
-      imageSrc: app ? app.dataset.antukImageSrc : "",
-      glbSrc: app ? app.dataset.antukGlbSrc : "",
-    },
-    pagtubas: {
-      imageSrc: app ? app.dataset.pagtubasImageSrc : "",
-      glbSrc: app ? app.dataset.pagtubasGlbSrc : "",
-    },
-    tsapang: {
-      imageSrc: app ? app.dataset.tsapangImageSrc : "",
-      glbSrc: app ? app.dataset.tsapangGlbSrc : "",
-    },
-    tboli: {
-      imageSrc: app ? app.dataset.tboliImageSrc : "",
-      glbSrc: app ? app.dataset.tboliGlbSrc : "",
-    },
-    sisiw: {
-      imageSrc: app ? app.dataset.sisiwImageSrc : "",
-      glbSrc: app ? app.dataset.sisiwGlbSrc : "",
-    },
-    sabwag: {
-      imageSrc: app ? app.dataset.sabwagImageSrc : "",
-      glbSrc: app ? app.dataset.sabwagGlbSrc : "",
-    },
-    tausug: {
-      imageSrc: app ? app.dataset.tausugImageSrc : "",
-      glbSources: [
-        app ? app.dataset.tausugGlb1Src : "",
-        app ? app.dataset.tausugGlb2Src : "",
-        app ? app.dataset.tausugGlb3Src : "",
-        app ? app.dataset.tausugGlb4Src : "",
-      ].filter(Boolean),
-    },
-    luksa: {
-      imageSrc: app ? app.dataset.luksaImageSrc : "",
-      glbSrc: app ? app.dataset.luksaGlbSrc : "",
-    },
-    mensahe: {
-      imageSrc: app ? app.dataset.mensaheImageSrc : "",
-    },
-    pahiwatig: {
-      imageSrc: app ? app.dataset.pahiwatigImageSrc : "",
-      glbSrc: app ? app.dataset.pahiwatigGlbSrc : "",
-    },
-    recuerdos: {
-      imageSrc: app ? app.dataset.recuerdosImageSrc : "",
-      glbSrc: app ? app.dataset.recuerdosGlbSrc : "",
-    },
-  };
   const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
   const frontGateHotspotH1AudioSrc = app ? app.dataset.frontGateHotspotH1AudioSrc : "";
   const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
@@ -124,10 +50,6 @@
   let floatingArtifactPreviewOverlay = null;
   let floatingArtifactPreviewImage = null;
   let floatingArtifactPreviewModel = null;
-  let floatingArtifactPreviewModelNav = null;
-  let floatingArtifactPreviewModelPrev = null;
-  let floatingArtifactPreviewModelNext = null;
-  let floatingArtifactPreviewArgs = null;
   const floatingImageHotspots = new Map();
   const floatingArtifactHotspots = new Map();
   let floatingImageAudio = null;
@@ -166,230 +88,6 @@
     }
     return;
   }
-
-  function getArtifactGlbSources(args) {
-    if (!args) {
-      return [];
-    }
-
-    if (Array.isArray(args.glbSources) && args.glbSources.length) {
-      return args.glbSources.filter(Boolean);
-    }
-
-    return args.glbSrc ? [args.glbSrc] : [];
-  }
-
-  function getArtifactGlbIndex(args) {
-    const glbSources = getArtifactGlbSources(args);
-    if (!glbSources.length) {
-      if (args) {
-        args.currentGlbIndex = 0;
-      }
-      return 0;
-    }
-
-    const requestedIndex = args && Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0;
-    const safeIndex = Math.min(Math.max(requestedIndex, 0), glbSources.length - 1);
-    if (args) {
-      args.currentGlbIndex = safeIndex;
-    }
-    return safeIndex;
-  }
-
-  function getArtifactCurrentGlbSrc(args) {
-    const glbSources = getArtifactGlbSources(args);
-    if (!glbSources.length) {
-      return "";
-    }
-
-    return glbSources[getArtifactGlbIndex(args)] || "";
-  }
-
-  function getArtifactCurrentGlbAlt(args) {
-    const glbSources = getArtifactGlbSources(args);
-    const baseAlt = args && (args.glbAlt || args.imageAlt) ? args.glbAlt || args.imageAlt : "Artifact 3D model";
-    if (glbSources.length > 1) {
-      return `${baseAlt} ${getArtifactGlbIndex(args) + 1}`;
-    }
-    return baseAlt;
-  }
-
-  function buildFloatingArtifactHotspot(options) {
-    return {
-      id: options.id,
-      pitch: options.pitch,
-      yaw: options.yaw,
-      type: "info",
-      text: "",
-      clickHandlerFunc: openFloatingArtifactOverlay,
-      clickHandlerArgs: {
-        sourceHotspotId: options.id,
-        windowHotspotId: `${options.id}-window`,
-        imageSrc: options.imageSrc,
-        imageAlt: options.imageAlt,
-        glbSrc: options.glbSrc || "",
-        glbSources: Array.isArray(options.glbSources) ? options.glbSources.filter(Boolean) : [],
-        glbAlt: options.glbAlt || `${options.imageAlt} 3D model`,
-        windowPitch: options.pitch,
-        windowYaw: options.yaw,
-      },
-      cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
-    };
-  }
-
-  const museum3ArtifactHotspots = [
-    buildFloatingArtifactHotspot({
-      id: "museum3-kagamitan-marker",
-      pitch: -20.3,
-      yaw: -92.86,
-      imageSrc: museum3ArtifactAssets.kagamitan.imageSrc,
-      imageAlt: "Kagamitan",
-      glbSrc: museum3ArtifactAssets.kagamitan.glbSrc,
-      glbAlt: "Kagamitan 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-bagongon-marker",
-      pitch: -12.37,
-      yaw: -116.55,
-      imageSrc: museum3ArtifactAssets.bagongon.imageSrc,
-      imageAlt: "Bagongon",
-      glbSrc: museum3ArtifactAssets.bagongon.glbSrc,
-      glbAlt: "Bagongon 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-bogwa-marker",
-      pitch: -26.32,
-      yaw: -122.8,
-      imageSrc: museum3ArtifactAssets.bogwa.imageSrc,
-      imageAlt: "Bogwa",
-      glbSrc: museum3ArtifactAssets.bogwa.glbSrc,
-      glbAlt: "Bogwa 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-pagpag-marker",
-      pitch: -12.59,
-      yaw: -139.64,
-      imageSrc: museum3ArtifactAssets.pagpag.imageSrc,
-      imageAlt: "Pagpag",
-      glbSrc: museum3ArtifactAssets.pagpag.glbSrc,
-      glbAlt: "Pagpag 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-pahimakas-marker",
-      pitch: -24.85,
-      yaw: -133.85,
-      imageSrc: museum3ArtifactAssets.pahimakas.imageSrc,
-      imageAlt: "Pahimakas",
-      glbSrc: museum3ArtifactAssets.pahimakas.glbSrc,
-      glbAlt: "Pahimakas 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-alay-marker",
-      pitch: -15.1,
-      yaw: -165.57,
-      imageSrc: museum3ArtifactAssets.alay.imageSrc,
-      imageAlt: "Alay",
-      glbSrc: museum3ArtifactAssets.alay.glbSrc,
-      glbAlt: "Alay 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-antuk-marker",
-      pitch: -25.93,
-      yaw: -177.89,
-      imageSrc: museum3ArtifactAssets.antuk.imageSrc,
-      imageAlt: "Antuk",
-      glbSrc: museum3ArtifactAssets.antuk.glbSrc,
-      glbAlt: "Antuk 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-pagtubas-marker",
-      pitch: -25.72,
-      yaw: 168.51,
-      imageSrc: museum3ArtifactAssets.pagtubas.imageSrc,
-      imageAlt: "Pagtubas",
-      glbSrc: museum3ArtifactAssets.pagtubas.glbSrc,
-      glbAlt: "Pagtubas 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-tsapang-marker",
-      pitch: -18.18,
-      yaw: 147.99,
-      imageSrc: museum3ArtifactAssets.tsapang.imageSrc,
-      imageAlt: "Tsapang",
-      glbSrc: museum3ArtifactAssets.tsapang.glbSrc,
-      glbAlt: "Tsapang 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-tboli-marker",
-      pitch: -7.75,
-      yaw: 154.08,
-      imageSrc: museum3ArtifactAssets.tboli.imageSrc,
-      imageAlt: "T'boli",
-      glbSrc: museum3ArtifactAssets.tboli.glbSrc,
-      glbAlt: "T'boli 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-sisiw-marker",
-      pitch: -7.99,
-      yaw: 143.31,
-      imageSrc: museum3ArtifactAssets.sisiw.imageSrc,
-      imageAlt: "Sisiw",
-      glbSrc: museum3ArtifactAssets.sisiw.glbSrc,
-      glbAlt: "Sisiw 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-sabwag-marker",
-      pitch: -16.01,
-      yaw: 137.14,
-      imageSrc: museum3ArtifactAssets.sabwag.imageSrc,
-      imageAlt: "Sabwag",
-      glbSrc: museum3ArtifactAssets.sabwag.glbSrc,
-      glbAlt: "Sabwag 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-tausug-marker",
-      pitch: -23.6,
-      yaw: 140.94,
-      imageSrc: museum3ArtifactAssets.tausug.imageSrc,
-      imageAlt: "Tausug",
-      glbSources: museum3ArtifactAssets.tausug.glbSources,
-      glbAlt: "Tausug 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-luksa-marker",
-      pitch: -14.26,
-      yaw: 116.98,
-      imageSrc: museum3ArtifactAssets.luksa.imageSrc,
-      imageAlt: "Luksa",
-      glbSrc: museum3ArtifactAssets.luksa.glbSrc,
-      glbAlt: "Luksa 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-mensahe-marker",
-      pitch: -14.29,
-      yaw: 108.16,
-      imageSrc: museum3ArtifactAssets.mensahe.imageSrc,
-      imageAlt: "Mensahe",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-pahiwatig-marker",
-      pitch: -28.09,
-      yaw: 104.25,
-      imageSrc: museum3ArtifactAssets.pahiwatig.imageSrc,
-      imageAlt: "Pahiwatig",
-      glbSrc: museum3ArtifactAssets.pahiwatig.glbSrc,
-      glbAlt: "Pahiwatig 3D model",
-    }),
-    buildFloatingArtifactHotspot({
-      id: "museum3-recuerdos-marker",
-      pitch: -28.09,
-      yaw: 104.25,
-      imageSrc: museum3ArtifactAssets.recuerdos.imageSrc,
-      imageAlt: "Recuerdos",
-      glbSrc: museum3ArtifactAssets.recuerdos.glbSrc,
-      glbAlt: "Recuerdos 3D model",
-    }),
-  ];
 
   const rawScenes = {
     frontGate: {
@@ -1798,7 +1496,6 @@
       yaw: 170,
       hfov: 100,
       hotSpots: [
-        ...museum3ArtifactHotspots,
         {
           id: "return-museum-2",
           pitch: -30,
@@ -2015,7 +1712,7 @@
   }
 
   function ensureFloatingArtifactPreviewOverlay() {
-    if (floatingArtifactPreviewOverlay && floatingArtifactPreviewImage && floatingArtifactPreviewModel && floatingArtifactPreviewModelNav && floatingArtifactPreviewModelPrev && floatingArtifactPreviewModelNext) {
+    if (floatingArtifactPreviewOverlay && floatingArtifactPreviewImage && floatingArtifactPreviewModel) {
       return;
     }
 
@@ -2049,29 +1746,9 @@
     model.setAttribute("shadow-intensity", "1");
     model.hidden = true;
 
-    const modelNav = document.createElement("div");
-    modelNav.className = "tour-floating-media-preview__model-nav";
-    modelNav.hidden = true;
-
-    const prevButton = document.createElement("button");
-    prevButton.className = "tour-floating-media-preview__model-nav-button tour-floating-media-preview__model-nav-button--prev";
-    prevButton.type = "button";
-    prevButton.setAttribute("aria-label", "Show previous 3D model");
-    prevButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.78 5.22a.75.75 0 0 1 0 1.06L9.06 12l5.72 5.72a.75.75 0 1 1-1.06 1.06l-6.25-6.25a.75.75 0 0 1 0-1.06l6.25-6.25a.75.75 0 0 1 1.06 0Z" fill="currentColor"></path></svg>';
-
-    const nextButton = document.createElement("button");
-    nextButton.className = "tour-floating-media-preview__model-nav-button tour-floating-media-preview__model-nav-button--next";
-    nextButton.type = "button";
-    nextButton.setAttribute("aria-label", "Show next 3D model");
-    nextButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.22 18.78a.75.75 0 0 1 0-1.06L14.94 12 9.22 6.28a.75.75 0 1 1 1.06-1.06l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z" fill="currentColor"></path></svg>';
-
-    modelNav.appendChild(prevButton);
-    modelNav.appendChild(nextButton);
-
     panel.appendChild(closeButton);
     panel.appendChild(image);
     panel.appendChild(model);
-    panel.appendChild(modelNav);
     overlay.appendChild(panel);
     app.appendChild(overlay);
 
@@ -2085,32 +1762,9 @@
       }
     });
 
-    prevButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!floatingArtifactPreviewArgs) {
-        return;
-      }
-      floatingArtifactPreviewArgs.currentGlbIndex = getArtifactGlbIndex(floatingArtifactPreviewArgs) - 1;
-      showFloatingArtifactPreviewOverlay(floatingArtifactPreviewArgs, "glb");
-    });
-
-    nextButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      if (!floatingArtifactPreviewArgs) {
-        return;
-      }
-      floatingArtifactPreviewArgs.currentGlbIndex = getArtifactGlbIndex(floatingArtifactPreviewArgs) + 1;
-      showFloatingArtifactPreviewOverlay(floatingArtifactPreviewArgs, "glb");
-    });
-
     floatingArtifactPreviewOverlay = overlay;
     floatingArtifactPreviewImage = image;
     floatingArtifactPreviewModel = model;
-    floatingArtifactPreviewModelNav = modelNav;
-    floatingArtifactPreviewModelPrev = prevButton;
-    floatingArtifactPreviewModelNext = nextButton;
   }
 
   function showFloatingArtifactPreviewOverlay(args, view) {
@@ -2124,12 +1778,9 @@
       return;
     }
 
-    const glbSources = getArtifactGlbSources(args);
     const nextView = view === "glb" ? "glb" : "image";
     const showImage = nextView === "image" && Boolean(args.imageSrc);
-    const showGlb = nextView === "glb" && glbSources.length > 0;
-
-    floatingArtifactPreviewArgs = args;
+    const showGlb = nextView === "glb" && Boolean(args.glbSrc);
 
     floatingArtifactPreviewImage.hidden = !showImage;
     floatingArtifactPreviewModel.hidden = !showGlb;
@@ -2146,20 +1797,11 @@
     }
 
     if (showGlb) {
-      floatingArtifactPreviewModel.src = getArtifactCurrentGlbSrc(args);
-      floatingArtifactPreviewModel.setAttribute("aria-label", getArtifactCurrentGlbAlt(args));
+      floatingArtifactPreviewModel.src = args.glbSrc;
+      floatingArtifactPreviewModel.setAttribute("aria-label", args.glbAlt || args.imageAlt || "Artifact 3D model");
     } else {
       floatingArtifactPreviewModel.removeAttribute("src");
       floatingArtifactPreviewModel.removeAttribute("aria-label");
-    }
-
-    if (floatingArtifactPreviewModelNav && floatingArtifactPreviewModelPrev && floatingArtifactPreviewModelNext) {
-      const showModelNav = showGlb && glbSources.length > 1;
-      const currentGlbIndex = getArtifactGlbIndex(args);
-      floatingArtifactPreviewModelNav.hidden = !showModelNav;
-      floatingArtifactPreviewModelNav.style.display = showModelNav ? "flex" : "none";
-      floatingArtifactPreviewModelPrev.disabled = !showModelNav || currentGlbIndex <= 0;
-      floatingArtifactPreviewModelNext.disabled = !showModelNav || currentGlbIndex >= glbSources.length - 1;
     }
 
     floatingArtifactPreviewOverlay.hidden = false;
@@ -2184,15 +1826,6 @@
       floatingArtifactPreviewModel.style.display = "none";
       floatingArtifactPreviewModel.style.pointerEvents = "none";
     }
-
-    if (floatingArtifactPreviewModelNav && floatingArtifactPreviewModelPrev && floatingArtifactPreviewModelNext) {
-      floatingArtifactPreviewModelNav.hidden = true;
-      floatingArtifactPreviewModelNav.style.display = "none";
-      floatingArtifactPreviewModelPrev.disabled = true;
-      floatingArtifactPreviewModelNext.disabled = true;
-    }
-
-    floatingArtifactPreviewArgs = null;
   }
 
   function ensureFloatingImageAudio(audioSrc) {
@@ -2328,47 +1961,18 @@
     model.setAttribute("touch-action", "pan-y");
     model.setAttribute("auto-rotate", "");
     model.setAttribute("shadow-intensity", "1");
-    const glbSources = getArtifactGlbSources(args);
-    if (!Number.isInteger(args.currentGlbIndex)) {
-      args.currentGlbIndex = 0;
+    if (args.glbSrc) {
+      model.src = args.glbSrc;
     }
-
-    const modelNav = document.createElement("div");
-    modelNav.className = "tour-floating-media-window-model-nav";
-    modelNav.hidden = true;
-
-    const prevButton = document.createElement("button");
-    prevButton.className = "tour-floating-media-window-model-nav-button tour-floating-media-window-model-nav-button--prev";
-    prevButton.type = "button";
-    prevButton.setAttribute("aria-label", "Show previous 3D model");
-    prevButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14.78 5.22a.75.75 0 0 1 0 1.06L9.06 12l5.72 5.72a.75.75 0 1 1-1.06 1.06l-6.25-6.25a.75.75 0 0 1 0-1.06l6.25-6.25a.75.75 0 0 1 1.06 0Z" fill="currentColor"></path></svg>';
-
-    const nextButton = document.createElement("button");
-    nextButton.className = "tour-floating-media-window-model-nav-button tour-floating-media-window-model-nav-button--next";
-    nextButton.type = "button";
-    nextButton.setAttribute("aria-label", "Show next 3D model");
-    nextButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9.22 18.78a.75.75 0 0 1 0-1.06L14.94 12 9.22 6.28a.75.75 0 1 1 1.06-1.06l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0Z" fill="currentColor"></path></svg>';
+    model.setAttribute("aria-label", args.glbAlt || args.imageAlt || "Artifact 3D model");
 
     let currentView = args.glbSrc ? "image" : "image";
     let modelPointerDown = null;
     let modelWasDragged = false;
 
-    function syncModelSource() {
-      const hasCurrentGlb = Boolean(getArtifactCurrentGlbSrc(args));
-      if (hasCurrentGlb) {
-        model.src = getArtifactCurrentGlbSrc(args);
-        model.setAttribute("aria-label", getArtifactCurrentGlbAlt(args));
-      } else {
-        model.removeAttribute("src");
-        model.removeAttribute("aria-label");
-      }
-    }
-
     function syncView(nextView) {
-      currentView = nextView === "glb" && glbSources.length ? "glb" : "image";
+      currentView = nextView === "glb" && args.glbSrc ? "glb" : "image";
       const isImageView = currentView === "image";
-      const showModelNav = !isImageView && glbSources.length > 1;
-      const currentGlbIndex = getArtifactGlbIndex(args);
 
       imageButton.hidden = !isImageView;
       imageButton.style.display = isImageView ? "block" : "none";
@@ -2376,17 +1980,12 @@
       image.style.display = isImageView ? "block" : "none";
       model.hidden = isImageView;
       model.style.display = isImageView ? "none" : "block";
-      modelNav.hidden = !showModelNav;
-      modelNav.style.display = showModelNav ? "flex" : "none";
-      prevButton.disabled = !showModelNav || currentGlbIndex <= 0;
-      nextButton.disabled = !showModelNav || currentGlbIndex >= glbSources.length - 1;
       switchIcon.innerHTML = isImageView
         ? '<svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 6v12L12 21.5 4.5 18V6L12 2.5Zm0 1.12L5.73 6.5 12 9.38l6.27-2.88L12 3.62Zm6.5 3.69-6 2.76v10.28l6-3V7.31Zm-13 0v7.74l6 3V10.07l-6-2.76Z" fill="currentColor"></path></svg>'
         : '<svg viewBox="0 0 24 24"><path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Zm1.5-.5a.5.5 0 0 0-.5.5v8.2l3.1-3.45a1 1 0 0 1 1.48-.03l1.9 2.02 2.45-2.78a1 1 0 0 1 1.5.02L18 12.4V6.5a.5.5 0 0 0-.5-.5h-11Zm11.5 10.83-2.3-3.1-2.38 2.7a1 1 0 0 1-1.47.06l-1.95-2.08L6 18h11.5a.5.5 0 0 0 .5-.5v-.67ZM9 8.75a1.75 1.75 0 1 1 3.5 0 1.75 1.75 0 0 1-3.5 0Z" fill="currentColor"></path></svg>';
       switchButton.setAttribute("aria-label", isImageView ? "Switch floating artifact to 3D model" : "Switch floating artifact to image");
       switchLabel.textContent = isImageView ? "Switch to 3D model" : "Switch to image";
-      switchButton.hidden = !glbSources.length;
-      syncModelSource();
+      switchButton.hidden = !args.glbSrc;
     }
 
     closeButton.addEventListener("click", function (event) {
@@ -2399,20 +1998,6 @@
       event.preventDefault();
       event.stopPropagation();
       syncView(currentView === "image" ? "glb" : "image");
-    });
-
-    prevButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      args.currentGlbIndex = getArtifactGlbIndex(args) - 1;
-      syncView("glb");
-    });
-
-    nextButton.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      args.currentGlbIndex = getArtifactGlbIndex(args) + 1;
-      syncView("glb");
     });
 
     imageButton.addEventListener("click", function (event) {
@@ -2470,9 +2055,6 @@
     panel.appendChild(switchButton);
     panel.appendChild(imageButton);
     panel.appendChild(model);
-    modelNav.appendChild(prevButton);
-    modelNav.appendChild(nextButton);
-    panel.appendChild(modelNav);
     hotSpotDiv.appendChild(panel);
     syncView(args.initialView || "image");
   }
@@ -2492,12 +2074,8 @@
     const isSameFloatingWindowOpen = floatingImageHotspots.has(imageHotspotKey);
 
     if (isSameFloatingWindowOpen) {
-      closeFloatingImageOverlay(nextHotspotId, sceneId);
       return;
     }
-
-    closeFloatingImageOverlay();
-    closeFloatingArtifactOverlay();
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
@@ -2543,12 +2121,8 @@
     const isSameFloatingWindowOpen = floatingArtifactHotspots.has(artifactHotspotKey);
 
     if (isSameFloatingWindowOpen) {
-      closeFloatingArtifactOverlay(nextHotspotId, sceneId);
       return;
     }
-
-    closeFloatingImageOverlay();
-    closeFloatingArtifactOverlay();
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
@@ -2562,10 +2136,8 @@
         imageSrc: args.imageSrc,
         imageAlt: args.imageAlt || "Artifact image",
         glbSrc: args.glbSrc || "",
-        glbSources: Array.isArray(args.glbSources) ? args.glbSources.filter(Boolean) : [],
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
-        currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,
         windowHotspotId: nextHotspotId,
         windowSceneId: sceneId,
       },
