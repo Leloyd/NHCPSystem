@@ -33,6 +33,7 @@
   const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
   const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
   const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
+  const frontGateHotspotH1AudioSrc = app ? app.dataset.frontGateHotspotH1AudioSrc : "";
   const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
   const artifactPanes = Array.from(document.querySelectorAll("[data-artifact-pane]"));
   let hotspotsVisible = true;
@@ -44,6 +45,8 @@
   let floatingImagePreviewImage = null;
   let floatingImageHotspotId = "";
   let floatingImageHotspotSceneId = "";
+  let floatingImageAudio = null;
+  let floatingImageAudioSrc = "";
   const balanghayArtifactCopy = {
     tagalogTitle: "Ang Balanghay",
     tagalogText:
@@ -129,6 +132,7 @@
             sourceHotspotId: "front-gate-hotspot-h1",
             windowHotspotId: "front-gate-hotspot-h1-window",
             imageSrc: frontGateHotspotH1Src,
+            audioSrc: frontGateHotspotH1AudioSrc,
             imageAlt: "Front Gate hotspot image",
             windowPitch: 1.06,
             windowYaw: 24.41,
@@ -1647,6 +1651,59 @@
     }
   }
 
+  function ensureFloatingImageAudio(audioSrc) {
+    if (!audioSrc) {
+      return null;
+    }
+
+    if (floatingImageAudio && floatingImageAudioSrc === audioSrc) {
+      return floatingImageAudio;
+    }
+
+    stopFloatingImageAudio();
+
+    const audio = new Audio(audioSrc);
+    audio.preload = "auto";
+    audio.addEventListener("ended", function () {
+      floatingImageAudio = null;
+      floatingImageAudioSrc = "";
+    });
+
+    floatingImageAudio = audio;
+    floatingImageAudioSrc = audioSrc;
+    return audio;
+  }
+
+  function playFloatingImageAudio(audioSrc) {
+    const audio = ensureFloatingImageAudio(audioSrc);
+    if (!audio) {
+      return;
+    }
+
+    if (!audio.paused && !audio.ended) {
+      return;
+    }
+
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(function (error) {
+        console.warn("Unable to autoplay hotspot audio.", error);
+      });
+    }
+  }
+
+  function stopFloatingImageAudio() {
+    if (!floatingImageAudio) {
+      floatingImageAudioSrc = "";
+      return;
+    }
+
+    floatingImageAudio.pause();
+    floatingImageAudio.currentTime = 0;
+    floatingImageAudio = null;
+    floatingImageAudioSrc = "";
+  }
+
   function renderFloatingImageHotspot(hotSpotDiv, args) {
     hotSpotDiv.classList.add("tour-floating-image-window-hotspot");
 
@@ -1726,6 +1783,7 @@
       tourViewer.addHotSpot(floatingWindowHotspot, sceneId);
       floatingImageHotspotId = nextHotspotId;
       floatingImageHotspotSceneId = sceneId;
+      playFloatingImageAudio(args.audioSrc);
     } catch (error) {
       console.error("Unable to open floating hotspot image.", error);
     }
@@ -1741,6 +1799,7 @@
     }
 
     hideFloatingImagePreviewOverlay();
+    stopFloatingImageAudio();
     floatingImageHotspotId = "";
     floatingImageHotspotSceneId = "";
   }
