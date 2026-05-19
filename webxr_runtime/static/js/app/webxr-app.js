@@ -991,11 +991,13 @@ export class WebXRApp {
         color,
         transparent: true,
         opacity: 0.58,
+        depthTest: false,
         depthWrite: false,
       }),
     );
     ring.position.y = 0.02;
     ring.rotation.x = Math.PI / 2;
+    ring.renderOrder = 5;
 
     const orb = new THREE.Mesh(
       new THREE.SphereGeometry(radius * 0.42, 14, 14),
@@ -1005,11 +1007,14 @@ export class WebXRApp {
         emissiveIntensity: 0.48,
         roughness: 0.52,
         metalness: 0.0,
+        depthTest: false,
+        depthWrite: false,
       }),
     );
     orb.position.y = radius * 0.55;
     orb.castShadow = false;
     orb.receiveShadow = false;
+    orb.renderOrder = 6;
 
     if (interactionName) {
       ring.name = `${interactionName}-ring`;
@@ -1485,7 +1490,7 @@ export class WebXRApp {
   async _copyCurrentPositionAsHotspot() {
     const position = this._getCrosshairHitPoint();
     if (!position) {
-      this.uiController.setHotspotHelperHint('No surface under crosshair. Aim at a mesh and press H again.', 2600);
+      this.uiController.setHotspotHelperHint('No surface under crosshair. Aim at the scene and press H again.', 2600);
       return;
     }
 
@@ -1517,6 +1522,14 @@ export class WebXRApp {
       const hits = this.hotspotRaycaster.intersectObjects(roots, true);
       if (hits.length > 0) {
         return hits[0].point;
+      }
+    }
+
+    const splatRoots = this.splatEntries.map((entry) => entry.object).filter(Boolean);
+    if (splatRoots.length > 0) {
+      const splatHits = this.hotspotRaycaster.intersectObjects(splatRoots, true);
+      if (splatHits.length > 0) {
+        return splatHits[0].point;
       }
     }
 
