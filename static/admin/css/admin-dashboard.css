@@ -199,13 +199,9 @@ select {
 }
 
 .admin-sidebar-account {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
   margin-top: auto;
-  padding: 0.95rem 0.75rem 1rem;
+  padding: 0.9rem 1rem 1rem;
   border-top: 1px solid rgba(201, 168, 76, 0.15);
-  background: linear-gradient(180deg, rgba(10, 31, 21, 0.96), rgba(13, 43, 31, 0.98));
 }
 
 .admin-sidebar-avatar,
@@ -242,26 +238,46 @@ select {
 
 .admin-logout-form {
   margin: 0;
+  width: 100%;
 }
 
 .admin-logout-button {
-  width: 2rem;
-  height: 2rem;
+  width: 100%;
+  min-height: 2.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 0.7rem;
+  padding: 0.78rem 0.9rem;
+  border: 1px solid rgba(201, 168, 76, 0.14);
+  border-radius: 0.95rem;
+  background: rgba(255, 255, 255, 0.03);
+  color: rgba(255, 255, 255, 0.82);
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.admin-logout-icon {
+  width: 1.8rem;
+  height: 1.8rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 0;
-  border-radius: 0.7rem;
-  background: transparent;
-  color: rgba(255, 255, 255, 0.45);
-  cursor: pointer;
+  border-radius: 0.65rem;
+  background: rgba(201, 168, 76, 0.12);
+  color: var(--dashboard-gold-500);
+  flex: 0 0 auto;
 }
 
 .admin-logout-button:hover,
 .admin-logout-button:focus-visible {
-  background: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(201, 168, 76, 0.28);
   color: #fff;
   outline: none;
+  transform: translateY(-1px);
 }
 
 .admin-main {
