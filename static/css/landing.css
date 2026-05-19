@@ -273,6 +273,97 @@ html {
   overflow: hidden;
 }
 
+body.ogd-high-contrast-page #publicNavHeader,
+body.ogd-high-contrast-page #mobileMenu,
+body.ogd-high-contrast-page footer {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #facc15 !important;
+}
+
+body.ogd-high-contrast-page #publicNavHeader {
+  box-shadow: 0 0 0 1px #facc15 inset !important;
+}
+
+body.ogd-high-contrast-page #navTitle,
+body.ogd-high-contrast-page #navLinks a,
+body.ogd-high-contrast-page #mobileMenu a,
+body.ogd-high-contrast-page footer h3,
+body.ogd-high-contrast-page footer p,
+body.ogd-high-contrast-page footer span,
+body.ogd-high-contrast-page footer li,
+body.ogd-high-contrast-page footer a {
+  color: #ffffff !important;
+}
+
+body.ogd-high-contrast-page #navLinks a:hover,
+body.ogd-high-contrast-page #mobileMenu a:hover,
+body.ogd-high-contrast-page footer a:hover {
+  color: #facc15 !important;
+}
+
+body.ogd-high-contrast-page .museum-logo,
+body.ogd-high-contrast-page .public-account-trigger,
+body.ogd-high-contrast-page .public-auth-entry-button,
+body.ogd-high-contrast-page .public-account-menu,
+body.ogd-high-contrast-page .public-account-menu-link,
+body.ogd-high-contrast-page .public-auth-card,
+body.ogd-high-contrast-page .public-auth-social,
+body.ogd-high-contrast-page .public-auth-input,
+body.ogd-high-contrast-page .public-auth-secondary,
+body.ogd-high-contrast-page .public-auth-close {
+  background: #000000 !important;
+  color: #ffffff !important;
+  border-color: #facc15 !important;
+}
+
+body.ogd-high-contrast-page .public-account-trigger:hover,
+body.ogd-high-contrast-page .public-account-trigger:focus-visible,
+body.ogd-high-contrast-page .public-auth-entry-button:hover,
+body.ogd-high-contrast-page .public-auth-entry-button:focus-visible,
+body.ogd-high-contrast-page .public-account-menu-link:hover,
+body.ogd-high-contrast-page .public-account-menu-link:focus-visible,
+body.ogd-high-contrast-page .public-auth-social:hover,
+body.ogd-high-contrast-page .public-auth-social:focus-visible,
+body.ogd-high-contrast-page .public-auth-secondary:hover,
+body.ogd-high-contrast-page .public-auth-secondary:focus-visible,
+body.ogd-high-contrast-page .public-auth-close:hover,
+body.ogd-high-contrast-page .public-auth-close:focus-visible {
+  background: #111111 !important;
+  color: #facc15 !important;
+}
+
+body.ogd-high-contrast-page .public-account-avatar,
+body.ogd-high-contrast-page .public-auth-submit,
+body.ogd-high-contrast-page .public-auth-accent {
+  background: #facc15 !important;
+  color: #000000 !important;
+}
+
+body.ogd-high-contrast-page .public-account-menu-name,
+body.ogd-high-contrast-page .public-account-menu-email,
+body.ogd-high-contrast-page .public-auth-title,
+body.ogd-high-contrast-page .public-auth-subtitle,
+body.ogd-high-contrast-page .public-auth-label,
+body.ogd-high-contrast-page .public-auth-hint,
+body.ogd-high-contrast-page .public-auth-divider,
+body.ogd-high-contrast-page .public-auth-input-icon,
+body.ogd-high-contrast-page .public-auth-password-toggle,
+body.ogd-high-contrast-page .public-account-menu-icon,
+body.ogd-high-contrast-page .public-account-chevron {
+  color: #ffffff !important;
+}
+
+body.ogd-high-contrast-page .public-account-menu-divider,
+body.ogd-high-contrast-page .public-auth-divider::before,
+body.ogd-high-contrast-page .public-auth-divider::after {
+  background: #facc15 !important;
+}
+
+body.ogd-high-contrast-page .public-account-menu-header {
+  border-color: #facc15 !important;
+}
+
 .public-auth-entry-button {
   display: inline-flex;
   align-items: center;

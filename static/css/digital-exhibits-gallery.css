@@ -1843,6 +1843,19 @@
   transform: rotate(12deg);
 }
 
+body.ogd-high-contrast-page {
+  background: #000000 !important;
+  color: #ffffff !important;
+}
+
+body.ogd-high-contrast-page main,
+body.ogd-high-contrast-page .ogd-results-section,
+body.ogd-high-contrast-page .ogd-detail-main,
+body.ogd-high-contrast-page .ogd-related-section {
+  background: transparent !important;
+  color: inherit !important;
+}
+
 html.ogd-high-contrast {
   background: #000000;
 }
@@ -1882,6 +1895,9 @@ html.ogd-high-contrast .ogd-detail-section-card__title,
 html.ogd-high-contrast .ogd-artifact-card__action,
 html.ogd-high-contrast .ogd-clear-filters,
 html.ogd-high-contrast .ogd-related-header__link,
+html.ogd-high-contrast .ogd-search-field__icon,
+html.ogd-high-contrast .ogd-sort-control__icon,
+html.ogd-high-contrast .ogd-search-field__clear,
 html.ogd-high-contrast .ogd-list-item__badge,
 html.ogd-high-contrast .ogd-detail-category-pill,
 html.ogd-high-contrast .ogd-detail-media__badge,
@@ -1907,6 +1923,9 @@ html.ogd-high-contrast .ogd-empty-state__icon,
 html.ogd-high-contrast .ogd-list-item__badge,
 html.ogd-high-contrast .ogd-detail-category-pill,
 html.ogd-high-contrast .ogd-detail-media__badge,
+html.ogd-high-contrast .ogd-detail-media__hint,
+html.ogd-high-contrast .ogd-detail-model-help,
+html.ogd-high-contrast .ogd-detail-model-prompt,
 html.ogd-high-contrast .ogd-detail-tag,
 html.ogd-high-contrast .ogd-accessibility-toggle__badge {
   background: #111111 !important;
@@ -1920,6 +1939,50 @@ html.ogd-high-contrast .ogd-accessibility-fab {
 
 html.ogd-high-contrast .ogd-accessibility-toggle.is-active .ogd-accessibility-toggle__switch {
   background: #facc15 !important;
+}
+
+html.ogd-high-contrast .ogd-page-header__title,
+html.ogd-high-contrast .ogd-artifact-card__title,
+html.ogd-high-contrast .ogd-list-item__title,
+html.ogd-high-contrast .ogd-related-header__title,
+html.ogd-high-contrast .ogd-detail-title,
+html.ogd-high-contrast .ogd-detail-description,
+html.ogd-high-contrast .ogd-detail-teaching,
+html.ogd-high-contrast .ogd-detail-fact__value,
+html.ogd-high-contrast .ogd-detail-counter,
+html.ogd-high-contrast .ogd-breadcrumb a,
+html.ogd-high-contrast .ogd-breadcrumb span,
+html.ogd-high-contrast .ogd-results-count,
+html.ogd-high-contrast .ogd-detail-meta,
+html.ogd-high-contrast .ogd-empty-state__title,
+html.ogd-high-contrast .ogd-empty-state__copy {
+  color: #ffffff !important;
+}
+
+html.ogd-high-contrast .ogd-search-field__input::placeholder,
+html.ogd-high-contrast .ogd-sort-control__select,
+html.ogd-high-contrast .ogd-detail-media__hint,
+html.ogd-high-contrast .ogd-detail-model-help {
+  color: #ffffff !important;
+}
+
+html.ogd-high-contrast .ogd-search-field__input::placeholder {
+  opacity: 1;
+}
+
+html.ogd-high-contrast .ogd-breadcrumb a:hover,
+html.ogd-high-contrast .ogd-related-header__link:hover,
+html.ogd-high-contrast .ogd-clear-filters:hover,
+html.ogd-high-contrast .ogd-search-field__clear:hover {
+  color: #facc15 !important;
+}
+
+html.ogd-high-contrast .ogd-detail-media,
+html.ogd-high-contrast .ogd-detail-media__frame,
+html.ogd-high-contrast .ogd-detail-media__frame--image,
+html.ogd-high-contrast .ogd-detail-media__frame--viewer {
+  background: #000000 !important;
+  border-color: #facc15 !important;
 }
 
 @media (max-width: 768px) {
