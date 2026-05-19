@@ -183,6 +183,11 @@ body {
   display: grid;
 }
 
+.tour-control-dock--with-floating-window {
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  width: min(25.75rem, calc(100vw - 1rem));
+}
+
 .tour-control-dock__action,
 .tour-control-dock__camera {
   display: inline-flex;
@@ -345,33 +350,30 @@ body {
   object-fit: contain;
 }
 
-.tour-floating-image-overlay {
-  position: fixed;
-  inset: 0;
-  z-index: 26;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-  pointer-events: auto;
+.tour-floating-image-window-hotspot {
+  width: clamp(12rem, 18vw, 16rem) !important;
+  height: auto !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  pointer-events: none !important;
+  transform: translate(-50%, -55%);
 }
 
-.tour-floating-image-overlay[hidden] {
-  display: none !important;
-}
-
-.tour-floating-image {
+.tour-floating-image-window {
   display: block;
-  width: min(30rem, calc(100vw - 3rem));
-  max-width: 100%;
-  max-height: calc(100vh - 3rem);
+  width: 100%;
   height: auto;
+  border-radius: 1.35rem;
   object-fit: contain;
-  border-radius: 1.5rem;
   box-shadow:
-    0 1.2rem 3rem rgba(0, 0, 0, 0.28),
+    0 1.4rem 3.6rem rgba(15, 23, 42, 0.28),
     0 0 0 1px rgba(255, 255, 255, 0.24),
-    inset 0 1px 0 rgba(255, 255, 255, 0.32);
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  opacity: 0.98;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 .tour-sr-only {
@@ -699,6 +701,10 @@ body {
     border-radius: 1.65rem;
   }
 
+  .tour-control-dock--with-floating-window {
+    width: min(24rem, calc(100vw - 0.9rem));
+  }
+
   .tour-control-dock__icon {
     width: 2.35rem;
     height: 2.35rem;
@@ -876,11 +882,24 @@ body {
   .tour-ground-hotspot::after {
     inset: 0.22rem;
   }
+
+  .tour-floating-image-window-hotspot {
+    width: clamp(9.5rem, 28vw, 12rem) !important;
+    transform: translate(-50%, -58%);
+  }
+
+  .tour-floating-image-window {
+    border-radius: 1rem;
+  }
 }
 
 @media (min-width: 769px) {
   .tour-control-dock {
     width: min(23rem, calc(100vw - 2rem));
     bottom: calc(var(--tour-safe-bottom) + 1.25rem);
+  }
+
+  .tour-control-dock--with-floating-window {
+    width: min(26.5rem, calc(100vw - 2rem));
   }
 }

@@ -14,6 +14,7 @@
   const controlDock = document.getElementById("tourControlDock");
   const toggleSceneHotspotsButton = document.getElementById("tourToggleSceneHotspots");
   const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
+  const toggleFloatingWindowButton = document.getElementById("tourToggleFloatingWindow");
   const captureViewButton = document.getElementById("tourCaptureView");
   const toggleFullscreenButton = document.getElementById("tourToggleFullscreen");
   const backToExhibitsButton = document.getElementById("tourBackToExhibits");
@@ -41,8 +42,8 @@
   let resolvedScenes = null;
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
-  let floatingImageOverlay = null;
-  let floatingImageElement = null;
+  let floatingImageHotspotId = "";
+  let floatingImageHotspotSceneId = "";
   const balanghayArtifactCopy = {
     tagalogTitle: "Ang Balanghay",
     tagalogText:
@@ -125,8 +126,12 @@
           text: "",
           clickHandlerFunc: openFloatingImageOverlay,
           clickHandlerArgs: {
+            sourceHotspotId: "front-gate-hotspot-h1",
+            windowHotspotId: "front-gate-hotspot-h1-window",
             imageSrc: frontGateHotspotH1Src,
             imageAlt: "Front Gate hotspot image",
+            windowPitch: 9.38,
+            windowYaw: 31.84,
           },
           cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon tour-ground-hotspot--floating-image-trigger",
         },
@@ -1473,6 +1478,24 @@
       toggleArtifactHotspotsButton.classList.toggle("is-active", artifactHotspotsVisible);
       toggleArtifactHotspotsButton.setAttribute("aria-pressed", artifactHotspotsVisible ? "true" : "false");
     }
+
+    syncFloatingWindowControl();
+  }
+
+  function syncFloatingWindowControl() {
+    const isFloatingWindowVisible = Boolean(floatingImageHotspotId && floatingImageHotspotSceneId);
+
+    if (controlDock) {
+      controlDock.classList.toggle("tour-control-dock--with-floating-window", isFloatingWindowVisible);
+    }
+
+    if (!toggleFloatingWindowButton) {
+      return;
+    }
+
+    toggleFloatingWindowButton.hidden = !isFloatingWindowVisible;
+    toggleFloatingWindowButton.classList.toggle("is-active", isFloatingWindowVisible);
+    toggleFloatingWindowButton.setAttribute("aria-pressed", isFloatingWindowVisible ? "true" : "false");
   }
 
   function syncFullscreenButton() {
@@ -1570,31 +1593,16 @@
     capturePreviewOverlay.hidden = false;
   }
 
-  function ensureFloatingImageOverlay() {
-    if (floatingImageOverlay && floatingImageElement) {
-      return;
-    }
-
-    const overlay = document.createElement("div");
-    overlay.className = "tour-floating-image-overlay";
-    overlay.hidden = true;
-    overlay.id = "tourFloatingImageOverlay";
+  function renderFloatingImageHotspot(hotSpotDiv, args) {
+    hotSpotDiv.classList.add("tour-floating-image-window-hotspot");
 
     const image = document.createElement("img");
-    image.className = "tour-floating-image";
-    image.alt = "";
+    image.className = "tour-floating-image-window";
+    image.src = args.imageSrc;
+    image.alt = args.imageAlt || "Hotspot image";
+    image.draggable = false;
 
-    overlay.appendChild(image);
-    app.appendChild(overlay);
-
-    overlay.addEventListener("click", function (event) {
-      if (event.target === overlay) {
-        closeFloatingImageOverlay();
-      }
-    });
-
-    floatingImageOverlay = overlay;
-    floatingImageElement = image;
+    hotSpotDiv.appendChild(image);
   }
 
   function openFloatingImageOverlay(event, args) {
@@ -1602,30 +1610,57 @@
       event.preventDefault();
     }
 
-    if (!args || !args.imageSrc) {
+    if (!args || !args.imageSrc || !tourViewer || typeof tourViewer.getScene !== "function") {
       return;
     }
 
-    ensureFloatingImageOverlay();
+    const sceneId = tourViewer.getScene();
+    const nextHotspotId = args.windowHotspotId || `${args.sourceHotspotId || "floating-image"}-window`;
+    const isSameFloatingWindowOpen = floatingImageHotspotId === nextHotspotId && floatingImageHotspotSceneId === sceneId;
 
-    if (!floatingImageOverlay || !floatingImageElement) {
+    if (isSameFloatingWindowOpen) {
+      closeFloatingImageOverlay();
       return;
     }
 
-    floatingImageElement.src = args.imageSrc;
-    floatingImageElement.alt = args.imageAlt || "Hotspot image";
-    floatingImageOverlay.hidden = false;
+    closeFloatingImageOverlay();
+
+    const floatingWindowHotspot = {
+      id: nextHotspotId,
+      pitch: Number.isFinite(Number(args.windowPitch)) ? Number(args.windowPitch) : 8,
+      yaw: Number.isFinite(Number(args.windowYaw)) ? Number(args.windowYaw) : 30,
+      type: "info",
+      text: "",
+      cssClass: "tour-floating-image-window-hotspot",
+      createTooltipFunc: renderFloatingImageHotspot,
+      createTooltipArgs: {
+        imageSrc: args.imageSrc,
+        imageAlt: args.imageAlt || "Hotspot image",
+      },
+    };
+
+    try {
+      tourViewer.addHotSpot(floatingWindowHotspot, sceneId);
+      floatingImageHotspotId = nextHotspotId;
+      floatingImageHotspotSceneId = sceneId;
+      syncFloatingWindowControl();
+    } catch (error) {
+      console.error("Unable to open floating hotspot image.", error);
+    }
   }
 
   function closeFloatingImageOverlay() {
-    if (floatingImageOverlay) {
-      floatingImageOverlay.hidden = true;
+    if (tourViewer && floatingImageHotspotId && floatingImageHotspotSceneId) {
+      try {
+        tourViewer.removeHotSpot(floatingImageHotspotId, floatingImageHotspotSceneId);
+      } catch (error) {
+        console.warn("Unable to remove floating hotspot image.", error);
+      }
     }
 
-    if (floatingImageElement) {
-      floatingImageElement.removeAttribute("src");
-      floatingImageElement.alt = "";
-    }
+    floatingImageHotspotId = "";
+    floatingImageHotspotSceneId = "";
+    syncFloatingWindowControl();
   }
 
   function downloadImageDataUrl(dataUrl) {
@@ -1893,10 +1928,6 @@
       closeArtifactOverlay();
     }
 
-    if (event.key === "Escape" && floatingImageOverlay && !floatingImageOverlay.hidden) {
-      closeFloatingImageOverlay();
-    }
-
     if (event.key === "Escape" && capturePreviewOverlay && !capturePreviewOverlay.hidden) {
       capturePreviewOverlay.hidden = true;
       if (capturePreviewImage) {
@@ -1916,6 +1947,12 @@
     toggleArtifactHotspotsButton.addEventListener("click", function () {
       artifactHotspotsVisible = !artifactHotspotsVisible;
       updateHotspotVisibilityState();
+    });
+  }
+
+  if (toggleFloatingWindowButton) {
+    toggleFloatingWindowButton.addEventListener("click", function () {
+      closeFloatingImageOverlay();
     });
   }
 
@@ -2071,6 +2108,9 @@
         updateHotspotVisibilityState();
 
         viewer.on("scenechange", function (sceneId) {
+          if (floatingImageHotspotSceneId && floatingImageHotspotSceneId !== sceneId) {
+            closeFloatingImageOverlay();
+          }
           syncSceneInUrl(sceneId);
           window.requestAnimationFrame(updateHotspotVisibilityState);
         });
