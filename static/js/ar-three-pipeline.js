@@ -1017,7 +1017,8 @@
     }
 
     var specialAudio = getEntrySpecialAudio(runtime.activeAudioEntry);
-    var isEnabled = Boolean(runtime.activeAudioEntry && specialAudio);
+    var isPahimakasActive = Boolean(runtime.activeAudioEntry && runtime.activeAudioEntry.key === "pahimakas");
+    var isEnabled = Boolean(isPahimakasActive && specialAudio);
 
     runtime.specialAudioButton.hidden = !isEnabled;
     runtime.specialAudioButton.disabled = !isEnabled;
