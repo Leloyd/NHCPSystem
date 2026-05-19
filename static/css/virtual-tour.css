@@ -433,7 +433,6 @@ body {
 .tour-floating-media-preview__model {
   display: block;
   width: 100%;
-  border-radius: 1rem;
 }
 
 .tour-floating-media-preview__image {
@@ -446,6 +445,8 @@ body {
   height: min(75vh, 42rem);
   --poster-color: transparent;
   background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .tour-floating-image-window-hotspot {
@@ -499,28 +500,31 @@ body {
 
 .tour-floating-media-window-switch {
   position: absolute;
-  top: -0.85rem;
-  left: -0.35rem;
-  z-index: 1;
+  left: 50%;
+  bottom: -1rem;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.6rem;
+  height: 2.6rem;
   padding: 0;
-  border: 0;
-  background: transparent;
-  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.72);
+  color: #f8fafc;
   cursor: pointer;
-  text-shadow: 0 0.35rem 1rem rgba(15, 23, 42, 0.9);
+  box-shadow: 0 0.85rem 2rem rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(10px);
+  transform: translateX(-50%);
 }
 
 .tour-floating-media-window-switch-icon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 1.3rem;
-  height: 1.3rem;
+  width: 1.45rem;
+  height: 1.45rem;
 }
 
 .tour-floating-media-window-switch-icon svg {
@@ -532,9 +536,10 @@ body {
   display: block;
   width: 100%;
   height: clamp(15rem, 24vw, 20rem);
-  border-radius: 1.35rem;
   --poster-color: transparent;
   background: transparent;
+  border-radius: 0;
+  overflow: visible;
 }
 
 .tour-floating-image-window {
@@ -1066,7 +1071,7 @@ body {
 
   .tour-floating-media-window-model {
     height: clamp(11.5rem, 34vw, 14.5rem);
-    border-radius: 1rem;
+    border-radius: 0;
   }
 
   .tour-floating-image-window-close {
@@ -1077,15 +1082,14 @@ body {
   }
 
   .tour-floating-media-window-switch {
-    top: -0.55rem;
-    left: -0.25rem;
-    width: 1.8rem;
-    height: 1.8rem;
+    bottom: -0.85rem;
+    width: 2.25rem;
+    height: 2.25rem;
   }
 
   .tour-floating-media-window-switch-icon {
-    width: 1.15rem;
-    height: 1.15rem;
+    width: 1.2rem;
+    height: 1.2rem;
   }
 
   .tour-floating-image-preview {

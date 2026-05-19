@@ -1729,6 +1729,9 @@
 
     floatingArtifactPreviewImage.hidden = !showImage;
     floatingArtifactPreviewModel.hidden = !showGlb;
+    floatingArtifactPreviewImage.style.display = showImage ? "block" : "none";
+    floatingArtifactPreviewModel.style.display = showGlb ? "block" : "none";
+    floatingArtifactPreviewModel.style.pointerEvents = showGlb ? "auto" : "none";
 
     if (showImage) {
       floatingArtifactPreviewImage.src = args.imageSrc;
@@ -1758,12 +1761,15 @@
       floatingArtifactPreviewImage.hidden = true;
       floatingArtifactPreviewImage.removeAttribute("src");
       floatingArtifactPreviewImage.alt = "";
+      floatingArtifactPreviewImage.style.display = "none";
     }
 
     if (floatingArtifactPreviewModel) {
       floatingArtifactPreviewModel.hidden = true;
       floatingArtifactPreviewModel.removeAttribute("src");
       floatingArtifactPreviewModel.removeAttribute("aria-label");
+      floatingArtifactPreviewModel.style.display = "none";
+      floatingArtifactPreviewModel.style.pointerEvents = "none";
     }
   }
 
