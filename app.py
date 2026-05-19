@@ -37,6 +37,8 @@ except ModuleNotFoundError:  # pragma: no cover - optional in some environments
 
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
+PUBLIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "public" / "AR-Artifacts").resolve()
+STATIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "static" / "AR-Artifacts").resolve()
 
 if load_dotenv is not None:
     load_dotenv(dotenv_path=PROJECT_ROOT / ".env", override=False)
@@ -794,6 +796,15 @@ def online_gallery_details():
 @app.route("/virtual-tour")
 def virtual_tour():
     return render_template("VirtualTour.html")
+
+
+@app.route("/AR-Artifacts/<path:filename>")
+def artifact_asset_file(filename):
+    for root_dir in (PUBLIC_AR_ARTIFACTS_DIR, STATIC_AR_ARTIFACTS_DIR):
+        candidate_path = _resolve_safe_path(root_dir, filename)
+        if candidate_path is not None and candidate_path.exists() and candidate_path.is_file():
+            return send_from_directory(str(root_dir), filename)
+    return jsonify({"error": f"Artifact asset not found: {filename}"}), 404
 
 
 @app.route("/heritage-trail")
