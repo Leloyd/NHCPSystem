@@ -28,6 +28,8 @@
   const digitalExhibitsUrl = app ? app.dataset.digitalExhibitsUrl : "";
   const balanghayImageSrc = app ? app.dataset.balanghayImageSrc : "";
   const balanghayGlbSrc = app ? app.dataset.balanghayGlbSrc : "";
+  const balanghayTagalogAudioSrc = app ? app.dataset.balanghayTagalogAudioSrc : "";
+  const balanghayEnglishAudioSrc = app ? app.dataset.balanghayEnglishAudioSrc : "";
   const kabaongImageSrc = app ? app.dataset.kabaongImageSrc : "";
   const kabaongGlbSrc = app ? app.dataset.kabaongGlbSrc : "";
   const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
@@ -130,6 +132,10 @@
   let floatingArtifactPreviewArgs = null;
   const floatingImageHotspots = new Map();
   const floatingArtifactHotspots = new Map();
+  let floatingArtifactAudio = null;
+  let floatingArtifactAudioSrc = "";
+  let floatingArtifactAudioLanguage = "tl";
+  let activeFloatingArtifactAudioConfig = null;
   let floatingImageAudio = null;
   let floatingImageAudioSrc = "";
   const balanghayArtifactCopy = {
@@ -1642,6 +1648,10 @@
             imageAlt: "Balanghay",
             glbSrc: balanghayGlbSrc,
             glbAlt: "Balanghay 3D model",
+            audioByLanguage: {
+              tl: balanghayTagalogAudioSrc,
+              en: balanghayEnglishAudioSrc,
+            },
             windowPitch: -20.31,
             windowYaw: 101.6,
           },
@@ -1842,8 +1852,18 @@
     }
 
     if (toggleArtifactHotspotsButton) {
-      toggleArtifactHotspotsButton.classList.remove("is-active");
-      toggleArtifactHotspotsButton.setAttribute("aria-pressed", "false");
+      const artifactAudioEnabled = Boolean(activeFloatingArtifactAudioConfig && (activeFloatingArtifactAudioConfig.tl || activeFloatingArtifactAudioConfig.en));
+      const isTagalog = floatingArtifactAudioLanguage === "tl";
+      toggleArtifactHotspotsButton.classList.toggle("tour-control-dock__action--inactive", !artifactAudioEnabled);
+      toggleArtifactHotspotsButton.classList.toggle("is-active", artifactAudioEnabled && isTagalog);
+      toggleArtifactHotspotsButton.setAttribute("aria-pressed", artifactAudioEnabled && isTagalog ? "true" : "false");
+      toggleArtifactHotspotsButton.setAttribute("aria-disabled", artifactAudioEnabled ? "false" : "true");
+      toggleArtifactHotspotsButton.disabled = !artifactAudioEnabled;
+      toggleArtifactHotspotsButton.setAttribute("aria-label", artifactAudioEnabled ? `Switch Balanghay audio to ${isTagalog ? "English" : "Tagalog"}` : "Artifact audio toggle unavailable");
+      const label = toggleArtifactHotspotsButton.querySelector(".tour-control-dock__label");
+      if (label) {
+        label.textContent = artifactAudioEnabled ? (isTagalog ? "Tagalog" : "English") : "Audio";
+      }
     }
   }
 
@@ -2248,6 +2268,85 @@
     floatingImageAudioSrc = "";
   }
 
+  function stopFloatingArtifactAudio() {
+    if (!floatingArtifactAudio) {
+      floatingArtifactAudioSrc = "";
+      return;
+    }
+
+    try {
+      floatingArtifactAudio.pause();
+      floatingArtifactAudio.currentTime = 0;
+    } catch (_error) {
+      // noop
+    }
+
+    floatingArtifactAudio = null;
+    floatingArtifactAudioSrc = "";
+  }
+
+  function getFloatingArtifactAudioSource(audioConfig, language) {
+    if (!audioConfig) {
+      return "";
+    }
+
+    if (language === "en" && audioConfig.en) {
+      return audioConfig.en;
+    }
+
+    if (audioConfig.tl) {
+      return audioConfig.tl;
+    }
+
+    return audioConfig.en || "";
+  }
+
+  function playFloatingArtifactAudio(audioConfig, language) {
+    const nextAudioSrc = getFloatingArtifactAudioSource(audioConfig, language);
+    if (!nextAudioSrc) {
+      stopFloatingArtifactAudio();
+      floatingArtifactAudioLanguage = language === "en" ? "en" : "tl";
+      activeFloatingArtifactAudioConfig = audioConfig || null;
+      updateHotspotVisibilityState();
+      return;
+    }
+
+    activeFloatingArtifactAudioConfig = audioConfig || null;
+    floatingArtifactAudioLanguage = language === "en" ? "en" : "tl";
+
+    if (floatingArtifactAudio && floatingArtifactAudioSrc === nextAudioSrc && !floatingArtifactAudio.paused && !floatingArtifactAudio.ended) {
+      updateHotspotVisibilityState();
+      return;
+    }
+
+    stopFloatingArtifactAudio();
+
+    const audio = new Audio(nextAudioSrc);
+    audio.preload = "auto";
+    audio.addEventListener("ended", function () {
+      floatingArtifactAudio = null;
+      floatingArtifactAudioSrc = "";
+    });
+
+    floatingArtifactAudio = audio;
+    floatingArtifactAudioSrc = nextAudioSrc;
+    updateHotspotVisibilityState();
+
+    const playPromise = audio.play();
+    if (playPromise && typeof playPromise.catch === "function") {
+      playPromise.catch(function (error) {
+        console.warn("Unable to autoplay artifact audio.", error);
+      });
+    }
+  }
+
+  function clearFloatingArtifactAudioState() {
+    stopFloatingArtifactAudio();
+    activeFloatingArtifactAudioConfig = null;
+    floatingArtifactAudioLanguage = "tl";
+    updateHotspotVisibilityState();
+  }
+
   function forceCloseAllFloatingOverlays() {
     const imageEntries = Array.from(floatingImageHotspots.entries());
     const artifactEntries = Array.from(floatingArtifactHotspots.entries());
@@ -2277,6 +2376,7 @@
     hideFloatingImagePreviewOverlay();
     hideFloatingArtifactPreviewOverlay();
     stopFloatingImageAudio();
+    clearFloatingArtifactAudioState();
 
     if (viewerContainer) {
       Array.from(viewerContainer.querySelectorAll(".tour-floating-image-window-hotspot, .tour-floating-media-window-hotspot")).forEach(function (hotspotNode) {
@@ -2598,6 +2698,7 @@
         imageAlt: args.imageAlt || "Artifact image",
         glbSrc: args.glbSrc || "",
         glbSources: Array.isArray(args.glbSources) ? args.glbSources.filter(Boolean) : [],
+        audioByLanguage: args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null,
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
         currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,
@@ -2611,7 +2712,13 @@
       floatingArtifactHotspots.set(artifactHotspotKey, {
         hotspotId: nextHotspotId,
         sceneId,
+        audioByLanguage: args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null,
       });
+      if (args.audioByLanguage && (args.audioByLanguage.tl || args.audioByLanguage.en)) {
+        playFloatingArtifactAudio(args.audioByLanguage, "tl");
+      } else {
+        clearFloatingArtifactAudioState();
+      }
     } catch (error) {
       console.error("Unable to open floating artifact.", error);
     }
@@ -2669,6 +2776,9 @@
     }
 
     hideFloatingArtifactPreviewOverlay();
+    if (hotspotEntry && hotspotEntry.audioByLanguage) {
+      clearFloatingArtifactAudioState();
+    }
     floatingArtifactHotspots.delete(artifactHotspotKey);
   }
 
@@ -2969,6 +3079,17 @@
     toggleSceneHotspotsButton.addEventListener("click", function () {
       hotspotsVisible = !hotspotsVisible;
       updateHotspotVisibilityState();
+    });
+  }
+
+  if (toggleArtifactHotspotsButton) {
+    toggleArtifactHotspotsButton.addEventListener("click", function () {
+      if (!activeFloatingArtifactAudioConfig) {
+        return;
+      }
+
+      const nextLanguage = floatingArtifactAudioLanguage === "tl" ? "en" : "tl";
+      playFloatingArtifactAudio(activeFloatingArtifactAudioConfig, nextLanguage);
     });
   }
 

@@ -65,6 +65,8 @@
       data-digital-exhibits-url="{{ url_for('digital_exhibits') }}"
       data-balanghay-image-src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.jpg') }}"
       data-balanghay-glb-src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512(10K).glb') }}"
+      data-balanghay-tagalog-audio-src="{{ url_for('static', filename='AR-Artifacts/Balanghay/ANG BALANGHAY.mp3') }}"
+      data-balanghay-english-audio-src="{{ url_for('static', filename='AR-Artifacts/Balanghay/THE BALANGHAY.mp3') }}"
       data-kabaong-image-src="{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong.jpg') }}"
       data-kabaong-glb-src="{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong-512(10k).glb') }}"
       data-uloh-image-src="{{ url_for('static', filename='AR-Artifacts/Uloh/Uloh.jpg') }}"
@@ -137,13 +139,13 @@
           </span>
           <span class="tour-control-dock__label">Hotspots</span>
         </button>
-        <button class="tour-control-dock__action tour-control-dock__action--inactive" id="tourToggleArtifactHotspots" type="button" aria-label="Inactive control" aria-pressed="false" aria-disabled="true">
+        <button class="tour-control-dock__action tour-control-dock__action--inactive" id="tourToggleArtifactHotspots" type="button" aria-label="Toggle artifact audio language" aria-pressed="false" aria-disabled="true">
           <span class="tour-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Zm1.5-.5a.5.5 0 0 0-.5.5v8.2l3.1-3.45a1 1 0 0 1 1.48-.03l1.9 2.02 2.45-2.78a1 1 0 0 1 1.5.02L18 12.4V6.5a.5.5 0 0 0-.5-.5h-11Zm11.5 10.83-2.3-3.1-2.38 2.7a1 1 0 0 1-1.47.06l-1.95-2.08L6 18h11.5a.5.5 0 0 0 .5-.5v-.67ZM9 8.75a1.75 1.75 0 1 1 3.5 0 1.75 1.75 0 0 1-3.5 0Z" fill="currentColor"></path>
             </svg>
           </span>
-          <span class="tour-control-dock__label">Info</span>
+          <span class="tour-control-dock__label">Audio</span>
         </button>
         <button class="tour-control-dock__camera" id="tourCaptureView" type="button" aria-label="Capture current view">
           <span class="tour-control-dock__camera-icon" aria-hidden="true">
