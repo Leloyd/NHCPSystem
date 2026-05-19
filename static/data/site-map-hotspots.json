@@ -42,8 +42,18 @@
         "pitch": -51.09,
         "yaw": -43.78
       },
-      "description": "Flag Pole hotspot.",
-      "media": []
+      "description": "The flag pole represents respect, national identity, and the public importance of the site. Its presence reminds visitors that the cemetery is not only a local landmark, but also part of the country's protected historical heritage.",
+      "translations": {
+        "tl": {
+          "description": "Ang watawatang-pambansa ay sumasagisag sa paggalang, pagkakakilanlang pambansa, at kahalagahan ng lugar sa publiko. Ipinapaalala nito sa mga bisita na ang sementeryo ay hindi lamang lokal na palatandaan, kundi bahagi rin ng pinangangalagaang pamanang pangkasaysayan ng bansa."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/FlagPole/FlagPole.png",
+          "alt": "Flag pole at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "parking",
@@ -55,8 +65,18 @@
         "pitch": -51.32,
         "yaw": -59.48
       },
-      "description": "Parking hotspot.",
-      "media": []
+      "description": "The parking area serves as the visitor’s first point of arrival before entering the heritage site. From here, guests prepare for their visit and begin their transition from the busy outside environment into a place of history, reflection, and remembrance.",
+      "translations": {
+        "tl": {
+          "description": "Ang parking area ang unang bahagi na nararating ng mga bisita bago pumasok sa pook-pamana. Mula rito, nagsisimula ang kanilang paghahanda sa pagbisita at pagpasok sa isang lugar ng kasaysayan, pagninilay, at pag-alala."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Parking/Parking.jpg",
+          "alt": "Parking area at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "museum-entrance",
@@ -68,8 +88,18 @@
         "pitch": -41.27,
         "yaw": -48.91
       },
-      "description": "Museum hotspot.",
-      "media": []
+      "description": "The museum introduces visitors to the history, meaning, and cultural value of the Nagcarlan Underground Cemetery. Through exhibits and interpretive materials, it helps explain the site’s role as a burial ground, a religious space, and a witness to local and national history.",
+      "translations": {
+        "tl": {
+          "description": "Ipinakikilala ng museo sa mga bisita ang kasaysayan, kahulugan, at halagang pangkultura ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Sa pamamagitan ng mga eksibit at impormasyong pang-edukasyon, ipinapaliwanag nito ang tungkulin ng lugar bilang libingan, espasyong panrelihiyon, at saksi sa kasaysayang lokal at pambansa."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Museum/Museum.png",
+          "alt": "Museum at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "resource-center-office",
@@ -81,8 +111,18 @@
         "pitch": -41.56,
         "yaw": -40.53
       },
-      "description": "Resource Center hotspot.",
-      "media": []
+      "description": "The resource center provides additional learning materials for students, teachers, researchers, and visitors. It supports deeper study of the cemetery’s history, architecture, conservation, and connection to the community of Nagcarlan.",
+      "translations": {
+        "tl": {
+          "description": "Ang resource center ay nagbibigay ng karagdagang materyales sa pag-aaral para sa mga mag-aaral, guro, mananaliksik, at bisita. Tinutulungan nito ang mas malalim na pag-unawa sa kasaysayan, arkitektura, konserbasyon, at ugnayan ng sementeryo sa pamayanan ng Nagcarlan."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/ResourceCenter/ResourceCenter.jpg",
+          "alt": "Resource center at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "middle-ground",
@@ -94,8 +134,18 @@
         "pitch": -40.52,
         "yaw": 5.58
       },
-      "description": "Middle hotspot.",
-      "media": []
+      "description": "The middle ground is the central open space that visually connects the entrance, the pathways, the chapel, and the surrounding tombs. It gives visitors a clear view of the cemetery’s circular plan and prepares them for the solemn atmosphere of the site.",
+      "translations": {
+        "tl": {
+          "description": "Ang gitnang bahagi ang bukas na espasyo na nag-uugnay sa pasukan, mga daanan, kapilya, at mga libingang nakapaligid dito. Dito mas nauunawaan ng mga bisita ang paikot na disenyo ng sementeryo at ang payapang kapaligiran ng lugar."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Middle/Middle.png",
+          "alt": "Central grounds of the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "left-side-inside",
@@ -107,8 +157,18 @@
         "pitch": -30.64,
         "yaw": -20.84
       },
-      "description": "Left hotspot.",
-      "media": []
+      "description": "The left side of the cemetery forms one part of the circular enclosure that surrounds the central chapel. This area helps show how the entire site was carefully planned, with the tombs, walls, and pathways arranged around a sacred center.",
+      "translations": {
+        "tl": {
+          "description": "Ang kaliwang bahagi ng sementeryo ay isa sa mga bahagi ng paikot na estruktura na nakapaligid sa gitnang kapilya. Ipinapakita nito kung paano maingat na binalangkas ang buong lugar, kung saan ang mga puntod, pader, at daanan ay nakaayos sa paligid ng sagradong sentro."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Left/Left.png",
+          "alt": "Left side of the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "right-side-inside",
@@ -120,8 +180,18 @@
         "pitch": -37.12,
         "yaw": 43.68
       },
-      "description": "Right hotspot.",
-      "media": []
+      "description": "The right side completes the balanced layout of the cemetery and mirrors the organized structure of the opposite side. Together, the left and right areas emphasize order, symmetry, and the solemn character of the burial grounds.",
+      "translations": {
+        "tl": {
+          "description": "Ang kanang bahagi ang kumukumpleto sa balanseng ayos ng sementeryo at sumasalamin sa organisadong estruktura ng kabilang panig. Magkasama, ipinakikita ng kaliwa at kanan ang kaayusan, simetriya, at taimtim na katangian ng libingan."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Right/Right.png",
+          "alt": "Right side of the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "right-tombs",
@@ -133,8 +203,18 @@
         "pitch": -29.01,
         "yaw": 29.41
       },
-      "description": "Right Tombs hotspot.",
-      "media": []
+      "description": "The right tombs are part of the wall niches that reflect the cemetery’s original purpose as a burial place for selected members of the community. These tombs remind visitors of the families, identities, and memories connected to the site.",
+      "translations": {
+        "tl": {
+          "description": "Ang mga puntod sa kanang bahagi ay bahagi ng mga libingang nasa pader na nagpapakita ng orihinal na gamit ng sementeryo bilang himlayan ng piling kasapi ng pamayanan. Ipinapaalala ng mga puntod na ito ang mga pamilya, pagkakakilanlan, at alaalang nakaugnay sa lugar."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/RightTombs/RightTombs.png",
+          "alt": "Right tomb niches at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "left-tombs",
@@ -146,8 +226,18 @@
         "pitch": -26.42,
         "yaw": -3.99
       },
-      "description": "Left Tombs hotspot.",
-      "media": []
+      "description": "The left tombs form another section of the cemetery’s burial niches. They contribute to the enclosed and reflective character of the site, reminding visitors that the cemetery was designed as a place of prayer, memory, and respect for the dead.",
+      "translations": {
+        "tl": {
+          "description": "Ang mga puntod sa kaliwang bahagi ay isa pang hanay ng mga libingang nasa loob ng sementeryo. Nakadaragdag ang mga ito sa tahimik at mapagnilay na katangian ng lugar, na nagpapaalala na ito ay ginawa para sa panalangin, pag-alala, at paggalang sa mga yumao."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/LeftTombs/LeftTombs.png",
+          "alt": "Left tomb niches at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "church-front",
@@ -159,8 +249,18 @@
         "pitch": -28.32,
         "yaw": 11.91
       },
-      "description": "Front Chapel hotspot.",
-      "media": []
+      "description": "The front chapel is the main visual focus as visitors approach the center of the cemetery. Its façade marks the transition from the open grounds to the sacred chapel space and leads visitors closer to the underground crypt beneath it.",
+      "translations": {
+        "tl": {
+          "description": "Ang harapang bahagi ng kapilya ang pangunahing tanawin habang papalapit ang mga bisita sa gitna ng sementeryo. Ito ang hudyat ng paglipat mula sa bukas na paligid patungo sa sagradong espasyo ng kapilya at sa libingang nasa ilalim nito."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/FrontChurch/FrontChurch.png",
+          "alt": "Front view of the chapel at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "church",
@@ -172,8 +272,18 @@
         "pitch": -20.6,
         "yaw": 14.1
       },
-      "description": "Chapel hotspot.",
-      "media": []
+      "description": "The chapel served as the religious center of the cemetery, where prayers and funeral rites were connected to the burial grounds. Its location at the center emphasizes the strong relationship between faith, death, and remembrance in the site’s design.",
+      "translations": {
+        "tl": {
+          "description": "Ang kapilya ang nagsilbing sentrong panrelihiyon ng sementeryo, kung saan iniuugnay ang panalangin at ritwal ng paglilibing sa buong lugar. Ang pagkakalagay nito sa gitna ay nagpapakita ng malalim na ugnayan ng pananampalataya, kamatayan, at pag-alala sa disenyo ng pook."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Chapel/Chapel.png",
+          "alt": "Chapel at the Nagcarlan Underground Cemetery"
+        }
+      ]
     },
     {
       "id": "underground-crypts",
@@ -185,8 +295,18 @@
         "pitch": -23.3,
         "yaw": 18.49
       },
-      "description": "Underground Crypts hotspot.",
-      "media": []
+      "description": "The underground crypts are the most distinctive feature of the Nagcarlan Underground Cemetery. Located beneath the chapel, this solemn space deepens the visitor’s understanding of the site as a rare heritage structure shaped by faith, social history, and remembrance.",
+      "translations": {
+        "tl": {
+          "description": "Ang mga libingan sa ilalim ng lupa ang pinakatanging bahagi ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Matatagpuan sa ilalim ng kapilya, ang tahimik na espasyong ito ay nagpapalalim sa pag-unawa ng mga bisita sa lugar bilang isang pambihirang pamanang hinubog ng pananampalataya, kasaysayang panlipunan, at paggunita."
+        }
+      },
+      "media": [
+        {
+          "src": "/static/SiteMap/Underground/Underground.png",
+          "alt": "Underground crypts of the Nagcarlan Underground Cemetery"
+        }
+      ]
     }
   ]
 }
