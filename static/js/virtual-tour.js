@@ -137,7 +137,7 @@
             windowPitch: 1.06,
             windowYaw: 24.41,
           },
-          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon tour-ground-hotspot--floating-image-trigger",
+          cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
         },
       ],
     },
