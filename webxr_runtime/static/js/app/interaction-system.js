@@ -14,6 +14,7 @@ export class InteractionSystem {
     uiController,
     registry,
     getPickables,
+    getPlayerPosition,
     pointerLockControls,
   }) {
     this.camera = camera;
@@ -22,6 +23,7 @@ export class InteractionSystem {
     this.uiController = uiController;
     this.registry = registry;
     this.getPickables = getPickables;
+    this.getPlayerPosition = getPlayerPosition;
     this.pointerLockControls = pointerLockControls;
 
     this.raycaster = new THREE.Raycaster();
@@ -224,6 +226,11 @@ export class InteractionSystem {
     this._highlight(mesh);
 
     const interactionData = mesh.userData.interaction ?? {};
+    const playerPosition = this.getPlayerPosition?.();
+    const planarDistance = playerPosition && hit.point
+      ? Math.hypot(hit.point.x - playerPosition.x, hit.point.z - playerPosition.z)
+      : null;
+    const maxDistance = Number(interactionData.maxDistance);
     const context = {
       name:
         interactionData.name ||
@@ -235,8 +242,26 @@ export class InteractionSystem {
       object: mesh,
       point: hit.point.clone(),
       distance: hit.distance,
+      playerDistance: planarDistance,
+      maxDistance: Number.isFinite(maxDistance) ? maxDistance : null,
       assetId: interactionData.assetId ?? null,
     };
+
+    const measuredDistance = Number.isFinite(planarDistance) ? planarDistance : hit.distance;
+    if (Number.isFinite(maxDistance) && Number.isFinite(measuredDistance) && measuredDistance > maxDistance) {
+      const metadataType = String(interactionData.metadata?.type || '').toLowerCase();
+      const targetLabel = metadataType.includes('door')
+        ? 'door'
+        : metadataType.includes('hotspot')
+          ? 'hotspot'
+          : 'object';
+      this.uiController?.hideInteraction();
+      this.uiController?.setHotspotHelperHint(
+        `Move closer to the ${targetLabel}. Current ${measuredDistance.toFixed(2)}, max ${maxDistance.toFixed(2)}.`,
+        2200,
+      );
+      return;
+    }
 
     if (context.suppressPanel) {
       this.uiController?.hideInteraction();

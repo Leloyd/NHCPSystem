@@ -114,7 +114,7 @@ export class UiController {
 
     if (resetAfterMs > 0) {
       this.hotspotHelperResetTimer = window.setTimeout(() => {
-        this.refs.hotspotHelper.textContent = 'Press H to copy hotspot position.';
+        this.refs.hotspotHelper.textContent = 'Press H to place a helper marker and copy the hotspot position.';
         this.hotspotHelperResetTimer = null;
       }, resetAfterMs);
     }

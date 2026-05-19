@@ -11,6 +11,10 @@ import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 const DEFAULT_BG = 0x0f1114;
 const CROSSHAIR_NDC = new THREE.Vector2(0, 0);
 const HOTSPOT_FALLBACK_DISTANCE = 5.0;
+const DOOR_INTERACTION_MAX_DISTANCE = 2.35;
+const HOTSPOT_INTERACTION_MAX_DISTANCE = 1.85;
+const HOTSPOT_HELPER_COLOR = 0xffd54a;
+const HOTSPOT_HELPER_RADIUS = 0.07;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
@@ -53,6 +57,7 @@ const CHURCH_HOTSPOT_MARKERS = [
     position: [-2.598, 0.438, -2.459],
     color: 0x8fd3ff,
     radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
 ];
 const UNDERGROUND_HOTSPOT_MARKERS = [
@@ -61,6 +66,7 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     position: [3.5, 1.136, 0],
     color: 0x8fd3ff,
     radius: 0.07,
+    interactionMaxDistance: DOOR_INTERACTION_MAX_DISTANCE,
   },
 ];
 const CHURCH_FLOATING_LABEL_IMAGES = {};
@@ -128,6 +134,7 @@ export class WebXRApp {
     this.splatEntries = [];
     this.pickableMeshes = [];
     this.hotspotMarkers = [];
+    this.hotspotHelperMarker = null;
     this.floatingHotspotLabels = [];
     this.expandedHotspotOverlay = null;
     this.expandedHotspotOverlayImage = null;
@@ -906,7 +913,9 @@ export class WebXRApp {
             assetId: asset.id,
             name: asset.fileName || asset.relativePath || child.name || root.name,
             suppressPanel: true,
+            maxDistance: DOOR_INTERACTION_MAX_DISTANCE,
             metadata: {
+              type: 'door',
               fileName: asset.fileName,
               relativePath: asset.relativePath,
               ...asset.metadata,
@@ -927,6 +936,84 @@ export class WebXRApp {
     }
   }
 
+  _getActiveHotspotMarkers() {
+    return this._isUndergroundScene()
+      ? UNDERGROUND_HOTSPOT_MARKERS
+      : CHURCH_HOTSPOT_MARKERS;
+  }
+
+  _getHotspotConfig(hotspotId) {
+    return this._getActiveHotspotMarkers().find((hotspot) => hotspot.id === hotspotId) ?? null;
+  }
+
+  _buildHotspotMarker({
+    id,
+    position,
+    color,
+    radius,
+    interactionName = null,
+    metadata = {},
+    maxDistance = null,
+    suppressPanel = true,
+  }) {
+    const root = new THREE.Group();
+    root.name = id;
+
+    const markerPosition = position?.isVector3
+      ? position.clone()
+      : new THREE.Vector3(position[0], position[1], position[2]);
+    root.position.copy(markerPosition);
+
+    const ring = new THREE.Mesh(
+      new THREE.TorusGeometry(radius * 1.1, radius * 0.13, 12, 48),
+      new THREE.MeshBasicMaterial({
+        color,
+        transparent: true,
+        opacity: 0.58,
+        depthWrite: false,
+      }),
+    );
+    ring.position.y = 0.02;
+    ring.rotation.x = Math.PI / 2;
+
+    const orb = new THREE.Mesh(
+      new THREE.SphereGeometry(radius * 0.42, 14, 14),
+      new THREE.MeshStandardMaterial({
+        color: 0xffffff,
+        emissive: color,
+        emissiveIntensity: 0.48,
+        roughness: 0.52,
+        metalness: 0.0,
+      }),
+    );
+    orb.position.y = radius * 0.55;
+    orb.castShadow = false;
+    orb.receiveShadow = false;
+
+    if (interactionName) {
+      ring.name = `${interactionName}-ring`;
+      orb.name = `${interactionName}-orb`;
+
+      const interaction = {
+        name: interactionName,
+        suppressPanel,
+        maxDistance,
+        metadata,
+      };
+
+      ring.userData.interaction = interaction;
+      orb.userData.interaction = interaction;
+      ring.userData.isHotspotPickable = true;
+      orb.userData.isHotspotPickable = true;
+
+      this.pickableMeshes.push(ring, orb);
+    }
+
+    root.add(ring, orb);
+
+    return { root, ring, orb };
+  }
+
   _createHotspotMarkers() {
     for (const marker of this.hotspotMarkers) {
       this.scene.remove(marker);
@@ -935,68 +1022,25 @@ export class WebXRApp {
     this._clearFloatingHotspotLabels();
     this.pickableMeshes = this.pickableMeshes.filter((mesh) => !mesh.userData?.isHotspotPickable);
 
-    const activeHotspots = this._isUndergroundScene()
-      ? UNDERGROUND_HOTSPOT_MARKERS
-      : CHURCH_HOTSPOT_MARKERS;
+    const activeHotspots = this._getActiveHotspotMarkers();
 
     for (const hotspot of activeHotspots) {
-      const root = new THREE.Group();
-      root.name = hotspot.id;
-      root.position.set(hotspot.position[0], hotspot.position[1], hotspot.position[2]);
+      const interactionName = hotspot.id === 'go-back-to-church'
+        ? hotspot.id
+        : null;
+      const { root } = this._buildHotspotMarker({
+        id: hotspot.id,
+        position: hotspot.position,
+        color: hotspot.color,
+        radius: hotspot.radius,
+        interactionName,
+        maxDistance: hotspot.interactionMaxDistance ?? HOTSPOT_INTERACTION_MAX_DISTANCE,
+        metadata: {
+          type: 'hotspot',
+          hotspotId: hotspot.id,
+        },
+      });
 
-      const ring = new THREE.Mesh(
-        new THREE.TorusGeometry(hotspot.radius * 1.1, hotspot.radius * 0.13, 12, 48),
-        new THREE.MeshBasicMaterial({
-          color: hotspot.color,
-          transparent: true,
-          opacity: 0.58,
-          depthWrite: false,
-        }),
-      );
-      ring.position.y = 0.02;
-      ring.rotation.x = Math.PI / 2;
-
-      const orb = new THREE.Mesh(
-        new THREE.SphereGeometry(hotspot.radius * 0.42, 14, 14),
-        new THREE.MeshStandardMaterial({
-          color: 0xffffff,
-          emissive: hotspot.color,
-          emissiveIntensity: 0.48,
-          roughness: 0.52,
-          metalness: 0.0,
-        }),
-      );
-      orb.position.y = hotspot.radius * 0.55;
-      orb.castShadow = false;
-      orb.receiveShadow = false;
-
-      if (hotspot.id === 'go-back-to-church') {
-        ring.name = `${hotspot.id}-ring`;
-        orb.name = `${hotspot.id}-orb`;
-
-        ring.userData.interaction = {
-          name: hotspot.id,
-          suppressPanel: true,
-          metadata: {
-            type: 'hotspot',
-            hotspotId: hotspot.id,
-          },
-        };
-        orb.userData.interaction = {
-          name: hotspot.id,
-          suppressPanel: true,
-          metadata: {
-            type: 'hotspot',
-            hotspotId: hotspot.id,
-          },
-        };
-        ring.userData.isHotspotPickable = true;
-        orb.userData.isHotspotPickable = true;
-
-        this.pickableMeshes.push(ring, orb);
-      }
-
-      root.add(ring, orb);
       this.scene.add(root);
       this.hotspotMarkers.push(root);
 
@@ -1023,6 +1067,13 @@ export class WebXRApp {
     trigger.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
+
+      const hotspot = this._getHotspotConfig(hotspotId);
+      const maxDistance = Number(hotspot?.interactionMaxDistance ?? HOTSPOT_INTERACTION_MAX_DISTANCE);
+      if (!this._isWithinInteractionDistance(anchor, maxDistance, 'hotspot')) {
+        return;
+      }
+
       this._showExpandedHotspotImage(imageUrl, hotspotId);
     });
 
@@ -1093,6 +1144,7 @@ export class WebXRApp {
     sprite.visible = this.renderer.xr.isPresenting;
     sprite.userData.interaction = {
       name: hotspotId,
+      maxDistance: Number(this._getHotspotConfig(hotspotId)?.interactionMaxDistance ?? HOTSPOT_INTERACTION_MAX_DISTANCE),
       metadata: {
         type: 'hotspot-floating-label',
         hotspotId,
@@ -1117,6 +1169,73 @@ export class WebXRApp {
       }
     }
     this.floatingHotspotLabels = [];
+  }
+
+  _getPlanarDistanceToPosition(position) {
+    if (!position || !this.playerRig) {
+      return null;
+    }
+
+    const dx = position.x - this.playerRig.position.x;
+    const dz = position.z - this.playerRig.position.z;
+    return Math.hypot(dx, dz);
+  }
+
+  _showInteractionDistanceHint(targetLabel, distance, maxDistance) {
+    const safeLabel = targetLabel || 'object';
+    this.uiController.setHotspotHelperHint(
+      `Move closer to the ${safeLabel}. Current ${distance.toFixed(2)}, max ${maxDistance.toFixed(2)}.`,
+      2200,
+    );
+  }
+
+  _isWithinInteractionDistance(anchor, maxDistance, targetLabel) {
+    if (!anchor || !Number.isFinite(maxDistance)) {
+      return true;
+    }
+
+    const worldPosition = new THREE.Vector3();
+    anchor.getWorldPosition(worldPosition);
+    const distance = this._getPlanarDistanceToPosition(worldPosition);
+    if (!Number.isFinite(distance) || distance <= maxDistance) {
+      return true;
+    }
+
+    this._showInteractionDistanceHint(targetLabel, distance, maxDistance);
+    return false;
+  }
+
+  _clearHotspotHelperMarker() {
+    if (!this.hotspotHelperMarker) {
+      return;
+    }
+
+    this.scene.remove(this.hotspotHelperMarker);
+    this.hotspotHelperMarker.traverse((child) => {
+      child.geometry?.dispose?.();
+
+      if (Array.isArray(child.material)) {
+        child.material.forEach((material) => material?.dispose?.());
+      } else {
+        child.material?.dispose?.();
+      }
+    });
+    this.hotspotHelperMarker = null;
+  }
+
+  _placeHotspotHelperMarker(position) {
+    this._clearHotspotHelperMarker();
+
+    const { root } = this._buildHotspotMarker({
+      id: 'hotspot-helper-preview',
+      position,
+      color: HOTSPOT_HELPER_COLOR,
+      radius: HOTSPOT_HELPER_RADIUS,
+    });
+    root.userData.isHotspotHelper = true;
+
+    this.scene.add(root);
+    this.hotspotHelperMarker = root;
   }
 
   _updateFloatingHotspotLabels() {
@@ -1228,6 +1347,7 @@ export class WebXRApp {
       uiController: this.uiController,
       registry: this.interactionRegistry,
       getPickables: () => this.pickableMeshes,
+      getPlayerPosition: () => this.playerRig.position,
     });
     this.uiController.hideInteraction();
   }
@@ -1348,6 +1468,8 @@ export class WebXRApp {
       return;
     }
 
+    this._placeHotspotHelperMarker(position);
+
     const hotspot = `[${position.x.toFixed(3)}, ${position.y.toFixed(3)}, ${position.z.toFixed(3)}]`;
 
     try {
@@ -1356,9 +1478,9 @@ export class WebXRApp {
       }
 
       await navigator.clipboard.writeText(hotspot);
-      this.uiController.setHotspotHelperHint(`Copied hotspot: ${hotspot}`, 2400);
+      this.uiController.setHotspotHelperHint(`Placed helper and copied hotspot: ${hotspot}`, 2600);
     } catch {
-      this.uiController.setHotspotHelperHint(`Hotspot: ${hotspot} (copy manually)`, 3000);
+      this.uiController.setHotspotHelperHint(`Placed helper at ${hotspot} (copy manually)`, 3200);
     }
   }
 
