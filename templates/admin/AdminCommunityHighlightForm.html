@@ -70,6 +70,11 @@
                   {% else %}
                   <p class="admin-field-hint">Upload an image for the highlight card and detail page. Upload 50MB size.</p>
                   {% endif %}
+                  {% if highlight_form.image_url %}
+                  <div class="admin-image-preview-card">
+                    <img src="{{ highlight_form.image_url }}" alt="Current community highlight preview" />
+                  </div>
+                  {% endif %}
                 </div>
 
                 <div class="admin-form-field admin-form-field-wide">
@@ -80,12 +85,6 @@
                   </p>
                 </div>
               </div>
-
-              {% if highlight_form.image_url %}
-              <div class="admin-image-preview-card">
-                <img src="{{ highlight_form.image_url }}" alt="Current community highlight preview" />
-              </div>
-              {% endif %}
 
               <div class="admin-form-actions">
                 <a href="{{ url_for('admin_community_highlights') }}" class="admin-secondary-action">Cancel</a>
