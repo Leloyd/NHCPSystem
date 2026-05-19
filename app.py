@@ -917,6 +917,17 @@ def virtual_tour_file(filename):
     return send_from_directory(str(virtual_tour_dir), filename)
 
 
+@app.route("/360Hotspots/<path:filename>")
+def virtual_tour_hotspot_file(filename):
+    hotspot_dir = PROJECT_ROOT / "public" / "360Hotspots"
+    candidate_path = _resolve_safe_path(hotspot_dir, filename)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid hotspot file path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"Hotspot file not found: {filename}"}), 404
+    return send_from_directory(str(hotspot_dir), filename)
+
+
 @app.route("/public/<path:filename>")
 def public_file(filename):
     public_dir = PROJECT_ROOT / "public"
