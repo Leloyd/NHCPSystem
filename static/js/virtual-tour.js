@@ -132,8 +132,6 @@
   let floatingArtifactPreviewArgs = null;
   const floatingImageHotspots = new Map();
   const floatingArtifactHotspots = new Map();
-  let floatingArtifactAudio = null;
-  let floatingArtifactAudioSrc = "";
   let floatingArtifactAudioLanguage = "tl";
   let activeFloatingArtifactAudioConfig = null;
   let floatingImageAudio = null;
@@ -2268,23 +2266,6 @@
     floatingImageAudioSrc = "";
   }
 
-  function stopFloatingArtifactAudio() {
-    if (!floatingArtifactAudio) {
-      floatingArtifactAudioSrc = "";
-      return;
-    }
-
-    try {
-      floatingArtifactAudio.pause();
-      floatingArtifactAudio.currentTime = 0;
-    } catch (_error) {
-      // noop
-    }
-
-    floatingArtifactAudio = null;
-    floatingArtifactAudioSrc = "";
-  }
-
   function getFloatingArtifactAudioSource(audioConfig, language) {
     if (!audioConfig) {
       return "";
@@ -2301,56 +2282,10 @@
     return audioConfig.en || "";
   }
 
-  function appendAudioCacheBuster(url) {
-    if (!url) {
-      return "";
-    }
-
-    const normalizedUrl = String(url);
-    return `${normalizedUrl}${normalizedUrl.includes("?") ? "&" : "?"}v=${Date.now()}`;
-  }
-
-  function attemptAudioPlayback(audio, errorLabel) {
-    if (!audio) {
-      return;
-    }
-
-    let didRetry = false;
-    const tryPlay = function () {
-      const playPromise = audio.play();
-      if (playPromise && typeof playPromise.catch === "function") {
-        playPromise.catch(function (error) {
-          if (!didRetry) {
-            didRetry = true;
-            const retryPlayback = function () {
-              audio.removeEventListener("canplaythrough", retryPlayback);
-              audio.removeEventListener("loadedmetadata", retryPlayback);
-              const retryPromise = audio.play();
-              if (retryPromise && typeof retryPromise.catch === "function") {
-                retryPromise.catch(function (retryError) {
-                  console.warn(errorLabel, retryError);
-                });
-              }
-            };
-
-            audio.addEventListener("canplaythrough", retryPlayback, { once: true });
-            audio.addEventListener("loadedmetadata", retryPlayback, { once: true });
-            audio.load();
-            return;
-          }
-
-          console.warn(errorLabel, error);
-        });
-      }
-    };
-
-    tryPlay();
-  }
-
   function playFloatingArtifactAudio(audioConfig, language) {
     const nextAudioSrc = getFloatingArtifactAudioSource(audioConfig, language);
     if (!nextAudioSrc) {
-      stopFloatingArtifactAudio();
+      stopFloatingImageAudio();
       floatingArtifactAudioLanguage = language === "en" ? "en" : "tl";
       activeFloatingArtifactAudioConfig = audioConfig || null;
       updateHotspotVisibilityState();
@@ -2360,32 +2295,18 @@
     activeFloatingArtifactAudioConfig = audioConfig || null;
     floatingArtifactAudioLanguage = language === "en" ? "en" : "tl";
 
-    if (floatingArtifactAudio && floatingArtifactAudioSrc === nextAudioSrc && !floatingArtifactAudio.paused && !floatingArtifactAudio.ended) {
+    if (floatingImageAudio && floatingImageAudioSrc === nextAudioSrc && !floatingImageAudio.paused && !floatingImageAudio.ended) {
       updateHotspotVisibilityState();
       return;
     }
 
-    stopFloatingArtifactAudio();
-
-    const audio = new Audio(appendAudioCacheBuster(nextAudioSrc));
-    audio.preload = "auto";
-    audio.addEventListener("ended", function () {
-      floatingArtifactAudio = null;
-      floatingArtifactAudioSrc = "";
-    });
-    audio.addEventListener("error", function () {
-      console.warn("Unable to load artifact audio.", nextAudioSrc, audio.error);
-    });
-
-    floatingArtifactAudio = audio;
-    floatingArtifactAudioSrc = nextAudioSrc;
+    stopFloatingImageAudio();
     updateHotspotVisibilityState();
-
-    attemptAudioPlayback(audio, "Unable to autoplay artifact audio.");
+    playFloatingImageAudio(nextAudioSrc);
   }
 
   function clearFloatingArtifactAudioState() {
-    stopFloatingArtifactAudio();
+    stopFloatingImageAudio();
     activeFloatingArtifactAudioConfig = null;
     floatingArtifactAudioLanguage = "tl";
     updateHotspotVisibilityState();
