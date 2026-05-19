@@ -43,8 +43,13 @@
   let capturePreviewImage = null;
   let floatingImagePreviewOverlay = null;
   let floatingImagePreviewImage = null;
+  let floatingArtifactPreviewOverlay = null;
+  let floatingArtifactPreviewImage = null;
+  let floatingArtifactPreviewModel = null;
   let floatingImageHotspotId = "";
   let floatingImageHotspotSceneId = "";
+  let floatingArtifactHotspotId = "";
+  let floatingArtifactHotspotSceneId = "";
   let floatingImageAudio = null;
   let floatingImageAudioSrc = "";
   const balanghayArtifactCopy = {
@@ -1325,16 +1330,16 @@
           yaw: 101.6,
           type: "info",
           text: "",
-          clickHandlerFunc: openArtifactOverlay,
+          clickHandlerFunc: openFloatingArtifactOverlay,
           clickHandlerArgs: {
+            sourceHotspotId: "museum1-pulse-marker",
+            windowHotspotId: "museum1-pulse-marker-window",
             imageSrc: balanghayImageSrc,
             imageAlt: "Balanghay",
             glbSrc: balanghayGlbSrc,
-            tagalogTitle: balanghayArtifactCopy.tagalogTitle,
-            tagalogText: balanghayArtifactCopy.tagalogText,
-            englishTitle: balanghayArtifactCopy.englishTitle,
-            englishText: balanghayArtifactCopy.englishText,
-            view: "image",
+            glbAlt: "Balanghay 3D model",
+            windowPitch: -20.31,
+            windowYaw: 101.6,
           },
           cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
         },
@@ -1651,6 +1656,117 @@
     }
   }
 
+  function ensureFloatingArtifactPreviewOverlay() {
+    if (floatingArtifactPreviewOverlay && floatingArtifactPreviewImage && floatingArtifactPreviewModel) {
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive";
+    overlay.hidden = true;
+    overlay.id = "tourFloatingArtifactPreviewOverlay";
+
+    const panel = document.createElement("section");
+    panel.className = "tour-floating-media-preview";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-label", "Expanded floating artifact preview");
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "tour-floating-media-preview__close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Return floating artifact to tour view");
+    closeButton.textContent = "×";
+
+    const image = document.createElement("img");
+    image.className = "tour-floating-media-preview__image";
+    image.alt = "";
+    image.hidden = true;
+
+    const model = document.createElement("model-viewer");
+    model.className = "tour-floating-media-preview__model";
+    model.setAttribute("camera-controls", "");
+    model.setAttribute("touch-action", "pan-y");
+    model.setAttribute("auto-rotate", "");
+    model.setAttribute("shadow-intensity", "1");
+    model.hidden = true;
+
+    panel.appendChild(closeButton);
+    panel.appendChild(image);
+    panel.appendChild(model);
+    overlay.appendChild(panel);
+    app.appendChild(overlay);
+
+    closeButton.addEventListener("click", function () {
+      hideFloatingArtifactPreviewOverlay();
+    });
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        hideFloatingArtifactPreviewOverlay();
+      }
+    });
+
+    floatingArtifactPreviewOverlay = overlay;
+    floatingArtifactPreviewImage = image;
+    floatingArtifactPreviewModel = model;
+  }
+
+  function showFloatingArtifactPreviewOverlay(args, view) {
+    if (!args) {
+      return;
+    }
+
+    ensureFloatingArtifactPreviewOverlay();
+
+    if (!floatingArtifactPreviewOverlay || !floatingArtifactPreviewImage || !floatingArtifactPreviewModel) {
+      return;
+    }
+
+    const nextView = view === "glb" ? "glb" : "image";
+    const showImage = nextView === "image" && Boolean(args.imageSrc);
+    const showGlb = nextView === "glb" && Boolean(args.glbSrc);
+
+    floatingArtifactPreviewImage.hidden = !showImage;
+    floatingArtifactPreviewModel.hidden = !showGlb;
+
+    if (showImage) {
+      floatingArtifactPreviewImage.src = args.imageSrc;
+      floatingArtifactPreviewImage.alt = args.imageAlt || "Artifact image";
+    } else {
+      floatingArtifactPreviewImage.removeAttribute("src");
+      floatingArtifactPreviewImage.alt = "";
+    }
+
+    if (showGlb) {
+      floatingArtifactPreviewModel.src = args.glbSrc;
+      floatingArtifactPreviewModel.setAttribute("aria-label", args.glbAlt || args.imageAlt || "Artifact 3D model");
+    } else {
+      floatingArtifactPreviewModel.removeAttribute("src");
+      floatingArtifactPreviewModel.removeAttribute("aria-label");
+    }
+
+    floatingArtifactPreviewOverlay.hidden = false;
+  }
+
+  function hideFloatingArtifactPreviewOverlay() {
+    if (floatingArtifactPreviewOverlay) {
+      floatingArtifactPreviewOverlay.hidden = true;
+    }
+
+    if (floatingArtifactPreviewImage) {
+      floatingArtifactPreviewImage.hidden = true;
+      floatingArtifactPreviewImage.removeAttribute("src");
+      floatingArtifactPreviewImage.alt = "";
+    }
+
+    if (floatingArtifactPreviewModel) {
+      floatingArtifactPreviewModel.hidden = true;
+      floatingArtifactPreviewModel.removeAttribute("src");
+      floatingArtifactPreviewModel.removeAttribute("aria-label");
+    }
+  }
+
   function ensureFloatingImageAudio(audioSrc) {
     if (!audioSrc) {
       return null;
@@ -1745,6 +1861,84 @@
     hotSpotDiv.appendChild(panel);
   }
 
+  function renderFloatingArtifactHotspot(hotSpotDiv, args) {
+    hotSpotDiv.classList.add("tour-floating-image-window-hotspot", "tour-floating-media-window-hotspot");
+
+    const panel = document.createElement("div");
+    panel.className = "tour-floating-image-window-shell";
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "tour-floating-image-window-close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close floating artifact");
+    closeButton.textContent = "×";
+
+    const switchButton = document.createElement("button");
+    switchButton.className = "tour-floating-media-window-switch";
+    switchButton.type = "button";
+
+    const mediaButton = document.createElement("button");
+    mediaButton.className = "tour-floating-image-window-trigger";
+    mediaButton.type = "button";
+
+    const image = document.createElement("img");
+    image.className = "tour-floating-image-window";
+    image.src = args.imageSrc;
+    image.alt = args.imageAlt || "Artifact image";
+    image.draggable = false;
+
+    const model = document.createElement("model-viewer");
+    model.className = "tour-floating-media-window-model";
+    model.setAttribute("camera-controls", "");
+    model.setAttribute("touch-action", "pan-y");
+    model.setAttribute("auto-rotate", "");
+    model.setAttribute("shadow-intensity", "1");
+    if (args.glbSrc) {
+      model.src = args.glbSrc;
+    }
+    model.setAttribute("aria-label", args.glbAlt || args.imageAlt || "Artifact 3D model");
+
+    let currentView = args.glbSrc ? "image" : "image";
+
+    function syncView(nextView) {
+      currentView = nextView === "glb" && args.glbSrc ? "glb" : "image";
+      const isImageView = currentView === "image";
+
+      image.hidden = !isImageView;
+      model.hidden = isImageView;
+      mediaButton.setAttribute("aria-label", isImageView ? "Open larger artifact image" : "Open larger 3D artifact view");
+      switchButton.textContent = isImageView ? "3D" : "IMG";
+      switchButton.setAttribute("aria-label", isImageView ? "Switch floating artifact to 3D model" : "Switch floating artifact to image");
+      switchButton.hidden = !args.glbSrc;
+    }
+
+    closeButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFloatingArtifactOverlay();
+    });
+
+    switchButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      syncView(currentView === "image" ? "glb" : "image");
+    });
+
+    mediaButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      showFloatingArtifactPreviewOverlay(args, currentView);
+    });
+
+    mediaButton.appendChild(image);
+    mediaButton.appendChild(model);
+    panel.appendChild(closeButton);
+    panel.appendChild(switchButton);
+    panel.appendChild(mediaButton);
+    hotSpotDiv.appendChild(panel);
+    syncView(args.initialView || "image");
+  }
+
   function openFloatingImageOverlay(event, args) {
     if (event && typeof event.preventDefault === "function") {
       event.preventDefault();
@@ -1789,6 +1983,52 @@
     }
   }
 
+  function openFloatingArtifactOverlay(event, args) {
+    if (event && typeof event.preventDefault === "function") {
+      event.preventDefault();
+    }
+
+    if (!args || !args.imageSrc || !tourViewer || typeof tourViewer.getScene !== "function") {
+      return;
+    }
+
+    const sceneId = tourViewer.getScene();
+    const nextHotspotId = args.windowHotspotId || `${args.sourceHotspotId || "floating-artifact"}-window`;
+    const isSameFloatingWindowOpen = floatingArtifactHotspotId === nextHotspotId && floatingArtifactHotspotSceneId === sceneId;
+
+    if (isSameFloatingWindowOpen) {
+      closeFloatingArtifactOverlay();
+      return;
+    }
+
+    closeFloatingArtifactOverlay();
+
+    const floatingWindowHotspot = {
+      id: nextHotspotId,
+      pitch: Number.isFinite(Number(args.windowPitch)) ? Number(args.windowPitch) : 8,
+      yaw: Number.isFinite(Number(args.windowYaw)) ? Number(args.windowYaw) : 30,
+      type: "info",
+      text: "",
+      cssClass: "tour-floating-image-window-hotspot tour-floating-media-window-hotspot",
+      createTooltipFunc: renderFloatingArtifactHotspot,
+      createTooltipArgs: {
+        imageSrc: args.imageSrc,
+        imageAlt: args.imageAlt || "Artifact image",
+        glbSrc: args.glbSrc || "",
+        glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
+        initialView: args.initialView || "image",
+      },
+    };
+
+    try {
+      tourViewer.addHotSpot(floatingWindowHotspot, sceneId);
+      floatingArtifactHotspotId = nextHotspotId;
+      floatingArtifactHotspotSceneId = sceneId;
+    } catch (error) {
+      console.error("Unable to open floating artifact.", error);
+    }
+  }
+
   function closeFloatingImageOverlay() {
     if (tourViewer && floatingImageHotspotId && floatingImageHotspotSceneId) {
       try {
@@ -1802,6 +2042,20 @@
     stopFloatingImageAudio();
     floatingImageHotspotId = "";
     floatingImageHotspotSceneId = "";
+  }
+
+  function closeFloatingArtifactOverlay() {
+    if (tourViewer && floatingArtifactHotspotId && floatingArtifactHotspotSceneId) {
+      try {
+        tourViewer.removeHotSpot(floatingArtifactHotspotId, floatingArtifactHotspotSceneId);
+      } catch (error) {
+        console.warn("Unable to remove floating artifact.", error);
+      }
+    }
+
+    hideFloatingArtifactPreviewOverlay();
+    floatingArtifactHotspotId = "";
+    floatingArtifactHotspotSceneId = "";
   }
 
   function downloadImageDataUrl(dataUrl) {
@@ -2069,6 +2323,16 @@
       closeArtifactOverlay();
     }
 
+    if (event.key === "Escape" && floatingArtifactPreviewOverlay && !floatingArtifactPreviewOverlay.hidden) {
+      hideFloatingArtifactPreviewOverlay();
+      return;
+    }
+
+    if (event.key === "Escape" && floatingArtifactHotspotId) {
+      closeFloatingArtifactOverlay();
+      return;
+    }
+
     if (event.key === "Escape" && floatingImagePreviewOverlay && !floatingImagePreviewOverlay.hidden) {
       hideFloatingImagePreviewOverlay();
       return;
@@ -2248,6 +2512,9 @@
         viewer.on("scenechange", function (sceneId) {
           if (floatingImageHotspotSceneId && floatingImageHotspotSceneId !== sceneId) {
             closeFloatingImageOverlay();
+          }
+          if (floatingArtifactHotspotSceneId && floatingArtifactHotspotSceneId !== sceneId) {
+            closeFloatingArtifactOverlay();
           }
           syncSceneInUrl(sceneId);
           window.requestAnimationFrame(updateHotspotVisibilityState);
