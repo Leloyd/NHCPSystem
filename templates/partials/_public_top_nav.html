@@ -8,9 +8,9 @@
            class="museum-logo transition-opacity duration-300"
            id="navLogo"
          />
-         <div class="min-w-0">
-           <div class="text-2xl font-serif transition-colors duration-300 truncate {% if public_active_page == 'home' %}text-white{% else %}text-amber-800{% endif %}" id="navTitle">Museo ng Libingan sa Ilalim ng Lupa</div>
-         </div>
+        <div class="min-w-0" id="navTitleWrapper">
+          <div class="text-2xl font-serif transition-colors duration-300 whitespace-nowrap {% if public_active_page == 'home' %}text-white{% else %}text-amber-800{% endif %}" id="navTitle">Museo ng Libingan sa Ilalim ng Lupa</div>
+        </div>
        </a>
  
        <nav class="hidden lg:flex items-center space-x-8" id="navLinks">
@@ -90,6 +90,18 @@
      const dropdownToggle = document.getElementById("publicAccountDropdownToggle");
      const dropdownMenu = document.getElementById("publicAccountDropdownMenu");
      const dropdownRoot = document.getElementById("publicAccountDropdownRoot");
+     const navTitle = document.getElementById("navTitle");
+     const navTitleWrapper = document.getElementById("navTitleWrapper");
+
+     function syncNavTitleVisibility() {
+       if (!navTitle || !navTitleWrapper) {
+         return;
+       }
+
+       navTitleWrapper.classList.remove("hidden");
+       const shouldHideTitle = navTitle.scrollWidth > navTitle.clientWidth + 1;
+       navTitleWrapper.classList.toggle("hidden", shouldHideTitle);
+     }
  
      if (menuToggle && mobileMenu && iconMenu && iconClose && menuToggle.dataset.navBound !== "true") {
        menuToggle.dataset.navBound = "true";
@@ -113,6 +125,13 @@
            dropdownMenu.classList.add("hidden");
          }
        });
+     }
+
+     syncNavTitleVisibility();
+     window.addEventListener("resize", syncNavTitleVisibility);
+     window.addEventListener("load", syncNavTitleVisibility);
+     if (document.fonts && typeof document.fonts.ready === "object" && typeof document.fonts.ready.then === "function") {
+       document.fonts.ready.then(syncNavTitleVisibility);
      }
    })();
  </script>
