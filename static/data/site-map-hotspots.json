@@ -124,7 +124,9 @@
           "src": "/static/SiteMap/ResourceCenter/ResourceCenter.jpg",
           "alt": "Resource center at the Nagcarlan Underground Cemetery"
         }
-      ]
+      ],
+      "learnMore": "/edu-resources",
+      "learnMoreLabel": "Edu Resources"
     },
     {
       "id": "middle-ground",
@@ -285,7 +287,9 @@
           "src": "/static/SiteMap/Chapel/Chapel.png",
           "alt": "Chapel at the Nagcarlan Underground Cemetery"
         }
-      ]
+      ],
+      "arModel": "/3d-environment?zip=church.zip",
+      "arModelLabel": "3D Environment"
     },
     {
       "id": "underground-crypts",
@@ -308,7 +312,9 @@
           "src": "/static/SiteMap/Underground/Underground.png",
           "alt": "Underground crypts of the Nagcarlan Underground Cemetery"
         }
-      ]
+      ],
+      "arModel": "/3d-environment?zip=underground.zip",
+      "arModelLabel": "3D Environment"
     }
   ]
 }

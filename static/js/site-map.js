@@ -257,6 +257,7 @@
       learnMoreLabel: raw.learnMoreLabel ? String(raw.learnMoreLabel) : "",
       view360: raw.view360 ? String(raw.view360) : "",
       arModel: raw.arModel ? String(raw.arModel) : "",
+      arModelLabel: raw.arModelLabel ? String(raw.arModelLabel) : "",
       audio: raw.audio ? String(raw.audio) : "",
       audioByLanguage: raw.audioByLanguage && typeof raw.audioByLanguage === "object" ? raw.audioByLanguage : {},
       videoEmbed: raw.videoEmbed ? String(raw.videoEmbed) : "",
@@ -1039,7 +1040,7 @@
     [
       { href: stop.learnMore, text: stop.learnMoreLabel || "Learn More" },
       { href: stop.view360, text: "360 View" },
-      { href: stop.arModel, text: "AR / 3D" },
+      { href: stop.arModel, text: stop.arModelLabel || "AR / 3D" },
       { href: stop.audio, text: "Audio" },
     ].forEach(function (linkMeta) {
       if (!linkMeta.href) {
