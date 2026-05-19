@@ -88,29 +88,21 @@
       </div>
 
       <div class="tour-control-dock" id="tourControlDock" aria-label="Virtual tour controls" hidden>
-        <button class="tour-control-dock__action" id="tourToggleSceneHotspots" type="button" aria-label="Toggle movement hotspots" aria-pressed="false">
+        <button class="tour-control-dock__action" id="tourToggleSceneHotspots" type="button" aria-label="Toggle all hotspots" aria-pressed="false">
           <span class="tour-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <path d="M12 3.25 20.25 10v10a.75.75 0 0 1-.75.75h-5.25a.75.75 0 0 1-.75-.75v-4.5h-3V20a.75.75 0 0 1-.75.75H4.5A.75.75 0 0 1 3.75 20V10L12 3.25Zm0 1.9L5.25 10.5v8.75H9v-4.5c0-.41.34-.75.75-.75h4.5c.41 0 .75.34.75.75v4.5h3.75V10.5L12 5.15Z" fill="currentColor"></path>
             </svg>
           </span>
-          <span class="tour-control-dock__label">Move</span>
+          <span class="tour-control-dock__label">Hotspots</span>
         </button>
-        <button class="tour-control-dock__action" id="tourToggleArtifactHotspots" type="button" aria-label="Toggle artifact hotspots" aria-pressed="false">
+        <button class="tour-control-dock__action tour-control-dock__action--inactive" id="tourToggleArtifactHotspots" type="button" aria-label="Inactive control" aria-pressed="false" aria-disabled="true">
           <span class="tour-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
               <path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Zm1.5-.5a.5.5 0 0 0-.5.5v8.2l3.1-3.45a1 1 0 0 1 1.48-.03l1.9 2.02 2.45-2.78a1 1 0 0 1 1.5.02L18 12.4V6.5a.5.5 0 0 0-.5-.5h-11Zm11.5 10.83-2.3-3.1-2.38 2.7a1 1 0 0 1-1.47.06l-1.95-2.08L6 18h11.5a.5.5 0 0 0 .5-.5v-.67ZM9 8.75a1.75 1.75 0 1 1 3.5 0 1.75 1.75 0 0 1-3.5 0Z" fill="currentColor"></path>
             </svg>
           </span>
-          <span class="tour-control-dock__label">Artifacts</span>
-        </button>
-        <button class="tour-control-dock__action" id="tourToggleFloatingWindow" type="button" aria-label="Close floating image" aria-pressed="false" hidden>
-          <span class="tour-control-dock__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M6.75 4.75h10.5A2.75 2.75 0 0 1 20 7.5v6a2.75 2.75 0 0 1-2.75 2.75H9.56l-2.96 2.38A.75.75 0 0 1 5.4 18v-1.75A2.75 2.75 0 0 1 3.75 13.5v-6A2.75 2.75 0 0 1 6.75 4.75Zm0 1.5c-.69 0-1.25.56-1.25 1.25v6c0 .69.56 1.25 1.25 1.25h.4a.75.75 0 0 1 .75.75v.94l1.96-1.58a.75.75 0 0 1 .47-.17h6.96c.69 0 1.25-.56 1.25-1.25v-6c0-.69-.56-1.25-1.25-1.25H6.75Zm2.47 2.47a.75.75 0 0 1 1.06 0L12 10.44l1.72-1.72a.75.75 0 1 1 1.06 1.06L13.06 11.5l1.72 1.72a.75.75 0 1 1-1.06 1.06L12 12.56l-1.72 1.72a.75.75 0 1 1-1.06-1.06l1.72-1.72-1.72-1.72a.75.75 0 0 1 0-1.06Z" fill="currentColor"></path>
-            </svg>
-          </span>
-          <span class="tour-control-dock__label">Close</span>
+          <span class="tour-control-dock__label">Info</span>
         </button>
         <button class="tour-control-dock__camera" id="tourCaptureView" type="button" aria-label="Capture current view">
           <span class="tour-control-dock__camera-icon" aria-hidden="true">
@@ -119,14 +111,6 @@
             </svg>
           </span>
         </button>
-        <button class="tour-control-dock__action" id="tourToggleFullscreen" type="button" aria-label="Toggle fullscreen" aria-pressed="false">
-          <span class="tour-control-dock__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M4 9.25c.41 0 .75-.34.75-.75V5.75H7.5a.75.75 0 0 0 0-1.5H4A1.25 1.25 0 0 0 2.75 5.5v3a.75.75 0 0 0 .75.75Zm12.5-5a.75.75 0 0 0 0 1.5h2.75V8.5a.75.75 0 0 0 1.5 0v-3A1.25 1.25 0 0 0 19.5 4.25h-3Zm3.5 10a.75.75 0 0 0-.75.75v2.75H16.5a.75.75 0 0 0 0 1.5h3A1.25 1.25 0 0 0 20.75 18v-3a.75.75 0 0 0-.75-.75Zm-16.5 0a.75.75 0 0 0-.75.75v3A1.25 1.25 0 0 0 4 19.25h3.5a.75.75 0 0 0 0-1.5H4.75V15a.75.75 0 0 0-.75-.75Z" fill="currentColor"></path>
-            </svg>
-          </span>
-          <span class="tour-control-dock__label">Full</span>
-        </button>
         <button class="tour-control-dock__action" id="tourBackToExhibits" type="button" aria-label="Back to Digital Exhibits">
           <span class="tour-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
@@ -134,6 +118,14 @@
             </svg>
           </span>
           <span class="tour-control-dock__label">Back</span>
+        </button>
+        <button class="tour-control-dock__action" id="tourToggleFullscreen" type="button" aria-label="Toggle fullscreen" aria-pressed="false">
+          <span class="tour-control-dock__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M4 9.25c.41 0 .75-.34.75-.75V5.75H7.5a.75.75 0 0 0 0-1.5H4A1.25 1.25 0 0 0 2.75 5.5v3a.75.75 0 0 0 .75.75Zm12.5-5a.75.75 0 0 0 0 1.5h2.75V8.5a.75.75 0 0 0 1.5 0v-3A1.25 1.25 0 0 0 19.5 4.25h-3Zm3.5 10a.75.75 0 0 0-.75.75v2.75H16.5a.75.75 0 0 0 0 1.5h3A1.25 1.25 0 0 0 20.75 18v-3a.75.75 0 0 0-.75-.75Zm-16.5 0a.75.75 0 0 0-.75.75v3A1.25 1.25 0 0 0 4 19.25h3.5a.75.75 0 0 0 0-1.5H4.75V15a.75.75 0 0 0-.75-.75Z" fill="currentColor"></path>
+            </svg>
+          </span>
+          <span class="tour-control-dock__label">Full</span>
         </button>
       </div>
 

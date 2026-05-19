@@ -14,7 +14,6 @@
   const controlDock = document.getElementById("tourControlDock");
   const toggleSceneHotspotsButton = document.getElementById("tourToggleSceneHotspots");
   const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
-  const toggleFloatingWindowButton = document.getElementById("tourToggleFloatingWindow");
   const captureViewButton = document.getElementById("tourCaptureView");
   const toggleFullscreenButton = document.getElementById("tourToggleFullscreen");
   const backToExhibitsButton = document.getElementById("tourBackToExhibits");
@@ -36,12 +35,13 @@
   const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
   const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
   const artifactPanes = Array.from(document.querySelectorAll("[data-artifact-pane]"));
-  let sceneHotspotsVisible = true;
-  let artifactHotspotsVisible = true;
+  let hotspotsVisible = true;
   let tourViewer = null;
   let resolvedScenes = null;
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
+  let floatingImagePreviewOverlay = null;
+  let floatingImagePreviewImage = null;
   let floatingImageHotspotId = "";
   let floatingImageHotspotSceneId = "";
   const balanghayArtifactCopy = {
@@ -130,8 +130,8 @@
             windowHotspotId: "front-gate-hotspot-h1-window",
             imageSrc: frontGateHotspotH1Src,
             imageAlt: "Front Gate hotspot image",
-            windowPitch: 9.38,
-            windowYaw: 31.84,
+            windowPitch: 1.06,
+            windowYaw: 24.41,
           },
           cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon tour-ground-hotspot--floating-image-trigger",
         },
@@ -1466,36 +1466,18 @@
       return;
     }
 
-    app.classList.toggle("tour-hide-scene-hotspots", !sceneHotspotsVisible);
-    app.classList.toggle("tour-hide-artifact-hotspots", !artifactHotspotsVisible);
+    app.classList.toggle("tour-hide-scene-hotspots", !hotspotsVisible);
+    app.classList.toggle("tour-hide-artifact-hotspots", !hotspotsVisible);
 
     if (toggleSceneHotspotsButton) {
-      toggleSceneHotspotsButton.classList.toggle("is-active", sceneHotspotsVisible);
-      toggleSceneHotspotsButton.setAttribute("aria-pressed", sceneHotspotsVisible ? "true" : "false");
+      toggleSceneHotspotsButton.classList.toggle("is-active", hotspotsVisible);
+      toggleSceneHotspotsButton.setAttribute("aria-pressed", hotspotsVisible ? "true" : "false");
     }
 
     if (toggleArtifactHotspotsButton) {
-      toggleArtifactHotspotsButton.classList.toggle("is-active", artifactHotspotsVisible);
-      toggleArtifactHotspotsButton.setAttribute("aria-pressed", artifactHotspotsVisible ? "true" : "false");
+      toggleArtifactHotspotsButton.classList.remove("is-active");
+      toggleArtifactHotspotsButton.setAttribute("aria-pressed", "false");
     }
-
-    syncFloatingWindowControl();
-  }
-
-  function syncFloatingWindowControl() {
-    const isFloatingWindowVisible = Boolean(floatingImageHotspotId && floatingImageHotspotSceneId);
-
-    if (controlDock) {
-      controlDock.classList.toggle("tour-control-dock--with-floating-window", isFloatingWindowVisible);
-    }
-
-    if (!toggleFloatingWindowButton) {
-      return;
-    }
-
-    toggleFloatingWindowButton.hidden = !isFloatingWindowVisible;
-    toggleFloatingWindowButton.classList.toggle("is-active", isFloatingWindowVisible);
-    toggleFloatingWindowButton.setAttribute("aria-pressed", isFloatingWindowVisible ? "true" : "false");
   }
 
   function syncFullscreenButton() {
@@ -1593,8 +1575,94 @@
     capturePreviewOverlay.hidden = false;
   }
 
+  function ensureFloatingImagePreviewOverlay() {
+    if (floatingImagePreviewOverlay && floatingImagePreviewImage) {
+      return;
+    }
+
+    const overlay = document.createElement("div");
+    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive";
+    overlay.hidden = true;
+    overlay.id = "tourFloatingImagePreviewOverlay";
+
+    const panel = document.createElement("section");
+    panel.className = "tour-floating-image-preview";
+    panel.setAttribute("role", "dialog");
+    panel.setAttribute("aria-modal", "true");
+    panel.setAttribute("aria-label", "Expanded hotspot image preview");
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "tour-floating-image-preview__close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Return hotspot image to floating view");
+    closeButton.textContent = "×";
+
+    const image = document.createElement("img");
+    image.className = "tour-floating-image-preview__image";
+    image.alt = "";
+
+    panel.appendChild(closeButton);
+    panel.appendChild(image);
+    overlay.appendChild(panel);
+    app.appendChild(overlay);
+
+    closeButton.addEventListener("click", function () {
+      hideFloatingImagePreviewOverlay();
+    });
+
+    overlay.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        hideFloatingImagePreviewOverlay();
+      }
+    });
+
+    floatingImagePreviewOverlay = overlay;
+    floatingImagePreviewImage = image;
+  }
+
+  function showFloatingImagePreviewOverlay(args) {
+    if (!args || !args.imageSrc) {
+      return;
+    }
+
+    ensureFloatingImagePreviewOverlay();
+
+    if (!floatingImagePreviewOverlay || !floatingImagePreviewImage) {
+      return;
+    }
+
+    floatingImagePreviewImage.src = args.imageSrc;
+    floatingImagePreviewImage.alt = args.imageAlt || "Hotspot image";
+    floatingImagePreviewOverlay.hidden = false;
+  }
+
+  function hideFloatingImagePreviewOverlay() {
+    if (floatingImagePreviewOverlay) {
+      floatingImagePreviewOverlay.hidden = true;
+    }
+
+    if (floatingImagePreviewImage) {
+      floatingImagePreviewImage.removeAttribute("src");
+      floatingImagePreviewImage.alt = "";
+    }
+  }
+
   function renderFloatingImageHotspot(hotSpotDiv, args) {
     hotSpotDiv.classList.add("tour-floating-image-window-hotspot");
+
+    const panel = document.createElement("div");
+    panel.className = "tour-floating-image-window-shell";
+
+    const closeButton = document.createElement("button");
+    closeButton.className = "tour-floating-image-window-close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close floating hotspot image");
+    closeButton.textContent = "×";
+
+    const imageButton = document.createElement("button");
+    imageButton.className = "tour-floating-image-window-trigger";
+    imageButton.type = "button";
+    imageButton.setAttribute("aria-label", "Open hotspot image preview");
 
     const image = document.createElement("img");
     image.className = "tour-floating-image-window";
@@ -1602,7 +1670,22 @@
     image.alt = args.imageAlt || "Hotspot image";
     image.draggable = false;
 
-    hotSpotDiv.appendChild(image);
+    closeButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFloatingImageOverlay();
+    });
+
+    imageButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      showFloatingImagePreviewOverlay(args);
+    });
+
+    imageButton.appendChild(image);
+    panel.appendChild(closeButton);
+    panel.appendChild(imageButton);
+    hotSpotDiv.appendChild(panel);
   }
 
   function openFloatingImageOverlay(event, args) {
@@ -1643,7 +1726,6 @@
       tourViewer.addHotSpot(floatingWindowHotspot, sceneId);
       floatingImageHotspotId = nextHotspotId;
       floatingImageHotspotSceneId = sceneId;
-      syncFloatingWindowControl();
     } catch (error) {
       console.error("Unable to open floating hotspot image.", error);
     }
@@ -1658,9 +1740,9 @@
       }
     }
 
+    hideFloatingImagePreviewOverlay();
     floatingImageHotspotId = "";
     floatingImageHotspotSceneId = "";
-    syncFloatingWindowControl();
   }
 
   function downloadImageDataUrl(dataUrl) {
@@ -1928,6 +2010,16 @@
       closeArtifactOverlay();
     }
 
+    if (event.key === "Escape" && floatingImagePreviewOverlay && !floatingImagePreviewOverlay.hidden) {
+      hideFloatingImagePreviewOverlay();
+      return;
+    }
+
+    if (event.key === "Escape" && floatingImageHotspotId) {
+      closeFloatingImageOverlay();
+      return;
+    }
+
     if (event.key === "Escape" && capturePreviewOverlay && !capturePreviewOverlay.hidden) {
       capturePreviewOverlay.hidden = true;
       if (capturePreviewImage) {
@@ -1938,21 +2030,8 @@
 
   if (toggleSceneHotspotsButton) {
     toggleSceneHotspotsButton.addEventListener("click", function () {
-      sceneHotspotsVisible = !sceneHotspotsVisible;
+      hotspotsVisible = !hotspotsVisible;
       updateHotspotVisibilityState();
-    });
-  }
-
-  if (toggleArtifactHotspotsButton) {
-    toggleArtifactHotspotsButton.addEventListener("click", function () {
-      artifactHotspotsVisible = !artifactHotspotsVisible;
-      updateHotspotVisibilityState();
-    });
-  }
-
-  if (toggleFloatingWindowButton) {
-    toggleFloatingWindowButton.addEventListener("click", function () {
-      closeFloatingImageOverlay();
     });
   }
 
