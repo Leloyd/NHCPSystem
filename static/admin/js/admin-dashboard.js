@@ -91,6 +91,61 @@
     });
   }
 
+  function initHighlightSwitcher() {
+    var switchers = document.querySelectorAll("[data-highlight-switcher]");
+
+    switchers.forEach(function (switcher, index) {
+      var tabs = Array.prototype.slice.call(
+        switcher.querySelectorAll("[data-highlight-tab]")
+      );
+      var panels = Array.prototype.slice.call(
+        switcher.querySelectorAll("[data-highlight-panel]")
+      );
+
+      if (!tabs.length || !panels.length) {
+        return;
+      }
+
+      var storageKey = "admin-highlight-tab-" + index;
+
+      function setActivePanel(panelName) {
+        var resolvedPanelName = String(panelName || "").trim().toLowerCase() || "active";
+
+        tabs.forEach(function (tab) {
+          var isActive = String(tab.getAttribute("data-highlight-tab") || "").trim().toLowerCase() === resolvedPanelName;
+          tab.classList.toggle("is-active", isActive);
+          tab.setAttribute("aria-selected", isActive ? "true" : "false");
+        });
+
+        panels.forEach(function (panel) {
+          var isActive = String(panel.getAttribute("data-highlight-panel") || "").trim().toLowerCase() === resolvedPanelName;
+          panel.classList.toggle("is-active", isActive);
+          panel.hidden = !isActive;
+        });
+
+        try {
+          window.localStorage.setItem(storageKey, resolvedPanelName);
+        } catch (error) {
+          return;
+        }
+      }
+
+      tabs.forEach(function (tab) {
+        tab.addEventListener("click", function () {
+          setActivePanel(tab.getAttribute("data-highlight-tab"));
+        });
+      });
+
+      var initialPanel = "active";
+      try {
+        initialPanel = window.localStorage.getItem(storageKey) || initialPanel;
+      } catch (error) {
+        initialPanel = "active";
+      }
+      setActivePanel(initialPanel);
+    });
+  }
+
   function initDashboardUi() {
     var toggle = document.querySelector("[data-sidebar-toggle]");
     var overlay = document.querySelector("[data-sidebar-overlay]");
@@ -125,6 +180,7 @@
     });
 
     initDashboardVisuals();
+    initHighlightSwitcher();
     initDashboardSearch();
     initAutoDismissAlerts();
   }

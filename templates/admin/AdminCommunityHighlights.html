@@ -29,19 +29,33 @@
             <div class="admin-panel-head">
               <div>
                 <h3>Community Highlight Cards</h3>
-                <p>Manage the cards shown in the redesigned Community Highlights section and keep Active, Draft, and Archived cards visible side by side.</p>
+                <p>Manage the cards shown in the redesigned Community Highlights section and switch between Active, Draft, and Archived views.</p>
               </div>
               <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-text-link">Add New</a>
             </div>
 
-            <div class="admin-highlight-board">
-              <article class="admin-highlight-column">
-                <div class="admin-highlight-column-head">
+            <div class="admin-highlight-switcher" data-highlight-switcher>
+              <div class="admin-highlight-tabs" role="tablist" aria-label="Community highlight status views">
+                <button type="button" class="admin-highlight-tab is-active" data-highlight-tab="active" aria-selected="true">
+                  <span>Community Highlight Cards</span>
+                  <span class="admin-chip is-dark">{{ active_highlights_items|length }}</span>
+                </button>
+                <button type="button" class="admin-highlight-tab" data-highlight-tab="draft" aria-selected="false">
+                  <span>Draft Cards</span>
+                  <span class="admin-chip is-dark">{{ draft_highlights_items|length }}</span>
+                </button>
+                <button type="button" class="admin-highlight-tab" data-highlight-tab="archived" aria-selected="false">
+                  <span>Archived Cards</span>
+                  <span class="admin-chip is-dark">{{ archived_highlights_items|length }}</span>
+                </button>
+              </div>
+
+              <section class="admin-highlight-panel is-active" data-highlight-panel="active">
+                <div class="admin-highlight-panel-head">
                   <div>
                     <h4>Community Highlight Cards</h4>
                     <p>Cards that are currently visible on the public Community Highlights section.</p>
                   </div>
-                  <span class="admin-chip is-dark">{{ active_highlights_items|length }}</span>
                 </div>
 
                 {% if active_highlights_items %}
@@ -86,15 +100,14 @@
                   <p>Change a draft to Active to show it in the public Community Highlights section.</p>
                 </div>
                 {% endif %}
-              </article>
+              </section>
 
-              <article class="admin-highlight-column">
-                <div class="admin-highlight-column-head">
+              <section class="admin-highlight-panel" data-highlight-panel="draft" hidden>
+                <div class="admin-highlight-panel-head">
                   <div>
                     <h4>Draft Cards</h4>
                     <p>Saved cards that stay hidden from the public page until you mark them active.</p>
                   </div>
-                  <span class="admin-chip is-dark">{{ draft_highlights_items|length }}</span>
                 </div>
 
                 {% if draft_highlights_items %}
@@ -130,15 +143,14 @@
                   <p>Create a new card or save one as draft while you are still preparing the content.</p>
                 </div>
                 {% endif %}
-              </article>
+              </section>
 
-              <article class="admin-highlight-column">
-                <div class="admin-highlight-column-head">
+              <section class="admin-highlight-panel" data-highlight-panel="archived" hidden>
+                <div class="admin-highlight-panel-head">
                   <div>
                     <h4>Archived Cards</h4>
                     <p>Archived cards remain available for editing and can be restored from the edit form.</p>
                   </div>
-                  <span class="admin-chip is-dark">{{ archived_highlights_items|length }}</span>
                 </div>
 
                 {% if archived_highlights_items %}
@@ -170,7 +182,7 @@
                   <p>Archived community highlight cards will appear here for reference and later restoration.</p>
                 </div>
                 {% endif %}
-              </article>
+              </section>
             </div>
           </section>
           {% else %}

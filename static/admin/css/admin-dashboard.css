@@ -1593,17 +1593,45 @@ a.admin-text-link {
   flex-wrap: wrap;
 }
 
-.admin-highlight-board {
+.admin-highlight-switcher {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 1rem;
-  align-items: start;
 }
 
-.admin-highlight-column {
+.admin-highlight-tabs {
+  display: flex;
+  align-items: stretch;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.admin-highlight-tab {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  min-width: 14rem;
+  padding: 0.85rem 1rem;
+  border-radius: 1rem;
+  border: 1px solid #e7e5e4;
+  background: #ffffff;
+  color: var(--dashboard-text-soft);
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease, color 0.2s ease;
+}
+
+.admin-highlight-tab.is-active {
+  border-color: rgba(22, 163, 74, 0.25);
+  background: rgba(22, 163, 74, 0.08);
+  color: var(--dashboard-green-900);
+  box-shadow: 0 10px 24px rgba(22, 163, 74, 0.08);
+}
+
+.admin-highlight-panel {
   display: grid;
   gap: 0.9rem;
-  min-height: 100%;
   padding: 1rem;
   border-radius: 1.15rem;
   border: 1px solid #e7e5e4;
@@ -1611,21 +1639,21 @@ a.admin-text-link {
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
 }
 
-.admin-highlight-column-head {
+.admin-highlight-panel-head {
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: 0.85rem;
 }
 
-.admin-highlight-column-head h4 {
+.admin-highlight-panel-head h4 {
   margin: 0;
   color: var(--dashboard-text);
   font-size: 0.96rem;
   font-weight: 700;
 }
 
-.admin-highlight-column-head p {
+.admin-highlight-panel-head p {
   margin: 0.22rem 0 0;
   color: var(--dashboard-muted);
   font-size: 0.78rem;
@@ -1711,10 +1739,6 @@ a.admin-text-link {
     grid-template-columns: 1fr;
   }
 
-  .admin-highlight-board {
-    grid-template-columns: 1fr;
-  }
-
   .admin-highlight-card-list {
     max-height: none;
     overflow: visible;
@@ -1756,7 +1780,7 @@ a.admin-text-link {
     padding: 1rem;
   }
 
-  .admin-highlight-column {
+  .admin-highlight-panel {
     padding: 0.9rem;
   }
 }
@@ -1796,6 +1820,11 @@ a.admin-text-link {
 
   .admin-status-badge {
     align-self: flex-start;
+  }
+
+  .admin-highlight-tab {
+    width: 100%;
+    min-width: 0;
   }
 
   .admin-highlight-card {
