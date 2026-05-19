@@ -545,8 +545,8 @@ body {
 
 .tour-floating-media-window-audio-button {
   position: absolute;
-  left: 0.9rem;
-  bottom: 0.9rem;
+  left: calc(50% - 3.2rem);
+  bottom: -1rem;
   z-index: 2;
   display: inline-flex;
   align-items: center;
@@ -561,6 +561,7 @@ body {
   cursor: pointer;
   box-shadow: 0 0.85rem 2rem rgba(15, 23, 42, 0.34);
   backdrop-filter: blur(10px);
+  transform: translateX(-50%);
 }
 
 .tour-floating-media-window-audio-button svg {
@@ -1164,8 +1165,8 @@ body {
   }
 
   .tour-floating-media-window-audio-button {
-    left: 0.7rem;
-    bottom: 0.7rem;
+    left: calc(50% - 2.7rem);
+    bottom: -0.85rem;
     width: 2.2rem;
     height: 2.2rem;
   }
