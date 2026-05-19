@@ -38,7 +38,7 @@
   const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
   const ulohTagalogAudioSrc = app ? app.dataset.ulohTagalogAudioSrc : "";
   const ulohEnglishAudioSrc = app ? app.dataset.ulohEnglishAudioSrc : "";
-  const kabilaImageSrc = app ? app.dataset.kabilaImageSrc : "";
+  const kabilaImageSrc = app ? (app.dataset.kabilaImageSrc || "/public/AR-Artifacts/Kabila/kabila.png") : "/public/AR-Artifacts/Kabila/kabila.png";
   const kabilaTagalogAudioSrc = app ? app.dataset.kabilaTagalogAudioSrc : "";
   const kabilaEnglishAudioSrc = app ? app.dataset.kabilaEnglishAudioSrc : "";
   const bangaImageSrc = app ? app.dataset.bangaImageSrc : "";
