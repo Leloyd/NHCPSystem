@@ -155,7 +155,6 @@ export class WebXRApp {
     this.splatEntries = [];
     this.pickableMeshes = [];
     this.hotspotMarkers = [];
-    this.hotspotHelperMarker = null;
     this.floatingHotspotLabels = [];
     this.expandedHotspotOverlay = null;
     this.expandedHotspotOverlayImage = null;
@@ -897,6 +896,7 @@ export class WebXRApp {
 
       splatObject.name = asset.name || asset.fileName;
       applyAssetTransform(splatObject, asset.transform);
+      splatObject.updateMatrixWorld(true);
       this.scene.add(splatObject);
 
       this.splatEntries.push({
@@ -1231,39 +1231,6 @@ export class WebXRApp {
     return false;
   }
 
-  _clearHotspotHelperMarker() {
-    if (!this.hotspotHelperMarker) {
-      return;
-    }
-
-    this.scene.remove(this.hotspotHelperMarker);
-    this.hotspotHelperMarker.traverse((child) => {
-      child.geometry?.dispose?.();
-
-      if (Array.isArray(child.material)) {
-        child.material.forEach((material) => material?.dispose?.());
-      } else {
-        child.material?.dispose?.();
-      }
-    });
-    this.hotspotHelperMarker = null;
-  }
-
-  _placeHotspotHelperMarker(position) {
-    this._clearHotspotHelperMarker();
-
-    const { root } = this._buildHotspotMarker({
-      id: 'hotspot-helper-preview',
-      position,
-      color: HOTSPOT_HELPER_COLOR,
-      radius: HOTSPOT_HELPER_RADIUS,
-    });
-    root.userData.isHotspotHelper = true;
-
-    this.scene.add(root);
-    this.hotspotHelperMarker = root;
-  }
-
   _updateFloatingHotspotLabels() {
     if (!this.camera || this.floatingHotspotLabels.length === 0) {
       return;
@@ -1494,8 +1461,6 @@ export class WebXRApp {
       return;
     }
 
-    this._placeHotspotHelperMarker(position);
-
     const hotspot = `[${position.x.toFixed(3)}, ${position.y.toFixed(3)}, ${position.z.toFixed(3)}]`;
 
     try {
@@ -1504,9 +1469,9 @@ export class WebXRApp {
       }
 
       await navigator.clipboard.writeText(hotspot);
-      this.uiController.setHotspotHelperHint(`Placed helper and copied hotspot: ${hotspot}`, 2600);
+      this.uiController.setHotspotHelperHint(`Copied hotspot: ${hotspot}`, 2400);
     } catch {
-      this.uiController.setHotspotHelperHint(`Placed helper at ${hotspot} (copy manually)`, 3200);
+      this.uiController.setHotspotHelperHint(`Hotspot: ${hotspot} (copy manually)`, 3000);
     }
   }
 
@@ -1517,20 +1482,21 @@ export class WebXRApp {
 
     this.hotspotRaycaster.setFromCamera(CROSSHAIR_NDC, this.camera);
 
+    const allHits = [];
+
     const roots = this.meshEntries.map((entry) => entry.root).filter(Boolean);
     if (roots.length > 0) {
-      const hits = this.hotspotRaycaster.intersectObjects(roots, true);
-      if (hits.length > 0) {
-        return hits[0].point;
-      }
+      allHits.push(...this.hotspotRaycaster.intersectObjects(roots, true));
     }
 
     const splatRoots = this.splatEntries.map((entry) => entry.object).filter(Boolean);
     if (splatRoots.length > 0) {
-      const splatHits = this.hotspotRaycaster.intersectObjects(splatRoots, true);
-      if (splatHits.length > 0) {
-        return splatHits[0].point;
-      }
+      allHits.push(...this.hotspotRaycaster.intersectObjects(splatRoots, true));
+    }
+
+    if (allHits.length > 0) {
+      allHits.sort((left, right) => left.distance - right.distance);
+      return allHits[0].point.clone();
     }
 
     return this.hotspotRaycaster.ray.origin
