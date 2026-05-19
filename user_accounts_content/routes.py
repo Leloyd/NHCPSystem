@@ -2,8 +2,12 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import re
 import secrets
+import urllib.error
+import urllib.parse
+import urllib.request
 from datetime import datetime, timedelta, timezone
 from typing import Any
 from urllib.parse import urlsplit
@@ -56,6 +60,12 @@ ONBOARDING_ROLE_OPTIONS = (
 )
 EMAIL_VERIFICATION_LIFETIME = timedelta(hours=24)
 PASSWORD_RESET_LIFETIME = timedelta(hours=1)
+GOOGLE_OAUTH_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
+GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_OAUTH_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
+GOOGLE_OAUTH_SESSION_STATE_KEY = "public_google_oauth_state"
+GOOGLE_OAUTH_SESSION_NEXT_KEY = "public_google_oauth_next"
+GOOGLE_OAUTH_SESSION_VIEW_KEY = "public_google_oauth_view"
 
 
 def _utcnow() -> datetime:
@@ -84,8 +94,151 @@ def _resolve_next_url(default_endpoint: str) -> str:
     return _resolve_safe_next_url(request.values.get("next"), default_endpoint)
 
 
+def _normalize_auth_view(raw_value: Any, *, default: str = "login") -> str:
+    normalized_default = "signup" if str(default or "").strip().lower() == "signup" else "login"
+    return "signup" if str(raw_value or "").strip().lower() == "signup" else normalized_default
+
+
 def _hash_token(raw_token: str) -> str:
     return hashlib.sha256(str(raw_token or "").encode("utf-8")).hexdigest()
+
+
+def _is_google_oauth_configured() -> bool:
+    return bool(
+        str(os.getenv("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
+        and str(os.getenv("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
+    )
+
+
+def _get_google_oauth_credentials() -> tuple[str, str]:
+    client_id = str(os.getenv("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
+    client_secret = str(os.getenv("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
+    if not client_id or not client_secret:
+        raise RuntimeError("Google sign-in is not configured.")
+    return client_id, client_secret
+
+
+def _build_google_oauth_redirect_uri() -> str:
+    configured_uri = str(os.getenv("GOOGLE_OAUTH_REDIRECT_URI") or "").strip()
+    if configured_uri:
+        return configured_uri
+    return url_for("public_google_auth_callback", _external=True)
+
+
+def _load_json_response(request_obj: urllib.request.Request) -> dict[str, Any]:
+    try:
+        with urllib.request.urlopen(request_obj, timeout=15) as response:
+            charset = response.headers.get_content_charset() or "utf-8"
+            body = response.read().decode(charset)
+    except urllib.error.HTTPError as exc:
+        body = exc.read().decode("utf-8", errors="ignore")
+        raise RuntimeError(body or f"Google request failed with status {exc.code}.") from exc
+    except urllib.error.URLError as exc:
+        raise RuntimeError("Could not reach Google authentication services.") from exc
+
+    if not body:
+        return {}
+    try:
+        payload = json.loads(body)
+    except json.JSONDecodeError as exc:
+        raise RuntimeError("Received an invalid response from Google.") from exc
+    if not isinstance(payload, dict):
+        raise RuntimeError("Received an invalid response from Google.")
+    return payload
+
+
+def _exchange_google_authorization_code(code: str, redirect_uri: str) -> dict[str, Any]:
+    client_id, client_secret = _get_google_oauth_credentials()
+    encoded_payload = urllib.parse.urlencode(
+        {
+            "code": code,
+            "client_id": client_id,
+            "client_secret": client_secret,
+            "redirect_uri": redirect_uri,
+            "grant_type": "authorization_code",
+        }
+    ).encode("utf-8")
+    request_obj = urllib.request.Request(
+        GOOGLE_OAUTH_TOKEN_URL,
+        data=encoded_payload,
+        headers={
+            "Content-Type": "application/x-www-form-urlencoded",
+            "Accept": "application/json",
+        },
+        method="POST",
+    )
+    return _load_json_response(request_obj)
+
+
+def _fetch_google_user_profile(access_token: str) -> dict[str, Any]:
+    request_obj = urllib.request.Request(
+        GOOGLE_OAUTH_USERINFO_URL,
+        headers={
+            "Authorization": f"Bearer {access_token}",
+            "Accept": "application/json",
+        },
+        method="GET",
+    )
+    return _load_json_response(request_obj)
+
+
+def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    email = _normalize_login_identifier(profile.get("email"))
+    if not EMAIL_PATTERN.match(email):
+        raise ValueError("Google did not return a valid email address.")
+    if not bool(profile.get("email_verified")):
+        raise ValueError("Please use a Google account with a verified email address.")
+
+    full_name = str(profile.get("name") or "").strip() or _build_placeholder_full_name(email)
+    now = _utcnow().isoformat()
+    existing_user = get_public_user_auth_by_email(email)
+    if existing_user:
+        if not bool(existing_user.get("is_active")):
+            raise ValueError("This account is unavailable.")
+
+        payload = {
+            "last_login_at": now,
+            "updated_at": now,
+        }
+        if not _user_is_verified(existing_user):
+            payload.update(
+                {
+                    "email_verified_at": now,
+                    "email_verification_token_hash": None,
+                    "email_verification_expires_at": None,
+                }
+            )
+        if not str(existing_user.get("full_name") or "").strip():
+            payload["full_name"] = full_name[:160]
+        return update_public_user(int(existing_user.get("id")), payload)
+
+    password_hash = generate_password_hash(secrets.token_urlsafe(48))
+    return create_public_user(
+        {
+            "full_name": full_name[:160],
+            "email": email,
+            "username": _generate_unique_username(email),
+            "password_hash": password_hash,
+            "phone_number": "",
+            "organization": "",
+            "is_active": True,
+            "last_login_at": now,
+            "email_verified_at": now,
+            "email_verification_token_hash": None,
+            "email_verification_expires_at": None,
+            "onboarding_completed_at": None,
+            "website_use_case": "",
+            "profile_roles": _serialize_role_values([]),
+            "location_text": "",
+            "country_text": "",
+            "province_text": "",
+            "city_text": "",
+            "auth_provider": "google",
+            "password_reset_token_hash": None,
+            "password_reset_expires_at": None,
+            "updated_at": now,
+        }
+    )
 
 
 def _is_expired(raw_timestamp: Any) -> bool:
@@ -278,6 +431,7 @@ def register_user_account_routes(
             auth_status_message=status_message,
             auth_error_message=error_message,
             public_auth_email_enabled=is_public_auth_email_configured(),
+            public_auth_google_enabled=_is_google_oauth_configured(),
         )
 
     def _build_verify_url(raw_token: str, next_url: str) -> str:
@@ -285,6 +439,17 @@ def register_user_account_routes(
 
     def _build_reset_url(raw_token: str, next_url: str) -> str:
         return url_for("public_reset_password", token=raw_token, next=next_url, _external=True)
+
+    def _redirect_google_auth_error(*, view: str, next_url: str, error_message: str):
+        target_endpoint = "public_signup" if _normalize_auth_view(view, default="login") == "signup" else "public_login"
+        return redirect(
+            url_for(
+                target_endpoint,
+                next=next_url,
+                auth_view=_normalize_auth_view(view, default=target_endpoint.split("_")[-1]),
+                error=error_message,
+            )
+        )
 
     @app.route("/login", methods=["GET"])
     def public_login():
@@ -294,7 +459,13 @@ def register_user_account_routes(
             if not _user_completed_onboarding(current_user):
                 return redirect(url_for("public_account_setup", next=next_url))
             return redirect(next_url)
-        return _render_auth_entry(default_view="login", next_url=next_url, page_title="Sign In | Museo ng Libingan sa Ilalim ng Lupa")
+        return _render_auth_entry(
+            default_view=_normalize_auth_view(request.args.get("auth_view"), default="login"),
+            next_url=next_url,
+            page_title="Sign In | Museo ng Libingan sa Ilalim ng Lupa",
+            status_message=str(request.args.get("status") or "").strip() or None,
+            error_message=str(request.args.get("error") or "").strip() or None,
+        )
 
     @app.route("/signup", methods=["GET"])
     def public_signup():
@@ -304,7 +475,78 @@ def register_user_account_routes(
             if not _user_completed_onboarding(current_user):
                 return redirect(url_for("public_account_setup", next=next_url))
             return redirect(next_url)
-        return _render_auth_entry(default_view="signup", next_url=next_url, page_title="Create Account | Museo ng Libingan sa Ilalim ng Lupa")
+        return _render_auth_entry(
+            default_view=_normalize_auth_view(request.args.get("auth_view"), default="signup"),
+            next_url=next_url,
+            page_title="Create Account | Museo ng Libingan sa Ilalim ng Lupa",
+            status_message=str(request.args.get("status") or "").strip() or None,
+            error_message=str(request.args.get("error") or "").strip() or None,
+        )
+
+    @app.route("/auth/google", methods=["GET"])
+    def public_google_auth_start():
+        current_user = get_current_public_user()
+        next_url = _resolve_safe_next_url(request.args.get("next"), "account_profile")
+        auth_view = _normalize_auth_view(request.args.get("view"), default="login")
+        if current_user:
+            if not _user_completed_onboarding(current_user):
+                return redirect(url_for("public_account_setup", next=next_url))
+            return redirect(next_url)
+        if not _is_google_oauth_configured():
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Google sign-in is not configured yet.")
+
+        state = secrets.token_urlsafe(32)
+        session[GOOGLE_OAUTH_SESSION_STATE_KEY] = state
+        session[GOOGLE_OAUTH_SESSION_NEXT_KEY] = next_url
+        session[GOOGLE_OAUTH_SESSION_VIEW_KEY] = auth_view
+        client_id, _client_secret = _get_google_oauth_credentials()
+        authorization_query = urllib.parse.urlencode(
+            {
+                "client_id": client_id,
+                "redirect_uri": _build_google_oauth_redirect_uri(),
+                "response_type": "code",
+                "scope": "openid email profile",
+                "state": state,
+                "prompt": "select_account",
+            }
+        )
+        return redirect(f"{GOOGLE_OAUTH_AUTHORIZE_URL}?{authorization_query}")
+
+    @app.route("/auth/google/callback", methods=["GET"])
+    def public_google_auth_callback():
+        next_url = _resolve_safe_next_url(session.pop(GOOGLE_OAUTH_SESSION_NEXT_KEY, None), "account_profile")
+        auth_view = _normalize_auth_view(session.pop(GOOGLE_OAUTH_SESSION_VIEW_KEY, None), default="login")
+        expected_state = str(session.pop(GOOGLE_OAUTH_SESSION_STATE_KEY, "") or "")
+        error_code = str(request.args.get("error") or "").strip()
+        returned_state = str(request.args.get("state") or "").strip()
+        authorization_code = str(request.args.get("code") or "").strip()
+
+        if error_code:
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Google sign-in was canceled or denied.")
+        if not _is_google_oauth_configured():
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Google sign-in is not configured yet.")
+        if not expected_state or not returned_state or not secrets.compare_digest(expected_state, returned_state):
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Could not verify the Google sign-in request.")
+        if not authorization_code:
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Google did not return an authorization code.")
+
+        try:
+            token_payload = _exchange_google_authorization_code(authorization_code, _build_google_oauth_redirect_uri())
+            access_token = str(token_payload.get("access_token") or "").strip()
+            if not access_token:
+                raise RuntimeError("Google did not return an access token.")
+            user_profile = _fetch_google_user_profile(access_token)
+            user = _sign_in_public_user_from_google_profile(user_profile)
+        except ValueError as exc:
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message=str(exc))
+        except Exception as exc:
+            app.logger.exception("Failed to sign in with Google: %s", exc)
+            return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Could not sign you in with Google right now.")
+
+        set_public_user_session(int(user.get("id")))
+        if not _user_completed_onboarding(user):
+            return redirect(url_for("public_account_setup", next=next_url))
+        return redirect(next_url)
 
     @app.route("/api/auth/login", methods=["POST"])
     def api_public_login():

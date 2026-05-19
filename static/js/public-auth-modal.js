@@ -106,8 +106,22 @@
     }, 180);
   }
 
-  function handleGooglePlaceholder() {
-    setMessage(currentView, "Continue with Google is coming soon.", "error");
+  function getCurrentNextUrl() {
+    var activePanel = modal.querySelector('[data-auth-view="' + currentView + '"]');
+    var nextField = activePanel ? activePanel.querySelector('input[name="next"]') : null;
+    return (nextField && nextField.value) || config.nextUrl || "/account";
+  }
+
+  function handleGoogleAuth() {
+    if (!config.googleEnabled || !config.googleAuthEndpoint) {
+      setMessage(currentView, "Google sign-in is not configured yet.", "error");
+      return;
+    }
+
+    var params = new URLSearchParams();
+    params.set("next", getCurrentNextUrl());
+    params.set("view", currentView === "signup" ? "signup" : "login");
+    window.location.href = config.googleAuthEndpoint + "?" + params.toString();
   }
 
   function togglePasswordVisibility(button) {
@@ -274,7 +288,11 @@
   });
 
   googleButtons.forEach(function (button) {
-    button.addEventListener("click", handleGooglePlaceholder);
+    if (!config.googleEnabled || !config.googleAuthEndpoint) {
+      button.setAttribute("aria-disabled", "true");
+      button.title = "Google sign-in is not configured yet.";
+    }
+    button.addEventListener("click", handleGoogleAuth);
   });
 
   modal.querySelectorAll("[data-password-toggle]").forEach(function (button) {

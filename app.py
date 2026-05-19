@@ -474,6 +474,10 @@ def inject_public_auth_context():
         "current_public_user": current_public_user,
         "public_user_authenticated": bool(current_public_user),
         "public_csrf_token": _ensure_public_csrf_token(),
+        "public_auth_google_enabled": bool(
+            str(os.getenv("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
+            and str(os.getenv("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
+        ),
     }
 
 
