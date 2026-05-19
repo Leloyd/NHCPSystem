@@ -95,11 +95,24 @@ def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, im
 
 
 def resolve_community_upload_image_url(image_filename: Any, *, upload_dir: Path, upload_folder_name: str, storage_prefix: str) -> str | None:
-    if is_storage_object_path(image_filename, folder_prefix=storage_prefix):
-        remote_url = resolve_public_image_url(image_filename)
+    normalized_value = str(image_filename or "").strip()
+    if not normalized_value:
+        return None
+
+    if normalized_value.startswith(("http://", "https://")):
+        return normalized_value
+
+    if is_storage_object_path(normalized_value, folder_prefix=storage_prefix):
+        remote_url = resolve_public_image_url(normalized_value)
         if remote_url:
             return remote_url
-    return resolve_local_upload_image_url(upload_dir, upload_folder_name, image_filename)
+
+    static_upload_prefix = f"uploads/{upload_folder_name}/"
+    normalized_static_path = normalized_value.lstrip("/")
+    if normalized_static_path.startswith(static_upload_prefix):
+        return url_for("static", filename=normalized_static_path)
+
+    return resolve_local_upload_image_url(upload_dir, upload_folder_name, normalized_value)
 
 
 def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, Any]:
