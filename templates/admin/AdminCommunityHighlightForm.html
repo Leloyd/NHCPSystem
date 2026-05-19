@@ -71,9 +71,7 @@
                   <p class="admin-field-hint">Upload an image for the highlight card and detail page. Upload 50MB size.</p>
                   {% endif %}
                   {% if highlight_form.image_url %}
-                  <div class="admin-image-preview-card">
-                    <img src="{{ highlight_form.image_url }}" alt="Current community highlight preview" />
-                  </div>
+                  <img src="{{ highlight_form.image_url }}" alt="Current community highlight preview" />
                   {% endif %}
                 </div>
 
