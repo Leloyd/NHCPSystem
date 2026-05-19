@@ -1877,6 +1877,13 @@
     switchButton.className = "tour-floating-media-window-switch";
     switchButton.type = "button";
 
+    const switchIcon = document.createElement("span");
+    switchIcon.className = "tour-floating-media-window-switch-icon";
+    switchIcon.setAttribute("aria-hidden", "true");
+
+    const switchLabel = document.createElement("span");
+    switchLabel.className = "tour-sr-only";
+
     const mediaButton = document.createElement("button");
     mediaButton.className = "tour-floating-image-window-trigger";
     mediaButton.type = "button";
@@ -1907,8 +1914,11 @@
       image.hidden = !isImageView;
       model.hidden = isImageView;
       mediaButton.setAttribute("aria-label", isImageView ? "Open larger artifact image" : "Open larger 3D artifact view");
-      switchButton.textContent = isImageView ? "3D" : "IMG";
+      switchIcon.innerHTML = isImageView
+        ? '<svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 6v12L12 21.5 4.5 18V6L12 2.5Zm0 1.12L5.73 6.5 12 9.38l6.27-2.88L12 3.62Zm6.5 3.69-6 2.76v10.28l6-3V7.31Zm-13 0v7.74l6 3V10.07l-6-2.76Z" fill="currentColor"></path></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Zm1.5-.5a.5.5 0 0 0-.5.5v8.2l3.1-3.45a1 1 0 0 1 1.48-.03l1.9 2.02 2.45-2.78a1 1 0 0 1 1.5.02L18 12.4V6.5a.5.5 0 0 0-.5-.5h-11Zm11.5 10.83-2.3-3.1-2.38 2.7a1 1 0 0 1-1.47.06l-1.95-2.08L6 18h11.5a.5.5 0 0 0 .5-.5v-.67ZM9 8.75a1.75 1.75 0 1 1 3.5 0 1.75 1.75 0 0 1-3.5 0Z" fill="currentColor"></path></svg>';
       switchButton.setAttribute("aria-label", isImageView ? "Switch floating artifact to 3D model" : "Switch floating artifact to image");
+      switchLabel.textContent = isImageView ? "Switch to 3D model" : "Switch to image";
       switchButton.hidden = !args.glbSrc;
     }
 
@@ -1933,6 +1943,8 @@
     mediaButton.appendChild(image);
     mediaButton.appendChild(model);
     panel.appendChild(closeButton);
+    switchButton.appendChild(switchIcon);
+    switchButton.appendChild(switchLabel);
     panel.appendChild(switchButton);
     panel.appendChild(mediaButton);
     hotSpotDiv.appendChild(panel);
