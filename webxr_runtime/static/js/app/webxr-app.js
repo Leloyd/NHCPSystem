@@ -713,6 +713,10 @@ export class WebXRApp {
   }
 
   _readPrefetchedMetadata() {
+    if (this.requestedZipOverride) {
+      return null;
+    }
+
     if (!window.sessionStorage) {
       return null;
     }
@@ -762,6 +766,10 @@ export class WebXRApp {
   }
 
   _storePrefetchedMetadata(payload) {
+    if (this.requestedZipOverride) {
+      return;
+    }
+
     if (!window.sessionStorage || !payload || !payload.scene) {
       return;
     }
@@ -854,6 +862,11 @@ export class WebXRApp {
         url: asset.url,
         lod: true,
       });
+
+      if (splatObject && splatObject.initialized && typeof splatObject.initialized.then === 'function') {
+        await splatObject.initialized;
+      }
+
       splatObject.name = asset.name || asset.fileName;
       applyAssetTransform(splatObject, asset.transform);
       this.scene.add(splatObject);
