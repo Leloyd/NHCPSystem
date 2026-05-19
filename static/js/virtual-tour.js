@@ -2248,6 +2248,43 @@
     floatingImageAudioSrc = "";
   }
 
+  function forceCloseAllFloatingOverlays() {
+    const imageEntries = Array.from(floatingImageHotspots.entries());
+    const artifactEntries = Array.from(floatingArtifactHotspots.entries());
+
+    imageEntries.forEach(function ([imageHotspotKey, entry]) {
+      if (tourViewer && entry) {
+        try {
+          tourViewer.removeHotSpot(entry.hotspotId, entry.sceneId);
+        } catch (error) {
+          console.warn("Unable to remove floating hotspot image.", error);
+        }
+      }
+      floatingImageHotspots.delete(imageHotspotKey);
+    });
+
+    artifactEntries.forEach(function ([artifactHotspotKey, entry]) {
+      if (tourViewer && entry) {
+        try {
+          tourViewer.removeHotSpot(entry.hotspotId, entry.sceneId);
+        } catch (error) {
+          console.warn("Unable to remove floating artifact.", error);
+        }
+      }
+      floatingArtifactHotspots.delete(artifactHotspotKey);
+    });
+
+    hideFloatingImagePreviewOverlay();
+    hideFloatingArtifactPreviewOverlay();
+    stopFloatingImageAudio();
+
+    if (viewerContainer) {
+      Array.from(viewerContainer.querySelectorAll(".tour-floating-image-window-hotspot, .tour-floating-media-window-hotspot")).forEach(function (hotspotNode) {
+        hotspotNode.remove();
+      });
+    }
+  }
+
   function renderFloatingImageHotspot(hotSpotDiv, args) {
     hotSpotDiv.classList.add("tour-floating-image-window-hotspot");
 
@@ -2492,8 +2529,11 @@
     const isSameFloatingWindowOpen = floatingImageHotspots.has(imageHotspotKey);
 
     if (isSameFloatingWindowOpen) {
+      forceCloseAllFloatingOverlays();
       return;
     }
+
+    forceCloseAllFloatingOverlays();
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
@@ -2539,8 +2579,11 @@
     const isSameFloatingWindowOpen = floatingArtifactHotspots.has(artifactHotspotKey);
 
     if (isSameFloatingWindowOpen) {
+      forceCloseAllFloatingOverlays();
       return;
     }
+
+    forceCloseAllFloatingOverlays();
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
