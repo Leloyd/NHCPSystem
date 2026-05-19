@@ -8,7 +8,8 @@
 {% set admin_topbar_variant = 'dashboard' %}
 
 {% block admin_content %}
-          <section class="admin-welcome-card">
+          <div data-dashboard-search-root>
+          <section class="admin-welcome-card" data-dashboard-search-item>
             <div class="admin-welcome-copy">
               <p class="admin-welcome-label">Welcome back</p>
               <h2>Good day, {{ admin_username or 'Administrator' }}</h2>
@@ -26,8 +27,17 @@
             </div>
           </section>
 
-          <section class="admin-stats-grid" aria-label="Dashboard statistics">
-            <article class="admin-stat-card">
+          <section class="admin-panel admin-panel-accent" data-dashboard-search-empty hidden>
+            <div class="admin-panel-head compact-head">
+              <div>
+                <h3>No dashboard results</h3>
+                <p>Try searching for highlights, gallery, bookings, feedback, visitors, or media.</p>
+              </div>
+            </div>
+          </section>
+
+          <section class="admin-stats-grid" aria-label="Dashboard statistics" data-dashboard-search-group>
+            <article class="admin-stat-card" data-dashboard-search-item>
               <div class="admin-stat-icon visitors">
                 <svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05A4.93 4.93 0 0 1 10 17v2H2v-2c0-2 3.46-3.54 6-3.92Z"></path></svg>
               </div>
@@ -37,7 +47,7 @@
                 <span class="admin-trend up">+18.2% this month</span>
               </div>
             </article>
-            <article class="admin-stat-card">
+            <article class="admin-stat-card" data-dashboard-search-item>
               <div class="admin-stat-icon views">
                 <svg viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7Zm0 11a4 4 0 1 1 4-4 4 4 0 0 1-4 4Z"></path><circle cx="12" cy="12" r="2"></circle></svg>
               </div>
@@ -47,7 +57,7 @@
                 <span class="admin-trend up">+24.5% this month</span>
               </div>
             </article>
-            <article class="admin-stat-card">
+            <article class="admin-stat-card" data-dashboard-search-item>
               <div class="admin-stat-icon posts">
                 <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5"></path><path d="M8 12h8M8 16h8M8 8h3"></path></svg>
               </div>
@@ -57,7 +67,7 @@
                 <span class="admin-trend up">+8 newly published</span>
               </div>
             </article>
-            <article class="admin-stat-card">
+            <article class="admin-stat-card" data-dashboard-search-item>
               <div class="admin-stat-icon media">
                 <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm1 8 3-4 2.5 3 1.5-2 3 3Z"></path></svg>
               </div>
@@ -69,8 +79,8 @@
             </article>
           </section>
 
-          <section class="admin-panels admin-panels-main">
-            <article class="admin-panel admin-panel-wide">
+          <section class="admin-panels admin-panels-main" data-dashboard-search-group>
+            <article class="admin-panel admin-panel-wide" data-dashboard-search-item>
               <div class="admin-panel-head">
                 <div>
                   <h3>Visitor Analytics</h3>
@@ -100,7 +110,7 @@
               </div>
             </article>
 
-            <article class="admin-panel admin-panel-side">
+            <article class="admin-panel admin-panel-side" data-dashboard-search-item>
               <div class="admin-panel-head">
                 <div>
                   <h3>Content Types</h3>
@@ -126,8 +136,8 @@
             </article>
           </section>
 
-          <section class="admin-panels admin-panels-bottom">
-            <article class="admin-panel admin-panel-wide">
+          <section class="admin-panels admin-panels-bottom" data-dashboard-search-group>
+            <article class="admin-panel admin-panel-wide" data-dashboard-search-item>
               <div class="admin-panel-head">
                 <div>
                   <h3>Recent Content</h3>
@@ -199,8 +209,8 @@
               </div>
             </article>
 
-            <div class="admin-side-stack">
-              <article class="admin-panel">
+            <div class="admin-side-stack" data-dashboard-search-group>
+              <article class="admin-panel" data-dashboard-search-item>
                 <div class="admin-panel-head">
                   <div>
                     <h3>Top Pages</h3>
@@ -216,23 +226,24 @@
                 </div>
               </article>
 
-              <article class="admin-panel admin-panel-accent">
+              <article class="admin-panel admin-panel-accent" data-dashboard-search-item>
                 <div class="admin-panel-head compact-head">
                   <div>
                     <h3>Quick Actions</h3>
                   </div>
                 </div>
                 <div class="admin-quick-actions">
-                  <button type="button" class="admin-quick-action">Create New Post</button>
-                  <button type="button" class="admin-quick-action">Upload to Gallery</button>
-                  <button type="button" class="admin-quick-action">Manage Featured</button>
+                  <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-quick-action">Create Highlight</a>
+                  <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-quick-action">Upload to Gallery</a>
+                  <a href="{{ url_for('admin_tour_bookings') }}" class="admin-quick-action">Review Bookings</a>
+                  <a href="{{ url_for('admin_visitor_feedback') }}" class="admin-quick-action">Visitor Feedback</a>
                 </div>
               </article>
             </div>
           </section>
 
-          <section class="admin-panels admin-panels-footer">
-            <article class="admin-panel admin-panel-wide">
+          <section class="admin-panels admin-panels-footer" data-dashboard-search-group>
+            <article class="admin-panel admin-panel-wide" data-dashboard-search-item>
               <div class="admin-panel-head">
                 <div>
                   <h3>Media Library</h3>
@@ -287,4 +298,5 @@
               </div>
             </article>
           </section>
+          </div>
 {% endblock %}
