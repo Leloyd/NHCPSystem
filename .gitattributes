@@ -9,6 +9,8 @@
 public/360VirtualTour/* -filter -diff -merge -text
 public/360Hotspots/* -filter -diff -merge -text
 public/360Hotspots/**/* -filter -diff -merge -text
+public/AR-Artifacts/* -filter -diff -merge -text
+public/AR-Artifacts/**/* -filter -diff -merge -text
 public/images/* -filter -diff -merge -text
 static/AR-Artifacts/* -filter -diff -merge -text
 static/AR-Artifacts/**/* -filter -diff -merge -text
