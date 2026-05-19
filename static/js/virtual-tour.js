@@ -14,6 +14,7 @@
   const controlDock = document.getElementById("tourControlDock");
   const toggleSceneHotspotsButton = document.getElementById("tourToggleSceneHotspots");
   const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
+  const playArtifactAlternateAudioButton = document.getElementById("tourPlayArtifactAlternateAudio");
   const captureViewButton = document.getElementById("tourCaptureView");
   const toggleFullscreenButton = document.getElementById("tourToggleFullscreen");
   const backToExhibitsButton = document.getElementById("tourBackToExhibits");
@@ -52,22 +53,43 @@
     kagamitan: {
       imageSrc: app ? app.dataset.kagamitanImageSrc : "",
       glbSrc: app ? app.dataset.kagamitanGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.kagamitanTagalogAudioSrc : "",
+        en: app ? app.dataset.kagamitanEnglishAudioSrc : "",
+      },
     },
     bagongon: {
       imageSrc: app ? app.dataset.bagongonImageSrc : "",
       glbSrc: app ? app.dataset.bagongonGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.bagongonTagalogAudioSrc : "",
+        en: app ? app.dataset.bagongonEnglishAudioSrc : "",
+      },
     },
     bogwa: {
       imageSrc: app ? app.dataset.bogwaImageSrc : "",
       glbSrc: app ? app.dataset.bogwaGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.bogwaTagalogAudioSrc : "",
+        en: app ? app.dataset.bogwaEnglishAudioSrc : "",
+      },
     },
     pagpag: {
       imageSrc: app ? app.dataset.pagpagImageSrc : "",
       glbSrc: app ? app.dataset.pagpagGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.pagpagTagalogAudioSrc : "",
+        en: app ? app.dataset.pagpagEnglishAudioSrc : "",
+      },
     },
     pahimakas: {
       imageSrc: app ? app.dataset.pahimakasImageSrc : "",
       glbSrc: app ? app.dataset.pahimakasGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.pahimakasTagalogAudioSrc : "",
+        en: app ? app.dataset.pahimakasEnglishAudioSrc : "",
+      },
+      alternateAudioSrc: app ? app.dataset.pahimakasMarchAudioSrc : "",
     },
     alay: {
       imageSrc: app ? app.dataset.alayImageSrc : "",
@@ -144,6 +166,7 @@
   const floatingArtifactHotspots = new Map();
   let floatingArtifactAudioLanguage = "tl";
   let activeFloatingArtifactAudioConfig = null;
+  let activeFloatingArtifactAlternateAudioSrc = "";
   let floatingImageAudio = null;
   let floatingImageAudioSrc = "";
   const balanghayArtifactCopy = {
@@ -244,6 +267,8 @@
         glbSrc: options.glbSrc || "",
         glbSources: Array.isArray(options.glbSources) ? options.glbSources.filter(Boolean) : [],
         glbAlt: options.glbAlt || `${options.imageAlt} 3D model`,
+        audioByLanguage: options.audioByLanguage && typeof options.audioByLanguage === "object" ? { ...options.audioByLanguage } : null,
+        alternateAudioSrc: options.alternateAudioSrc || "",
         windowPitch: options.pitch,
         windowYaw: options.yaw,
       },
@@ -259,6 +284,7 @@
       imageSrc: museum3ArtifactAssets.kagamitan.imageSrc,
       imageAlt: "Kagamitan",
       glbSrc: museum3ArtifactAssets.kagamitan.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.kagamitan.audioByLanguage,
       glbAlt: "Kagamitan 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -268,6 +294,7 @@
       imageSrc: museum3ArtifactAssets.bagongon.imageSrc,
       imageAlt: "Bagongon",
       glbSrc: museum3ArtifactAssets.bagongon.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.bagongon.audioByLanguage,
       glbAlt: "Bagongon 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -277,6 +304,7 @@
       imageSrc: museum3ArtifactAssets.bogwa.imageSrc,
       imageAlt: "Bogwa",
       glbSrc: museum3ArtifactAssets.bogwa.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.bogwa.audioByLanguage,
       glbAlt: "Bogwa 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -286,6 +314,7 @@
       imageSrc: museum3ArtifactAssets.pagpag.imageSrc,
       imageAlt: "Pagpag",
       glbSrc: museum3ArtifactAssets.pagpag.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.pagpag.audioByLanguage,
       glbAlt: "Pagpag 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -295,6 +324,8 @@
       imageSrc: museum3ArtifactAssets.pahimakas.imageSrc,
       imageAlt: "Pahimakas",
       glbSrc: museum3ArtifactAssets.pahimakas.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.pahimakas.audioByLanguage,
+      alternateAudioSrc: museum3ArtifactAssets.pahimakas.alternateAudioSrc,
       glbAlt: "Pahimakas 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -1893,6 +1924,15 @@
         label.textContent = artifactAudioEnabled ? (isTagalog ? "Tagalog" : "English") : "Audio";
       }
     }
+
+    if (playArtifactAlternateAudioButton) {
+      const alternateAudioEnabled = Boolean(activeFloatingArtifactAlternateAudioSrc);
+      playArtifactAlternateAudioButton.hidden = !alternateAudioEnabled;
+      playArtifactAlternateAudioButton.classList.toggle("tour-control-dock__action--inactive", !alternateAudioEnabled);
+      playArtifactAlternateAudioButton.setAttribute("aria-disabled", alternateAudioEnabled ? "false" : "true");
+      playArtifactAlternateAudioButton.disabled = !alternateAudioEnabled;
+      playArtifactAlternateAudioButton.setAttribute("aria-pressed", "false");
+    }
   }
 
   function syncFullscreenButton() {
@@ -2338,6 +2378,7 @@
   function clearFloatingArtifactAudioState() {
     stopFloatingImageAudio();
     activeFloatingArtifactAudioConfig = null;
+    activeFloatingArtifactAlternateAudioSrc = "";
     floatingArtifactAudioLanguage = "tl";
     updateHotspotVisibilityState();
   }
@@ -2673,6 +2714,7 @@
     const artifactHotspotKey = `${sceneId}::${nextHotspotId}`;
     const isSameFloatingWindowOpen = floatingArtifactHotspots.has(artifactHotspotKey);
     const artifactAudioByLanguage = args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null;
+    const artifactAlternateAudioSrc = args.alternateAudioSrc || "";
 
     if (isSameFloatingWindowOpen) {
       forceCloseAllFloatingOverlays();
@@ -2680,6 +2722,8 @@
     }
 
     forceCloseAllFloatingOverlays();
+
+    activeFloatingArtifactAlternateAudioSrc = artifactAlternateAudioSrc;
 
     if (artifactAudioByLanguage && (artifactAudioByLanguage.tl || artifactAudioByLanguage.en)) {
       playFloatingArtifactAudio(artifactAudioByLanguage, "tl");
@@ -2715,6 +2759,7 @@
         hotspotId: nextHotspotId,
         sceneId,
         audioByLanguage: artifactAudioByLanguage,
+        alternateAudioSrc: artifactAlternateAudioSrc,
       });
     } catch (error) {
       clearFloatingArtifactAudioState();
@@ -3088,6 +3133,17 @@
 
       const nextLanguage = floatingArtifactAudioLanguage === "tl" ? "en" : "tl";
       playFloatingArtifactAudio(activeFloatingArtifactAudioConfig, nextLanguage);
+    });
+  }
+
+  if (playArtifactAlternateAudioButton) {
+    playArtifactAlternateAudioButton.addEventListener("click", function () {
+      if (!activeFloatingArtifactAlternateAudioSrc) {
+        return;
+      }
+
+      stopFloatingImageAudio();
+      playFloatingImageAudio(activeFloatingArtifactAlternateAudioSrc);
     });
   }
 

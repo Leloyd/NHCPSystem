@@ -87,14 +87,25 @@
       data-jar-english-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='jar/THE MAITUM JARS.mp3') }}"
       data-kagamitan-image-src="{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan.png') }}"
       data-kagamitan-glb-src="{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan-512(10k).glb') }}"
+      data-kagamitan-tagalog-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Kagamitan/MGA KAGAMITAN NG MGA YUMAO SA BATANES.mp3') }}"
+      data-kagamitan-english-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Kagamitan/BELONGINGS OF THE DEAD IN BATANES.mp3') }}"
       data-bagongon-image-src="{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon.png') }}"
       data-bagongon-glb-src="{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon-512(10k).glb') }}"
+      data-bagongon-tagalog-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Bagongon/BAGONGON NG MGA ILOKANO.mp3') }}"
+      data-bagongon-english-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Bagongon/BAGONGON OF THE ILOCANO.mp3') }}"
       data-bogwa-image-src="{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa.png') }}"
       data-bogwa-glb-src="{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa-512(10k).glb') }}"
+      data-bogwa-tagalog-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Bogwa/BOGWA NG MGA IFUGAO.mp3') }}"
+      data-bogwa-english-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Bogwa/BOGWA OF THE IFUGAO.mp3') }}"
       data-pagpag-image-src="{{ url_for('artifact_asset_file', filename='Pagpag/Pagpag.png') }}"
       data-pagpag-glb-src="{{ url_for('artifact_asset_file', filename='Pagpag/Pagpag-512(10k).glb') }}"
+      data-pagpag-tagalog-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Pagpag/ANG PAGPAG.mp3') }}"
+      data-pagpag-english-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Pagpag/THE CUSTOM OF PAGPAG.mp3') }}"
       data-pahimakas-image-src="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas.png') }}"
       data-pahimakas-glb-src="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas-512(10k).glb') }}"
+      data-pahimakas-tagalog-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/PAHIMAKAS AT IBA PANG MARCHA FUNEBRE NI NAKPIL.mp3') }}"
+      data-pahimakas-english-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/NAKPIL_S PAHIMAKAS AND OTHER FUNERAL MARCHES.mp3') }}"
+      data-pahimakas-march-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/Pahimakas_ Marche funébre, Ob. 21a (1897).mp3') }}"
       data-alay-image-src="{{ url_for('artifact_asset_file', filename='Alay/Alay.png') }}"
       data-alay-glb-src="{{ url_for('artifact_asset_file', filename='Alay/Alay-512(10k).glb') }}"
       data-antuk-image-src="{{ url_for('artifact_asset_file', filename='Antuk/Antuk.png') }}"
@@ -156,6 +167,14 @@
             </svg>
           </span>
           <span class="tour-control-dock__label">Audio</span>
+        </button>
+        <button class="tour-control-dock__action tour-control-dock__action--inactive" id="tourPlayArtifactAlternateAudio" type="button" aria-label="Play alternate artifact audio" aria-pressed="false" aria-disabled="true" hidden>
+          <span class="tour-control-dock__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path>
+            </svg>
+          </span>
+          <span class="tour-control-dock__label">March</span>
         </button>
         <button class="tour-control-dock__camera" id="tourCaptureView" type="button" aria-label="Capture current view">
           <span class="tour-control-dock__camera-icon" aria-hidden="true">
