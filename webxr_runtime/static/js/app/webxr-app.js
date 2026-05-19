@@ -54,7 +54,28 @@ const UNDERGROUND_WALK_BOUNDARY = [
 const CHURCH_HOTSPOT_MARKERS = [
   {
     id: 'hotspot-1',
-    position: [-2.598, 0.438, -2.459],
+    position: [-2.494, 0.343, -2.280],
+    color: 0x8fd3ff,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'hotspot-2',
+    position: [-2.504, 0.345, -1.342],
+    color: 0x8fd3ff,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'hotspot-3',
+    position: [-2.619, 0.334, 1.068],
+    color: 0x8fd3ff,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'hotspot-4',
+    position: [-2.641, 0.339, 2.063],
     color: 0x8fd3ff,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
