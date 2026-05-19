@@ -21,6 +21,12 @@
 
     <div id="arScene" aria-label="WebAR camera scene"></div>
 
+    <div class="ar-overlay ar-overlay--bottom ar-overlay--centered">
+      <button id="arAudioLanguageToggle" class="ar-btn ar-btn--translation" type="button" aria-label="Audio unavailable until an artifact is detected" aria-disabled="true" disabled>
+        Audio
+      </button>
+    </div>
+
     <script id="ar-three-config" type="application/json">
       {
         "markers": [
@@ -29,6 +35,10 @@
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Balanghay/balanghay.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Balanghay/Balanghay-512(10K).glb') }}",
             "imageUrl": "{{ url_for('artifact_asset_file', filename='Balanghay/Balanghay.jpg') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/ANG BALANGHAY.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/THE BALANGHAY.mp3') }}"
+            },
             "infoTitle": "Balanghay",
             "infoText": "The balanghay is an early Philippine wooden boat linked to precolonial maritime travel, trade, and community life."
           },
@@ -36,115 +46,191 @@
             "key": "kabaong",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Kabaong/kabaong.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Kabaong/Kabaong-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Kabaong/Kabaong.jpg') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Kabaong/Kabaong.jpg') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Kabaong/ANG MGA NAKABITING KABAONG NG SAGADA.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Kabaong/THE HANGING COFFINS OF SAGADA.mp3') }}"
+            }
           },
           {
             "key": "banga",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Banga/banga.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Banga/Banga-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Banga/Banga.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Banga/Banga.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/Banga/ANG BANGA NG MANUNGGUL.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/Banga/THE MANUNGGUL JAR.mp3') }}"
+            }
           },
           {
             "key": "bogwa",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Bogwa/bogwa.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Bogwa/BOGWA NG MGA IFUGAO.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Bogwa/BOGWA OF THE IFUGAO.mp3') }}"
+            }
           },
           {
             "key": "alay",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Alay/alay.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Alay/Alay-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Alay/Alay.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Alay/Alay.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Alay/ALAY, ATANG, HALAD.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Alay/ALAY, ATANG, HALAD(English).mp3') }}"
+            }
           },
           {
             "key": "antuk",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Antuk/antuk.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Antuk/Antuk-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Antuk/Antuk.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Antuk/Antuk.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Antuk/ANTUK AT ULAHING NG MGA ATA-MANOBO.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Antuk/ANTUK AND ULAHING OF THE ATA-MANOBO.mp3') }}"
+            }
           },
           {
             "key": "bagongon",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Bagongon/bagongon.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Bagongon/BAGONGON NG MGA ILOKANO.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Bagongon/BAGONGON OF THE ILOCANO.mp3') }}"
+            }
           },
           {
             "key": "pagpag",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Pagpag/pagpag.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Pagpag/Pagpag-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pagpag/Pagpag.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pagpag/Pagpag.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Pagpag/ANG PAGPAG.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Pagpag/THE CUSTOM OF PAGPAG.mp3') }}"
+            }
           },
           {
             "key": "pahimakas",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Pahimakas/pahimakas.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/PAHIMAKAS AT IBA PANG MARCHA FUNEBRE NI NAKPIL.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/NAKPIL_S PAHIMAKAS AND OTHER FUNERAL MARCHES.mp3') }}"
+            }
           },
           {
             "key": "uloh",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Uloh/pattern-uloh-custom.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Uloh/Uloh-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Uloh/Uloh.jpg') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Uloh/Uloh.jpg') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Uloh/TRADISYUNAL NA ULÓH NG MGA IFUGAO.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Uloh/TRADITIONAL ULÓH OF IFUGAO.mp3') }}"
+            }
           },
           {
             "key": "tsapang",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Tsapang/pattern-tsapang-v2.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Tsapang/Tsapang-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Tsapang/Tsapang.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Tsapang/Tsapang.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Tsapang/TSAPANG ITIM NG PAGLULUKSA.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Tsapang/BLACK MOURNING PINS.mp3') }}"
+            }
           },
           {
             "key": "kagamitan",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Kagamitan/pattern-kagamitan-custom.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Kagamitan/MGA KAGAMITAN NG MGA YUMAO SA BATANES.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Kagamitan/BELONGINGS OF THE DEAD IN BATANES.mp3') }}"
+            }
           },
           {
             "key": "luksa",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Luksa/Luksa.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Luksa/Luksa-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Luksa/Luksa.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Luksa/Luksa.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Luksa/ANG MGA TAGA-LUKSA SA BUROL NG MGA FILIPINONG-TSINO.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Luksa/THE MOURNERS IN FILIPINO-CHINESE BURIAL.mp3') }}"
+            }
           },
           {
             "key": "pagtubas",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Pagtubas/PAGTUBAS NG MGA WARAY.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Pagtubas/PAGTUBAS OF THE WARAY.mp3') }}"
+            }
           },
           {
             "key": "pahiwatig",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwatig.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwating.glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwatig.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwatig.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Pahiwatig/MGA PAHIWATIG NG KAMATAYAN.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Pahiwatig/OMENS OF DEATH.mp3') }}"
+            }
           },
           {
             "key": "recuerdos",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Recuerdos/RECUERDOS DE PATAY.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Recuerdos/RECUERDOS DE PATAY(English).mp3') }}"
+            }
           },
           {
             "key": "sabwag",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Sabwag/SABWAG NG MGA BIKOLNON.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Sabwag/SABWAG OF THE BIKOLNON.mp3') }}"
+            }
           },
           {
             "key": "sisiw",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Sisiw/Sisiw.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Sisiw/Sisiw-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Sisiw/Sisiw.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Sisiw/Sisiw.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Sisiw/SISIW NG BUDHI.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Sisiw/HATCHLING OF CONSCIENCE.mp3') }}"
+            }
           },
           {
             "key": "tausug",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Tausug/Tausug.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename='Tausug/Tausug1-512(10k).glb') }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Tausug/Tausug.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Tausug/Tausug.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Tausug/KAUGALIAN SA PAGLILIBING NG MGA TAUSUG.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Tausug/TAUSUG BURIAL PRACTICES.mp3') }}"
+            }
           },
           {
             "key": "tboli",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Tboli/Tboli.patt') }}",
             "modelUrl": "{{ url_for('artifact_asset_file', filename="Tboli/T'boli-512(10k).glb") }}",
-            "imageUrl": "{{ url_for('artifact_asset_file', filename='Tboli/Tboli.png') }}"
+            "imageUrl": "{{ url_for('artifact_asset_file', filename='Tboli/Tboli.png') }}",
+            "audioByLanguage": {
+              "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Tboli/ANG KALULUWA NG MGA T_BOLI.mp3') }}",
+              "en": "{{ url_for('virtual_tour_hotspot_file', filename='Tboli/THE T_BOLI SOUL.mp3') }}"
+            }
           }
         ]
       }

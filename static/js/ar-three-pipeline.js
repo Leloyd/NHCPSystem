@@ -3,6 +3,7 @@
 
   var body = document.body;
   var rootEl = document.getElementById("arScene");
+  var audioToggleButton = document.getElementById("arAudioLanguageToggle");
   if (!body || !rootEl) {
     return;
   }
@@ -324,6 +325,12 @@
     videoWatcherIntervalId: 0,
     markerFilter: "all",
     rafId: 0,
+    audioElement: null,
+    audioToggleButton: audioToggleButton,
+    activeAudioEntry: null,
+    audioLanguage: "tl",
+    pendingAudioSrc: "",
+    audioUnlockHandler: null,
     destroyed: false,
   };
 
@@ -390,6 +397,12 @@
           patternUrl: String(item && item.patternUrl ? item.patternUrl : ""),
           modelUrl: String(item && item.modelUrl ? item.modelUrl : ""),
           imageUrl: String(item && item.imageUrl ? item.imageUrl : ""),
+          audioByLanguage: item && item.audioByLanguage && typeof item.audioByLanguage === "object"
+            ? {
+                tl: String(item.audioByLanguage.tl || ""),
+                en: String(item.audioByLanguage.en || ""),
+              }
+            : null,
           infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
           infoText: String(item && item.infoText ? item.infoText : ""),
         };
@@ -801,7 +814,250 @@
       entry.isVisibleStable = false;
       entry.renderRoot.visible = false;
       sendAnalytics("marker_lost", { marker: entry.key });
+      syncActiveAudioEntry();
     }, CONFIG.markerLostDebounceMs);
+  }
+
+  function getEntryAudioConfig(entry) {
+    if (!entry || !entry.audioByLanguage || typeof entry.audioByLanguage !== "object") {
+      return null;
+    }
+
+    return entry.audioByLanguage;
+  }
+
+  function resolveAudioSource(audioConfig, language) {
+    if (!audioConfig) {
+      return "";
+    }
+
+    var normalizedLanguage = language === "en" ? "en" : "tl";
+    var preferred = String(audioConfig[normalizedLanguage] || "").trim();
+    if (preferred) {
+      return preferred;
+    }
+
+    var fallbackLanguage = normalizedLanguage === "tl" ? "en" : "tl";
+    return String(audioConfig[fallbackLanguage] || "").trim();
+  }
+
+  function removePendingAudioUnlockHandler() {
+    if (!runtime.audioUnlockHandler) {
+      return;
+    }
+
+    document.removeEventListener("pointerdown", runtime.audioUnlockHandler);
+    document.removeEventListener("touchend", runtime.audioUnlockHandler);
+    document.removeEventListener("keydown", runtime.audioUnlockHandler);
+    runtime.audioUnlockHandler = null;
+  }
+
+  function retryPendingAudioPlayback() {
+    if (!runtime.pendingAudioSrc || !runtime.audioElement) {
+      return;
+    }
+
+    var playResult = runtime.audioElement.play();
+    if (!playResult || typeof playResult.then !== "function") {
+      runtime.pendingAudioSrc = "";
+      return;
+    }
+
+    playResult
+      .then(function () {
+        runtime.pendingAudioSrc = "";
+      })
+      .catch(function () {
+        schedulePendingAudioRetry();
+      });
+  }
+
+  function schedulePendingAudioRetry() {
+    if (runtime.audioUnlockHandler) {
+      return;
+    }
+
+    runtime.audioUnlockHandler = function () {
+      removePendingAudioUnlockHandler();
+      retryPendingAudioPlayback();
+    };
+
+    document.addEventListener("pointerdown", runtime.audioUnlockHandler, { once: true, passive: true });
+    document.addEventListener("touchend", runtime.audioUnlockHandler, { once: true, passive: true });
+    document.addEventListener("keydown", runtime.audioUnlockHandler, { once: true });
+  }
+
+  function ensureAudioElement() {
+    if (runtime.audioElement) {
+      return runtime.audioElement;
+    }
+
+    var audioEl = document.createElement("audio");
+    audioEl.preload = "auto";
+    audioEl.hidden = true;
+    audioEl.setAttribute("playsinline", "");
+    audioEl.playsInline = true;
+    body.appendChild(audioEl);
+    runtime.audioElement = audioEl;
+    return audioEl;
+  }
+
+  function stopActiveAudio(resetTime) {
+    removePendingAudioUnlockHandler();
+    runtime.pendingAudioSrc = "";
+
+    if (!runtime.audioElement) {
+      return;
+    }
+
+    runtime.audioElement.pause();
+    if (resetTime) {
+      try {
+        runtime.audioElement.currentTime = 0;
+      } catch (error) {
+        return;
+      }
+    }
+  }
+
+  function updateAudioToggleButton() {
+    if (!runtime.audioToggleButton) {
+      return;
+    }
+
+    var audioConfig = getEntryAudioConfig(runtime.activeAudioEntry);
+    var hasTagalog = Boolean(audioConfig && String(audioConfig.tl || "").trim());
+    var hasEnglish = Boolean(audioConfig && String(audioConfig.en || "").trim());
+    var isEnabled = Boolean(runtime.activeAudioEntry && (hasTagalog || hasEnglish));
+
+    runtime.audioToggleButton.disabled = !isEnabled;
+    runtime.audioToggleButton.setAttribute("aria-disabled", isEnabled ? "false" : "true");
+
+    if (!isEnabled) {
+      runtime.audioToggleButton.textContent = "Audio";
+      runtime.audioToggleButton.setAttribute("aria-label", "Audio unavailable until an artifact is detected");
+      return;
+    }
+
+    var targetLanguage = runtime.audioLanguage === "tl" ? (hasEnglish ? "en" : "tl") : (hasTagalog ? "tl" : "en");
+    var label = targetLanguage === "en" ? "English" : "Tagalog";
+    runtime.audioToggleButton.textContent = label;
+    runtime.audioToggleButton.setAttribute("aria-label", "Switch audio to " + label + " for " + runtime.activeAudioEntry.key);
+  }
+
+  function playAudioForEntry(entry, language, shouldRestart) {
+    var audioConfig = getEntryAudioConfig(entry);
+    var nextSrc = resolveAudioSource(audioConfig, language);
+    if (!nextSrc) {
+      stopActiveAudio(true);
+      updateAudioToggleButton();
+      return;
+    }
+
+    var preferredLanguage = language === "en" ? "en" : "tl";
+    var resolvedLanguage = String(audioConfig[preferredLanguage] || "").trim() ? preferredLanguage : preferredLanguage === "tl" ? "en" : "tl";
+    var audioEl = ensureAudioElement();
+    var currentSrc = audioEl.getAttribute("data-audio-src") || "";
+
+    runtime.audioLanguage = resolvedLanguage;
+
+    if (shouldRestart || currentSrc !== nextSrc) {
+      audioEl.pause();
+      audioEl.src = nextSrc;
+      audioEl.setAttribute("data-audio-src", nextSrc);
+      try {
+        audioEl.currentTime = 0;
+      } catch (error) {
+        return;
+      }
+    }
+
+    runtime.pendingAudioSrc = nextSrc;
+
+    var playResult = audioEl.play();
+    if (!playResult || typeof playResult.then !== "function") {
+      runtime.pendingAudioSrc = "";
+      updateAudioToggleButton();
+      return;
+    }
+
+    playResult
+      .then(function () {
+        runtime.pendingAudioSrc = "";
+      })
+      .catch(function () {
+        schedulePendingAudioRetry();
+      });
+
+    updateAudioToggleButton();
+  }
+
+  function getPreferredAudioEntry() {
+    var visibleEntries = runtime.markerEntries.filter(function (entry) {
+      return Boolean(entry && entry.modelLoaded && entry.isVisibleStable && entry.renderRoot && entry.renderRoot.visible);
+    });
+
+    if (!visibleEntries.length) {
+      return null;
+    }
+
+    if (runtime.activeAudioEntry) {
+      var activeStillVisible = visibleEntries.find(function (entry) {
+        return entry.key === runtime.activeAudioEntry.key;
+      });
+
+      if (activeStillVisible) {
+        return activeStillVisible;
+      }
+    }
+
+    visibleEntries.sort(function (entryA, entryB) {
+      return clampNumber(entryB.lastSeenAt, 0, 0, Number.MAX_SAFE_INTEGER) - clampNumber(entryA.lastSeenAt, 0, 0, Number.MAX_SAFE_INTEGER);
+    });
+
+    return visibleEntries[0] || null;
+  }
+
+  function syncActiveAudioEntry() {
+    var nextEntry = getPreferredAudioEntry();
+
+    if (!nextEntry) {
+      if (runtime.activeAudioEntry) {
+        runtime.activeAudioEntry = null;
+        runtime.audioLanguage = "tl";
+        stopActiveAudio(true);
+      }
+      updateAudioToggleButton();
+      return;
+    }
+
+    if (!runtime.activeAudioEntry || runtime.activeAudioEntry.key !== nextEntry.key) {
+      runtime.activeAudioEntry = nextEntry;
+      runtime.audioLanguage = "tl";
+      playAudioForEntry(nextEntry, "tl", true);
+      return;
+    }
+
+    updateAudioToggleButton();
+  }
+
+  function handleAudioToggleClick() {
+    if (!runtime.activeAudioEntry) {
+      return;
+    }
+
+    var nextLanguage = runtime.audioLanguage === "tl" ? "en" : "tl";
+    playAudioForEntry(runtime.activeAudioEntry, nextLanguage, true);
+  }
+
+  function bindAudioToggleButton() {
+    if (!runtime.audioToggleButton || runtime.audioToggleButton.dataset.bound === "1") {
+      return;
+    }
+
+    runtime.audioToggleButton.dataset.bound = "1";
+    runtime.audioToggleButton.addEventListener("click", handleAudioToggleClick);
+    updateAudioToggleButton();
   }
 
   function updateSmoothedPose(entry, nowMs) {
@@ -881,6 +1137,8 @@
 
       scheduleMarkerLost(entry);
     });
+
+    syncActiveAudioEntry();
   }
 
   function updateGroundOccluder(entry, modelSettings, size, fitScale) {
@@ -1089,6 +1347,7 @@
         markerControls: markerControls,
         modelContainer: modelContainer,
         modelScene: null,
+        audioByLanguage: markerConfig.audioByLanguage || null,
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -1318,6 +1577,16 @@
     runtime.destroyed = true;
 
     clearViewportSettleTimers();
+    removePendingAudioUnlockHandler();
+    stopActiveAudio(true);
+
+    if (runtime.audioElement) {
+      runtime.audioElement.pause();
+      runtime.audioElement.removeAttribute("src");
+      runtime.audioElement.load();
+      runtime.audioElement.remove();
+      runtime.audioElement = null;
+    }
 
     if (runtime.resizeRafId) {
       window.cancelAnimationFrame(runtime.resizeRafId);
@@ -1372,6 +1641,7 @@
       })
     );
 
+    bindAudioToggleButton();
     initRendererScene();
     initArToolkit();
     buildMarkerEntries(enabledMarkers);

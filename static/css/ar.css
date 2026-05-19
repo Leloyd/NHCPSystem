@@ -4,6 +4,7 @@
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
   --accent: #d97706;
   --accent-strong: #f59e0b;
 }
@@ -68,7 +69,8 @@ video {
   pointer-events: none;
 }
 
-.ar-overlay a {
+.ar-overlay a,
+.ar-overlay button {
   pointer-events: auto;
 }
 
@@ -81,6 +83,18 @@ video {
 
 .ar-overlay--minimal {
   justify-content: flex-start;
+}
+
+.ar-overlay--bottom {
+  top: auto;
+  bottom: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0.65rem calc(var(--safe-right) + 0.75rem) calc(var(--safe-bottom) + 1rem) calc(var(--safe-left) + 0.75rem);
+}
+
+.ar-overlay--centered {
+  justify-content: center;
 }
 
 .ar-overlay--artifact {
@@ -186,6 +200,27 @@ video {
 
 .ar-btn:active {
   transform: translateY(0);
+}
+
+.ar-btn--translation {
+  min-width: min(11rem, calc(100vw - 2rem));
+  padding-inline: 1rem;
+  background: rgba(11, 16, 23, 0.78);
+  border-color: rgba(255, 255, 255, 0.18);
+  color: #f9fafb;
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+.ar-btn--translation:hover,
+.ar-btn--translation:focus-visible {
+  background: rgba(24, 34, 48, 0.88);
+}
+
+.ar-btn--translation[disabled] {
+  opacity: 0.62;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 768px) {
