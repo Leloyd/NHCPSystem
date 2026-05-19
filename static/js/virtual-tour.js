@@ -32,6 +32,8 @@
   const balanghayEnglishAudioSrc = app ? app.dataset.balanghayEnglishAudioSrc : "";
   const kabaongImageSrc = app ? app.dataset.kabaongImageSrc : "";
   const kabaongGlbSrc = app ? app.dataset.kabaongGlbSrc : "";
+  const kabaongTagalogAudioSrc = app ? app.dataset.kabaongTagalogAudioSrc : "";
+  const kabaongEnglishAudioSrc = app ? app.dataset.kabaongEnglishAudioSrc : "";
   const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
   const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
   const kabilaImageSrc = app ? app.dataset.kabilaImageSrc : "";
@@ -1669,6 +1671,10 @@
             imageAlt: "Kabaong",
             glbSrc: kabaongGlbSrc,
             glbAlt: "Kabaong 3D model",
+            audioByLanguage: {
+              tl: kabaongTagalogAudioSrc,
+              en: kabaongEnglishAudioSrc,
+            },
             windowPitch: -18.35,
             windowYaw: 26.68,
           },
