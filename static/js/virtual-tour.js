@@ -93,30 +93,58 @@
     alay: {
       imageSrc: app ? app.dataset.alayImageSrc : "",
       glbSrc: app ? app.dataset.alayGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.alayTagalogAudioSrc : "",
+        en: app ? app.dataset.alayEnglishAudioSrc : "",
+      },
     },
     antuk: {
       imageSrc: app ? app.dataset.antukImageSrc : "",
       glbSrc: app ? app.dataset.antukGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.antukTagalogAudioSrc : "",
+        en: app ? app.dataset.antukEnglishAudioSrc : "",
+      },
     },
     pagtubas: {
       imageSrc: app ? app.dataset.pagtubasImageSrc : "",
       glbSrc: app ? app.dataset.pagtubasGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.pagtubasTagalogAudioSrc : "",
+        en: app ? app.dataset.pagtubasEnglishAudioSrc : "",
+      },
     },
     tsapang: {
       imageSrc: app ? app.dataset.tsapangImageSrc : "",
       glbSrc: app ? app.dataset.tsapangGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.tsapangTagalogAudioSrc : "",
+        en: app ? app.dataset.tsapangEnglishAudioSrc : "",
+      },
     },
     tboli: {
       imageSrc: app ? app.dataset.tboliImageSrc : "",
       glbSrc: app ? app.dataset.tboliGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.tboliTagalogAudioSrc : "",
+        en: app ? app.dataset.tboliEnglishAudioSrc : "",
+      },
     },
     sisiw: {
       imageSrc: app ? app.dataset.sisiwImageSrc : "",
       glbSrc: app ? app.dataset.sisiwGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.sisiwTagalogAudioSrc : "",
+        en: app ? app.dataset.sisiwEnglishAudioSrc : "",
+      },
     },
     sabwag: {
       imageSrc: app ? app.dataset.sabwagImageSrc : "",
       glbSrc: app ? app.dataset.sabwagGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.sabwagTagalogAudioSrc : "",
+        en: app ? app.dataset.sabwagEnglishAudioSrc : "",
+      },
     },
     tausug: {
       imageSrc: app ? app.dataset.tausugImageSrc : "",
@@ -126,21 +154,41 @@
         app ? app.dataset.tausugGlb3Src : "",
         app ? app.dataset.tausugGlb4Src : "",
       ].filter(Boolean),
+      audioByLanguage: {
+        tl: app ? app.dataset.tausugTagalogAudioSrc : "",
+        en: app ? app.dataset.tausugEnglishAudioSrc : "",
+      },
     },
     luksa: {
       imageSrc: app ? app.dataset.luksaImageSrc : "",
       glbSrc: app ? app.dataset.luksaGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.luksaTagalogAudioSrc : "",
+        en: app ? app.dataset.luksaEnglishAudioSrc : "",
+      },
     },
     mensahe: {
       imageSrc: app ? app.dataset.mensaheImageSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.mensaheTagalogAudioSrc : "",
+        en: app ? app.dataset.mensaheEnglishAudioSrc : "",
+      },
     },
     pahiwatig: {
       imageSrc: app ? app.dataset.pahiwatigImageSrc : "",
       glbSrc: app ? app.dataset.pahiwatigGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.pahiwatigTagalogAudioSrc : "",
+        en: app ? app.dataset.pahiwatigEnglishAudioSrc : "",
+      },
     },
     recuerdos: {
       imageSrc: app ? app.dataset.recuerdosImageSrc : "",
       glbSrc: app ? app.dataset.recuerdosGlbSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.recuerdosTagalogAudioSrc : "",
+        en: app ? app.dataset.recuerdosEnglishAudioSrc : "",
+      },
     },
   };
   const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
@@ -333,6 +381,7 @@
       imageSrc: museum3ArtifactAssets.alay.imageSrc,
       imageAlt: "Alay",
       glbSrc: museum3ArtifactAssets.alay.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.alay.audioByLanguage,
       glbAlt: "Alay 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -342,6 +391,7 @@
       imageSrc: museum3ArtifactAssets.antuk.imageSrc,
       imageAlt: "Antuk",
       glbSrc: museum3ArtifactAssets.antuk.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.antuk.audioByLanguage,
       glbAlt: "Antuk 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -351,6 +401,7 @@
       imageSrc: museum3ArtifactAssets.pagtubas.imageSrc,
       imageAlt: "Pagtubas",
       glbSrc: museum3ArtifactAssets.pagtubas.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.pagtubas.audioByLanguage,
       glbAlt: "Pagtubas 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -360,6 +411,7 @@
       imageSrc: museum3ArtifactAssets.tsapang.imageSrc,
       imageAlt: "Tsapang",
       glbSrc: museum3ArtifactAssets.tsapang.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.tsapang.audioByLanguage,
       glbAlt: "Tsapang 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -369,6 +421,7 @@
       imageSrc: museum3ArtifactAssets.tboli.imageSrc,
       imageAlt: "T'boli",
       glbSrc: museum3ArtifactAssets.tboli.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.tboli.audioByLanguage,
       glbAlt: "T'boli 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -378,6 +431,7 @@
       imageSrc: museum3ArtifactAssets.sisiw.imageSrc,
       imageAlt: "Sisiw",
       glbSrc: museum3ArtifactAssets.sisiw.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.sisiw.audioByLanguage,
       glbAlt: "Sisiw 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -387,6 +441,7 @@
       imageSrc: museum3ArtifactAssets.sabwag.imageSrc,
       imageAlt: "Sabwag",
       glbSrc: museum3ArtifactAssets.sabwag.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.sabwag.audioByLanguage,
       glbAlt: "Sabwag 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -396,6 +451,7 @@
       imageSrc: museum3ArtifactAssets.tausug.imageSrc,
       imageAlt: "Tausug",
       glbSources: museum3ArtifactAssets.tausug.glbSources,
+      audioByLanguage: museum3ArtifactAssets.tausug.audioByLanguage,
       glbAlt: "Tausug 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -405,6 +461,7 @@
       imageSrc: museum3ArtifactAssets.luksa.imageSrc,
       imageAlt: "Luksa",
       glbSrc: museum3ArtifactAssets.luksa.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.luksa.audioByLanguage,
       glbAlt: "Luksa 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -413,6 +470,7 @@
       yaw: 108.16,
       imageSrc: museum3ArtifactAssets.mensahe.imageSrc,
       imageAlt: "Mensahe",
+      audioByLanguage: museum3ArtifactAssets.mensahe.audioByLanguage,
     }),
     buildFloatingArtifactHotspot({
       id: "museum3-pahiwatig-marker",
@@ -421,6 +479,7 @@
       imageSrc: museum3ArtifactAssets.pahiwatig.imageSrc,
       imageAlt: "Pahiwatig",
       glbSrc: museum3ArtifactAssets.pahiwatig.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.pahiwatig.audioByLanguage,
       glbAlt: "Pahiwatig 3D model",
     }),
     buildFloatingArtifactHotspot({
@@ -430,6 +489,7 @@
       imageSrc: museum3ArtifactAssets.recuerdos.imageSrc,
       imageAlt: "Recuerdos",
       glbSrc: museum3ArtifactAssets.recuerdos.glbSrc,
+      audioByLanguage: museum3ArtifactAssets.recuerdos.audioByLanguage,
       glbAlt: "Recuerdos 3D model",
     }),
   ];
