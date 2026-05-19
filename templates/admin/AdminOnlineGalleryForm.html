@@ -105,12 +105,6 @@
                 </label>
               </div>
 
-              {% if gallery_form.image_url %}
-              <div class="admin-image-preview-card">
-                <img src="{{ gallery_form.image_url }}" alt="Current online gallery preview" />
-              </div>
-              {% endif %}
-
               <div class="admin-form-actions">
                 <a href="{{ url_for('admin_online_gallery') }}" class="admin-secondary-action">Cancel</a>
                 <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
