@@ -2301,6 +2301,52 @@
     return audioConfig.en || "";
   }
 
+  function appendAudioCacheBuster(url) {
+    if (!url) {
+      return "";
+    }
+
+    const normalizedUrl = String(url);
+    return `${normalizedUrl}${normalizedUrl.includes("?") ? "&" : "?"}v=${Date.now()}`;
+  }
+
+  function attemptAudioPlayback(audio, errorLabel) {
+    if (!audio) {
+      return;
+    }
+
+    let didRetry = false;
+    const tryPlay = function () {
+      const playPromise = audio.play();
+      if (playPromise && typeof playPromise.catch === "function") {
+        playPromise.catch(function (error) {
+          if (!didRetry) {
+            didRetry = true;
+            const retryPlayback = function () {
+              audio.removeEventListener("canplaythrough", retryPlayback);
+              audio.removeEventListener("loadedmetadata", retryPlayback);
+              const retryPromise = audio.play();
+              if (retryPromise && typeof retryPromise.catch === "function") {
+                retryPromise.catch(function (retryError) {
+                  console.warn(errorLabel, retryError);
+                });
+              }
+            };
+
+            audio.addEventListener("canplaythrough", retryPlayback, { once: true });
+            audio.addEventListener("loadedmetadata", retryPlayback, { once: true });
+            audio.load();
+            return;
+          }
+
+          console.warn(errorLabel, error);
+        });
+      }
+    };
+
+    tryPlay();
+  }
+
   function playFloatingArtifactAudio(audioConfig, language) {
     const nextAudioSrc = getFloatingArtifactAudioSource(audioConfig, language);
     if (!nextAudioSrc) {
@@ -2321,23 +2367,21 @@
 
     stopFloatingArtifactAudio();
 
-    const audio = new Audio(nextAudioSrc);
+    const audio = new Audio(appendAudioCacheBuster(nextAudioSrc));
     audio.preload = "auto";
     audio.addEventListener("ended", function () {
       floatingArtifactAudio = null;
       floatingArtifactAudioSrc = "";
+    });
+    audio.addEventListener("error", function () {
+      console.warn("Unable to load artifact audio.", nextAudioSrc, audio.error);
     });
 
     floatingArtifactAudio = audio;
     floatingArtifactAudioSrc = nextAudioSrc;
     updateHotspotVisibilityState();
 
-    const playPromise = audio.play();
-    if (playPromise && typeof playPromise.catch === "function") {
-      playPromise.catch(function (error) {
-        console.warn("Unable to autoplay artifact audio.", error);
-      });
-    }
+    attemptAudioPlayback(audio, "Unable to autoplay artifact audio.");
   }
 
   function clearFloatingArtifactAudioState() {
