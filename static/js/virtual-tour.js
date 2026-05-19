@@ -36,10 +36,18 @@
   const kabaongEnglishAudioSrc = app ? app.dataset.kabaongEnglishAudioSrc : "";
   const ulohImageSrc = app ? app.dataset.ulohImageSrc : "";
   const ulohGlbSrc = app ? app.dataset.ulohGlbSrc : "";
+  const ulohTagalogAudioSrc = app ? app.dataset.ulohTagalogAudioSrc : "";
+  const ulohEnglishAudioSrc = app ? app.dataset.ulohEnglishAudioSrc : "";
   const kabilaImageSrc = app ? app.dataset.kabilaImageSrc : "";
+  const kabilaTagalogAudioSrc = app ? app.dataset.kabilaTagalogAudioSrc : "";
+  const kabilaEnglishAudioSrc = app ? app.dataset.kabilaEnglishAudioSrc : "";
   const bangaImageSrc = app ? app.dataset.bangaImageSrc : "";
   const bangaGlbSrc = app ? app.dataset.bangaGlbSrc : "";
+  const bangaTagalogAudioSrc = app ? app.dataset.bangaTagalogAudioSrc : "";
+  const bangaEnglishAudioSrc = app ? app.dataset.bangaEnglishAudioSrc : "";
   const jarImageSrc = app ? app.dataset.jarImageSrc : "";
+  const jarTagalogAudioSrc = app ? app.dataset.jarTagalogAudioSrc : "";
+  const jarEnglishAudioSrc = app ? app.dataset.jarEnglishAudioSrc : "";
   const museum3ArtifactAssets = {
     kagamitan: {
       imageSrc: app ? app.dataset.kagamitanImageSrc : "",
@@ -1694,6 +1702,10 @@
             imageAlt: "Ulóh",
             glbSrc: ulohGlbSrc,
             glbAlt: "Ulóh 3D model",
+            audioByLanguage: {
+              tl: ulohTagalogAudioSrc,
+              en: ulohEnglishAudioSrc,
+            },
             windowPitch: -17.35,
             windowYaw: -128.78,
           },
@@ -1741,6 +1753,10 @@
             windowHotspotId: "museum2-kabila-marker-window",
             imageSrc: kabilaImageSrc,
             imageAlt: "Kabila",
+            audioByLanguage: {
+              tl: kabilaTagalogAudioSrc,
+              en: kabilaEnglishAudioSrc,
+            },
             windowPitch: -20.36,
             windowYaw: 47.56,
           },
@@ -1760,6 +1776,10 @@
             imageAlt: "Banga",
             glbSrc: bangaGlbSrc,
             glbAlt: "Banga 3D model",
+            audioByLanguage: {
+              tl: bangaTagalogAudioSrc,
+              en: bangaEnglishAudioSrc,
+            },
             windowPitch: -17.11,
             windowYaw: 169.7,
           },
@@ -1777,6 +1797,10 @@
             windowHotspotId: "museum2-jar-marker-window",
             imageSrc: jarImageSrc,
             imageAlt: "Jar",
+            audioByLanguage: {
+              tl: jarTagalogAudioSrc,
+              en: jarEnglishAudioSrc,
+            },
             windowPitch: -29.35,
             windowYaw: 169.12,
           },
