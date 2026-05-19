@@ -506,7 +506,15 @@
   function getVisibleTausugEntry() {
     for (var index = 0; index < runtime.markerEntries.length; index += 1) {
       var entry = runtime.markerEntries[index];
-      if (entry && entry.key === TAUSUG_KEY && entry.isVisibleStable && entry.renderRoot && entry.renderRoot.visible) {
+      if (
+        entry &&
+        entry.key === TAUSUG_KEY &&
+        entry.trackingRoot &&
+        entry.trackingRoot.visible &&
+        entry.renderRoot &&
+        entry.renderRoot.visible &&
+        entry.modelLoaded
+      ) {
         return entry;
       }
     }
