@@ -26,10 +26,12 @@
          {% if current_public_user %}
         {% set user_label = current_public_user.full_name or current_public_user.username or current_public_user.email %}
         <div class="relative" id="publicAccountDropdownRoot">
-          <button type="button" id="publicAccountDropdownToggle" class="public-account-trigger inline-flex {% if public_active_page == 'home' %}is-home-top{% endif %}" aria-expanded="false" aria-haspopup="true">
-            <span class="public-account-avatar">{{ user_label[:1]|upper }}</span>
-            <span class="hidden md:inline">Hi, {{ user_label.split(' ')[0] }}</span>
-            <svg class="public-account-chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path></svg>
+         <button type="button" id="publicAccountDropdownToggle" class="public-account-trigger inline-flex {% if public_active_page == 'home' %}is-home-top{% endif %}" aria-expanded="false" aria-haspopup="true">
+           <span class="public-account-avatar">{{ user_label[:1]|upper }}</span>
+            <span class="hidden lg:inline">Hi, {{ user_label.split(' ')[0] }}</span>
+            <svg class="public-account-menu-icon lg:hidden" id="publicAccountMenuIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
+            <svg class="public-account-menu-icon hidden lg:hidden" id="publicAccountCloseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"></path></svg>
+            <svg class="public-account-chevron hidden lg:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path></svg>
           </button>
           <div id="publicAccountDropdownMenu" class="public-account-menu hidden" role="menu">
             <div class="public-account-menu-header">
@@ -37,7 +39,6 @@
               <p class="public-account-menu-email">{{ current_public_user.email }}</p>
             </div>
             <a href="{{ url_for('account_profile') }}" class="public-account-menu-link" role="menuitem">Profile</a>
-            <a href="{{ url_for('account_profile') }}" class="public-account-menu-link" role="menuitem">My Activity</a>
             <div class="public-account-menu-divider"></div>
             <form method="post" action="{{ url_for('public_logout') }}">
               <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
@@ -49,28 +50,33 @@
         <button type="button" class="public-auth-entry-button" data-open-auth-modal="login">Sign In</button>
         {% endif %}
 
+        {% if not current_public_user %}
         <button id="menuToggle" class="lg:hidden p-2 transition-colors duration-300 {% if public_active_page == 'home' %}text-white{% else %}text-gray-700{% endif %}" type="button" aria-label="Toggle menu" data-nav-toggle>
-           <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
-           <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
-         </button>
-       </div>
-     </div>
- 
-     <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden bg-white/95 backdrop-blur-sm border-gray-200">
+          <i data-lucide="menu" class="w-6 h-6" id="iconMenu"></i>
+          <i data-lucide="x" class="w-6 h-6 hidden" id="iconClose"></i>
+        </button>
+        {% endif %}
+      </div>
+    </div>
+
+    <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden bg-white/95 backdrop-blur-sm border-gray-200">
        <a href="{{ url_for('index') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Home</a>
        <a href="{{ url_for('digital_exhibits') }}" class="block transition-colors duration-300 {% if public_active_page == 'digital-exhibits' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Digital Exhibits</a>
        <a href="{{ url_for('interactive') }}" class="block transition-colors duration-300 {% if public_active_page == 'interactive' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Interactive</a>
        <a href="{{ url_for('heritage_trail') }}" class="block transition-colors duration-300 {% if public_active_page == 'heritage-trail' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Heritage Trail</a>
        <a href="{{ url_for('community_participation') }}" class="block transition-colors duration-300 {% if public_active_page == 'community-participation' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Community Participation</a>
        <a href="{{ url_for('support') }}" class="block transition-colors duration-300 {% if public_active_page == 'support' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Support</a>
-       <div class="pt-3 border-t border-stone-200 space-y-3">
-         {% if current_public_user %}
-         <a href="{{ url_for('account_profile') }}" class="block text-amber-800 font-semibold">My Account</a>
-         <form method="post" action="{{ url_for('public_logout') }}">
-           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
-           <button type="submit" class="block text-left text-red-700 font-semibold">Logout</button>
-         </form>
-         {% else %}
+      <div class="pt-3 border-t border-stone-200 space-y-3">
+        {% if current_public_user %}
+        <div class="space-y-2">
+          <p class="text-amber-800 font-semibold">My Account</p>
+          <a href="{{ url_for('account_profile') }}" class="block pl-4 text-gray-700 hover:text-amber-800">Profile</a>
+        </div>
+        <form method="post" action="{{ url_for('public_logout') }}">
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <button type="submit" class="block text-left text-red-700 font-semibold">Logout</button>
+        </form>
+        {% else %}
          <button type="button" class="public-auth-entry-button w-full justify-center" data-open-auth-modal="login">Sign In</button>
          {% endif %}
        </div>
@@ -86,16 +92,57 @@
      const mobileMenu = document.getElementById("mobileMenu");
      const iconMenu = document.getElementById("iconMenu");
      const iconClose = document.getElementById("iconClose");
-     const dropdownToggle = document.getElementById("publicAccountDropdownToggle");
-     const dropdownMenu = document.getElementById("publicAccountDropdownMenu");
-     const dropdownRoot = document.getElementById("publicAccountDropdownRoot");
-     const navTitle = document.getElementById("navTitle");
-     const navTitleWrapper = document.getElementById("navTitleWrapper");
+    const dropdownToggle = document.getElementById("publicAccountDropdownToggle");
+    const dropdownMenu = document.getElementById("publicAccountDropdownMenu");
+    const dropdownRoot = document.getElementById("publicAccountDropdownRoot");
+    const accountMenuIcon = document.getElementById("publicAccountMenuIcon");
+    const accountCloseIcon = document.getElementById("publicAccountCloseIcon");
+    const navTitle = document.getElementById("navTitle");
+    const navTitleWrapper = document.getElementById("navTitleWrapper");
 
-     function syncNavTitleVisibility() {
-       if (!navTitle || !navTitleWrapper) {
-         return;
-       }
+    function isMobileNavViewport() {
+      return window.innerWidth < 1024;
+    }
+
+    function closeDesktopAccountMenu() {
+      if (!dropdownToggle || !dropdownMenu) {
+        return;
+      }
+
+      dropdownToggle.setAttribute("aria-expanded", "false");
+      dropdownMenu.classList.add("hidden");
+    }
+
+    function setMobileMenuOpen(isOpen) {
+      if (!mobileMenu) {
+        return;
+      }
+
+      mobileMenu.classList.toggle("hidden", !isOpen);
+
+      if (iconMenu && iconClose) {
+        iconMenu.classList.toggle("hidden", isOpen);
+        iconClose.classList.toggle("hidden", !isOpen);
+      }
+
+      if (accountMenuIcon && accountCloseIcon) {
+        accountMenuIcon.classList.toggle("hidden", isOpen);
+        accountCloseIcon.classList.toggle("hidden", !isOpen);
+      }
+    }
+
+    function toggleMobileMenu() {
+      if (!mobileMenu) {
+        return;
+      }
+
+      setMobileMenuOpen(mobileMenu.classList.contains("hidden"));
+    }
+
+    function syncNavTitleVisibility() {
+      if (!navTitle || !navTitleWrapper) {
+        return;
+      }
 
        navTitleWrapper.classList.remove("hidden");
        const shouldHideTitle = navTitle.scrollWidth > navTitle.clientWidth + 1;
@@ -103,34 +150,51 @@
      }
  
      if (menuToggle && mobileMenu && iconMenu && iconClose && menuToggle.dataset.navBound !== "true") {
-       menuToggle.dataset.navBound = "true";
-       menuToggle.addEventListener("click", function () {
-         mobileMenu.classList.toggle("hidden");
-         iconMenu.classList.toggle("hidden");
-         iconClose.classList.toggle("hidden");
-       });
-     }
- 
-     if (dropdownToggle && dropdownMenu && dropdownRoot && dropdownToggle.dataset.accountBound !== "true") {
-       dropdownToggle.dataset.accountBound = "true";
-       dropdownToggle.addEventListener("click", function () {
-         const expanded = dropdownToggle.getAttribute("aria-expanded") === "true";
-         dropdownToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
-         dropdownMenu.classList.toggle("hidden", expanded);
-       });
-       document.addEventListener("click", function (event) {
-         if (!dropdownRoot.contains(event.target)) {
-           dropdownToggle.setAttribute("aria-expanded", "false");
-           dropdownMenu.classList.add("hidden");
-         }
-       });
-     }
+      menuToggle.dataset.navBound = "true";
+      menuToggle.addEventListener("click", function () {
+        toggleMobileMenu();
+      });
+    }
 
-     syncNavTitleVisibility();
-     window.addEventListener("resize", syncNavTitleVisibility);
-     window.addEventListener("load", syncNavTitleVisibility);
-     if (document.fonts && typeof document.fonts.ready === "object" && typeof document.fonts.ready.then === "function") {
-       document.fonts.ready.then(syncNavTitleVisibility);
-     }
+    if (dropdownToggle && dropdownMenu && dropdownRoot && dropdownToggle.dataset.accountBound !== "true") {
+      dropdownToggle.dataset.accountBound = "true";
+      dropdownToggle.addEventListener("click", function (event) {
+        if (isMobileNavViewport()) {
+          event.preventDefault();
+          event.stopPropagation();
+          closeDesktopAccountMenu();
+          toggleMobileMenu();
+          return;
+        }
+
+        const expanded = dropdownToggle.getAttribute("aria-expanded") === "true";
+        dropdownToggle.setAttribute("aria-expanded", expanded ? "false" : "true");
+        dropdownMenu.classList.toggle("hidden", expanded);
+      });
+      document.addEventListener("click", function (event) {
+        if (isMobileNavViewport()) {
+          return;
+        }
+
+        if (!dropdownRoot.contains(event.target)) {
+          dropdownToggle.setAttribute("aria-expanded", "false");
+          dropdownMenu.classList.add("hidden");
+        }
+      });
+    }
+
+    setMobileMenuOpen(false);
+    syncNavTitleVisibility();
+    window.addEventListener("resize", syncNavTitleVisibility);
+    window.addEventListener("resize", function () {
+      closeDesktopAccountMenu();
+      if (!isMobileNavViewport()) {
+        setMobileMenuOpen(false);
+      }
+    });
+    window.addEventListener("load", syncNavTitleVisibility);
+    if (document.fonts && typeof document.fonts.ready === "object" && typeof document.fonts.ready.then === "function") {
+      document.fonts.ready.then(syncNavTitleVisibility);
+    }
    })();
  </script>

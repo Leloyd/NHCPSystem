@@ -348,12 +348,14 @@ html {
   border: 1px solid rgba(255, 255, 255, 0.28);
 }
 
+.public-account-menu-icon,
 .public-account-chevron {
   width: 0.9rem;
   height: 0.9rem;
   color: #9e8b72;
 }
 
+.public-account-trigger.is-home-top .public-account-menu-icon,
 .public-account-trigger.is-home-top .public-account-chevron {
   color: rgba(255, 255, 255, 0.82);
 }
