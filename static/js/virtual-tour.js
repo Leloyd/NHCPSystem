@@ -46,10 +46,8 @@
   let floatingArtifactPreviewOverlay = null;
   let floatingArtifactPreviewImage = null;
   let floatingArtifactPreviewModel = null;
-  let floatingImageHotspotId = "";
-  let floatingImageHotspotSceneId = "";
-  let floatingArtifactHotspotId = "";
-  let floatingArtifactHotspotSceneId = "";
+  const floatingImageHotspots = new Map();
+  const floatingArtifactHotspots = new Map();
   let floatingImageAudio = null;
   let floatingImageAudioSrc = "";
   const balanghayArtifactCopy = {
@@ -1368,16 +1366,16 @@
           yaw: -128.78,
           type: "info",
           text: "",
-          clickHandlerFunc: openArtifactOverlay,
+          clickHandlerFunc: openFloatingArtifactOverlay,
           clickHandlerArgs: {
+            sourceHotspotId: "museum1-uloh-marker",
+            windowHotspotId: "museum1-uloh-marker-window",
             imageSrc: ulohImageSrc,
             imageAlt: "Ulóh",
             glbSrc: ulohGlbSrc,
-            tagalogTitle: ulohArtifactCopy.tagalogTitle,
-            tagalogText: ulohArtifactCopy.tagalogText,
-            englishTitle: ulohArtifactCopy.englishTitle,
-            englishText: ulohArtifactCopy.englishText,
-            view: "image",
+            glbAlt: "Ulóh 3D model",
+            windowPitch: -17.35,
+            windowYaw: -128.78,
           },
           cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
         },
@@ -1852,7 +1850,7 @@
     closeButton.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
-      closeFloatingImageOverlay();
+      closeFloatingImageOverlay(args.windowHotspotId, args.windowSceneId);
     });
 
     imageButton.addEventListener("click", function (event) {
@@ -1936,7 +1934,7 @@
     closeButton.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
-      closeFloatingArtifactOverlay();
+      closeFloatingArtifactOverlay(args.windowHotspotId, args.windowSceneId);
     });
 
     switchButton.addEventListener("click", function (event) {
@@ -2015,14 +2013,12 @@
 
     const sceneId = tourViewer.getScene();
     const nextHotspotId = args.windowHotspotId || `${args.sourceHotspotId || "floating-image"}-window`;
-    const isSameFloatingWindowOpen = floatingImageHotspotId === nextHotspotId && floatingImageHotspotSceneId === sceneId;
+    const imageHotspotKey = `${sceneId}::${nextHotspotId}`;
+    const isSameFloatingWindowOpen = floatingImageHotspots.has(imageHotspotKey);
 
     if (isSameFloatingWindowOpen) {
-      closeFloatingImageOverlay();
       return;
     }
-
-    closeFloatingImageOverlay();
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
@@ -2035,13 +2031,18 @@
       createTooltipArgs: {
         imageSrc: args.imageSrc,
         imageAlt: args.imageAlt || "Hotspot image",
+        windowHotspotId: nextHotspotId,
+        windowSceneId: sceneId,
       },
     };
 
     try {
       tourViewer.addHotSpot(floatingWindowHotspot, sceneId);
-      floatingImageHotspotId = nextHotspotId;
-      floatingImageHotspotSceneId = sceneId;
+      floatingImageHotspots.set(imageHotspotKey, {
+        hotspotId: nextHotspotId,
+        sceneId,
+        audioSrc: args.audioSrc || "",
+      });
       playFloatingImageAudio(args.audioSrc);
     } catch (error) {
       console.error("Unable to open floating hotspot image.", error);
@@ -2059,14 +2060,12 @@
 
     const sceneId = tourViewer.getScene();
     const nextHotspotId = args.windowHotspotId || `${args.sourceHotspotId || "floating-artifact"}-window`;
-    const isSameFloatingWindowOpen = floatingArtifactHotspotId === nextHotspotId && floatingArtifactHotspotSceneId === sceneId;
+    const artifactHotspotKey = `${sceneId}::${nextHotspotId}`;
+    const isSameFloatingWindowOpen = floatingArtifactHotspots.has(artifactHotspotKey);
 
     if (isSameFloatingWindowOpen) {
-      closeFloatingArtifactOverlay();
       return;
     }
-
-    closeFloatingArtifactOverlay();
 
     const floatingWindowHotspot = {
       id: nextHotspotId,
@@ -2082,45 +2081,75 @@
         glbSrc: args.glbSrc || "",
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
+        windowHotspotId: nextHotspotId,
+        windowSceneId: sceneId,
       },
     };
 
     try {
       tourViewer.addHotSpot(floatingWindowHotspot, sceneId);
-      floatingArtifactHotspotId = nextHotspotId;
-      floatingArtifactHotspotSceneId = sceneId;
+      floatingArtifactHotspots.set(artifactHotspotKey, {
+        hotspotId: nextHotspotId,
+        sceneId,
+      });
     } catch (error) {
       console.error("Unable to open floating artifact.", error);
     }
   }
 
-  function closeFloatingImageOverlay() {
-    if (tourViewer && floatingImageHotspotId && floatingImageHotspotSceneId) {
+  function closeFloatingImageOverlay(hotspotId, sceneId) {
+    const hasSpecificHotspot = Boolean(hotspotId && sceneId);
+
+    if (!hasSpecificHotspot) {
+      Array.from(floatingImageHotspots.values()).forEach(function (entry) {
+        closeFloatingImageOverlay(entry.hotspotId, entry.sceneId);
+      });
+      return;
+    }
+
+    const imageHotspotKey = `${sceneId}::${hotspotId}`;
+    const hotspotEntry = floatingImageHotspots.get(imageHotspotKey);
+
+    if (tourViewer && hotspotEntry) {
       try {
-        tourViewer.removeHotSpot(floatingImageHotspotId, floatingImageHotspotSceneId);
+        tourViewer.removeHotSpot(hotspotEntry.hotspotId, hotspotEntry.sceneId);
       } catch (error) {
         console.warn("Unable to remove floating hotspot image.", error);
       }
     }
 
     hideFloatingImagePreviewOverlay();
-    stopFloatingImageAudio();
-    floatingImageHotspotId = "";
-    floatingImageHotspotSceneId = "";
+
+    if (hotspotEntry && hotspotEntry.audioSrc && floatingImageAudioSrc === hotspotEntry.audioSrc) {
+      stopFloatingImageAudio();
+    }
+
+    floatingImageHotspots.delete(imageHotspotKey);
   }
 
-  function closeFloatingArtifactOverlay() {
-    if (tourViewer && floatingArtifactHotspotId && floatingArtifactHotspotSceneId) {
+  function closeFloatingArtifactOverlay(hotspotId, sceneId) {
+    const hasSpecificHotspot = Boolean(hotspotId && sceneId);
+
+    if (!hasSpecificHotspot) {
+      Array.from(floatingArtifactHotspots.values()).forEach(function (entry) {
+        closeFloatingArtifactOverlay(entry.hotspotId, entry.sceneId);
+      });
+      return;
+    }
+
+    const artifactHotspotKey = `${sceneId}::${hotspotId}`;
+    const hotspotEntry = floatingArtifactHotspots.get(artifactHotspotKey);
+
+    if (tourViewer && hotspotEntry) {
       try {
-        tourViewer.removeHotSpot(floatingArtifactHotspotId, floatingArtifactHotspotSceneId);
+        tourViewer.removeHotSpot(hotspotEntry.hotspotId, hotspotEntry.sceneId);
       } catch (error) {
         console.warn("Unable to remove floating artifact.", error);
       }
     }
 
     hideFloatingArtifactPreviewOverlay();
-    floatingArtifactHotspotId = "";
-    floatingArtifactHotspotSceneId = "";
+    floatingArtifactHotspots.delete(artifactHotspotKey);
   }
 
   function downloadImageDataUrl(dataUrl) {
@@ -2393,7 +2422,7 @@
       return;
     }
 
-    if (event.key === "Escape" && floatingArtifactHotspotId) {
+    if (event.key === "Escape" && floatingArtifactHotspots.size) {
       closeFloatingArtifactOverlay();
       return;
     }
@@ -2403,7 +2432,7 @@
       return;
     }
 
-    if (event.key === "Escape" && floatingImageHotspotId) {
+    if (event.key === "Escape" && floatingImageHotspots.size) {
       closeFloatingImageOverlay();
       return;
     }
@@ -2575,12 +2604,16 @@
         updateHotspotVisibilityState();
 
         viewer.on("scenechange", function (sceneId) {
-          if (floatingImageHotspotSceneId && floatingImageHotspotSceneId !== sceneId) {
-            closeFloatingImageOverlay();
-          }
-          if (floatingArtifactHotspotSceneId && floatingArtifactHotspotSceneId !== sceneId) {
-            closeFloatingArtifactOverlay();
-          }
+          Array.from(floatingImageHotspots.values()).forEach(function (entry) {
+            if (entry.sceneId !== sceneId) {
+              closeFloatingImageOverlay(entry.hotspotId, entry.sceneId);
+            }
+          });
+          Array.from(floatingArtifactHotspots.values()).forEach(function (entry) {
+            if (entry.sceneId !== sceneId) {
+              closeFloatingArtifactOverlay(entry.hotspotId, entry.sceneId);
+            }
+          });
           syncSceneInUrl(sceneId);
           window.requestAnimationFrame(updateHotspotVisibilityState);
         });
