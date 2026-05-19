@@ -94,7 +94,7 @@
   function initHighlightSwitcher() {
     var switchers = document.querySelectorAll("[data-highlight-switcher]");
 
-    switchers.forEach(function (switcher, index) {
+    switchers.forEach(function (switcher) {
       var tabs = Array.prototype.slice.call(
         switcher.querySelectorAll("[data-highlight-tab]")
       );
@@ -106,10 +106,15 @@
         return;
       }
 
-      var storageKey = "admin-highlight-tab-" + index;
-
       function setActivePanel(panelName) {
         var resolvedPanelName = String(panelName || "").trim().toLowerCase() || "active";
+        var hasMatch = panels.some(function (panel) {
+          return String(panel.getAttribute("data-highlight-panel") || "").trim().toLowerCase() === resolvedPanelName;
+        });
+
+        if (!hasMatch) {
+          resolvedPanelName = "active";
+        }
 
         tabs.forEach(function (tab) {
           var isActive = String(tab.getAttribute("data-highlight-tab") || "").trim().toLowerCase() === resolvedPanelName;
@@ -122,12 +127,6 @@
           panel.classList.toggle("is-active", isActive);
           panel.hidden = !isActive;
         });
-
-        try {
-          window.localStorage.setItem(storageKey, resolvedPanelName);
-        } catch (error) {
-          return;
-        }
       }
 
       tabs.forEach(function (tab) {
@@ -136,13 +135,7 @@
         });
       });
 
-      var initialPanel = "active";
-      try {
-        initialPanel = window.localStorage.getItem(storageKey) || initialPanel;
-      } catch (error) {
-        initialPanel = "active";
-      }
-      setActivePanel(initialPanel);
+      setActivePanel("active");
     });
   }
 
