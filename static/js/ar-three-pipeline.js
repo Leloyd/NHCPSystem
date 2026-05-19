@@ -503,23 +503,26 @@
     return [];
   }
 
-  function getVisibleTausugEntry() {
-    for (var index = 0; index < runtime.markerEntries.length; index += 1) {
-      var entry = runtime.markerEntries[index];
-      if (
+  function getActivelyVisibleEntries() {
+    return runtime.markerEntries.filter(function (entry) {
+      return Boolean(
         entry &&
-        entry.key === TAUSUG_KEY &&
-        entry.trackingRoot &&
-        entry.trackingRoot.visible &&
-        entry.renderRoot &&
-        entry.renderRoot.visible &&
-        entry.modelLoaded
-      ) {
-        return entry;
-      }
+          entry.trackingRoot &&
+          entry.trackingRoot.visible &&
+          entry.renderRoot &&
+          entry.renderRoot.visible &&
+          entry.modelLoaded
+      );
+    });
+  }
+
+  function getVisibleTausugEntry() {
+    var visibleEntries = getActivelyVisibleEntries();
+    if (visibleEntries.length !== 1) {
+      return null;
     }
 
-    return null;
+    return visibleEntries[0].key === TAUSUG_KEY ? visibleEntries[0] : null;
   }
 
   function updateTausugSwitcherVisibility() {
