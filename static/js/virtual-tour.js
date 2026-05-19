@@ -14,7 +14,6 @@
   const controlDock = document.getElementById("tourControlDock");
   const toggleSceneHotspotsButton = document.getElementById("tourToggleSceneHotspots");
   const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
-  const playArtifactAlternateAudioButton = document.getElementById("tourPlayArtifactAlternateAudio");
   const captureViewButton = document.getElementById("tourCaptureView");
   const toggleFullscreenButton = document.getElementById("tourToggleFullscreen");
   const backToExhibitsButton = document.getElementById("tourBackToExhibits");
@@ -166,7 +165,6 @@
   const floatingArtifactHotspots = new Map();
   let floatingArtifactAudioLanguage = "tl";
   let activeFloatingArtifactAudioConfig = null;
-  let activeFloatingArtifactAlternateAudioSrc = "";
   let floatingImageAudio = null;
   let floatingImageAudioSrc = "";
   const balanghayArtifactCopy = {
@@ -427,8 +425,8 @@
     }),
     buildFloatingArtifactHotspot({
       id: "museum3-recuerdos-marker",
-      pitch: -28.09,
-      yaw: 104.25,
+      pitch: -22.93,
+      yaw: 78.03,
       imageSrc: museum3ArtifactAssets.recuerdos.imageSrc,
       imageAlt: "Recuerdos",
       glbSrc: museum3ArtifactAssets.recuerdos.glbSrc,
@@ -1925,14 +1923,6 @@
       }
     }
 
-    if (playArtifactAlternateAudioButton) {
-      const alternateAudioEnabled = Boolean(activeFloatingArtifactAlternateAudioSrc);
-      playArtifactAlternateAudioButton.hidden = !alternateAudioEnabled;
-      playArtifactAlternateAudioButton.classList.toggle("tour-control-dock__action--inactive", !alternateAudioEnabled);
-      playArtifactAlternateAudioButton.setAttribute("aria-disabled", alternateAudioEnabled ? "false" : "true");
-      playArtifactAlternateAudioButton.disabled = !alternateAudioEnabled;
-      playArtifactAlternateAudioButton.setAttribute("aria-pressed", "false");
-    }
   }
 
   function syncFullscreenButton() {
@@ -2378,7 +2368,6 @@
   function clearFloatingArtifactAudioState() {
     stopFloatingImageAudio();
     activeFloatingArtifactAudioConfig = null;
-    activeFloatingArtifactAlternateAudioSrc = "";
     floatingArtifactAudioLanguage = "tl";
     updateHotspotVisibilityState();
   }
@@ -2489,6 +2478,13 @@
     imageButton.className = "tour-floating-image-window-trigger";
     imageButton.type = "button";
 
+    const alternateAudioButton = document.createElement("button");
+    alternateAudioButton.className = "tour-floating-media-window-audio-button";
+    alternateAudioButton.type = "button";
+    alternateAudioButton.setAttribute("aria-label", "Play Pahimakas march audio");
+    alternateAudioButton.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path></svg>';
+    alternateAudioButton.hidden = !args.alternateAudioSrc;
+
     const image = document.createElement("img");
     image.className = "tour-floating-image-window";
     image.src = args.imageSrc;
@@ -2543,6 +2539,7 @@
       const showModelNav = !isImageView && glbSources.length > 1;
       const currentGlbIndex = getArtifactGlbIndex(args);
 
+      alternateAudioButton.hidden = !args.alternateAudioSrc || !isImageView;
       imageButton.hidden = !isImageView;
       imageButton.style.display = isImageView ? "block" : "none";
       image.hidden = !isImageView;
@@ -2572,6 +2569,17 @@
       event.preventDefault();
       event.stopPropagation();
       syncView(currentView === "image" ? "glb" : "image");
+    });
+
+    alternateAudioButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      if (!args.alternateAudioSrc) {
+        return;
+      }
+
+      stopFloatingImageAudio();
+      playFloatingImageAudio(args.alternateAudioSrc);
     });
 
     prevButton.addEventListener("click", function (event) {
@@ -2641,6 +2649,7 @@
     switchButton.appendChild(switchIcon);
     switchButton.appendChild(switchLabel);
     panel.appendChild(switchButton);
+    panel.appendChild(alternateAudioButton);
     panel.appendChild(imageButton);
     panel.appendChild(model);
     modelNav.appendChild(prevButton);
@@ -2723,8 +2732,6 @@
 
     forceCloseAllFloatingOverlays();
 
-    activeFloatingArtifactAlternateAudioSrc = artifactAlternateAudioSrc;
-
     if (artifactAudioByLanguage && (artifactAudioByLanguage.tl || artifactAudioByLanguage.en)) {
       playFloatingArtifactAudio(artifactAudioByLanguage, "tl");
     } else {
@@ -2745,6 +2752,7 @@
         glbSrc: args.glbSrc || "",
         glbSources: Array.isArray(args.glbSources) ? args.glbSources.filter(Boolean) : [],
         audioByLanguage: artifactAudioByLanguage,
+        alternateAudioSrc: artifactAlternateAudioSrc,
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
         currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,
@@ -3133,17 +3141,6 @@
 
       const nextLanguage = floatingArtifactAudioLanguage === "tl" ? "en" : "tl";
       playFloatingArtifactAudio(activeFloatingArtifactAudioConfig, nextLanguage);
-    });
-  }
-
-  if (playArtifactAlternateAudioButton) {
-    playArtifactAlternateAudioButton.addEventListener("click", function () {
-      if (!activeFloatingArtifactAlternateAudioSrc) {
-        return;
-      }
-
-      stopFloatingImageAudio();
-      playFloatingImageAudio(activeFloatingArtifactAlternateAudioSrc);
     });
   }
 

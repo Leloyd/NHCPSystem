@@ -128,10 +128,10 @@
       data-luksa-image-src="{{ url_for('artifact_asset_file', filename='Luksa/Luksa.png') }}"
       data-luksa-glb-src="{{ url_for('artifact_asset_file', filename='Luksa/Luksa-512(10k).glb') }}"
       data-mensahe-image-src="{{ url_for('artifact_asset_file', filename='Mensahe/Mensahe.png') }}"
-      data-pahiwatig-image-src="{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwatig.png') }}"
-      data-pahiwatig-glb-src="{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwating.glb') }}"
-      data-recuerdos-image-src="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}"
-      data-recuerdos-glb-src="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}"
+      data-pahiwatig-image-src="{{ url_for('public_file', filename='AR-Artifacts/Pahiwatig/Pahiwatig.png') }}"
+      data-pahiwatig-glb-src="{{ url_for('public_file', filename='AR-Artifacts/Pahiwatig/Pahiwating.glb') }}"
+      data-recuerdos-image-src="{{ url_for('public_file', filename='AR-Artifacts/Recuerdos/Recuerdos.png') }}"
+      data-recuerdos-glb-src="{{ url_for('public_file', filename='AR-Artifacts/Recuerdos/Recuerdos-512(10k).glb') }}"
       data-front-gate-hotspot-h1-src="{{ url_for('virtual_tour_hotspot_file', filename='FrontGateHotspot/H1.jpg') }}"
       data-front-gate-hotspot-h1-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='FrontGateHotspot/FrontGateH1.mp3') }}"
     >
@@ -167,14 +167,6 @@
             </svg>
           </span>
           <span class="tour-control-dock__label">Audio</span>
-        </button>
-        <button class="tour-control-dock__action tour-control-dock__action--inactive" id="tourPlayArtifactAlternateAudio" type="button" aria-label="Play alternate artifact audio" aria-pressed="false" aria-disabled="true" hidden>
-          <span class="tour-control-dock__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path>
-            </svg>
-          </span>
-          <span class="tour-control-dock__label">March</span>
         </button>
         <button class="tour-control-dock__camera" id="tourCaptureView" type="button" aria-label="Capture current view">
           <span class="tour-control-dock__camera-icon" aria-hidden="true">

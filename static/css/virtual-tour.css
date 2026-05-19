@@ -543,6 +543,31 @@ body {
   height: 100%;
 }
 
+.tour-floating-media-window-audio-button {
+  position: absolute;
+  left: 0.9rem;
+  bottom: 0.9rem;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 999px;
+  background: rgba(15, 23, 42, 0.82);
+  color: #f8fafc;
+  cursor: pointer;
+  box-shadow: 0 0.85rem 2rem rgba(15, 23, 42, 0.34);
+  backdrop-filter: blur(10px);
+}
+
+.tour-floating-media-window-audio-button svg {
+  width: 1.35rem;
+  height: 1.35rem;
+}
+
 .tour-floating-media-window-model-nav {
   position: absolute;
   left: 50%;
@@ -1136,6 +1161,18 @@ body {
     bottom: -0.85rem;
     width: 2.25rem;
     height: 2.25rem;
+  }
+
+  .tour-floating-media-window-audio-button {
+    left: 0.7rem;
+    bottom: 0.7rem;
+    width: 2.2rem;
+    height: 2.2rem;
+  }
+
+  .tour-floating-media-window-audio-button svg {
+    width: 1.05rem;
+    height: 1.05rem;
   }
 
   .tour-floating-media-window-model-nav {
