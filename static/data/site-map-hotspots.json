@@ -99,7 +99,9 @@
           "src": "/static/SiteMap/Museum/Museum.png",
           "alt": "Museum at the Nagcarlan Underground Cemetery"
         }
-      ]
+      ],
+      "learnMore": "/online-gallery",
+      "learnMoreLabel": "Online Gallery"
     },
     {
       "id": "resource-center-office",

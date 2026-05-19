@@ -106,6 +106,7 @@
     mapInfoMeta: document.getElementById("mapInfoMeta"),
     stopMedia: document.getElementById("mapInfoMedia"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
+    stopLinks: document.getElementById("mapInfoLinks"),
   };
 
   if (!elements.mapRoot || !window.L) {
@@ -253,6 +254,7 @@
       panorama: normalizePanoramaCoordinates(raw.panorama),
       media: Array.isArray(raw.media) ? raw.media : [],
       learnMore: raw.learnMore ? String(raw.learnMore) : "",
+      learnMoreLabel: raw.learnMoreLabel ? String(raw.learnMoreLabel) : "",
       view360: raw.view360 ? String(raw.view360) : "",
       arModel: raw.arModel ? String(raw.arModel) : "",
       audio: raw.audio ? String(raw.audio) : "",
@@ -1028,13 +1030,14 @@
     }
 
     elements.stopLinks.innerHTML = "";
+    elements.stopLinks.hidden = true;
 
     if (!stop) {
       return;
     }
 
     [
-      { href: stop.learnMore, text: "Learn More" },
+      { href: stop.learnMore, text: stop.learnMoreLabel || "Learn More" },
       { href: stop.view360, text: "360 View" },
       { href: stop.arModel, text: "AR / 3D" },
       { href: stop.audio, text: "Audio" },
@@ -1053,6 +1056,8 @@
       link.textContent = linkMeta.text;
       elements.stopLinks.appendChild(link);
     });
+
+    elements.stopLinks.hidden = !elements.stopLinks.childElementCount;
   }
 
   function hideMapInfoOverlay() {
@@ -1167,6 +1172,7 @@
     elements.mapInfoMeta.hidden = true;
     renderMedia(stop);
     elements.mapInfoSummary.textContent = getLocalizedDescription(stop);
+    renderLinks(stop);
     playHotspotAudio(stop);
 
     positionMapInfoOverlay(stop);
