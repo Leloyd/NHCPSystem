@@ -9,6 +9,15 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;1,400;1,500&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing-guide.css') }}" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/webxr/static/vendor/three/three.module.js",
+          "three/addons/": "/webxr/static/vendor/three/examples/jsm/"
+        }
+      }
+    </script>
   </head>
   <body class="min-h-screen overflow-x-hidden" style="background-color: #FAF7F2;">
     {% set public_active_page = 'home' %}
@@ -527,6 +536,53 @@
 
 
     </main>
+
+    <!-- ===================== Ana Kalang — Interactive Heritage Guide ===================== -->
+    <!-- Launcher (visible when the guide is minimized) -->
+    <button id="anaLauncher" class="ana-launcher" type="button" aria-label="Open Ana Kalang, your heritage guide" hidden>
+      <span class="ana-launcher__avatar" aria-hidden="true"></span>
+      <span class="ana-launcher__label">
+        <strong>Ana Kalang</strong>
+        <span>Your guide · tap to listen</span>
+      </span>
+    </button>
+
+    <!-- Guide dock -->
+    <aside id="anaGuide" class="ana-guide" data-model-url="{{ url_for('static', filename='models/ana-kalang/ana-kalang.glb') }}" aria-label="Ana Kalang heritage guide">
+      <!-- Speech bubble -->
+      <div class="ana-guide__bubble">
+        <p class="ana-guide__eyebrow" data-ana-eyebrow>Ana Kalang says</p>
+        <p class="ana-guide__text" data-ana-text aria-live="polite"></p>
+      </div>
+
+      <!-- 3D stage -->
+      <div class="ana-guide__stage">
+        <div class="ana-guide__canvas-wrap" data-ana-canvas>
+          <div class="ana-guide__loading" data-ana-loading>Summoning your guide…</div>
+          <div class="ana-guide__nameplate">Ana Kalang<span>Guardian of Nagcarlan</span></div>
+        </div>
+
+        <!-- Controls -->
+        <div class="ana-guide__controls">
+          <button class="ana-btn ana-btn--primary" type="button" data-ana-play aria-pressed="false" aria-label="Play narration">
+            <svg class="ana-ico--play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+            <svg class="ana-ico--pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+            <span>Listen</span>
+          </button>
+          <button class="ana-btn" type="button" data-ana-mute aria-pressed="false" aria-label="Mute narration">
+            <svg class="ana-ico--sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>
+            <svg class="ana-ico--sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+          </button>
+          <button class="ana-btn ana-btn--lang" type="button" data-ana-lang aria-label="Switch narration language">EN</button>
+          <span class="ana-guide__spacer"></span>
+          <button class="ana-btn" type="button" data-ana-minimize aria-label="Minimize guide">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+        </div>
+      </div>
+    </aside>
+    <script type="module" src="{{ url_for('static', filename='js/landing-guide.js') }}"></script>
+    <!-- =================== End Ana Kalang Interactive Heritage Guide =================== -->
 
     {% include 'partials/_public_footer.html' %}
 
