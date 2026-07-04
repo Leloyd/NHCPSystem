@@ -27,8 +27,6 @@
     var publicAccountToggle = document.getElementById("publicAccountDropdownToggle");
     var mobileMenu = document.getElementById("mobileMenu");
     var menuToggle = document.getElementById("menuToggle");
-    var scrollThreshold = 100;
-    var isScrolled = false;
     var isMobileMenuOpen = false;
 
     function applyWhiteBackground() {
@@ -97,29 +95,17 @@
       }
     }
 
-    function updateNavOnScroll() {
-      var scrollY = window.pageYOffset || document.documentElement.scrollTop;
-
-      if (scrollY > scrollThreshold && !isScrolled) {
-        isScrolled = true;
-        applyWhiteBackground();
-      } else if (scrollY <= scrollThreshold && isScrolled && !isMobileMenuOpen) {
-        isScrolled = false;
-        applyTransparentBackground();
-      }
-    }
-
+    // The landing nav stays transparent while scrolling (the immersive stage
+    // is dark end-to-end). The white background only applies while the mobile
+    // menu is open, for readability.
     if (menuToggle && mobileMenu) {
       menuToggle.addEventListener("click", function () {
         isMobileMenuOpen = !mobileMenu.classList.contains("hidden");
-        
+
         if (isMobileMenuOpen) {
           applyWhiteBackground();
         } else {
-          var scrollY = window.pageYOffset || document.documentElement.scrollTop;
-          if (scrollY <= scrollThreshold) {
-            applyTransparentBackground();
-          }
+          applyTransparentBackground();
         }
       });
     }
@@ -129,21 +115,10 @@
 
       if (isMobileMenuOpen) {
         applyWhiteBackground();
-        return;
-      }
-
-      var scrollY = window.pageYOffset || document.documentElement.scrollTop;
-      if (scrollY <= scrollThreshold) {
-        isScrolled = false;
-        applyTransparentBackground();
       } else {
-        isScrolled = true;
-        applyWhiteBackground();
+        applyTransparentBackground();
       }
     });
-
-    window.addEventListener("scroll", updateNavOnScroll, { passive: true });
-    updateNavOnScroll();
   }
 
   function initGSAPAnimations() {
