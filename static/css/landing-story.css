@@ -11,11 +11,19 @@
   --story-cream: #faf7f2;
 }
 
+/* `overflow-x: hidden` on html/body breaks position:sticky (the stage was
+   scrolling away instead of pinning). `clip` prevents horizontal overflow
+   WITHOUT creating a scroll container, so the sticky stage works. */
+html,
+body {
+  overflow-x: clip !important;
+}
+
 /* Scroll track: tall wrapper; the viewport inside stays stuck. ------------- */
 .story {
   position: relative;
-  /* 4 chapters x 120vh of scroll each */
-  height: 480vh;
+  /* 6 chapters x 120vh of scroll each */
+  height: 720vh;
   background-color: #0d0a04;
 }
 
@@ -26,7 +34,7 @@
   overflow: hidden;
 }
 
-/* Background layers (kept from the original hero) -------------------------- */
+/* Background layers: default underground shot + per-chapter crossfades ----- */
 .story__bg,
 .story__bg-tint,
 .story__bg-texture {
@@ -36,6 +44,20 @@
 .story__bg {
   background-size: cover;
   background-position: center;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  animation: story-bg-drift 30s ease-in-out infinite alternate; /* slow Ken Burns */
+  will-change: opacity, transform;
+}
+.story__bg[data-bg="default"] { opacity: 1; }
+.story__viewport[data-chapter="testament"] .story__bg[data-bg="testament"],
+.story__viewport[data-chapter="about"] .story__bg[data-bg="about"],
+.story__viewport[data-chapter="visitor-info"] .story__bg[data-bg="visitor-info"] {
+  opacity: 1;
+}
+@keyframes story-bg-drift {
+  from { transform: scale(1.03) translateY(0); }
+  to { transform: scale(1.1) translateY(-1.4%); }
 }
 .story__bg-tint {
   background: linear-gradient(180deg, rgba(13, 10, 4, 0.8) 0%, rgba(28, 18, 8, 0.65) 50%, rgba(13, 10, 4, 0.9) 100%);
@@ -508,6 +530,146 @@
   .story-chapter { padding-top: 6.4rem; }
 }
 
+/* Loading overlay ------------------------------------------------------------- */
+.story__loader {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.4rem;
+  background: #0d0a04;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
+}
+.story__loader.is-done { opacity: 0; visibility: hidden; pointer-events: none; }
+.story__loader-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 106, 0.25);
+  border-top-color: var(--story-gold);
+  animation: story-spin 1.1s linear infinite;
+}
+.story__loader p {
+  margin: 0;
+  text-align: center;
+  color: var(--story-cream);
+  font-family: "Playfair Display", serif;
+  font-size: 1.15rem;
+  animation: story-breathe 2.2s ease-in-out infinite;
+}
+.story__loader p span {
+  display: block;
+  margin-top: 0.4rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(212, 175, 106, 0.8);
+}
+@keyframes story-spin { to { transform: rotate(360deg); } }
+@keyframes story-breathe { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+
+/* Cursor glow (mouse animation) ------------------------------------------------ */
+.story__cursor {
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 6;
+  width: 26rem;
+  height: 26rem;
+  margin: -13rem 0 0 -13rem;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(212, 175, 106, 0.13) 0%, transparent 60%);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  will-change: transform;
+}
+.story__cursor.is-on { opacity: 1; }
+@media (pointer: coarse) { .story__cursor { display: none; } }
+
+/* Wide chapters (Visitor Info, Rules) ------------------------------------------ */
+.story-chapter--wide { width: min(760px, 58vw); }
+
+/* Info cards (Visitor Info chapter) --------------------------------------------- */
+.story-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+}
+.story-card {
+  padding: 1rem 1.1rem;
+  border: 1px solid rgba(212, 175, 106, 0.25);
+  background: rgba(250, 247, 242, 0.06);
+  backdrop-filter: blur(8px);
+  transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), border-color 0.3s ease, background 0.3s ease;
+}
+.story-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 106, 0.65);
+  background: rgba(250, 247, 242, 0.1);
+}
+.story-card h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.5rem;
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: 1.05rem;
+  font-weight: 500;
+}
+.story-card h3 svg { width: 1rem; height: 1rem; color: var(--story-gold); flex: 0 0 auto; }
+.story-card p {
+  margin: 0 0 0.2rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: "Inter", sans-serif;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+.story-card a { color: var(--story-gold); font-size: 0.74rem; text-decoration: none; }
+.story-card a:hover { color: #e8c97a; }
+
+/* Rules grid (Museum Rules chapter) ---------------------------------------------- */
+.story-rules {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.45rem 1.1rem;
+}
+.story-rule {
+  padding: 0.5rem 0.4rem;
+  border-radius: 4px;
+  transition: background 0.25s ease, transform 0.25s ease;
+}
+.story-rule:hover { background: rgba(212, 175, 106, 0.08); transform: translateX(3px); }
+.story-rule h3 {
+  display: flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  margin: 0 0 0.2rem;
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+.story-rule h3::before { content: "◆"; font-size: 0.5rem; color: var(--story-gold); }
+.story-rule p {
+  margin: 0 0 0 0.95rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-family: "Inter", sans-serif;
+  font-size: 0.72rem;
+  line-height: 1.5;
+}
+
+@media (max-width: 768px) {
+  .story-cards, .story-rules { grid-template-columns: 1fr; }
+  .story-chapter--wide { width: auto; }
+}
+
 /* Reduced motion -------------------------------------------------------------- */
 @media (prefers-reduced-motion: reduce) {
   .story-chapter,
@@ -519,4 +681,6 @@
   }
   .story__hint::after { animation: none; }
   .story__bubble-text .ana-cursor { animation: none; }
+  .story__bg { animation: none; }
+  .story__cursor { display: none; }
 }

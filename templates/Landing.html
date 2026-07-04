@@ -19,9 +19,15 @@
       }
     </script>
   </head>
-  <body class="min-h-screen overflow-x-hidden" style="background-color: #FAF7F2;">
+  <body class="min-h-screen" style="background-color: #0D0A04;">
     {% set public_active_page = 'home' %}
     {% include 'partials/_public_top_nav.html' %}
+
+    <!-- Loading overlay -->
+    <div class="story__loader" data-story-loader>
+      <div class="story__loader-ring" aria-hidden="true"></div>
+      <p>Museo ng Libingan<span>Summoning Ana Kalang…</span></p>
+    </div>
 
     <main>
       <!-- ============== Ana Kalang Story — scroll-driven narrative stage ============== -->
@@ -29,18 +35,23 @@
         id="anaStory"
         class="story"
         data-model-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-idle-1K.glb"
-        aria-label="Guided introduction by Ana Kalang"
+        aria-label="Guided tour of the museum by Ana Kalang"
       >
-        <div class="story__viewport" data-story-viewport data-model-side="right" data-muted="false" data-playing="false">
-          <!-- Background (kept from the original hero) -->
-          <div class="story__bg" style="background-image: url('/images/UndergroundBG.png');"></div>
+        <div class="story__viewport" data-story-viewport data-model-side="right" data-chapter="hero" data-muted="false" data-playing="false">
+          <!-- Background layers: default + per-chapter crossfades -->
+          <div class="story__bg" data-bg="default" style="background-image: url('/images/UndergroundBG.png');"></div>
+          <div class="story__bg" data-bg="testament" style="background-image: url('{{ url_for('static', filename='images/living-testament.jpg') }}');"></div>
+          <div class="story__bg" data-bg="about" style="background-image: url('{{ url_for('static', filename='images/about-site.jpg') }}');"></div>
+          <div class="story__bg" data-bg="visitor-info" style="background-image: url('{{ url_for('static', filename='images/visitors-info.jpg') }}');"></div>
           <div class="story__bg-tint"></div>
           <div class="story__bg-texture"></div>
           <div class="story__glow" aria-hidden="true"></div>
 
           <!-- Ana Kalang 3D stage -->
           <div class="story__canvas" data-story-canvas aria-hidden="true"></div>
-          <div class="story__hint" data-story-loading style="bottom: auto; top: 46vh;">Summoning your guide…</div>
+
+          <!-- Cursor glow (mouse animation) -->
+          <div class="story__cursor" data-story-cursor aria-hidden="true"></div>
 
           <!-- Speech bubble -->
           <div class="story__bubble" role="status">
@@ -75,7 +86,7 @@
             </article>
 
             <!-- Chapter 2 · A Living Testament -->
-            <article class="story-chapter" data-chapter="testament" data-side="left" data-title="Testament">
+            <article class="story-chapter" data-chapter="testament" data-side="right" data-title="Testament">
               <div class="story-label">
                 <span class="story-label__line"></span>
                 <span class="story-label__text">Living Testament to History</span>
@@ -138,14 +149,11 @@
                 <p class="story-copy">
                   THE NAGCARLAN Cemetery became a stronghold for Filipino guerrillas during the Japanese occupation. Colonel Guillermo "Billy" Igay Aynaga Sr., founder of the First Laguna Division of the Fil-American Irregular Troops, led the movement until his capture and death in 1944. His remains were later moved to the Libingan ng mga Bayani.
                 </p>
-                <figure class="story-figure">
-                  <img src="{{ url_for('static', filename='images/about-site.jpg') }}" alt="Underground Cemetery Architecture" />
-                </figure>
               </div>
             </article>
 
             <!-- Chapter 4 · Cemetery History -->
-            <article class="story-chapter" data-chapter="history" data-side="left" data-title="History">
+            <article class="story-chapter" data-chapter="history" data-side="right" data-title="History">
               <div class="story-label">
                 <span class="story-label__line"></span>
                 <span class="story-label__text">Historical Journey</span>
@@ -185,6 +193,112 @@
                 </div>
               </div>
             </article>
+
+            <!-- Chapter 5 · Visitor Information -->
+            <article class="story-chapter story-chapter--wide" data-chapter="visitor-info" data-side="left" data-title="Visit">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Plan Your Visit</span>
+              </div>
+              <h2>
+                Visitor<br />
+                <em>Information</em>
+              </h2>
+              <div class="story-cards">
+                <div class="story-card">
+                  <h3>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Hours
+                  </h3>
+                  <p>Tuesday - Sunday</p>
+                  <p>8:00 AM - 4:00 PM</p>
+                  <p style="color: #D4AF6A;">Closed on Mondays</p>
+                </div>
+                <div class="story-card">
+                  <h3>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                    Location
+                  </h3>
+                  <p>Rizal Ave., Barangay Bambang, Nagcarlan, Laguna, 4002</p>
+                  <a href="https://www.google.com/maps/place/NHCP+Museo+ng+Libingan+sa+Ilalim+ng+Lupa+ng+Nagcarlan/@14.1310486,121.4141209,548m/data=!3m1!1e3!4m6!3m5!1s0x33bd5a26f2223a8b:0xb0f711a572efc1e8!8m2!3d14.1311373!4d121.4151153!16s%2Fm%2F01113j70?entry=ttu&g_ep=EgoyMDI2MDQxMi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer">View Map →</a>
+                </div>
+                <div class="story-card">
+                  <h3>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                    Admission
+                  </h3>
+                  <p>Free for All</p>
+                </div>
+                <div class="story-card">
+                  <h3>
+                    <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path></svg>
+                    Contact
+                  </h3>
+                  <p>+63 915 249 1151</p>
+                  <p style="word-break: break-all;">museum.undergroundnagcarlan@gmail.com</p>
+                </div>
+              </div>
+            </article>
+
+            <!-- Chapter 6 · Museum Rules -->
+            <article class="story-chapter story-chapter--wide" data-chapter="rules" data-side="right" data-title="Rules">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Responsible Visiting</span>
+              </div>
+              <h2>
+                Museum<br />
+                <em>Rules</em>
+              </h2>
+              <div class="story-chapter__scroll">
+                <div class="story-rules">
+                  <div class="story-rule">
+                    <h3>Observe Silence</h3>
+                    <p>Observe silence, be mindful of other guests, and do not loiter inside the museum.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Dress Respectfully</h3>
+                    <p>Hats and caps must be removed as a sign of respect to the museum and historical landmark.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Photography Permission</h3>
+                    <p>No flash photography. Video and photo shoots are allowed only with permission from the museum management.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Protect Displays</h3>
+                    <p>Do not touch displays and artifacts.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>No Food or Drinks</h3>
+                    <p>Do not eat or drink inside the museum and chapel.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Logbook Registration</h3>
+                    <p>Visitors are required to sign the guest book or logbook upon arrival. For larger groups, the coordinator will register the group on their behalf.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Follow Guide Instructions</h3>
+                    <p>Always follow your museum guide's instructions. In case of emergency, stay calm and follow your museum guide's safety instructions.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Animals Policy</h3>
+                    <p>Pets and other animals are not allowed inside the museum. However, animals required by individuals with physical or mental health disabilities to assist with mobility or stability are permitted if they are properly controlled and restrained.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Dispose Waste Properly</h3>
+                    <p>All waste must be properly disposed of in designated trash cans or bins to help maintain the cleanliness and integrity of the site.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Visitor Limit Control</h3>
+                    <p>Museum personnel have the authority to limit the number of visitors inside the museum to prevent overcrowding and disruptive behavior.</p>
+                  </div>
+                  <div class="story-rule">
+                    <h3>Right to Deny Entry</h3>
+                    <p>The Curator or Officer-in-Charge has the authority to deny entry or remove visitors who are unruly, noisy, intoxicated, or who refuse to comply with the museum's rules and regulations.</p>
+                  </div>
+                </div>
+              </div>
+            </article>
           </div>
 
           <!-- Guide controls -->
@@ -210,262 +324,6 @@
         </div>
       </section>
       <!-- ============================ End Ana Kalang Story ============================ -->
-
-      <!-- Visitor Info Section -->
-      <section id="visitor-info" class="relative py-20 overflow-hidden">
-        <!-- Background image with overlay -->
-        <img src="{{ url_for('static', filename='images/visitors-info.jpg') }}" alt="Visitor information" class="absolute inset-0 h-full w-full object-cover" />
-        <div class="absolute inset-0 bg-gradient-to-br from-[#1C1208]/90 via-[#0D0A04]/85 to-[#1C1208]/90"></div>
-
-        <div class="relative z-10 max-w-6xl mx-auto px-6">
-          <!-- Section label -->
-          <div class="flex items-center gap-3 mb-5">
-            <div class="h-px w-10 bg-[#D4AF6A]"></div>
-            <span class="text-[#D4AF6A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Plan Your Visit</span>
-          </div>
-
-          <h2 class="text-white mb-12 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
-            Visitor<br />
-            <em style="font-style: italic; color: #D4AF6A;">Information</em>
-          </h2>
-
-          <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <!-- Hours card -->
-            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
-              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Hours</h3>
-              <p class="text-[#4A3B2E] text-sm mb-1" style="font-family: 'Inter', sans-serif;">Tuesday - Sunday</p>
-              <p class="text-[#4A3B2E] text-sm mb-2" style="font-family: 'Inter', sans-serif;">8:00 AM - 4:00 PM</p>
-              <p class="text-[#B8923A] text-xs" style="font-family: 'Inter', sans-serif;">Closed on Mondays</p>
-            </div>
-
-            <!-- Location card -->
-            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
-              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-              </div>
-              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Location</h3>
-              <p class="text-[#4A3B2E] text-sm mb-2" style="font-family: 'Inter', sans-serif;">Rizal Ave., Barangay Bambang, Nagcarlan, Laguna, 4002</p>
-              <a href="https://www.google.com/maps/place/NHCP+Museo+ng+Libingan+sa+Ilalim+ng+Lupa+ng+Nagcarlan/@14.1310486,121.4141209,548m/data=!3m1!1e3!4m6!3m5!1s0x33bd5a26f2223a8b:0xb0f711a572efc1e8!8m2!3d14.1311373!4d121.4151153!16s%2Fm%2F01113j70?entry=ttu&g_ep=EgoyMDI2MDQxMi4wIKXMDSoASAFQAw%3D%3D" target="_blank" rel="noopener noreferrer" class="text-[#B8923A] text-xs hover:text-[#D4AF6A] transition-colors" style="font-family: 'Inter', sans-serif;">View Map →</a>
-            </div>
-
-            <!-- Admission card -->
-            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
-              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"></path>
-                </svg>
-              </div>
-              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Admission</h3>
-              <p class="text-[#4A3B2E] text-sm" style="font-family: 'Inter', sans-serif;">Free for All</p>
-            </div>
-
-            <!-- Contact card -->
-            <div class="bg-white/95 backdrop-blur-sm p-6 border border-[#D4AF6A]/20">
-              <div class="w-12 h-12 flex items-center justify-center mb-4" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
-                </svg>
-              </div>
-              <h3 class="text-[#1C1208] mb-3" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Contact</h3>
-              <p class="text-[#4A3B2E] text-sm mb-1" style="font-family: 'Inter', sans-serif;">+63 915 249 1151</p>
-              <p class="text-[#4A3B2E] text-xs break-all" style="font-family: 'Inter', sans-serif;">museum.undergroundnagcarlan@gmail.com</p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <!-- House Rules Section -->
-      <section id="rules" class="py-20" style="background-color: #FAF7F2;">
-        <div class="max-w-6xl mx-auto px-6">
-          <!-- Section label -->
-          <div class="flex items-center gap-3 mb-5">
-            <div class="h-px w-10 bg-[#B8923A]"></div>
-            <span class="text-[#B8923A] text-xs tracking-[0.3em] uppercase" style="font-family: 'Inter', sans-serif;">Responsible Visiting</span>
-          </div>
-
-          <h2 class="text-[#1C1208] mb-12 leading-tight" style="font-family: 'Playfair Display', serif; font-size: clamp(1.8rem, 4vw, 2.8rem); font-weight: 500; line-height: 1.2;">
-            Museum<br />
-            <em style="font-style: italic; color: #6B4F3A;">Rules</em>
-          </h2>
-
-          <div class="grid md:grid-cols-2 gap-8">
-            <!-- Rule 1 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Observe Silence</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Observe silence, be mindful of other guests, and do not loiter inside the museum.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 2 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Dress Respectfully</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Hats and caps must be removed as a sign of respect to the museum and historical landmark.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 3 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"></path>
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Photography Permission</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  No flash photography. Video and photo shoots are allowed only with permission from the museum management.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 4 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Protect Displays</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Do not touch displays and artifacts.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 5 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">No Food or Drinks</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Do not eat or drink inside the museum and chapel.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 6 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Logbook Registration</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Visitors are required to sign the guest book or logbook upon arrival. For larger groups, the coordinator will register the group on their behalf.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 7 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Follow Guide Instructions</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Always follow your museum guide's instructions. In case of emergency, stay calm and follow your museum guide's safety instructions.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 8 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-3-3h-1m-4 5H6a3 3 0 01-3-3v-1a4 4 0 014-4h2m4 8v-3a4 4 0 10-8 0v3m8 0h2a2 2 0 002-2v-1a4 4 0 00-4-4h-1"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Animals Policy</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Pets and other animals are not allowed inside the museum. However, animals required by individuals with physical or mental health disabilities to assist with mobility or stability are permitted if they are properly controlled and restrained.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 9 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 6h18M6 6V4h12v2m-9 0v14m6-14v14M5 6l1 14h12l1-14"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Dispose Waste Properly</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  All waste must be properly disposed of in designated trash cans or bins to help maintain the cleanliness and integrity of the site.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 10 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10m-11 9h12a2 2 0 002-2V7a2 2 0 00-2-2H6a2 2 0 00-2 2v11a2 2 0 002 2z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Visitor Limit Control</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  Museum personnel have the authority to limit the number of visitors inside the museum to prevent overcrowding and disruptive behavior.
-                </p>
-              </div>
-            </div>
-
-            <!-- Rule 11 -->
-            <div class="flex gap-4 items-start">
-              <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center border border-[#B8923A]/40" style="background-color: #F5EDD8;">
-                <svg class="w-6 h-6 text-[#B8923A]" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-7.938 4h15.876c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L2.34 16c-.77 1.333.192 3 1.732 3z"></path>
-                </svg>
-              </div>
-              <div>
-                <h3 class="text-[#1C1208] mb-2" style="font-family: 'Playfair Display', serif; font-size: 1.2rem; font-weight: 500;">Right to Deny Entry</h3>
-                <p class="text-[#4A3B2E] text-sm leading-relaxed" style="font-family: 'Inter', sans-serif;">
-                  The Curator or Officer-in-Charge has the authority to deny entry or remove visitors who are unruly, noisy, intoxicated, or who refuse to comply with the museum's rules and regulations.
-                </p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
     </main>
 
     {% include 'partials/_public_footer.html' %}

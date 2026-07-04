@@ -28,6 +28,14 @@ const SCRIPT = {
     en: "Walk with me through time — from its construction in 1845, to the revolution in 1896, to its declaration as a National Landmark, and to the museum that welcomes you today.",
     tl: "Samahan mo ako sa paglalakbay sa panahon — mula sa pagkakatayo noong 1845, sa rebolusyon noong 1896, sa pagiging Pambansang Palatandaan, hanggang sa museo na tumatanggap sa iyo ngayon.",
   },
+  'visitor-info': {
+    en: "Planning a visit? We are open Tuesday to Sunday, eight in the morning to four in the afternoon, and admission is free for everyone. I will be glad to see you here in Nagcarlan, Laguna.",
+    tl: "Balak mong bumisita? Bukas kami Martes hanggang Linggo, alas-otso ng umaga hanggang alas-kuwatro ng hapon, at libre ang pagpasok para sa lahat. Ikalulugod kong makita ka rito sa Nagcarlan, Laguna.",
+  },
+  rules: {
+    en: "Before you go, please remember: observe silence, dress respectfully, do not touch the artifacts, and follow your guide. Help us protect this sacred place for the generations to come.",
+    tl: "Bago ka umalis, tandaan: manahimik, magbihis nang may paggalang, huwag hawakan ang mga artepakto, at sundin ang iyong gabay. Tulungan mo kaming pangalagaan ang banal na lugar na ito para sa susunod na henerasyon.",
+  },
 };
 
 /* --- DOM refs -------------------------------------------------------------- */
@@ -59,13 +67,30 @@ const state = {
   typeTimer: 0,
 };
 
-/* How far (world units) Ana sits from center, per breakpoint. */
-function modelSideOffset() {
-  return mobileQuery.matches ? 0.34 : 0.62;
-}
-
 /* The GLB is authored facing screen-right; turn her to face the camera. */
 const MODEL_FACE_OFFSET = -Math.PI / 2;
+const CAM_BASE_Y = 1.42;
+const CAM_BASE_Z = 2.55;
+
+/* Camera distance grows with the CSS-pixel viewport height, so when the
+   browser is zoomed out (viewport gets "bigger") Ana shrinks along with the
+   text instead of dominating the screen. */
+function cameraDistance() {
+  const zoomComp = Math.min(1.75, Math.max(0.85, window.innerHeight / 900));
+  return (mobileQuery.matches ? 2.9 : CAM_BASE_Z) * zoomComp;
+}
+
+/* Ana's horizontal offset for a chapter: side, a small alternating "step",
+   wider berth for wide panels, and proportional to camera distance so her
+   on-screen position stays consistent across zoom levels. */
+function computeOffsetX(index) {
+  const side = chapterModelSide(index);
+  const wide = chapters[index]?.classList.contains('story-chapter--wide');
+  let offset = (mobileQuery.matches ? 0.34 : 0.62) * (index % 2 ? 0.8 : 1);
+  if (wide) offset *= 1.5;
+  offset *= cameraDistance() / CAM_BASE_Z;
+  return side === 'right' ? offset : -offset;
+}
 
 /* ========================================================================== */
 /*  Speech (Web Speech API)                                                   */
@@ -191,10 +216,9 @@ function setChapter(index) {
 
   const side = chapterModelSide(index);
   viewport?.setAttribute('data-model-side', side);
-  // Alternate her distance from center slightly so she visibly "steps"
-  // between chapters even when the text stays on one side.
-  const offset = modelSideOffset() * (index % 2 ? 0.8 : 1);
-  modelTarget.x = side === 'right' ? offset : -offset;
+  // Drives the per-chapter background crossfade in CSS.
+  viewport?.setAttribute('data-chapter', chapters[index]?.getAttribute('data-chapter') || '');
+  modelTarget.x = computeOffsetX(index);
   // Face the camera, angled slightly toward the text panel.
   modelTarget.rotY = MODEL_FACE_OFFSET + (side === 'right' ? -0.42 : 0.42);
 
@@ -225,6 +249,23 @@ function scrollToChapter(index) {
   const target = storyTop + (index / chapters.length) * total + 2;
   window.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
 }
+
+/* Loading overlay: dismissed when the model arrives (or after a timeout so a
+   failed download never traps the visitor), then chapter 1 replays its
+   entrance so the reveal happens on a visible stage. */
+function dismissLoader() {
+  const loaderEl = document.querySelector('[data-story-loader]');
+  if (!loaderEl || loaderEl.classList.contains('is-done')) return;
+  loaderEl.classList.add('is-done');
+  window.setTimeout(() => loaderEl.remove(), 900);
+  if (state.chapter === 0) {
+    const first = chapters[0];
+    first.classList.remove('is-active');
+    void first.offsetWidth; // restart the CSS transition
+    first.classList.add('is-active');
+  }
+}
+window.setTimeout(dismissLoader, 4500);
 
 /* Scroll → progress → chapter index (rAF-throttled). */
 let scrollScheduled = false;
@@ -305,10 +346,10 @@ function initStage() {
     const w = Math.max(viewport.clientWidth, 1);
     const h = Math.max(viewport.clientHeight, 1);
 
-    // Half-body framing: camera close and raised, aimed at the chest.
+    // Half-body framing: camera raised and aimed at the chest, with headroom.
     camera = new THREE.PerspectiveCamera(34, w / h, 0.1, 100);
-    camera.position.set(0, 1.48, 2.1);
-    camera.lookAt(0, 1.46, 0);
+    camera.position.set(0, CAM_BASE_Y, cameraDistance());
+    camera.lookAt(0, 1.4, 0);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
@@ -338,26 +379,61 @@ function initStage() {
       renderer.setSize(nw, nh, false);
       camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
-      // Re-apply the side offset for the current breakpoint.
-      if (state.chapter >= 0) {
-        const side = chapterModelSide(state.chapter);
-        const offset = modelSideOffset() * (state.chapter % 2 ? 0.8 : 1);
-        modelTarget.x = side === 'right' ? offset : -offset;
-      }
+      // Re-fit Ana for the new viewport size / browser zoom level.
+      camera.position.z = cameraDistance();
+      if (state.chapter >= 0) modelTarget.x = computeOffsetX(state.chapter);
     };
     window.addEventListener('resize', onResize);
 
+    const cursorGlow = document.querySelector('[data-story-cursor]');
+    const cursorPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
+    const cursorGoal = { x: cursorPos.x, y: cursorPos.y };
+    let cursorMoved = false;
     if (!prefersReducedMotion) {
       window.addEventListener('pointermove', (event) => {
         pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
         pointer.y = (event.clientY / window.innerHeight) * 2 - 1;
+        cursorGoal.x = event.clientX;
+        cursorGoal.y = event.clientY;
+        cursorMoved = true;
       }, { passive: true });
+    }
+
+    // Floating golden dust drifting up through the stage (background animation).
+    let dust = null;
+    let dustSpeeds = null;
+    if (!prefersReducedMotion) {
+      const COUNT = 140;
+      const positions = new Float32Array(COUNT * 3);
+      dustSpeeds = new Float32Array(COUNT);
+      for (let i = 0; i < COUNT; i += 1) {
+        positions[i * 3] = (Math.random() - 0.5) * 4.4;
+        positions[i * 3 + 1] = Math.random() * 3.2;
+        positions[i * 3 + 2] = (Math.random() - 0.5) * 2 - 0.2;
+        dustSpeeds[i] = 0.03 + Math.random() * 0.08;
+      }
+      const dustGeo = new THREE.BufferGeometry();
+      dustGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      dust = new THREE.Points(
+        dustGeo,
+        new THREE.PointsMaterial({
+          color: 0xd4af6a,
+          size: 0.02,
+          transparent: true,
+          opacity: 0.5,
+          depthWrite: false,
+          blending: THREE.AdditiveBlending,
+        })
+      );
+      scene.add(dust);
     }
 
     const animate = () => {
       if (disposed) return;
       window.requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.05);
+      // Only show the cursor glow while the story stage is on screen.
+      cursorGlow?.classList.toggle('is-on', state.visible && cursorMoved);
       if (!state.visible) return; // stage is offscreen — skip the draw
       if (mixer) mixer.update(dt);
 
@@ -374,9 +450,29 @@ function initStage() {
       // Gentle camera parallax toward the cursor.
       if (!prefersReducedMotion) {
         camera.position.x += (pointer.x * 0.06 - camera.position.x) * Math.min(1, dt * 2);
-        camera.position.y += (1.48 - pointer.y * 0.04 - camera.position.y) * Math.min(1, dt * 2);
+        camera.position.y += (CAM_BASE_Y - pointer.y * 0.04 - camera.position.y) * Math.min(1, dt * 2);
       }
-      camera.lookAt((avatar ? avatar.position.x : 0) * 0.72, 1.46, 0);
+      camera.lookAt((avatar ? avatar.position.x : 0) * 0.72, 1.4, 0);
+
+      // Drift the dust upward with a light sway; wrap at the top.
+      if (dust) {
+        const positions = dust.geometry.attributes.position;
+        const t = clock.elapsedTime;
+        for (let i = 0; i < dustSpeeds.length; i += 1) {
+          let y = positions.getY(i) + dustSpeeds[i] * dt;
+          if (y > 3.2) y = 0;
+          positions.setY(i, y);
+          positions.setX(i, positions.getX(i) + Math.sin(t * 0.6 + i) * dt * 0.015);
+        }
+        positions.needsUpdate = true;
+      }
+
+      // Smoothly trail the cursor glow behind the mouse.
+      if (cursorGlow && !prefersReducedMotion) {
+        cursorPos.x += (cursorGoal.x - cursorPos.x) * Math.min(1, dt * 6);
+        cursorPos.y += (cursorGoal.y - cursorPos.y) * Math.min(1, dt * 6);
+        cursorGlow.style.transform = `translate3d(${cursorPos.x}px, ${cursorPos.y}px, 0)`;
+      }
 
       renderer.render(scene, camera);
     };
@@ -422,15 +518,16 @@ function initStage() {
             action.setLoop(THREE.LoopRepeat, Infinity);
             action.play();
           }
-          story.querySelector('[data-story-loading]')?.remove();
+          dismissLoader();
         },
         undefined,
         (err) => {
           console.warn('[Ana Kalang] Model failed to load:', modelUrl, err);
-          const loading = story.querySelector('[data-story-loading]');
-          if (loading) loading.textContent = '';
+          dismissLoader();
         }
       );
+    } else {
+      dismissLoader();
     }
 
     window.addEventListener('beforeunload', () => {
