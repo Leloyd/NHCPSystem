@@ -586,9 +586,13 @@ body {
   font-size: 1.15rem;
   animation: story-breathe 2.2s ease-in-out infinite;
 }
+.story__loader p em {
+  font-style: italic;
+  color: var(--story-gold);
+}
 .story__loader p span {
   display: block;
-  margin-top: 0.4rem;
+  margin-top: 0.5rem;
   font-family: "Inter", sans-serif;
   font-size: 0.62rem;
   letter-spacing: 0.28em;
