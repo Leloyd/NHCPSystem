@@ -64,6 +64,9 @@ function modelSideOffset() {
   return mobileQuery.matches ? 0.34 : 0.62;
 }
 
+/* The GLB is authored facing screen-right; turn her to face the camera. */
+const MODEL_FACE_OFFSET = -Math.PI / 2;
+
 /* ========================================================================== */
 /*  Speech (Web Speech API)                                                   */
 /* ========================================================================== */
@@ -188,10 +191,12 @@ function setChapter(index) {
 
   const side = chapterModelSide(index);
   viewport?.setAttribute('data-model-side', side);
-  const offset = modelSideOffset();
+  // Alternate her distance from center slightly so she visibly "steps"
+  // between chapters even when the text stays on one side.
+  const offset = modelSideOffset() * (index % 2 ? 0.8 : 1);
   modelTarget.x = side === 'right' ? offset : -offset;
-  // Turn Ana's front slightly toward the text panel.
-  modelTarget.rotY = side === 'right' ? -0.42 : 0.42;
+  // Face the camera, angled slightly toward the text panel.
+  modelTarget.rotY = MODEL_FACE_OFFSET + (side === 'right' ? -0.42 : 0.42);
 
   dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
   hint?.classList.toggle('is-hidden', index > 0);
@@ -336,7 +341,7 @@ function initStage() {
       // Re-apply the side offset for the current breakpoint.
       if (state.chapter >= 0) {
         const side = chapterModelSide(state.chapter);
-        const offset = modelSideOffset();
+        const offset = modelSideOffset() * (state.chapter % 2 ? 0.8 : 1);
         modelTarget.x = side === 'right' ? offset : -offset;
       }
     };
