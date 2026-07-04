@@ -14,6 +14,8 @@ public/AR-Artifacts/**/* -filter -diff -merge -text
 public/images/* -filter -diff -merge -text
 static/AR-Artifacts/* -filter -diff -merge -text
 static/AR-Artifacts/**/* -filter -diff -merge -text
+static/AK-animation/* -filter -diff -merge -text
+static/AK-animation/**/* -filter -diff -merge -text
 static/models/landing/3DRuntime/* -filter -diff -merge -text
 static/models/landing/3DRuntime/**/* -filter -diff -merge -text
 static/images/* -filter -diff -merge -text
