@@ -343,8 +343,8 @@ function initCharacter() {
       rafId = window.requestAnimationFrame(animate);
       const dt = clock.getDelta();
       if (mixer) mixer.update(dt);
-      if (avatar && !prefersReducedMotion) {
-        // Gentle idle: slow turn + breathing bob.
+      if (avatar && !prefersReducedMotion && !avatar.userData.hasClip) {
+        // Gentle idle for the procedural placeholder: slow turn + breathing bob.
         avatar.rotation.y += dt * 0.25;
         avatar.position.y = avatar.userData.baseY + Math.sin(clock.elapsedTime * 1.6) * 0.02;
         // Subtle "talking" scale pulse while speaking.
@@ -418,17 +418,33 @@ function initCharacter() {
           if (!root) {
             buildPlaceholder();
           } else {
+            // Skinned characters push their vertices past the bounding sphere
+            // three.js measured at load time, so the renderer frustum-culls
+            // (hides) them mid-animation. Disable culling so Ana Kalang stays
+            // visible through the whole idle loop.
+            root.traverse((obj) => {
+              if (obj.isMesh || obj.isSkinnedMesh) obj.frustumCulled = false;
+            });
             fitAndAdd(root);
             if (gltf.animations && gltf.animations.length) {
               mixer = new THREE.AnimationMixer(root);
-              mixer.clipAction(gltf.animations[0]).play();
+              // Prefer an idle clip if the file names one, else the first clip.
+              const clip = gltf.animations.find((c) => /idle/i.test(c.name || '')) || gltf.animations[0];
+              const action = mixer.clipAction(clip);
+              action.setLoop(THREE.LoopRepeat, Infinity); // loop forever
+              action.clampWhenFinished = false;
+              action.play();
+              // The rigged clip already gives the figure life, so skip the
+              // procedural spin/bob below — it would fight the clip's motion.
+              avatar.userData.hasClip = true;
             }
           }
           if (refs.loading) refs.loading.remove();
         },
         undefined,
-        () => {
-          // Model not found yet → show placeholder so the guide still works.
+        (err) => {
+          // Model failed to load → show placeholder so the guide still works.
+          console.warn('[Ana Kalang] Model failed to load:', modelUrl, err);
           if (disposed) return;
           buildPlaceholder();
         }
