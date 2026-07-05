@@ -525,39 +525,38 @@ body {
 @media (max-width: 768px) {
   .story-chapter {
     width: auto;
-    top: 5.5rem; /* start below the fixed nav — content can never slide under it */
-    left: 0 !important;
-    right: 0 !important;
-    justify-content: flex-start;
-    overflow-y: auto; /* content taller than the screen scrolls instead of overflowing */
-    /* Right padding clears the chapter dots; bottom leaves room for the
-       subtitle chip + control bar. */
-    padding: 1rem 2rem 8.6rem 1.1rem;
-    /* Scrim baked into the box (element-attached, so it doesn't scroll away):
-       transparent up top where Ana stands, dark where the text sits. */
-    background: linear-gradient(180deg, transparent 0%, rgba(13, 10, 4, 0.55) 30%, rgba(13, 10, 4, 0.92) 55%);
-    scrollbar-width: thin;
-    scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
+    left: 1.1rem !important;
+    right: 2rem !important; /* clears the chapter dots on the right edge */
+    justify-content: flex-end;
+    /* Bottom padding leaves room for the subtitle chip + control bar. */
+    padding: 6rem 0 8.6rem;
   }
-  /* Bottom-anchor short content (tall content starts at the top and scrolls). */
-  .story-chapter > :first-child { margin-top: auto; }
-  /* When the chapter is tall enough to scroll, veil the whole sheet so
-     every scrolled line stays readable. */
-  .story-chapter.is-tall { background: rgba(13, 10, 4, 0.88); }
+  /* Scrim so text stays readable over Ana */
+  .story-chapter::before {
+    content: "";
+    position: absolute;
+    inset: -2rem -2.2rem -6rem;
+    z-index: -1;
+    background: linear-gradient(180deg, transparent 0%, rgba(13, 10, 4, 0.6) 30%, rgba(13, 10, 4, 0.92) 62%);
+    pointer-events: none;
+  }
   .story-chapter h1 { font-size: clamp(1.85rem, 8.5vw, 2.5rem); }
   .story-chapter h2 { font-size: clamp(1.45rem, 7vw, 2rem); margin-bottom: 0.7rem; }
   .story-label { margin-bottom: 0.7rem; }
   .story-chapter[data-chapter="hero"] .story-label { margin-bottom: 1.1rem; }
   .story-hero-tagline { margin-bottom: 1.6rem; }
   .story-copy { font-size: 0.95rem; }
-  /* The whole chapter scrolls as one on mobile — no nested scroll traps. */
-  .story-chapter__scroll,
+  .story-chapter__scroll { max-height: 33vh; max-height: 33svh; }
+  /* Visitor cards stack and scroll within the sheet */
   .story-cards {
-    max-height: none;
-    overflow: visible;
-    padding-right: 0;
+    max-height: 33vh;
+    max-height: 33svh;
+    overflow-y: auto;
+    gap: 0.55rem;
+    padding-right: 0.4rem;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
   }
-  .story-cards { gap: 0.55rem; }
   .story-card { padding: 0.75rem 0.9rem; }
   /* Let taps in the open area (Ana) pass through the full-height chapter
      box; only its actual content blocks remain interactive. */

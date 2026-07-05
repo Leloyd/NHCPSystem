@@ -268,14 +268,6 @@ function setChapter(index) {
     chapter.setAttribute('aria-hidden', String(i !== index));
   });
 
-  // Mobile: chapters taller than the screen scroll internally — start them
-  // at the top and switch to the full veil so scrolled text stays readable.
-  if (mobileQuery.matches) {
-    const active = chapters[index];
-    active.scrollTop = 0;
-    active.classList.toggle('is-tall', active.scrollHeight > active.clientHeight + 8);
-  }
-
   const side = chapterModelSide(index);
   viewport?.setAttribute('data-model-side', side);
   // Drives the per-chapter background crossfade in CSS.
