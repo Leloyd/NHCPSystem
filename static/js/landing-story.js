@@ -782,10 +782,10 @@ function initStage() {
       dismissLoader();
     }
 
-    window.addEventListener('beforeunload', () => {
-      disposed = true;
-      renderer?.dispose();
-    });
+    // No beforeunload teardown: killing the renderer there freezes Ana when
+    // the page is restored from the back/forward cache. On a real unload the
+    // browser reclaims the WebGL context itself; on a bfcache restore the
+    // animation loop simply resumes.
   } catch (err) {
     console.warn('[Ana Kalang] 3D stage unavailable; the story still works as text.', err);
   }
@@ -801,6 +801,16 @@ if (story && viewport && chapters.length) {
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
+
+  // Leaving the page (including into the back/forward cache): silence the
+  // narration — some mobile browsers keep speaking otherwise.
+  window.addEventListener('pagehide', () => stopSpeaking());
+  // Restored from the back/forward cache: the render loop resumes by itself;
+  // just reset the transient audio state so the Listen button is accurate.
+  window.addEventListener('pageshow', (event) => {
+    if (event.persisted) stopSpeaking();
+  });
+
   setChapter(0);
   onScroll();
 }
