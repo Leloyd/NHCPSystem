@@ -84,31 +84,28 @@ function cameraDistance() {
   return (mobileQuery.matches ? 2.9 : CAM_BASE_Z) * zoomComp;
 }
 
-/* Left/right gutter that matches the top-nav container, so the chapter text
-   and Ana line up with the logo. Measured from the nav itself rather than
-   hardcoded, so it tracks Tailwind's responsive container exactly. */
-function contentInsetPx() {
-  const navContainer = document.querySelector('#publicNavHeader .container');
-  if (navContainer) {
-    const rect = navContainer.getBoundingClientRect();
-    const pad = parseFloat(window.getComputedStyle(navContainer).paddingLeft) || 0;
-    return Math.max(0, rect.left + pad);
-  }
-  return window.innerWidth * 0.06;
+/* Centered two-column composition: [ text column | gap | Ana ] treated as one
+   group and centered in the viewport, so both sides get equal outer margins. */
+const ANA_WIDTH_PCT = 20; // her approximate on-screen width
+const GROUP_GAP_PCT = 8; // breathing room between the text and Ana
+
+function chapterLayout(index) {
+  const vw = Math.max(window.innerWidth, 1);
+  const wide = chapters[index]?.classList.contains('story-chapter--wide');
+  const textPct = (Math.min(wide ? 760 : 600, vw * (wide ? 0.58 : 0.46)) / vw) * 100;
+  const groupPct = textPct + GROUP_GAP_PCT + ANA_WIDTH_PCT;
+  const insetPct = Math.max(4, (100 - groupPct) / 2);
+  const anaFromTextSide = insetPct + textPct + GROUP_GAP_PCT + ANA_WIDTH_PCT / 2;
+  const textSide = chapters[index]?.getAttribute('data-side') || 'left';
+  return {
+    insetPct,
+    anaPct: textSide === 'left' ? anaFromTextSide : 100 - anaFromTextSide,
+  };
 }
 
-/* Where Ana should stand on screen (as a % of viewport width): inside the
-   nav-aligned gutter, stepped slightly per chapter, closer to the edge for
-   wide panels. */
 function anaTargetPercent(index) {
   if (mobileQuery.matches) return chapterModelSide(index) === 'right' ? 60 : 40;
-  const insetPct = (contentInsetPx() / Math.max(window.innerWidth, 1)) * 100;
-  const wide = chapters[index]?.classList.contains('story-chapter--wide');
-  // How far in from the content edge she stands — higher = closer to the text.
-  let inward = 25 - (index % 2 ? 1.8 : 0);
-  if (wide) inward -= 5;
-  const pct = chapterModelSide(index) === 'right' ? 100 - insetPct - inward : insetPct + inward;
-  return Math.min(88, Math.max(12, pct));
+  return Math.min(88, Math.max(12, chapterLayout(index).anaPct));
 }
 
 /* Convert the target screen % into a world-space X for the model, undoing
@@ -124,7 +121,9 @@ function computeOffsetX(index) {
 
 function updateBubbleAnchor(index) {
   if (!viewport || index < 0) return;
-  story.style.setProperty('--story-inset', `${contentInsetPx().toFixed(1)}px`);
+  if (!mobileQuery.matches) {
+    story.style.setProperty('--story-inset', `${chapterLayout(index).insetPct.toFixed(2)}%`);
+  }
   viewport.style.setProperty('--ana-x', `${anaTargetPercent(index).toFixed(1)}%`);
 }
 
