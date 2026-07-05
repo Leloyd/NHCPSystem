@@ -41,6 +41,7 @@ body {
 .story__bg-texture {
   position: absolute;
   inset: 0;
+  pointer-events: none; /* decorative — let clicks reach the stage for Ana picking */
 }
 .story__bg {
   background-size: cover;

@@ -462,8 +462,12 @@ function initStage() {
     const anaClickable = () => Boolean(avatar) && !state.playing && !gestureBusy();
 
     viewport.addEventListener('click', (event) => {
-      // Ignore clicks that landed on real UI (chapter text, buttons, dots).
-      if (event.target !== viewport) return;
+      // Ignore clicks on real UI (links, buttons, chapter text, dots) —
+      // anything else on the stage is fair game for picking Ana.
+      const target = event.target;
+      if (target instanceof Element && target.closest('a, button, .story-chapter, .story__guidebar, .story__dots')) {
+        return;
+      }
       if (anaClickable() && pointerHitsAna(event.clientX, event.clientY)) {
         playGesture('heart');
       }
