@@ -104,8 +104,9 @@ function anaTargetPercent(index) {
   if (mobileQuery.matches) return chapterModelSide(index) === 'right' ? 60 : 40;
   const insetPct = (contentInsetPx() / Math.max(window.innerWidth, 1)) * 100;
   const wide = chapters[index]?.classList.contains('story-chapter--wide');
-  let inward = 17 - (index % 2 ? 1.8 : 0);
-  if (wide) inward -= 4;
+  // How far in from the content edge she stands — higher = closer to the text.
+  let inward = 25 - (index % 2 ? 1.8 : 0);
+  if (wide) inward -= 5;
   const pct = chapterModelSide(index) === 'right' ? 100 - insetPct - inward : insetPct + inward;
   return Math.min(88, Math.max(12, pct));
 }
