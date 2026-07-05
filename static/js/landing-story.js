@@ -46,6 +46,7 @@ const viewport = story?.querySelector('[data-story-viewport]');
 const canvasWrap = story?.querySelector('[data-story-canvas]');
 const chapters = story ? Array.from(story.querySelectorAll('.story-chapter')) : [];
 const bubbleText = story?.querySelector('[data-story-bubble-text]');
+const bubbleWrap = story?.querySelector('.story__bubble');
 const dotsWrap = story?.querySelector('[data-story-dots]');
 const hint = story?.querySelector('[data-story-hint]');
 const playBtn = story?.querySelector('[data-story-play]');
@@ -193,6 +194,7 @@ function speak(text) {
 /* ========================================================================== */
 function renderBubble(text) {
   if (!bubbleText) return;
+  bubbleWrap?.classList.remove('is-expanded'); // new narration → collapsed chip
   window.clearInterval(state.typeTimer);
 
   if (prefersReducedMotion) {
@@ -378,6 +380,9 @@ function wireControls() {
   });
   muteBtn?.addEventListener('click', () => setMuted(!state.muted));
   langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
+  // On mobile the bubble is a collapsed 2-line chip; tapping it expands the
+  // full narration (pointer-events are off on desktop, so this is inert there).
+  bubbleWrap?.addEventListener('click', () => bubbleWrap.classList.toggle('is-expanded'));
 }
 
 /* ========================================================================== */
