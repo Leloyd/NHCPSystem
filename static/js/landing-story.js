@@ -204,11 +204,21 @@ function renderBubble(text) {
   }, 16);
 }
 
+/* Greet gesture: requested whenever a narration opens with "Mabuhay"; the 3D
+   stage fulfils it once the greet clip is available. */
+let greetWanted = false;
+let requestGreetImpl = null;
+function requestGreet() {
+  greetWanted = true;
+  if (requestGreetImpl) requestGreetImpl();
+}
+
 function narrateChapter(index, { speakIt } = {}) {
   const key = chapters[index]?.getAttribute('data-chapter');
   const entry = key ? SCRIPT[key] : null;
   if (!entry) return;
   const text = entry[state.lang] || entry.en;
+  if (/^\s*mabuhay/i.test(text)) requestGreet();
   renderBubble(text);
   if (speakIt) speak(text);
   else stopSpeaking();
@@ -364,8 +374,22 @@ function initStage() {
 
   const modelUrl = story.getAttribute('data-model-url') || '';
   let renderer, scene, camera, mixer, clock, avatar;
+  let idleAction = null;
+  let greetAction = null;
+  let greetFadingBack = false;
   let disposed = false;
   const pointer = { x: 0, y: 0 }; // -1..1 parallax input
+
+  /* Crossfade the one-shot greet in over the idle loop. */
+  const playGreet = () => {
+    if (!greetAction || !idleAction) return; // clip still downloading; greetWanted stays set
+    if (greetAction.isRunning()) return;
+    greetWanted = false;
+    greetFadingBack = false;
+    greetAction.reset().play();
+    idleAction.crossFadeTo(greetAction, 0.45, false);
+  };
+  requestGreetImpl = playGreet;
 
   try {
     scene = new THREE.Scene();
@@ -465,7 +489,19 @@ function initStage() {
       // Only show the cursor glow while the story stage is on screen.
       cursorGlow?.classList.toggle('is-on', state.visible && cursorMoved);
       if (!state.visible) return; // stage is offscreen — skip the draw
-      if (mixer) mixer.update(dt);
+      if (mixer) {
+        // Blend the one-shot greet back into the idle loop just before it
+        // ends, so she returns to idling mid-paragraph with no snap.
+        if (
+          greetAction && idleAction && greetAction.isRunning() && !greetFadingBack &&
+          greetAction.getClip().duration - greetAction.time <= 0.6
+        ) {
+          greetFadingBack = true;
+          idleAction.reset().play();
+          greetAction.crossFadeTo(idleAction, 0.6, false);
+        }
+        mixer.update(dt);
+      }
 
       if (avatar) {
         // Ease toward the chapter's side/orientation.
@@ -588,9 +624,30 @@ function initStage() {
           if (gltf.animations && gltf.animations.length) {
             mixer = new THREE.AnimationMixer(root);
             const clip = gltf.animations.find((c) => /idle/i.test(c.name || '')) || gltf.animations[0];
-            const action = mixer.clipAction(clip);
-            action.setLoop(THREE.LoopRepeat, Infinity);
-            action.play();
+            idleAction = mixer.clipAction(clip);
+            idleAction.setLoop(THREE.LoopRepeat, Infinity);
+            idleAction.play();
+
+            // Quietly fetch the greet GLB in the background just for its
+            // animation clip — same skeleton, so the clip binds onto the
+            // already-visible model and can crossfade in with no reload.
+            const greetUrl = story.getAttribute('data-greet-url') || '';
+            if (greetUrl) {
+              loader.load(
+                greetUrl,
+                (greetGltf) => {
+                  if (disposed || !greetGltf.animations || !greetGltf.animations.length) return;
+                  greetAction = mixer.clipAction(greetGltf.animations[0]);
+                  greetAction.setLoop(THREE.LoopOnce, 1);
+                  greetAction.clampWhenFinished = true; // hold the last pose through the fade back
+                  // If "Mabuhay" already played while this downloaded (first
+                  // page load), greet now — but only if we're still on it.
+                  if (greetWanted && state.chapter === 0) playGreet();
+                },
+                undefined,
+                (err) => console.warn('[Ana Kalang] Greet clip failed to load:', err)
+              );
+            }
           }
           dismissLoader();
         },
