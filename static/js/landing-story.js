@@ -109,7 +109,8 @@ function chapterLayout(index) {
 }
 
 function anaTargetPercent(index) {
-  if (mobileQuery.matches) return chapterModelSide(index) === 'right' ? 60 : 40;
+  // Mobile: hug the screen edge — part of her may crop off, by design.
+  if (mobileQuery.matches) return chapterModelSide(index) === 'right' ? 92 : 8;
   return Math.min(88, Math.max(12, chapterLayout(index).anaPct));
 }
 
