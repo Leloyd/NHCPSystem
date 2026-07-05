@@ -71,6 +71,10 @@ const state = {
 const MODEL_FACE_OFFSET = -Math.PI / 2;
 const CAM_BASE_Y = 1.42;
 const CAM_BASE_Z = 2.55;
+const CAM_FOV = 34;
+/* How much the camera swings toward Ana. Higher values re-center her on
+   screen and shrink her apparent side offset, so keep this low. */
+const LOOK_FACTOR = 0.35;
 
 /* Camera distance grows with the CSS-pixel viewport height, so when the
    browser is zoomed out (viewport gets "bigger") Ana shrinks along with the
@@ -86,10 +90,27 @@ function cameraDistance() {
 function computeOffsetX(index) {
   const side = chapterModelSide(index);
   const wide = chapters[index]?.classList.contains('story-chapter--wide');
-  let offset = (mobileQuery.matches ? 0.34 : 0.62) * (index % 2 ? 0.8 : 1);
-  if (wide) offset *= 1.5;
+  let offset = (mobileQuery.matches ? 0.34 : 0.95) * (index % 2 ? 0.88 : 1);
+  if (wide) offset *= 1.35;
   offset *= cameraDistance() / CAM_BASE_Z;
   return side === 'right' ? offset : -offset;
+}
+
+/* Where Ana lands on screen (as a % of viewport width), accounting for the
+   camera swinging partway toward her. Anchors the speech bubble to her. */
+function anaScreenPercent(index) {
+  if (!viewport) return 72;
+  const x = computeOffsetX(index);
+  const z = cameraDistance();
+  const aspect = Math.max(viewport.clientWidth, 1) / Math.max(viewport.clientHeight, 1);
+  const halfW = Math.tan((CAM_FOV * Math.PI) / 360) * z * aspect;
+  const frac = (x - x * LOOK_FACTOR) / halfW;
+  return Math.min(88, Math.max(12, 50 + frac * 50));
+}
+
+function updateBubbleAnchor(index) {
+  if (!viewport || index < 0) return;
+  viewport.style.setProperty('--ana-x', `${anaScreenPercent(index).toFixed(1)}%`);
 }
 
 /* ========================================================================== */
@@ -219,6 +240,7 @@ function setChapter(index) {
   // Drives the per-chapter background crossfade in CSS.
   viewport?.setAttribute('data-chapter', chapters[index]?.getAttribute('data-chapter') || '');
   modelTarget.x = computeOffsetX(index);
+  updateBubbleAnchor(index);
   // Face the camera, angled slightly toward the text panel.
   modelTarget.rotY = MODEL_FACE_OFFSET + (side === 'right' ? -0.42 : 0.42);
 
@@ -381,7 +403,10 @@ function initStage() {
       camera.updateProjectionMatrix();
       // Re-fit Ana for the new viewport size / browser zoom level.
       camera.position.z = cameraDistance();
-      if (state.chapter >= 0) modelTarget.x = computeOffsetX(state.chapter);
+      if (state.chapter >= 0) {
+        modelTarget.x = computeOffsetX(state.chapter);
+        updateBubbleAnchor(state.chapter);
+      }
     };
     window.addEventListener('resize', onResize);
 
@@ -452,7 +477,7 @@ function initStage() {
         camera.position.x += (pointer.x * 0.06 - camera.position.x) * Math.min(1, dt * 2);
         camera.position.y += (CAM_BASE_Y - pointer.y * 0.04 - camera.position.y) * Math.min(1, dt * 2);
       }
-      camera.lookAt((avatar ? avatar.position.x : 0) * 0.72, 1.4, 0);
+      camera.lookAt((avatar ? avatar.position.x : 0) * LOOK_FACTOR, 1.4, 0);
 
       // Drift the dust upward with a light sway; wrap at the top.
       if (dust) {
