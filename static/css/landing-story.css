@@ -31,7 +31,9 @@ body {
   position: sticky;
   top: 0;
   height: 100vh;
-  height: 100svh; /* stable on mobile while the browser URL bar collapses */
+  /* Dynamic viewport height: grows with the mobile URL bar as it collapses,
+     so no background strip is exposed at the bottom mid-scroll. */
+  height: 100dvh;
   overflow: hidden;
 }
 
