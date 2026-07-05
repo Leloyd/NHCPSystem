@@ -84,33 +84,47 @@ function cameraDistance() {
   return (mobileQuery.matches ? 2.9 : CAM_BASE_Z) * zoomComp;
 }
 
-/* Ana's horizontal offset for a chapter: side, a small alternating "step",
-   wider berth for wide panels, and proportional to camera distance so her
-   on-screen position stays consistent across zoom levels. */
-function computeOffsetX(index) {
-  const side = chapterModelSide(index);
-  const wide = chapters[index]?.classList.contains('story-chapter--wide');
-  let offset = (mobileQuery.matches ? 0.34 : 0.95) * (index % 2 ? 0.88 : 1);
-  if (wide) offset *= 1.35;
-  offset *= cameraDistance() / CAM_BASE_Z;
-  return side === 'right' ? offset : -offset;
+/* Left/right gutter that matches the top-nav container, so the chapter text
+   and Ana line up with the logo. Measured from the nav itself rather than
+   hardcoded, so it tracks Tailwind's responsive container exactly. */
+function contentInsetPx() {
+  const navContainer = document.querySelector('#publicNavHeader .container');
+  if (navContainer) {
+    const rect = navContainer.getBoundingClientRect();
+    const pad = parseFloat(window.getComputedStyle(navContainer).paddingLeft) || 0;
+    return Math.max(0, rect.left + pad);
+  }
+  return window.innerWidth * 0.06;
 }
 
-/* Where Ana lands on screen (as a % of viewport width), accounting for the
-   camera swinging partway toward her. Anchors the speech bubble to her. */
-function anaScreenPercent(index) {
-  if (!viewport) return 72;
-  const x = computeOffsetX(index);
+/* Where Ana should stand on screen (as a % of viewport width): inside the
+   nav-aligned gutter, stepped slightly per chapter, closer to the edge for
+   wide panels. */
+function anaTargetPercent(index) {
+  if (mobileQuery.matches) return chapterModelSide(index) === 'right' ? 60 : 40;
+  const insetPct = (contentInsetPx() / Math.max(window.innerWidth, 1)) * 100;
+  const wide = chapters[index]?.classList.contains('story-chapter--wide');
+  let inward = 17 - (index % 2 ? 1.8 : 0);
+  if (wide) inward -= 4;
+  const pct = chapterModelSide(index) === 'right' ? 100 - insetPct - inward : insetPct + inward;
+  return Math.min(88, Math.max(12, pct));
+}
+
+/* Convert the target screen % into a world-space X for the model, undoing
+   the camera's partial swing toward her. */
+function computeOffsetX(index) {
+  if (!viewport) return 0;
+  const frac = (anaTargetPercent(index) - 50) / 50;
   const z = cameraDistance();
   const aspect = Math.max(viewport.clientWidth, 1) / Math.max(viewport.clientHeight, 1);
   const halfW = Math.tan((CAM_FOV * Math.PI) / 360) * z * aspect;
-  const frac = (x - x * LOOK_FACTOR) / halfW;
-  return Math.min(88, Math.max(12, 50 + frac * 50));
+  return (frac * halfW) / (1 - LOOK_FACTOR);
 }
 
 function updateBubbleAnchor(index) {
   if (!viewport || index < 0) return;
-  viewport.style.setProperty('--ana-x', `${anaScreenPercent(index).toFixed(1)}%`);
+  story.style.setProperty('--story-inset', `${contentInsetPx().toFixed(1)}px`);
+  viewport.style.setProperty('--ana-x', `${anaTargetPercent(index).toFixed(1)}%`);
 }
 
 /* ========================================================================== */

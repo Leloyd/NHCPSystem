@@ -123,8 +123,9 @@ body {
   transition: opacity 0.65s cubic-bezier(0.22, 1, 0.36, 1), transform 0.65s cubic-bezier(0.22, 1, 0.36, 1);
   will-change: opacity, transform;
 }
-.story-chapter[data-side="left"] { left: 6vw; text-align: left; }
-.story-chapter[data-side="right"] { right: 6vw; text-align: left; }
+/* --story-inset is set from JS to match the top-nav container's gutter. */
+.story-chapter[data-side="left"] { left: var(--story-inset, 6vw); text-align: left; }
+.story-chapter[data-side="right"] { right: var(--story-inset, 6vw); text-align: left; }
 
 .story-chapter.is-active {
   opacity: 1;
@@ -228,7 +229,7 @@ body {
 .story__guidebar {
   position: absolute;
   z-index: 5;
-  right: 3.2rem;
+  right: var(--story-inset, 3.2rem);
   bottom: 1.4rem;
   display: flex;
   align-items: center;
