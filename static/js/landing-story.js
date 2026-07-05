@@ -84,7 +84,9 @@ const LOOK_FACTOR = 0.35;
    text instead of dominating the screen. */
 function cameraDistance() {
   const zoomComp = Math.min(1.75, Math.max(0.85, window.innerHeight / 900));
-  return (mobileQuery.matches ? 2.9 : CAM_BASE_Z) * zoomComp;
+  // Mobile pulls the camera back further so Ana reads as part of the scene
+  // rather than filling the frame — keeps the background visible around her.
+  return (mobileQuery.matches ? 4.1 : CAM_BASE_Z) * zoomComp;
 }
 
 /* Centered two-column composition: [ text column | gap | Ana ] treated as one
