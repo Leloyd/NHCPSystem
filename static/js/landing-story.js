@@ -375,21 +375,30 @@ function initStage() {
   const modelUrl = story.getAttribute('data-model-url') || '';
   let renderer, scene, camera, mixer, clock, avatar;
   let idleAction = null;
-  let greetAction = null;
-  let greetFadingBack = false;
   let disposed = false;
   const pointer = { x: 0, y: 0 }; // -1..1 parallax input
 
-  /* Crossfade the one-shot greet in over the idle loop. */
-  const playGreet = () => {
-    if (!greetAction || !idleAction) return; // clip still downloading; greetWanted stays set
-    if (greetAction.isRunning()) return;
-    greetWanted = false;
-    greetFadingBack = false;
-    greetAction.reset().play();
-    idleAction.crossFadeTo(greetAction, 0.45, false);
+  /* One-shot gesture clips (greet, heart, …) that crossfade over the idle
+     loop on the same skeleton — no model swap, no visible loading. */
+  const gestures = {};
+  let activeGesture = null;
+  let gestureFadingBack = false;
+
+  const gestureBusy = () => Boolean(activeGesture && activeGesture.isRunning());
+
+  const playGesture = (name) => {
+    const action = gestures[name];
+    if (!action || !idleAction || gestureBusy()) return false;
+    activeGesture = action;
+    gestureFadingBack = false;
+    action.reset().play();
+    idleAction.crossFadeTo(action, 0.45, false);
+    return true;
   };
-  requestGreetImpl = playGreet;
+
+  requestGreetImpl = () => {
+    if (playGesture('greet')) greetWanted = false;
+  };
 
   try {
     scene = new THREE.Scene();
@@ -439,19 +448,43 @@ function initStage() {
     };
     window.addEventListener('resize', onResize);
 
+    /* Pointer picking: is the cursor over Ana? */
+    const raycaster = new THREE.Raycaster();
+    const ndc = new THREE.Vector2();
+    const pointerHitsAna = (clientX, clientY) => {
+      const hitProxy = avatar?.userData.hitProxy;
+      if (!hitProxy || !state.visible) return false;
+      ndc.set((clientX / window.innerWidth) * 2 - 1, -(clientY / window.innerHeight) * 2 + 1);
+      raycaster.setFromCamera(ndc, camera);
+      return raycaster.intersectObject(hitProxy, false).length > 0;
+    };
+    // She reacts to a tap only while resting: no gesture and no voice-over.
+    const anaClickable = () => Boolean(avatar) && !state.playing && !gestureBusy();
+
+    viewport.addEventListener('click', (event) => {
+      // Ignore clicks that landed on real UI (chapter text, buttons, dots).
+      if (event.target !== viewport) return;
+      if (anaClickable() && pointerHitsAna(event.clientX, event.clientY)) {
+        playGesture('heart');
+      }
+    });
+
     const cursorGlow = document.querySelector('[data-story-cursor]');
     const cursorPos = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
     const cursorGoal = { x: cursorPos.x, y: cursorPos.y };
     let cursorMoved = false;
-    if (!prefersReducedMotion) {
-      window.addEventListener('pointermove', (event) => {
+    window.addEventListener('pointermove', (event) => {
+      if (!prefersReducedMotion) {
         pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
         pointer.y = (event.clientY / window.innerHeight) * 2 - 1;
         cursorGoal.x = event.clientX;
         cursorGoal.y = event.clientY;
         cursorMoved = true;
-      }, { passive: true });
-    }
+      }
+      // Cursor hint when she's interactive.
+      viewport.style.cursor =
+        anaClickable() && pointerHitsAna(event.clientX, event.clientY) ? 'pointer' : '';
+    }, { passive: true });
 
     // Floating golden dust drifting up through the stage (background animation).
     let dust = null;
@@ -490,15 +523,15 @@ function initStage() {
       cursorGlow?.classList.toggle('is-on', state.visible && cursorMoved);
       if (!state.visible) return; // stage is offscreen — skip the draw
       if (mixer) {
-        // Blend the one-shot greet back into the idle loop just before it
-        // ends, so she returns to idling mid-paragraph with no snap.
+        // Blend the running one-shot gesture back into the idle loop just
+        // before it ends, so she returns to idling with no snap.
         if (
-          greetAction && idleAction && greetAction.isRunning() && !greetFadingBack &&
-          greetAction.getClip().duration - greetAction.time <= 0.6
+          activeGesture && idleAction && activeGesture.isRunning() && !gestureFadingBack &&
+          activeGesture.getClip().duration - activeGesture.time <= 0.6
         ) {
-          greetFadingBack = true;
+          gestureFadingBack = true;
           idleAction.reset().play();
-          greetAction.crossFadeTo(idleAction, 0.6, false);
+          activeGesture.crossFadeTo(idleAction, 0.6, false);
         }
         mixer.update(dt);
       }
@@ -605,6 +638,16 @@ function initStage() {
           avatar.rotation.y = modelTarget.rotY;
           scene.add(avatar);
 
+          // Invisible hit volume for click/hover detection — much cheaper
+          // and more forgiving than raycasting the skinned mesh itself.
+          const hitProxy = new THREE.Mesh(
+            new THREE.BoxGeometry(1.0, 2.1, 0.7),
+            new THREE.MeshBasicMaterial({ visible: false })
+          );
+          hitProxy.position.y = 1.05;
+          avatar.add(hitProxy);
+          avatar.userData.hitProxy = hitProxy;
+
           // Talking rig: prefer real mouth morphs (jawOpen/mouthOpen/visemes)
           // if the model ever ships with a face rig; this model has none, so
           // fall back to animating the Head bone while she speaks.
@@ -628,26 +671,31 @@ function initStage() {
             idleAction.setLoop(THREE.LoopRepeat, Infinity);
             idleAction.play();
 
-            // Quietly fetch the greet GLB in the background just for its
-            // animation clip — same skeleton, so the clip binds onto the
+            // Quietly fetch the gesture GLBs in the background just for their
+            // animation clips — same skeleton, so the clips bind onto the
             // already-visible model and can crossfade in with no reload.
-            const greetUrl = story.getAttribute('data-greet-url') || '';
-            if (greetUrl) {
+            const gestureUrls = {
+              greet: story.getAttribute('data-greet-url') || '',
+              heart: story.getAttribute('data-heart-url') || '',
+            };
+            Object.entries(gestureUrls).forEach(([name, url]) => {
+              if (!url) return;
               loader.load(
-                greetUrl,
-                (greetGltf) => {
-                  if (disposed || !greetGltf.animations || !greetGltf.animations.length) return;
-                  greetAction = mixer.clipAction(greetGltf.animations[0]);
-                  greetAction.setLoop(THREE.LoopOnce, 1);
-                  greetAction.clampWhenFinished = true; // hold the last pose through the fade back
+                url,
+                (gestureGltf) => {
+                  if (disposed || !gestureGltf.animations || !gestureGltf.animations.length) return;
+                  const action = mixer.clipAction(gestureGltf.animations[0]);
+                  action.setLoop(THREE.LoopOnce, 1);
+                  action.clampWhenFinished = true; // hold the last pose through the fade back
+                  gestures[name] = action;
                   // If "Mabuhay" already played while this downloaded (first
                   // page load), greet now — but only if we're still on it.
-                  if (greetWanted && state.chapter === 0) playGreet();
+                  if (name === 'greet' && greetWanted && state.chapter === 0) requestGreetImpl();
                 },
                 undefined,
-                (err) => console.warn('[Ana Kalang] Greet clip failed to load:', err)
+                (err) => console.warn(`[Ana Kalang] ${name} clip failed to load:`, err)
               );
-            }
+            });
           }
           dismissLoader();
         },
