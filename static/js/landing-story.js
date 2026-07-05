@@ -378,18 +378,37 @@ function initStage() {
   let disposed = false;
   const pointer = { x: 0, y: 0 }; // -1..1 parallax input
 
-  /* One-shot gesture clips (greet, heart, …) that crossfade over the idle
-     loop on the same skeleton — no model swap, no visible loading. */
+  /* One-shot gesture clips that crossfade over the idle loop on the same
+     skeleton — no model swap, no visible loading. Ambient gestures (look,
+     wait, foldarm) fire on their own; featured ones (greet, heart) take
+     priority and may interrupt an ambient gesture mid-play. */
+  const AMBIENT_GESTURES = new Set(['look', 'wait', 'foldarm']);
+  const AMBIENT_CHOICES = ['idle', 'look', 'wait', 'foldarm'];
   const gestures = {};
   let activeGesture = null;
+  let activeGestureAmbient = false;
   let gestureFadingBack = false;
+  let ambientCountdown = 6 + Math.random() * 6;
 
   const gestureBusy = () => Boolean(activeGesture && activeGesture.isRunning());
 
-  const playGesture = (name) => {
+  const playGesture = (name, { interrupt = false } = {}) => {
     const action = gestures[name];
-    if (!action || !idleAction || gestureBusy()) return false;
+    if (!action || !idleAction) return false;
+    if (gestureBusy()) {
+      // Only featured gestures may cut in, and only over ambient ones.
+      if (!interrupt || !activeGestureAmbient || action === activeGesture) return false;
+      const from = activeGesture;
+      activeGesture = action;
+      activeGestureAmbient = AMBIENT_GESTURES.has(name);
+      gestureFadingBack = false;
+      action.reset().play();
+      from.crossFadeTo(action, 0.35, false);
+      idleAction.fadeOut(0.35); // in case idle was mid-fade-in
+      return true;
+    }
     activeGesture = action;
+    activeGestureAmbient = AMBIENT_GESTURES.has(name);
     gestureFadingBack = false;
     action.reset().play();
     idleAction.crossFadeTo(action, 0.45, false);
@@ -397,7 +416,7 @@ function initStage() {
   };
 
   requestGreetImpl = () => {
-    if (playGesture('greet')) greetWanted = false;
+    if (playGesture('greet', { interrupt: true })) greetWanted = false;
   };
 
   try {
@@ -458,8 +477,9 @@ function initStage() {
       raycaster.setFromCamera(ndc, camera);
       return raycaster.intersectObject(hitProxy, false).length > 0;
     };
-    // She reacts to a tap only while resting: no gesture and no voice-over.
-    const anaClickable = () => Boolean(avatar) && !state.playing && !gestureBusy();
+    // She reacts to a tap whenever no voice-over is playing — ambient
+    // gestures don't block her, only a featured one (greet/heart) mid-play.
+    const anaClickable = () => Boolean(avatar) && !state.playing && !(gestureBusy() && !activeGestureAmbient);
 
     viewport.addEventListener('click', (event) => {
       // Ignore clicks on real UI (links, buttons, chapter text, dots) —
@@ -469,7 +489,7 @@ function initStage() {
         return;
       }
       if (anaClickable() && pointerHitsAna(event.clientX, event.clientY)) {
-        playGesture('heart');
+        playGesture('heart', { interrupt: true });
       }
     });
 
@@ -538,6 +558,19 @@ function initStage() {
           activeGesture.crossFadeTo(idleAction, 0.6, false);
         }
         mixer.update(dt);
+
+        // Ambient variety: every so often, randomly stay idle or play one of
+        // the ambient gestures (look / wait / foldarm) — talking or not.
+        if (!prefersReducedMotion && idleAction) {
+          ambientCountdown -= dt;
+          if (ambientCountdown <= 0) {
+            ambientCountdown = 7 + Math.random() * 8;
+            if (!gestureBusy()) {
+              const pick = AMBIENT_CHOICES[Math.floor(Math.random() * AMBIENT_CHOICES.length)];
+              if (pick !== 'idle') playGesture(pick);
+            }
+          }
+        }
       }
 
       if (avatar) {
@@ -681,6 +714,9 @@ function initStage() {
             const gestureUrls = {
               greet: story.getAttribute('data-greet-url') || '',
               heart: story.getAttribute('data-heart-url') || '',
+              look: story.getAttribute('data-look-url') || '',
+              wait: story.getAttribute('data-wait-url') || '',
+              foldarm: story.getAttribute('data-foldarm-url') || '',
             };
             Object.entries(gestureUrls).forEach(([name, url]) => {
               if (!url) return;
