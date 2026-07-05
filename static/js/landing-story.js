@@ -169,6 +169,8 @@ function speak(text) {
   utter.onstart = () => setPlaying(true);
   utter.onend = () => setPlaying(false);
   utter.onerror = () => setPlaying(false);
+  // Fires per spoken word in most browsers — drives the talking pulses.
+  utter.onboundary = () => { talk.pulse = 1; };
   synth.speak(utter);
 }
 
@@ -216,6 +218,9 @@ function narrateChapter(index, { speakIt } = {}) {
 /*  Chapter engine                                                            */
 /* ========================================================================== */
 const modelTarget = { x: 0, rotY: 0 };
+/* Talking animation state: level eases in/out with speech; pulse spikes on
+   every spoken word (via the utterance's boundary events). */
+const talk = { level: 0, pulse: 0 };
 let dots = [];
 
 function chapterModelSide(index) {
@@ -470,6 +475,34 @@ function initStage() {
         const micro = prefersReducedMotion ? 0 : (state.localProgress - 0.5) * 0.22;
         const rotGoal = modelTarget.rotY + micro;
         avatar.rotation.y += (rotGoal - avatar.rotation.y) * ease;
+
+        // "Talking" motion while narration plays. Runs after mixer.update so
+        // it layers on top of the idle clip's pose for this frame.
+        talk.level += ((state.playing ? 1 : 0) - talk.level) * Math.min(1, dt * 5);
+        talk.pulse *= Math.exp(-dt * 7); // decay the per-word spike
+        if (talk.level > 0.01 && !prefersReducedMotion) {
+          const t = clock.elapsedTime;
+          const energy = talk.level * (0.55 + talk.pulse);
+          const mouths = avatar.userData.mouths;
+          if (mouths && mouths.length) {
+            // Real face rig: open/close the mouth with a speech-like pattern.
+            const open = Math.max(0, Math.sin(t * 11) * 0.6 + Math.sin(t * 17.3) * 0.4) * energy;
+            mouths.forEach(({ mesh, index }) => {
+              if (mesh.morphTargetInfluences) mesh.morphTargetInfluences[index] = open;
+            });
+          } else if (avatar.userData.head) {
+            // No face rig: conversational head motion — light nods and tilts
+            // that spike on each spoken word.
+            const head = avatar.userData.head;
+            head.rotation.x += (Math.sin(t * 8.7) * 0.028 + Math.sin(t * 13.1) * 0.014) * energy;
+            head.rotation.z += Math.sin(t * 5.3) * 0.016 * energy;
+            head.rotation.y += Math.sin(t * 3.1) * 0.02 * energy;
+          }
+        } else if (avatar.userData.mouths && avatar.userData.mouths.length && talk.level <= 0.01) {
+          avatar.userData.mouths.forEach(({ mesh, index }) => {
+            if (mesh.morphTargetInfluences) mesh.morphTargetInfluences[index] = 0;
+          });
+        }
       }
 
       // Gentle camera parallax toward the cursor.
@@ -535,6 +568,22 @@ function initStage() {
           avatar.position.x = modelTarget.x;
           avatar.rotation.y = modelTarget.rotY;
           scene.add(avatar);
+
+          // Talking rig: prefer real mouth morphs (jawOpen/mouthOpen/visemes)
+          // if the model ever ships with a face rig; this model has none, so
+          // fall back to animating the Head bone while she speaks.
+          const mouths = [];
+          root.traverse((obj) => {
+            const dict = obj.morphTargetDictionary;
+            if (!dict) return;
+            Object.keys(dict).forEach((key) => {
+              if (/jaw[_ ]?open|mouth[_ ]?open|viseme[_ ]?(aa|oh|ou)/i.test(key)) {
+                mouths.push({ mesh: obj, index: dict[key] });
+              }
+            });
+          });
+          avatar.userData.mouths = mouths;
+          avatar.userData.head = root.getObjectByName('Head') || null;
 
           if (gltf.animations && gltf.animations.length) {
             mixer = new THREE.AnimationMixer(root);
