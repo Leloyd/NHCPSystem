@@ -156,25 +156,25 @@ body {
   scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
 }
 
-/* Speech bubble ------------------------------------------------------------- */
+/* Speech bubble — sits at the lower front of Ana, like a subtitle ----------- */
 .story__bubble {
   position: absolute;
   z-index: 4;
-  top: 13vh;
-  width: min(330px, 84vw);
-  background: rgba(250, 247, 242, 0.97);
+  bottom: 5.6rem; /* above the guide controls */
+  width: min(340px, 32vw);
+  background: rgba(250, 247, 242, 0.95);
   color: var(--story-ink);
   border: 1px solid rgba(184, 146, 58, 0.4);
-  border-radius: 16px;
+  border-radius: 14px;
   padding: 0.85rem 1rem 0.95rem;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(4px);
   transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.4s ease;
   pointer-events: none;
 }
-.story__viewport[data-model-side="right"] .story__bubble { right: 5vw; border-bottom-right-radius: 4px; }
-.story__viewport[data-model-side="left"] .story__bubble { left: 5vw; border-bottom-left-radius: 4px; }
-.story__viewport[data-model-side="right"] .story__bubble { left: auto; }
-.story__viewport[data-model-side="left"] .story__bubble { right: auto; }
+/* Follow Ana's side, roughly centered under where she stands. */
+.story__viewport[data-model-side="right"] .story__bubble { right: 9vw; left: auto; border-top-right-radius: 4px; }
+.story__viewport[data-model-side="left"] .story__bubble { left: 9vw; right: auto; border-top-left-radius: 4px; }
 
 .story__bubble-eyebrow {
   display: flex;
@@ -529,6 +529,7 @@ body {
   .story-card { padding: 0.75rem 0.9rem; }
   .story__bubble {
     top: 5.6rem;
+    bottom: auto;
     left: 1.1rem !important;
     right: 2rem !important;
     width: auto;
