@@ -287,6 +287,17 @@ body {
 }
 .story-btn--primary:hover { background: #e8c97a; }
 
+/* Subtitles toggle: hide the bubble when turned off; dim the CC button. */
+.story__viewport[data-subtitles="off"] .story__bubble {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+[data-story-subs][aria-pressed="false"] {
+  opacity: 0.45;
+  text-decoration: line-through;
+}
+
 /* Icon swaps driven by data attributes on the viewport */
 .story__viewport[data-playing="true"] .story-ico--play { display: none; }
 .story__viewport[data-playing="false"] .story-ico--pause { display: none; }
@@ -517,7 +528,8 @@ body {
     left: 1.1rem !important;
     right: 2rem !important; /* clears the chapter dots on the right edge */
     justify-content: flex-end;
-    padding: 6rem 0 5.4rem;
+    /* Bottom padding leaves room for the subtitle chip + control bar. */
+    padding: 6rem 0 8.6rem;
   }
   /* Scrim so text stays readable over Ana */
   .story-chapter::before {
@@ -534,11 +546,11 @@ body {
   .story-chapter[data-chapter="hero"] .story-label { margin-bottom: 1.1rem; }
   .story-hero-tagline { margin-bottom: 1.6rem; }
   .story-copy { font-size: 0.95rem; }
-  .story-chapter__scroll { max-height: 38vh; max-height: 38svh; }
+  .story-chapter__scroll { max-height: 33vh; max-height: 33svh; }
   /* Visitor cards stack and scroll within the sheet */
   .story-cards {
-    max-height: 38vh;
-    max-height: 38svh;
+    max-height: 33vh;
+    max-height: 33svh;
     overflow-y: auto;
     gap: 0.55rem;
     padding-right: 0.4rem;
@@ -550,10 +562,11 @@ body {
      box; only its actual content blocks remain interactive. */
   .story-chapter.is-active { pointer-events: none; }
   .story-chapter.is-active > * { pointer-events: auto; }
-  /* Compact subtitle chip under the nav — tap to expand/collapse. */
+  /* Compact subtitle chip below the chapter text, above the controls —
+     tap to expand/collapse (it expands upward over the sheet). */
   .story__bubble {
-    top: 5rem;
-    bottom: auto;
+    top: auto;
+    bottom: 3.9rem;
     left: 1.1rem !important;
     right: 1.1rem !important;
     width: auto;
