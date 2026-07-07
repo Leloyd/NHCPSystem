@@ -177,7 +177,18 @@ function setPlaying(isPlaying) {
    pauses/resumes from the same spot instead of restarting. The utterGen
    counter invalidates callbacks from cancelled utterances. */
 let utterGen = 0;
-const narration = { full: '', pos: 0, paused: false };
+const narration = { full: '', pos: 0, paused: false, startPos: 0, startedAt: 0, boundaryFired: false };
+
+/* Android Chrome never fires word-boundary events, so estimate the spoken
+   position from elapsed time instead, snapped back to a word start. */
+const SPEECH_CHARS_PER_SEC = 14; // ≈150 wpm at our speaking rate
+function currentSpeechPos() {
+  if (narration.boundaryFired || !state.playing) return narration.pos;
+  const elapsed = (performance.now() - narration.startedAt) / 1000;
+  let pos = Math.min(narration.full.length, narration.startPos + Math.round(elapsed * SPEECH_CHARS_PER_SEC));
+  while (pos > narration.startPos && pos < narration.full.length && !/\s/.test(narration.full[pos])) pos -= 1;
+  return pos;
+}
 
 function stopSpeaking() {
   utterGen += 1;
@@ -201,6 +212,9 @@ function speakFrom(pos) {
   }
   const gen = ++utterGen;
   narration.pos = pos;
+  narration.startPos = pos;
+  narration.startedAt = performance.now();
+  narration.boundaryFired = false;
   narration.paused = false;
   synth.cancel();
   const utter = new SpeechSynthesisUtterance(text);
@@ -210,15 +224,24 @@ function speakFrom(pos) {
   utter.rate = 0.96;
   utter.pitch = 1.05;
   utter.volume = state.muted ? 0 : 1; // muted = silent playback, not stopped
-  utter.onstart = () => { if (gen === utterGen) setPlaying(true); };
+  utter.onstart = () => {
+    if (gen !== utterGen) return;
+    narration.startedAt = performance.now(); // time the pace from real start
+    setPlaying(true);
+  };
   utter.onboundary = (event) => {
     if (gen !== utterGen) return;
+    narration.boundaryFired = true;
     narration.pos = pos + (event.charIndex || 0); // remember where she is
     talk.pulse = 1; // drives the talking motion
   };
   utter.onend = () => { if (gen === utterGen) setPlaying(false); };
   utter.onerror = () => { if (gen === utterGen) setPlaying(false); };
-  synth.speak(utter);
+  // Android drops an utterance issued in the same tick as cancel() — give
+  // the engine a beat before speaking. The gen guard voids stale timers.
+  window.setTimeout(() => {
+    if (gen === utterGen) synth.speak(utter);
+  }, 80);
 }
 
 function speak(text) {
@@ -227,6 +250,7 @@ function speak(text) {
 }
 
 function pauseSpeaking() {
+  narration.pos = currentSpeechPos(); // capture before playing flips off
   narration.paused = true;
   utterGen += 1; // silence callbacks from the utterance we cancel
   if (synth) synth.cancel();
@@ -403,7 +427,7 @@ function setMuted(isMuted) {
   }
   // Mute is a volume switch, not a stop: if she's mid-narration, re-speak
   // the remainder from the current word at the new volume so she carries on.
-  if (state.playing) speakFrom(narration.pos);
+  if (state.playing) speakFrom(currentSpeechPos());
 }
 
 function setLang(lang) {
