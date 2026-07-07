@@ -171,16 +171,37 @@ function setPlaying(isPlaying) {
   }
 }
 
+/* The narration engine tracks the spoken position (via word-boundary events)
+   so that mute works like a volume control — the speech keeps advancing
+   silently and can come back audible mid-sentence — and the Listen button
+   pauses/resumes from the same spot instead of restarting. The utterGen
+   counter invalidates callbacks from cancelled utterances. */
+let utterGen = 0;
+const narration = { full: '', pos: 0, paused: false };
+
 function stopSpeaking() {
+  utterGen += 1;
   if (synth) synth.cancel();
+  narration.paused = false;
+  narration.pos = 0;
   setPlaying(false);
 }
 
-function speak(text) {
-  if (!synth || state.muted || !state.unlocked) {
+/* Speak the current narration from a character offset, at the current
+   mute-volume. Used for starts, resumes, and mute/unmute swaps. */
+function speakFrom(pos) {
+  if (!synth || !state.unlocked) {
     setPlaying(false);
     return;
   }
+  const text = narration.full.slice(pos);
+  if (!text) {
+    setPlaying(false);
+    return;
+  }
+  const gen = ++utterGen;
+  narration.pos = pos;
+  narration.paused = false;
   synth.cancel();
   const utter = new SpeechSynthesisUtterance(text);
   const voice = pickVoice(state.lang);
@@ -188,12 +209,28 @@ function speak(text) {
   utter.lang = state.lang === 'tl' ? (voice && /fil|tl/i.test(voice.lang) ? voice.lang : 'fil-PH') : 'en-US';
   utter.rate = 0.96;
   utter.pitch = 1.05;
-  utter.onstart = () => setPlaying(true);
-  utter.onend = () => setPlaying(false);
-  utter.onerror = () => setPlaying(false);
-  // Fires per spoken word in most browsers — drives the talking pulses.
-  utter.onboundary = () => { talk.pulse = 1; };
+  utter.volume = state.muted ? 0 : 1; // muted = silent playback, not stopped
+  utter.onstart = () => { if (gen === utterGen) setPlaying(true); };
+  utter.onboundary = (event) => {
+    if (gen !== utterGen) return;
+    narration.pos = pos + (event.charIndex || 0); // remember where she is
+    talk.pulse = 1; // drives the talking motion
+  };
+  utter.onend = () => { if (gen === utterGen) setPlaying(false); };
+  utter.onerror = () => { if (gen === utterGen) setPlaying(false); };
   synth.speak(utter);
+}
+
+function speak(text) {
+  narration.full = text;
+  speakFrom(0);
+}
+
+function pauseSpeaking() {
+  narration.paused = true;
+  utterGen += 1; // silence callbacks from the utterance we cancel
+  if (synth) synth.cancel();
+  setPlaying(false);
 }
 
 /* ========================================================================== */
@@ -362,7 +399,9 @@ function setMuted(isMuted) {
     muteBtn.setAttribute('aria-pressed', String(isMuted));
     muteBtn.setAttribute('aria-label', isMuted ? 'Unmute narration' : 'Mute narration');
   }
-  if (isMuted) stopSpeaking();
+  // Mute is a volume switch, not a stop: if she's mid-narration, re-speak
+  // the remainder from the current word at the new volume so she carries on.
+  if (state.playing) speakFrom(narration.pos);
 }
 
 function setLang(lang) {
@@ -422,8 +461,13 @@ function wireControls() {
 
   playBtn?.addEventListener('click', () => {
     unlockAudio();
-    if (state.playing) stopSpeaking();
-    else narrateChapter(state.chapter, { speakIt: !state.muted });
+    if (state.playing) {
+      pauseSpeaking(); // Listen acts as pause…
+    } else if (narration.paused && narration.pos > 0) {
+      speakFrom(narration.pos); // …and resumes from the same word,
+    } else {
+      narrateChapter(state.chapter, { speakIt: true }); // or restarts when finished.
+    }
   });
   muteBtn?.addEventListener('click', () => setMuted(!state.muted));
   langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
