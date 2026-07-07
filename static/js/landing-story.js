@@ -53,6 +53,7 @@ const playBtn = story?.querySelector('[data-story-play]');
 const muteBtn = story?.querySelector('[data-story-mute]');
 const langBtn = story?.querySelector('[data-story-lang]');
 const subsBtn = story?.querySelector('[data-story-subs]');
+const textSizeBtn = story?.querySelector('[data-story-textsize]');
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mobileQuery = window.matchMedia('(max-width: 768px)');
@@ -65,6 +66,7 @@ const state = {
   lang: localStorage.getItem('anaGuideLang') === 'tl' ? 'tl' : 'en',
   muted: localStorage.getItem('anaGuideMuted') === 'true',
   subtitles: localStorage.getItem('anaGuideSubs') !== 'off',
+  textSize: Math.min(3, Math.max(1, parseInt(localStorage.getItem('anaGuideTextSize') || '1', 10) || 1)),
   unlocked: false, // true after the first user gesture (required for TTS)
   playing: false,
   typeTimer: 0,
@@ -283,6 +285,10 @@ function setChapter(index) {
   dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
   hint?.classList.toggle('is-hidden', index > 0);
 
+  // Mobile: start tall chapters at their top and re-check the scroll veil.
+  if (mobileQuery.matches) chapters[index].scrollTop = 0;
+  refreshChapterFit();
+
   narrateChapter(index, { speakIt: state.unlocked && !state.muted });
 }
 
@@ -366,6 +372,14 @@ function setLang(lang) {
   narrateChapter(state.chapter, { speakIt: state.unlocked && !state.muted });
 }
 
+/* Re-check whether the active chapter needs its scrollable "tall" mode —
+   layout-affecting settings (subtitles, text size) change its height. */
+function refreshChapterFit() {
+  if (!mobileQuery.matches || state.chapter < 0) return;
+  const active = chapters[state.chapter];
+  if (active) active.classList.toggle('is-tall', active.scrollHeight > active.clientHeight + 8);
+}
+
 function setSubtitles(on) {
   state.subtitles = on;
   localStorage.setItem('anaGuideSubs', on ? 'on' : 'off');
@@ -374,6 +388,22 @@ function setSubtitles(on) {
     subsBtn.setAttribute('aria-pressed', String(on));
     subsBtn.setAttribute('aria-label', on ? 'Hide subtitles' : 'Show subtitles');
   }
+  refreshChapterFit();
+}
+
+const TEXT_SIZE_LABELS = { 1: 'A', 2: 'A+', 3: 'A++' };
+const TEXT_SIZE_NAMES = { 1: 'normal', 2: 'large', 3: 'extra large' };
+
+function setTextSize(size) {
+  state.textSize = size;
+  localStorage.setItem('anaGuideTextSize', String(size));
+  viewport?.setAttribute('data-textsize', String(size));
+  if (textSizeBtn) {
+    textSizeBtn.textContent = TEXT_SIZE_LABELS[size];
+    const next = size >= 3 ? 'reset' : 'enlarge';
+    textSizeBtn.setAttribute('aria-label', `Text size: ${TEXT_SIZE_NAMES[size]}. Tap to ${next}`);
+  }
+  refreshChapterFit();
 }
 
 function unlockAudio() {
@@ -387,6 +417,7 @@ function wireControls() {
   viewport?.setAttribute('data-playing', 'false');
   setMuted(state.muted);
   setSubtitles(state.subtitles);
+  setTextSize(state.textSize);
   if (langBtn) langBtn.textContent = state.lang === 'tl' ? 'TL' : 'EN';
 
   playBtn?.addEventListener('click', () => {
@@ -397,6 +428,7 @@ function wireControls() {
   muteBtn?.addEventListener('click', () => setMuted(!state.muted));
   langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
   subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
+  textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
   // On mobile the bubble is a collapsed 2-line chip; tapping it expands the
   // full narration (pointer-events are off on desktop, so this is inert there).
   bubbleWrap?.addEventListener('click', () => bubbleWrap.classList.toggle('is-expanded'));
