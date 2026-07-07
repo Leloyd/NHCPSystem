@@ -59,7 +59,11 @@ const bubbleWrap = story?.querySelector('.story__bubble');
 const dotsWrap = story?.querySelector('[data-story-dots]');
 const hint = story?.querySelector('[data-story-hint]');
 const fatherEl = story?.querySelector('[data-story-father]');
-const bgVideo = story?.querySelector('[data-story-video]');
+const bgVideos = [story?.querySelector('[data-story-video-a]'), story?.querySelector('[data-story-video-b]')].filter(Boolean);
+const aboutPlaylist = (story?.getAttribute('data-about-videos') || '')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
 const playBtn = story?.querySelector('[data-story-play]');
 const muteBtn = story?.querySelector('[data-story-mute]');
 const langBtn = story?.querySelector('[data-story-lang]');
@@ -320,6 +324,9 @@ function narrateChapter(index, { speakIt } = {}) {
   if (!entry) return;
   const text = entry[state.lang] || entry.en;
   if (/^\s*mabuhay/i.test(text)) requestGreet();
+  // The About·I visuals are choreographed to the narration: whenever it
+  // (re)starts from the top, replay the scene — photo bg, portrait, videos.
+  if (key === 'about1' && speakIt) resetAboutScene(true);
   renderBubble(text);
   if (speakIt) speak(text);
   else stopSpeaking();
@@ -346,6 +353,86 @@ function chapterModelSide(index) {
 /*  right as she names him, lingers, then the background becomes the video.  */
 /* ========================================================================== */
 const aboutScene = { active: false, step: 0, enteredAt: 0, hideTimer: 0 };
+/* Double-buffered playlist state: which clip is queued and which of the two
+   stacked <video> layers is currently showing. */
+const videoState = { clip: 0, active: 0, switching: false };
+
+function safePlay(video) {
+  const playing = video.play();
+  if (playing && playing.catch) playing.catch(() => {});
+}
+
+function stopAboutVideos() {
+  videoState.clip = 0;
+  videoState.active = 0;
+  videoState.switching = false;
+  bgVideos.forEach((video) => {
+    video.classList.remove('is-active');
+    video.pause();
+    try { video.currentTime = 0; } catch { /* not seekable yet */ }
+  });
+}
+
+/* Buffer the next clip in the hidden layer so the crossfade starts instantly. */
+function primeStandbyVideo() {
+  if (bgVideos.length < 2 || aboutPlaylist.length < 2) return;
+  const standby = bgVideos[1 - videoState.active];
+  const nextUrl = aboutPlaylist[(videoState.clip + 1) % aboutPlaylist.length];
+  if (standby.getAttribute('src') !== nextUrl) {
+    standby.setAttribute('src', nextUrl);
+    standby.load();
+  }
+}
+
+function startAboutVideos() {
+  if (!bgVideos.length || !aboutPlaylist.length) return;
+  videoState.clip = 0;
+  videoState.active = 0;
+  videoState.switching = false;
+  const first = bgVideos[0];
+  if (first.getAttribute('src') !== aboutPlaylist[0]) first.setAttribute('src', aboutPlaylist[0]);
+  try { first.currentTime = 0; } catch { /* not seekable yet */ }
+  first.classList.add('is-active');
+  safePlay(first);
+  primeStandbyVideo();
+}
+
+/* Crossfade to the next clip in the playlist (wraps around at the end). */
+function advanceAboutVideo() {
+  if (videoState.switching || !aboutScene.active || aboutScene.step !== 2) return;
+  videoState.switching = true;
+  const current = bgVideos[videoState.active];
+  const nextIndex = bgVideos.length > 1 ? 1 - videoState.active : videoState.active;
+  const next = bgVideos[nextIndex];
+  videoState.clip = (videoState.clip + 1) % aboutPlaylist.length;
+  if (next === current) {
+    current.setAttribute('src', aboutPlaylist[videoState.clip]);
+    safePlay(current);
+    videoState.switching = false;
+    return;
+  }
+  try { next.currentTime = 0; } catch { /* not seekable yet */ }
+  next.classList.add('is-active');
+  safePlay(next);
+  window.setTimeout(() => {
+    current.classList.remove('is-active');
+    current.pause();
+    videoState.active = nextIndex;
+    videoState.switching = false;
+    primeStandbyVideo();
+  }, 1250); // just past the CSS opacity fade
+}
+
+/* Begin the crossfade shortly before a clip runs out (with 'ended' as backup). */
+bgVideos.forEach((video) => {
+  video.addEventListener('timeupdate', () => {
+    if (video !== bgVideos[videoState.active]) return;
+    if (video.duration && video.duration - video.currentTime < 1.2) advanceAboutVideo();
+  });
+  video.addEventListener('ended', () => {
+    if (video === bgVideos[videoState.active]) advanceAboutVideo();
+  });
+});
 
 function resetAboutScene(activeNow) {
   window.clearTimeout(aboutScene.hideTimer);
@@ -354,11 +441,7 @@ function resetAboutScene(activeNow) {
   aboutScene.enteredAt = performance.now();
   fatherEl?.classList.remove('is-visible');
   fatherEl?.setAttribute('aria-hidden', 'true');
-  if (bgVideo) {
-    bgVideo.classList.remove('is-active');
-    bgVideo.pause();
-    try { bgVideo.currentTime = 0; } catch { /* not seekable yet */ }
-  }
+  stopAboutVideos();
 }
 
 /* Character offset just past "…Fray Vicente Velloc" (EN) or
@@ -390,11 +473,7 @@ function updateAboutScene() {
     fatherEl?.classList.remove('is-visible');
     fatherEl?.setAttribute('aria-hidden', 'true');
     aboutScene.step = 2;
-    if (bgVideo) {
-      bgVideo.classList.add('is-active');
-      const playing = bgVideo.play();
-      if (playing && playing.catch) playing.catch(() => {});
-    }
+    startAboutVideos();
   }, 5000);
 }
 
