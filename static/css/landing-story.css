@@ -22,8 +22,8 @@ body {
 /* Scroll track: tall wrapper; the viewport inside stays stuck. ------------- */
 .story {
   position: relative;
-  /* 6 chapters x 120vh of scroll each */
-  height: 720vh;
+  /* 8 chapters x 120vh of scroll each */
+  height: 960vh;
   background-color: #0d0a04;
 }
 
@@ -55,10 +55,26 @@ body {
 }
 .story__bg[data-bg="default"] { opacity: 1; }
 .story__viewport[data-chapter="testament"] .story__bg[data-bg="testament"],
-.story__viewport[data-chapter="about"] .story__bg[data-bg="about"],
+.story__viewport[data-chapter="about1"] .story__bg[data-bg="about1"],
+.story__viewport[data-chapter="about2"] .story__bg[data-bg="about"],
+.story__viewport[data-chapter="about3"] .story__bg[data-bg="about"],
 .story__viewport[data-chapter="visitor-info"] .story__bg[data-bg="visitor-info"] {
   opacity: 1;
 }
+
+/* Video background layer: sits above the still layers (under the tint) and
+   fades in when the About scene reaches its video moment. */
+.story__bg-video {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 1.2s ease;
+  pointer-events: none;
+}
+.story__bg-video.is-active { opacity: 1; }
 @keyframes story-bg-drift {
   from { transform: scale(1.03) translateY(0); }
   to { transform: scale(1.1) translateY(-1.4%); }
@@ -286,6 +302,70 @@ body {
   letter-spacing: 0.08em;
 }
 .story-btn--primary:hover { background: #e8c97a; }
+
+/* Bilingual content: the viewport's data-lang (EN/TL button) decides which
+   language block is visible. */
+.story__viewport[data-lang="tl"] [data-lang-en] { display: none !important; }
+.story__viewport:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
+
+/* About · I shows the narration as its on-screen text — the subtitle bubble
+   would duplicate it, so it stays hidden there. */
+.story__viewport[data-chapter="about1"] .story__bubble {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+/* Padre Vicente Velloc portrait: framed reveal near Ana while she names him. */
+.story__father {
+  position: absolute;
+  z-index: 4;
+  top: 15vh;
+  left: calc(var(--ana-x, 72%) - 19vw);
+  width: min(230px, 22vw);
+  margin: 0;
+  padding: 0.5rem 0.5rem 0.65rem;
+  background: var(--story-cream);
+  border: 1px solid rgba(184, 146, 58, 0.5);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55);
+  transform: rotate(-3deg) translateY(18px) scale(0.92);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.7s;
+  pointer-events: none;
+}
+.story__father.is-visible {
+  opacity: 1;
+  visibility: visible;
+  transform: rotate(-3deg) translateY(0) scale(1);
+}
+.story__father img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border: 1px solid rgba(184, 146, 58, 0.3);
+}
+.story__father figcaption {
+  margin-top: 0.45rem;
+  text-align: center;
+  color: var(--story-ink);
+  font-family: "Playfair Display", serif;
+  font-size: 0.82rem;
+}
+
+@media (max-width: 768px) {
+  .story__father {
+    top: 12vh;
+    left: 50%;
+    margin-left: min(-115px, -23vw);
+    width: min(230px, 46vw);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story__father { transition-duration: 0.01ms; }
+  .story__bg-video { transition-duration: 0.01ms; }
+}
 
 /* Accessible text sizing: three steps driven by a single scale variable. */
 .story__viewport { --story-font-scale: 1; }

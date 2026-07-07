@@ -20,9 +20,18 @@ const SCRIPT = {
     en: "This place is a living testament to history. Built in 1845, its underground crypt shows the ingenuity of our ancestors. Today it stands proudly as a National Historical Landmark.",
     tl: "Ang lugar na ito ay buhay na patunay ng kasaysayan. Itinayo noong 1845, ipinapakita ng silong nitong libingan ang talino ng ating mga ninuno. Ngayon, ipinagmamalaki itong Pambansang Makasaysayang Palatandaan.",
   },
-  about: {
-    en: "The cemetery was built under Fray Vicente Velloc. It was a burial site, a secret meeting place, and a hideout for guerrillas. It carries Nagcarlan's faith, history, and shared memory.",
-    tl: "Itinayo ang libingan sa pamumuno ni Fray Vicente Velloc. Naging libingan ito, lihim na pagpupulungan, at taguan ng mga gerilya. Taglay nito ang pananampalataya, kasaysayan, at sama-samang alaala ng Nagcarlan.",
+  // About · I: the narration IS the on-screen text (subtitle hidden there).
+  about1: {
+    en: "THE NAGCARLAN Underground Cemetery, built in 1845 under Fray Vicente Velloc, stands as a historic landmark that served as a burial site, a revolutionary meeting place, and a hideout of guerillas. Declared a National Historical Landmark on 24 October 1981, it continues to embody Nagcarlan's faith, history, and collective memory.",
+    tl: "ANG LIBINGAN sa Ilalim ng Lupa ng Nagcarlan, itinayo sa patnubay ni Padre Vicente Velloc nong 1845, ay isang makasaysayang palatandaan na nagsilbing libingan, tagpuan ng mga rebolusyonaryo, at taguan ng mga gerilya noong panahon ng digmaan. Idineklarang Pambansang Palatandaang Pangkasaysayan noong 24 Oktubre 1981, patuloy nitong kinakatawan ang pananampalataya, kasaysayan, at kabuuang gunita ng Nagcarlan.",
+  },
+  about2: {
+    en: "Look closely at the gravestones. Many bear Catholic inscriptions — R.I.P., D.E.P., and D.O.M. — prayers for the departed. Among ordinary Filipinos, you will often find S.L.N., Sumalangit Nawa — may their soul ascend to heaven.",
+    tl: "Pagmasdan mo ang mga lapida. Marami ang may mga inskripsiyong Katoliko — R.I.P., D.E.P., at D.O.M. — mga panalangin para sa mga yumao. Sa mga karaniwang Pilipino, madalas makikita ang S.L.N., Sumalangit Nawa.",
+  },
+  about3: {
+    en: "During the Japanese occupation, this cemetery sheltered Filipino guerrillas. Colonel Guillermo Billy Aynaga Sr. led the First Laguna Division until his capture in 1944. His remains now rest at the Libingan ng mga Bayani.",
+    tl: "Noong panahon ng pananakop ng mga Hapones, naging kanlungan ng mga gerilyang Pilipino ang libingang ito. Pinamunuan ni Koronel Guillermo Billy Aynaga Sr. ang First Laguna Division hanggang madakip siya noong 1944. Ang kaniyang mga labi ay nasa Libingan ng mga Bayani na ngayon.",
   },
   history: {
     en: "Walk with me through time — from its construction in 1845, to the revolution in 1896, to its declaration as a National Landmark, and to the museum that welcomes you today.",
@@ -49,6 +58,8 @@ const bubbleText = story?.querySelector('[data-story-bubble-text]');
 const bubbleWrap = story?.querySelector('.story__bubble');
 const dotsWrap = story?.querySelector('[data-story-dots]');
 const hint = story?.querySelector('[data-story-hint]');
+const fatherEl = story?.querySelector('[data-story-father]');
+const bgVideo = story?.querySelector('[data-story-video]');
 const playBtn = story?.querySelector('[data-story-play]');
 const muteBtn = story?.querySelector('[data-story-mute]');
 const langBtn = story?.querySelector('[data-story-lang]');
@@ -329,6 +340,64 @@ function chapterModelSide(index) {
   return textSide === 'left' ? 'right' : 'left';
 }
 
+/* ========================================================================== */
+/*  About · I scene: portrait + video moment                                  */
+/*  While Ana narrates Part I, the portrait of Padre Vicente Velloc appears  */
+/*  right as she names him, lingers, then the background becomes the video.  */
+/* ========================================================================== */
+const aboutScene = { active: false, step: 0, enteredAt: 0, hideTimer: 0 };
+
+function resetAboutScene(activeNow) {
+  window.clearTimeout(aboutScene.hideTimer);
+  aboutScene.active = activeNow;
+  aboutScene.step = 0;
+  aboutScene.enteredAt = performance.now();
+  fatherEl?.classList.remove('is-visible');
+  fatherEl?.setAttribute('aria-hidden', 'true');
+  if (bgVideo) {
+    bgVideo.classList.remove('is-active');
+    bgVideo.pause();
+    try { bgVideo.currentTime = 0; } catch { /* not seekable yet */ }
+  }
+}
+
+/* Character offset just past "…Fray Vicente Velloc" (EN) or
+   "…Padre Vicente Velloc nong 1845" (TL) in the current narration. */
+function aboutCuePos() {
+  const entry = SCRIPT.about1;
+  const text = (entry && (entry[state.lang] || entry.en)) || '';
+  const velloc = text.indexOf('Velloc');
+  const year = text.indexOf('1845');
+  return Math.max(velloc >= 0 ? velloc + 6 : 0, year >= 0 ? year + 4 : 0);
+}
+
+function updateAboutScene() {
+  if (!aboutScene.active || aboutScene.step !== 0) return;
+  const text = SCRIPT.about1 ? SCRIPT.about1[state.lang] || SCRIPT.about1.en : '';
+  let cueHit = false;
+  if (state.playing && narration.full === text) {
+    cueHit = currentSpeechPos() >= aboutCuePos();
+  } else if (performance.now() - aboutScene.enteredAt > 8000) {
+    cueHit = true; // silent visitors still get the moment
+  }
+  if (!cueHit) return;
+
+  aboutScene.step = 1;
+  fatherEl?.classList.add('is-visible');
+  fatherEl?.setAttribute('aria-hidden', 'false');
+  aboutScene.hideTimer = window.setTimeout(() => {
+    if (!aboutScene.active) return;
+    fatherEl?.classList.remove('is-visible');
+    fatherEl?.setAttribute('aria-hidden', 'true');
+    aboutScene.step = 2;
+    if (bgVideo) {
+      bgVideo.classList.add('is-active');
+      const playing = bgVideo.play();
+      if (playing && playing.catch) playing.catch(() => {});
+    }
+  }, 5000);
+}
+
 function setChapter(index) {
   if (index === state.chapter || index < 0 || index >= chapters.length) return;
   state.chapter = index;
@@ -343,7 +412,9 @@ function setChapter(index) {
   const side = chapterModelSide(index);
   viewport?.setAttribute('data-model-side', side);
   // Drives the per-chapter background crossfade in CSS.
-  viewport?.setAttribute('data-chapter', chapters[index]?.getAttribute('data-chapter') || '');
+  const chapterKey = chapters[index]?.getAttribute('data-chapter') || '';
+  viewport?.setAttribute('data-chapter', chapterKey);
+  resetAboutScene(chapterKey === 'about1');
   modelTarget.x = computeOffsetX(index);
   updateBubbleAnchor(index);
   // Face the camera, angled slightly toward the text panel.
@@ -441,7 +512,9 @@ function setMuted(isMuted) {
 function setLang(lang) {
   state.lang = lang;
   localStorage.setItem('anaGuideLang', lang);
+  viewport?.setAttribute('data-lang', lang); // swaps bilingual on-page content
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
+  refreshChapterFit(); // the other language may run longer/shorter
   narrateChapter(state.chapter, { speakIt: state.unlocked });
 }
 
@@ -513,6 +586,7 @@ function setupAutoSpeakKickstart() {
 
 function wireControls() {
   viewport?.setAttribute('data-playing', 'false');
+  viewport?.setAttribute('data-lang', state.lang);
   setMuted(state.muted);
   setSubtitles(state.subtitles);
   setTextSize(state.textSize);
@@ -940,6 +1014,10 @@ if (story && viewport && chapters.length) {
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
+
+  // Drive the About·I portrait/video moment. A timer (not the render loop)
+  // so it also works if WebGL is unavailable.
+  window.setInterval(updateAboutScene, 300);
 
   // Leaving the page (including into the back/forward cache): silence the
   // narration — some mobile browsers keep speaking otherwise.

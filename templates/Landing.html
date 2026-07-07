@@ -47,7 +47,19 @@
           <div class="story__bg" data-bg="default" style="background-image: url('/images/UndergroundBG.png');"></div>
           <div class="story__bg" data-bg="testament" style="background-image: url('{{ url_for('static', filename='images/living-testament.jpg') }}');"></div>
           <div class="story__bg" data-bg="about" style="background-image: url('{{ url_for('static', filename='images/about-site.jpg') }}');"></div>
+          <div class="story__bg" data-bg="about1" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite1st.jpg');"></div>
           <div class="story__bg" data-bg="visitor-info" style="background-image: url('{{ url_for('static', filename='images/visitors-info.jpg') }}');"></div>
+          <!-- Video background: fades in mid-way through the About chapter -->
+          <video
+            class="story__bg-video"
+            data-story-video
+            src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/MiddleView.mp4"
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            aria-hidden="true"
+          ></video>
           <div class="story__bg-tint"></div>
           <div class="story__bg-texture"></div>
           <div class="story__glow" aria-hidden="true"></div>
@@ -57,6 +69,15 @@
 
           <!-- Cursor glow (mouse animation) -->
           <div class="story__cursor" data-story-cursor aria-hidden="true"></div>
+
+          <!-- Padre Vicente Velloc portrait: revealed as the narration names him -->
+          <figure class="story__father" data-story-father aria-hidden="true">
+            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Father.jpg" alt="Padre Vicente Velloc" loading="lazy" />
+            <figcaption>
+              <span data-lang-en>Padre Vicente Velloc</span>
+              <span data-lang-tl>Padre Vicente Velloc</span>
+            </figcaption>
+          </figure>
 
           <!-- Speech bubble -->
           <div class="story__bubble" role="status">
@@ -134,27 +155,56 @@
               </div>
             </article>
 
-            <!-- Chapter 3 · About the Historic Site -->
-            <article class="story-chapter" data-chapter="about" data-side="left" data-title="About">
+            <!-- Chapter 3 · About the Historical Site — Part I (bilingual, no subtitle:
+                 the on-screen text IS the narration; EN/TL button swaps it) -->
+            <article class="story-chapter" data-chapter="about1" data-side="left" data-title="About · I">
               <div class="story-label">
                 <span class="story-label__line"></span>
-                <span class="story-label__text">Heritage Overview</span>
+                <span class="story-label__text">
+                  <span data-lang-en>Heritage Overview · I</span>
+                  <span data-lang-tl>Pangkalahatang-tanaw · I</span>
+                </span>
               </div>
               <h2>
-                About the<br />
-                <em>Historical Site</em>
+                <span data-lang-en>The Nagcarlan<br /><em>Underground Cemetery</em></span>
+                <span data-lang-tl>Ang Libingan sa Ilalim<br /><em>ng Lupa ng Nagcarlan</em></span>
               </h2>
-              <div class="story-chapter__scroll">
-                <p class="story-copy">
-                  THE NAGCARLAN Underground Cemetery, built in 1845 under Fray Vicente Velloc, stands as a historic landmark that served as a burial site, a revolutionary meeting place, and a hideout of guerillas. Declared a National Historical Landmark on 24 October 1981, it continues to embody Nagcarlan's faith, history, and collective memory.
-                </p>
-                <p class="story-copy">
-                  FILIPINO GRAVESTONES often bear Catholic symbols such as RI.P. (Requiescat in pace), D.E.P. (Descansar en paz), and D.O.M. (Deo Optimo Maximo), signifying prayers for the dead. Among ordinary Filipinos, the local inscription S.L.N., meaning "Sumalangit Nawa" (May their soul ascend to heaven) is more common.
-                </p>
-                <p class="story-copy">
-                  THE NAGCARLAN Cemetery became a stronghold for Filipino guerrillas during the Japanese occupation. Colonel Guillermo "Billy" Igay Aynaga Sr., founder of the First Laguna Division of the Fil-American Irregular Troops, led the movement until his capture and death in 1944. His remains were later moved to the Libingan ng mga Bayani.
-                </p>
+              <p class="story-copy" data-lang-en>
+                THE NAGCARLAN Underground Cemetery, built in 1845 under Fray Vicente Velloc, stands as a historic landmark that served as a burial site, a revolutionary meeting place, and a hideout of guerillas. Declared a National Historical Landmark on 24 October 1981, it continues to embody Nagcarlan's faith, history, and collective memory.
+              </p>
+              <p class="story-copy" data-lang-tl>
+                ANG LIBINGAN sa Ilalim ng Lupa ng Nagcarlan, itinayo sa patnubay ni Padre Vicente Velloc nong 1845, ay isang makasaysayang palatandaan na nagsilbing libingan, tagpuan ng mga rebolusyonaryo, at taguan ng mga gerilya noong panahon ng digmaan. Idineklarang Pambansang Palatandaang Pangkasaysayan noong 24 Oktubre 1981, patuloy nitong kinakatawan ang pananampalataya, kasaysayan, at kabuuang gunita ng Nagcarlan.
+              </p>
+            </article>
+
+            <!-- Chapter 4 · About — Part II (gravestone inscriptions) -->
+            <article class="story-chapter" data-chapter="about2" data-side="right" data-title="About · II">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Heritage Overview · II</span>
               </div>
+              <h2>
+                Inscriptions of<br />
+                <em>Faith</em>
+              </h2>
+              <p class="story-copy">
+                FILIPINO GRAVESTONES often bear Catholic symbols such as RI.P. (Requiescat in pace), D.E.P. (Descansar en paz), and D.O.M. (Deo Optimo Maximo), signifying prayers for the dead. Among ordinary Filipinos, the local inscription S.L.N., meaning "Sumalangit Nawa" (May their soul ascend to heaven) is more common.
+              </p>
+            </article>
+
+            <!-- Chapter 5 · About — Part III (wartime refuge) -->
+            <article class="story-chapter" data-chapter="about3" data-side="left" data-title="About · III">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Heritage Overview · III</span>
+              </div>
+              <h2>
+                Shelter of<br />
+                <em>Guerrillas</em>
+              </h2>
+              <p class="story-copy">
+                THE NAGCARLAN Cemetery became a stronghold for Filipino guerrillas during the Japanese occupation. Colonel Guillermo "Billy" Igay Aynaga Sr., founder of the First Laguna Division of the Fil-American Irregular Troops, led the movement until his capture and death in 1944. His remains were later moved to the Libingan ng mga Bayani.
+              </p>
             </article>
 
             <!-- Chapter 4 · Cemetery History -->
