@@ -42,14 +42,15 @@
         data-foldarm-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-foldarm-1k.glb"
         data-about-videos="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/Outside.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/GateView.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UndergroundCrypts.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/AerealShot.mp4"
         data-about2-videos="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/OutsideGrave.MOV,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UnderGroundStairs.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UnderGroundGrave1.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UnderGroundGrave2.mp4"
+        data-about3-videos="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/GateView.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UnderGroundStairs.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UnderGroundGrave2.mp4,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Vids/UndergroundCrypts.mp4"
         aria-label="Guided tour of the museum by Ana Kalang"
       >
         <div class="story__viewport" data-story-viewport data-model-side="right" data-chapter="hero" data-muted="false" data-playing="false">
           <!-- Background layers: default + per-chapter crossfades -->
           <div class="story__bg" data-bg="default" style="background-image: url('/images/UndergroundBG.png');"></div>
           <div class="story__bg" data-bg="testament" style="background-image: url('{{ url_for('static', filename='images/living-testament.jpg') }}');"></div>
-          <div class="story__bg" data-bg="about" style="background-image: url('{{ url_for('static', filename='images/about-site.jpg') }}');"></div>
           <div class="story__bg" data-bg="about1" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite1st.jpg');"></div>
+          <div class="story__bg" data-bg="about3" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite3.jpg');"></div>
           <div class="story__bg" data-bg="about2" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite2.jpg');"></div>
           <div class="story__bg" data-bg="visitor-info" style="background-image: url('{{ url_for('static', filename='images/visitors-info.jpg') }}');"></div>
           <!-- Video backgrounds: a double-buffered pair so the About playlist
@@ -79,6 +80,26 @@
           <figure class="story__father" data-story-puntod aria-hidden="true">
             <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Puntod.jpg" alt="Gravestone with S.L.N. inscription" loading="lazy" />
             <figcaption>S.L.N. · Sumalangit Nawa</figcaption>
+          </figure>
+
+          <!-- Guerrilla-era photos (About · III): shown one after another -->
+          <figure class="story__father" data-story-guerrilla-a aria-hidden="true">
+            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/A.jpg" alt="Colonel Guillermo I. Aynaga Sr." loading="lazy" />
+            <figcaption>
+              <span data-lang-en>Colonel Guillermo I. Aynaga Sr.</span>
+              <span data-lang-tl>Koronel Guillermo "Billy" Igay Aynaga Sr.</span>
+            </figcaption>
+          </figure>
+          <figure class="story__father" data-story-guerrilla-b aria-hidden="true">
+            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/B.jpg" alt="Historical photograph" loading="lazy" />
+            <figcaption>Courtesy of Mr. Joey Vistal</figcaption>
+          </figure>
+          <figure class="story__father" data-story-guerrilla-c aria-hidden="true">
+            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/C.jpg" alt="Filipino guerillas in Nagcarlan, 1945" loading="lazy" />
+            <figcaption>
+              <span data-lang-en>Filipino guerillas in Nagcarlan, 1945<br /><small>WW2 Philippines via Pepito Achicocho</small></span>
+              <span data-lang-tl>Mga gerilyang Pilipino sa Nagcarlan, 1945<br /><small>WW2 Philippines via Pepito Achicocho</small></span>
+            </figcaption>
           </figure>
 
           <!-- Speech bubble -->
@@ -204,14 +225,20 @@
             <article class="story-chapter" data-chapter="about3" data-side="left" data-title="About · III">
               <div class="story-label">
                 <span class="story-label__line"></span>
-                <span class="story-label__text">Heritage Overview · III</span>
+                <span class="story-label__text">
+                  <span data-lang-en>Heritage Overview · III</span>
+                  <span data-lang-tl>Pangkalahatang-tanaw · III</span>
+                </span>
               </div>
               <h2>
-                Shelter of<br />
-                <em>Guerrillas</em>
+                <span data-lang-en>Shelter of<br /><em>Guerrillas</em></span>
+                <span data-lang-tl>Kublihan ng mga<br /><em>Gerilya</em></span>
               </h2>
-              <p class="story-copy">
+              <p class="story-copy" data-lang-en>
                 THE NAGCARLAN Cemetery became a stronghold for Filipino guerrillas during the Japanese occupation. Colonel Guillermo "Billy" Igay Aynaga Sr., founder of the First Laguna Division of the Fil-American Irregular Troops, led the movement until his capture and death in 1944. His remains were later moved to the Libingan ng mga Bayani.
+              </p>
+              <p class="story-copy" data-lang-tl>
+                NAGING KUBLIHAN at kuta ng mga gerilyang Pilipino ang Libingan ng Nagcarlan noong pananakop ng mga Hapon. Pinamunuan ito ni Koronel Guillermo "Billy" Igay Aynaga Sr., na nagtatag ng Unang Sangay ng Fil-American Irregular Troops sa Laguna. Siya ay nadakip at pinaslang noong 1944, at kalaunan ay inilibing sa Libingan ng mga Bayani.
               </p>
             </article>
 

@@ -69,6 +69,10 @@ function parsePlaylist(attr) {
 }
 const aboutPlaylist = parsePlaylist('data-about-videos');
 const about2Playlist = parsePlaylist('data-about2-videos');
+const about3Playlist = parsePlaylist('data-about3-videos');
+const guerrillaEls = ['a', 'b', 'c']
+  .map((k) => story?.querySelector(`[data-story-guerrilla-${k}]`))
+  .filter(Boolean);
 const playBtn = story?.querySelector('[data-story-play]');
 const muteBtn = story?.querySelector('[data-story-mute]');
 const langBtn = story?.querySelector('[data-story-lang]');
@@ -331,7 +335,7 @@ function narrateChapter(index, { speakIt } = {}) {
   if (/^\s*mabuhay/i.test(text)) requestGreet();
   // The About visuals are choreographed to the narration: whenever it
   // (re)starts from the top, replay the chapter's scene — bg, photo, videos.
-  if ((key === 'about1' || key === 'about2') && speakIt) resetAboutScene(key);
+  if ((key === 'about1' || key === 'about2' || key === 'about3') && speakIt) resetAboutScene(key);
   renderBubble(text);
   if (speakIt) speak(text);
   else stopSpeaking();
@@ -480,10 +484,27 @@ function resetAboutScene(key) {
   aboutScene.enteredAt = performance.now();
   hideScenePhoto(fatherEl);
   hideScenePhoto(puntodEl);
+  guerrillaEls.forEach(hideScenePhoto);
   stopAboutVideos();
   if (aboutScene.key === 'about2') {
     sceneTimer(() => showScenePhoto(puntodEl), 1800);
     sceneTimer(() => startVideos(about2Playlist), 6000);
+  }
+  if (aboutScene.key === 'about3') {
+    // Sequential slideshow: Colonel → courtesy photo → guerrillas of 1945,
+    // then the crypt video tour takes over.
+    const START = 2000;
+    const HOLD = 4500;
+    guerrillaEls.forEach((el, i) => {
+      sceneTimer(() => {
+        if (i > 0) hideScenePhoto(guerrillaEls[i - 1]);
+        showScenePhoto(el);
+      }, START + HOLD * i);
+    });
+    sceneTimer(() => {
+      guerrillaEls.forEach(hideScenePhoto);
+      startVideos(about3Playlist);
+    }, START + HOLD * Math.max(guerrillaEls.length, 1));
   }
 }
 
@@ -533,7 +554,7 @@ function setChapter(index) {
   // Drives the per-chapter background crossfade in CSS.
   const chapterKey = chapters[index]?.getAttribute('data-chapter') || '';
   viewport?.setAttribute('data-chapter', chapterKey);
-  resetAboutScene(['about1', 'about2'].includes(chapterKey) ? chapterKey : null);
+  resetAboutScene(['about1', 'about2', 'about3'].includes(chapterKey) ? chapterKey : null);
   modelTarget.x = computeOffsetX(index);
   updateBubbleAnchor(index);
   // Face the camera, angled slightly toward the text panel.

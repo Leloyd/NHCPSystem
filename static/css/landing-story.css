@@ -57,7 +57,7 @@ body {
 .story__viewport[data-chapter="testament"] .story__bg[data-bg="testament"],
 .story__viewport[data-chapter="about1"] .story__bg[data-bg="about1"],
 .story__viewport[data-chapter="about2"] .story__bg[data-bg="about2"],
-.story__viewport[data-chapter="about3"] .story__bg[data-bg="about"],
+.story__viewport[data-chapter="about3"] .story__bg[data-bg="about3"],
 .story__viewport[data-chapter="visitor-info"] .story__bg[data-bg="visitor-info"] {
   opacity: 1;
 }
@@ -363,6 +363,15 @@ body {
   color: var(--story-ink);
   font-family: "Playfair Display", serif;
   font-size: 0.82rem;
+}
+.story__father figcaption small {
+  display: block;
+  margin-top: 0.15rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.58rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(28, 18, 8, 0.55);
 }
 
 @media (max-width: 768px) {
