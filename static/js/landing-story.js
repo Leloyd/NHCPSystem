@@ -236,7 +236,13 @@ function speakFrom(pos) {
     talk.pulse = 1; // drives the talking motion
   };
   utter.onend = () => { if (gen === utterGen) setPlaying(false); };
-  utter.onerror = () => { if (gen === utterGen) setPlaying(false); };
+  utter.onerror = (event) => {
+    if (gen !== utterGen) return;
+    // Autoplay was blocked: flag audio as still locked so the first user
+    // gesture (kickstart below) retries the narration properly.
+    if (event && event.error === 'not-allowed') state.unlocked = false;
+    setPlaying(false);
+  };
   // Android drops an utterance issued in the same tick as cancel() — give
   // the engine a beat before speaking. The gen guard voids stale timers.
   window.setTimeout(() => {
@@ -391,6 +397,8 @@ function dismissLoader() {
     void first.offsetWidth; // restart the CSS transition
     first.classList.add('is-active');
   }
+  // The stage is revealed — start speaking (or arm the first-gesture start).
+  attemptAutoSpeak();
 }
 window.setTimeout(dismissLoader, 4500);
 
@@ -476,6 +484,31 @@ function unlockAudio() {
   state.unlocked = true;
   // Some browsers require a speak() inside the gesture to unlock TTS.
   if (synth && !state.muted) synth.speak(new SpeechSynthesisUtterance(''));
+}
+
+/* Auto-start narration on load. Browsers usually block TTS before the first
+   user gesture, so: try immediately (the not-allowed handler above reverts
+   the unlock if refused), and arm a one-shot "kickstart" so the visitor's
+   very first tap/click/keypress anywhere starts her speaking. */
+function attemptAutoSpeak() {
+  if (state.playing || state.unlocked) return;
+  state.unlocked = true; // optimistic — revoked by the not-allowed error
+  narrateChapter(state.chapter, { speakIt: true });
+}
+
+function setupAutoSpeakKickstart() {
+  const types = ['pointerdown', 'keydown', 'touchend'];
+  const handler = (event) => {
+    const target = event.target;
+    // On the guide controls, only unlock — their own handlers decide playback.
+    const onControls = target instanceof Element && target.closest('.story__guidebar');
+    if (!state.unlocked) unlockAudio();
+    if (!onControls && !state.playing && !narration.paused) {
+      narrateChapter(state.chapter, { speakIt: true });
+    }
+    types.forEach((t) => window.removeEventListener(t, handler, true));
+  };
+  types.forEach((t) => window.addEventListener(t, handler, true));
 }
 
 function wireControls() {
@@ -902,6 +935,7 @@ function initStage() {
 if (story && viewport && chapters.length) {
   buildDots();
   wireControls();
+  setupAutoSpeakKickstart();
   initStage();
 
   window.addEventListener('scroll', onScroll, { passive: true });
