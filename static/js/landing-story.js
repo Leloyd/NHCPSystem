@@ -326,7 +326,9 @@ function setChapter(index) {
   if (mobileQuery.matches) chapters[index].scrollTop = 0;
   refreshChapterFit();
 
-  narrateChapter(index, { speakIt: state.unlocked && !state.muted });
+  // Auto-narrate every chapter once audio is unlocked — even while muted
+  // (silent playback keeps advancing, so unmuting rejoins mid-sentence).
+  narrateChapter(index, { speakIt: state.unlocked });
 }
 
 function buildDots() {
@@ -408,7 +410,7 @@ function setLang(lang) {
   state.lang = lang;
   localStorage.setItem('anaGuideLang', lang);
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
-  narrateChapter(state.chapter, { speakIt: state.unlocked && !state.muted });
+  narrateChapter(state.chapter, { speakIt: state.unlocked });
 }
 
 /* Re-check whether the active chapter needs its scrollable "tall" mode —
