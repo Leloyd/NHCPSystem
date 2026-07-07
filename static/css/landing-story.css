@@ -56,7 +56,7 @@ body {
 .story__bg[data-bg="default"] { opacity: 1; }
 .story__viewport[data-chapter="testament"] .story__bg[data-bg="testament"],
 .story__viewport[data-chapter="about1"] .story__bg[data-bg="about1"],
-.story__viewport[data-chapter="about2"] .story__bg[data-bg="about"],
+.story__viewport[data-chapter="about2"] .story__bg[data-bg="about2"],
 .story__viewport[data-chapter="about3"] .story__bg[data-bg="about"],
 .story__viewport[data-chapter="visitor-info"] .story__bg[data-bg="visitor-info"] {
   opacity: 1;
@@ -327,7 +327,6 @@ body {
   position: absolute;
   z-index: 4;
   top: 15vh;
-  left: calc(var(--ana-x, 72%) - 19vw);
   width: min(230px, 22vw);
   margin: 0;
   padding: 0.5rem 0.5rem 0.65rem;
@@ -344,6 +343,13 @@ body {
   opacity: 1;
   visibility: visible;
   transform: rotate(-3deg) translateY(0) scale(1);
+}
+/* Framed photos sit between Ana and the text, whichever side she's on. */
+.story__viewport[data-model-side="right"] .story__father {
+  left: calc(var(--ana-x, 72%) - 19vw);
+}
+.story__viewport[data-model-side="left"] .story__father {
+  left: calc(var(--ana-x, 28%) + 19vw - min(230px, 22vw));
 }
 .story__father img {
   display: block;
@@ -362,7 +368,7 @@ body {
 @media (max-width: 768px) {
   .story__father {
     top: 12vh;
-    left: 50%;
+    left: 50% !important; /* beats the side-anchored rules above */
     margin-left: min(-115px, -23vw);
     width: min(230px, 46vw);
   }

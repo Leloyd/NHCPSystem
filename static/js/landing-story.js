@@ -59,11 +59,16 @@ const bubbleWrap = story?.querySelector('.story__bubble');
 const dotsWrap = story?.querySelector('[data-story-dots]');
 const hint = story?.querySelector('[data-story-hint]');
 const fatherEl = story?.querySelector('[data-story-father]');
+const puntodEl = story?.querySelector('[data-story-puntod]');
 const bgVideos = [story?.querySelector('[data-story-video-a]'), story?.querySelector('[data-story-video-b]')].filter(Boolean);
-const aboutPlaylist = (story?.getAttribute('data-about-videos') || '')
-  .split(',')
-  .map((url) => url.trim())
-  .filter(Boolean);
+function parsePlaylist(attr) {
+  return (story?.getAttribute(attr) || '')
+    .split(',')
+    .map((url) => url.trim())
+    .filter(Boolean);
+}
+const aboutPlaylist = parsePlaylist('data-about-videos');
+const about2Playlist = parsePlaylist('data-about2-videos');
 const playBtn = story?.querySelector('[data-story-play]');
 const muteBtn = story?.querySelector('[data-story-mute]');
 const langBtn = story?.querySelector('[data-story-lang]');
@@ -324,9 +329,9 @@ function narrateChapter(index, { speakIt } = {}) {
   if (!entry) return;
   const text = entry[state.lang] || entry.en;
   if (/^\s*mabuhay/i.test(text)) requestGreet();
-  // The About·I visuals are choreographed to the narration: whenever it
-  // (re)starts from the top, replay the scene — photo bg, portrait, videos.
-  if (key === 'about1' && speakIt) resetAboutScene(true);
+  // The About visuals are choreographed to the narration: whenever it
+  // (re)starts from the top, replay the chapter's scene — bg, photo, videos.
+  if ((key === 'about1' || key === 'about2') && speakIt) resetAboutScene(key);
   renderBubble(text);
   if (speakIt) speak(text);
   else stopSpeaking();
@@ -352,10 +357,24 @@ function chapterModelSide(index) {
 /*  While Ana narrates Part I, the portrait of Padre Vicente Velloc appears  */
 /*  right as she names him, lingers, then the background becomes the video.  */
 /* ========================================================================== */
-const aboutScene = { active: false, step: 0, enteredAt: 0, hideTimer: 0 };
+const aboutScene = { key: null, step: 0, enteredAt: 0, timers: [] };
 /* Double-buffered playlist state: which clip is queued and which of the two
    stacked <video> layers is currently showing. */
-const videoState = { clip: 0, active: 0, switching: false };
+const videoState = { playlist: [], clip: 0, active: 0, switching: false, on: false };
+
+function sceneTimer(fn, ms) {
+  aboutScene.timers.push(window.setTimeout(fn, ms));
+}
+
+function showScenePhoto(el) {
+  el?.classList.add('is-visible');
+  el?.setAttribute('aria-hidden', 'false');
+}
+
+function hideScenePhoto(el) {
+  el?.classList.remove('is-visible');
+  el?.setAttribute('aria-hidden', 'true');
+}
 
 function safePlay(video) {
   const playing = video.play();
@@ -363,6 +382,8 @@ function safePlay(video) {
 }
 
 function stopAboutVideos() {
+  videoState.on = false;
+  videoState.playlist = [];
   videoState.clip = 0;
   videoState.active = 0;
   videoState.switching = false;
@@ -375,22 +396,24 @@ function stopAboutVideos() {
 
 /* Buffer the next clip in the hidden layer so the crossfade starts instantly. */
 function primeStandbyVideo() {
-  if (bgVideos.length < 2 || aboutPlaylist.length < 2) return;
+  if (bgVideos.length < 2 || videoState.playlist.length < 2) return;
   const standby = bgVideos[1 - videoState.active];
-  const nextUrl = aboutPlaylist[(videoState.clip + 1) % aboutPlaylist.length];
+  const nextUrl = videoState.playlist[(videoState.clip + 1) % videoState.playlist.length];
   if (standby.getAttribute('src') !== nextUrl) {
     standby.setAttribute('src', nextUrl);
     standby.load();
   }
 }
 
-function startAboutVideos() {
-  if (!bgVideos.length || !aboutPlaylist.length) return;
+function startVideos(playlist) {
+  if (!bgVideos.length || !playlist.length) return;
+  videoState.playlist = playlist;
+  videoState.on = true;
   videoState.clip = 0;
   videoState.active = 0;
   videoState.switching = false;
   const first = bgVideos[0];
-  if (first.getAttribute('src') !== aboutPlaylist[0]) first.setAttribute('src', aboutPlaylist[0]);
+  if (first.getAttribute('src') !== playlist[0]) first.setAttribute('src', playlist[0]);
   try { first.currentTime = 0; } catch { /* not seekable yet */ }
   first.classList.add('is-active');
   safePlay(first);
@@ -399,17 +422,21 @@ function startAboutVideos() {
 
 /* Crossfade to the next clip in the playlist (wraps around at the end). */
 function advanceAboutVideo() {
-  if (videoState.switching || !aboutScene.active || aboutScene.step !== 2) return;
+  if (!videoState.on || videoState.switching || !videoState.playlist.length) return;
   videoState.switching = true;
   const current = bgVideos[videoState.active];
   const nextIndex = bgVideos.length > 1 ? 1 - videoState.active : videoState.active;
   const next = bgVideos[nextIndex];
-  videoState.clip = (videoState.clip + 1) % aboutPlaylist.length;
+  videoState.clip = (videoState.clip + 1) % videoState.playlist.length;
   if (next === current) {
-    current.setAttribute('src', aboutPlaylist[videoState.clip]);
+    current.setAttribute('src', videoState.playlist[videoState.clip]);
     safePlay(current);
     videoState.switching = false;
     return;
+  }
+  if (next.getAttribute('src') !== videoState.playlist[videoState.clip]) {
+    next.setAttribute('src', videoState.playlist[videoState.clip]);
+    next.load();
   }
   try { next.currentTime = 0; } catch { /* not seekable yet */ }
   next.classList.add('is-active');
@@ -420,10 +447,13 @@ function advanceAboutVideo() {
     videoState.active = nextIndex;
     videoState.switching = false;
     primeStandbyVideo();
+    // Unplayable clip (e.g. an HEVC .MOV in Chrome) — skip past it.
+    if (next.error && videoState.on) advanceAboutVideo();
   }, 1250); // just past the CSS opacity fade
 }
 
-/* Begin the crossfade shortly before a clip runs out (with 'ended' as backup). */
+/* Begin the crossfade shortly before a clip runs out ('ended' as backup,
+   'error' so a broken clip never stalls the tour). */
 bgVideos.forEach((video) => {
   video.addEventListener('timeupdate', () => {
     if (video !== bgVideos[videoState.active]) return;
@@ -432,16 +462,29 @@ bgVideos.forEach((video) => {
   video.addEventListener('ended', () => {
     if (video === bgVideos[videoState.active]) advanceAboutVideo();
   });
+  video.addEventListener('error', () => {
+    if (video === bgVideos[videoState.active]) advanceAboutVideo();
+  });
 });
 
-function resetAboutScene(activeNow) {
-  window.clearTimeout(aboutScene.hideTimer);
-  aboutScene.active = activeNow;
+/* Reset + (re)start the scripted scene for the given chapter key (or null).
+   about1: cue-driven — portrait flashes as the narration names Padre Velloc,
+           then the site tour videos begin (see updateAboutScene).
+   about2: time-driven — the gravestone photo appears after a beat and STAYS,
+           with the crypt tour videos rolling in behind it. */
+function resetAboutScene(key) {
+  aboutScene.timers.forEach(window.clearTimeout);
+  aboutScene.timers = [];
+  aboutScene.key = key || null;
   aboutScene.step = 0;
   aboutScene.enteredAt = performance.now();
-  fatherEl?.classList.remove('is-visible');
-  fatherEl?.setAttribute('aria-hidden', 'true');
+  hideScenePhoto(fatherEl);
+  hideScenePhoto(puntodEl);
   stopAboutVideos();
+  if (aboutScene.key === 'about2') {
+    sceneTimer(() => showScenePhoto(puntodEl), 1800);
+    sceneTimer(() => startVideos(about2Playlist), 6000);
+  }
 }
 
 /* Character offset just past "…Fray Vicente Velloc" (EN) or
@@ -455,7 +498,7 @@ function aboutCuePos() {
 }
 
 function updateAboutScene() {
-  if (!aboutScene.active || aboutScene.step !== 0) return;
+  if (aboutScene.key !== 'about1' || aboutScene.step !== 0) return;
   const text = SCRIPT.about1 ? SCRIPT.about1[state.lang] || SCRIPT.about1.en : '';
   let cueHit = false;
   if (state.playing && narration.full === text) {
@@ -466,14 +509,11 @@ function updateAboutScene() {
   if (!cueHit) return;
 
   aboutScene.step = 1;
-  fatherEl?.classList.add('is-visible');
-  fatherEl?.setAttribute('aria-hidden', 'false');
-  aboutScene.hideTimer = window.setTimeout(() => {
-    if (!aboutScene.active) return;
-    fatherEl?.classList.remove('is-visible');
-    fatherEl?.setAttribute('aria-hidden', 'true');
+  showScenePhoto(fatherEl);
+  sceneTimer(() => {
+    hideScenePhoto(fatherEl);
     aboutScene.step = 2;
-    startAboutVideos();
+    startVideos(aboutPlaylist);
   }, 5000);
 }
 
@@ -493,7 +533,7 @@ function setChapter(index) {
   // Drives the per-chapter background crossfade in CSS.
   const chapterKey = chapters[index]?.getAttribute('data-chapter') || '';
   viewport?.setAttribute('data-chapter', chapterKey);
-  resetAboutScene(chapterKey === 'about1');
+  resetAboutScene(['about1', 'about2'].includes(chapterKey) ? chapterKey : null);
   modelTarget.x = computeOffsetX(index);
   updateBubbleAnchor(index);
   // Face the camera, angled slightly toward the text panel.
