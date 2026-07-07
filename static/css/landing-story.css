@@ -79,6 +79,12 @@ body {
   from { transform: scale(1.03) translateY(0); }
   to { transform: scale(1.1) translateY(-1.4%); }
 }
+
+/* Mobile hero: swap the title backdrop to the AboutSite photo (the layer is
+   already in the stack for About · I; it paints over the default layer). */
+@media (max-width: 768px) {
+  .story__viewport[data-chapter="hero"] .story__bg[data-bg="about1"] { opacity: 1; }
+}
 .story__bg-tint {
   background: linear-gradient(180deg, rgba(13, 10, 4, 0.8) 0%, rgba(28, 18, 8, 0.65) 50%, rgba(13, 10, 4, 0.9) 100%);
 }
