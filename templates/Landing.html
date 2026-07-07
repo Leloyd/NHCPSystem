@@ -391,6 +391,15 @@
             </article>
           </div>
 
+          <!-- Photo lightbox: opened by tapping any scene photo -->
+          <div class="story__lightbox" data-story-lightbox hidden role="dialog" aria-modal="true" aria-label="Image viewer">
+            <button class="story__lightbox-close" data-story-lightbox-close type="button" aria-label="Close image">✕</button>
+            <figure>
+              <img data-story-lightbox-img src="" alt="" />
+              <figcaption data-story-lightbox-caption></figcaption>
+            </figure>
+          </div>
+
           <!-- Guide controls -->
           <div class="story__guidebar">
             <div class="story__nameplate">Ana Kalang<span>Guardian of Nagcarlan</span></div>

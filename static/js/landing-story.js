@@ -380,6 +380,50 @@ function hideScenePhoto(el) {
   el?.setAttribute('aria-hidden', 'true');
 }
 
+/* Lightbox: tap any scene photo to view it large; ✕, ESC, or the backdrop
+   closes it. Captions carry over (including their EN/TL variants). */
+const lightbox = story?.querySelector('[data-story-lightbox]');
+const lightboxImg = story?.querySelector('[data-story-lightbox-img]');
+const lightboxCaption = story?.querySelector('[data-story-lightbox-caption]');
+
+function openLightbox(figureEl) {
+  if (!lightbox || !lightboxImg) return;
+  const img = figureEl.querySelector('img');
+  const caption = figureEl.querySelector('figcaption');
+  if (!img) return;
+  lightboxImg.src = img.src;
+  lightboxImg.alt = img.alt || '';
+  if (lightboxCaption) lightboxCaption.innerHTML = caption ? caption.innerHTML : '';
+  lightbox.hidden = false;
+  window.requestAnimationFrame(() => lightbox.classList.add('is-open'));
+}
+
+function closeLightbox() {
+  if (!lightbox || lightbox.hidden) return;
+  lightbox.classList.remove('is-open');
+  window.setTimeout(() => { lightbox.hidden = true; }, 300);
+}
+
+/* Every scene photo opens the lightbox once it's visible. */
+[fatherEl, puntodEl, ...guerrillaEls].forEach((photo) => {
+  photo?.addEventListener('click', () => {
+    if (photo.classList.contains('is-visible')) openLightbox(photo);
+  });
+});
+
+if (lightbox) {
+  lightbox.addEventListener('click', (event) => {
+    // Close on the backdrop or the ✕ — not on the image/caption itself.
+    const target = event.target;
+    if (target === lightbox || (target instanceof Element && target.closest('[data-story-lightbox-close]'))) {
+      closeLightbox();
+    }
+  });
+  window.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape') closeLightbox();
+  });
+}
+
 function safePlay(video) {
   const playing = video.play();
   if (playing && playing.catch) playing.catch(() => {});
@@ -485,26 +529,19 @@ function resetAboutScene(key) {
   hideScenePhoto(fatherEl);
   hideScenePhoto(puntodEl);
   guerrillaEls.forEach(hideScenePhoto);
+  closeLightbox();
   stopAboutVideos();
   if (aboutScene.key === 'about2') {
     sceneTimer(() => showScenePhoto(puntodEl), 1800);
     sceneTimer(() => startVideos(about2Playlist), 6000);
   }
   if (aboutScene.key === 'about3') {
-    // Sequential slideshow: Colonel → courtesy photo → guerrillas of 1945,
-    // then the crypt video tour takes over.
-    const START = 2000;
-    const HOLD = 4500;
+    // Polaroid collage: the three photos cascade in together and STAY,
+    // with the crypt video tour rolling in behind them.
     guerrillaEls.forEach((el, i) => {
-      sceneTimer(() => {
-        if (i > 0) hideScenePhoto(guerrillaEls[i - 1]);
-        showScenePhoto(el);
-      }, START + HOLD * i);
+      sceneTimer(() => showScenePhoto(el), 2000 + i * 450);
     });
-    sceneTimer(() => {
-      guerrillaEls.forEach(hideScenePhoto);
-      startVideos(about3Playlist);
-    }, START + HOLD * Math.max(guerrillaEls.length, 1));
+    sceneTimer(() => startVideos(about3Playlist), 7000);
   }
 }
 
@@ -867,10 +904,10 @@ function initStage() {
     const anaClickable = () => Boolean(avatar) && !state.playing && !(gestureBusy() && !activeGestureAmbient);
 
     viewport.addEventListener('click', (event) => {
-      // Ignore clicks on real UI (links, buttons, chapter text, dots) —
-      // anything else on the stage is fair game for picking Ana.
+      // Ignore clicks on real UI (links, buttons, chapter text, dots, photos,
+      // the lightbox) — anything else on the stage picks Ana.
       const target = event.target;
-      if (target instanceof Element && target.closest('a, button, .story-chapter, .story__guidebar, .story__dots')) {
+      if (target instanceof Element && target.closest('a, button, .story-chapter, .story__guidebar, .story__dots, .story__father, .story__lightbox')) {
         return;
       }
       if (anaClickable() && pointerHitsAna(event.clientX, event.clientY)) {
