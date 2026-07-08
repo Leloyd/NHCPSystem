@@ -157,6 +157,10 @@ body {
 .story-chapter[data-side="left"] { left: var(--story-inset, 6vw); text-align: left; }
 .story-chapter[data-side="right"] { right: var(--story-inset, 6vw); text-align: left; }
 
+/* Museum Rules is the tallest chapter — anchor it to the top instead of
+   centering, so the list starts high and has room to breathe. */
+.story-chapter[data-chapter="rules"] { justify-content: flex-start; }
+
 .story-chapter.is-active {
   opacity: 1;
   transform: translateY(0);
@@ -940,6 +944,19 @@ body {
   .story-card h3 svg { width: 0.85rem; height: 0.85rem; }
   .story-card p { font-size: calc(0.74rem * var(--story-font-scale, 1)); }
   .story-card a { font-size: calc(0.7rem * var(--story-font-scale, 1)); }
+  /* Living Testament: compact stats, no inner scrolling — fits one screen. */
+  .story-chapter[data-chapter="testament"] .story-chapter__scroll {
+    max-height: none;
+    overflow: visible;
+    padding-right: 0;
+  }
+  .story-stat { padding: 0.4rem 0; gap: 0.6rem; }
+  .story-stat__icon { width: 1.9rem; height: 1.9rem; }
+  .story-stat__icon svg { width: 0.85rem; height: 0.85rem; }
+  .story-stat h4 { font-size: calc(0.92rem * var(--story-font-scale, 1)); }
+  .story-stat p { font-size: calc(0.72rem * var(--story-font-scale, 1)); }
+  /* Museum Rules: show more of the list per screen. */
+  .story-chapter[data-chapter="rules"] .story-chapter__scroll { max-height: 42vh; max-height: 42svh; }
   /* Compact subtitle chip below the chapter text, above the controls —
      tap to expand/collapse (it expands upward over the sheet). */
   .story__bubble {
