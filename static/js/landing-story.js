@@ -689,13 +689,9 @@ function updateAboutScene() {
   }
   if (!cueHit) return;
 
-  aboutScene.step = 1;
-  showScenePhoto(fatherEl);
-  sceneTimer(() => {
-    hideScenePhoto(fatherEl);
-    aboutScene.step = 2;
-    startVideos(aboutPlaylist);
-  }, 5000);
+  // No portrait here anymore — the video tour begins right on the cue.
+  aboutScene.step = 2;
+  startVideos(aboutPlaylist);
 }
 
 function setChapter(index) {
