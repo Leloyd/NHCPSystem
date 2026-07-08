@@ -33,9 +33,22 @@ const SCRIPT = {
     en: "During the Japanese occupation, this cemetery sheltered Filipino guerrillas. Colonel Guillermo Billy Aynaga Sr. led the First Laguna Division until his capture in 1944. His remains now rest at the Libingan ng mga Bayani.",
     tl: "Noong panahon ng pananakop ng mga Hapones, naging kanlungan ng mga gerilyang Pilipino ang libingang ito. Pinamunuan ni Koronel Guillermo Billy Aynaga Sr. ang First Laguna Division hanggang madakip siya noong 1944. Ang kaniyang mga labi ay nasa Libingan ng mga Bayani na ngayon.",
   },
-  history: {
-    en: "Walk with me through time — from its construction in 1845, to the revolution in 1896, to its declaration as a National Landmark, and to the museum that welcomes you today.",
-    tl: "Samahan mo ako sa paglalakbay sa panahon — mula sa pagkakatayo noong 1845, sa rebolusyon noong 1896, sa pagiging Pambansang Palatandaan, hanggang sa museo na tumatanggap sa iyo ngayon.",
+  // Cemetery History — one era per chapter, narrated like a walk through time.
+  era1845: {
+    en: "Let us return to 1845. Under the guidance of Franciscan friars, workers raised a burial ground unlike any other — with crypts resting beneath the earth. An architectural feat far ahead of its time.",
+    tl: "Balikan natin ang 1845. Sa patnubay ng mga praileng Pransiskano, itinayo ang isang libingang naiiba sa lahat — may mga kriptang nahihimlay sa ilalim ng lupa. Isang kahanga-hangang arkitektura na lampas sa panahon nito.",
+  },
+  era1896: {
+    en: "By 1896, revolution stirred. In the secrecy of these underground chambers, members of the Katipunan gathered — planning a nation's freedom beneath the resting dead.",
+    tl: "Pagsapit ng 1896, nag-alab ang rebolusyon. Sa lihim ng mga silid sa ilalim ng lupa, nagtipon ang mga Katipunero — pinaplano ang kalayaan ng bayan sa ilalim ng mga yumaong nahihimlay.",
+  },
+  era1981: {
+    en: "In 1981, the nation gave this place its due honor — declared a National Historical Landmark, recognized for its unique architecture and its place in our history.",
+    tl: "Noong 1981, kinilala ng bansa ang lugar na ito — idineklarang Pambansang Palatandaang Pangkasaysayan, dahil sa natatanging arkitektura at papel nito sa ating kasaysayan.",
+  },
+  eraToday: {
+    en: "And today, the cemetery lives on as a museum and heritage site — welcoming visitors from all over the world to walk through this unique piece of Philippine history.",
+    tl: "At ngayon, nananatiling buhay ang libingan bilang museo at pamanang pook — tinatanggap ang mga bisita mula sa iba't ibang panig ng mundo upang tahakin ang natatanging bahagi ng kasaysayang Pilipino.",
   },
   'visitor-info': {
     en: "Planning a visit? We are open Tuesday to Sunday, eight in the morning to four in the afternoon, and admission is free for everyone. I will be glad to see you here in Nagcarlan, Laguna.",
@@ -1273,6 +1286,16 @@ if (story && viewport && chapters.length) {
   buildDots();
   wireControls();
   setupAutoSpeakKickstart();
+
+  // History timeline rail: each year jumps to its era chapter.
+  story.querySelectorAll('[data-era-jump]').forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const target = btn.getAttribute('data-era-jump');
+      const idx = chapters.findIndex((ch) => ch.getAttribute('data-chapter') === target);
+      if (idx >= 0) scrollToChapter(idx);
+    });
+  });
+
   initStage();
 
   window.addEventListener('scroll', onScroll, { passive: true });

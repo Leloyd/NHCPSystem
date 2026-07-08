@@ -22,8 +22,8 @@ body {
 /* Scroll track: tall wrapper; the viewport inside stays stuck. ------------- */
 .story {
   position: relative;
-  /* 8 chapters x 120vh of scroll each */
-  height: 960vh;
+  /* 11 chapters x 120vh of scroll each */
+  height: 1320vh;
   background-color: #0d0a04;
 }
 
@@ -49,10 +49,16 @@ body {
   background-size: cover;
   background-position: center;
   opacity: 0;
-  transition: opacity 1.2s ease;
+  transition: opacity 1.2s ease, filter 1.4s ease;
   animation: story-bg-drift 30s ease-in-out infinite alternate; /* slow Ken Burns */
   will-change: opacity, transform;
 }
+
+/* History eras: the further back in time, the deeper the sepia — color
+   gradually returns as the visitor travels toward the present. */
+.story__viewport[data-chapter="era1845"] .story__bg { filter: sepia(0.85) contrast(1.06) brightness(0.78); }
+.story__viewport[data-chapter="era1896"] .story__bg { filter: sepia(0.62) contrast(1.04) brightness(0.84); }
+.story__viewport[data-chapter="era1981"] .story__bg { filter: sepia(0.32) saturate(0.75) brightness(0.92); }
 .story__bg[data-bg="default"] { opacity: 1; }
 .story__viewport[data-chapter="testament"] .story__bg[data-bg="testament"],
 .story__viewport[data-chapter="about1"] .story__bg[data-bg="about1"],
@@ -447,6 +453,119 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .story__father { transition-duration: 0.01ms; }
   .story__bg-video { transition-duration: 0.01ms; }
+}
+
+/* Cemetery History eras -------------------------------------------------------- */
+/* Giant ghosted year stamped behind each era's text. */
+.story-era-ghost {
+  position: absolute;
+  top: 3vh;
+  left: -1.5rem;
+  z-index: -1; /* behind the chapter's own content */
+  font-family: "Playfair Display", serif;
+  font-size: clamp(7rem, 19vw, 17rem);
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: rgba(212, 175, 106, 0.1);
+  pointer-events: none;
+  user-select: none;
+  white-space: nowrap;
+}
+.story-era-ghost--word { font-size: clamp(4.2rem, 11vw, 10rem); top: 6vh; }
+
+/* Old-film grain + vignette overlay: breathes only during the era chapters. */
+.story__vintage {
+  position: absolute;
+  inset: -2%;
+  z-index: 7;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 1s ease;
+  background-image:
+    radial-gradient(ellipse at center, transparent 52%, rgba(13, 10, 4, 0.6) 100%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='260' height='260'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='260' height='260' filter='url(%23n)' opacity='0.5'/%3E%3C/svg%3E");
+  background-size: 100% 100%, 260px 260px;
+}
+.story__viewport[data-chapter^="era"] .story__vintage {
+  opacity: 0.5;
+  animation: story-grain 0.65s steps(3) infinite, story-flicker 5.5s ease-in-out infinite;
+}
+/* The present: the film look almost clears. */
+.story__viewport[data-chapter="eraToday"] .story__vintage { opacity: 0.14; }
+@keyframes story-grain {
+  0% { background-position: 0 0, 0 0; }
+  33% { background-position: 0 0, -85px 45px; }
+  66% { background-position: 0 0, 60px -70px; }
+  100% { background-position: 0 0, -30px -95px; }
+}
+@keyframes story-flicker {
+  0%, 100% { opacity: 0.5; }
+  8% { opacity: 0.42; }
+  9% { opacity: 0.55; }
+  46% { opacity: 0.47; }
+  74% { opacity: 0.54; }
+}
+
+/* Timeline rail: 1845 — 1896 — 1981 — Today */
+.story__timeline {
+  position: absolute;
+  z-index: 5;
+  left: 50%;
+  bottom: 2rem;
+  transform: translateX(-50%);
+  display: flex;
+  align-items: center;
+  gap: 1.7rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.5s ease;
+}
+.story__viewport[data-chapter^="era"] .story__timeline {
+  opacity: 1;
+  pointer-events: auto;
+}
+.story__timeline button {
+  position: relative;
+  padding: 0.3rem 0.2rem;
+  border: 0;
+  background: transparent;
+  color: rgba(250, 247, 242, 0.5);
+  font-family: "Playfair Display", serif;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: color 0.3s ease, transform 0.3s ease;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+}
+.story__timeline button:hover { color: rgba(250, 247, 242, 0.85); }
+.story__timeline button + button::before {
+  content: "";
+  position: absolute;
+  left: -1.45rem;
+  top: 50%;
+  width: 1.2rem;
+  height: 1px;
+  background: rgba(212, 175, 106, 0.35);
+}
+.story__viewport[data-chapter="era1845"] .story__timeline [data-era-jump="era1845"],
+.story__viewport[data-chapter="era1896"] .story__timeline [data-era-jump="era1896"],
+.story__viewport[data-chapter="era1981"] .story__timeline [data-era-jump="era1981"],
+.story__viewport[data-chapter="eraToday"] .story__timeline [data-era-jump="eraToday"] {
+  color: var(--story-gold);
+  transform: scale(1.22);
+  text-shadow: 0 0 18px rgba(212, 175, 106, 0.55);
+}
+
+@media (max-width: 768px) {
+  /* Rail moves under the nav on phones (bottom is taken by chip + controls). */
+  .story__timeline { bottom: auto; top: 4.6rem; gap: 1.2rem; }
+  .story__timeline button { font-size: 0.82rem; }
+  .story__timeline button + button::before { left: -1rem; width: 0.75rem; }
+  .story-era-ghost { font-size: clamp(5rem, 26vw, 9rem); top: 1vh; left: 0; }
+  .story-era-ghost--word { font-size: clamp(3rem, 15vw, 5.5rem); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .story__viewport[data-chapter^="era"] .story__vintage { animation: none; }
 }
 
 /* Photo lightbox --------------------------------------------------------------- */

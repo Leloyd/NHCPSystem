@@ -67,6 +67,9 @@
           <!-- Cursor glow (mouse animation) -->
           <div class="story__cursor" data-story-cursor aria-hidden="true"></div>
 
+          <!-- Old-film grain + vignette, alive only during the History eras -->
+          <div class="story__vintage" aria-hidden="true"></div>
+
           <!-- Padre Vicente Velloc portrait: revealed as the narration names him -->
           <figure class="story__father" data-story-father aria-hidden="true">
             <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Father.jpg" alt="Padre Vicente Velloc" loading="lazy" />
@@ -242,50 +245,71 @@
               </p>
             </article>
 
-            <!-- Chapter 4 · Cemetery History -->
-            <article class="story-chapter" data-chapter="history" data-side="right" data-title="History">
+            <!-- Chapters 6–9 · Cemetery History — one era per screen, the
+                 sepia of the past washing out as time approaches the present.
+                 Per-era media (images/video/VO) slots in later. -->
+            <article class="story-chapter story-chapter--era" data-chapter="era1845" data-side="right" data-title="1845">
               <div class="story-label">
                 <span class="story-label__line"></span>
-                <span class="story-label__text">Historical Journey</span>
+                <span class="story-label__text">Historical Journey · 1845</span>
               </div>
               <h2>
-                Cemetery<br />
-                <em>History</em>
+                Construction<br />
+                <em>Era</em>
               </h2>
-              <div class="story-chapter__scroll">
-                <div class="story-era">
-                  <span class="story-era__year">1845</span>
-                  <div>
-                    <h3>Construction Era</h3>
-                    <p>Built under the direction of Franciscan friars as a modern burial ground featuring underground crypts. The structure represented a significant advancement in cemetery architecture in the Philippines.</p>
-                  </div>
-                </div>
-                <div class="story-era">
-                  <span class="story-era__year">1896</span>
-                  <div>
-                    <h3>Revolutionary Period</h3>
-                    <p>The underground chambers became a secret meeting place for members of the Katipunan during the Philippine Revolution against Spanish colonial rule.</p>
-                  </div>
-                </div>
-                <div class="story-era">
-                  <span class="story-era__year">1981</span>
-                  <div>
-                    <h3>National Landmark</h3>
-                    <p>Declared a National Historical Landmark by the National Historical Institute, recognizing its unique architectural and historical significance.</p>
-                  </div>
-                </div>
-                <div class="story-era">
-                  <span class="story-era__year">Today</span>
-                  <div>
-                    <h3>Museum &amp; Heritage Site</h3>
-                    <p>Now serves as a museum and cultural heritage site, welcoming visitors from around the world to experience this unique piece of Philippine history.</p>
-                  </div>
-                </div>
-              </div>
+              <p class="story-copy">
+                Built under the direction of Franciscan friars as a modern burial ground featuring underground crypts. The structure represented a significant advancement in cemetery architecture in the Philippines.
+              </p>
+              <span class="story-era-ghost" aria-hidden="true">1845</span>
             </article>
 
-            <!-- Chapter 5 · Visitor Information -->
-            <article class="story-chapter story-chapter--wide" data-chapter="visitor-info" data-side="left" data-title="Visit">
+            <article class="story-chapter story-chapter--era" data-chapter="era1896" data-side="left" data-title="1896">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Historical Journey · 1896</span>
+              </div>
+              <h2>
+                Revolutionary<br />
+                <em>Period</em>
+              </h2>
+              <p class="story-copy">
+                The underground chambers became a secret meeting place for members of the Katipunan during the Philippine Revolution against Spanish colonial rule.
+              </p>
+              <span class="story-era-ghost" aria-hidden="true">1896</span>
+            </article>
+
+            <article class="story-chapter story-chapter--era" data-chapter="era1981" data-side="right" data-title="1981">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Historical Journey · 1981</span>
+              </div>
+              <h2>
+                National<br />
+                <em>Landmark</em>
+              </h2>
+              <p class="story-copy">
+                Declared a National Historical Landmark by the National Historical Institute, recognizing its unique architectural and historical significance.
+              </p>
+              <span class="story-era-ghost" aria-hidden="true">1981</span>
+            </article>
+
+            <article class="story-chapter story-chapter--era" data-chapter="eraToday" data-side="left" data-title="Today">
+              <div class="story-label">
+                <span class="story-label__line"></span>
+                <span class="story-label__text">Historical Journey · Today</span>
+              </div>
+              <h2>
+                Museum &amp;<br />
+                <em>Heritage Site</em>
+              </h2>
+              <p class="story-copy">
+                Now serves as a museum and cultural heritage site, welcoming visitors from around the world to experience this unique piece of Philippine history.
+              </p>
+              <span class="story-era-ghost story-era-ghost--word" aria-hidden="true">Today</span>
+            </article>
+
+            <!-- Chapter 10 · Visitor Information -->
+            <article class="story-chapter story-chapter--wide" data-chapter="visitor-info" data-side="right" data-title="Visit">
               <div class="story-label">
                 <span class="story-label__line"></span>
                 <span class="story-label__text">Plan Your Visit</span>
@@ -330,8 +354,8 @@
               </div>
             </article>
 
-            <!-- Chapter 6 · Museum Rules -->
-            <article class="story-chapter story-chapter--wide" data-chapter="rules" data-side="right" data-title="Rules">
+            <!-- Chapter 11 · Museum Rules -->
+            <article class="story-chapter story-chapter--wide" data-chapter="rules" data-side="left" data-title="Rules">
               <div class="story-label">
                 <span class="story-label__line"></span>
                 <span class="story-label__text">Responsible Visiting</span>
@@ -416,6 +440,14 @@
             <button class="story-btn" type="button" data-story-subs aria-pressed="true" aria-label="Hide subtitles">CC</button>
             <button class="story-btn" type="button" data-story-textsize aria-label="Text size: normal. Tap to enlarge">A</button>
           </div>
+
+          <!-- History timeline rail (visible during the era chapters) -->
+          <nav class="story__timeline" data-story-timeline aria-label="Cemetery history timeline">
+            <button type="button" data-era-jump="era1845">1845</button>
+            <button type="button" data-era-jump="era1896">1896</button>
+            <button type="button" data-era-jump="era1981">1981</button>
+            <button type="button" data-era-jump="eraToday">Today</button>
+          </nav>
 
           <!-- Chapter dots -->
           <nav class="story__dots" data-story-dots aria-label="Story chapters"></nav>
