@@ -563,12 +563,13 @@ body {
   /* Well below the sheet's top edge (which starts at the nav's bottom). */
   .story-era-ghost { font-size: clamp(4.6rem, 24vw, 8.5rem); top: 3.2rem; left: 0; }
   .story-era-ghost--word { font-size: clamp(2.8rem, 14vw, 5rem); top: 3.6rem; }
-  /* Era sheets need extra bottom room so their text clears the rail. */
-  .story__viewport .story-chapter--era { padding-bottom: 10.6rem; }
+  /* Era sheets need extra bottom room so their text clears the rail.
+     (Selector strength must beat the later generic subtitles-off rule.) */
+  .story__viewport .story-chapter.story-chapter--era { padding-bottom: 10.6rem; }
   /* Subtitles hidden → the rail drops into the chip's slot, keeping the
      same breathing room to the controls below and the info above. */
   .story__viewport[data-subtitles="off"] .story__timeline { bottom: 4.7rem; }
-  .story__viewport[data-subtitles="off"] .story-chapter--era { padding-bottom: 7.8rem; }
+  .story__viewport[data-subtitles="off"] .story-chapter.story-chapter--era { padding-bottom: 7.8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
