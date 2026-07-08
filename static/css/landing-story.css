@@ -414,16 +414,17 @@ body {
     width: min(230px, 46vw);
   }
   /* Collage on phones: same diagonal, overlapping arrangement as desktop —
-     larger frames zigzagging down the upper half, behind the text sheet. */
-  .story__father[data-story-guerrilla-a],
-  .story__father[data-story-guerrilla-b],
-  .story__father[data-story-guerrilla-c] {
+     larger frames zigzagging down the upper half, behind the text sheet.
+     (Selectors match the desktop rules' specificity so these actually win.) */
+  .story__viewport .story__father[data-story-guerrilla-a],
+  .story__viewport .story__father[data-story-guerrilla-b],
+  .story__viewport .story__father[data-story-guerrilla-c] {
     width: min(175px, 43vw);
     margin-left: 0;
   }
-  .story__father[data-story-guerrilla-a] { top: 7vh; left: 7vw !important; }
-  .story__father[data-story-guerrilla-b] { top: 18vh; left: auto !important; right: 7vw; }
-  .story__father[data-story-guerrilla-c] { top: 31vh; left: 16vw !important; }
+  .story__viewport .story__father[data-story-guerrilla-a] { top: 6vh; left: 7vw !important; }
+  .story__viewport .story__father[data-story-guerrilla-b] { top: 17vh; left: auto !important; right: 7vw; }
+  .story__viewport .story__father[data-story-guerrilla-c] { top: 29vh; left: 16vw !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
