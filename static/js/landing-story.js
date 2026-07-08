@@ -13,8 +13,8 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 /* --- Narration scripts (spoken as Ana Kalang, guardian of Nagcarlan) ------ */
 const SCRIPT = {
   hero: {
-    en: "Mabuhay! I am Ana Kalang, guardian of Nagcarlan's memory. Welcome to the Museo ng Libingan sa Ilalim ng Lupa — the only underground cemetery in the Philippines. Scroll with me, and let me walk you through our story.",
-    tl: "Mabuhay! Ako si Ana Kalang, tagapag-ingat ng alaala ng Nagcarlan. Maligayang pagdating sa Museo ng Libingan sa Ilalim ng Lupa — ang tanging libingan sa ilalim ng lupa sa Pilipinas. Samahan mo akong ikuwento ito.",
+    en: "Mabuhay! I am Ana Kalang, guardian of Nagcarlan's memory. Welcome to the Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan — the only underground cemetery in the Philippines. Scroll with me, and let me walk you through our story.",
+    tl: "Mabuhay! Ako si Ana Kalang, tagapag-ingat ng alaala ng Nagcarlan. Maligayang pagdating sa Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan — ang tanging libingan sa ilalim ng lupa sa Pilipinas. Samahan mo akong ikuwento ito.",
   },
   testament: {
     en: "This place is a living testament to history. Built in 1845, its underground crypt shows the ingenuity of our ancestors. Today it stands proudly as a National Historical Landmark.",
