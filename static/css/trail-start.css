@@ -220,12 +220,15 @@
 }
 
 /* Ana Kalang — full-viewport canvas so her arms never clip; she's placed on
-   the right in 3D space and slides in there (see trail-start.js). ------------- */
+   the right in 3D space and slides in there (see trail-start.js). The canvas
+   is click-through so the 360 panorama beneath stays fully draggable. -------- */
 .trailx__ana {
   position: absolute;
   inset: 0;
   z-index: 5;
   opacity: 0;
+  pointer-events: none;
+  transition: transform 0.75s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.6s ease;
 }
 .trailx.is-entered .trailx__ana {
   animation: trailx-ana-fade 1.1s ease 0.2s forwards;
@@ -247,7 +250,6 @@
 .trailx__canvas {
   position: absolute;
   inset: 0;
-  cursor: pointer;
 }
 .trailx__canvas canvas {
   display: block;
@@ -389,6 +391,60 @@
 /* Bilingual toggle */
 .trailx:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
 .trailx[data-lang="tl"] [data-lang-en] { display: none !important; }
+
+/* Immersive toggle: slide everything off so only the 360 view remains. The
+   toggle button stays put; clicking it slides everything back in from the same
+   side it left. (!important beats the entrance animations' forwards fill.) --- */
+.trailx__panel,
+.trailx__controls { transition: transform 0.7s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.55s ease; }
+.trailx.is-immersive .trailx__panel {
+  transform: translateY(-50%) translateX(-130%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+.trailx.is-immersive .trailx__ana {
+  transform: translateX(72%) !important;
+  opacity: 0 !important;
+}
+.trailx.is-immersive .trailx__bubble { opacity: 0 !important; pointer-events: none !important; }
+.trailx.is-immersive .trailx__controls {
+  transform: translateY(180%) !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
+
+/* Immersive toggle button — always visible, top-right. */
+.trailx__immersive {
+  position: absolute;
+  z-index: 12;
+  top: 1.3rem;
+  right: 1.3rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  height: 40px;
+  padding: 0 1rem;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.72);
+  color: var(--tx-cream);
+  font-size: 0.68rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.trailx.is-entered .trailx__immersive { animation: trailx-rise 0.6s ease 1.6s forwards; }
+.trailx__immersive:hover { background: rgba(212, 175, 106, 0.24); border-color: var(--tx-gold); }
+.trailx__immersive:active { transform: scale(0.96); }
+.trailx__immersive:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 2px; }
+.trailx__immersive svg { width: 16px; height: 16px; }
+.trailx[data-immersive="true"] .trailx-ico--expand { display: none; }
+.trailx:not([data-immersive="true"]) .trailx-ico--collapse { display: none; }
+.trailx[data-immersive="true"] .trailx__immersive-label-show { display: none; }
+.trailx:not([data-immersive="true"]) .trailx__immersive-label-hide { display: none; }
 
 /* Leaving for the trail: the scene dims and eases forward ---------------------- */
 .trailx.is-leaving { animation: trailx-leave 0.9s ease forwards; }

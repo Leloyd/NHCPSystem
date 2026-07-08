@@ -34,6 +34,14 @@
     >
       <!-- 360 aerial panorama (no controls / no leaflet) -->
       <div class="trailx__pano" id="trailPano" role="img" aria-label="360-degree aerial view of the Nagcarlan Underground Cemetery"></div>
+
+      <!-- Immersive toggle: slide the panels away for an unobstructed 360 view -->
+      <button class="trailx__immersive" type="button" data-trail-immersive aria-pressed="false" aria-label="Hide panels for a full 360 view">
+        <svg class="trailx-ico--expand" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 8V4h4M20 8V4h-4M4 16v4h4M20 16v4h-4"/></svg>
+        <svg class="trailx-ico--collapse" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 4v4H5M15 4v4h4M9 20v-4H5M15 20v-4h4"/></svg>
+        <span class="trailx__immersive-label-show"><span data-lang-en>Full View</span><span data-lang-tl>Buong Tanaw</span></span>
+        <span class="trailx__immersive-label-hide"><span data-lang-en>Show Panels</span><span data-lang-tl>Ibalik</span></span>
+      </button>
       <div class="trailx__scrim" aria-hidden="true"></div>
       <div class="trailx__grain" aria-hidden="true"></div>
 

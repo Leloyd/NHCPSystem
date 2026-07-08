@@ -178,6 +178,16 @@ langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'e
 subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
 textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
 
+// Immersive toggle: slide the panels / Ana / controls out for a clean 360
+// view; click again to slide them back in from the same side.
+const immersiveBtn = root.querySelector('[data-trail-immersive]');
+root.setAttribute('data-immersive', 'false');
+immersiveBtn?.addEventListener('click', () => {
+  const on = root.getAttribute('data-immersive') === 'true';
+  root.setAttribute('data-immersive', on ? 'false' : 'true');
+  immersiveBtn.setAttribute('aria-pressed', String(!on));
+});
+
 // First interaction anywhere unlocks TTS, then auto-narrates once.
 const kickstart = () => {
   const wasLocked = !state.unlocked;
@@ -288,8 +298,8 @@ function initCharacter() {
   const modelUrl = root.getAttribute('data-model-url') || '';
   const BASE_ROT_Y = -Math.PI / 2; // GLB authored facing screen-right → face camera
   const mobile = window.matchMedia('(max-width: 820px)').matches;
-  const ANA_REST_X = mobile ? 0.32 : 0.78; // world-space resting X (right of center)
-  const CAM_LOOK_X = ANA_REST_X * 0.34;    // frame her without pushing her off-edge
+  const ANA_REST_X = mobile ? 0.55 : 1.15; // world-space resting X (right side)
+  const CAM_LOOK_X = ANA_REST_X * 0.2;     // frame her without pushing her off-edge
   let renderer, scene, camera, mixer, clock, avatar;
   let idleAction = null;
   let gestureAction = null;
