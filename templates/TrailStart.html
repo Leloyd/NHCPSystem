@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Heritage Trail · Starting Point | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/trail-start.css') }}" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/webxr/static/vendor/three/three.module.js",
+          "three/addons/": "/webxr/static/vendor/three/examples/jsm/"
+        }
+      }
+    </script>
+  </head>
+  <body class="trail-start-body">
+    <section
+      id="trailStart"
+      class="trailx"
+      data-panorama="{{ url_for('static', filename='images/site-map/360aerial_view.jpg') }}"
+      data-model-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-idle-1K.glb"
+      data-greet-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-greet-1k.glb"
+      data-heart-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-heart-1k.glb"
+      data-look-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-look-1k.glb"
+      data-begin-url="{{ url_for('heritage_trail') }}"
+      data-cancel-url="{{ url_for('index') }}"
+    >
+      <!-- 360 aerial panorama (no controls / no leaflet) -->
+      <div class="trailx__pano" id="trailPano" role="img" aria-label="360-degree aerial view of the Nagcarlan Underground Cemetery"></div>
+      <div class="trailx__scrim" aria-hidden="true"></div>
+      <div class="trailx__grain" aria-hidden="true"></div>
+
+      <!-- Curtain that fades from the landing exit into this scene (no loader) -->
+      <div class="trailx__curtain" data-trail-curtain aria-hidden="true"></div>
+
+      <!-- Mouse-follow glow -->
+      <div class="trailx__cursor" data-trail-cursor aria-hidden="true"></div>
+
+      <!-- Informational panel (left) -->
+      <div class="trailx__panel" data-trail-panel>
+        <div class="trailx__label">
+          <span class="trailx__label-line"></span>
+          <span class="trailx__label-text">
+            <span data-lang-en>Starting Point</span>
+            <span data-lang-tl>Panimulang Hinto</span>
+          </span>
+        </div>
+        <h1 class="trailx__title">
+          <span data-lang-en>The Heritage<br /><em>Trail</em></span>
+          <span data-lang-tl>Ang Landas<br /><em>ng Pamana</em></span>
+        </h1>
+        <div class="trailx__divider" aria-hidden="true"></div>
+        <p class="trailx__lede" data-lang-en>
+          You are standing at the threshold of the Nagcarlan Underground Cemetery. Look around the aerial view — the circular enclosure, the chapel, the paths worn by centuries. When you are ready, I will walk you through ten guided stops, from the front gates to the crypts below.
+        </p>
+        <p class="trailx__lede" data-lang-tl>
+          Nasa bungad ka na ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Lumingon-lingon sa tanawin mula sa itaas — ang pabilog na pader, ang kapilya, ang mga daanang ginugol ng mga siglo. Kapag handa ka na, gagabayan kita sa sampung hinto, mula sa tarangkahan hanggang sa mga kripta sa ilalim.
+        </p>
+        <div class="trailx__actions">
+          <a class="trailx__begin" data-trail-begin href="{{ url_for('heritage_trail') }}">
+            <span data-lang-en>Begin the Trail</span>
+            <span data-lang-tl>Simulan ang Landas</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+          </a>
+          <a class="trailx__cancel" data-trail-cancel href="{{ url_for('index') }}">
+            <span data-lang-en>Not yet</span>
+            <span data-lang-tl>Hindi pa</span>
+          </a>
+        </div>
+        <p class="trailx__hint">
+          <span data-lang-en>Drag to look around · Tap Ana to say hello</span>
+          <span data-lang-tl>I-drag upang lumingon · Pindutin si Ana upang bumati</span>
+        </p>
+      </div>
+
+      <!-- Ana Kalang — slides in from the right -->
+      <div class="trailx__ana" data-trail-ana>
+        <div class="trailx__ana-glow" aria-hidden="true"></div>
+        <div class="trailx__canvas" data-trail-canvas></div>
+      </div>
+
+      <!-- Speech bubble -->
+      <div class="trailx__bubble" data-trail-bubble role="status">
+        <p class="trailx__bubble-eyebrow">Ana Kalang says</p>
+        <p class="trailx__bubble-text" data-trail-text aria-live="polite"></p>
+      </div>
+
+      <!-- Guide controls (same family as the landing page) -->
+      <div class="trailx__controls">
+        <div class="trailx__nameplate">Ana Kalang<span>Guardian of Nagcarlan</span></div>
+        <button class="trailx-btn trailx-btn--primary" type="button" data-trail-play aria-pressed="false" aria-label="Play narration">
+          <svg class="trailx-ico--play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <svg class="trailx-ico--pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+          <span>Listen</span>
+        </button>
+        <button class="trailx-btn" type="button" data-trail-mute aria-pressed="false" aria-label="Mute narration">
+          <svg class="trailx-ico--sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>
+          <svg class="trailx-ico--sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+        </button>
+        <button class="trailx-btn" type="button" data-trail-lang aria-label="Switch narration language">EN</button>
+      </div>
+    </section>
+
+    <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+    <script type="module" src="{{ url_for('static', filename='js/trail-start.js') }}"></script>
+  </body>
+</html>

@@ -1317,8 +1317,9 @@ if (story && viewport && chapters.length) {
   // Back to top: one tap returns to the first chapter.
   story.querySelector('[data-story-top]')?.addEventListener('click', () => scrollToChapter(0));
 
-  // Departing for the Heritage Trail: close a golden iris over the stage and
-  // lean the camera in, then navigate — the trail page opens the iris back up.
+  // Departing for the Heritage Trail starting point: lift the nav, slide the
+  // text and chrome away (Ana + her controls stay on screen), then let a
+  // curtain close before the page swaps — so the hand-off feels continuous.
   const trailCta = story.querySelector('.story-cta');
   trailCta?.addEventListener('click', (event) => {
     const href = trailCta.getAttribute('href');
@@ -1326,12 +1327,13 @@ if (story && viewport && chapters.length) {
     event.preventDefault();
     stopSpeaking();
     try { sessionStorage.setItem('trailArrival', '1'); } catch { /* private mode */ }
-    const iris = document.createElement('div');
-    iris.className = 'story__iris';
-    document.body.appendChild(iris);
+    document.body.classList.add('is-trail-exit');
     viewport.classList.add('is-departing');
-    window.requestAnimationFrame(() => iris.classList.add('is-closing'));
-    window.setTimeout(() => { window.location.href = href; }, 1000);
+    const curtain = document.createElement('div');
+    curtain.className = 'story__curtain';
+    document.body.appendChild(curtain);
+    window.requestAnimationFrame(() => curtain.classList.add('is-closing'));
+    window.setTimeout(() => { window.location.href = href; }, 1050);
   });
 
   // History timeline rail: each year jumps to its era chapter.

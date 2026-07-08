@@ -1269,6 +1269,11 @@ def artifact_asset_file(filename):
     return jsonify({"error": f"Artifact asset not found: {filename}"}), 404
 
 
+@app.route("/trail")
+def trail_start():
+    return render_template("TrailStart.html")
+
+
 @app.route("/heritage-trail")
 def heritage_trail():
     return render_template("HeritageTrail.html")
