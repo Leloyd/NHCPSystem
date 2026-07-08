@@ -253,6 +253,11 @@ if (voiceEl) {
   });
 }
 
+/* Mobile browsers refuse AUDIBLE autoplay but allow MUTED autoplay. When the
+   audible attempt is blocked, we start muted so the narration begins at page
+   open exactly like on PC — then the first touch unmutes it mid-sentence. */
+let autoMutedStart = false;
+
 function playVoiceFrom(url, seconds) {
   if (!voiceEl) return false;
   narration.mode = 'audio';
@@ -261,12 +266,26 @@ function playVoiceFrom(url, seconds) {
   if (synth) synth.cancel();
   if (voiceEl.src !== url) voiceEl.src = url;
   try { voiceEl.currentTime = seconds || 0; } catch { /* metadata not ready */ }
-  voiceEl.muted = state.muted;
+  voiceEl.muted = state.muted || autoMutedStart;
   const playing = voiceEl.play();
   if (playing && playing.catch) {
     playing.catch((err) => {
-      // Autoplay refused — the first-gesture kickstart will retry.
-      if (err && err.name === 'NotAllowedError') state.unlocked = false;
+      if (err && err.name === 'NotAllowedError') {
+        if (!autoMutedStart) {
+          // Retry silently — visuals/captions roll, sound joins on first touch.
+          autoMutedStart = true;
+          voiceEl.muted = true;
+          const retry = voiceEl.play();
+          if (retry && retry.catch) {
+            retry.catch(() => {
+              state.unlocked = false;
+              setPlaying(false);
+            });
+          }
+          return;
+        }
+        state.unlocked = false;
+      }
       setPlaying(false);
     });
   }
@@ -854,6 +873,12 @@ function attemptAutoSpeak() {
 function setupAutoSpeakKickstart() {
   const types = ['pointerdown', 'keydown', 'touchend'];
   const handler = (event) => {
+    // If the narration auto-started muted (mobile policy), this first gesture
+    // brings the sound in right where she is.
+    if (autoMutedStart) {
+      autoMutedStart = false;
+      if (voiceEl && !state.muted) voiceEl.muted = false;
+    }
     const target = event.target;
     // On the guide controls, only unlock — their own handlers decide playback.
     const onControls = target instanceof Element && target.closest('.story__guidebar');
