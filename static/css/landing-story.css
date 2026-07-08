@@ -382,7 +382,7 @@ body {
 .story__viewport .story__father[data-story-guerrilla-b] {
   --tilt: 3deg;
   top: 63.5vh;
-  left: calc(var(--ana-x, 72%) - 34vw); /* edge kisses the 1945 print */
+  left: calc(var(--ana-x, 72%) - 29vw); /* corner tucks under the 1945 print */
 }
 .story__viewport .story__father[data-story-guerrilla-c] {
   --tilt: -2deg;
