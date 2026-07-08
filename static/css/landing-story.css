@@ -157,12 +157,18 @@ body {
 .story-chapter[data-side="left"] { left: var(--story-inset, 6vw); text-align: left; }
 .story-chapter[data-side="right"] { right: var(--story-inset, 6vw); text-align: left; }
 
-/* Museum Rules is the tallest chapter — anchor it to the top instead of
-   centering, so the list starts high and has room to breathe, and let the
-   list itself run down to just above the controls. */
+/* Museum Rules is the tallest chapter — anchor it to the top, and let the
+   list FILL everything from the heading down to the bottom padding (which
+   already accounts for the subtitle chip / controls and the CC state). */
 .story-chapter[data-chapter="rules"] { justify-content: flex-start; }
 .story-chapter[data-chapter="rules"] .story-chapter__scroll {
-  max-height: calc(100vh - 19.5rem);
+  flex: 1 1 auto;
+  min-height: 0; /* lets it shrink → overflow scrolls instead of spilling */
+  max-height: none;
+}
+.story-chapter[data-chapter="rules"] .story-rules {
+  min-height: 100%;
+  align-content: space-between; /* spread the rows to cover the space */
 }
 
 /* Back-to-top: one tap returns to the first chapter. */
@@ -989,13 +995,9 @@ body {
   .story-stat__icon svg { width: 0.85rem; height: 0.85rem; }
   .story-stat h4 { font-size: calc(0.92rem * var(--story-font-scale, 1)); }
   .story-stat p { font-size: calc(0.72rem * var(--story-font-scale, 1)); }
-  /* Museum Rules: show more of the list per screen; expand further when the
-     subtitle chip is hidden and its space frees up. */
-  .story-chapter[data-chapter="rules"] .story-chapter__scroll { max-height: 42vh; max-height: 42svh; }
-  .story__viewport[data-subtitles="off"] .story-chapter[data-chapter="rules"] .story-chapter__scroll {
-    max-height: 48vh;
-    max-height: 48svh;
-  }
+  /* Museum Rules: the flex-fill sizing (see the desktop rules) stretches the
+     list down to the sheet's bottom padding, which already adapts to the
+     subtitle chip being shown or hidden — no fixed caps needed here. */
   /* Back-to-top: icon-only pill at the right, above the subtitle chip;
      drops into the chip's slot when subtitles are hidden. */
   .story__top {
