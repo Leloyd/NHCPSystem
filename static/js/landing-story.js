@@ -47,6 +47,17 @@ const SCRIPT = {
   },
 };
 
+/* Recorded voice-overs (Supabase). Chapters listed here play the MP3 in the
+   active language; chapters without an entry fall back to browser TTS. */
+const VOICE_BASE = 'https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Audio/';
+const VOICE = {
+  hero: { en: `${VOICE_BASE}E1%20-%20Title.mp3`, tl: `${VOICE_BASE}T1%20-%20Title.mp3` },
+  testament: { en: `${VOICE_BASE}E2%20-%20Testament.mp3`, tl: `${VOICE_BASE}T2%20-%20Testament.mp3` },
+  about1: { en: `${VOICE_BASE}E3%20-%20AboutSite1.mp3`, tl: `${VOICE_BASE}T3%20-%20AboutSite1.mp3` },
+  about2: { en: `${VOICE_BASE}E4%20-%20AboutSite2.mp3`, tl: `${VOICE_BASE}T4%20-%20AboutSite2.mp3` },
+  about3: { en: `${VOICE_BASE}E5%20-%20AboutSite3.mp3`, tl: `${VOICE_BASE}T5%20-%20AboutSite3.mp3` },
+};
+
 /* --- DOM refs -------------------------------------------------------------- */
 const story = document.getElementById('anaStory');
 if (!story) console.warn('[Ana Kalang] Story markup not found.');
@@ -201,12 +212,57 @@ function setPlaying(isPlaying) {
    pauses/resumes from the same spot instead of restarting. The utterGen
    counter invalidates callbacks from cancelled utterances. */
 let utterGen = 0;
-const narration = { full: '', pos: 0, paused: false, startPos: 0, startedAt: 0, boundaryFired: false };
+const narration = { full: '', pos: 0, paused: false, startPos: 0, startedAt: 0, boundaryFired: false, mode: 'tts' };
+
+/* Shared player for the recorded voice-overs. */
+const voiceEl = typeof Audio !== 'undefined' ? new Audio() : null;
+if (voiceEl) {
+  voiceEl.preload = 'auto';
+  voiceEl.addEventListener('play', () => { if (narration.mode === 'audio') setPlaying(true); });
+  voiceEl.addEventListener('ended', () => {
+    if (narration.mode === 'audio') {
+      narration.paused = false;
+      setPlaying(false);
+    }
+  });
+  voiceEl.addEventListener('error', () => {
+    // Recording failed to load — fall back to TTS so she still speaks.
+    if (narration.mode === 'audio' && state.unlocked && narration.full) {
+      narration.mode = 'tts';
+      speakFrom(0);
+    }
+  });
+}
+
+function playVoiceFrom(url, seconds) {
+  if (!voiceEl) return false;
+  narration.mode = 'audio';
+  narration.paused = false;
+  utterGen += 1; // invalidate any in-flight TTS
+  if (synth) synth.cancel();
+  if (voiceEl.src !== url) voiceEl.src = url;
+  try { voiceEl.currentTime = seconds || 0; } catch { /* metadata not ready */ }
+  voiceEl.muted = state.muted;
+  const playing = voiceEl.play();
+  if (playing && playing.catch) {
+    playing.catch((err) => {
+      // Autoplay refused — the first-gesture kickstart will retry.
+      if (err && err.name === 'NotAllowedError') state.unlocked = false;
+      setPlaying(false);
+    });
+  }
+  return true;
+}
 
 /* Android Chrome never fires word-boundary events, so estimate the spoken
    position from elapsed time instead, snapped back to a word start. */
 const SPEECH_CHARS_PER_SEC = 14; // ≈150 wpm at our speaking rate
 function currentSpeechPos() {
+  if (narration.mode === 'audio' && voiceEl) {
+    // Recorded VO: map playback progress onto the script text proportionally.
+    if (!voiceEl.duration || !Number.isFinite(voiceEl.duration)) return 0;
+    return Math.min(narration.full.length, Math.round((voiceEl.currentTime / voiceEl.duration) * narration.full.length));
+  }
   if (narration.boundaryFired || !state.playing) return narration.pos;
   const elapsed = (performance.now() - narration.startedAt) / 1000;
   let pos = Math.min(narration.full.length, narration.startPos + Math.round(elapsed * SPEECH_CHARS_PER_SEC));
@@ -217,6 +273,10 @@ function currentSpeechPos() {
 function stopSpeaking() {
   utterGen += 1;
   if (synth) synth.cancel();
+  if (voiceEl) {
+    voiceEl.pause();
+    try { voiceEl.currentTime = 0; } catch { /* metadata not ready */ }
+  }
   narration.paused = false;
   narration.pos = 0;
   setPlaying(false);
@@ -274,17 +334,42 @@ function speakFrom(pos) {
   }, 80);
 }
 
-function speak(text) {
+function speak(text, key) {
   narration.full = text;
+  // Recorded voice-over when this chapter has one; browser TTS otherwise.
+  const voiceUrl = key && VOICE[key] ? VOICE[key][state.lang] || VOICE[key].en : null;
+  if (voiceUrl && voiceEl) {
+    playVoiceFrom(voiceUrl, 0);
+    return;
+  }
+  narration.mode = 'tts';
+  if (voiceEl) voiceEl.pause();
   speakFrom(0);
 }
 
 function pauseSpeaking() {
+  if (narration.mode === 'audio' && voiceEl) {
+    voiceEl.pause(); // position is kept by the element itself
+    narration.paused = true;
+    setPlaying(false);
+    return;
+  }
   narration.pos = currentSpeechPos(); // capture before playing flips off
   narration.paused = true;
   utterGen += 1; // silence callbacks from the utterance we cancel
   if (synth) synth.cancel();
   setPlaying(false);
+}
+
+function resumeSpeaking() {
+  if (narration.mode === 'audio' && voiceEl) {
+    voiceEl.muted = state.muted;
+    const playing = voiceEl.play();
+    if (playing && playing.catch) playing.catch(() => setPlaying(false));
+    narration.paused = false;
+    return;
+  }
+  speakFrom(narration.pos);
 }
 
 /* ========================================================================== */
@@ -337,7 +422,7 @@ function narrateChapter(index, { speakIt } = {}) {
   // (re)starts from the top, replay the chapter's scene — bg, photo, videos.
   if ((key === 'about1' || key === 'about2' || key === 'about3') && speakIt) resetAboutScene(key);
   renderBubble(text);
-  if (speakIt) speak(text);
+  if (speakIt) speak(text, key);
   else stopSpeaking();
 }
 
@@ -681,9 +766,10 @@ function setMuted(isMuted) {
     muteBtn.setAttribute('aria-pressed', String(isMuted));
     muteBtn.setAttribute('aria-label', isMuted ? 'Unmute narration' : 'Mute narration');
   }
-  // Mute is a volume switch, not a stop: if she's mid-narration, re-speak
-  // the remainder from the current word at the new volume so she carries on.
-  if (state.playing) speakFrom(currentSpeechPos());
+  // Mute is a volume switch, not a stop. Recorded VO mutes natively; TTS
+  // re-speaks the remainder from the current word at the new volume.
+  if (voiceEl) voiceEl.muted = isMuted;
+  if (state.playing && narration.mode !== 'audio') speakFrom(currentSpeechPos());
 }
 
 function setLang(lang) {
@@ -773,8 +859,8 @@ function wireControls() {
     unlockAudio();
     if (state.playing) {
       pauseSpeaking(); // Listen acts as pause…
-    } else if (narration.paused && narration.pos > 0) {
-      speakFrom(narration.pos); // …and resumes from the same word,
+    } else if (narration.paused && (narration.mode === 'audio' || narration.pos > 0)) {
+      resumeSpeaking(); // …and resumes from the same spot,
     } else {
       narrateChapter(state.chapter, { speakIt: true }); // or restarts when finished.
     }
@@ -1192,9 +1278,13 @@ if (story && viewport && chapters.length) {
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', onScroll, { passive: true });
 
-  // Drive the About·I portrait/video moment. A timer (not the render loop)
-  // so it also works if WebGL is unavailable.
-  window.setInterval(updateAboutScene, 300);
+  // Drive the About scenes. A timer (not the render loop) so it also works
+  // if WebGL is unavailable. Recorded VO has no word-boundary events, so the
+  // same tick keeps her talking motion pulsing while an MP3 plays.
+  window.setInterval(() => {
+    updateAboutScene();
+    if (state.playing && narration.mode === 'audio') talk.pulse = 1;
+  }, 300);
 
   // Leaving the page (including into the back/forward cache): silence the
   // narration — some mobile browsers keep speaking otherwise.
