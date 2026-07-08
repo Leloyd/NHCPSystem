@@ -359,7 +359,7 @@ body {
 /* The gravestone frame stays on screen — parked at the upper right, above
    the information column, so it never covers the text. */
 .story__viewport .story__father[data-story-puntod] {
-  top: 9vh;
+  top: 17vh;
   left: auto;
   right: calc(var(--story-inset, 6vw) + 1vw);
   z-index: 2;
@@ -375,18 +375,18 @@ body {
 }
 .story__viewport .story__father[data-story-guerrilla-a] {
   --tilt: -3deg;
-  top: 15vh;
-  left: calc(var(--ana-x, 72%) - 19vw);
+  top: 19vh;
+  left: calc(var(--ana-x, 72%) - 22vw);
   width: min(230px, 22vw); /* same framing as the Padre portrait */
 }
 .story__viewport .story__father[data-story-guerrilla-b] {
   --tilt: 3deg;
-  top: 62vh;
-  left: calc(var(--ana-x, 72%) - 37vw);
+  top: 63.5vh;
+  left: calc(var(--ana-x, 72%) - 34vw); /* edge kisses the 1945 print */
 }
 .story__viewport .story__father[data-story-guerrilla-c] {
   --tilt: -2deg;
-  top: 62vh;
+  top: 66vh;
   left: calc(var(--ana-x, 72%) - 19vw);
 }
 .story__father img {
@@ -424,7 +424,7 @@ body {
     left: auto !important;
     right: 4vw;
     margin-left: 0;
-    top: 10vh;
+    top: 16vh;
     width: min(190px, 44vw);
   }
   /* Collage on phones: same diagonal, overlapping arrangement as desktop —
