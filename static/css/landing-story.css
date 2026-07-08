@@ -158,8 +158,42 @@ body {
 .story-chapter[data-side="right"] { right: var(--story-inset, 6vw); text-align: left; }
 
 /* Museum Rules is the tallest chapter — anchor it to the top instead of
-   centering, so the list starts high and has room to breathe. */
+   centering, so the list starts high and has room to breathe, and let the
+   list itself run down to just above the controls. */
 .story-chapter[data-chapter="rules"] { justify-content: flex-start; }
+.story-chapter[data-chapter="rules"] .story-chapter__scroll {
+  max-height: calc(100vh - 19.5rem);
+}
+
+/* Back-to-top: one tap returns to the first chapter. */
+.story__top {
+  position: absolute;
+  z-index: 6;
+  left: var(--story-inset, 6vw);
+  bottom: 1.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  height: 40px;
+  padding: 0 1rem;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.78);
+  color: var(--story-cream);
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  transition: opacity 0.4s ease, bottom 0.4s ease, background 0.2s ease, border-color 0.2s ease;
+}
+.story__top svg { width: 15px; height: 15px; }
+.story__top:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--story-gold); }
+.story__top:focus-visible { outline: 2px solid var(--story-gold); outline-offset: 2px; }
+/* Pointless on the first chapter — hide it there. */
+.story__viewport[data-chapter="hero"] .story__top { opacity: 0; pointer-events: none; }
 
 .story-chapter.is-active {
   opacity: 1;
@@ -955,8 +989,25 @@ body {
   .story-stat__icon svg { width: 0.85rem; height: 0.85rem; }
   .story-stat h4 { font-size: calc(0.92rem * var(--story-font-scale, 1)); }
   .story-stat p { font-size: calc(0.72rem * var(--story-font-scale, 1)); }
-  /* Museum Rules: show more of the list per screen. */
+  /* Museum Rules: show more of the list per screen; expand further when the
+     subtitle chip is hidden and its space frees up. */
   .story-chapter[data-chapter="rules"] .story-chapter__scroll { max-height: 42vh; max-height: 42svh; }
+  .story__viewport[data-subtitles="off"] .story-chapter[data-chapter="rules"] .story-chapter__scroll {
+    max-height: 48vh;
+    max-height: 48svh;
+  }
+  /* Back-to-top: icon-only pill at the right, above the subtitle chip;
+     drops into the chip's slot when subtitles are hidden. */
+  .story__top {
+    left: auto;
+    right: 1.1rem;
+    bottom: 7.8rem;
+    width: 42px;
+    height: 42px;
+    padding: 0;
+  }
+  .story__top span { display: none; }
+  .story__viewport[data-subtitles="off"] .story__top { bottom: 4.3rem; }
   /* Compact subtitle chip below the chapter text, above the controls —
      tap to expand/collapse (it expands upward over the sheet). */
   .story__bubble {

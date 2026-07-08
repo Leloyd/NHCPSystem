@@ -1293,6 +1293,9 @@ if (story && viewport && chapters.length) {
   wireControls();
   setupAutoSpeakKickstart();
 
+  // Back to top: one tap returns to the first chapter.
+  story.querySelector('[data-story-top]')?.addEventListener('click', () => scrollToChapter(0));
+
   // History timeline rail: each year jumps to its era chapter.
   story.querySelectorAll('[data-era-jump]').forEach((btn) => {
     btn.addEventListener('click', () => {
