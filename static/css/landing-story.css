@@ -924,17 +924,22 @@ body {
   .story-hero-tagline { margin-bottom: 1.6rem; }
   .story-copy { font-size: calc(0.95rem * var(--story-font-scale, 1)); }
   .story-chapter__scroll { max-height: 33vh; max-height: 33svh; }
-  /* Visitor cards stack and scroll within the sheet */
+  /* Visitor cards: compact, no inner scrolling — everything fits one screen. */
   .story-cards {
-    max-height: 33vh;
-    max-height: 33svh;
-    overflow-y: auto;
-    gap: 0.55rem;
-    padding-right: 0.4rem;
-    scrollbar-width: thin;
-    scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
+    max-height: none;
+    overflow: visible;
+    gap: 0.5rem;
+    padding-right: 0;
   }
-  .story-card { padding: 0.75rem 0.9rem; }
+  .story-card { padding: 0.55rem 0.7rem; }
+  .story-card h3 {
+    margin-bottom: 0.25rem;
+    gap: 0.4rem;
+    font-size: calc(0.9rem * var(--story-font-scale, 1));
+  }
+  .story-card h3 svg { width: 0.85rem; height: 0.85rem; }
+  .story-card p { font-size: calc(0.74rem * var(--story-font-scale, 1)); }
+  .story-card a { font-size: calc(0.7rem * var(--story-font-scale, 1)); }
   /* Compact subtitle chip below the chapter text, above the controls —
      tap to expand/collapse (it expands upward over the sheet). */
   .story__bubble {
@@ -1136,7 +1141,14 @@ body {
 }
 
 @media (max-width: 768px) {
-  .story-cards, .story-rules { grid-template-columns: 1fr; }
+  .story-rules { grid-template-columns: 1fr; }
+  /* Visitor info: short cards (Hours, Admission) pair on one row; the long
+     ones (Location, Contact) span the full width below. */
+  .story-cards { grid-template-columns: 1fr 1fr; }
+  .story-card:nth-child(1) { grid-column: 1; grid-row: 1; } /* Hours */
+  .story-card:nth-child(3) { grid-column: 2; grid-row: 1; } /* Admission */
+  .story-card:nth-child(2),
+  .story-card:nth-child(4) { grid-column: 1 / -1; } /* Location, Contact */
   .story-chapter--wide { width: auto; }
 }
 

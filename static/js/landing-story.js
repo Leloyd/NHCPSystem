@@ -73,6 +73,7 @@ const VOICE = {
   era1896: { en: `${VOICE_BASE}1896-E.mp3`, tl: `${VOICE_BASE}1896-T.mp3` },
   era1981: { en: `${VOICE_BASE}1981-E.mp3`, tl: `${VOICE_BASE}1981-T.mp3` },
   eraToday: { en: `${VOICE_BASE}Today-E.mp3`, tl: `${VOICE_BASE}Ngayon-T.mp3` },
+  'visitor-info': { en: `${VOICE_BASE}E-7.mp3`, tl: `${VOICE_BASE}T-7.mp3` },
 };
 
 /* --- DOM refs -------------------------------------------------------------- */
