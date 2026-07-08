@@ -198,8 +198,9 @@ body {
 .story__top svg { width: 15px; height: 15px; }
 .story__top:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--story-gold); }
 .story__top:focus-visible { outline: 2px solid var(--story-gold); outline-offset: 2px; }
-/* Pointless on the first chapter — hide it there. */
-.story__viewport[data-chapter="hero"] .story__top { opacity: 0; pointer-events: none; }
+/* Only shown at journey's end — the Museum Rules chapter. */
+.story__top { opacity: 0; pointer-events: none; }
+.story__viewport[data-chapter="rules"] .story__top { opacity: 1; pointer-events: auto; }
 
 .story-chapter.is-active {
   opacity: 1;
