@@ -314,9 +314,11 @@ body {
 .story__viewport[data-lang="tl"] [data-lang-en] { display: none !important; }
 .story__viewport:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
 
-/* About · I shows the narration as its on-screen text — the subtitle bubble
-   would duplicate it, so it stays hidden there. */
-.story__viewport[data-chapter="about1"] .story__bubble {
+/* The About chapters show their narration as on-screen text — the subtitle
+   bubble would duplicate it, so it stays hidden across all three. */
+.story__viewport[data-chapter="about1"] .story__bubble,
+.story__viewport[data-chapter="about2"] .story__bubble,
+.story__viewport[data-chapter="about3"] .story__bubble {
   opacity: 0;
   visibility: hidden;
   pointer-events: none;
@@ -354,34 +356,38 @@ body {
 .story__viewport[data-model-side="left"] .story__father {
   left: calc(var(--ana-x, 28%) + 19vw - min(230px, 22vw));
 }
-/* The gravestone frame stays on screen — keep it clear of the text column,
-   and layered BEHIND the chapter text (above the backgrounds and Ana). */
+/* The gravestone frame stays on screen — parked at the upper right, above
+   the information column, so it never covers the text. */
 .story__viewport .story__father[data-story-puntod] {
-  left: calc(var(--ana-x, 28%) + 24vw - min(230px, 22vw));
+  top: 9vh;
+  left: auto;
+  right: calc(var(--story-inset, 6vw) + 1vw);
   z-index: 2;
 }
-/* About·III polaroid collage: three frames scattered diagonally beside Ana,
-   like prints laid on a table — behind the text, still clickable. */
+/* About·III photos — behind Ana (canvas is z-index 2), still clickable.
+   The Colonel takes the Padre's spot; the other two sit in a row below the
+   information, the right one column-aligned with the Colonel. */
 .story__viewport .story__father[data-story-guerrilla-a],
 .story__viewport .story__father[data-story-guerrilla-b],
 .story__viewport .story__father[data-story-guerrilla-c] {
   width: min(200px, 16vw);
-  z-index: 2; /* DOM order stacks b over a, c over b for the overlap look */
+  z-index: 1;
 }
 .story__viewport .story__father[data-story-guerrilla-a] {
-  --tilt: -6deg;
-  top: 7vh;
-  left: calc(var(--ana-x, 72%) - 26vw);
+  --tilt: -3deg;
+  top: 15vh;
+  left: calc(var(--ana-x, 72%) - 19vw);
+  width: min(230px, 22vw); /* same framing as the Padre portrait */
 }
 .story__viewport .story__father[data-story-guerrilla-b] {
-  --tilt: 4deg;
-  top: 25vh;
-  left: calc(var(--ana-x, 72%) - 17vw);
+  --tilt: 3deg;
+  top: 62vh;
+  left: calc(var(--ana-x, 72%) - 37vw);
 }
 .story__viewport .story__father[data-story-guerrilla-c] {
   --tilt: -2deg;
-  top: 45vh;
-  left: calc(var(--ana-x, 72%) - 25vw);
+  top: 62vh;
+  left: calc(var(--ana-x, 72%) - 19vw);
 }
 .story__father img {
   display: block;
@@ -412,6 +418,14 @@ body {
     left: 50% !important; /* beats the side-anchored rules above */
     margin-left: min(-115px, -23vw);
     width: min(230px, 46vw);
+  }
+  /* Gravestone photo: upper right on phones as well, clear of the sheet. */
+  .story__viewport .story__father[data-story-puntod] {
+    left: auto !important;
+    right: 4vw;
+    margin-left: 0;
+    top: 10vh;
+    width: min(190px, 44vw);
   }
   /* Collage on phones: same diagonal, overlapping arrangement as desktop —
      larger frames zigzagging down the upper half, behind the text sheet.
