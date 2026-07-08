@@ -1317,6 +1317,23 @@ if (story && viewport && chapters.length) {
   // Back to top: one tap returns to the first chapter.
   story.querySelector('[data-story-top]')?.addEventListener('click', () => scrollToChapter(0));
 
+  // Departing for the Heritage Trail: close a golden iris over the stage and
+  // lean the camera in, then navigate — the trail page opens the iris back up.
+  const trailCta = story.querySelector('.story-cta');
+  trailCta?.addEventListener('click', (event) => {
+    const href = trailCta.getAttribute('href');
+    if (!href || prefersReducedMotion) return; // reduced motion: plain navigation
+    event.preventDefault();
+    stopSpeaking();
+    try { sessionStorage.setItem('trailArrival', '1'); } catch { /* private mode */ }
+    const iris = document.createElement('div');
+    iris.className = 'story__iris';
+    document.body.appendChild(iris);
+    viewport.classList.add('is-departing');
+    window.requestAnimationFrame(() => iris.classList.add('is-closing'));
+    window.setTimeout(() => { window.location.href = href; }, 1000);
+  });
+
   // History timeline rail: each year jumps to its era chapter.
   story.querySelectorAll('[data-era-jump]').forEach((btn) => {
     btn.addEventListener('click', () => {

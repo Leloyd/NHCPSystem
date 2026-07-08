@@ -621,6 +621,49 @@ body {
   .story__viewport[data-chapter^="era"] .story__vintage { animation: none; }
 }
 
+/* Departure to the Heritage Trail: a golden iris closes over the stage while
+   it leans in — a scene change, not a loading screen. ------------------------- */
+@property --iris {
+  syntax: "<length>";
+  inherits: false;
+  initial-value: 4000px;
+}
+.story__iris {
+  position: fixed;
+  inset: 0;
+  z-index: 99;
+  pointer-events: none;
+  --iris: 4000px;
+  opacity: 0;
+  background: radial-gradient(
+    circle at 50% 46%,
+    transparent calc(var(--iris) - 90px),
+    rgba(212, 175, 106, 0.45) calc(var(--iris) - 34px),
+    #0d0a04 var(--iris)
+  );
+  transition: --iris 1s cubic-bezier(0.7, 0, 0.3, 1), opacity 0.35s ease;
+}
+.story__iris.is-closing {
+  --iris: 0px;
+  opacity: 1;
+}
+.story__viewport.is-departing {
+  animation: story-depart-zoom 1.1s ease forwards;
+}
+@keyframes story-depart-zoom {
+  to { transform: scale(1.07); }
+}
+.story__viewport.is-departing .story-chapter.is-active,
+.story__viewport.is-departing .story__guidebar,
+.story__viewport.is-departing .story__dots,
+.story__viewport.is-departing .story__bubble,
+.story__viewport.is-departing .story__hint,
+.story__viewport.is-departing .story__timeline,
+.story__viewport.is-departing .story__top {
+  opacity: 0 !important;
+  transition: opacity 0.4s ease;
+}
+
 /* Photo lightbox --------------------------------------------------------------- */
 .story__lightbox {
   position: fixed;

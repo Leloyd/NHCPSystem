@@ -1205,6 +1205,9 @@
       '<main id="heritageTrailMain" class="heritage-main ' + (state.currentStop === 0 ? 'is-landing' : '') + '">' + renderStopContent() + '</main>';
     initStep1Panorama();
     initStep2Panorama();
+    // Let the Ana Kalang guide (trail-guide.js) know which stop is showing.
+    shell.dataset.currentStop = String(state.currentStop);
+    window.dispatchEvent(new CustomEvent('trail:stop', { detail: { stop: state.currentStop } }));
   }
 
   shell.addEventListener('click', function (event) {
