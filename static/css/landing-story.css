@@ -560,10 +560,15 @@ body {
   .story__timeline { bottom: 7.9rem; gap: 1.2rem; }
   .story__timeline button { font-size: 0.82rem; }
   .story__timeline button + button::before { left: -1rem; width: 0.75rem; }
-  .story-era-ghost { font-size: clamp(5rem, 26vw, 9rem); top: 1vh; left: 0; }
-  .story-era-ghost--word { font-size: clamp(3rem, 15vw, 5.5rem); }
+  /* Well below the sheet's top edge (which starts at the nav's bottom). */
+  .story-era-ghost { font-size: clamp(4.6rem, 24vw, 8.5rem); top: 3.2rem; left: 0; }
+  .story-era-ghost--word { font-size: clamp(2.8rem, 14vw, 5rem); top: 3.6rem; }
   /* Era sheets need extra bottom room so their text clears the rail. */
   .story__viewport .story-chapter--era { padding-bottom: 10.6rem; }
+  /* Subtitles hidden → the rail drops into the chip's slot and the sheet
+     reclaims the difference. */
+  .story__viewport[data-subtitles="off"] .story__timeline { bottom: 3.9rem; }
+  .story__viewport[data-subtitles="off"] .story-chapter--era { padding-bottom: 6.8rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
