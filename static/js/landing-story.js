@@ -51,8 +51,8 @@ const SCRIPT = {
     tl: "At ngayon, nananatiling buhay ang libingan bilang museo at pamanang pook — tinatanggap ang mga bisita mula sa iba't ibang panig ng mundo upang tahakin ang natatanging bahagi ng kasaysayang Pilipino.",
   },
   'visitor-info': {
-    en: "Planning a visit? We are open Tuesday to Sunday, eight in the morning to four in the afternoon, and admission is free for everyone. I will be glad to see you here in Nagcarlan, Laguna.",
-    tl: "Balak mong bumisita? Bukas kami Martes hanggang Linggo, alas-otso ng umaga hanggang alas-kuwatro ng hapon, at libre ang pagpasok para sa lahat. Ikalulugod kong makita ka rito sa Nagcarlan, Laguna.",
+    en: "Planning a visit? We are open Tuesday to Sunday, nine in the morning to four in the afternoon, and admission is free for everyone. I will be glad to see you here in Nagcarlan, Laguna.",
+    tl: "Balak mong bumisita? Bukas kami Martes hanggang Linggo, alas-nuwebe ng umaga hanggang alas-kuwatro ng hapon, at libre ang pagpasok para sa lahat. Ikalulugod kong makita ka rito sa Nagcarlan, Laguna.",
   },
   rules: {
     en: "Before you go, please remember: observe silence, dress respectfully, do not touch the artifacts, and follow your guide. Help us protect this sacred place for the generations to come.",
