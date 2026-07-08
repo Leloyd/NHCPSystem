@@ -459,7 +459,7 @@ body {
 /* Giant ghosted year stamped behind each era's text. */
 .story-era-ghost {
   position: absolute;
-  top: 3vh;
+  top: 7.5rem; /* stays below the fixed top nav */
   left: -1.5rem;
   z-index: -1; /* behind the chapter's own content */
   font-family: "Playfair Display", serif;
@@ -471,7 +471,7 @@ body {
   user-select: none;
   white-space: nowrap;
 }
-.story-era-ghost--word { font-size: clamp(4.2rem, 11vw, 10rem); top: 6vh; }
+.story-era-ghost--word { font-size: clamp(4.2rem, 11vw, 10rem); top: 8.5rem; }
 
 /* Old-film grain + vignette overlay: breathes only during the era chapters. */
 .story__vintage {
@@ -511,7 +511,7 @@ body {
   position: absolute;
   z-index: 5;
   left: 50%;
-  bottom: 2rem;
+  bottom: 4.5rem; /* clear air above the guide controls */
   transform: translateX(-50%);
   display: flex;
   align-items: center;
@@ -556,12 +556,14 @@ body {
 }
 
 @media (max-width: 768px) {
-  /* Rail moves under the nav on phones (bottom is taken by chip + controls). */
-  .story__timeline { bottom: auto; top: 4.6rem; gap: 1.2rem; }
+  /* Rail sits just above the subtitle chip on phones. */
+  .story__timeline { bottom: 7.9rem; gap: 1.2rem; }
   .story__timeline button { font-size: 0.82rem; }
   .story__timeline button + button::before { left: -1rem; width: 0.75rem; }
   .story-era-ghost { font-size: clamp(5rem, 26vw, 9rem); top: 1vh; left: 0; }
   .story-era-ghost--word { font-size: clamp(3rem, 15vw, 5.5rem); }
+  /* Era sheets need extra bottom room so their text clears the rail. */
+  .story__viewport .story-chapter--era { padding-bottom: 10.6rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
