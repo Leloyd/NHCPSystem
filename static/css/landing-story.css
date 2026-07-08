@@ -154,9 +154,12 @@ body {
 .story-chapter.is-active {
   opacity: 1;
   transform: translateY(0);
-  pointer-events: auto;
+  /* The chapter box spans the full viewport height — keep it click-transparent
+     so photos/Ana behind it stay tappable; only real content catches clicks. */
+  pointer-events: none;
   transition-delay: 0.12s; /* let the outgoing panel start moving first */
 }
+.story-chapter.is-active > * { pointer-events: auto; }
 .story-chapter.is-above { transform: translateY(-9vh); }
 .story-chapter.is-below { transform: translateY(9vh); }
 
@@ -805,10 +808,6 @@ body {
     scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
   }
   .story-card { padding: 0.75rem 0.9rem; }
-  /* Let taps in the open area (Ana) pass through the full-height chapter
-     box; only its actual content blocks remain interactive. */
-  .story-chapter.is-active { pointer-events: none; }
-  .story-chapter.is-active > * { pointer-events: auto; }
   /* Compact subtitle chip below the chapter text, above the controls —
      tap to expand/collapse (it expands upward over the sheet). */
   .story__bubble {
