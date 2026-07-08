@@ -31,12 +31,16 @@ const cursorGlow = root.querySelector('[data-trail-cursor]');
 const playBtn = root.querySelector('[data-trail-play]');
 const muteBtn = root.querySelector('[data-trail-mute]');
 const langBtn = root.querySelector('[data-trail-lang]');
+const subsBtn = root.querySelector('[data-trail-subs]');
+const textSizeBtn = root.querySelector('[data-trail-textsize]');
 const beginLink = root.querySelector('[data-trail-begin]');
 const cancelLink = root.querySelector('[data-trail-cancel]');
 
 const state = {
   lang: localStorage.getItem('anaGuideLang') === 'tl' ? 'tl' : 'en',
   muted: localStorage.getItem('anaGuideMuted') === 'true',
+  subtitles: localStorage.getItem('anaGuideSubs') !== 'off',
+  textSize: Math.min(3, Math.max(1, parseInt(localStorage.getItem('anaGuideTextSize') || '1', 10) || 1)),
   unlocked: false,
   playing: false,
   typeTimer: 0,
@@ -129,6 +133,28 @@ function setLang(lang) {
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
   narrate({ speakIt: state.unlocked && !state.muted });
 }
+function setSubtitles(on) {
+  state.subtitles = on;
+  localStorage.setItem('anaGuideSubs', on ? 'on' : 'off');
+  root.setAttribute('data-subtitles', on ? 'on' : 'off');
+  if (subsBtn) {
+    subsBtn.setAttribute('aria-pressed', String(on));
+    subsBtn.setAttribute('aria-label', on ? 'Hide subtitles' : 'Show subtitles');
+  }
+}
+
+const TEXT_SIZE_LABELS = { 1: 'A', 2: 'A+', 3: 'A++' };
+const TEXT_SIZE_NAMES = { 1: 'normal', 2: 'large', 3: 'extra large' };
+function setTextSize(size) {
+  state.textSize = size;
+  localStorage.setItem('anaGuideTextSize', String(size));
+  root.setAttribute('data-textsize', String(size));
+  if (textSizeBtn) {
+    textSizeBtn.textContent = TEXT_SIZE_LABELS[size];
+    textSizeBtn.setAttribute('aria-label', `Text size: ${TEXT_SIZE_NAMES[size]}. Tap to ${size >= 3 ? 'reset' : 'enlarge'}`);
+  }
+}
+
 function unlockAudio() {
   if (state.unlocked) return;
   state.unlocked = true;
@@ -138,6 +164,8 @@ function unlockAudio() {
 root.setAttribute('data-lang', state.lang);
 root.setAttribute('data-playing', 'false');
 setMuted(state.muted);
+setSubtitles(state.subtitles);
+setTextSize(state.textSize);
 if (langBtn) langBtn.textContent = state.lang === 'tl' ? 'TL' : 'EN';
 
 playBtn?.addEventListener('click', () => {
@@ -147,6 +175,8 @@ playBtn?.addEventListener('click', () => {
 });
 muteBtn?.addEventListener('click', () => setMuted(!state.muted));
 langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
+subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
+textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
 
 // First interaction anywhere unlocks TTS, then auto-narrates once.
 const kickstart = () => {
@@ -257,12 +287,24 @@ function initCharacter() {
   if (!canvasWrap) return;
   const modelUrl = root.getAttribute('data-model-url') || '';
   const BASE_ROT_Y = -Math.PI / 2; // GLB authored facing screen-right → face camera
+  const mobile = window.matchMedia('(max-width: 820px)').matches;
+  const ANA_REST_X = mobile ? 0.32 : 0.78; // world-space resting X (right of center)
+  const CAM_LOOK_X = ANA_REST_X * 0.34;    // frame her without pushing her off-edge
   let renderer, scene, camera, mixer, clock, avatar;
   let idleAction = null;
   let gestureAction = null;
   let gestureFadingBack = false;
+  let slideT = prefersReducedMotion ? 1 : 0; // 0→1 entrance slide progress
   const gestures = {};
   const pointer = { x: 0, y: 0 };
+
+  // Publish Ana's on-screen X (%) so the bubble + glow center on her.
+  const projectAnaX = () => {
+    if (!camera) return;
+    const v = new THREE.Vector3(ANA_REST_X, 1.15, 0).project(camera);
+    const pct = Math.min(92, Math.max(8, (v.x * 0.5 + 0.5) * 100));
+    root.style.setProperty('--tx-ana-x', `${pct.toFixed(1)}%`);
+  };
 
   try {
     scene = new THREE.Scene();
@@ -270,7 +312,7 @@ function initCharacter() {
     const h = Math.max(canvasWrap.clientHeight, 1);
     camera = new THREE.PerspectiveCamera(32, w / h, 0.1, 100);
     camera.position.set(0, 1.5, 3.1);
-    camera.lookAt(0, 1.35, 0);
+    camera.lookAt(CAM_LOOK_X, 1.35, 0);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
@@ -296,8 +338,10 @@ function initCharacter() {
       renderer.setSize(nw, nh, false);
       camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
+      projectAnaX();
     };
     window.addEventListener('resize', onResize);
+    projectAnaX();
     if (!prefersReducedMotion) {
       window.addEventListener('pointermove', (e) => {
         pointer.x = (e.clientX / innerWidth) * 2 - 1;
@@ -327,14 +371,18 @@ function initCharacter() {
         mixer.update(dt);
       }
       if (avatar) {
+        // Entrance: glide in from off-screen right to her resting spot.
+        if (slideT < 1) slideT = Math.min(1, slideT + dt / 1.3);
+        const ease = 1 - Math.pow(1 - slideT, 3); // easeOutCubic
         const sway = state.playing && !prefersReducedMotion ? Math.sin(clock.elapsedTime * 1.4) * 0.05 : 0;
+        avatar.position.x = ANA_REST_X + (1 - ease) * 2.6;
         avatar.rotation.y = BASE_ROT_Y + sway;
       }
       if (!prefersReducedMotion) {
-        camera.position.x += (pointer.x * 0.08 - camera.position.x) * Math.min(1, dt * 2);
+        camera.position.x += (CAM_LOOK_X + pointer.x * 0.08 - camera.position.x) * Math.min(1, dt * 2);
         camera.position.y += (1.5 - pointer.y * 0.05 - camera.position.y) * Math.min(1, dt * 2);
-        camera.lookAt(0, 1.35, 0);
       }
+      camera.lookAt(CAM_LOOK_X, 1.35, 0);
       renderer.render(scene, camera);
     };
     animate();
@@ -356,6 +404,7 @@ function initCharacter() {
         avatar = new THREE.Group();
         avatar.add(model);
         avatar.rotation.y = BASE_ROT_Y;
+        avatar.position.x = ANA_REST_X + (prefersReducedMotion ? 0 : 2.6); // start off-right
         scene.add(avatar);
 
         if (gltf.animations && gltf.animations.length) {

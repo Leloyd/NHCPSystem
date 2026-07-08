@@ -27,7 +27,10 @@
   position: fixed;
   inset: 0;
   overflow: hidden;
+  --tx-font-scale: 1;
 }
+.trailx[data-textsize="2"] { --tx-font-scale: 1.16; }
+.trailx[data-textsize="3"] { --tx-font-scale: 1.34; }
 
 /* 360 panorama ---------------------------------------------------------------- */
 .trailx__pano {
@@ -163,7 +166,7 @@
   max-width: 34rem;
   color: rgba(255, 255, 255, 0.82);
   font-family: "Cormorant Garamond", serif;
-  font-size: clamp(1.05rem, 1.6vw, 1.25rem);
+  font-size: calc(clamp(1.05rem, 1.6vw, 1.25rem) * var(--tx-font-scale, 1));
   line-height: 1.62;
 }
 
@@ -216,27 +219,21 @@
   letter-spacing: 0.08em;
 }
 
-/* Ana Kalang (right) — slides in ---------------------------------------------- */
+/* Ana Kalang — full-viewport canvas so her arms never clip; she's placed on
+   the right in 3D space and slides in there (see trail-start.js). ------------- */
 .trailx__ana {
   position: absolute;
+  inset: 0;
   z-index: 5;
-  right: 0;
-  bottom: 0;
-  width: min(46vw, 620px);
-  height: 100%;
-  transform: translateX(60%);
   opacity: 0;
 }
 .trailx.is-entered .trailx__ana {
-  animation: trailx-ana-in 1.5s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards;
+  animation: trailx-ana-fade 1.1s ease 0.2s forwards;
 }
-@keyframes trailx-ana-in {
-  from { transform: translateX(60%); opacity: 0; }
-  to { transform: translateX(8%); opacity: 1; }
-}
+@keyframes trailx-ana-fade { to { opacity: 1; } }
 .trailx__ana-glow {
   position: absolute;
-  left: 50%;
+  left: var(--tx-ana-x, 70%);
   top: 14%;
   width: 62vmin;
   height: 74vmin;
@@ -245,6 +242,7 @@
   pointer-events: none;
   background: radial-gradient(50% 50% at 50% 42%, rgba(212, 175, 106, 0.22) 0%, rgba(212, 175, 106, 0.05) 55%, transparent 74%);
   filter: blur(2px);
+  transition: left 0.6s ease;
 }
 .trailx__canvas {
   position: absolute;
@@ -257,31 +255,44 @@
   height: 100% !important;
 }
 
-/* Speech bubble (near Ana's feet) --------------------------------------------- */
+/* Speech bubble — centered on Ana's lower front, like the landing page. ------- */
+/* --tx-ana-x is set from JS to Ana's actual on-screen position. */
 .trailx__bubble {
   position: absolute;
   z-index: 9;
-  right: clamp(1.4rem, 9vw, 8vw);
+  left: var(--tx-ana-x, 70%);
   bottom: 6.2rem;
-  width: min(330px, 74vw);
+  transform: translateX(-50%) translateY(12px);
+  width: min(320px, 78vw);
   padding: 0.85rem 1rem 0.95rem;
-  background: rgba(250, 247, 242, 0.95);
+  background: rgba(250, 247, 242, 0.94);
   color: var(--tx-ink);
   border: 1px solid rgba(184, 146, 58, 0.4);
-  border-radius: 14px 14px 4px 14px;
+  border-radius: 14px;
   box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
   backdrop-filter: blur(4px);
   opacity: 0;
-  transform: translateY(12px);
   pointer-events: none;
-  transition: opacity 0.5s ease, transform 0.5s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease, left 0.6s ease;
+}
+/* Diamond "chin" pointing up toward Ana. */
+.trailx__bubble::before {
+  content: "";
+  position: absolute;
+  top: -7px;
+  left: 50%;
+  width: 12px;
+  height: 12px;
+  transform: translateX(-50%) rotate(45deg);
+  background: rgba(250, 247, 242, 0.94);
+  border-left: 1px solid rgba(184, 146, 58, 0.4);
+  border-top: 1px solid rgba(184, 146, 58, 0.4);
 }
 .trailx.is-entered .trailx__bubble {
   opacity: 1;
-  transform: translateY(0);
+  transform: translateX(-50%) translateY(0);
   transition-delay: 1.4s;
 }
-.trailx__viewport-muted .trailx__bubble { }
 .trailx__bubble-eyebrow {
   display: flex;
   align-items: center;
@@ -296,7 +307,7 @@
 .trailx__bubble-text {
   margin: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: 1rem;
+  font-size: calc(1rem * var(--tx-font-scale, 1));
   line-height: 1.42;
 }
 .trailx__bubble-text .tx-cursor {
@@ -372,6 +383,8 @@
 .trailx[data-playing="false"] .trailx-ico--pause { display: none; }
 .trailx[data-muted="true"] .trailx-ico--sound-on { display: none; }
 .trailx[data-muted="false"] .trailx-ico--sound-off { display: none; }
+/* CC toggle off → dim + strike the button (bubble hidden via the rule above). */
+[data-trail-subs][aria-pressed="false"] { opacity: 0.45; text-decoration: line-through; }
 
 /* Bilingual toggle */
 .trailx:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
@@ -388,16 +401,6 @@
   .trailx__scrim {
     background:
       linear-gradient(0deg, rgba(13, 10, 4, 0.92) 6%, rgba(13, 10, 4, 0.45) 42%, rgba(13, 10, 4, 0.2) 100%);
-  }
-  .trailx__ana {
-    width: 100%;
-    left: 0;
-    right: auto;
-  }
-  .trailx.is-entered .trailx__ana { animation: trailx-ana-in-m 1.4s cubic-bezier(0.22, 1, 0.36, 1) 0.15s forwards; }
-  @keyframes trailx-ana-in-m {
-    from { transform: translateX(40%); opacity: 0; }
-    to { transform: translateX(18%); opacity: 1; }
   }
   .trailx__panel {
     top: auto;
@@ -417,11 +420,11 @@
   .trailx__title { font-size: clamp(2rem, 9vw, 3rem); }
   .trailx__lede { font-size: 0.98rem; margin-bottom: 1.4rem; }
   .trailx__bubble {
-    left: 1.1rem;
-    right: 1.1rem;
+    left: 50%;
+    right: auto;
     bottom: auto;
     top: 4.5rem;
-    width: auto;
+    width: min(320px, calc(100vw - 2.2rem));
   }
   .trailx__cursor { display: none; }
   .trailx__nameplate { display: none; }
@@ -432,14 +435,18 @@
   .trailx__panel,
   .trailx__panel > *,
   .trailx__ana,
-  .trailx__bubble,
   .trailx__controls {
     animation-duration: 0.01ms !important;
     animation-delay: 0s !important;
     opacity: 1 !important;
     transform: none !important;
   }
-  .trailx__ana { transform: translateX(8%) !important; }
+  .trailx__bubble {
+    animation-duration: 0.01ms !important;
+    animation-delay: 0s !important;
+    opacity: 1 !important;
+    transform: translateX(-50%) !important;
+  }
   .trailx__grain { animation: none; }
   .trailx__curtain { transition: none; }
 }
