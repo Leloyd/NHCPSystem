@@ -69,6 +69,10 @@ const VOICE = {
   about1: { en: `${VOICE_BASE}E3%20-%20AboutSite1.mp3`, tl: `${VOICE_BASE}T3%20-%20AboutSite1.mp3` },
   about2: { en: `${VOICE_BASE}E4%20-%20AboutSite2.mp3`, tl: `${VOICE_BASE}T4%20-%20AboutSite2.mp3` },
   about3: { en: `${VOICE_BASE}E5%20-%20AboutSite3.mp3`, tl: `${VOICE_BASE}T5%20-%20AboutSite3.mp3` },
+  era1845: { en: `${VOICE_BASE}1845-E.mp3`, tl: `${VOICE_BASE}1845-T.mp3` },
+  era1896: { en: `${VOICE_BASE}1896-E.mp3`, tl: `${VOICE_BASE}1896-T.mp3` },
+  era1981: { en: `${VOICE_BASE}1981-E.mp3`, tl: `${VOICE_BASE}1981-T.mp3` },
+  eraToday: { en: `${VOICE_BASE}Today-E.mp3`, tl: `${VOICE_BASE}Ngayon-T.mp3` },
 };
 
 /* --- DOM refs -------------------------------------------------------------- */
