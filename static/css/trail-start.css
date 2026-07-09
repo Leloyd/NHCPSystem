@@ -245,7 +245,6 @@
   pointer-events: none;
   background: radial-gradient(50% 50% at 50% 42%, rgba(212, 175, 106, 0.22) 0%, rgba(212, 175, 106, 0.05) 55%, transparent 74%);
   filter: blur(2px);
-  transition: left 0.6s ease;
 }
 .trailx__canvas {
   position: absolute;
@@ -275,7 +274,7 @@
   backdrop-filter: blur(4px);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 0.5s ease, transform 0.5s ease, left 0.6s ease;
+  transition: opacity 0.5s ease, transform 0.5s ease; /* left updates per frame */
 }
 /* Diamond "chin" pointing up toward Ana. */
 .trailx__bubble::before {
@@ -393,54 +392,28 @@
 .trailx[data-lang="tl"] [data-lang-en] { display: none !important; }
 
 /* Immersive toggle: slide everything off so only the 360 view remains. The
-   toggle button stays put; clicking it slides everything back in from the same
-   side it left. (!important beats the entrance animations' forwards fill.) --- */
-.trailx__panel,
-.trailx__controls { transition: transform 0.7s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.55s ease; }
-.trailx.is-immersive .trailx__panel {
+   toggle button itself stays put (its siblings keep their layout space, so it
+   never moves); clicking it slides everything back in from the same side it
+   left. (!important beats the entrance animations' forwards fill.) ----------- */
+.trailx__panel { transition: transform 0.7s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.55s ease; }
+.trailx__controls > * { transition: transform 0.6s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.5s ease; }
+.trailx[data-immersive="true"] .trailx__panel {
   transform: translateY(-50%) translateX(-130%) !important;
   opacity: 0 !important;
   pointer-events: none !important;
 }
-.trailx.is-immersive .trailx__ana {
+.trailx[data-immersive="true"] .trailx__ana {
   transform: translateX(72%) !important;
   opacity: 0 !important;
 }
-.trailx.is-immersive .trailx__bubble { opacity: 0 !important; pointer-events: none !important; }
-.trailx.is-immersive .trailx__controls {
-  transform: translateY(180%) !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
+.trailx[data-immersive="true"] .trailx__bubble { opacity: 0 !important; pointer-events: none !important; }
+.trailx[data-immersive="true"] .trailx__controls > *:not([data-trail-immersive]) {
+  transform: translateY(180%);
+  opacity: 0;
+  pointer-events: none;
 }
 
-/* Immersive toggle button — always visible, top-right. */
-.trailx__immersive {
-  position: absolute;
-  z-index: 12;
-  top: 1.3rem;
-  right: 1.3rem;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
-  height: 40px;
-  padding: 0 1rem;
-  border: 1px solid rgba(212, 175, 106, 0.45);
-  border-radius: 999px;
-  background: rgba(20, 13, 6, 0.72);
-  color: var(--tx-cream);
-  font-size: 0.68rem;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  opacity: 0;
-  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
-}
-.trailx.is-entered .trailx__immersive { animation: trailx-rise 0.6s ease 1.6s forwards; }
-.trailx__immersive:hover { background: rgba(212, 175, 106, 0.24); border-color: var(--tx-gold); }
-.trailx__immersive:active { transform: scale(0.96); }
-.trailx__immersive:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 2px; }
-.trailx__immersive svg { width: 16px; height: 16px; }
+/* Icon + label swap on the toggle button */
 .trailx[data-immersive="true"] .trailx-ico--expand { display: none; }
 .trailx:not([data-immersive="true"]) .trailx-ico--collapse { display: none; }
 .trailx[data-immersive="true"] .trailx__immersive-label-show { display: none; }

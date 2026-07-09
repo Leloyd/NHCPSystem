@@ -308,11 +308,15 @@ function initCharacter() {
   const gestures = {};
   const pointer = { x: 0, y: 0 };
 
-  // Publish Ana's on-screen X (%) so the bubble + glow center on her.
-  const projectAnaX = () => {
+  // Publish Ana's on-screen X (%) so the bubble + glow center on her. Runs
+  // every frame with her LIVE position, so it stays glued to the model even
+  // through the slide-in and camera parallax.
+  const anaProbe = new THREE.Vector3();
+  const projectAnaX = (worldX) => {
     if (!camera) return;
-    const v = new THREE.Vector3(ANA_REST_X, 1.15, 0).project(camera);
-    const pct = Math.min(92, Math.max(8, (v.x * 0.5 + 0.5) * 100));
+    anaProbe.set(typeof worldX === 'number' ? worldX : ANA_REST_X, 1.0, 0);
+    anaProbe.project(camera);
+    const pct = Math.min(92, Math.max(8, (anaProbe.x * 0.5 + 0.5) * 100));
     root.style.setProperty('--tx-ana-x', `${pct.toFixed(1)}%`);
   };
 
@@ -393,6 +397,7 @@ function initCharacter() {
         camera.position.y += (1.5 - pointer.y * 0.05 - camera.position.y) * Math.min(1, dt * 2);
       }
       camera.lookAt(CAM_LOOK_X, 1.35, 0);
+      if (avatar) projectAnaX(avatar.position.x); // keep bubble/glow centered on her
       renderer.render(scene, camera);
     };
     animate();
