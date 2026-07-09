@@ -221,9 +221,16 @@ function initPanorama() {
   const src = root.getAttribute('data-panorama') || '';
   if (!src || !window.pannellum || !panoEl) return;
 
+  // Starting view: set data-yaw / data-pitch on #trailStart in the template.
+  // Yaw is horizontal (-180..180), pitch is up/down. Drag around and check
+  // the console — the current view is logged after every drag, so you can
+  // pick a starting direction and copy its numbers into the attributes.
+  const startYaw = parseFloat(root.getAttribute('data-yaw')) || 0;
+  const startPitch = parseFloat(root.getAttribute('data-pitch')) || 0;
+
   const build = (finalSrc) => {
     try {
-      window.pannellum.viewer('trailPano', {
+      const viewer = window.pannellum.viewer('trailPano', {
         type: 'equirectangular',
         panorama: finalSrc,
         autoLoad: true,
@@ -239,9 +246,18 @@ function initPanorama() {
         hfov: 100,
         minHfov: 70,
         maxHfov: 118,
-        pitch: -4,
-        yaw: 0,
+        pitch: startPitch,
+        yaw: startYaw,
       });
+      // Helper for picking the starting view: log where the visitor is
+      // looking after each drag ends.
+      const logView = () => {
+        try {
+          console.info(`[Trail] view → data-yaw="${viewer.getYaw().toFixed(1)}" data-pitch="${viewer.getPitch().toFixed(1)}"`);
+        } catch { /* viewer not ready */ }
+      };
+      panoEl.addEventListener('mouseup', logView);
+      panoEl.addEventListener('touchend', logView);
       window.setTimeout(() => panoEl.classList.add('is-ready'), 250);
     } catch (err) {
       console.warn('[Trail] Panorama failed to initialize:', err);
