@@ -228,6 +228,14 @@ function initPanorama() {
   const startYaw = parseFloat(root.getAttribute('data-yaw')) || 0;
   const startPitch = parseFloat(root.getAttribute('data-pitch')) || 0;
 
+  // Ping-pong drift boundaries: the idle sweep pans right until data-yaw-max,
+  // reverses and pans left until data-yaw-min, and repeats. A missing/empty
+  // bound mirrors the start view until you fill it in.
+  const yawMaxAttr = parseFloat(root.getAttribute('data-yaw-max'));
+  const yawMinAttr = parseFloat(root.getAttribute('data-yaw-min'));
+  const yawMax = Number.isFinite(yawMaxAttr) ? yawMaxAttr : startYaw + 24;
+  const yawMin = Number.isFinite(yawMinAttr) ? yawMinAttr : startYaw - (yawMax - startYaw);
+
   const build = (finalSrc) => {
     try {
       const viewer = window.pannellum.viewer('trailPano', {
@@ -241,16 +249,16 @@ function initPanorama() {
         mouseZoom: false,
         draggable: true,
         compass: false,
-        autoRotate: prefersReducedMotion ? 0 : -1.4,
-        autoRotateInactivityDelay: 3500,
+        autoRotate: 0, // replaced by the ping-pong drift below
         hfov: 100,
         minHfov: 70,
         maxHfov: 118,
         pitch: startPitch,
         yaw: startYaw,
       });
-      // Helper for picking the starting view: log where the visitor is
-      // looking after each drag ends.
+
+      // Helper for picking views: log where the visitor is looking after
+      // each drag ends (used to choose the start and the sweep boundaries).
       const logView = () => {
         try {
           console.info(`[Trail] view → data-yaw="${viewer.getYaw().toFixed(1)}" data-pitch="${viewer.getPitch().toFixed(1)}"`);
@@ -258,6 +266,42 @@ function initPanorama() {
       };
       panoEl.addEventListener('mouseup', logView);
       panoEl.addEventListener('touchend', logView);
+
+      // Idle ping-pong sweep: pans right to yawMax, reverses to yawMin, and
+      // so on. Pauses while the visitor drags and resumes a beat after; the
+      // pitch also eases gently back to the start pitch while idle.
+      if (!prefersReducedMotion) {
+        const DRIFT_SPEED = 1.4; // degrees per second
+        const PITCH_EASE = 0.4;
+        const IDLE_MS = 3000;
+        let dir = 1; // start by panning right, toward yawMax
+        let interacting = false;
+        let lastEnd = performance.now();
+        let prev = performance.now();
+        panoEl.addEventListener('pointerdown', () => { interacting = true; });
+        window.addEventListener('pointerup', () => {
+          if (interacting) { interacting = false; lastEnd = performance.now(); }
+        });
+        const drift = (now) => {
+          const dt = Math.min((now - prev) / 1000, 0.05);
+          prev = now;
+          if (!interacting && now - lastEnd > IDLE_MS && !document.hidden) {
+            try {
+              const y = viewer.getYaw() + dir * DRIFT_SPEED * dt;
+              // Reverse at the bounds (no clamp — if the visitor parked the
+              // view outside them, the sweep simply drifts back into range).
+              if (y >= yawMax && dir > 0) dir = -1;
+              else if (y <= yawMin && dir < 0) dir = 1;
+              viewer.setYaw(y, false);
+              const p = viewer.getPitch();
+              viewer.setPitch(p + (startPitch - p) * Math.min(1, dt * PITCH_EASE), false);
+            } catch { /* viewer busy */ }
+          }
+          window.requestAnimationFrame(drift);
+        };
+        window.requestAnimationFrame(drift);
+      }
+
       window.setTimeout(() => panoEl.classList.add('is-ready'), 250);
     } catch (err) {
       console.warn('[Trail] Panorama failed to initialize:', err);
