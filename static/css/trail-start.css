@@ -425,6 +425,404 @@
   to { transform: scale(1.05); filter: brightness(0.4); opacity: 0; }
 }
 
+/* ==========================================================================
+   Begin choreography — data-phase="depart" slides the intro UI out while the
+   aerial view pans to the gate; data-phase="stop1" brings Ana + controls back
+   once the FrontGate 360 has crossfaded in. (animation:none neutralises the
+   entrance keyframes' forwards fill so transitions can take over.)
+   ========================================================================== */
+.trailx[data-phase] .trailx__panel,
+.trailx[data-phase] .trailx__ana,
+.trailx[data-phase] .trailx__controls { animation: none; }
+.trailx[data-phase] .trailx__bubble { transition-delay: 0s; }
+
+/* The intro panel leaves and never returns (Stop 1 has its own story layer). */
+.trailx[data-phase] .trailx__panel {
+  transform: translateY(-50%) translateX(-130%);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: transform 0.7s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.55s ease, visibility 0s 0.7s;
+}
+
+.trailx[data-phase] .trailx__ana { transition: opacity 0.55s ease; }
+.trailx[data-phase="depart"] .trailx__ana { opacity: 0; }
+.trailx[data-phase="stop1"] .trailx__ana { opacity: 1; }
+
+.trailx[data-phase="depart"] .trailx__bubble { opacity: 0 !important; }
+
+.trailx[data-phase] .trailx__controls {
+  transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
+}
+.trailx[data-phase="depart"] .trailx__controls {
+  transform: translateY(180%);
+  opacity: 0;
+  pointer-events: none;
+}
+.trailx[data-phase="stop1"] .trailx__controls {
+  transform: none;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Stop 1 · Orientation — scrollable story layer over the FrontGate 360.
+   The layer itself is click-through (the panorama stays draggable in the
+   gaps); only the cards and buttons catch the pointer.
+   ========================================================================== */
+.trailx__progress {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  z-index: 12;
+  pointer-events: none;
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+}
+.trailx[data-mode="stop1"] .trailx__progress { opacity: 1; }
+.trailx__progress span {
+  display: block;
+  height: 100%;
+  transform: scaleX(0);
+  transform-origin: left;
+  background: linear-gradient(90deg, var(--tx-gold-deep), var(--tx-gold));
+}
+
+.trailx__story {
+  position: absolute;
+  inset: 0;
+  z-index: 7;
+  overflow-y: auto;
+  overflow-x: hidden;
+  overscroll-behavior: contain;
+  pointer-events: none; /* children opt back in */
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.8s ease, visibility 0s 0.8s;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 106, 0.4) transparent;
+}
+.trailx[data-mode="stop1"] .trailx__story {
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.8s ease 0.25s, visibility 0s;
+}
+.trailx__story::-webkit-scrollbar { width: 5px; }
+.trailx__story::-webkit-scrollbar-thumb { background: rgba(212, 175, 106, 0.35); border-radius: 999px; }
+
+/* Hero screen: the 360 is the star; the title sits low and stays untouchable. */
+.trailx__s1-hero {
+  position: relative;
+  min-height: 100vh;
+  display: flex;
+  align-items: flex-end;
+  padding: 0 clamp(1.4rem, 6vw, 6rem) 7rem;
+}
+.trailx__s1-kicker {
+  margin: 0;
+  color: var(--tx-gold);
+  font-size: 0.66rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+}
+.trailx__s1-title h2 {
+  margin: 0.5rem 0 0.7rem;
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-weight: 500;
+  font-size: clamp(1.9rem, 4.6vw, 3.4rem);
+  line-height: 1.12;
+  text-shadow: 0 4px 26px rgba(0, 0, 0, 0.65);
+}
+.trailx__s1-title h2 em { font-style: italic; color: var(--tx-gold); }
+.trailx__s1-tip {
+  margin: 0;
+  max-width: 34rem;
+  color: rgba(255, 255, 255, 0.55);
+  font-size: calc(0.76rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.06em;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+.trailx__s1-scroll {
+  position: absolute;
+  left: 50%;
+  bottom: 1.6rem;
+  transform: translateX(-50%);
+  pointer-events: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.55rem 1.15rem;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.72);
+  color: var(--tx-cream);
+  font-family: "Inter", sans-serif;
+  font-size: 0.68rem;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  cursor: pointer;
+  backdrop-filter: blur(6px);
+  animation: trailx-bob 2.6s ease-in-out infinite;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.trailx__s1-scroll:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--tx-gold); }
+.trailx__s1-scroll svg { width: 13px; height: 13px; }
+@keyframes trailx-bob {
+  0%, 100% { transform: translateX(-50%) translateY(0); }
+  50% { transform: translateX(-50%) translateY(6px); }
+}
+
+/* Chapters: one screen each, cards alternating sides, revealed on scroll. */
+.trailx__chapter {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  padding: 3.5rem clamp(1.4rem, 6vw, 6rem);
+  opacity: 0;
+  transform: translateY(36px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.trailx__chapter.is-visible { opacity: 1; transform: none; }
+.trailx__chapter[data-side="right"] { justify-content: flex-end; }
+
+.trailx__card {
+  pointer-events: auto;
+  width: min(560px, 92vw);
+  padding: 2rem 2.2rem 2.1rem;
+  background: linear-gradient(160deg, rgba(22, 15, 7, 0.86), rgba(13, 10, 4, 0.74));
+  border: 1px solid rgba(212, 175, 106, 0.28);
+  border-radius: 18px;
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(10px);
+  transition: transform 0.25s ease, border-color 0.3s ease;
+  will-change: transform;
+}
+.trailx__card:hover { border-color: rgba(212, 175, 106, 0.5); }
+.trailx__card .trailx__label { margin-bottom: 1rem; }
+.trailx__card-title {
+  margin: 0 0 1rem;
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-weight: 500;
+  font-size: clamp(1.6rem, 3.2vw, 2.4rem);
+  line-height: 1.15;
+}
+.trailx__card-title em { font-style: italic; color: var(--tx-gold); }
+.trailx__card-copy {
+  margin: 0 0 0.9rem;
+  color: rgba(255, 255, 255, 0.85);
+  font-family: "Cormorant Garamond", serif;
+  font-size: calc(1.05rem * var(--tx-font-scale, 1));
+  line-height: 1.65;
+}
+.trailx__card-copy:last-child { margin-bottom: 0; }
+
+/* Quick facts */
+.trailx__stats {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.8rem;
+  margin-top: 1.3rem;
+}
+.trailx__stat {
+  padding: 0.75rem 0.95rem;
+  border: 1px solid rgba(212, 175, 106, 0.22);
+  border-radius: 12px;
+  background: rgba(212, 175, 106, 0.06);
+  transition: transform 0.25s ease, border-color 0.25s ease, background 0.25s ease;
+}
+.trailx__stat:hover {
+  transform: translateY(-3px);
+  border-color: var(--tx-gold);
+  background: rgba(212, 175, 106, 0.12);
+}
+.trailx__stat-label {
+  display: block;
+  margin-bottom: 0.3rem;
+  color: var(--tx-gold);
+  font-size: 0.58rem;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+.trailx__stat-value {
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: calc(1.1rem * var(--tx-font-scale, 1));
+}
+
+/* "Reading the Threshold" chips + detail panel */
+.trailx__chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin: 1.15rem 0 1rem;
+}
+.trailx__chip {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.95rem;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.6);
+  color: var(--tx-cream);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.7rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.06em;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease, transform 0.15s ease;
+}
+.trailx__chip:hover { border-color: var(--tx-gold); background: rgba(212, 175, 106, 0.18); }
+.trailx__chip:active { transform: scale(0.96); }
+.trailx__chip[aria-pressed="true"] {
+  background: var(--tx-gold);
+  border-color: var(--tx-gold);
+  color: var(--tx-ink);
+  font-weight: 600;
+}
+.trailx__detail p {
+  margin: 0;
+  padding-left: 0.95rem;
+  border-left: 2px solid var(--tx-gold);
+  color: rgba(255, 255, 255, 0.88);
+  font-family: "Cormorant Garamond", serif;
+  font-size: calc(1.02rem * var(--tx-font-scale, 1));
+  line-height: 1.6;
+  animation: trailx-detail-in 0.45s ease;
+}
+@keyframes trailx-detail-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: none; }
+}
+
+/* Next-stop footer */
+.trailx__chapter--next { justify-content: center; min-height: 92vh; }
+.trailx__next-card { text-align: center; width: min(620px, 92vw); }
+.trailx__next-card .trailx__actions { justify-content: center; margin-bottom: 0.2rem; }
+button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
+.trailx__begin.is-teased { animation: trailx-tease 0.6s ease; }
+@keyframes trailx-tease {
+  0%, 100% { transform: none; }
+  25% { transform: translateX(-6px); }
+  55% { transform: translateX(5px); }
+  80% { transform: translateX(-3px); }
+}
+.trailx__next-note {
+  margin: 0.8rem 0 0;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: calc(0.78rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.04em;
+}
+
+/* ==========================================================================
+   360 hotspots (Stop 1 scenes)
+   ========================================================================== */
+/* Ground scene-link hotspot — same family as the heritage trail page. */
+.trailx__pano .tour-ground-hotspot {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  border: 0.22rem solid rgba(255, 255, 255, 0.58);
+  background: radial-gradient(circle at center, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0.08) 58%, rgba(255, 255, 255, 0) 72%);
+  box-shadow: 0 0.45rem 1rem rgba(0, 0, 0, 0.14);
+  cursor: pointer;
+  opacity: 0.92;
+  transition: box-shadow 0.18s ease, opacity 0.18s ease, border-color 0.18s ease;
+}
+.trailx__pano .tour-ground-hotspot::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.9rem;
+  height: 0.9rem;
+  border-top: 0.3rem solid rgba(70, 70, 70, 0.82);
+  border-right: 0.3rem solid rgba(70, 70, 70, 0.82);
+  transform: translate(-50%, -52%) rotate(-45deg);
+}
+.trailx__pano .tour-ground-hotspot::after {
+  content: "";
+  position: absolute;
+  inset: 0.26rem;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  transform: scaleY(0.9);
+  animation: trailx-pulse 2.6s ease-out infinite;
+}
+.trailx__pano .tour-ground-hotspot:hover {
+  border-color: rgba(255, 255, 255, 0.85);
+  opacity: 1;
+  box-shadow: 0 0.75rem 1.4rem rgba(0, 0, 0, 0.2);
+}
+
+/* Gold info spot with a hover/tap note */
+.trailx__pano .trailx-spot {
+  width: 24px;
+  height: 24px;
+  cursor: pointer;
+}
+.trailx-spot__dot {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  border: 2px solid var(--tx-gold);
+  background: rgba(212, 175, 106, 0.3);
+  animation: trailx-pulse 2.4s ease-out infinite;
+}
+@keyframes trailx-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 106, 0.45); }
+  70% { box-shadow: 0 0 0 14px rgba(212, 175, 106, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 106, 0); }
+}
+.trailx-spot__tip {
+  position: absolute;
+  bottom: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  width: 240px;
+  padding: 0.65rem 0.8rem;
+  background: rgba(20, 13, 6, 0.94);
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 10px;
+  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+  text-align: left;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+}
+.trailx-spot__tip strong {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--tx-gold);
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+.trailx-spot__tip > span {
+  display: block;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.73rem * var(--tx-font-scale, 1));
+  line-height: 1.45;
+}
+.trailx__pano .trailx-spot:hover .trailx-spot__tip {
+  opacity: 1;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Immersive mode also clears the Stop 1 layers */
+.trailx[data-immersive="true"] .trailx__story {
+  opacity: 0 !important;
+  visibility: hidden !important;
+}
+.trailx[data-immersive="true"] .trailx__progress { opacity: 0 !important; }
+
 /* Mobile ---------------------------------------------------------------------- */
 @media (max-width: 820px) {
   .trailx__scrim {
@@ -458,6 +856,16 @@
   .trailx__cursor { display: none; }
   .trailx__nameplate { display: none; }
   .trailx__controls { right: 1.1rem; bottom: 1rem; }
+
+  /* Stop 1 on small screens */
+  .trailx[data-phase] .trailx__panel { transform: translateX(-130%); }
+  .trailx__s1-hero { padding: 0 1.1rem 7.5rem; }
+  .trailx__chapter { padding: 3rem 1.1rem; }
+  .trailx__chapter[data-side="right"] { justify-content: flex-start; }
+  .trailx__card { width: 100%; padding: 1.5rem 1.3rem 1.6rem; }
+  .trailx__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .trailx__s1-scroll { bottom: 4.4rem; }
+  .trailx-spot__tip { width: 200px; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -478,4 +886,20 @@
   }
   .trailx__grain { animation: none; }
   .trailx__curtain { transition: none; }
+  .trailx__chapter {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
+  }
+  .trailx__s1-scroll { animation: none; }
+  .trailx__pano .tour-ground-hotspot::after,
+  .trailx-spot__dot { animation: none; }
+  .trailx__detail p { animation: none; }
+  /* The Begin choreography must still clear the intro UI without motion. */
+  .trailx[data-phase] .trailx__panel {
+    opacity: 0 !important;
+    visibility: hidden !important;
+  }
+  .trailx[data-phase="depart"] .trailx__ana,
+  .trailx[data-phase="depart"] .trailx__controls { opacity: 0 !important; }
 }

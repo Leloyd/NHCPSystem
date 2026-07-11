@@ -1,10 +1,13 @@
 /* ==========================================================================
-   Heritage Trail — Starting Point (/trail)
-   - A 360 equirectangular panorama of the aerial view (Pannellum, no controls).
-   - Ana Kalang (idle GLB) slides in from the right; greets on arrival, plays a
-     heart gesture when tapped, gentle sway while narrating.
-   - Bilingual narration (EN / Tagalog) with the landing page's control family.
-   - Begin → the heritage trail (with a matching leave animation); Cancel → home.
+   Heritage Trail — Starting Point + Stop 1 · Orientation (/trail)
+   - Intro: 360 aerial panorama (Pannellum, no controls), Ana Kalang on the
+     right, info panel + Begin / Cancel on the left.
+   - Begin: everything slides out, the aerial view pans down to the front
+     gate (data-gate-yaw / data-gate-pitch), then crossfades into the
+     FrontGate 360 (Pannellum scene fade) — Stop 1 begins.
+   - Stop 1: the FrontGate 360 becomes the living background (with the same
+     hotspots as the heritage page + gold info spots), Ana returns with the
+     controls, and a scrollable story layer tells the Orientation chapters.
    ========================================================================== */
 
 import * as THREE from 'three';
@@ -15,10 +18,36 @@ if (!root) throw new Error('[Trail] Starting-point markup not found.');
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
-/* --- Narration -------------------------------------------------------------- */
-const SCRIPT = {
-  en: "This is where your journey begins. Before us lies the Nagcarlan Underground Cemetery, seen from above — the circular enclosure, the chapel, and the paths worn by centuries of passage. Look around, take it in. When you are ready, we will walk the trail together.",
-  tl: "Dito magsisimula ang iyong paglalakbay. Sa harap natin ang Libingan sa Ilalim ng Lupa ng Nagcarlan, mula sa itaas — ang pabilog na pader, ang kapilya, at ang mga daanang ginugol ng mga siglo. Lumingon-lingon, damhin ito. Kapag handa ka na, sabay nating tatahakin ang landas.",
+/* --- Narration (one script per chapter; EN / TL) ----------------------------- */
+const SCRIPTS = {
+  intro: {
+    en: "This is where your journey begins. Before us lies the Nagcarlan Underground Cemetery, seen from above — the circular enclosure, the chapel, and the paths worn by centuries of passage. Look around, take it in. When you are ready, we will walk the trail together.",
+    tl: "Dito magsisimula ang iyong paglalakbay. Sa harap natin ang Libingan sa Ilalim ng Lupa ng Nagcarlan, mula sa itaas — ang pabilog na pader, ang kapilya, at ang mga daanang ginugol ng mga siglo. Lumingon-lingon, damhin ito. Kapag handa ka na, sabay nating tatahakin ang landas.",
+  },
+  's1-arrive': {
+    en: "Welcome to the first stop — the front gates of the Nagcarlan Underground Cemetery. Take a moment to look around. When you find the glowing ring on the ground, it will carry you to another view. Then scroll down, and I will tell you what this threshold means.",
+    tl: "Maligayang pagdating sa unang hinto — ang tarangkahan ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Lumingon-lingon muna. Kapag nakita mo ang kumikinang na singsing sa lupa, dadalhin ka nito sa ibang tanaw. Pagkatapos, mag-scroll pababa at ikukuwento ko ang kahulugan ng bungad na ito.",
+  },
+  's1-threshold': {
+    en: "Look at the gate as a frame. From this one spot you can already read the whole site — the arch, the circular wall, and the straight path leading to the chapel at the center.",
+    tl: "Tingnan ang tarangkahan bilang isang kuwadro. Mula sa iisang puwestong ito, mababasa mo na ang buong pook — ang arko, ang pabilog na pader, at ang tuwid na daanang patungo sa kapilya sa gitna.",
+  },
+  's1-1845': {
+    en: "The cemetery was established in 1845 under Father Vicente Velloc, built south of the town center to follow the health regulations of the time. Distance made it quiet; devotion kept it close.",
+    tl: "Itinatag ang libingan noong 1845 sa ilalim ni Padre Vicente Velloc, at itinayo sa timog ng bayan alinsunod sa mga alituntuning pangkalusugan ng panahong iyon. Ang layo ang nagbigay ng katahimikan; ang debosyon ang nagpanatili nitong malapit.",
+  },
+  's1-landmark': {
+    en: "This is sacred ground and historical ground at once. Funerals, secret revolutionary meetings, wartime shelter — all passed through this gate. In 1981 it was declared a National Historical Landmark.",
+    tl: "Sabay itong sagrado at makasaysayang lupa. Mga libing, lihim na pulong ng mga rebolusyonaryo, kublihan noong digmaan — lahat dumaan sa tarangkahang ito. Noong 1981, idineklara itong Pambansang Palatandaang Pangkasaysayan.",
+  },
+  's1-details': {
+    en: "The arch, the iron gate, the masonry walls, and the path inward — four elements that mark the boundary between the town and the world of the dead. Tap each one to take a closer look.",
+    tl: "Ang arko, ang rehas na bakal, ang mga pader na bato, at ang daanang papasok — apat na elementong nagtatakda ng hangganan sa pagitan ng bayan at ng mundo ng mga yumao. Pindutin ang bawat isa upang mapagmasdan.",
+  },
+  's1-next': {
+    en: "That completes our orientation. When Stop Two opens, we will step inside and register at the museum. Salamat — thank you for walking this far with me.",
+    tl: "Tapos na ang ating oryentasyon. Kapag nabuksan na ang Ikalawang Hinto, papasok tayo at magpapatala sa museo. Salamat sa paglalakad kasama ko.",
+  },
 };
 
 /* --- Refs & state ----------------------------------------------------------- */
@@ -35,6 +64,11 @@ const subsBtn = root.querySelector('[data-trail-subs]');
 const textSizeBtn = root.querySelector('[data-trail-textsize]');
 const beginLink = root.querySelector('[data-trail-begin]');
 const cancelLink = root.querySelector('[data-trail-cancel]');
+const storyEl = root.querySelector('[data-trail-story]');
+const progressEl = root.querySelector('[data-trail-progress] span');
+const scrollCue = root.querySelector('[data-trail-scrollcue]');
+const nextBtn = root.querySelector('[data-trail-next]');
+const nextNote = root.querySelector('[data-trail-next-note]');
 
 const state = {
   lang: localStorage.getItem('anaGuideLang') === 'tl' ? 'tl' : 'en',
@@ -44,7 +78,18 @@ const state = {
   unlocked: false,
   playing: false,
   typeTimer: 0,
+  mode: 'intro',       // 'intro' | 'stop1'
+  scriptKey: 'intro',  // which SCRIPTS entry the Listen button replays
 };
+
+/* Panorama handles (set once the viewer is built) */
+let viewer = null;
+let currentScene = 'aerial';
+let transitioning = false; // true during the Begin pan + scene crossfade
+let scrollYaw = 0;         // scroll-linked yaw offset while reading Stop 1
+
+/* Character handle (populated by initCharacter) */
+const charApi = {};
 
 /* --- Arrival ---------------------------------------------------------------- */
 // Whether we came here via the landing "Start Heritage Trail" exit.
@@ -112,7 +157,8 @@ function renderBubble(text) {
   }, 16);
 }
 function narrate({ speakIt } = {}) {
-  const text = SCRIPT[state.lang] || SCRIPT.en;
+  const script = SCRIPTS[state.scriptKey] || SCRIPTS.intro;
+  const text = script[state.lang] || script.en;
   renderBubble(text);
   if (speakIt) speak(text);
   else stopSpeaking();
@@ -163,6 +209,7 @@ function unlockAudio() {
 
 root.setAttribute('data-lang', state.lang);
 root.setAttribute('data-playing', 'false');
+root.setAttribute('data-mode', 'intro');
 setMuted(state.muted);
 setSubtitles(state.subtitles);
 setTextSize(state.textSize);
@@ -178,8 +225,8 @@ langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'e
 subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
 textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
 
-// Immersive toggle: slide the panels / Ana / controls out for a clean 360
-// view; click again to slide them back in from the same side.
+// Immersive toggle: slide the panels / Ana / controls / story out for a clean
+// 360 view; click again to slide them back in from the same side.
 const immersiveBtn = root.querySelector('[data-trail-immersive]');
 root.setAttribute('data-immersive', 'false');
 immersiveBtn?.addEventListener('click', () => {
@@ -200,9 +247,81 @@ window.addEventListener('pointerdown', kickstart, true);
 window.addEventListener('keydown', kickstart, true);
 window.addEventListener('pagehide', () => stopSpeaking());
 
-/* --- Begin / Cancel with matching leave animation --------------------------- */
+/* --- Views & scenes ----------------------------------------------------------
+   GATE  = where the aerial view pans before the crossfade (aim at the gate).
+   FG    = the FrontGate 360's starting view (same numbers as the old page).
+   Tune any of these via the data attributes on #trailStart — drag the view
+   and read the console: every drag logs data-yaw / data-pitch to copy. ------ */
+const GATE = {
+  yaw: parseFloat(root.getAttribute('data-gate-yaw')),
+  pitch: parseFloat(root.getAttribute('data-gate-pitch')),
+};
+if (!Number.isFinite(GATE.yaw)) GATE.yaw = -44.6;
+if (!Number.isFinite(GATE.pitch)) GATE.pitch = -72.8;
+
+const FG = {
+  yaw: parseFloat(root.getAttribute('data-fg-yaw')),
+  pitch: parseFloat(root.getAttribute('data-fg-pitch')),
+  hfov: 110,
+};
+if (!Number.isFinite(FG.yaw)) FG.yaw = -10.2;
+if (!Number.isFinite(FG.pitch)) FG.pitch = 1.8;
+
+// Where the idle view settles per scene while Stop 1 is active.
+const SCENE_BASE = {
+  frontGate: { yaw: FG.yaw, pitch: FG.pitch },
+  rightFrontGate: { yaw: 90, pitch: -20 },
+};
+
+/* --- Stop 1 entry ------------------------------------------------------------ */
+function enterStop1() {
+  transitioning = false;
+  if (state.mode === 'stop1') return;
+  state.mode = 'stop1';
+  root.setAttribute('data-mode', 'stop1');
+  root.setAttribute('data-phase', 'stop1'); // brings Ana + controls back in
+  if (storyEl) {
+    storyEl.hidden = false;
+    storyEl.scrollTop = 0;
+  }
+  try { history.replaceState(null, '', '#stop-1-orientation'); } catch { /* ignore */ }
+  charApi.reenter?.();                       // Ana glides in from the right again
+  window.setTimeout(() => charApi.playGesture?.('greet'), 1000);
+  state.scriptKey = 's1-arrive';
+  narrate({ speakIt: state.unlocked && !state.muted });
+}
+
+function beginStop1() {
+  if (state.mode === 'stop1' || root.getAttribute('data-phase') === 'depart') return;
+  stopSpeaking();
+  // No panorama? Fall back to the old page transition so Begin never dead-ends.
+  if (!viewer) { leaveTo(beginLink?.getAttribute('href') || root.getAttribute('data-begin-url'), 'begin'); return; }
+  transitioning = true;
+  root.setAttribute('data-phase', 'depart'); // slide panel/Ana/bubble/controls out
+  const crossfade = () => {
+    try {
+      viewer.loadScene('frontGate', FG.pitch, FG.yaw, FG.hfov);
+      window.setTimeout(enterStop1, prefersReducedMotion ? 120 : 1300);
+    } catch (err) {
+      console.warn('[Trail] Scene change failed:', err);
+      enterStop1();
+    }
+  };
+  if (prefersReducedMotion) { crossfade(); return; }
+  // Let the UI clear first, then swoop the aerial view down onto the gate.
+  window.setTimeout(() => {
+    try { viewer.lookAt(GATE.pitch, GATE.yaw, 112, 2300, crossfade); }
+    catch { crossfade(); }
+  }, 620);
+}
+
+/* --- Begin / Cancel ----------------------------------------------------------
+   Begin now stays on this page (aerial pan → FrontGate crossfade → Stop 1).
+   Cancel still returns home with the curtain. leaveTo() remains as the
+   reduced-capability fallback (no WebGL / pannellum missing). --------------- */
 function leaveTo(url, mode) {
   stopSpeaking();
+  if (!url) return;
   if (prefersReducedMotion) { window.location.href = url; return; }
   if (mode === 'begin') {
     try { sessionStorage.setItem('trailArrival', '1'); } catch { /* ignore */ }
@@ -213,10 +332,10 @@ function leaveTo(url, mode) {
     window.setTimeout(() => { window.location.href = url; }, 650);
   }
 }
-beginLink?.addEventListener('click', (e) => { e.preventDefault(); leaveTo(beginLink.getAttribute('href'), 'begin'); });
+beginLink?.addEventListener('click', (e) => { e.preventDefault(); beginStop1(); });
 cancelLink?.addEventListener('click', (e) => { e.preventDefault(); leaveTo(cancelLink.getAttribute('href'), 'cancel'); });
 
-/* --- 360 panorama (Pannellum, no controls, gentle auto-rotate) -------------- */
+/* --- 360 panorama (Pannellum tour: aerial + FrontGate scenes) ---------------- */
 function initPanorama() {
   const src = root.getAttribute('data-panorama') || '';
   if (!src || !window.pannellum || !panoEl) return;
@@ -228,50 +347,138 @@ function initPanorama() {
   const startYaw = parseFloat(root.getAttribute('data-yaw')) || 0;
   const startPitch = parseFloat(root.getAttribute('data-pitch')) || 0;
 
-  // Ping-pong drift boundaries: the idle sweep pans right until data-yaw-max,
-  // reverses and pans left until data-yaw-min, and repeats. A missing/empty
-  // bound mirrors the start view until you fill it in.
+  // Ping-pong drift boundaries (intro only): the idle sweep pans right until
+  // data-yaw-max, reverses and pans left until data-yaw-min, and repeats.
   const yawMaxAttr = parseFloat(root.getAttribute('data-yaw-max'));
   const yawMinAttr = parseFloat(root.getAttribute('data-yaw-min'));
   const yawMax = Number.isFinite(yawMaxAttr) ? yawMaxAttr : startYaw + 24;
   const yawMin = Number.isFinite(yawMinAttr) ? yawMinAttr : startYaw - (yawMax - startYaw);
 
-  const build = (finalSrc) => {
+  const gateSrc = root.getAttribute('data-pano-front-gate') || '';
+  const rightGateSrc = root.getAttribute('data-pano-right-front-gate') || '';
+
+  // Gold info spots on the FrontGate 360 (hover/tap for a note). Coordinates
+  // are best guesses — drag the view in that scene and use the console log
+  // to fine-tune pitch/yaw here.
+  const infoSpotTooltip = (div, args) => {
+    div.classList.add('trailx-spot');
+    div.innerHTML =
+      '<span class="trailx-spot__dot" aria-hidden="true"></span>' +
+      '<span class="trailx-spot__tip">' +
+        `<strong><span data-lang-en>${args.en.title}</span><span data-lang-tl>${args.tl.title}</span></strong>` +
+        `<span><span data-lang-en>${args.en.text}</span><span data-lang-tl>${args.tl.text}</span></span>` +
+      '</span>';
+  };
+  const infoSpots = [
+    {
+      pitch: 7, yaw: -10,
+      en: { title: 'The Entrance Arch', text: 'The high arch marks the passage into consecrated ground — the first element of the threshold.' },
+      tl: { title: 'Ang Arkong Pasukan', text: 'Ang mataas na arko ang hudyat ng pagpasok sa banal na lupa — ang unang elemento ng bungad.' },
+    },
+    {
+      pitch: -2, yaw: -75,
+      en: { title: 'The Perimeter Wall', text: 'The masonry wall traces the cemetery’s circular plan and carries the burial niches within it.' },
+      tl: { title: 'Ang Pader ng Palibot', text: 'Sinusundan ng pader na bato ang pabilog na plano ng libingan at kinapapalooban ng mga nitso.' },
+    },
+  ].map((s) => ({
+    pitch: s.pitch,
+    yaw: s.yaw,
+    type: 'info',
+    createTooltipFunc: infoSpotTooltip,
+    createTooltipArgs: s,
+  }));
+
+  const build = (aerialSrc) => {
     try {
-      const viewer = window.pannellum.viewer('trailPano', {
-        type: 'equirectangular',
-        panorama: finalSrc,
-        autoLoad: true,
-        showControls: false,
-        showZoomCtrl: false,
-        showFullscreenCtrl: false,
-        keyboardZoom: false,
-        mouseZoom: false,
-        draggable: true,
-        compass: false,
-        autoRotate: 0, // replaced by the ping-pong drift below
-        hfov: 100,
-        minHfov: 70,
-        maxHfov: 118,
-        pitch: startPitch,
-        yaw: startYaw,
+      const scenes = {
+        aerial: {
+          type: 'equirectangular',
+          panorama: aerialSrc,
+          pitch: startPitch,
+          yaw: startYaw,
+          hfov: 100,
+        },
+      };
+      if (gateSrc) {
+        scenes.frontGate = {
+          type: 'equirectangular',
+          panorama: gateSrc,
+          pitch: FG.pitch,
+          yaw: FG.yaw,
+          hfov: FG.hfov,
+          hotSpots: [
+            // Same ground hotspot as the heritage page: step to the right-side view.
+            ...(rightGateSrc ? [{
+              pitch: -10,
+              yaw: 90,
+              type: 'scene',
+              sceneId: 'rightFrontGate',
+              targetPitch: -20,
+              targetYaw: 90,
+              targetHfov: 100,
+              cssClass: 'tour-ground-hotspot',
+            }] : []),
+            ...infoSpots,
+          ],
+        };
+      }
+      if (gateSrc && rightGateSrc) {
+        scenes.rightFrontGate = {
+          type: 'equirectangular',
+          panorama: rightGateSrc,
+          pitch: -20,
+          yaw: 90,
+          hfov: 100,
+          hotSpots: [{
+            pitch: -11,
+            yaw: -89,
+            type: 'scene',
+            sceneId: 'frontGate',
+            targetPitch: -20,
+            targetYaw: -90,
+            targetHfov: 100,
+            cssClass: 'tour-ground-hotspot',
+          }],
+        };
+      }
+
+      viewer = window.pannellum.viewer('trailPano', {
+        default: {
+          firstScene: 'aerial',
+          sceneFadeDuration: prefersReducedMotion ? 0 : 1500,
+          autoLoad: true,
+          showControls: false,
+          showZoomCtrl: false,
+          showFullscreenCtrl: false,
+          keyboardZoom: false,
+          mouseZoom: false,
+          draggable: true,
+          compass: false,
+          autoRotate: 0, // replaced by the drift loop below
+          minHfov: 70,
+          maxHfov: 118,
+        },
+        scenes,
       });
 
+      viewer.on('scenechange', (id) => { currentScene = id; });
+
       // Helper for picking views: log where the visitor is looking after
-      // each drag ends (used to choose the start and the sweep boundaries).
+      // each drag ends (used to tune start views, boundaries, hotspots).
       const logView = () => {
         try {
-          console.info(`[Trail] view → data-yaw="${viewer.getYaw().toFixed(1)}" data-pitch="${viewer.getPitch().toFixed(1)}"`);
+          console.info(`[Trail] ${currentScene} view → data-yaw="${viewer.getYaw().toFixed(1)}" data-pitch="${viewer.getPitch().toFixed(1)}"`);
         } catch { /* viewer not ready */ }
       };
       panoEl.addEventListener('mouseup', logView);
       panoEl.addEventListener('touchend', logView);
 
-      // Idle ping-pong sweep: pans right to yawMax, reverses to yawMin, and
-      // so on. Pauses while the visitor drags and resumes a beat after; the
-      // pitch also eases gently back to the start pitch while idle.
+      // Idle drift. Intro (aerial): ping-pong sweep between yawMin / yawMax.
+      // Stop 1 (gate scenes): ease gently toward the scene's base view plus
+      // the scroll-linked yaw offset, so the 360 stays alive while reading.
+      // Pauses while the visitor drags and during the Begin transition.
       if (!prefersReducedMotion) {
-        const DRIFT_SPEED = 1.4; // degrees per second
+        const DRIFT_SPEED = 1.4; // degrees per second (intro sweep)
         const PITCH_EASE = 0.4;
         const IDLE_MS = 3000;
         let dir = 1; // start by panning right, toward yawMax
@@ -285,16 +492,26 @@ function initPanorama() {
         const drift = (now) => {
           const dt = Math.min((now - prev) / 1000, 0.05);
           prev = now;
-          if (!interacting && now - lastEnd > IDLE_MS && !document.hidden) {
+          const idle = !interacting && now - lastEnd > IDLE_MS && !document.hidden && !transitioning;
+          if (idle) {
             try {
-              const y = viewer.getYaw() + dir * DRIFT_SPEED * dt;
-              // Reverse at the bounds (no clamp — if the visitor parked the
-              // view outside them, the sweep simply drifts back into range).
-              if (y >= yawMax && dir > 0) dir = -1;
-              else if (y <= yawMin && dir < 0) dir = 1;
-              viewer.setYaw(y, false);
-              const p = viewer.getPitch();
-              viewer.setPitch(p + (startPitch - p) * Math.min(1, dt * PITCH_EASE), false);
+              if (state.mode === 'intro' && currentScene === 'aerial') {
+                const y = viewer.getYaw() + dir * DRIFT_SPEED * dt;
+                // Reverse at the bounds (no clamp — if the visitor parked the
+                // view outside them, the sweep simply drifts back into range).
+                if (y >= yawMax && dir > 0) dir = -1;
+                else if (y <= yawMin && dir < 0) dir = 1;
+                viewer.setYaw(y, false);
+                const p = viewer.getPitch();
+                viewer.setPitch(p + (startPitch - p) * Math.min(1, dt * PITCH_EASE), false);
+              } else if (state.mode === 'stop1' && SCENE_BASE[currentScene]) {
+                const base = SCENE_BASE[currentScene];
+                const targetYaw = base.yaw + (currentScene === 'frontGate' ? scrollYaw : 0);
+                const y = viewer.getYaw();
+                viewer.setYaw(y + (targetYaw - y) * Math.min(1, dt * 0.9), false);
+                const p = viewer.getPitch();
+                viewer.setPitch(p + (base.pitch - p) * Math.min(1, dt * PITCH_EASE), false);
+              }
             } catch { /* viewer busy */ }
           }
           window.requestAnimationFrame(drift);
@@ -332,6 +549,93 @@ function initPanorama() {
   };
   img.onerror = () => build(src);
   img.src = src;
+}
+
+/* --- Stop 1 story: scroll, chapters, narration, interactions ----------------- */
+function initStory() {
+  if (!storyEl) return;
+
+  // Scroll progress + scroll-linked yaw (the gate view leans as you read).
+  storyEl.addEventListener('scroll', () => {
+    const max = storyEl.scrollHeight - storyEl.clientHeight;
+    const progress = max > 0 ? storyEl.scrollTop / max : 0;
+    if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
+    scrollYaw = progress * 26;
+  }, { passive: true });
+
+  // The story layer itself is click-through so the 360 stays draggable in the
+  // gaps; forward wheel spins that land on the panorama into the scroller.
+  window.addEventListener('wheel', (e) => {
+    if (state.mode !== 'stop1' || storyEl.hidden) return;
+    if (root.getAttribute('data-immersive') === 'true') return;
+    if (e.target && storyEl.contains(e.target)) return; // native scroll
+    storyEl.scrollBy({ top: e.deltaY });
+  }, { passive: true });
+
+  // Keyboard scrolling (arrows / page / space) once Stop 1 is active.
+  window.addEventListener('keydown', (e) => {
+    if (state.mode !== 'stop1' || storyEl.hidden) return;
+    if (root.getAttribute('data-immersive') === 'true') return;
+    if (e.target && e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
+    const page = window.innerHeight * 0.85;
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      storyEl.scrollBy({ top: page, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      storyEl.scrollBy({ top: -page, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+    }
+  });
+
+  scrollCue?.addEventListener('click', () => {
+    storyEl.scrollBy({ top: window.innerHeight * 0.94, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+  });
+
+  // Chapters: reveal on scroll + Ana narrates the one you're reading.
+  const chapters = Array.from(storyEl.querySelectorAll('[data-chapter]'));
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('is-visible');
+      const key = entry.target.getAttribute('data-chapter');
+      if (state.mode === 'stop1' && SCRIPTS[key] && key !== state.scriptKey) {
+        state.scriptKey = key;
+        narrate({ speakIt: state.unlocked && !state.muted });
+      }
+    });
+  }, { root: storyEl, threshold: 0.45 });
+  chapters.forEach((c) => observer.observe(c));
+
+  // "Reading the Threshold" chips: one detail panel at a time.
+  const chips = Array.from(storyEl.querySelectorAll('[data-detail]'));
+  const panels = Array.from(storyEl.querySelectorAll('[data-detail-panel]'));
+  chips.forEach((chip) => {
+    chip.addEventListener('click', () => {
+      const key = chip.getAttribute('data-detail');
+      chips.forEach((b) => b.setAttribute('aria-pressed', String(b === chip)));
+      panels.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
+    });
+  });
+
+  // Gentle 3D tilt on the story cards (micro-interaction, desktop pointers).
+  if (!prefersReducedMotion && window.matchMedia('(hover: hover)').matches) {
+    storyEl.querySelectorAll('.trailx__card').forEach((card) => {
+      card.addEventListener('pointermove', (e) => {
+        const r = card.getBoundingClientRect();
+        const rx = ((e.clientY - r.top) / r.height - 0.5) * -3.5;
+        const ry = ((e.clientX - r.left) / r.width - 0.5) * 4.5;
+        card.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
+      });
+      card.addEventListener('pointerleave', () => { card.style.transform = ''; });
+    });
+  }
+
+  // Next stop: Stop 2 lives here soon — tease instead of navigating away.
+  nextBtn?.addEventListener('click', () => {
+    nextNote?.removeAttribute('hidden');
+    nextBtn.classList.add('is-teased');
+    window.setTimeout(() => nextBtn.classList.remove('is-teased'), 700);
+  });
 }
 
 /* --- Cursor glow ------------------------------------------------------------- */
@@ -432,6 +736,10 @@ function initCharacter() {
       idleAction.crossFadeTo(action, 0.4, false);
     };
 
+    // Let the Begin choreography replay her entrance for Stop 1.
+    charApi.reenter = () => { slideT = prefersReducedMotion ? 1 : 0; };
+    charApi.playGesture = playGesture;
+
     const animate = () => {
       window.requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.05);
@@ -513,3 +821,4 @@ function initCharacter() {
 narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();
+initStory();
