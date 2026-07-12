@@ -650,9 +650,10 @@
   position: absolute;
   z-index: -1;
   pointer-events: none;
-  /* Bleed far past both edges so the veil spans the whole viewport width —
-     one continuous sheet, no seam anywhere in the middle. */
-  inset: 0 -60vw -7rem;
+  /* Bleed a full viewport width past both edges so the veil always spans the
+     whole screen — one continuous sheet, regardless of how narrow the panel
+     is on wide monitors (its width caps at 600px). */
+  inset: 0 -100vw -7rem;
   background: linear-gradient(
     180deg,
     rgba(13, 10, 4, 0) 0%,
