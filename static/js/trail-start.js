@@ -7,7 +7,11 @@
      FrontGate 360 (Pannellum scene fade) — Stop 1 begins.
    - Stop 1: the FrontGate 360 becomes the living background (with the same
      hotspots as the heritage page + gold info spots), Ana returns with the
-     controls, and a scrollable story layer tells the Orientation chapters.
+     controls, and a scrollable story layer (GSAP-choreographed, like the
+     landing page) tells the Orientation chapters.
+   - Narration engine ported from the landing page: auto-plays on arrival,
+     Listen = pause/resume from the same spot, Mute = volume switch (the
+     narration keeps advancing silently and can come back mid-sentence).
    ========================================================================== */
 
 import * as THREE from 'three';
@@ -69,6 +73,8 @@ const progressEl = root.querySelector('[data-trail-progress] span');
 const scrollCue = root.querySelector('[data-trail-scrollcue]');
 const nextBtn = root.querySelector('[data-trail-next]');
 const nextNote = root.querySelector('[data-trail-next-note]');
+const zoomInBtn = root.querySelector('[data-trail-zoom-in]');
+const zoomOutBtn = root.querySelector('[data-trail-zoom-out]');
 
 const state = {
   lang: localStorage.getItem('anaGuideLang') === 'tl' ? 'tl' : 'en',
@@ -105,7 +111,7 @@ window.requestAnimationFrame(() => {
   window.setTimeout(() => curtain && curtain.classList.add('is-lifted'), 60);
 });
 
-/* --- Speech (TTS until trail VO exists) ------------------------------------- */
+/* --- Speech (Web Speech API — engine ported from the landing page) ----------- */
 const synth = 'speechSynthesis' in window ? window.speechSynthesis : null;
 let voices = [];
 function refreshVoices() { if (synth) voices = synth.getVoices() || []; }
@@ -122,21 +128,99 @@ function pickVoice(lang) {
 function setPlaying(p) {
   state.playing = p;
   root.setAttribute('data-playing', String(p));
-  playBtn?.setAttribute('aria-pressed', String(p));
+  if (playBtn) {
+    playBtn.setAttribute('aria-pressed', String(p));
+    playBtn.setAttribute('aria-label', p ? 'Pause narration' : 'Play narration');
+  }
 }
-function stopSpeaking() { if (synth) synth.cancel(); setPlaying(false); }
-function speak(text) {
-  if (!synth || state.muted || !state.unlocked) { setPlaying(false); return; }
+
+/* The narration engine tracks the spoken position (via word-boundary events)
+   so that Mute works like a volume control — the speech keeps advancing
+   silently and can come back audible mid-sentence — and the Listen button
+   pauses/resumes from the same spot instead of restarting. The utterGen
+   counter invalidates callbacks from cancelled utterances. */
+let utterGen = 0;
+const narration = { full: '', pos: 0, paused: false, startPos: 0, startedAt: 0, boundaryFired: false };
+
+/* Android Chrome never fires word-boundary events, so estimate the spoken
+   position from elapsed time instead, snapped back to a word start. */
+const SPEECH_CHARS_PER_SEC = 14; // ≈150 wpm at our speaking rate
+function currentSpeechPos() {
+  if (narration.boundaryFired || !state.playing) return narration.pos;
+  const elapsed = (performance.now() - narration.startedAt) / 1000;
+  let pos = Math.min(narration.full.length, narration.startPos + Math.round(elapsed * SPEECH_CHARS_PER_SEC));
+  while (pos > narration.startPos && pos < narration.full.length && !/\s/.test(narration.full[pos])) pos -= 1;
+  return pos;
+}
+
+function stopSpeaking() {
+  utterGen += 1;
+  if (synth) synth.cancel();
+  narration.paused = false;
+  narration.pos = 0;
+  setPlaying(false);
+}
+
+/* Speak the current narration from a character offset, at the current
+   mute-volume. Used for starts, resumes, and mute/unmute swaps. */
+function speakFrom(pos) {
+  if (!synth || !state.unlocked) { setPlaying(false); return; }
+  const text = narration.full.slice(pos);
+  if (!text) { setPlaying(false); return; }
+  const gen = ++utterGen;
+  narration.pos = pos;
+  narration.startPos = pos;
+  narration.startedAt = performance.now();
+  narration.boundaryFired = false;
+  narration.paused = false;
   synth.cancel();
-  const u = new SpeechSynthesisUtterance(text);
-  const v = pickVoice(state.lang);
-  if (v) u.voice = v;
-  u.lang = state.lang === 'tl' ? (v && /fil|tl/i.test(v.lang) ? v.lang : 'fil-PH') : 'en-US';
-  u.rate = 0.96; u.pitch = 1.05;
-  u.onstart = () => setPlaying(true);
-  u.onend = () => setPlaying(false);
-  u.onerror = () => setPlaying(false);
-  synth.speak(u);
+  const utter = new SpeechSynthesisUtterance(text);
+  const voice = pickVoice(state.lang);
+  if (voice) utter.voice = voice;
+  utter.lang = state.lang === 'tl' ? (voice && /fil|tl/i.test(voice.lang) ? voice.lang : 'fil-PH') : 'en-US';
+  utter.rate = 0.96;
+  utter.pitch = 1.05;
+  utter.volume = state.muted ? 0 : 1; // muted = silent playback, not stopped
+  utter.onstart = () => {
+    if (gen !== utterGen) return;
+    narration.startedAt = performance.now(); // time the pace from real start
+    setPlaying(true);
+  };
+  utter.onboundary = (event) => {
+    if (gen !== utterGen) return;
+    narration.boundaryFired = true;
+    narration.pos = pos + (event.charIndex || 0); // remember where she is
+  };
+  utter.onend = () => { if (gen === utterGen) setPlaying(false); };
+  utter.onerror = (event) => {
+    if (gen !== utterGen) return;
+    // Autoplay was blocked: flag audio as still locked so the first user
+    // gesture (kickstart below) retries the narration properly.
+    if (event && event.error === 'not-allowed') state.unlocked = false;
+    setPlaying(false);
+  };
+  // Android drops an utterance issued in the same tick as cancel() — give
+  // the engine a beat before speaking. The gen guard voids stale timers.
+  window.setTimeout(() => {
+    if (gen === utterGen) synth.speak(utter);
+  }, 80);
+}
+
+function speak(text) {
+  narration.full = text;
+  speakFrom(0);
+}
+
+function pauseSpeaking() {
+  narration.pos = currentSpeechPos(); // capture before playing flips off
+  narration.paused = true;
+  utterGen += 1; // silence callbacks from the utterance we cancel
+  if (synth) synth.cancel();
+  setPlaying(false);
+}
+
+function resumeSpeaking() {
+  speakFrom(narration.pos);
 }
 
 /* --- Bubble (typewriter) ---------------------------------------------------- */
@@ -169,15 +253,20 @@ function setMuted(m) {
   state.muted = m;
   localStorage.setItem('anaGuideMuted', String(m));
   root.setAttribute('data-muted', String(m));
-  muteBtn?.setAttribute('aria-pressed', String(m));
-  if (m) stopSpeaking();
+  if (muteBtn) {
+    muteBtn.setAttribute('aria-pressed', String(m));
+    muteBtn.setAttribute('aria-label', m ? 'Unmute narration' : 'Mute narration');
+  }
+  // Mute is a volume switch, not a stop: re-speak the remainder from the
+  // current word at the new volume so she keeps (or regains) her place.
+  if (state.playing) speakFrom(currentSpeechPos());
 }
 function setLang(lang) {
   state.lang = lang;
   localStorage.setItem('anaGuideLang', lang);
   root.setAttribute('data-lang', lang);
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
-  narrate({ speakIt: state.unlocked && !state.muted });
+  narrate({ speakIt: state.unlocked });
 }
 function setSubtitles(on) {
   state.subtitles = on;
@@ -204,6 +293,7 @@ function setTextSize(size) {
 function unlockAudio() {
   if (state.unlocked) return;
   state.unlocked = true;
+  // Some browsers require a speak() inside the gesture to unlock TTS.
   if (synth && !state.muted) synth.speak(new SpeechSynthesisUtterance(''));
 }
 
@@ -217,34 +307,42 @@ if (langBtn) langBtn.textContent = state.lang === 'tl' ? 'TL' : 'EN';
 
 playBtn?.addEventListener('click', () => {
   unlockAudio();
-  if (state.playing) stopSpeaking();
-  else narrate({ speakIt: !state.muted });
+  if (state.playing) {
+    pauseSpeaking(); // Listen acts as pause…
+  } else if (narration.paused && narration.pos > 0) {
+    resumeSpeaking(); // …and resumes from the same spot,
+  } else {
+    narrate({ speakIt: true }); // or restarts when finished.
+  }
 });
 muteBtn?.addEventListener('click', () => setMuted(!state.muted));
 langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
 subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
 textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
 
-// Immersive toggle: slide the panels / Ana / controls / story out for a clean
-// 360 view; click again to slide them back in from the same side.
-const immersiveBtn = root.querySelector('[data-trail-immersive]');
-root.setAttribute('data-immersive', 'false');
-immersiveBtn?.addEventListener('click', () => {
-  const on = root.getAttribute('data-immersive') === 'true';
-  root.setAttribute('data-immersive', on ? 'false' : 'true');
-  immersiveBtn.setAttribute('aria-pressed', String(!on));
-});
-
-// First interaction anywhere unlocks TTS, then auto-narrates once.
-const kickstart = () => {
-  const wasLocked = !state.unlocked;
-  unlockAudio();
-  if (wasLocked && !state.muted) narrate({ speakIt: true });
-  window.removeEventListener('pointerdown', kickstart, true);
-  window.removeEventListener('keydown', kickstart, true);
-};
-window.addEventListener('pointerdown', kickstart, true);
-window.addEventListener('keydown', kickstart, true);
+/* Auto-start narration on load (like the landing page). Browsers usually
+   block TTS before the first gesture, so: try immediately (the not-allowed
+   handler reverts the unlock if refused), and arm a one-shot kickstart so
+   the visitor's very first tap/click/keypress starts her speaking. */
+function attemptAutoSpeak() {
+  if (state.playing || state.unlocked) return;
+  state.unlocked = true; // optimistic — revoked by the not-allowed error
+  narrate({ speakIt: true });
+}
+function setupAutoSpeakKickstart() {
+  const types = ['pointerdown', 'keydown', 'touchend'];
+  const handler = (event) => {
+    const target = event.target;
+    // On the guide controls, only unlock — their own handlers decide playback.
+    const onControls = target instanceof Element && target.closest('.trailx__controls');
+    if (!state.unlocked) unlockAudio();
+    if (!onControls && !state.playing && !narration.paused) {
+      narrate({ speakIt: true });
+    }
+    types.forEach((t) => window.removeEventListener(t, handler, true));
+  };
+  types.forEach((t) => window.addEventListener(t, handler, true));
+}
 window.addEventListener('pagehide', () => stopSpeaking());
 
 /* --- Views & scenes ----------------------------------------------------------
@@ -272,6 +370,50 @@ const SCENE_BASE = {
   frontGate: { yaw: FG.yaw, pitch: FG.pitch },
   rightFrontGate: { yaw: 90, pitch: -20 },
 };
+// Default zoom per scene — Show Panels eases back to this before restoring.
+const SCENE_HFOV = { aerial: 100, frontGate: FG.hfov, rightFrontGate: 100 };
+
+const isImmersive = () => root.getAttribute('data-immersive') === 'true';
+
+/* --- Immersive (Full View) toggle + zoom -------------------------------------
+   Full View slides everything out AND unlocks zoom (wheel / buttons / pinch).
+   Show Panels first eases the zoom back to the scene's default, then brings
+   the panels, Ana and controls back in. ------------------------------------- */
+const immersiveBtn = root.querySelector('[data-trail-immersive]');
+root.setAttribute('data-immersive', 'false');
+let restorePanelsTimer = 0;
+immersiveBtn?.addEventListener('click', () => {
+  const on = isImmersive();
+  window.clearTimeout(restorePanelsTimer);
+  if (!on) {
+    root.setAttribute('data-immersive', 'true');
+    immersiveBtn.setAttribute('aria-pressed', 'true');
+    return;
+  }
+  immersiveBtn.setAttribute('aria-pressed', 'false');
+  // Ease any zoom back to the scene default first, then restore the panels.
+  let delay = 0;
+  if (viewer) {
+    try {
+      const base = SCENE_HFOV[currentScene] || 100;
+      if (Math.abs(viewer.getHfov() - base) > 1.5 && !prefersReducedMotion) {
+        viewer.setHfov(base, 900);
+        delay = 920;
+      } else {
+        viewer.setHfov(base, false);
+      }
+    } catch { /* viewer busy */ }
+  }
+  restorePanelsTimer = window.setTimeout(() => root.setAttribute('data-immersive', 'false'), delay);
+});
+
+function zoomBy(delta, ms = 220) {
+  if (!viewer) return;
+  try { viewer.setHfov(viewer.getHfov() + delta, prefersReducedMotion ? false : ms); }
+  catch { /* viewer busy */ }
+}
+zoomInBtn?.addEventListener('click', () => zoomBy(-10));
+zoomOutBtn?.addEventListener('click', () => zoomBy(10));
 
 /* --- Stop 1 entry ------------------------------------------------------------ */
 function enterStop1() {
@@ -283,12 +425,13 @@ function enterStop1() {
   if (storyEl) {
     storyEl.hidden = false;
     storyEl.scrollTop = 0;
+    initStoryFx(); // GSAP choreography needs the layer measurable
   }
   try { history.replaceState(null, '', '#stop-1-orientation'); } catch { /* ignore */ }
   charApi.reenter?.();                       // Ana glides in from the right again
   window.setTimeout(() => charApi.playGesture?.('greet'), 1000);
   state.scriptKey = 's1-arrive';
-  narrate({ speakIt: state.unlocked && !state.muted });
+  narrate({ speakIt: state.unlocked });
 }
 
 function beginStop1() {
@@ -451,11 +594,11 @@ function initPanorama() {
           showZoomCtrl: false,
           showFullscreenCtrl: false,
           keyboardZoom: false,
-          mouseZoom: false,
+          mouseZoom: false, // zoom is handled by our Full View wheel/buttons
           draggable: true,
           compass: false,
           autoRotate: 0, // replaced by the drift loop below
-          minHfov: 70,
+          minHfov: 55,
           maxHfov: 118,
         },
         scenes,
@@ -476,7 +619,8 @@ function initPanorama() {
       // Idle drift. Intro (aerial): ping-pong sweep between yawMin / yawMax.
       // Stop 1 (gate scenes): ease gently toward the scene's base view plus
       // the scroll-linked yaw offset, so the 360 stays alive while reading.
-      // Pauses while the visitor drags and during the Begin transition.
+      // Pauses while dragging, during the Begin transition, and in Full View
+      // (so a zoomed-in look is never dragged back by the drift).
       if (!prefersReducedMotion) {
         const DRIFT_SPEED = 1.4; // degrees per second (intro sweep)
         const PITCH_EASE = 0.4;
@@ -504,7 +648,7 @@ function initPanorama() {
                 viewer.setYaw(y, false);
                 const p = viewer.getPitch();
                 viewer.setPitch(p + (startPitch - p) * Math.min(1, dt * PITCH_EASE), false);
-              } else if (state.mode === 'stop1' && SCENE_BASE[currentScene]) {
+              } else if (state.mode === 'stop1' && SCENE_BASE[currentScene] && !isImmersive()) {
                 const base = SCENE_BASE[currentScene];
                 const targetYaw = base.yaw + (currentScene === 'frontGate' ? scrollYaw : 0);
                 const y = viewer.getYaw();
@@ -551,7 +695,90 @@ function initPanorama() {
   img.src = src;
 }
 
-/* --- Stop 1 story: scroll, chapters, narration, interactions ----------------- */
+/* --- Stop 1 story: smooth scroll, GSAP chapters, narration, interactions ----- */
+
+/* Smoothed wheel scrolling (landing-like glide). The goal accumulates wheel
+   deltas and GSAP eases the scroller toward it; touch stays native. */
+let scrollGoal = null;
+function smoothScrollBy(delta) {
+  if (!storyEl) return;
+  const max = storyEl.scrollHeight - storyEl.clientHeight;
+  const from = scrollGoal === null ? storyEl.scrollTop : scrollGoal;
+  scrollGoal = Math.max(0, Math.min(max, from + delta));
+  if (window.gsap && !prefersReducedMotion) {
+    window.gsap.to(storyEl, {
+      scrollTop: scrollGoal,
+      duration: 0.75,
+      ease: 'power3.out',
+      overwrite: true,
+      onComplete: () => { scrollGoal = null; },
+    });
+  } else {
+    storyEl.scrollTop = scrollGoal;
+    scrollGoal = null;
+  }
+}
+
+/* GSAP chapter choreography (like the landing chapters): label line draws,
+   title rises, copy/stats/chips stagger in; a slow parallax drift while each
+   chapter crosses the screen; the hero title fades up and away as you leave
+   the 360. Falls back to the CSS IntersectionObserver reveals without GSAP. */
+let storyFxDone = false;
+function initStoryFx() {
+  if (storyFxDone || !storyEl) return;
+  storyFxDone = true;
+  const gsap = window.gsap;
+  const ScrollTrigger = window.ScrollTrigger;
+  if (!gsap || !ScrollTrigger || prefersReducedMotion) return;
+  gsap.registerPlugin(ScrollTrigger);
+  storyEl.classList.add('is-gsap'); // disables the CSS fallback reveals
+
+  const hero = storyEl.querySelector('.trailx__s1-hero');
+  const heroTitle = storyEl.querySelector('.trailx__s1-title');
+  if (hero && heroTitle) {
+    gsap.fromTo(heroTitle, { opacity: 1, y: 0 }, {
+      opacity: 0,
+      y: -70,
+      ease: 'none',
+      scrollTrigger: { scroller: storyEl, trigger: hero, start: 'top top', end: 'bottom 40%', scrub: true },
+    });
+  }
+
+  storyEl.querySelectorAll('.trailx__chapter').forEach((chapter) => {
+    const card = chapter.querySelector('.trailx__card');
+    if (!card) return;
+    const line = card.querySelector('.trailx__label-line');
+    const labelText = card.querySelector('.trailx__label-text');
+    const title = card.querySelector('.trailx__card-title');
+    const blocks = card.querySelectorAll('.trailx__card-copy, .trailx__chips, .trailx__detail, .trailx__actions, .trailx__next-note, .trailx__s1-kicker');
+    const stats = card.querySelectorAll('.trailx__stat');
+
+    const tl = gsap.timeline({
+      defaults: { ease: 'power3.out' },
+      scrollTrigger: {
+        scroller: storyEl,
+        trigger: chapter,
+        start: 'top 62%',
+        toggleActions: 'play none none reverse', // reverses out when scrolling back
+      },
+    });
+    if (line) tl.fromTo(line, { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.7 }, 0);
+    if (labelText) tl.fromTo(labelText, { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.6 }, 0.1);
+    if (title) tl.fromTo(title, { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 0.9 }, 0.15);
+    if (blocks.length) tl.fromTo(blocks, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.09 }, 0.3);
+    if (stats.length) tl.fromTo(stats, { opacity: 0, y: 18, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.07 }, 0.5);
+
+    // Depth: the card drifts slowly against the scroll while on screen.
+    gsap.fromTo(card, { yPercent: 5 }, {
+      yPercent: -5,
+      ease: 'none',
+      scrollTrigger: { scroller: storyEl, trigger: chapter, start: 'top bottom', end: 'bottom top', scrub: true },
+    });
+  });
+
+  ScrollTrigger.refresh();
+}
+
 function initStory() {
   if (!storyEl) return;
 
@@ -563,35 +790,46 @@ function initStory() {
     scrollYaw = progress * 26;
   }, { passive: true });
 
-  // The story layer itself is click-through so the 360 stays draggable in the
-  // gaps; forward wheel spins that land on the panorama into the scroller.
+  // One wheel handler for the whole scene:
+  //  - Full View → wheel zooms the 360 in/out.
+  //  - Stop 1    → wheel glides the story scroller (smoothed via GSAP),
+  //                wherever the cursor is, so the panorama gaps scroll too.
   window.addEventListener('wheel', (e) => {
+    const lineDelta = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
+    if (isImmersive()) {
+      if (!viewer) return;
+      e.preventDefault();
+      zoomBy(lineDelta > 0 ? 6 : -6, 120);
+      return;
+    }
     if (state.mode !== 'stop1' || storyEl.hidden) return;
-    if (root.getAttribute('data-immersive') === 'true') return;
-    if (e.target && storyEl.contains(e.target)) return; // native scroll
-    storyEl.scrollBy({ top: e.deltaY });
+    e.preventDefault();
+    smoothScrollBy(lineDelta);
+  }, { passive: false });
+
+  // Touch/drag inside the story cancels any in-flight glide so it never fights.
+  storyEl.addEventListener('pointerdown', () => {
+    if (window.gsap) window.gsap.killTweensOf(storyEl);
+    scrollGoal = null;
   }, { passive: true });
 
   // Keyboard scrolling (arrows / page / space) once Stop 1 is active.
   window.addEventListener('keydown', (e) => {
-    if (state.mode !== 'stop1' || storyEl.hidden) return;
-    if (root.getAttribute('data-immersive') === 'true') return;
+    if (state.mode !== 'stop1' || storyEl.hidden || isImmersive()) return;
     if (e.target && e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
     const page = window.innerHeight * 0.85;
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
       e.preventDefault();
-      storyEl.scrollBy({ top: page, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      smoothScrollBy(page);
     } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
       e.preventDefault();
-      storyEl.scrollBy({ top: -page, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      smoothScrollBy(-page);
     }
   });
 
-  scrollCue?.addEventListener('click', () => {
-    storyEl.scrollBy({ top: window.innerHeight * 0.94, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
-  });
+  scrollCue?.addEventListener('click', () => smoothScrollBy(window.innerHeight * 0.94));
 
-  // Chapters: reveal on scroll + Ana narrates the one you're reading.
+  // Chapters: reveal on scroll (CSS fallback) + Ana narrates the one you read.
   const chapters = Array.from(storyEl.querySelectorAll('[data-chapter]'));
   const observer = new IntersectionObserver((entries) => {
     entries.forEach((entry) => {
@@ -600,7 +838,7 @@ function initStory() {
       const key = entry.target.getAttribute('data-chapter');
       if (state.mode === 'stop1' && SCRIPTS[key] && key !== state.scriptKey) {
         state.scriptKey = key;
-        narrate({ speakIt: state.unlocked && !state.muted });
+        narrate({ speakIt: state.unlocked });
       }
     });
   }, { root: storyEl, threshold: 0.45 });
@@ -616,19 +854,6 @@ function initStory() {
       panels.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
     });
   });
-
-  // Gentle 3D tilt on the story cards (micro-interaction, desktop pointers).
-  if (!prefersReducedMotion && window.matchMedia('(hover: hover)').matches) {
-    storyEl.querySelectorAll('.trailx__card').forEach((card) => {
-      card.addEventListener('pointermove', (e) => {
-        const r = card.getBoundingClientRect();
-        const rx = ((e.clientY - r.top) / r.height - 0.5) * -3.5;
-        const ry = ((e.clientX - r.left) / r.width - 0.5) * 4.5;
-        card.style.transform = `perspective(900px) rotateX(${rx.toFixed(2)}deg) rotateY(${ry.toFixed(2)}deg)`;
-      });
-      card.addEventListener('pointerleave', () => { card.style.transform = ''; });
-    });
-  }
 
   // Next stop: Stop 2 lives here soon — tease instead of navigating away.
   nextBtn?.addEventListener('click', () => {
@@ -822,3 +1047,5 @@ narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();
 initStory();
+attemptAutoSpeak();          // auto-play like the landing page…
+setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it

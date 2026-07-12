@@ -575,8 +575,11 @@
   50% { transform: translateX(-50%) translateY(6px); }
 }
 
-/* Chapters: one screen each, cards alternating sides, revealed on scroll. */
+/* Chapters: one screen each, open landing-style compositions on alternating
+   sides. Readability comes from a per-chapter gradient scrim (like the
+   landing's darkened side) instead of a boxed card. */
 .trailx__chapter {
+  position: relative;
   min-height: 100vh;
   display: flex;
   align-items: center;
@@ -587,36 +590,49 @@
 }
 .trailx__chapter.is-visible { opacity: 1; transform: none; }
 .trailx__chapter[data-side="right"] { justify-content: flex-end; }
+.trailx__chapter::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(13, 10, 4, 0.9) 0%, rgba(13, 10, 4, 0.62) 36%, rgba(13, 10, 4, 0) 66%);
+}
+.trailx__chapter[data-side="right"]::before {
+  background: linear-gradient(270deg, rgba(13, 10, 4, 0.9) 0%, rgba(13, 10, 4, 0.62) 36%, rgba(13, 10, 4, 0) 66%);
+}
+
+/* GSAP choreography active → the CSS fallback reveal must not double-animate. */
+.trailx__story.is-gsap .trailx__chapter {
+  opacity: 1;
+  transform: none;
+  transition: none;
+}
 
 .trailx__card {
+  position: relative; /* paints above the chapter scrim */
   pointer-events: auto;
   width: min(560px, 92vw);
-  padding: 2rem 2.2rem 2.1rem;
-  background: linear-gradient(160deg, rgba(22, 15, 7, 0.86), rgba(13, 10, 4, 0.74));
-  border: 1px solid rgba(212, 175, 106, 0.28);
-  border-radius: 18px;
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.5);
-  backdrop-filter: blur(10px);
-  transition: transform 0.25s ease, border-color 0.3s ease;
   will-change: transform;
 }
-.trailx__card:hover { border-color: rgba(212, 175, 106, 0.5); }
-.trailx__card .trailx__label { margin-bottom: 1rem; }
+.trailx__card .trailx__label { margin-bottom: 1.2rem; }
 .trailx__card-title {
-  margin: 0 0 1rem;
+  margin: 0 0 1.2rem;
   color: #fff;
   font-family: "Playfair Display", serif;
   font-weight: 500;
-  font-size: clamp(1.6rem, 3.2vw, 2.4rem);
-  line-height: 1.15;
+  font-size: clamp(1.9rem, 3.8vw, 2.9rem);
+  line-height: 1.14;
+  text-shadow: 0 4px 26px rgba(0, 0, 0, 0.6);
 }
 .trailx__card-title em { font-style: italic; color: var(--tx-gold); }
 .trailx__card-copy {
-  margin: 0 0 0.9rem;
-  color: rgba(255, 255, 255, 0.85);
+  margin: 0 0 1rem;
+  max-width: 34rem;
+  color: rgba(255, 255, 255, 0.9);
   font-family: "Cormorant Garamond", serif;
-  font-size: calc(1.05rem * var(--tx-font-scale, 1));
-  line-height: 1.65;
+  font-size: calc(1.13rem * var(--tx-font-scale, 1));
+  line-height: 1.7;
+  text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
 }
 .trailx__card-copy:last-child { margin-bottom: 0; }
 
@@ -699,7 +715,11 @@
 
 /* Next-stop footer */
 .trailx__chapter--next { justify-content: center; min-height: 92vh; }
+.trailx__chapter--next::before {
+  background: linear-gradient(0deg, rgba(13, 10, 4, 0.94) 0%, rgba(13, 10, 4, 0.55) 55%, rgba(13, 10, 4, 0) 100%);
+}
 .trailx__next-card { text-align: center; width: min(620px, 92vw); }
+.trailx__next-card .trailx__card-copy { margin-left: auto; margin-right: auto; }
 .trailx__next-card .trailx__actions { justify-content: center; margin-bottom: 0.2rem; }
 button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx__begin.is-teased { animation: trailx-tease 0.6s ease; }
@@ -823,6 +843,29 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 .trailx[data-immersive="true"] .trailx__progress { opacity: 0 !important; }
 
+/* Zoom controls — only alive in Full View, stacked above the toggle button */
+.trailx__zoom {
+  position: absolute;
+  z-index: 9;
+  right: clamp(1.4rem, 4vw, 3rem);
+  bottom: 4.7rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(14px);
+  pointer-events: none;
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), visibility 0.45s;
+}
+.trailx[data-immersive="true"] .trailx__zoom {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: auto;
+}
+.trailx__zoom .trailx-btn { padding: 0; width: 38px; }
+
 /* Mobile ---------------------------------------------------------------------- */
 @media (max-width: 820px) {
   .trailx__scrim {
@@ -860,12 +903,17 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   /* Stop 1 on small screens */
   .trailx[data-phase] .trailx__panel { transform: translateX(-130%); }
   .trailx__s1-hero { padding: 0 1.1rem 7.5rem; }
-  .trailx__chapter { padding: 3rem 1.1rem; }
+  .trailx__chapter { padding: 3.5rem 1.1rem 4.5rem; align-items: flex-end; }
   .trailx__chapter[data-side="right"] { justify-content: flex-start; }
-  .trailx__card { width: 100%; padding: 1.5rem 1.3rem 1.6rem; }
+  .trailx__chapter::before,
+  .trailx__chapter[data-side="right"]::before {
+    background: linear-gradient(0deg, rgba(13, 10, 4, 0.92) 0%, rgba(13, 10, 4, 0.6) 55%, rgba(13, 10, 4, 0) 100%);
+  }
+  .trailx__card { width: 100%; }
   .trailx__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
   .trailx__s1-scroll { bottom: 4.4rem; }
   .trailx-spot__tip { width: 200px; }
+  .trailx__zoom { right: 1.1rem; bottom: 4rem; }
 }
 
 @media (prefers-reduced-motion: reduce) {
