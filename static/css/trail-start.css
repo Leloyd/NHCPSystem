@@ -640,9 +640,26 @@
 .trailx__chapter.is-active > *:nth-child(7) { transition-delay: 0.66s; }
 
 /* No per-panel scrims on desktop — the full-viewport tint (like the landing's
-   .story__bg-tint) carries the contrast evenly; the hero title stands clean
-   over the 360. (Mobile re-adds a bottom veil in the media block below.) */
+   .story__bg-tint) carries the contrast evenly. The hero title is the one
+   exception: the arrival tint is light there, so it gets a soft feathered
+   shade pooled behind the text — many gradient stops so it melts into the
+   360 with no visible edge. (Mobile swaps it for a bottom sheet below.) */
 .trailx__chapter--hero { justify-content: flex-end; padding-bottom: 7rem; }
+.trailx__chapter--hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
+  inset: -5rem -10rem -7rem -8rem;
+  background: radial-gradient(
+    115% 95% at 22% 86%,
+    rgba(13, 10, 4, 0.78) 0%,
+    rgba(13, 10, 4, 0.6) 32%,
+    rgba(13, 10, 4, 0.38) 52%,
+    rgba(13, 10, 4, 0.16) 70%,
+    rgba(13, 10, 4, 0) 88%
+  );
+}
 
 .trailx__chapter-title {
   margin: 0 0 1.1rem;
