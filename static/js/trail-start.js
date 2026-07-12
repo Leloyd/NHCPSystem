@@ -94,6 +94,11 @@ let currentScene = 'aerial';
 let transitioning = false; // true during the Begin pan + scene crossfade
 let scrollYaw = 0;         // scroll-linked yaw offset while reading Stop 1
 
+/* Refreshing while reading Stop 1 keeps you in Stop 1: entering it stamps
+   #stop-1-orientation on the URL, and on load that hash restores the stop
+   directly (FrontGate 360 as the first scene, no intro). */
+const wantsStop1 = /stop-1/.test(window.location.hash);
+
 /* Character handle (populated by initCharacter) */
 const charApi = {};
 
@@ -652,9 +657,11 @@ function initPanorama() {
         };
       }
 
+      const startAtGate = wantsStop1 && !!gateSrc;
+      if (startAtGate) currentScene = 'frontGate';
       viewer = window.pannellum.viewer('trailPano', {
         default: {
-          firstScene: 'aerial',
+          firstScene: startAtGate ? 'frontGate' : 'aerial',
           sceneFadeDuration: prefersReducedMotion ? 0 : 1500,
           autoLoad: true,
           showControls: false,
@@ -1151,5 +1158,6 @@ narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();
 initStory();
+if (wantsStop1) enterStop1(); // refreshed mid-stop → restore Stop 1 directly
 attemptAutoSpeak();          // auto-play like the landing page…
 setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it
