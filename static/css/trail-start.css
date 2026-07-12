@@ -52,11 +52,33 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  transition: opacity 0.9s ease;
   background:
     linear-gradient(90deg, rgba(13, 10, 4, 0.82) 0%, rgba(13, 10, 4, 0.5) 34%, rgba(13, 10, 4, 0) 60%),
     linear-gradient(0deg, rgba(13, 10, 4, 0.7) 0%, rgba(13, 10, 4, 0) 40%),
     radial-gradient(120% 90% at 50% 12%, rgba(212, 175, 106, 0.08), transparent 60%);
 }
+/* The intro scrim steps aside once the Stop 1 reading tint takes over,
+   and in Full View so nothing veils the 360. */
+.trailx[data-mode="stop1"] .trailx__scrim,
+.trailx[data-immersive="true"] .trailx__scrim { opacity: 0; }
+
+/* Landing-style even tint (same recipe as .story__bg-tint): a full-viewport,
+   evenly graded warm darkness that gives the reading text its contrast.
+   Light on the arrival step so the 360 stays the star; deep while reading;
+   gone entirely in Full View. */
+.trailx__tint {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+  background: linear-gradient(180deg, rgba(13, 10, 4, 0.8) 0%, rgba(28, 18, 8, 0.65) 50%, rgba(13, 10, 4, 0.9) 100%);
+}
+.trailx[data-mode="stop1"] .trailx__tint { opacity: 1; }
+.trailx[data-mode="stop1"][data-step="s1-arrive"] .trailx__tint { opacity: 0.32; }
+.trailx[data-immersive="true"] .trailx__tint { opacity: 0 !important; }
 .trailx__grain {
   position: absolute;
   inset: -2%;
@@ -609,19 +631,15 @@
 .trailx__chapter.is-active > *:nth-child(6) { transition-delay: 0.58s; }
 .trailx__chapter.is-active > *:nth-child(7) { transition-delay: 0.66s; }
 
-/* Soft readability pool behind the text (the 360 behind is bright) */
-.trailx__chapter::before {
-  content: "";
-  position: absolute;
-  inset: -3rem -5rem;
-  z-index: -1;
-  pointer-events: none;
-  background: radial-gradient(ellipse 90% 80% at 50% 50%, rgba(13, 10, 4, 0.72) 0%, rgba(13, 10, 4, 0.45) 55%, transparent 78%);
-}
-
-/* Hero step: the title sits low over the open 360 */
+/* No per-panel scrims on desktop — the full-viewport tint (like the landing's
+   .story__bg-tint) carries the contrast evenly. The hero step keeps a clean
+   bottom veil because the tint stays light there. */
 .trailx__chapter--hero { justify-content: flex-end; padding-bottom: 7rem; }
 .trailx__chapter--hero::before {
+  content: "";
+  position: absolute;
+  z-index: -1;
+  pointer-events: none;
   inset: -2rem -5rem -7rem;
   background: linear-gradient(0deg, rgba(13, 10, 4, 0.85) 0%, rgba(13, 10, 4, 0.4) 55%, transparent 100%);
 }
@@ -778,9 +796,6 @@
   width: min(620px, 92vw);
   align-items: center;
   text-align: center;
-}
-.trailx__chapter--next::before {
-  background: radial-gradient(ellipse 90% 80% at 50% 50%, rgba(13, 10, 4, 0.78) 0%, rgba(13, 10, 4, 0.5) 55%, transparent 80%);
 }
 .trailx__chapter--next .trailx__chapter-copy { margin-left: auto; margin-right: auto; }
 .trailx__chapter--next .trailx__actions { justify-content: center; margin-bottom: 0.2rem; }
@@ -978,9 +993,14 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     text-align: left;
     padding: 5rem 0 9.6rem; /* room for the subtitle chip + controls below */
   }
+  /* Bottom sheet behind the text — same as the landing's mobile chapters. */
   .trailx__chapter::before,
   .trailx__chapter--hero::before,
   .trailx__chapter--next::before {
+    content: "";
+    position: absolute;
+    z-index: -1;
+    pointer-events: none;
     inset: -2rem -2.3rem -9.6rem;
     background: linear-gradient(180deg, transparent 0%, rgba(13, 10, 4, 0.6) 30%, rgba(13, 10, 4, 0.92) 62%);
   }

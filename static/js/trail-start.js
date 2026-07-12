@@ -773,6 +773,7 @@ function initStory() {
     // Auto-narrate the step being read — even muted (silent playback keeps
     // advancing, so unmuting rejoins mid-sentence; landing behaviour).
     const key = panels[index].getAttribute('data-chapter');
+    root.setAttribute('data-step', key || ''); // drives the reading tint depth
     if (state.mode === 'stop1' && SCRIPTS[key] && key !== state.scriptKey) {
       state.scriptKey = key;
       narrate({ speakIt: state.unlocked });
