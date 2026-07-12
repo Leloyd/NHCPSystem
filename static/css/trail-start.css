@@ -898,63 +898,83 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   box-shadow: 0 0.75rem 1.4rem rgba(0, 0, 0, 0.2);
 }
 
-/* Gold info spot with a hover/tap note */
-.trailx__pano .trailx-spot {
-  width: 24px;
-  height: 24px;
-  cursor: pointer;
-}
-.trailx-spot__dot {
-  display: block;
-  width: 100%;
-  height: 100%;
-  border-radius: 50%;
-  border: 2px solid var(--tx-gold);
-  background: rgba(212, 175, 106, 0.3);
-  animation: trailx-pulse 2.4s ease-out infinite;
-}
 @keyframes trailx-pulse {
   0% { box-shadow: 0 0 0 0 rgba(212, 175, 106, 0.45); }
   70% { box-shadow: 0 0 0 14px rgba(212, 175, 106, 0); }
   100% { box-shadow: 0 0 0 0 rgba(212, 175, 106, 0); }
 }
-.trailx-spot__tip {
+
+/* Pulsing wall-photo marker + floating image window — copied from the
+   virtual tour (front-gate-hotspot-h1). */
+.trailx__pano .tour-ground-hotspot--compact {
+  width: 2.1rem;
+  height: 2.1rem;
+  border-width: 0.18rem;
+}
+.trailx__pano .tour-ground-hotspot--compact::after { inset: 0.2rem; }
+.trailx__pano .tour-ground-hotspot--no-icon::before { content: none; }
+.trailx__pano .tour-ground-hotspot--pulse {
+  border-color: rgba(251, 191, 36, 0.92);
+  background: radial-gradient(circle at center, rgba(251, 191, 36, 0.28) 0%, rgba(251, 191, 36, 0.14) 52%, rgba(251, 191, 36, 0) 76%);
+  box-shadow: 0 0 0 rgba(251, 191, 36, 0.36);
+  animation: tour-hotspot-pulse 1.8s ease-out infinite;
+}
+.trailx__pano .tour-ground-hotspot--pulse::after {
+  background: rgba(251, 191, 36, 0.18);
+  animation: none;
+}
+@keyframes tour-hotspot-pulse {
+  0% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0.42); opacity: 0.86; }
+  70% { box-shadow: 0 0 0 0.7rem rgba(251, 191, 36, 0); opacity: 1; }
+  100% { box-shadow: 0 0 0 0 rgba(251, 191, 36, 0); opacity: 0.9; }
+}
+
+.trailx__pano .tour-floating-image-window-hotspot {
+  width: clamp(12rem, 18vw, 16rem) !important;
+  height: auto !important;
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
+  overflow: visible !important;
+  pointer-events: auto !important;
+  transform: translate(-50%, -50%);
+}
+.tour-floating-image-window-shell {
+  position: relative;
+  width: 100%;
+}
+.tour-floating-image-window-close {
   position: absolute;
-  bottom: calc(100% + 12px);
-  left: 50%;
-  transform: translateX(-50%) translateY(4px);
-  width: 240px;
-  padding: 0.65rem 0.8rem;
-  background: rgba(20, 13, 6, 0.94);
-  border: 1px solid rgba(212, 175, 106, 0.45);
-  border-radius: 10px;
-  box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
-  text-align: left;
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-  transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+  top: -0.75rem;
+  right: -0.75rem;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 999px;
+  background: rgba(7, 10, 16, 0.8);
+  color: #ffffff;
+  font-size: 1.2rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 0.8rem 1.8rem rgba(15, 23, 42, 0.24);
 }
-.trailx-spot__tip strong {
+.tour-floating-image-window {
   display: block;
-  margin-bottom: 0.25rem;
-  color: var(--tx-gold);
-  font-family: "Inter", sans-serif;
-  font-size: 0.7rem;
-  letter-spacing: 0.1em;
-  text-transform: uppercase;
-}
-.trailx-spot__tip > span {
-  display: block;
-  color: rgba(255, 255, 255, 0.88);
-  font-family: "Inter", sans-serif;
-  font-size: calc(0.73rem * var(--tx-font-scale, 1));
-  line-height: 1.45;
-}
-.trailx__pano .trailx-spot:hover .trailx-spot__tip {
-  opacity: 1;
-  visibility: visible;
-  transform: translateX(-50%) translateY(0);
+  width: 100%;
+  height: auto;
+  border-radius: 1.35rem;
+  object-fit: contain;
+  box-shadow:
+    0 1.4rem 3.6rem rgba(15, 23, 42, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  opacity: 0.98;
+  user-select: none;
+  -webkit-user-drag: none;
 }
 
 /* Immersive mode also clears the Stop 1 layers */
@@ -1090,7 +1110,10 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__chapter-title { font-size: calc(clamp(1.45rem, 7vw, 2rem) * var(--tx-font-scale, 1)); margin-bottom: 0.7rem; }
   .trailx__chapter-title--hero { font-size: calc(clamp(1.7rem, 8.5vw, 2.4rem) * var(--tx-font-scale, 1)); }
   .trailx__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
-  .trailx-spot__tip { width: 200px; }
+  .trailx__pano .tour-ground-hotspot--compact { width: 1.9rem; height: 1.9rem; }
+  .trailx__pano .tour-floating-image-window-hotspot { width: clamp(9.5rem, 28vw, 12rem) !important; }
+  .tour-floating-image-window { border-radius: 1rem; }
+  .tour-floating-image-window-close { top: -0.55rem; right: -0.55rem; width: 1.75rem; height: 1.75rem; }
   .trailx__zoom { right: 1.1rem; bottom: 4rem; }
   .trailx__dots { right: 0.55rem; gap: 0.55rem; }
   .trailx__dot::after { display: none; }
@@ -1124,7 +1147,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__chapter.is-active > * { opacity: 1 !important; }
   .trailx__hint-scroll::after { animation: none; }
   .trailx__pano .tour-ground-hotspot::after,
-  .trailx-spot__dot { animation: none; }
+  .trailx__pano .tour-ground-hotspot--pulse { animation: none; }
   .trailx__detail p { animation: none; }
   /* The Begin choreography must still clear the intro UI without motion. */
   .trailx[data-phase] .trailx__panel {

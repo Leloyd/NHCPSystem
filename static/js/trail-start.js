@@ -498,37 +498,87 @@ function initPanorama() {
 
   const gateSrc = root.getAttribute('data-pano-front-gate') || '';
   const rightGateSrc = root.getAttribute('data-pano-right-front-gate') || '';
+  const h1ImageSrc = root.getAttribute('data-fg-h1-image') || '';
+  const h1AudioSrc = root.getAttribute('data-fg-h1-audio') || '';
 
-  // Gold info spots on the FrontGate 360 (hover/tap for a note). Coordinates
-  // are best guesses — drag the view in that scene and use the console log
-  // to fine-tune pitch/yaw here.
-  const infoSpotTooltip = (div, args) => {
-    div.classList.add('trailx-spot');
-    div.innerHTML =
-      '<span class="trailx-spot__dot" aria-hidden="true"></span>' +
-      '<span class="trailx-spot__tip">' +
-        `<strong><span data-lang-en>${args.en.title}</span><span data-lang-tl>${args.tl.title}</span></strong>` +
-        `<span><span data-lang-en>${args.en.text}</span><span data-lang-tl>${args.tl.text}</span></span>` +
-      '</span>';
+  /* Floating image hotspot — ported from the virtual tour (front-gate-hotspot-h1):
+     tapping the pulsing marker pins the photo on the wall at the same spot and
+     plays its audio guide; tapping again (or ×) closes it and stops the audio. */
+  let floatingWindow = null; // { hotspotId, sceneId }
+  let hotspotAudio = null;
+  const stopHotspotAudio = () => {
+    if (!hotspotAudio) return;
+    hotspotAudio.pause();
+    hotspotAudio.currentTime = 0;
+    hotspotAudio = null;
   };
-  const infoSpots = [
-    {
-      pitch: 7, yaw: -10,
-      en: { title: 'The Entrance Arch', text: 'The high arch marks the passage into consecrated ground — the first element of the threshold.' },
-      tl: { title: 'Ang Arkong Pasukan', text: 'Ang mataas na arko ang hudyat ng pagpasok sa banal na lupa — ang unang elemento ng bungad.' },
-    },
-    {
-      pitch: -2, yaw: -75,
-      en: { title: 'The Perimeter Wall', text: 'The masonry wall traces the cemetery’s circular plan and carries the burial niches within it.' },
-      tl: { title: 'Ang Pader ng Palibot', text: 'Sinusundan ng pader na bato ang pabilog na plano ng libingan at kinapapalooban ng mga nitso.' },
-    },
-  ].map((s) => ({
-    pitch: s.pitch,
-    yaw: s.yaw,
-    type: 'info',
-    createTooltipFunc: infoSpotTooltip,
-    createTooltipArgs: s,
-  }));
+  window.addEventListener('pagehide', stopHotspotAudio);
+  const playHotspotAudio = (src) => {
+    if (!src) return;
+    stopHotspotAudio();
+    hotspotAudio = new Audio(src);
+    hotspotAudio.preload = 'auto';
+    const playing = hotspotAudio.play();
+    if (playing && playing.catch) playing.catch((err) => console.warn('[Trail] Hotspot audio blocked:', err));
+  };
+  const closeFloatingImage = () => {
+    if (floatingWindow && viewer) {
+      try { viewer.removeHotSpot(floatingWindow.hotspotId, floatingWindow.sceneId); } catch { /* already gone */ }
+    }
+    floatingWindow = null;
+    stopHotspotAudio();
+    panoEl.querySelectorAll('.tour-floating-image-window-hotspot').forEach((node) => node.remove());
+  };
+  const renderFloatingImageHotspot = (hotSpotDiv, args) => {
+    hotSpotDiv.classList.add('tour-floating-image-window-hotspot');
+    const shell = document.createElement('div');
+    shell.className = 'tour-floating-image-window-shell';
+    const closeButton = document.createElement('button');
+    closeButton.className = 'tour-floating-image-window-close';
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Close hotspot image');
+    closeButton.textContent = '×';
+    closeButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFloatingImage();
+    });
+    const image = document.createElement('img');
+    image.className = 'tour-floating-image-window';
+    image.src = args.imageSrc;
+    image.alt = args.imageAlt || 'Hotspot image';
+    image.draggable = false;
+    shell.appendChild(closeButton);
+    shell.appendChild(image);
+    hotSpotDiv.appendChild(shell);
+  };
+  const openFloatingImage = (event, args) => {
+    if (event && typeof event.preventDefault === 'function') event.preventDefault();
+    if (!args || !args.imageSrc || !viewer) return;
+    if (floatingWindow && floatingWindow.hotspotId === args.windowHotspotId) {
+      closeFloatingImage(); // same marker tapped again → toggle closed
+      return;
+    }
+    closeFloatingImage();
+    pauseSpeaking(); // let the audio guide speak alone; Listen resumes Ana after
+    const spot = {
+      id: args.windowHotspotId,
+      pitch: args.windowPitch,
+      yaw: args.windowYaw,
+      type: 'info',
+      text: '',
+      cssClass: 'tour-floating-image-window-hotspot',
+      createTooltipFunc: renderFloatingImageHotspot,
+      createTooltipArgs: args,
+    };
+    try {
+      viewer.addHotSpot(spot, currentScene);
+      floatingWindow = { hotspotId: args.windowHotspotId, sceneId: currentScene };
+      playHotspotAudio(args.audioSrc);
+    } catch (err) {
+      console.warn('[Trail] Unable to open hotspot image:', err);
+    }
+  };
 
   const build = (aerialSrc) => {
     try {
@@ -560,7 +610,25 @@ function initPanorama() {
               targetHfov: 100,
               cssClass: 'tour-ground-hotspot',
             }] : []),
-            ...infoSpots,
+            // Wall-photo hotspot copied from the virtual tour (H1 + audio guide).
+            ...(h1ImageSrc ? [{
+              id: 'front-gate-hotspot-h1',
+              pitch: 1.06,
+              yaw: 24.41,
+              type: 'info',
+              text: '',
+              clickHandlerFunc: openFloatingImage,
+              clickHandlerArgs: {
+                sourceHotspotId: 'front-gate-hotspot-h1',
+                windowHotspotId: 'front-gate-hotspot-h1-window',
+                imageSrc: h1ImageSrc,
+                audioSrc: h1AudioSrc,
+                imageAlt: 'Front Gate hotspot image',
+                windowPitch: 1.06,
+                windowYaw: 24.41,
+              },
+              cssClass: 'tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon',
+            }] : []),
           ],
         };
       }
@@ -603,7 +671,10 @@ function initPanorama() {
         scenes,
       });
 
-      viewer.on('scenechange', (id) => { currentScene = id; });
+      viewer.on('scenechange', (id) => {
+        currentScene = id;
+        closeFloatingImage(); // leaving the scene closes the wall photo + audio
+      });
 
       // Helper for picking views: log where the visitor is looking after
       // each drag ends (used to tune start views, boundaries, hotspots).
