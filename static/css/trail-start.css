@@ -1143,14 +1143,17 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx[data-subtitles="off"] .trailx__chapter { padding-bottom: 5rem; }
   .trailx__chapter-title { font-size: calc(clamp(1.45rem, 7vw, 2rem) * var(--tx-font-scale, 1)); margin-bottom: 0.7rem; }
   .trailx__chapter-title--hero { font-size: calc(clamp(1.85rem, 8.5vw, 2.5rem) * var(--tx-font-scale, 1)); }
-  /* Long blocks scroll internally, like the landing's .story-chapter__scroll */
+  /* Quick facts: compact 2×2 tiles that fit without their own scrollbar. */
   .trailx__stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.6rem;
-    max-height: 33vh;
-    max-height: 33svh;
-    overflow-y: auto;
+    gap: 0.45rem;
+    margin-top: 0.9rem;
   }
+  .trailx__stat { padding: 0.45rem 0.6rem; border-radius: 9px; }
+  .trailx__stat-label { font-size: 0.5rem; letter-spacing: 0.14em; margin-bottom: 0.15rem; }
+  .trailx__stat-value { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
+  /* A touch tighter body text so the fuller chapters breathe on phones. */
+  .trailx__chapter-copy { line-height: 1.5; margin-bottom: 0.7rem; }
   .trailx__pano .tour-ground-hotspot--compact { width: 1.9rem; height: 1.9rem; }
   .trailx__pano .tour-floating-image-window-hotspot { width: clamp(9.5rem, 28vw, 12rem) !important; }
   .tour-floating-image-window { border-radius: 1rem; }

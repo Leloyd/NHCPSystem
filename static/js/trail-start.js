@@ -49,8 +49,8 @@ const SCRIPTS = {
     tl: "Ang arko, ang rehas na bakal, ang mga pader na bato, at ang daanang papasok — apat na elementong nagtatakda ng hangganan sa pagitan ng bayan at ng mundo ng mga yumao. Pindutin ang bawat isa upang mapagmasdan.",
   },
   's1-next': {
-    en: "That completes our orientation. When Stop Two opens, we will step inside and register at the museum. Salamat — thank you for walking this far with me.",
-    tl: "Tapos na ang ating oryentasyon. Kapag nabuksan na ang Ikalawang Hinto, papasok tayo at magpapatala sa museo. Salamat sa paglalakad kasama ko.",
+    en: "That completes our first stop. When Stop Two opens, we will step inside and register at the museum. Salamat — thank you for walking this far with me.",
+    tl: "Tapos na ang ating unang hinto. Kapag nabuksan na ang Ikalawang Hinto, papasok tayo at magpapatala sa museo. Salamat sa paglalakad kasama ko.",
   },
 };
 
@@ -813,12 +813,16 @@ function initStory() {
   if (!STEPS) return;
   let step = -1;
 
-  // One screen of scroll per step, sized in real pixels from the story's
-  // visible height so the mobile URL bar (dvh) never desyncs the steps.
+  // Scroll distance per step, sized in real pixels from the story's visible
+  // height so the mobile URL bar (dvh) never desyncs the steps. Less than a
+  // full screen per step so moving between chapters takes less scrolling
+  // (shorter still on touch, where each swipe travels less than a wheel).
   const sizeTrack = () => {
     if (!trackEl) return;
     const h = storyEl.clientHeight;
-    trackEl.style.height = h ? `${STEPS * h}px` : `${STEPS * 100}vh`;
+    if (!h) { trackEl.style.height = `${STEPS * 100}vh`; return; }
+    const stepPx = Math.round(h * (window.matchMedia('(max-width: 820px)').matches ? 0.72 : 0.85));
+    trackEl.style.height = `${STEPS * stepPx}px`;
   };
   sizeTrack();
   window.addEventListener('resize', sizeTrack);
@@ -910,7 +914,8 @@ function initStory() {
     if (state.mode !== 'stop1' || storyEl.hidden) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
-    smoothScrollBy(e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY);
+    // ×1.5 so each wheel notch travels further — chapters arrive sooner.
+    smoothScrollBy((e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 1.5);
   }, { passive: false, capture: true });
 
   // Touch/drag inside the story cancels any in-flight glide so it never fights.
