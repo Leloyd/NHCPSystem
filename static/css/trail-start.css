@@ -1021,24 +1021,146 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   position: relative;
   width: 100%;
 }
-.tour-floating-image-window-close {
+
+/* Shared round close button — the landing lightbox's design. */
+.trailx-xclose {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.8);
+  color: var(--tx-cream);
+  cursor: pointer;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.trailx-xclose:hover { background: rgba(212, 175, 106, 0.25); }
+.trailx-xclose:active { transform: scale(0.94); }
+.trailx-xclose:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 2px; }
+
+/* Artifact window: media (photo ↔ 3D) with the title above a middle-bottom
+   close button, like tapping a photo in the landing's Heritage Overview. */
+.trailx-art {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.trailx-art__mediawrap { position: relative; width: 100%; }
+.trailx-art__zoom {
+  display: block;
+  width: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: zoom-in;
+}
+.trailx-art__model {
+  width: 100%;
+  height: clamp(10rem, 15vw, 14rem);
+  border-radius: 1.35rem;
+  background: rgba(20, 13, 6, 0.6);
+  box-shadow:
+    0 1.4rem 3.6rem rgba(15, 23, 42, 0.28),
+    0 0 0 1px rgba(255, 255, 255, 0.24);
+}
+.trailx-art__icon {
   position: absolute;
   top: -0.75rem;
-  right: -0.75rem;
   z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   width: 2rem;
   height: 2rem;
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(212, 175, 106, 0.5);
   border-radius: 999px;
-  background: rgba(7, 10, 16, 0.8);
-  color: #ffffff;
-  font-size: 1.2rem;
-  line-height: 1;
+  background: rgba(20, 13, 6, 0.85);
+  color: var(--tx-cream);
   cursor: pointer;
-  box-shadow: 0 0.8rem 1.8rem rgba(15, 23, 42, 0.24);
+  box-shadow: 0 0.8rem 1.8rem rgba(0, 0, 0, 0.3);
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+.trailx-art__icon:hover { background: rgba(212, 175, 106, 0.3); }
+.trailx-art__icon:active { transform: scale(0.94); }
+.trailx-art__icon svg { width: 14px; height: 14px; }
+.trailx-art__expand { left: -0.75rem; }
+.trailx-art__switch { right: -0.75rem; }
+.trailx-art__switch[aria-pressed="true"] {
+  background: var(--tx-gold);
+  color: var(--tx-ink);
+  border-color: var(--tx-gold);
+}
+.trailx-art__title {
+  margin: 0.6rem 0 0;
+  text-align: center;
+  color: var(--tx-cream);
+  font-family: "Playfair Display", serif;
+  font-size: calc(0.95rem * var(--tx-font-scale, 1));
+  line-height: 1.3;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.75);
+}
+.trailx-art__title[hidden] { display: none; }
+.trailx-art__close {
+  margin-top: 0.7rem; /* breathing room under the title */
+  width: 40px;
+  height: 40px;
+  font-size: 0.95rem;
+}
+
+/* Enlarged viewer — the landing photo lightbox, for photos and 3D models. */
+.trailx-preview {
+  position: absolute;
+  inset: 0;
+  z-index: 30;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 2.5rem;
+  background: rgba(13, 10, 4, 0.92);
+  backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  cursor: zoom-out;
+}
+.trailx-preview.is-open { opacity: 1; }
+.trailx-preview[hidden] { display: none; }
+.trailx-preview__media {
+  max-width: min(920px, 92vw);
+  cursor: default;
+}
+.trailx-preview__media img {
+  display: block;
+  max-width: 100%;
+  max-height: 72vh;
+  margin: 0 auto;
+  object-fit: contain;
+  padding: 0.6rem;
+  background: var(--tx-cream);
+  border: 1px solid rgba(184, 146, 58, 0.5);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.trailx-preview__model {
+  width: min(920px, 92vw);
+  height: 66vh;
+  background: rgba(20, 13, 6, 0.55);
+  border: 1px solid rgba(184, 146, 58, 0.5);
+  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+}
+.trailx-preview__title {
+  margin: 0.9rem 0 0;
+  text-align: center;
+  color: var(--tx-cream);
+  font-family: "Playfair Display", serif;
+  font-size: calc(1.05rem * var(--tx-font-scale, 1));
+}
+.trailx-preview__title[hidden] { display: none; }
+.trailx-preview__close {
+  margin-top: 1.3rem;
+  width: 46px;
+  height: 46px;
+  font-size: 1.1rem;
 }
 .tour-floating-image-window {
   display: block;
@@ -1249,7 +1371,18 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__pano .tour-ground-hotspot--compact { width: 1.9rem; height: 1.9rem; }
   .trailx__pano .tour-floating-image-window-hotspot { width: clamp(9.5rem, 28vw, 12rem) !important; }
   .tour-floating-image-window { border-radius: 1rem; }
-  .tour-floating-image-window-close { top: -0.55rem; right: -0.55rem; width: 1.75rem; height: 1.75rem; }
+  .trailx-art__icon { width: 1.75rem; height: 1.75rem; top: -0.55rem; }
+  .trailx-art__expand { left: -0.55rem; }
+  .trailx-art__switch { right: -0.55rem; }
+  .trailx-art__icon svg { width: 12px; height: 12px; }
+  .trailx-art__title { font-size: calc(0.82rem * var(--tx-font-scale, 1)); }
+  .trailx-art__close { width: 34px; height: 34px; margin-top: 0.55rem; font-size: 0.85rem; }
+  .trailx-art__model { height: clamp(8.5rem, 30vw, 11rem); border-radius: 1rem; }
+  .trailx-preview { padding: 1rem; }
+  .trailx-preview__media img { max-height: 58vh; }
+  .trailx-preview__model { height: 52vh; }
+  .trailx-preview__title { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
+  .trailx-preview__close { margin-top: 1rem; }
   .trailx__zoom { right: 1.1rem; bottom: 4rem; }
   .trailx__dots { right: 0.6rem; gap: 0.6rem; } /* landing values */
   .trailx__dot { width: 8px; height: 8px; }

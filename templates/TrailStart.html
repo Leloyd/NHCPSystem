@@ -12,6 +12,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&family=Cormorant+Garamond:ital,wght@0,400;0,500;1,400&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/trail-start.css') }}" />
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <script type="importmap">
       {
         "imports": {
@@ -113,6 +114,26 @@
       data-art-recuerdos-img="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}"
       data-art-recuerdos-tl="{{ url_for('virtual_tour_hotspot_file', filename='Recuerdos/RECUERDOS DE PATAY.mp3') }}"
       data-art-recuerdos-en="{{ url_for('virtual_tour_hotspot_file', filename='Recuerdos/RECUERDOS DE PATAY(English).mp3') }}"
+      data-art-balanghay-glb="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512(10K).glb') }}"
+      data-art-kabaong-glb="{{ url_for('static', filename='AR-Artifacts/Kabaong/Kabaong-512(10k).glb') }}"
+      data-art-uloh-glb="{{ url_for('static', filename='AR-Artifacts/Uloh/Uloh-512(10k).glb') }}"
+      data-art-banga-glb="{{ url_for('static', filename='AR-Artifacts/Banga/Banga-512(10k).glb') }}"
+      data-art-kagamitan-glb="{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan-512(10k).glb') }}"
+      data-art-bagongon-glb="{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon-512(10k).glb') }}"
+      data-art-bogwa-glb="{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa-512(10k).glb') }}"
+      data-art-pagpag-glb="{{ url_for('artifact_asset_file', filename='Pagpag/Pagpag-512(10k).glb') }}"
+      data-art-pahimakas-glb="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas-512(10k).glb') }}"
+      data-art-alay-glb="{{ url_for('artifact_asset_file', filename='Alay/Alay-512(10k).glb') }}"
+      data-art-antuk-glb="{{ url_for('artifact_asset_file', filename='Antuk/Antuk-512(10k).glb') }}"
+      data-art-pagtubas-glb="{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas-512(10k).glb') }}"
+      data-art-tsapang-glb="{{ url_for('artifact_asset_file', filename='Tsapang/Tsapang-512(10k).glb') }}"
+      data-art-sisiw-glb="{{ url_for('artifact_asset_file', filename='Sisiw/Sisiw-512(10k).glb') }}"
+      data-art-sabwag-glb="{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag-512(10k).glb') }}"
+      data-art-tausug-glb="{{ url_for('artifact_asset_file', filename='Tausug/Tausug1-512(10k).glb') }}"
+      data-art-luksa-glb="{{ url_for('artifact_asset_file', filename='Luksa/Luksa-512(10k).glb') }}"
+      data-art-pahiwatig-glb="{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwating.glb') }}"
+      data-art-recuerdos-glb="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}"
+      data-art-tboli-glb='{{ url_for("artifact_asset_file", filename="Tboli/T\'boli-512(10k).glb") }}'
       data-model-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-idle-1K.glb"
       data-greet-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-greet-1k.glb"
       data-heart-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-heart-1k.glb"

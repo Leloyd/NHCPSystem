@@ -626,17 +626,44 @@ function initPanorama() {
   const museum2Src = root.getAttribute('data-pano-museum2') || '';
   const museum3Src = root.getAttribute('data-pano-museum3') || '';
 
-  // Artifact assets for the museum halls (image + EN/TL voice-over), copied
-  // off the virtual tour page via data attributes.
+  // Artifact assets for the museum halls (image + EN/TL voice-over + optional
+  // 3D model), copied off the virtual tour page via data attributes.
   const ART_KEYS = ['balanghay', 'kabaong', 'uloh', 'kabila', 'banga', 'jar', 'kagamitan', 'bagongon', 'bogwa', 'pagpag', 'pahimakas', 'alay', 'antuk', 'pagtubas', 'tsapang', 'tboli', 'sisiw', 'sabwag', 'tausug', 'luksa', 'mensahe', 'pahiwatig', 'recuerdos'];
   const ART = {};
   ART_KEYS.forEach((key) => {
     ART[key] = {
       img: root.getAttribute(`data-art-${key}-img`) || '',
+      glb: root.getAttribute(`data-art-${key}-glb`) || '',
       tl: root.getAttribute(`data-art-${key}-tl`) || '',
       en: root.getAttribute(`data-art-${key}-en`) || '',
     };
   });
+  // Display titles (shown above the window's close button, and in the viewer).
+  const ART_TITLES = {
+    balanghay: { en: 'The Balanghay', tl: 'Ang Balanghay' },
+    kabaong: { en: 'The Hanging Coffins of Sagada', tl: 'Ang mga Nakabiting Kabaong ng Sagada' },
+    uloh: { en: 'Traditional Ulóh of Ifugao', tl: 'Tradisyunal na Ulóh ng mga Ifugao' },
+    kabila: { en: 'The Afterlife of the Filipino', tl: 'Ang Kabilang Buhay ng mga Filipino' },
+    banga: { en: 'The Manunggul Jar', tl: 'Ang Banga ng Manunggul' },
+    jar: { en: 'The Maitum Jars', tl: 'Mga Banga ng Maitum' },
+    kagamitan: { en: 'Belongings of the Dead in Batanes', tl: 'Mga Kagamitan ng mga Yumao sa Batanes' },
+    bagongon: { en: 'Bagongon of the Ilocano', tl: 'Bagongon ng mga Ilokano' },
+    bogwa: { en: 'Bogwa of the Ifugao', tl: 'Bogwa ng mga Ifugao' },
+    pagpag: { en: 'The Custom of Pagpag', tl: 'Ang Pagpag' },
+    pahimakas: { en: "Nakpil's Pahimakas", tl: 'Pahimakas ni Nakpil' },
+    alay: { en: 'Alay, Atang, Halad', tl: 'Alay, Atang, Halad' },
+    antuk: { en: 'Antuk and Ulahing of the Ata-Manobo', tl: 'Antuk at Ulahing ng mga Ata-Manobo' },
+    pagtubas: { en: 'Pagtubas of the Waray', tl: 'Pagtubas ng mga Waray' },
+    tsapang: { en: 'Black Mourning Pins', tl: 'Tsapang: Itim ng Pagluluksa' },
+    tboli: { en: "The T'boli Soul", tl: "Ang Kaluluwa ng mga T'boli" },
+    sisiw: { en: 'Hatchling of Conscience', tl: 'Sisiw ng Budhi' },
+    sabwag: { en: 'Sabwag of the Bikolnon', tl: 'Sabwag ng mga Bikolnon' },
+    tausug: { en: 'Tausug Burial Practices', tl: 'Kaugalian sa Paglilibing ng mga Tausug' },
+    luksa: { en: 'The Mourners in Filipino-Chinese Burial', tl: 'Ang mga Taga-Luksa sa Burol ng mga Filipino-Tsino' },
+    mensahe: { en: 'Condolences for President Aguinaldo', tl: 'Pakikiramay kay Pangulong Aguinaldo' },
+    pahiwatig: { en: 'Omens of Death', tl: 'Mga Pahiwatig ng Kamatayan' },
+    recuerdos: { en: 'Recuerdos de Patay', tl: 'Recuerdos de Patay' },
+  };
 
   /* Floating image hotspot — ported from the virtual tour (front-gate-hotspot-h1):
      tapping the pulsing marker pins the photo on the wall at the same spot and
@@ -658,7 +685,81 @@ function initPanorama() {
     const playing = hotspotAudio.play();
     if (playing && playing.catch) playing.catch((err) => console.warn('[Trail] Hotspot audio blocked:', err));
   };
+  /* Enlarged viewer (the landing lightbox pattern): the media big and clear,
+     the title above a centered round close button. Works for the photo and,
+     when the artifact has one, its 3D model. */
+  let previewEl = null;
+  let previewMedia = null;
+  let previewTitle = null;
+  const closePreview = () => {
+    if (!previewEl) return;
+    previewEl.classList.remove('is-open');
+    previewEl.hidden = true;
+    if (previewMedia) previewMedia.innerHTML = '';
+  };
+  const setTitleHtml = (el, title, fallback) => {
+    if (!el) return;
+    if (title && (title.en || title.tl)) {
+      el.innerHTML = `<span data-lang-en>${title.en || title.tl}</span><span data-lang-tl>${title.tl || title.en}</span>`;
+      el.hidden = false;
+    } else if (fallback) {
+      el.textContent = fallback;
+      el.hidden = false;
+    } else {
+      el.hidden = true;
+    }
+  };
+  const ensurePreview = () => {
+    if (previewEl) return;
+    previewEl = document.createElement('div');
+    previewEl.className = 'trailx-preview';
+    previewEl.hidden = true;
+    previewEl.setAttribute('role', 'dialog');
+    previewEl.setAttribute('aria-modal', 'true');
+    previewEl.setAttribute('aria-label', 'Artifact viewer');
+    previewMedia = document.createElement('div');
+    previewMedia.className = 'trailx-preview__media';
+    previewTitle = document.createElement('p');
+    previewTitle.className = 'trailx-preview__title';
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'trailx-xclose trailx-preview__close';
+    closeBtn.type = 'button';
+    closeBtn.setAttribute('aria-label', 'Close viewer');
+    closeBtn.textContent = '✕';
+    closeBtn.addEventListener('click', closePreview);
+    previewEl.addEventListener('click', (event) => { if (event.target === previewEl) closePreview(); });
+    previewEl.appendChild(previewMedia);
+    previewEl.appendChild(previewTitle);
+    previewEl.appendChild(closeBtn);
+    root.appendChild(previewEl);
+  };
+  const openPreview = (args, view) => {
+    ensurePreview();
+    previewMedia.innerHTML = '';
+    if (view === 'model' && args.glbSrc) {
+      const big = document.createElement('model-viewer');
+      big.className = 'trailx-preview__model';
+      big.setAttribute('camera-controls', '');
+      big.setAttribute('touch-action', 'pan-y');
+      big.setAttribute('auto-rotate', '');
+      big.setAttribute('shadow-intensity', '1');
+      big.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
+      big.src = args.glbSrc;
+      previewMedia.appendChild(big);
+    } else {
+      const big = document.createElement('img');
+      big.src = args.imageSrc;
+      big.alt = args.imageAlt || 'Artifact image';
+      previewMedia.appendChild(big);
+    }
+    setTitleHtml(previewTitle, args.title, args.imageAlt || '');
+    previewEl.hidden = false;
+    window.requestAnimationFrame(() => previewEl.classList.add('is-open'));
+  };
+  window.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePreview(); });
+
   const closeFloatingImage = () => {
+    closePreview();
     if (floatingWindow && viewer) {
       try { viewer.removeHotSpot(floatingWindow.hotspotId, floatingWindow.sceneId); } catch { /* already gone */ }
     }
@@ -669,24 +770,94 @@ function initPanorama() {
   const renderFloatingImageHotspot = (hotSpotDiv, args) => {
     hotSpotDiv.classList.add('tour-floating-image-window-hotspot');
     const shell = document.createElement('div');
-    shell.className = 'tour-floating-image-window-shell';
-    const closeButton = document.createElement('button');
-    closeButton.className = 'tour-floating-image-window-close';
-    closeButton.type = 'button';
-    closeButton.setAttribute('aria-label', 'Close hotspot image');
-    closeButton.textContent = '×';
-    closeButton.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      closeFloatingImage();
-    });
+    shell.className = 'tour-floating-image-window-shell trailx-art';
+    let showingModel = false;
+    let model = null;
+
+    const mediaWrap = document.createElement('div');
+    mediaWrap.className = 'trailx-art__mediawrap';
+
+    // The photo: tap it for the enlarged, clear view.
+    const zoomBtn = document.createElement('button');
+    zoomBtn.className = 'trailx-art__zoom';
+    zoomBtn.type = 'button';
+    zoomBtn.setAttribute('aria-label', 'Open a larger view');
     const image = document.createElement('img');
     image.className = 'tour-floating-image-window';
     image.src = args.imageSrc;
     image.alt = args.imageAlt || 'Hotspot image';
     image.draggable = false;
+    zoomBtn.appendChild(image);
+    zoomBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openPreview(args, 'image');
+    });
+    mediaWrap.appendChild(zoomBtn);
+
+    // Expand: enlarge whichever side (photo / 3D) is currently showing.
+    const expandBtn = document.createElement('button');
+    expandBtn.className = 'trailx-art__icon trailx-art__expand';
+    expandBtn.type = 'button';
+    expandBtn.setAttribute('aria-label', 'Open a larger view');
+    expandBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6"/></svg>';
+    expandBtn.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      openPreview(args, showingModel ? 'model' : 'image');
+    });
+    mediaWrap.appendChild(expandBtn);
+
+    // Image ↔ 3D switch, like the virtual tour (only when a model exists).
+    // The model loads lazily on the first switch.
+    if (args.glbSrc) {
+      const switchBtn = document.createElement('button');
+      switchBtn.className = 'trailx-art__icon trailx-art__switch';
+      switchBtn.type = 'button';
+      switchBtn.setAttribute('aria-label', 'Switch between image and 3D model');
+      switchBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.5 19.5 6v12L12 21.5 4.5 18V6L12 2.5Zm0 6.9L5 6.2m7 3.2 7-3.2m-7 3.2V21"/></svg>';
+      switchBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        showingModel = !showingModel;
+        if (showingModel && !model) {
+          model = document.createElement('model-viewer');
+          model.className = 'trailx-art__model';
+          model.setAttribute('camera-controls', '');
+          model.setAttribute('touch-action', 'pan-y');
+          model.setAttribute('auto-rotate', '');
+          model.setAttribute('shadow-intensity', '1');
+          model.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
+          model.src = args.glbSrc;
+          mediaWrap.insertBefore(model, expandBtn);
+        }
+        zoomBtn.hidden = showingModel;
+        if (model) model.hidden = !showingModel;
+        switchBtn.setAttribute('aria-pressed', String(showingModel));
+      });
+      mediaWrap.appendChild(switchBtn);
+    }
+
+    // Title above the close button (landing lightbox pattern).
+    const title = document.createElement('p');
+    title.className = 'trailx-art__title';
+    setTitleHtml(title, args.title, '');
+
+    // Close: middle-bottom, breathing room above (like the landing lightbox).
+    const closeButton = document.createElement('button');
+    closeButton.className = 'trailx-xclose trailx-art__close';
+    closeButton.type = 'button';
+    closeButton.setAttribute('aria-label', 'Close artifact');
+    closeButton.textContent = '✕';
+    closeButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      closeFloatingImage();
+    });
+
+    shell.appendChild(mediaWrap);
+    shell.appendChild(title);
     shell.appendChild(closeButton);
-    shell.appendChild(image);
     hotSpotDiv.appendChild(shell);
   };
   const openFloatingImage = (event, args) => {
@@ -764,6 +935,7 @@ function initPanorama() {
                 windowHotspotId: 'front-gate-hotspot-h1-window',
                 imageSrc: h1ImageSrc,
                 audioSrc: h1AudioSrc,
+                title: { en: 'The Front Gate', tl: 'Ang Tarangkahan' },
                 imageAlt: 'Front Gate hotspot image',
                 windowPitch: 1.06,
                 windowYaw: 24.41,
@@ -850,6 +1022,8 @@ function initPanorama() {
             sourceHotspotId: id,
             windowHotspotId: `${id}-window`,
             imageSrc: asset.img,
+            glbSrc: asset.glb,
+            title: ART_TITLES[key],
             audioByLanguage: { tl: asset.tl, en: asset.en },
             imageAlt: alt,
             windowPitch: pitch,
@@ -1234,8 +1408,9 @@ function initStories() {
   window.addEventListener('wheel', (e) => {
     if (isImmersive()) return; // native Pannellum zoom
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
-    // Inner scroll areas (e.g. the rules box) scroll natively inside themselves.
-    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox')) return;
+    // Inner scroll areas (rules box), the artifact viewer, and 3D models keep
+    // their own native wheel behaviour.
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-preview, model-viewer')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
