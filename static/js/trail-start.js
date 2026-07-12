@@ -45,8 +45,8 @@ const SCRIPTS = {
     tl: "Sabay itong sagrado at makasaysayang lupa. Mga libing, lihim na pulong ng mga rebolusyonaryo, kublihan noong digmaan — lahat dumaan sa tarangkahang ito. Noong 1981, idineklara itong Pambansang Palatandaang Pangkasaysayan.",
   },
   's1-details': {
-    en: "The arch, the iron gate, the masonry walls, and the path inward — four elements that mark the boundary between the town and the world of the dead. Tap each one to take a closer look.",
-    tl: "Ang arko, ang rehas na bakal, ang mga pader na bato, at ang daanang papasok — apat na elementong nagtatakda ng hangganan sa pagitan ng bayan at ng mundo ng mga yumao. Pindutin ang bawat isa upang mapagmasdan.",
+    en: "The arch, the gate, the walls, and the path inward — four parts of the entrance that separate the town from this resting place. Tap each one to take a closer look.",
+    tl: "Ang arko, ang rehas, ang pader, at ang daanang papasok — apat na bahagi ng pasukan na naghihiwalay sa bayan mula sa himlayang ito. Pindutin ang bawat isa upang mapagmasdan.",
   },
   's1-next': {
     en: "That completes our first stop. When Stop Two opens, we will step inside and register at the museum. Salamat — thank you for walking this far with me.",
