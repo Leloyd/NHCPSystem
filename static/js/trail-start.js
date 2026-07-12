@@ -594,12 +594,12 @@ function initPanorama() {
           showZoomCtrl: false,
           showFullscreenCtrl: false,
           keyboardZoom: false,
-          mouseZoom: false, // zoom is handled by our Full View wheel/buttons
+          mouseZoom: true, // native Pannellum zoom, same feel as the Virtual Tour
           draggable: true,
           compass: false,
           autoRotate: 0, // replaced by the drift loop below
-          minHfov: 55,
-          maxHfov: 118,
+          minHfov: 50,
+          maxHfov: 140,
         },
         scenes,
       });
@@ -790,22 +790,19 @@ function initStory() {
     scrollYaw = progress * 26;
   }, { passive: true });
 
-  // One wheel handler for the whole scene:
-  //  - Full View → wheel zooms the 360 in/out.
-  //  - Stop 1    → wheel glides the story scroller (smoothed via GSAP),
-  //                wherever the cursor is, so the panorama gaps scroll too.
+  // One wheel rule for the whole scene:
+  //  - Intro & Full View → the event reaches Pannellum untouched, so its
+  //    native scroll/pinch zoom works exactly like the Virtual Tour page.
+  //  - Stop 1 (reading)  → we capture the wheel before Pannellum sees it and
+  //    glide the story scroller instead (smoothed via GSAP), wherever the
+  //    cursor is, so the panorama gaps scroll too.
   window.addEventListener('wheel', (e) => {
-    const lineDelta = e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY;
-    if (isImmersive()) {
-      if (!viewer) return;
-      e.preventDefault();
-      zoomBy(lineDelta > 0 ? 6 : -6, 120);
-      return;
-    }
+    if (isImmersive()) return; // native Pannellum zoom
     if (state.mode !== 'stop1' || storyEl.hidden) return;
     e.preventDefault();
-    smoothScrollBy(lineDelta);
-  }, { passive: false });
+    e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
+    smoothScrollBy(e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY);
+  }, { passive: false, capture: true });
 
   // Touch/drag inside the story cancels any in-flight glide so it never fights.
   storyEl.addEventListener('pointerdown', () => {
