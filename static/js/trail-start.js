@@ -70,7 +70,7 @@ const beginLink = root.querySelector('[data-trail-begin]');
 const cancelLink = root.querySelector('[data-trail-cancel]');
 const storyEl = root.querySelector('[data-trail-story]');
 const progressEl = root.querySelector('[data-trail-progress] span');
-const scrollCue = root.querySelector('[data-trail-scrollcue]');
+const scrollHint = root.querySelector('[data-trail-hint]');
 const nextBtn = root.querySelector('[data-trail-next]');
 const nextNote = root.querySelector('[data-trail-next-note]');
 const zoomInBtn = root.querySelector('[data-trail-zoom-in]');
@@ -226,6 +226,7 @@ function resumeSpeaking() {
 /* --- Bubble (typewriter) ---------------------------------------------------- */
 function renderBubble(text) {
   if (!bubbleText) return;
+  bubble?.classList.remove('is-expanded'); // new narration → collapsed chip (mobile)
   window.clearInterval(state.typeTimer);
   if (prefersReducedMotion) { bubbleText.textContent = text; return; }
   bubbleText.textContent = '';
@@ -319,6 +320,9 @@ muteBtn?.addEventListener('click', () => setMuted(!state.muted));
 langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
 subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
 textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
+// On mobile the bubble is a collapsed 2-line chip above the controls; tapping
+// it expands the full narration (pointer-events are off on desktop → inert).
+bubble?.addEventListener('click', () => bubble.classList.toggle('is-expanded'));
 
 /* Auto-start narration on load (like the landing page). Browsers usually
    block TTS before the first gesture, so: try immediately (the not-allowed
@@ -770,6 +774,11 @@ function initStory() {
       panel.setAttribute('aria-hidden', String(i !== index));
     });
     dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+    scrollHint?.classList.toggle('is-hidden', index > 0);
+    // Ana stands opposite the text panel and glides across on step changes,
+    // exactly like the landing's chapter engine.
+    const textSide = panels[index].getAttribute('data-side') || 'left';
+    charApi.setSide?.(textSide === 'left' ? 'right' : 'left');
     // Auto-narrate the step being read — even muted (silent playback keeps
     // advancing, so unmuting rejoins mid-sentence; landing behaviour).
     const key = panels[index].getAttribute('data-chapter');
@@ -828,7 +837,6 @@ function initStory() {
     }
   });
 
-  scrollCue?.addEventListener('click', () => scrollToStep(1));
 
   // "Reading the Threshold" chips: one detail panel at a time.
   const chips = Array.from(storyEl.querySelectorAll('[data-detail]'));
@@ -873,23 +881,46 @@ function initCharacter() {
   const modelUrl = root.getAttribute('data-model-url') || '';
   const BASE_ROT_Y = -Math.PI / 2; // GLB authored facing screen-right → face camera
   const mobile = window.matchMedia('(max-width: 820px)').matches;
-  const ANA_REST_X = mobile ? 0.55 : 1.15; // world-space resting X (right side)
-  const CAM_LOOK_X = ANA_REST_X * 0.2;     // frame her without pushing her off-edge
+  const FOV = 32;
+  // Mobile pulls the camera back so Ana reads as part of the scene rather
+  // than filling (or falling off) the frame — same trick as the landing.
+  const CAM_Z = mobile ? 4.1 : 3.1;
+  // Where she stands, as a screen percentage (landing-style): computed into
+  // world X from the live aspect ratio, so she is ALWAYS on screen — this is
+  // what keeps her visible on narrow phone viewports.
+  const SIDE_PCT = mobile ? { right: 86, left: 14 } : { right: 82, left: 18 };
+  let currentSide = 'right';
+  const modelTarget = { x: 0, rotY: BASE_ROT_Y - 0.42 };
   let renderer, scene, camera, mixer, clock, avatar;
   let idleAction = null;
   let gestureAction = null;
   let gestureFadingBack = false;
-  let slideT = prefersReducedMotion ? 1 : 0; // 0→1 entrance slide progress
   const gestures = {};
   const pointer = { x: 0, y: 0 };
 
+  const worldXAt = (pct) => {
+    const aspect = Math.max(canvasWrap.clientWidth, 1) / Math.max(canvasWrap.clientHeight, 1);
+    const halfW = Math.tan((FOV * Math.PI) / 360) * CAM_Z * aspect;
+    return ((pct - 50) / 50) * halfW * 0.9; // slight inset so her arms never clip
+  };
+  const applySide = () => {
+    modelTarget.x = worldXAt(SIDE_PCT[currentSide]);
+    // Face the camera, angled slightly toward the text panel (landing values).
+    modelTarget.rotY = BASE_ROT_Y + (currentSide === 'right' ? -0.42 : 0.42);
+  };
+  applySide();
+  charApi.setSide = (side) => {
+    currentSide = side === 'left' ? 'left' : 'right';
+    applySide();
+  };
+
   // Publish Ana's on-screen X (%) so the bubble + glow center on her. Runs
   // every frame with her LIVE position, so it stays glued to the model even
-  // through the slide-in and camera parallax.
+  // through the slide-in, side changes and camera parallax.
   const anaProbe = new THREE.Vector3();
   const projectAnaX = (worldX) => {
     if (!camera) return;
-    anaProbe.set(typeof worldX === 'number' ? worldX : ANA_REST_X, 1.0, 0);
+    anaProbe.set(typeof worldX === 'number' ? worldX : modelTarget.x, 1.0, 0);
     anaProbe.project(camera);
     const pct = Math.min(92, Math.max(8, (anaProbe.x * 0.5 + 0.5) * 100));
     root.style.setProperty('--tx-ana-x', `${pct.toFixed(1)}%`);
@@ -899,9 +930,9 @@ function initCharacter() {
     scene = new THREE.Scene();
     const w = Math.max(canvasWrap.clientWidth, 1);
     const h = Math.max(canvasWrap.clientHeight, 1);
-    camera = new THREE.PerspectiveCamera(32, w / h, 0.1, 100);
-    camera.position.set(0, 1.5, 3.1);
-    camera.lookAt(CAM_LOOK_X, 1.35, 0);
+    camera = new THREE.PerspectiveCamera(FOV, w / h, 0.1, 100);
+    camera.position.set(0, 1.5, CAM_Z);
+    camera.lookAt(modelTarget.x * 0.2, 1.35, 0);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
@@ -927,6 +958,7 @@ function initCharacter() {
       renderer.setSize(nw, nh, false);
       camera.aspect = nw / nh;
       camera.updateProjectionMatrix();
+      applySide(); // re-derive her world X from the new aspect ratio
       projectAnaX();
     };
     window.addEventListener('resize', onResize);
@@ -947,8 +979,14 @@ function initCharacter() {
       idleAction.crossFadeTo(action, 0.4, false);
     };
 
-    // Let the Begin choreography replay her entrance for Stop 1.
-    charApi.reenter = () => { slideT = prefersReducedMotion ? 1 : 0; };
+    // Let the Begin choreography replay her entrance for Stop 1: she re-enters
+    // from the edge of whichever side she'll stand on.
+    charApi.reenter = () => {
+      applySide();
+      if (avatar && !prefersReducedMotion) {
+        avatar.position.x = modelTarget.x + (currentSide === 'right' ? 2.6 : -2.6);
+      }
+    };
     charApi.playGesture = playGesture;
 
     const animate = () => {
@@ -964,18 +1002,23 @@ function initCharacter() {
         mixer.update(dt);
       }
       if (avatar) {
-        // Entrance: glide in from off-screen right to her resting spot.
-        if (slideT < 1) slideT = Math.min(1, slideT + dt / 1.3);
-        const ease = 1 - Math.pow(1 - slideT, 3); // easeOutCubic
-        const sway = state.playing && !prefersReducedMotion ? Math.sin(clock.elapsedTime * 1.4) * 0.05 : 0;
-        avatar.position.x = ANA_REST_X + (1 - ease) * 2.6;
-        avatar.rotation.y = BASE_ROT_Y + sway;
+        // Glide toward her target side (also covers the entrance, since she
+        // starts off-screen) — the landing's continuous easing.
+        if (prefersReducedMotion) {
+          avatar.position.x = modelTarget.x;
+          avatar.rotation.y = modelTarget.rotY;
+        } else {
+          const sway = state.playing ? Math.sin(clock.elapsedTime * 1.4) * 0.05 : 0;
+          avatar.position.x += (modelTarget.x - avatar.position.x) * Math.min(1, dt * 2.2);
+          avatar.rotation.y += (modelTarget.rotY + sway - avatar.rotation.y) * Math.min(1, dt * 3);
+        }
       }
+      const lookX = (avatar ? avatar.position.x : modelTarget.x) * 0.2;
       if (!prefersReducedMotion) {
-        camera.position.x += (CAM_LOOK_X + pointer.x * 0.08 - camera.position.x) * Math.min(1, dt * 2);
+        camera.position.x += (lookX + pointer.x * 0.08 - camera.position.x) * Math.min(1, dt * 2);
         camera.position.y += (1.5 - pointer.y * 0.05 - camera.position.y) * Math.min(1, dt * 2);
       }
-      camera.lookAt(CAM_LOOK_X, 1.35, 0);
+      camera.lookAt(lookX, 1.35, 0);
       if (avatar) projectAnaX(avatar.position.x); // keep bubble/glow centered on her
       renderer.render(scene, camera);
     };
@@ -997,8 +1040,8 @@ function initCharacter() {
         model.position.y -= box.min.y * scale;
         avatar = new THREE.Group();
         avatar.add(model);
-        avatar.rotation.y = BASE_ROT_Y;
-        avatar.position.x = ANA_REST_X + (prefersReducedMotion ? 0 : 2.6); // start off-right
+        avatar.rotation.y = modelTarget.rotY;
+        avatar.position.x = modelTarget.x + (prefersReducedMotion ? 0 : 2.6); // start off-right
         scene.add(avatar);
 
         if (gltf.animations && gltf.animations.length) {

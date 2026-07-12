@@ -127,12 +127,6 @@
               <span data-lang-en>Drag to look around · Find the glowing ring on the ground to step to the right-side view</span>
               <span data-lang-tl>I-drag upang lumingon · Hanapin ang kumikinang na singsing sa lupa upang lumipat ng tanaw</span>
             </p>
-            <div>
-              <button class="trailx__s1-scroll" data-trail-scrollcue type="button" aria-label="Scroll down to read about this stop">
-                <span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span>
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-              </button>
-            </div>
           </header>
 
           <!-- Chapter I · The Opening Frame -->
@@ -265,6 +259,11 @@
 
           <!-- Chapter dots (like the landing) -->
           <nav class="trailx__dots" data-trail-dots aria-label="Stop 1 sections"></nav>
+
+          <!-- Scroll hint — lower middle, same as the landing; hides after step 0 -->
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true">
+            <span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span>
+          </div>
         </div>
         <!-- Invisible track: gives the story its scroll distance -->
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>

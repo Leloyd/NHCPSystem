@@ -560,29 +560,37 @@
   letter-spacing: 0.06em;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
 }
-.trailx__s1-scroll {
-  pointer-events: auto;
-  display: inline-flex;
+/* Scroll hint — lower middle, copied from the landing's .story__hint */
+.trailx__hint-scroll {
+  position: absolute;
+  z-index: 5;
+  bottom: 1.5rem;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.45rem;
-  padding: 0.55rem 1.15rem;
-  border: 1px solid rgba(212, 175, 106, 0.45);
-  border-radius: 999px;
-  background: rgba(20, 13, 6, 0.72);
-  color: var(--tx-cream);
+  gap: 0.5rem;
+  color: rgba(255, 255, 255, 0.45);
   font-family: "Inter", sans-serif;
   font-size: 0.68rem;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.24em;
   text-transform: uppercase;
-  cursor: pointer;
-  backdrop-filter: blur(6px);
-  transition: background 0.2s ease, border-color 0.2s ease;
+  transition: opacity 0.5s ease;
+  pointer-events: none;
 }
-.trailx__s1-scroll:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--tx-gold); }
-.trailx__s1-scroll svg { width: 13px; height: 13px; animation: trailx-bob 2.6s ease-in-out infinite; }
-@keyframes trailx-bob {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(4px); }
+.trailx__hint-scroll::after {
+  content: "";
+  width: 1px;
+  height: 44px;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.45), transparent);
+  animation: trailx-hint-drop 2.2s ease-in-out infinite;
+}
+.trailx__hint-scroll.is-hidden { opacity: 0; }
+@keyframes trailx-hint-drop {
+  0% { transform: scaleY(0); transform-origin: top; }
+  55% { transform: scaleY(1); transform-origin: top; }
+  100% { transform: scaleY(1); opacity: 0; transform-origin: top; }
 }
 
 /* ==========================================================================
@@ -632,17 +640,9 @@
 .trailx__chapter.is-active > *:nth-child(7) { transition-delay: 0.66s; }
 
 /* No per-panel scrims on desktop — the full-viewport tint (like the landing's
-   .story__bg-tint) carries the contrast evenly. The hero step keeps a clean
-   bottom veil because the tint stays light there. */
+   .story__bg-tint) carries the contrast evenly; the hero title stands clean
+   over the 360. (Mobile re-adds a bottom veil in the media block below.) */
 .trailx__chapter--hero { justify-content: flex-end; padding-bottom: 7rem; }
-.trailx__chapter--hero::before {
-  content: "";
-  position: absolute;
-  z-index: -1;
-  pointer-events: none;
-  inset: -2rem -5rem -7rem;
-  background: linear-gradient(0deg, rgba(13, 10, 4, 0.85) 0%, rgba(13, 10, 4, 0.4) 55%, transparent 100%);
-}
 
 .trailx__chapter-title {
   margin: 0 0 1.1rem;
@@ -967,13 +967,47 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   }
   .trailx__title { font-size: clamp(2rem, 9vw, 3rem); }
   .trailx__lede { font-size: 0.98rem; margin-bottom: 1.4rem; }
+  /* Subtitle chip above the controls — copied from the landing's mobile
+     bubble: collapsed to two lines, tap to expand/collapse. */
   .trailx__bubble {
-    left: 50%;
-    right: auto;
-    bottom: auto;
-    top: 4.5rem;
-    width: min(320px, calc(100vw - 2.2rem));
+    top: auto;
+    bottom: 3.9rem;
+    left: 1.1rem !important;
+    right: 1.1rem !important;
+    width: auto;
+    transform: none !important;
+    padding: 0.45rem 0.7rem 0.5rem;
+    border-radius: 10px;
+    background: rgba(250, 247, 242, 0.92);
+    pointer-events: auto; /* tappable to expand */
+    cursor: pointer;
   }
+  .trailx__bubble::before { display: none; }
+  .trailx__bubble-eyebrow { display: none; }
+  .trailx__bubble-text {
+    font-size: calc(0.78rem * var(--tx-font-scale, 1));
+    line-height: 1.4;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+    overflow: hidden;
+  }
+  .trailx__bubble::after {
+    content: "⌄";
+    position: absolute;
+    right: 0.55rem;
+    bottom: 0.15rem;
+    font-size: 0.7rem;
+    color: var(--tx-gold-deep);
+  }
+  .trailx__bubble.is-expanded .trailx__bubble-text {
+    display: block;
+    -webkit-line-clamp: unset;
+    overflow: visible;
+  }
+  .trailx__bubble.is-expanded::after { content: "⌃"; }
+  .trailx__ana-glow { display: none; } /* less visual noise behind the sheet */
+  .trailx__hint-scroll { display: none; } /* like the landing's mobile view */
   .trailx__cursor { display: none; }
   .trailx__nameplate { display: none; }
   .trailx__controls { right: 1.1rem; bottom: 1rem; }
@@ -1007,6 +1041,9 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__chapter--hero { padding-bottom: 9.6rem; }
   .trailx__chapter--next .trailx__chapter-copy { margin-left: 0; margin-right: 0; }
   .trailx__chapter--next .trailx__actions { justify-content: flex-start; }
+  /* Subtitles hidden → give their reserved space back to the chapter text
+     (same reflow as the landing). */
+  .trailx[data-subtitles="off"] .trailx__chapter { padding-bottom: 5rem; }
   .trailx__chapter-title { font-size: calc(clamp(1.45rem, 7vw, 2rem) * var(--tx-font-scale, 1)); margin-bottom: 0.7rem; }
   .trailx__chapter-title--hero { font-size: calc(clamp(1.7rem, 8.5vw, 2.4rem) * var(--tx-font-scale, 1)); }
   .trailx__stats { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
@@ -1042,7 +1079,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   }
   .trailx__chapter.is-active,
   .trailx__chapter.is-active > * { opacity: 1 !important; }
-  .trailx__s1-scroll svg { animation: none; }
+  .trailx__hint-scroll::after { animation: none; }
   .trailx__pano .tour-ground-hotspot::after,
   .trailx-spot__dot { animation: none; }
   .trailx__detail p { animation: none; }
