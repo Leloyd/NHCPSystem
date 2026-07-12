@@ -1058,16 +1058,11 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-art__model {
   width: 100%;
   height: clamp(10rem, 15vw, 14rem);
-  border-radius: 1.35rem;
-  background: rgba(20, 13, 6, 0.6);
-  box-shadow:
-    0 1.4rem 3.6rem rgba(15, 23, 42, 0.28),
-    0 0 0 1px rgba(255, 255, 255, 0.24);
+  background: transparent; /* the model floats over the 360, like the tour */
 }
 .trailx-art__icon {
   position: absolute;
-  top: -0.75rem;
-  z-index: 1;
+  z-index: 2;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1082,17 +1077,21 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   transition: background 0.2s ease, transform 0.15s ease;
 }
 .trailx-art__icon:hover { background: rgba(212, 175, 106, 0.3); }
-.trailx-art__icon:active { transform: scale(0.94); }
 .trailx-art__icon svg { width: 14px; height: 14px; }
-.trailx-art__expand { left: -0.75rem; }
-.trailx-art__switch { right: -0.75rem; }
+/* Lower middle of the media — the virtual tour's switch placement. */
+.trailx-art__switch {
+  left: 50%;
+  bottom: -1rem;
+  transform: translateX(-50%);
+}
+.trailx-art__switch:active { transform: translateX(-50%) scale(0.94); }
 .trailx-art__switch[aria-pressed="true"] {
   background: var(--tx-gold);
   color: var(--tx-ink);
   border-color: var(--tx-gold);
 }
 .trailx-art__title {
-  margin: 0.6rem 0 0;
+  margin: 1.2rem 0 0; /* clears the overhanging switch button */
   text-align: center;
   color: var(--tx-cream);
   font-family: "Playfair Display", serif;
@@ -1144,9 +1143,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-preview__model {
   width: min(920px, 92vw);
   height: 66vh;
-  background: rgba(20, 13, 6, 0.55);
-  border: 1px solid rgba(184, 146, 58, 0.5);
-  box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  background: transparent; /* no shade behind the model, like the tour */
 }
 .trailx-preview__title {
   margin: 0.9rem 0 0;
@@ -1371,13 +1368,12 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__pano .tour-ground-hotspot--compact { width: 1.9rem; height: 1.9rem; }
   .trailx__pano .tour-floating-image-window-hotspot { width: clamp(9.5rem, 28vw, 12rem) !important; }
   .tour-floating-image-window { border-radius: 1rem; }
-  .trailx-art__icon { width: 1.75rem; height: 1.75rem; top: -0.55rem; }
-  .trailx-art__expand { left: -0.55rem; }
-  .trailx-art__switch { right: -0.55rem; }
+  .trailx-art__icon { width: 1.75rem; height: 1.75rem; }
+  .trailx-art__switch { bottom: -0.85rem; }
   .trailx-art__icon svg { width: 12px; height: 12px; }
-  .trailx-art__title { font-size: calc(0.82rem * var(--tx-font-scale, 1)); }
+  .trailx-art__title { margin-top: 1rem; font-size: calc(0.82rem * var(--tx-font-scale, 1)); }
   .trailx-art__close { width: 34px; height: 34px; margin-top: 0.55rem; font-size: 0.85rem; }
-  .trailx-art__model { height: clamp(8.5rem, 30vw, 11rem); border-radius: 1rem; }
+  .trailx-art__model { height: clamp(8.5rem, 30vw, 11rem); }
   .trailx-preview { padding: 1rem; }
   .trailx-preview__media img { max-height: 58vh; }
   .trailx-preview__model { height: 52vh; }

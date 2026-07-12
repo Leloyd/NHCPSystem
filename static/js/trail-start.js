@@ -795,21 +795,8 @@ function initPanorama() {
     });
     mediaWrap.appendChild(zoomBtn);
 
-    // Expand: enlarge whichever side (photo / 3D) is currently showing.
-    const expandBtn = document.createElement('button');
-    expandBtn.className = 'trailx-art__icon trailx-art__expand';
-    expandBtn.type = 'button';
-    expandBtn.setAttribute('aria-label', 'Open a larger view');
-    expandBtn.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9V4h5M20 15v5h-5M4 4l6 6M20 20l-6-6"/></svg>';
-    expandBtn.addEventListener('click', (event) => {
-      event.preventDefault();
-      event.stopPropagation();
-      openPreview(args, showingModel ? 'model' : 'image');
-    });
-    mediaWrap.appendChild(expandBtn);
-
-    // Image ↔ 3D switch, like the virtual tour (only when a model exists).
-    // The model loads lazily on the first switch.
+    // Image ↔ 3D switch — lower middle of the media, like the virtual tour's
+    // floating window switch. The model loads lazily on the first switch.
     if (args.glbSrc) {
       const switchBtn = document.createElement('button');
       switchBtn.className = 'trailx-art__icon trailx-art__switch';
@@ -829,7 +816,7 @@ function initPanorama() {
           model.setAttribute('shadow-intensity', '1');
           model.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
           model.src = args.glbSrc;
-          mediaWrap.insertBefore(model, expandBtn);
+          mediaWrap.insertBefore(model, switchBtn);
         }
         zoomBtn.hidden = showingModel;
         if (model) model.hidden = !showingModel;
