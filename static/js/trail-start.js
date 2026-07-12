@@ -963,14 +963,18 @@ function initCharacter() {
   const modelUrl = root.getAttribute('data-model-url') || '';
   const BASE_ROT_Y = -Math.PI / 2; // GLB authored facing screen-right → face camera
   const mobile = window.matchMedia('(max-width: 820px)').matches;
-  const FOV = 32;
-  // Mobile pulls the camera back so Ana reads as part of the scene rather
-  // than filling (or falling off) the frame — same trick as the landing.
-  const CAM_Z = mobile ? 4.1 : 3.1;
-  // Where she stands, as a screen percentage (landing-style): computed into
-  // world X from the live aspect ratio, so she is ALWAYS on screen — this is
-  // what keeps her visible on narrow phone viewports.
-  const SIDE_PCT = mobile ? { right: 86, left: 14 } : { right: 82, left: 18 };
+  // Mobile uses the landing page's exact camera recipe so Ana's size and
+  // position match it: FOV 34, distance 4.1 × a viewport-height compensation,
+  // camera at y 1.42 looking at 1.4, a 35% swing toward her, and an edge-hug
+  // stance at 92% / 8% with the same swing compensation. Desktop keeps this
+  // page's own framing.
+  const FOV = mobile ? 34 : 32;
+  const zoomComp = Math.min(1.75, Math.max(0.85, window.innerHeight / 900));
+  const CAM_Z = mobile ? 4.1 * zoomComp : 3.1;
+  const CAM_Y = mobile ? 1.42 : 1.5;
+  const LOOK_AT_Y = mobile ? 1.4 : 1.35;
+  const LOOK = mobile ? 0.35 : 0.2; // how far the camera swings toward Ana
+  const SIDE_PCT = mobile ? { right: 92, left: 8 } : { right: 82, left: 18 };
   let currentSide = 'right';
   const modelTarget = { x: 0, rotY: BASE_ROT_Y - 0.42 };
   let renderer, scene, camera, mixer, clock, avatar;
@@ -983,7 +987,10 @@ function initCharacter() {
   const worldXAt = (pct) => {
     const aspect = Math.max(canvasWrap.clientWidth, 1) / Math.max(canvasWrap.clientHeight, 1);
     const halfW = Math.tan((FOV * Math.PI) / 360) * CAM_Z * aspect;
-    return ((pct - 50) / 50) * halfW * 0.9; // slight inset so her arms never clip
+    const frac = (pct - 50) / 50;
+    // Landing formula: undo the camera's partial swing toward her (mobile);
+    // desktop keeps a small inset so her arms never clip at the edge.
+    return mobile ? (frac * halfW) / (1 - LOOK) : frac * halfW * 0.9;
   };
   const applySide = () => {
     modelTarget.x = worldXAt(SIDE_PCT[currentSide]);
@@ -1013,8 +1020,8 @@ function initCharacter() {
     const w = Math.max(canvasWrap.clientWidth, 1);
     const h = Math.max(canvasWrap.clientHeight, 1);
     camera = new THREE.PerspectiveCamera(FOV, w / h, 0.1, 100);
-    camera.position.set(0, 1.5, CAM_Z);
-    camera.lookAt(modelTarget.x * 0.2, 1.35, 0);
+    camera.position.set(0, CAM_Y, CAM_Z);
+    camera.lookAt(modelTarget.x * LOOK, LOOK_AT_Y, 0);
 
     renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.8));
@@ -1095,12 +1102,12 @@ function initCharacter() {
           avatar.rotation.y += (modelTarget.rotY + sway - avatar.rotation.y) * Math.min(1, dt * 3);
         }
       }
-      const lookX = (avatar ? avatar.position.x : modelTarget.x) * 0.2;
+      const lookX = (avatar ? avatar.position.x : modelTarget.x) * LOOK;
       if (!prefersReducedMotion) {
         camera.position.x += (lookX + pointer.x * 0.08 - camera.position.x) * Math.min(1, dt * 2);
-        camera.position.y += (1.5 - pointer.y * 0.05 - camera.position.y) * Math.min(1, dt * 2);
+        camera.position.y += (CAM_Y - pointer.y * (mobile ? 0.04 : 0.05) - camera.position.y) * Math.min(1, dt * 2);
       }
-      camera.lookAt(lookX, 1.35, 0);
+      camera.lookAt(lookX, LOOK_AT_Y, 0);
       if (avatar) projectAnaX(avatar.position.x); // keep bubble/glow centered on her
       renderer.render(scene, camera);
     };
