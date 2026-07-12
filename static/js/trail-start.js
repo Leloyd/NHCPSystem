@@ -61,8 +61,8 @@ const SCRIPTS = {
     tl: "Sa pasukan, iaabot sa iyo ng mga tauhan ang tamang form — ang talaan para sa karaniwang pagbisita, pahintulot para sa mga shoot at pananaliksik, maikling sarbey pagkatapos ng iyong pagbisita, o booking form para sa mga grupo.",
   },
   's2-hours': {
-    en: "The museum is open from Tuesday to Sunday, eight in the morning until four in the afternoon, and rests on Mondays. Admission is free for everyone.",
-    tl: "Bukas ang museo mula Martes hanggang Linggo, alas-otso ng umaga hanggang alas-kuwatro ng hapon, at sarado tuwing Lunes. Libre ang pagpasok para sa lahat.",
+    en: "The museum is open from Tuesday to Sunday, nine in the morning until four in the afternoon, and rests on Mondays. Admission is free for everyone.",
+    tl: "Bukas ang museo mula Martes hanggang Linggo, alas-nuwebe ng umaga hanggang alas-kuwatro ng hapon, at sarado tuwing Lunes. Libre ang pagpasok para sa lahat.",
   },
   's2-rules': {
     en: "A few simple courtesies: keep quiet, remove your hat, no flash, do not touch the artifacts, and no food or drinks inside. Sign the logbook, and follow the staff at all times.",
@@ -1061,6 +1061,8 @@ function initStories() {
   window.addEventListener('wheel', (e) => {
     if (isImmersive()) return; // native Pannellum zoom
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
+    // Inner scroll areas (e.g. the rules box) scroll natively inside themselves.
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
