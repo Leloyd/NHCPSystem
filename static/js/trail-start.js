@@ -315,7 +315,10 @@ playBtn?.addEventListener('click', () => {
   unlockAudio();
   if (state.playing) {
     pauseSpeaking(); // Listen acts as pause…
-  } else if (narration.paused && narration.pos > 0) {
+    return;
+  }
+  if (!state.subtitles) setSubtitles(true); // playing reveals her words
+  if (narration.paused && narration.pos > 0) {
     resumeSpeaking(); // …and resumes from the same spot,
   } else {
     narrate({ speakIt: true }); // or restarts when finished.
