@@ -60,7 +60,7 @@
 }
 /* The intro scrim steps aside once the Stop 1 reading tint takes over,
    and in Full View so nothing veils the 360. */
-.trailx[data-mode="stop1"] .trailx__scrim,
+.trailx[data-mode^="stop"] .trailx__scrim,
 .trailx[data-immersive="true"] .trailx__scrim { opacity: 0; }
 
 /* Landing-style even tint (same recipe as .story__bg-tint): a full-viewport,
@@ -76,8 +76,8 @@
   transition: opacity 0.9s ease;
   background: linear-gradient(180deg, rgba(13, 10, 4, 0.8) 0%, rgba(28, 18, 8, 0.65) 50%, rgba(13, 10, 4, 0.9) 100%);
 }
-.trailx[data-mode="stop1"] .trailx__tint { opacity: 1; }
-.trailx[data-mode="stop1"][data-step="s1-arrive"] .trailx__tint { opacity: 0.32; }
+.trailx[data-mode^="stop"] .trailx__tint { opacity: 1; }
+.trailx[data-mode^="stop"][data-step$="-arrive"] .trailx__tint { opacity: 0.32; }
 .trailx[data-immersive="true"] .trailx__tint { opacity: 0 !important; }
 
 /* Side veil riding on the tint: deepens whichever side the active chapter's
@@ -98,10 +98,10 @@
 .trailx__tint::after {
   background: linear-gradient(270deg, rgba(13, 10, 4, 0.78) 0%, rgba(13, 10, 4, 0.48) 34%, rgba(13, 10, 4, 0) 64%);
 }
-.trailx[data-mode="stop1"][data-panel-side="left"] .trailx__tint::before { opacity: 1; }
-.trailx[data-mode="stop1"][data-panel-side="right"] .trailx__tint::after { opacity: 1; }
-.trailx[data-step="s1-arrive"] .trailx__tint::before,
-.trailx[data-step="s1-arrive"] .trailx__tint::after { opacity: 0 !important; }
+.trailx[data-mode^="stop"][data-panel-side="left"] .trailx__tint::before { opacity: 1; }
+.trailx[data-mode^="stop"][data-panel-side="right"] .trailx__tint::after { opacity: 1; }
+.trailx[data-step$="-arrive"] .trailx__tint::before,
+.trailx[data-step$="-arrive"] .trailx__tint::after { opacity: 0 !important; }
 .trailx__grain {
   position: absolute;
   inset: -2%;
@@ -472,7 +472,7 @@
 
 /* ==========================================================================
    Begin choreography — data-phase="depart" slides the intro UI out while the
-   aerial view pans to the gate; data-phase="stop1" brings Ana + controls back
+   360 crossfades to the next scene; data-phase="guide" brings Ana + controls back
    once the FrontGate 360 has crossfaded in. (animation:none neutralises the
    entrance keyframes' forwards fill so transitions can take over.)
    ========================================================================== */
@@ -492,9 +492,12 @@
 
 .trailx[data-phase] .trailx__ana { transition: opacity 0.55s ease; }
 .trailx[data-phase="depart"] .trailx__ana { opacity: 0; }
-.trailx[data-phase="stop1"] .trailx__ana { opacity: 1; }
+.trailx[data-phase="guide"] .trailx__ana { opacity: 1; }
 
 .trailx[data-phase="depart"] .trailx__bubble { opacity: 0 !important; }
+/* Stop-to-stop travel: the leaving stop's chapters fade with the guide. */
+.trailx[data-phase="depart"] .trailx__story { opacity: 0 !important; }
+.trailx[data-phase="depart"] .trailx__progress { opacity: 0 !important; }
 
 .trailx[data-phase] .trailx__controls {
   transition: transform 0.65s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.5s ease;
@@ -504,7 +507,7 @@
   opacity: 0;
   pointer-events: none;
 }
-.trailx[data-phase="stop1"] .trailx__controls {
+.trailx[data-phase="guide"] .trailx__controls {
   transform: none;
   opacity: 1;
 }
@@ -526,7 +529,7 @@
   opacity: 0;
   transition: opacity 0.5s ease;
 }
-.trailx[data-mode="stop1"] .trailx__progress { opacity: 1; }
+.trailx[data-mode^="stop"] .trailx__progress { opacity: 1; }
 .trailx__progress span {
   display: block;
   height: 100%;
@@ -549,7 +552,7 @@
   scrollbar-width: thin;
   scrollbar-color: rgba(212, 175, 106, 0.4) transparent;
 }
-.trailx[data-mode="stop1"] .trailx__story {
+.trailx[data-mode^="stop"] .trailx__story {
   opacity: 1;
   visibility: visible;
   transition: opacity 0.8s ease 0.25s, visibility 0s;
@@ -710,6 +713,44 @@
   font-size: calc(clamp(0.98rem, 1.5vw, 1.14rem) * var(--tx-font-scale, 1));
   line-height: 1.62;
   text-shadow: 0 2px 14px rgba(0, 0, 0, 0.55);
+}
+
+/* Rule list (Stop 2 · museum courtesies) — landing-style quiet rows */
+.trailx__list {
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+  max-width: 34rem;
+}
+.trailx__list li {
+  position: relative;
+  padding: 0.42rem 0 0.42rem 1.3rem;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: "Cormorant Garamond", serif;
+  font-size: calc(1.02rem * var(--tx-font-scale, 1));
+  line-height: 1.45;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  border-bottom: 1px solid rgba(212, 175, 106, 0.16);
+}
+.trailx__list li:last-child { border-bottom: 0; }
+.trailx__list li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 1.05em;
+  width: 7px;
+  height: 7px;
+  transform: rotate(45deg);
+  background: rgba(212, 175, 106, 0.75);
+}
+
+/* Fine print (contact channels etc.) */
+.trailx__chapter-copy--fine {
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.78rem * var(--tx-font-scale, 1));
+  line-height: 1.55;
+  color: rgba(255, 255, 255, 0.7);
+  word-break: break-word;
 }
 
 /* Chapter dots — right-edge rail, like the landing */
@@ -1154,6 +1195,13 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__stat-value { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
   /* A touch tighter body text so the fuller chapters breathe on phones. */
   .trailx__chapter-copy { line-height: 1.5; margin-bottom: 0.7rem; }
+  .trailx__list li {
+    padding: 0.3rem 0 0.3rem 1.1rem;
+    font-size: calc(0.92rem * var(--tx-font-scale, 1));
+    line-height: 1.38;
+  }
+  .trailx__list li::before { width: 6px; height: 6px; top: 0.95em; }
+  .trailx__chapter-copy--fine { font-size: calc(0.7rem * var(--tx-font-scale, 1)); }
   .trailx__pano .tour-ground-hotspot--compact { width: 1.9rem; height: 1.9rem; }
   .trailx__pano .tour-floating-image-window-hotspot { width: clamp(9.5rem, 28vw, 12rem) !important; }
   .tour-floating-image-window { border-radius: 1rem; }

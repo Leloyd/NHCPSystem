@@ -49,8 +49,32 @@ const SCRIPTS = {
     tl: "Ang arko, ang rehas, ang pader, at ang daanang papasok — apat na bahagi ng pasukan na naghihiwalay sa bayan mula sa himlayang ito. Pindutin ang bawat isa upang mapagmasdan.",
   },
   's1-next': {
-    en: "That completes our first stop. When Stop Two opens, we will step inside and register at the museum. Salamat — thank you for walking this far with me.",
-    tl: "Tapos na ang ating unang hinto. Kapag nabuksan na ang Ikalawang Hinto, papasok tayo at magpapatala sa museo. Salamat sa paglalakad kasama ko.",
+    en: "That completes our first stop. When you are ready, come with me to the museum — we will register your visit there. Tap Continue and let us walk together.",
+    tl: "Tapos na ang ating unang hinto. Kapag handa ka na, sumama ka sa akin sa museo — doon natin itatala ang iyong pagbisita. Pindutin ang Magpatuloy at sabay tayong maglakad.",
+  },
+  's2-arrive': {
+    en: "Welcome to the second stop — the museum grounds. Look around, and find the glowing ring on the ground to walk up to the entrance. Then scroll down, and I will show you how the museum welcomes its visitors.",
+    tl: "Maligayang pagdating sa ikalawang hinto — ang bakuran ng museo. Lumingon-lingon, at hanapin ang kumikinang na singsing sa lupa upang lumapit sa pasukan. Pagkatapos, mag-scroll pababa at ipapakita ko kung paano tinatanggap ng museo ang mga bisita nito.",
+  },
+  's2-registration': {
+    en: "At the entrance, the staff will hand you the right form — the daily log for regular visits, a permission form for shoots and research, a short survey after your visit, or a booking form for groups.",
+    tl: "Sa pasukan, iaabot sa iyo ng mga tauhan ang tamang form — ang talaan para sa karaniwang pagbisita, pahintulot para sa mga shoot at pananaliksik, maikling sarbey pagkatapos ng iyong pagbisita, o booking form para sa mga grupo.",
+  },
+  's2-hours': {
+    en: "The museum is open from Tuesday to Sunday, eight in the morning until four in the afternoon, and rests on Mondays. Admission is free for everyone.",
+    tl: "Bukas ang museo mula Martes hanggang Linggo, alas-otso ng umaga hanggang alas-kuwatro ng hapon, at sarado tuwing Lunes. Libre ang pagpasok para sa lahat.",
+  },
+  's2-rules': {
+    en: "A few simple courtesies: keep quiet, remove your hat, no flash, do not touch the artifacts, and no food or drinks inside. Sign the logbook, and follow the staff at all times.",
+    tl: "Ilang simpleng alituntunin: manahimik, alisin ang sumbrero, bawal ang flash, huwag hawakan ang mga artepakto, at bawal ang pagkain o inumin sa loob. Pumirma sa logbook, at laging sundin ang mga tauhan.",
+  },
+  's2-service': {
+    en: "This museum is cared for by the National Historical Commission of the Philippines. Public service here follows clear rules — no smoking, no fixers, no noon break, and no red tape. If anything goes wrong, the complaint channels are posted for you.",
+    tl: "Pinangangalagaan ang museong ito ng National Historical Commission of the Philippines. Malinaw ang serbisyo publiko rito — bawal manigarilyo, walang fixer, tuloy ang serbisyo sa tanghali, at bawal ang red tape. Kung may problema, nakapaskil ang mga daluyan ng reklamo para sa iyo.",
+  },
+  's2-next': {
+    en: "That completes our second stop. When Stop Three opens, we will step inside and meet the artifacts. Salamat — see you at the next stop.",
+    tl: "Tapos na ang ating ikalawang hinto. Kapag nabuksan na ang Ikatlong Hinto, papasok tayo at makikilala ang mga artepakto. Salamat — kita tayo sa susunod na hinto.",
   },
 };
 
@@ -68,11 +92,8 @@ const subsBtn = root.querySelector('[data-trail-subs]');
 const textSizeBtn = root.querySelector('[data-trail-textsize]');
 const beginLink = root.querySelector('[data-trail-begin]');
 const cancelLink = root.querySelector('[data-trail-cancel]');
-const storyEl = root.querySelector('[data-trail-story]');
+const storyEls = Array.from(root.querySelectorAll('[data-trail-story]'));
 const progressEl = root.querySelector('[data-trail-progress] span');
-const scrollHint = root.querySelector('[data-trail-hint]');
-const nextBtn = root.querySelector('[data-trail-next]');
-const nextNote = root.querySelector('[data-trail-next-note]');
 const zoomInBtn = root.querySelector('[data-trail-zoom-in]');
 const zoomOutBtn = root.querySelector('[data-trail-zoom-out]');
 
@@ -94,10 +115,15 @@ let currentScene = 'aerial';
 let transitioning = false; // true during the Begin pan + scene crossfade
 let scrollYaw = 0;         // scroll-linked yaw offset while reading Stop 1
 
-/* Refreshing while reading Stop 1 keeps you in Stop 1: entering it stamps
-   #stop-1-orientation on the URL, and on load that hash restores the stop
-   directly (FrontGate 360 as the first scene, no intro). */
-const wantsStop1 = /stop-1/.test(window.location.hash);
+/* Refreshing while reading a stop keeps you in that stop: entering one stamps
+   #stop-N on the URL, and on load that hash restores the stop directly (its
+   360 as the first scene, no intro). */
+const hashStopNum = (window.location.hash.match(/stop-(\d+)/) || [])[1];
+const wantsStop = hashStopNum ? `stop${hashStopNum}` : null;
+
+/* Per-stop story engines + the scroller currently on screen. */
+const storyApis = {};
+let activeStoryEl = null;
 
 /* Character handle (populated by initCharacter) */
 const charApi = {};
@@ -377,13 +403,25 @@ const FG = {
 if (!Number.isFinite(FG.yaw)) FG.yaw = -10.2;
 if (!Number.isFinite(FG.pitch)) FG.pitch = 1.8;
 
-// Where the idle view settles per scene while Stop 1 is active.
+// MiddleG-Museum start view (same numbers as the heritage page's Stop 2).
+const M2 = { yaw: -100, pitch: -5, hfov: 100 };
+
+// Where the idle view settles per scene while a stop is active.
 const SCENE_BASE = {
   frontGate: { yaw: FG.yaw, pitch: FG.pitch },
   rightFrontGate: { yaw: 90, pitch: -20 },
+  middleGMuseum: { yaw: M2.yaw, pitch: M2.pitch },
+  frontMuseum: { yaw: 0, pitch: 0 },
 };
 // Default zoom per scene — Show Panels eases back to this before restoring.
-const SCENE_HFOV = { aerial: 100, frontGate: FG.hfov, rightFrontGate: 100 };
+const SCENE_HFOV = { aerial: 100, frontGate: FG.hfov, rightFrontGate: 100, middleGMuseum: 100, frontMuseum: 100 };
+
+// Per-stop config: which 360 the stop opens on, its entry view, and the hash
+// that restores the stop on refresh. The scroll-lean follows the stop's scene.
+const STOP_CONF = {
+  stop1: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-1' },
+  stop2: { scene: 'middleGMuseum', pitch: M2.pitch, yaw: M2.yaw, hfov: M2.hfov, hash: '#stop-2' },
+};
 
 const isImmersive = () => root.getAttribute('data-immersive') === 'true';
 
@@ -427,22 +465,45 @@ function zoomBy(delta, ms = 220) {
 zoomInBtn?.addEventListener('click', () => zoomBy(-10));
 zoomOutBtn?.addEventListener('click', () => zoomBy(10));
 
-/* --- Stop 1 entry ------------------------------------------------------------ */
-function enterStop1() {
+/* --- Stop entry / transitions ------------------------------------------------ */
+function enterStop(stopId) {
   transitioning = false;
-  if (state.mode === 'stop1') return;
-  state.mode = 'stop1';
-  root.setAttribute('data-mode', 'stop1');
-  root.setAttribute('data-phase', 'stop1'); // brings Ana + controls back in
-  if (storyEl) storyEl.hidden = false;
-  try { history.replaceState(null, '', '#stop-1-orientation'); } catch { /* ignore */ }
-  charApi.reenter?.();                       // Ana glides in from the right again
+  const conf = STOP_CONF[stopId];
+  if (!conf || state.mode === stopId) return;
+  state.mode = stopId;
+  root.setAttribute('data-mode', stopId);
+  root.setAttribute('data-phase', 'guide'); // brings Ana + controls back in
+  storyEls.forEach((el) => { el.hidden = el.getAttribute('data-trail-story') !== stopId; });
+  activeStoryEl = storyEls.find((el) => !el.hidden) || null;
+  try { history.replaceState(null, '', conf.hash); } catch { /* ignore */ }
+  charApi.reenter?.();                       // Ana glides in from the side again
   window.setTimeout(() => charApi.playGesture?.('greet'), 1000);
-  storyApi.reset?.();                        // activate step 0 → Ana narrates the arrival
+  storyApis[stopId]?.reset();                // step 0 → Ana narrates the arrival
 }
 
-function beginStop1() {
-  if (state.mode === 'stop1' || root.getAttribute('data-phase') === 'depart') return;
+/* Stop → stop: the guide slides out, the 360 crossfades to the next stop's
+   scene, and everything slides back in with the new chapters. */
+function transitionToStop(stopId) {
+  const conf = STOP_CONF[stopId];
+  if (!conf || state.mode === stopId || root.getAttribute('data-phase') === 'depart') return;
+  stopSpeaking();
+  if (!viewer) { enterStop(stopId); return; }
+  transitioning = true;
+  root.setAttribute('data-phase', 'depart');
+  window.setTimeout(() => {
+    try {
+      viewer.loadScene(conf.scene, conf.pitch, conf.yaw, conf.hfov);
+      window.setTimeout(() => enterStop(stopId), prefersReducedMotion ? 120 : 1300);
+    } catch (err) {
+      console.warn('[Trail] Scene change failed:', err);
+      enterStop(stopId);
+    }
+  }, prefersReducedMotion ? 0 : 650);
+}
+
+/* Intro → Stop 1: the aerial view swoops down onto the gate first. */
+function beginTrail() {
+  if (state.mode !== 'intro' || root.getAttribute('data-phase') === 'depart') return;
   stopSpeaking();
   // No panorama? Fall back to the old page transition so Begin never dead-ends.
   if (!viewer) { leaveTo(beginLink?.getAttribute('href') || root.getAttribute('data-begin-url'), 'begin'); return; }
@@ -451,10 +512,10 @@ function beginStop1() {
   const crossfade = () => {
     try {
       viewer.loadScene('frontGate', FG.pitch, FG.yaw, FG.hfov);
-      window.setTimeout(enterStop1, prefersReducedMotion ? 120 : 1300);
+      window.setTimeout(() => enterStop('stop1'), prefersReducedMotion ? 120 : 1300);
     } catch (err) {
       console.warn('[Trail] Scene change failed:', err);
-      enterStop1();
+      enterStop('stop1');
     }
   };
   if (prefersReducedMotion) { crossfade(); return; }
@@ -482,7 +543,7 @@ function leaveTo(url, mode) {
     window.setTimeout(() => { window.location.href = url; }, 650);
   }
 }
-beginLink?.addEventListener('click', (e) => { e.preventDefault(); beginStop1(); });
+beginLink?.addEventListener('click', (e) => { e.preventDefault(); beginTrail(); });
 cancelLink?.addEventListener('click', (e) => { e.preventDefault(); leaveTo(cancelLink.getAttribute('href'), 'cancel'); });
 
 /* --- 360 panorama (Pannellum tour: aerial + FrontGate scenes) ---------------- */
@@ -508,6 +569,8 @@ function initPanorama() {
   const rightGateSrc = root.getAttribute('data-pano-right-front-gate') || '';
   const h1ImageSrc = root.getAttribute('data-fg-h1-image') || '';
   const h1AudioSrc = root.getAttribute('data-fg-h1-audio') || '';
+  const midMuseumSrc = root.getAttribute('data-pano-middle-museum') || '';
+  const frontMuseumSrc = root.getAttribute('data-pano-front-museum') || '';
 
   /* Floating image hotspot — ported from the virtual tour (front-gate-hotspot-h1):
      tapping the pulsing marker pins the photo on the wall at the same spot and
@@ -659,12 +722,53 @@ function initPanorama() {
           }],
         };
       }
+      // Stop 2 scenes — museum approach ↔ museum front, same hotspots as the
+      // heritage page's Stop 2 panorama.
+      if (midMuseumSrc) {
+        scenes.middleGMuseum = {
+          type: 'equirectangular',
+          panorama: midMuseumSrc,
+          pitch: M2.pitch,
+          yaw: M2.yaw,
+          hfov: M2.hfov,
+          hotSpots: [
+            ...(frontMuseumSrc ? [{
+              pitch: -25,
+              yaw: -100,
+              type: 'scene',
+              sceneId: 'frontMuseum',
+              cssClass: 'tour-ground-hotspot',
+            }] : []),
+          ],
+        };
+      }
+      if (midMuseumSrc && frontMuseumSrc) {
+        scenes.frontMuseum = {
+          type: 'equirectangular',
+          panorama: frontMuseumSrc,
+          pitch: 0,
+          yaw: 0,
+          hfov: 100,
+          hotSpots: [{
+            pitch: -30,
+            yaw: 173,
+            type: 'scene',
+            sceneId: 'middleGMuseum',
+            targetPitch: -20,
+            targetYaw: 90,
+            targetHfov: 100,
+            cssClass: 'tour-ground-hotspot',
+          }],
+        };
+      }
 
-      const startAtGate = wantsStop1 && !!gateSrc;
-      if (startAtGate) currentScene = 'frontGate';
+      // Refresh restore: open directly on the remembered stop's scene.
+      const startConf = wantsStop ? STOP_CONF[wantsStop] : null;
+      const startScene = startConf && scenes[startConf.scene] ? startConf.scene : 'aerial';
+      currentScene = startScene;
       viewer = window.pannellum.viewer('trailPano', {
         default: {
-          firstScene: startAtGate ? 'frontGate' : 'aerial',
+          firstScene: startScene,
           sceneFadeDuration: prefersReducedMotion ? 0 : 1500,
           autoLoad: true,
           showControls: false,
@@ -728,9 +832,10 @@ function initPanorama() {
                 viewer.setYaw(y, false);
                 const p = viewer.getPitch();
                 viewer.setPitch(p + (startPitch - p) * Math.min(1, dt * PITCH_EASE), false);
-              } else if (state.mode === 'stop1' && SCENE_BASE[currentScene] && !isImmersive()) {
+              } else if (state.mode !== 'intro' && SCENE_BASE[currentScene] && !isImmersive()) {
                 const base = SCENE_BASE[currentScene];
-                const targetYaw = base.yaw + (currentScene === 'frontGate' ? scrollYaw : 0);
+                const stopScene = STOP_CONF[state.mode] ? STOP_CONF[state.mode].scene : '';
+                const targetYaw = base.yaw + (currentScene === stopScene ? scrollYaw : 0);
                 const y = viewer.getYaw();
                 viewer.setYaw(y + (targetYaw - y) * Math.min(1, dt * 0.9), false);
                 const p = viewer.getPitch();
@@ -775,18 +880,20 @@ function initPanorama() {
   img.src = src;
 }
 
-/* --- Stop 1 story: smooth scroll, GSAP chapters, narration, interactions ----- */
+/* --- Stop stories: smooth scroll, chapter engine, narration, interactions ---- */
 
-/* Smoothed wheel scrolling (landing-like glide). The goal accumulates wheel
-   deltas and GSAP eases the scroller toward it; touch stays native. */
+/* Smoothed wheel scrolling (landing-like glide) on whichever stop's story is
+   on screen. The goal accumulates wheel deltas and GSAP eases the scroller
+   toward it; touch stays native. */
 let scrollGoal = null;
 function smoothScrollBy(delta) {
-  if (!storyEl) return;
-  const max = storyEl.scrollHeight - storyEl.clientHeight;
-  const from = scrollGoal === null ? storyEl.scrollTop : scrollGoal;
+  const el = activeStoryEl;
+  if (!el) return;
+  const max = el.scrollHeight - el.clientHeight;
+  const from = scrollGoal === null ? el.scrollTop : scrollGoal;
   scrollGoal = Math.max(0, Math.min(max, from + delta));
   if (window.gsap && !prefersReducedMotion) {
-    window.gsap.to(storyEl, {
+    window.gsap.to(el, {
       scrollTop: scrollGoal,
       duration: 0.75,
       ease: 'power3.out',
@@ -794,23 +901,24 @@ function smoothScrollBy(delta) {
       onComplete: () => { scrollGoal = null; },
     });
   } else {
-    storyEl.scrollTop = scrollGoal;
+    el.scrollTop = scrollGoal;
     scrollGoal = null;
   }
 }
 
-/* The landing page's chapter engine: scroll progress picks the active step;
-   the leaving panel slides up and out, the next rises in from below, and the
-   active panel's children stagger in — all with the landing's exact curves
-   (see trail-start.css). Ana narrates every step she lands on. */
-const storyApi = {};
-function initStory() {
-  if (!storyEl) return;
-  const trackEl = storyEl.querySelector('[data-trail-track]');
-  const dotsWrap = storyEl.querySelector('[data-trail-dots]');
-  const panels = Array.from(storyEl.querySelectorAll('.trailx__chapter'));
+/* The landing page's chapter engine, instantiated once per stop: scroll
+   progress picks the active step; the leaving panel slides up and out, the
+   next rises in from below, and the active panel's children stagger in — all
+   with the landing's exact curves (see trail-start.css). Ana narrates every
+   step she lands on. */
+function setupStory(el) {
+  const stopId = el.getAttribute('data-trail-story') || '';
+  const trackEl = el.querySelector('[data-trail-track]');
+  const dotsWrap = el.querySelector('[data-trail-dots]');
+  const hintEl = el.querySelector('[data-trail-hint]');
+  const panels = Array.from(el.querySelectorAll('.trailx__chapter'));
   const STEPS = panels.length;
-  if (!STEPS) return;
+  if (!STEPS) return null;
   let step = -1;
 
   // Scroll distance per step, sized in real pixels from the story's visible
@@ -819,7 +927,7 @@ function initStory() {
   // (shorter still on touch, where each swipe travels less than a wheel).
   const sizeTrack = () => {
     if (!trackEl) return;
-    const h = storyEl.clientHeight;
+    const h = el.clientHeight;
     if (!h) { trackEl.style.height = `${STEPS * 100}vh`; return; }
     const stepPx = Math.round(h * (window.matchMedia('(max-width: 820px)').matches ? 0.72 : 0.85));
     trackEl.style.height = `${STEPS * stepPx}px`;
@@ -828,11 +936,11 @@ function initStory() {
   window.addEventListener('resize', sizeTrack);
 
   function scrollToStep(index) {
-    const total = storyEl.scrollHeight - storyEl.clientHeight;
+    const total = el.scrollHeight - el.clientHeight;
     const target = Math.max(0, Math.min(total, (index / STEPS) * total + 2));
     if (window.gsap && !prefersReducedMotion) {
       scrollGoal = target;
-      window.gsap.to(storyEl, {
+      window.gsap.to(el, {
         scrollTop: target,
         duration: 0.9,
         ease: 'power3.inOut',
@@ -840,7 +948,7 @@ function initStory() {
         onComplete: () => { scrollGoal = null; },
       });
     } else {
-      storyEl.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      el.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
       scrollGoal = null;
     }
   }
@@ -868,7 +976,7 @@ function initStory() {
       panel.setAttribute('aria-hidden', String(i !== index));
     });
     dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
-    scrollHint?.classList.toggle('is-hidden', index > 0);
+    hintEl?.classList.toggle('is-hidden', index > 0);
     // Ana stands opposite the text panel and glides across on step changes,
     // exactly like the landing's chapter engine. The side also drives the
     // tint's side veil so the text always has shade behind it.
@@ -881,66 +989,32 @@ function initStory() {
     // advancing, so unmuting rejoins mid-sentence; landing behaviour).
     const key = panels[index].getAttribute('data-chapter');
     root.setAttribute('data-step', key || ''); // drives the reading tint depth
-    if (state.mode === 'stop1' && SCRIPTS[key] && key !== state.scriptKey) {
+    if (state.mode === stopId && SCRIPTS[key] && key !== state.scriptKey) {
       state.scriptKey = key;
       narrate({ speakIt: state.unlocked });
     }
   };
 
-  storyApi.reset = () => {
-    sizeTrack(); // the story has just been unhidden — measure for real now
-    storyEl.scrollTop = 0;
-    step = -1;
-    setStep(0);
-  };
-
-  // Scroll → progress → step. Also drives the progress rail + the gate lean.
-  storyEl.addEventListener('scroll', () => {
-    const total = storyEl.scrollHeight - storyEl.clientHeight;
-    const progress = total > 0 ? Math.min(1, Math.max(0, storyEl.scrollTop / total)) : 0;
-    if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
-    scrollYaw = progress * 26;
+  // Scroll → progress → step. Also drives the progress rail + the 360 lean.
+  el.addEventListener('scroll', () => {
+    const total = el.scrollHeight - el.clientHeight;
+    const progress = total > 0 ? Math.min(1, Math.max(0, el.scrollTop / total)) : 0;
+    if (el === activeStoryEl) {
+      if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
+      scrollYaw = progress * 26;
+    }
     setStep(Math.floor(Math.min(STEPS - 1e-4, progress * STEPS)));
   }, { passive: true });
 
-  // One wheel rule for the whole scene:
-  //  - Intro & Full View → the event reaches Pannellum untouched, so its
-  //    native scroll/pinch zoom works exactly like the Virtual Tour page.
-  //  - Stop 1 (reading)  → we capture the wheel before Pannellum sees it and
-  //    glide the story scroller instead (smoothed via GSAP), wherever the
-  //    cursor is, so the panorama gaps scroll too.
-  window.addEventListener('wheel', (e) => {
-    if (isImmersive()) return; // native Pannellum zoom
-    if (state.mode !== 'stop1' || storyEl.hidden) return;
-    e.preventDefault();
-    e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
-    // ×1.5 so each wheel notch travels further — chapters arrive sooner.
-    smoothScrollBy((e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 1.5);
-  }, { passive: false, capture: true });
-
   // Touch/drag inside the story cancels any in-flight glide so it never fights.
-  storyEl.addEventListener('pointerdown', () => {
-    if (window.gsap) window.gsap.killTweensOf(storyEl);
+  el.addEventListener('pointerdown', () => {
+    if (window.gsap) window.gsap.killTweensOf(el);
     scrollGoal = null;
   }, { passive: true });
 
-  // Keyboard: arrows / page / space step through the chapters.
-  window.addEventListener('keydown', (e) => {
-    if (state.mode !== 'stop1' || storyEl.hidden || isImmersive()) return;
-    if (e.target && e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
-    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
-      e.preventDefault();
-      scrollToStep(Math.min(STEPS - 1, step + 1));
-    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
-      e.preventDefault();
-      scrollToStep(Math.max(0, step - 1));
-    }
-  });
-
-
-  // "Reading the Threshold" chips: one detail panel at a time.
-  const chips = Array.from(storyEl.querySelectorAll('[data-detail]'));
-  const detailPanes = Array.from(storyEl.querySelectorAll('[data-detail-panel]'));
+  // Detail chips (e.g. gate elements, registration forms): one pane at a time.
+  const chips = Array.from(el.querySelectorAll('[data-detail]'));
+  const detailPanes = Array.from(el.querySelectorAll('[data-detail-panel]'));
   chips.forEach((chip) => {
     chip.addEventListener('click', () => {
       const key = chip.getAttribute('data-detail');
@@ -949,11 +1023,67 @@ function initStory() {
     });
   });
 
-  // Next stop: Stop 2 lives here soon — tease instead of navigating away.
+  // "Continue" tease for a stop that isn't built yet.
+  const nextBtn = el.querySelector('[data-trail-next]');
+  const nextNote = el.querySelector('[data-trail-next-note]');
   nextBtn?.addEventListener('click', () => {
     nextNote?.removeAttribute('hidden');
     nextBtn.classList.add('is-teased');
     window.setTimeout(() => nextBtn.classList.remove('is-teased'), 700);
+  });
+
+  return {
+    el,
+    stepCount: STEPS,
+    getStep: () => step,
+    scrollToStep,
+    reset() {
+      sizeTrack(); // the story has just been unhidden — measure for real now
+      el.scrollTop = 0;
+      step = -1;
+      setStep(0);
+    },
+  };
+}
+
+function initStories() {
+  storyEls.forEach((el) => {
+    const api = setupStory(el);
+    if (api) storyApis[el.getAttribute('data-trail-story')] = api;
+  });
+
+  // One wheel rule for the whole scene:
+  //  - Intro & Full View → the event reaches Pannellum untouched, so its
+  //    native scroll/pinch zoom works exactly like the Virtual Tour page.
+  //  - Reading a stop   → we capture the wheel before Pannellum sees it and
+  //    glide the active story instead (smoothed via GSAP), wherever the
+  //    cursor is, so the panorama gaps scroll too.
+  window.addEventListener('wheel', (e) => {
+    if (isImmersive()) return; // native Pannellum zoom
+    if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
+    e.preventDefault();
+    e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
+    // ×1.5 so each wheel notch travels further — chapters arrive sooner.
+    smoothScrollBy((e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 1.5);
+  }, { passive: false, capture: true });
+
+  // Keyboard: arrows / page / space step through the active stop's chapters.
+  window.addEventListener('keydown', (e) => {
+    const api = storyApis[state.mode];
+    if (!api || api.el !== activeStoryEl || api.el.hidden || isImmersive()) return;
+    if (e.target && e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
+    if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+      e.preventDefault();
+      api.scrollToStep(Math.min(api.stepCount - 1, api.getStep() + 1));
+    } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+      e.preventDefault();
+      api.scrollToStep(Math.max(0, api.getStep() - 1));
+    }
+  });
+
+  // Stop-to-stop travel (e.g. Stop 1's "Continue to Stop 2").
+  root.querySelectorAll('[data-trail-goto]').forEach((btn) => {
+    btn.addEventListener('click', () => transitionToStop(btn.getAttribute('data-trail-goto')));
   });
 }
 
@@ -1184,7 +1314,7 @@ function initCharacter() {
 narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();
-initStory();
-if (wantsStop1) enterStop1(); // refreshed mid-stop → restore Stop 1 directly
+initStories();
+if (wantsStop && STOP_CONF[wantsStop]) enterStop(wantsStop); // refresh → restore the stop
 attemptAutoSpeak();          // auto-play like the landing page…
 setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it

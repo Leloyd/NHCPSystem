@@ -38,6 +38,8 @@
       data-pano-right-front-gate="{{ url_for('virtual_tour_file', filename='right-FrontGate.jpg') }}"
       data-fg-h1-image="{{ url_for('virtual_tour_hotspot_file', filename='FrontGateHotspot/H1.jpg') }}"
       data-fg-h1-audio="{{ url_for('virtual_tour_hotspot_file', filename='FrontGateHotspot/FrontGateH1.mp3') }}"
+      data-pano-middle-museum="{{ url_for('virtual_tour_file', filename='MiddleG-Museum.jpg') }}"
+      data-pano-front-museum="{{ url_for('virtual_tour_file', filename='FrontMuseum.jpg') }}"
       data-model-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-idle-1K.glb"
       data-greet-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-greet-1k.glb"
       data-heart-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-heart-1k.glb"
@@ -116,7 +118,7 @@
            the invisible track below provides the scroll distance. Scrolling swaps
            chapters in place (leaving panel slides up/out, next rises in, children
            stagger) — exactly the landing page's chapter engine. ==================== -->
-      <div class="trailx__story" data-trail-story aria-label="Stop 1 — The Front Gates" hidden>
+      <div class="trailx__story" data-trail-story="stop1" aria-label="Stop 1 — The Front Gates" hidden>
         <div class="trailx__stage" data-trail-stage>
           <!-- Step 0 · Arrive: the 360 speaks for itself; the title sits low -->
           <header class="trailx__chapter trailx__chapter--hero" data-chapter="s1-arrive" data-side="left" data-title="Arrive">
@@ -247,16 +249,12 @@
               Lampas sa tarangkahan, patungo ang landas sa museo — kung saan itatala ang iyong pagbisita at matututuhan kung paano tinatanggap ng pook ang mga panauhin nito.
             </p>
             <div class="trailx__actions">
-              <button class="trailx__begin" data-trail-next type="button">
+              <button class="trailx__begin" data-trail-goto="stop2" type="button">
                 <span data-lang-en>Continue to Stop 2</span>
                 <span data-lang-tl>Magpatuloy sa Hinto 2</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
             </div>
-            <p class="trailx__next-note" data-trail-next-note hidden>
-              <span data-lang-en>Stop 2 is still being prepared — it will open right here soon.</span>
-              <span data-lang-tl>Inihahanda pa ang Hinto 2 — malapit na itong buksan mismo dito.</span>
-            </p>
           </footer>
 
           <!-- Chapter dots (like the landing) -->
@@ -270,7 +268,185 @@
         <!-- Invisible track: gives the story its scroll distance -->
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>
       </div>
-      <!-- ========================== End Stop 1 · Orientation ========================== -->
+      <!-- ========================== End Stop 1 · The Front Gates ========================== -->
+
+      <!-- ============ Stop 2 · Museum Registration & Visitor Guidance ============
+           Same engine as Stop 1, over the museum-approach 360s. -->
+      <div class="trailx__story" data-trail-story="stop2" aria-label="Stop 2 — Museum Registration &amp; Visitor Guidance" hidden>
+        <div class="trailx__stage" data-trail-stage>
+          <!-- Step 0 · Arrive at the museum grounds -->
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s2-arrive" data-side="left" data-title="Arrive">
+            <p class="trailx__s1-kicker"><span data-lang-en>Stop 2 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 2 ng 10 · Landas ng Pamana</span></p>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
+              <span data-lang-en>Museum Registration<br /><em>&amp; Visitor Guidance</em></span>
+              <span data-lang-tl>Pagpapatala sa Museo<br /><em>at Gabay sa Bisita</em></span>
+            </h2>
+            <p class="trailx__s1-tip">
+              <span data-lang-en>Drag to look around · Find the glowing ring on the ground to walk up to the museum entrance</span>
+              <span data-lang-tl>I-drag upang lumingon · Hanapin ang kumikinang na singsing sa lupa upang lumapit sa pasukan ng museo</span>
+            </p>
+          </header>
+
+          <!-- Chapter I · Registering Your Visit (interactive forms) -->
+          <article class="trailx__chapter" data-chapter="s2-registration" data-side="left" data-title="Forms">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Museum · I</span><span data-lang-tl>Ang Museo · I</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Registering<br /><em>Your Visit</em></span>
+              <span data-lang-tl>Pagpapatala ng<br /><em>Iyong Pagbisita</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              At the museum entrance, the staff will guide you to the correct form depending on the purpose of your visit. Tap each form to see what it is for.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Sa pasukan ng museo, gagabayan ka ng mga tauhan sa tamang form depende sa layunin ng iyong pagbisita. Pindutin ang bawat form upang makita kung para saan ito.
+            </p>
+            <div class="trailx__chips" role="group" aria-label="Registration forms">
+              <button class="trailx__chip" type="button" data-detail="log" aria-pressed="true"><span data-lang-en>Visitor's Log</span><span data-lang-tl>Talaan ng Bisita</span></button>
+              <button class="trailx__chip" type="button" data-detail="permission" aria-pressed="false"><span data-lang-en>Permission Form</span><span data-lang-tl>Pahintulot</span></button>
+              <button class="trailx__chip" type="button" data-detail="survey" aria-pressed="false"><span data-lang-en>Survey</span><span data-lang-tl>Sarbey</span></button>
+              <button class="trailx__chip" type="button" data-detail="booking" aria-pressed="false"><span data-lang-en>Tour Booking</span><span data-lang-tl>Pag-book ng Tour</span></button>
+            </div>
+            <div class="trailx__detail">
+              <p data-detail-panel="log">
+                <span data-lang-en>The daily sign-in sheet at the entrance. Visitors write their name, address, nationality, sex, school or company, and group size so the museum can keep a record of its daily guests.</span>
+                <span data-lang-tl>Ang pang-araw-araw na talaan sa pasukan. Isinusulat ng mga bisita ang kanilang pangalan, tirahan, nasyonalidad, kasarian, paaralan o kompanya, at bilang ng grupo upang maitala ng museo ang mga panauhin nito.</span>
+              </p>
+              <p data-detail-panel="permission" hidden>
+                <span data-lang-en>For special requests such as video or photo shoots, interviews, surveys, or research use of the museum. It explains the request and records the approval of the NHCP staff.</span>
+                <span data-lang-tl>Para sa mga espesyal na kahilingan tulad ng video o photo shoot, panayam, sarbey, o paggamit ng museo para sa pananaliksik. Ipinapaliwanag nito ang kahilingan at itinatala ang pahintulot ng mga tauhan ng NHCP.</span>
+              </p>
+              <p data-detail-panel="survey" hidden>
+                <span data-lang-en>A short feedback form after your visit or transaction. It helps the museum improve its service, staff assistance, and facilities.</span>
+                <span data-lang-tl>Isang maikling feedback form pagkatapos ng iyong pagbisita o transaksyon. Nakakatulong ito sa museo na mapabuti ang serbisyo, tulong ng mga tauhan, at mga pasilidad.</span>
+              </p>
+              <p data-detail-panel="booking" hidden>
+                <span data-lang-en>For scheduled group visits. It records the requested date and time, the school or agency, contact details, group size, and the status of the booking.</span>
+                <span data-lang-tl>Para sa mga nakatakdang pagbisita ng grupo. Itinatala nito ang hiniling na petsa at oras, ang paaralan o ahensya, mga detalye ng contact, bilang ng grupo, at ang katayuan ng booking.</span>
+              </p>
+            </div>
+          </article>
+
+          <!-- Chapter II · Hours & Admission -->
+          <article class="trailx__chapter" data-chapter="s2-hours" data-side="right" data-title="Hours">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Museum · II</span><span data-lang-tl>Ang Museo · II</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Hours &amp;<br /><em>Admission</em></span>
+              <span data-lang-tl>Oras at<br /><em>Pagpasok</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              The museum welcomes visitors six days a week, and entry is free — heritage here is for everyone.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Tinatanggap ng museo ang mga bisita anim na araw bawat linggo, at libre ang pagpasok — ang pamana rito ay para sa lahat.
+            </p>
+            <div class="trailx__stats">
+              <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Open</span><span data-lang-tl>Bukas</span></span><span class="trailx__stat-value"><span data-lang-en>Tue – Sun</span><span data-lang-tl>Martes – Linggo</span></span></div>
+              <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Hours</span><span data-lang-tl>Oras</span></span><span class="trailx__stat-value">8:00 AM – 4:00 PM</span></div>
+              <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Closed</span><span data-lang-tl>Sarado</span></span><span class="trailx__stat-value"><span data-lang-en>Monday</span><span data-lang-tl>Lunes</span></span></div>
+              <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Admission</span><span data-lang-tl>Pagpasok</span></span><span class="trailx__stat-value"><span data-lang-en>Free for All</span><span data-lang-tl>Libre para sa Lahat</span></span></div>
+            </div>
+          </article>
+
+          <!-- Chapter III · Museum Rules -->
+          <article class="trailx__chapter" data-chapter="s2-rules" data-side="left" data-title="Rules">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Museum · III</span><span data-lang-tl>Ang Museo · III</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Inside the<br /><em>Museum</em></span>
+              <span data-lang-tl>Sa Loob ng<br /><em>Museo</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              A few simple courtesies keep the museum safe and solemn for everyone:
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Ilang simpleng alituntunin ang nagpapanatiling ligtas at taimtim ang museo para sa lahat:
+            </p>
+            <ul class="trailx__list">
+              <li><span data-lang-en>Keep silent and be mindful of other guests.</span><span data-lang-tl>Manahimik at maging maalalahanin sa ibang bisita.</span></li>
+              <li><span data-lang-en>Remove hats and caps as a sign of respect.</span><span data-lang-tl>Alisin ang sumbrero at cap bilang tanda ng paggalang.</span></li>
+              <li><span data-lang-en>No flash photography — shoots need the museum's permission.</span><span data-lang-tl>Bawal ang flash — kailangan ng pahintulot ng museo ang mga shoot.</span></li>
+              <li><span data-lang-en>Do not touch the displays and artifacts.</span><span data-lang-tl>Huwag hawakan ang mga display at artepakto.</span></li>
+              <li><span data-lang-en>No food or drinks inside the museum and chapel.</span><span data-lang-tl>Bawal ang pagkain o inumin sa loob ng museo at kapilya.</span></li>
+              <li><span data-lang-en>Sign the logbook and follow the staff at all times.</span><span data-lang-tl>Pumirma sa logbook at laging sundin ang mga tauhan.</span></li>
+            </ul>
+          </article>
+
+          <!-- Chapter IV · Public Service Corner -->
+          <article class="trailx__chapter" data-chapter="s2-service" data-side="right" data-title="Service">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Museum · IV</span><span data-lang-tl>Ang Museo · IV</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Public Service<br /><em>Corner</em></span>
+              <span data-lang-tl>Sulok ng<br /><em>Serbisyo Publiko</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              The museum is cared for by the National Historical Commission of the Philippines (NHCP), which protects the country's historic sites. Posted notices remind everyone how public service works here:
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Pinangangalagaan ang museo ng National Historical Commission of the Philippines (NHCP), na nag-iingat sa mga makasaysayang pook ng bansa. Ipinapaalala ng mga nakapaskil na abiso kung paano ang serbisyo publiko rito:
+            </p>
+            <div class="trailx__stats">
+              <div class="trailx__stat"><span class="trailx__stat-label">CSC</span><span class="trailx__stat-value"><span data-lang-en>No Smoking</span><span data-lang-tl>Bawal Manigarilyo</span></span></div>
+              <div class="trailx__stat"><span class="trailx__stat-label">CSC</span><span class="trailx__stat-value"><span data-lang-en>No Fixer</span><span data-lang-tl>Bawal ang Fixer</span></span></div>
+              <div class="trailx__stat"><span class="trailx__stat-label">CSC</span><span class="trailx__stat-value"><span data-lang-en>No Noon Break</span><span data-lang-tl>Tuloy ang Serbisyo sa Tanghali</span></span></div>
+              <div class="trailx__stat"><span class="trailx__stat-label">ARTA</span><span class="trailx__stat-value">Bawal ang Red Tape</span></div>
+            </div>
+            <p class="trailx__chapter-copy trailx__chapter-copy--fine" data-lang-en>
+              Have a concern? Answer the satisfaction form, approach the staff, or reach the Contact Center ng Bayan — text 0908-8816565, call 1-6565, or visit www.contactcenterngbayan.gov.ph.
+            </p>
+            <p class="trailx__chapter-copy trailx__chapter-copy--fine" data-lang-tl>
+              May reklamo o alalahanin? Sagutan ang satisfaction form, lumapit sa mga tauhan, o makipag-ugnayan sa Contact Center ng Bayan — mag-text sa 0908-8816565, tumawag sa 1-6565, o bisitahin ang www.contactcenterngbayan.gov.ph.
+            </p>
+          </article>
+
+          <!-- Step 5 · Next stop -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s2-next" data-title="Next">
+            <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 3</span><span data-lang-tl>Susunod · Hinto 3</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Museum Artifact<br /><em>Interpretation</em></span>
+              <span data-lang-tl>Interpretasyon ng mga<br /><em>Artefakto ng Museo</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Inside, the collection waits — artifacts that connect burial customs, faith, and the memory of the community.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Sa loob, naghihintay ang koleksyon — mga artefaktong nag-uugnay sa mga kaugalian sa paglilibing, pananampalataya, at gunita ng pamayanan.
+            </p>
+            <div class="trailx__actions">
+              <button class="trailx__begin" data-trail-next type="button">
+                <span data-lang-en>Continue to Stop 3</span>
+                <span data-lang-tl>Magpatuloy sa Hinto 3</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+            <p class="trailx__next-note" data-trail-next-note hidden>
+              <span data-lang-en>Stop 3 is still being prepared — it will open right here soon.</span>
+              <span data-lang-tl>Inihahanda pa ang Hinto 3 — malapit na itong buksan mismo dito.</span>
+            </p>
+          </footer>
+
+          <!-- Chapter dots -->
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 2 sections"></nav>
+
+          <!-- Scroll hint -->
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true">
+            <span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span>
+          </div>
+        </div>
+        <!-- Invisible track: gives the story its scroll distance -->
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+      </div>
+      <!-- ========== End Stop 2 · Museum Registration & Visitor Guidance ========== -->
 
       <!-- Guide controls (same family as the landing page) -->
       <div class="trailx__controls">
