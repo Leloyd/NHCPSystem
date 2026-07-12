@@ -974,7 +974,8 @@ function initCharacter() {
   const CAM_Y = mobile ? 1.42 : 1.5;
   const LOOK_AT_Y = mobile ? 1.4 : 1.35;
   const LOOK = mobile ? 0.35 : 0.2; // how far the camera swings toward Ana
-  const SIDE_PCT = mobile ? { right: 92, left: 8 } : { right: 82, left: 18 };
+  const SIDE_PCT = { right: 92, left: 8 }; // mobile edge-hug (landing values)
+  const DESKTOP_X = 1.15; // desktop keeps her original fixed stance
   let currentSide = 'right';
   const modelTarget = { x: 0, rotY: BASE_ROT_Y - 0.42 };
   let renderer, scene, camera, mixer, clock, avatar;
@@ -984,16 +985,17 @@ function initCharacter() {
   const gestures = {};
   const pointer = { x: 0, y: 0 };
 
+  // Mobile: landing formula — screen % → world X, undoing the camera's
+  // partial swing toward her, so she hugs the edge exactly like the landing.
   const worldXAt = (pct) => {
     const aspect = Math.max(canvasWrap.clientWidth, 1) / Math.max(canvasWrap.clientHeight, 1);
     const halfW = Math.tan((FOV * Math.PI) / 360) * CAM_Z * aspect;
-    const frac = (pct - 50) / 50;
-    // Landing formula: undo the camera's partial swing toward her (mobile);
-    // desktop keeps a small inset so her arms never clip at the edge.
-    return mobile ? (frac * halfW) / (1 - LOOK) : frac * halfW * 0.9;
+    return (((pct - 50) / 50) * halfW) / (1 - LOOK);
   };
   const applySide = () => {
-    modelTarget.x = worldXAt(SIDE_PCT[currentSide]);
+    modelTarget.x = mobile
+      ? worldXAt(SIDE_PCT[currentSide])
+      : (currentSide === 'right' ? DESKTOP_X : -DESKTOP_X);
     // Face the camera, angled slightly toward the text panel (landing values).
     modelTarget.rotY = BASE_ROT_Y + (currentSide === 'right' ? -0.42 : 0.42);
   };
