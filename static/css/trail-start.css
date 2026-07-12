@@ -563,6 +563,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100dvh; /* follow the mobile URL bar, like the landing viewport */
   pointer-events: none;
 }
 .trailx__track { height: 600vh; } /* fallback; JS sets the exact height */
@@ -1097,7 +1098,9 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__immersive-label-hide { display: none !important; }
   .trailx__zoom .trailx-btn { width: 34px; }
 
-  /* Stop 1 on small screens: panels anchor to the bottom, like the landing */
+  /* Stop 1 on small screens: panels anchor to the bottom, like the landing.
+     Content is pinned down with margin-top:auto (not justify-content) so a
+     chapter taller than the screen scrolls internally instead of spilling. */
   .trailx[data-phase] .trailx__panel { transform: translateX(-130%); }
   .trailx__chapter,
   .trailx__chapter[data-side="left"],
@@ -1107,11 +1110,19 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     left: 1.1rem;
     right: 2.3rem; /* clears the chapter dots on the right edge */
     margin: 0;
-    justify-content: flex-end;
+    justify-content: flex-start;
     align-items: stretch;
     text-align: left;
     padding: 5rem 0 9.6rem; /* room for the subtitle chip + controls below */
+    overflow-y: auto;
+    overscroll-behavior: contain;
+    scrollbar-width: none;
   }
+  .trailx__chapter > :first-child { margin-top: auto; }
+  /* The side veils are a desktop treatment — stacked with the tint and the
+     bottom sheet they made mobile far too dark (the landing has no veils). */
+  .trailx__tint::before,
+  .trailx__tint::after { display: none; }
   /* Bottom sheet behind the text — same as the landing's mobile chapters. */
   .trailx__chapter::before,
   .trailx__chapter--hero::before,

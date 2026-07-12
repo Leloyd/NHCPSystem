@@ -808,8 +808,17 @@ function initStory() {
   const panels = Array.from(storyEl.querySelectorAll('.trailx__chapter'));
   const STEPS = panels.length;
   if (!STEPS) return;
-  if (trackEl) trackEl.style.height = `${STEPS * 100}vh`; // one screen of scroll per step
   let step = -1;
+
+  // One screen of scroll per step, sized in real pixels from the story's
+  // visible height so the mobile URL bar (dvh) never desyncs the steps.
+  const sizeTrack = () => {
+    if (!trackEl) return;
+    const h = storyEl.clientHeight;
+    trackEl.style.height = h ? `${STEPS * h}px` : `${STEPS * 100}vh`;
+  };
+  sizeTrack();
+  window.addEventListener('resize', sizeTrack);
 
   function scrollToStep(index) {
     const total = storyEl.scrollHeight - storyEl.clientHeight;
@@ -872,6 +881,7 @@ function initStory() {
   };
 
   storyApi.reset = () => {
+    sizeTrack(); // the story has just been unhidden — measure for real now
     storyEl.scrollTop = 0;
     step = -1;
     setStep(0);
