@@ -79,6 +79,29 @@
 .trailx[data-mode="stop1"] .trailx__tint { opacity: 1; }
 .trailx[data-mode="stop1"][data-step="s1-arrive"] .trailx__tint { opacity: 0.32; }
 .trailx[data-immersive="true"] .trailx__tint { opacity: 0 !important; }
+
+/* Side veil riding on the tint: deepens whichever side the active chapter's
+   text sits on (data-panel-side, set per step from JS), so right-side
+   chapters get the same shade as left-side ones. Crossfades on side change;
+   off on the arrival step, where the tint stays light. */
+.trailx__tint::before,
+.trailx__tint::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  transition: opacity 0.9s ease;
+}
+.trailx__tint::before {
+  background: linear-gradient(90deg, rgba(13, 10, 4, 0.78) 0%, rgba(13, 10, 4, 0.48) 34%, rgba(13, 10, 4, 0) 64%);
+}
+.trailx__tint::after {
+  background: linear-gradient(270deg, rgba(13, 10, 4, 0.78) 0%, rgba(13, 10, 4, 0.48) 34%, rgba(13, 10, 4, 0) 64%);
+}
+.trailx[data-mode="stop1"][data-panel-side="left"] .trailx__tint::before { opacity: 1; }
+.trailx[data-mode="stop1"][data-panel-side="right"] .trailx__tint::after { opacity: 1; }
+.trailx[data-step="s1-arrive"] .trailx__tint::before,
+.trailx[data-step="s1-arrive"] .trailx__tint::after { opacity: 0 !important; }
 .trailx__grain {
   position: absolute;
   inset: -2%;

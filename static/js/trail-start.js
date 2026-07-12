@@ -776,9 +776,13 @@ function initStory() {
     dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
     scrollHint?.classList.toggle('is-hidden', index > 0);
     // Ana stands opposite the text panel and glides across on step changes,
-    // exactly like the landing's chapter engine.
-    const textSide = panels[index].getAttribute('data-side') || 'left';
+    // exactly like the landing's chapter engine. The side also drives the
+    // tint's side veil so the text always has shade behind it.
+    const sideAttr = panels[index].getAttribute('data-side');
+    const textSide = sideAttr || 'left';
     charApi.setSide?.(textSide === 'left' ? 'right' : 'left');
+    if (sideAttr) root.setAttribute('data-panel-side', sideAttr);
+    else root.removeAttribute('data-panel-side'); // centered footer: even tint only
     // Auto-narrate the step being read — even muted (silent playback keeps
     // advancing, so unmuting rejoins mid-sentence; landing behaviour).
     const key = panels[index].getAttribute('data-chapter');
