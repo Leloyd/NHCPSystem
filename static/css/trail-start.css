@@ -1082,7 +1082,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     bottom: calc(0.85rem + env(safe-area-inset-bottom, 0px));
     gap: 0.4rem;
     justify-content: flex-start;
-    flex-wrap: wrap; /* very narrow screens: wrap rather than clip */
+    flex-wrap: nowrap; /* one aligned row, always */
   }
   .trailx-btn {
     height: 34px;
@@ -1093,6 +1093,11 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     flex: 0 0 auto;
   }
   .trailx-btn svg { width: 13px; height: 13px; }
+  /* Icon-only Listen + Full View on phones so the row always fits one line
+     (their aria-labels still describe them). */
+  .trailx-btn--primary span,
+  .trailx__immersive-label-show,
+  .trailx__immersive-label-hide { display: none !important; }
   .trailx__zoom .trailx-btn { width: 34px; }
 
   /* Stop 1 on small screens — the landing's mobile chapter recipe, verbatim
