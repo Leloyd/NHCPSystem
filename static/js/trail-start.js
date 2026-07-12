@@ -422,16 +422,11 @@ function enterStop1() {
   state.mode = 'stop1';
   root.setAttribute('data-mode', 'stop1');
   root.setAttribute('data-phase', 'stop1'); // brings Ana + controls back in
-  if (storyEl) {
-    storyEl.hidden = false;
-    storyEl.scrollTop = 0;
-    initStoryFx(); // GSAP choreography needs the layer measurable
-  }
+  if (storyEl) storyEl.hidden = false;
   try { history.replaceState(null, '', '#stop-1-orientation'); } catch { /* ignore */ }
   charApi.reenter?.();                       // Ana glides in from the right again
   window.setTimeout(() => charApi.playGesture?.('greet'), 1000);
-  state.scriptKey = 's1-arrive';
-  narrate({ speakIt: state.unlocked });
+  storyApi.reset?.();                        // activate step 0 → Ana narrates the arrival
 }
 
 function beginStop1() {
@@ -719,75 +714,84 @@ function smoothScrollBy(delta) {
   }
 }
 
-/* GSAP chapter choreography (like the landing chapters): label line draws,
-   title rises, copy/stats/chips stagger in; a slow parallax drift while each
-   chapter crosses the screen; the hero title fades up and away as you leave
-   the 360. Falls back to the CSS IntersectionObserver reveals without GSAP. */
-let storyFxDone = false;
-function initStoryFx() {
-  if (storyFxDone || !storyEl) return;
-  storyFxDone = true;
-  const gsap = window.gsap;
-  const ScrollTrigger = window.ScrollTrigger;
-  if (!gsap || !ScrollTrigger || prefersReducedMotion) return;
-  gsap.registerPlugin(ScrollTrigger);
-  storyEl.classList.add('is-gsap'); // disables the CSS fallback reveals
-
-  const hero = storyEl.querySelector('.trailx__s1-hero');
-  const heroTitle = storyEl.querySelector('.trailx__s1-title');
-  if (hero && heroTitle) {
-    gsap.fromTo(heroTitle, { opacity: 1, y: 0 }, {
-      opacity: 0,
-      y: -70,
-      ease: 'none',
-      scrollTrigger: { scroller: storyEl, trigger: hero, start: 'top top', end: 'bottom 40%', scrub: true },
-    });
-  }
-
-  storyEl.querySelectorAll('.trailx__chapter').forEach((chapter) => {
-    const card = chapter.querySelector('.trailx__card');
-    if (!card) return;
-    const line = card.querySelector('.trailx__label-line');
-    const labelText = card.querySelector('.trailx__label-text');
-    const title = card.querySelector('.trailx__card-title');
-    const blocks = card.querySelectorAll('.trailx__card-copy, .trailx__chips, .trailx__detail, .trailx__actions, .trailx__next-note, .trailx__s1-kicker');
-    const stats = card.querySelectorAll('.trailx__stat');
-
-    const tl = gsap.timeline({
-      defaults: { ease: 'power3.out' },
-      scrollTrigger: {
-        scroller: storyEl,
-        trigger: chapter,
-        start: 'top 62%',
-        toggleActions: 'play none none reverse', // reverses out when scrolling back
-      },
-    });
-    if (line) tl.fromTo(line, { scaleX: 0, transformOrigin: 'left center' }, { scaleX: 1, duration: 0.7 }, 0);
-    if (labelText) tl.fromTo(labelText, { opacity: 0, x: -14 }, { opacity: 1, x: 0, duration: 0.6 }, 0.1);
-    if (title) tl.fromTo(title, { opacity: 0, y: 46 }, { opacity: 1, y: 0, duration: 0.9 }, 0.15);
-    if (blocks.length) tl.fromTo(blocks, { opacity: 0, y: 26 }, { opacity: 1, y: 0, duration: 0.7, stagger: 0.09 }, 0.3);
-    if (stats.length) tl.fromTo(stats, { opacity: 0, y: 18, scale: 0.96 }, { opacity: 1, y: 0, scale: 1, duration: 0.55, stagger: 0.07 }, 0.5);
-
-    // Depth: the card drifts slowly against the scroll while on screen.
-    gsap.fromTo(card, { yPercent: 5 }, {
-      yPercent: -5,
-      ease: 'none',
-      scrollTrigger: { scroller: storyEl, trigger: chapter, start: 'top bottom', end: 'bottom top', scrub: true },
-    });
-  });
-
-  ScrollTrigger.refresh();
-}
-
+/* The landing page's chapter engine: scroll progress picks the active step;
+   the leaving panel slides up and out, the next rises in from below, and the
+   active panel's children stagger in — all with the landing's exact curves
+   (see trail-start.css). Ana narrates every step she lands on. */
+const storyApi = {};
 function initStory() {
   if (!storyEl) return;
+  const trackEl = storyEl.querySelector('[data-trail-track]');
+  const dotsWrap = storyEl.querySelector('[data-trail-dots]');
+  const panels = Array.from(storyEl.querySelectorAll('.trailx__chapter'));
+  const STEPS = panels.length;
+  if (!STEPS) return;
+  if (trackEl) trackEl.style.height = `${STEPS * 100}vh`; // one screen of scroll per step
+  let step = -1;
 
-  // Scroll progress + scroll-linked yaw (the gate view leans as you read).
+  function scrollToStep(index) {
+    const total = storyEl.scrollHeight - storyEl.clientHeight;
+    const target = Math.max(0, Math.min(total, (index / STEPS) * total + 2));
+    if (window.gsap && !prefersReducedMotion) {
+      scrollGoal = target;
+      window.gsap.to(storyEl, {
+        scrollTop: target,
+        duration: 0.9,
+        ease: 'power3.inOut',
+        overwrite: true,
+        onComplete: () => { scrollGoal = null; },
+      });
+    } else {
+      storyEl.scrollTo({ top: target, behavior: prefersReducedMotion ? 'auto' : 'smooth' });
+      scrollGoal = null;
+    }
+  }
+
+  // Chapter dots — right-edge rail, like the landing.
+  const dots = dotsWrap ? panels.map((panel, i) => {
+    const dot = document.createElement('button');
+    dot.type = 'button';
+    dot.className = 'trailx__dot';
+    const label = panel.getAttribute('data-title') || `Section ${i + 1}`;
+    dot.setAttribute('data-label', label);
+    dot.setAttribute('aria-label', `Go to: ${label}`);
+    dot.addEventListener('click', () => scrollToStep(i));
+    dotsWrap.appendChild(dot);
+    return dot;
+  }) : [];
+
+  const setStep = (index) => {
+    if (index === step || index < 0 || index >= STEPS) return;
+    step = index;
+    panels.forEach((panel, i) => {
+      panel.classList.toggle('is-active', i === index);
+      panel.classList.toggle('is-above', i < index);
+      panel.classList.toggle('is-below', i > index);
+      panel.setAttribute('aria-hidden', String(i !== index));
+    });
+    dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
+    // Auto-narrate the step being read — even muted (silent playback keeps
+    // advancing, so unmuting rejoins mid-sentence; landing behaviour).
+    const key = panels[index].getAttribute('data-chapter');
+    if (state.mode === 'stop1' && SCRIPTS[key] && key !== state.scriptKey) {
+      state.scriptKey = key;
+      narrate({ speakIt: state.unlocked });
+    }
+  };
+
+  storyApi.reset = () => {
+    storyEl.scrollTop = 0;
+    step = -1;
+    setStep(0);
+  };
+
+  // Scroll → progress → step. Also drives the progress rail + the gate lean.
   storyEl.addEventListener('scroll', () => {
-    const max = storyEl.scrollHeight - storyEl.clientHeight;
-    const progress = max > 0 ? storyEl.scrollTop / max : 0;
+    const total = storyEl.scrollHeight - storyEl.clientHeight;
+    const progress = total > 0 ? Math.min(1, Math.max(0, storyEl.scrollTop / total)) : 0;
     if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
     scrollYaw = progress * 26;
+    setStep(Math.floor(Math.min(STEPS - 1e-4, progress * STEPS)));
   }, { passive: true });
 
   // One wheel rule for the whole scene:
@@ -810,45 +814,29 @@ function initStory() {
     scrollGoal = null;
   }, { passive: true });
 
-  // Keyboard scrolling (arrows / page / space) once Stop 1 is active.
+  // Keyboard: arrows / page / space step through the chapters.
   window.addEventListener('keydown', (e) => {
     if (state.mode !== 'stop1' || storyEl.hidden || isImmersive()) return;
     if (e.target && e.target.closest && e.target.closest('button, a, input, select, textarea')) return;
-    const page = window.innerHeight * 0.85;
     if (e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
       e.preventDefault();
-      smoothScrollBy(page);
+      scrollToStep(Math.min(STEPS - 1, step + 1));
     } else if (e.key === 'ArrowUp' || e.key === 'PageUp') {
       e.preventDefault();
-      smoothScrollBy(-page);
+      scrollToStep(Math.max(0, step - 1));
     }
   });
 
-  scrollCue?.addEventListener('click', () => smoothScrollBy(window.innerHeight * 0.94));
-
-  // Chapters: reveal on scroll (CSS fallback) + Ana narrates the one you read.
-  const chapters = Array.from(storyEl.querySelectorAll('[data-chapter]'));
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach((entry) => {
-      if (!entry.isIntersecting) return;
-      entry.target.classList.add('is-visible');
-      const key = entry.target.getAttribute('data-chapter');
-      if (state.mode === 'stop1' && SCRIPTS[key] && key !== state.scriptKey) {
-        state.scriptKey = key;
-        narrate({ speakIt: state.unlocked });
-      }
-    });
-  }, { root: storyEl, threshold: 0.45 });
-  chapters.forEach((c) => observer.observe(c));
+  scrollCue?.addEventListener('click', () => scrollToStep(1));
 
   // "Reading the Threshold" chips: one detail panel at a time.
   const chips = Array.from(storyEl.querySelectorAll('[data-detail]'));
-  const panels = Array.from(storyEl.querySelectorAll('[data-detail-panel]'));
+  const detailPanes = Array.from(storyEl.querySelectorAll('[data-detail-panel]'));
   chips.forEach((chip) => {
     chip.addEventListener('click', () => {
       const key = chip.getAttribute('data-detail');
       chips.forEach((b) => b.setAttribute('aria-pressed', String(b === chip)));
-      panels.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
+      detailPanes.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
     });
   });
 

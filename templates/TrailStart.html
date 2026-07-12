@@ -107,13 +107,17 @@
       <!-- Scroll progress rail (Stop 1 only) -->
       <div class="trailx__progress" data-trail-progress aria-hidden="true"><span></span></div>
 
-      <!-- ============ Stop 1 · Orientation — scrollable story over the FrontGate 360 ============ -->
+      <!-- ============ Stop 1 · Orientation — landing-style scrollytelling ============
+           The story layer is a scroll DRIVER: a sticky stage pins the panels while
+           the invisible track below provides the scroll distance. Scrolling swaps
+           chapters in place (leaving panel slides up/out, next rises in, children
+           stagger) — exactly the landing page's chapter engine. ==================== -->
       <div class="trailx__story" data-trail-story aria-label="Stop 1 — Orientation" hidden>
-        <!-- Hero screen: the 360 speaks for itself; title sits low, hotspots stay clickable -->
-        <header class="trailx__s1-hero" data-chapter="s1-arrive">
-          <div class="trailx__s1-title">
+        <div class="trailx__stage" data-trail-stage>
+          <!-- Step 0 · Arrive: the 360 speaks for itself; the title sits low -->
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s1-arrive" data-side="left" data-title="Arrive">
             <p class="trailx__s1-kicker"><span data-lang-en>Stop 1 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 1 ng 10 · Landas ng Pamana</span></p>
-            <h2>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
               <span data-lang-en>Orientation — <em>The Front Gates</em></span>
               <span data-lang-tl>Oryentasyon — <em>Ang Tarangkahan</em></span>
             </h2>
@@ -121,48 +125,46 @@
               <span data-lang-en>Drag to look around · Find the glowing ring on the ground to step to the right-side view</span>
               <span data-lang-tl>I-drag upang lumingon · Hanapin ang kumikinang na singsing sa lupa upang lumipat ng tanaw</span>
             </p>
-          </div>
-          <button class="trailx__s1-scroll" data-trail-scrollcue type="button" aria-label="Scroll down to read about this stop">
-            <span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span>
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
-          </button>
-        </header>
+            <div>
+              <button class="trailx__s1-scroll" data-trail-scrollcue type="button" aria-label="Scroll down to read about this stop">
+                <span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7"/></svg>
+              </button>
+            </div>
+          </header>
 
-        <!-- Chapter I · The Opening Frame -->
-        <article class="trailx__chapter" data-chapter="s1-threshold" data-side="left">
-          <div class="trailx__card">
+          <!-- Chapter I · The Opening Frame -->
+          <article class="trailx__chapter" data-chapter="s1-threshold" data-side="left" data-title="Frame">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
               <span class="trailx__label-text"><span data-lang-en>Orientation · I</span><span data-lang-tl>Oryentasyon · I</span></span>
             </div>
-            <h3 class="trailx__card-title">
+            <h3 class="trailx__chapter-title">
               <span data-lang-en>The Opening<br /><em>Frame</em></span>
               <span data-lang-tl>Ang Unang<br /><em>Kuwadro</em></span>
             </h3>
-            <p class="trailx__card-copy" data-lang-en>
+            <p class="trailx__chapter-copy" data-lang-en>
               The front gate is the opening frame of the Underground Cemetery. From here the site reads as a planned whole rather than a single structure — the arched entrance, the circular perimeter wall carrying rows of niches, and the straight path that leads the eye to the chapel at the center. Nothing about this arrangement is accidental: the gate is where the logic of the cemetery first becomes visible.
             </p>
-            <p class="trailx__card-copy" data-lang-tl>
+            <p class="trailx__chapter-copy" data-lang-tl>
               Ang tarangkahan ang unang kuwadro ng Libingan sa Ilalim ng Lupa. Mula rito, mababasa ang pook bilang isang buong plano at hindi iisang gusali — ang arkong pasukan, ang pabilog na pader na kinapapalooban ng mga nitso, at ang tuwid na daanang umaakay sa paningin patungo sa kapilya sa gitna. Walang aksidente sa ayos na ito: sa tarangkahan unang nakikita ang buong balangkas ng libingan.
             </p>
-          </div>
-        </article>
+          </article>
 
-        <!-- Chapter II · Why Here, Why 1845 -->
-        <article class="trailx__chapter" data-chapter="s1-1845" data-side="right">
-          <div class="trailx__card">
+          <!-- Chapter II · Why Here, Why 1845 -->
+          <article class="trailx__chapter" data-chapter="s1-1845" data-side="right" data-title="1845">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
               <span class="trailx__label-text"><span data-lang-en>Orientation · II</span><span data-lang-tl>Oryentasyon · II</span></span>
             </div>
-            <h3 class="trailx__card-title">
+            <h3 class="trailx__chapter-title">
               <span data-lang-en>Why Here,<br /><em>Why 1845</em></span>
               <span data-lang-tl>Bakit Dito,<br /><em>Bakit 1845</em></span>
             </h3>
-            <p class="trailx__card-copy" data-lang-en>
+            <p class="trailx__chapter-copy" data-lang-en>
               Historical records point to 1845 as the year the cemetery was established under the supervision of Fr. Vicente Velloc. It was deliberately built south of the town center, following 19th-century health regulations that kept burial grounds away from crowded neighborhoods. That distance gave the cemetery its solemn quiet — set apart from everyday life, yet never separated from the people of Nagcarlan.
             </p>
-            <p class="trailx__card-copy" data-lang-tl>
+            <p class="trailx__chapter-copy" data-lang-tl>
               Itinuturo ng mga tala ng kasaysayan ang 1845 bilang taon ng pagkakatatag ng libingan sa ilalim ng pamamahala ni Padre Vicente Velloc. Sadya itong itinayo sa timog ng bayan, alinsunod sa mga alituntuning pangkalusugan ng ika-19 na siglo na naglalayo sa mga libingan mula sa matataong pamayanan. Ang layong iyon ang nagbigay dito ng taimtim na katahimikan — hiwalay sa pang-araw-araw na buhay, ngunit hindi kailanman nalayo sa mga taga-Nagcarlan.
             </p>
             <div class="trailx__stats">
@@ -171,44 +173,40 @@
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Declared Landmark</span><span data-lang-tl>Deklarasyon</span></span><span class="trailx__stat-value"><span data-lang-en>24 Oct 1981</span><span data-lang-tl>24 Okt 1981</span></span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Trail Stops</span><span data-lang-tl>Mga Hinto</span></span><span class="trailx__stat-value">10</span></div>
             </div>
-          </div>
-        </article>
+          </article>
 
-        <!-- Chapter III · Sacred Space, National Landmark -->
-        <article class="trailx__chapter" data-chapter="s1-landmark" data-side="left">
-          <div class="trailx__card">
+          <!-- Chapter III · Sacred Space, National Landmark -->
+          <article class="trailx__chapter" data-chapter="s1-landmark" data-side="left" data-title="Landmark">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
               <span class="trailx__label-text"><span data-lang-en>Orientation · III</span><span data-lang-tl>Oryentasyon · III</span></span>
             </div>
-            <h3 class="trailx__card-title">
+            <h3 class="trailx__chapter-title">
               <span data-lang-en>Sacred Space,<br /><em>National Landmark</em></span>
               <span data-lang-tl>Sagradong Pook,<br /><em>Pambansang Palatandaan</em></span>
             </h3>
-            <p class="trailx__card-copy" data-lang-en>
+            <p class="trailx__chapter-copy" data-lang-en>
               This gate opens into more than architecture. The cemetery served as a Catholic burial ground centered on a chapel for funeral rites — yet its story reaches far beyond mourning. Revolutionaries met in secret within its grounds, and guerrillas sheltered here during the Second World War. On 24 October 1981, the site was declared a National Historical Landmark — recognized as both sacred space and witness to the nation's history.
             </p>
-            <p class="trailx__card-copy" data-lang-tl>
+            <p class="trailx__chapter-copy" data-lang-tl>
               Higit pa sa arkitektura ang binubuksan ng tarangkahang ito. Nagsilbi ang libingan bilang Katolikong himlayan na nakasentro sa kapilya para sa mga seremonya ng libing — ngunit umaabot ang kuwento nito nang higit pa sa pagluluksa. Dito lihim na nagpulong ang mga rebolusyonaryo, at dito rin kumubli ang mga gerilya noong Ikalawang Digmaang Pandaigdig. Noong ika-24 ng Oktubre 1981, idineklara itong Pambansang Palatandaang Pangkasaysayan — kinikilala bilang sagradong pook at saksi ng kasaysayan ng bansa.
             </p>
-          </div>
-        </article>
+          </article>
 
-        <!-- Chapter IV · Reading the Threshold (interactive) -->
-        <article class="trailx__chapter" data-chapter="s1-details" data-side="right">
-          <div class="trailx__card">
+          <!-- Chapter IV · Reading the Threshold (interactive) -->
+          <article class="trailx__chapter" data-chapter="s1-details" data-side="right" data-title="Threshold">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
               <span class="trailx__label-text"><span data-lang-en>Orientation · IV</span><span data-lang-tl>Oryentasyon · IV</span></span>
             </div>
-            <h3 class="trailx__card-title">
+            <h3 class="trailx__chapter-title">
               <span data-lang-en>Reading the<br /><em>Threshold</em></span>
               <span data-lang-tl>Pagbasa sa<br /><em>Bungad</em></span>
             </h3>
-            <p class="trailx__card-copy" data-lang-en>
+            <p class="trailx__chapter-copy" data-lang-en>
               Four elements work together to separate the public road from the enclosed world within. Tap each one to read it.
             </p>
-            <p class="trailx__card-copy" data-lang-tl>
+            <p class="trailx__chapter-copy" data-lang-tl>
               Apat na elemento ang magkakasamang naghihiwalay sa pampublikong daan mula sa nakapaloob na mundo sa loob. Pindutin ang bawat isa upang basahin.
             </p>
             <div class="trailx__chips" role="group" aria-label="Gate elements">
@@ -235,21 +233,19 @@
                 <span data-lang-tl>Inaakay ng pormal na daanan ang bisita mula sa tarangkahan, patawid sa bukas na patyo, patungo sa kapilya — ang parehong maingat na pagkakasunud-sunod na nilakaran ng mga nagluluksa sa maraming salinlahi.</span>
               </p>
             </div>
-          </div>
-        </article>
+          </article>
 
-        <!-- Footer · Next stop -->
-        <footer class="trailx__chapter trailx__chapter--next" data-chapter="s1-next">
-          <div class="trailx__card trailx__next-card">
+          <!-- Step 5 · Next stop -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s1-next" data-title="Next">
             <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 2</span><span data-lang-tl>Susunod · Hinto 2</span></p>
-            <h3 class="trailx__card-title">
+            <h3 class="trailx__chapter-title">
               <span data-lang-en>Museum Registration<br /><em>&amp; Visitor Guidance</em></span>
               <span data-lang-tl>Pagpapatala sa Museo<br /><em>at Gabay sa Bisita</em></span>
             </h3>
-            <p class="trailx__card-copy" data-lang-en>
+            <p class="trailx__chapter-copy" data-lang-en>
               Beyond the gate, the trail leads to the museum — where you will register your visit and learn how the site welcomes its guests.
             </p>
-            <p class="trailx__card-copy" data-lang-tl>
+            <p class="trailx__chapter-copy" data-lang-tl>
               Lampas sa tarangkahan, patungo ang landas sa museo — kung saan itatala ang iyong pagbisita at matututuhan kung paano tinatanggap ng pook ang mga panauhin nito.
             </p>
             <div class="trailx__actions">
@@ -263,8 +259,13 @@
               <span data-lang-en>Stop 2 is still being prepared — it will open right here soon.</span>
               <span data-lang-tl>Inihahanda pa ang Hinto 2 — malapit na itong buksan mismo dito.</span>
             </p>
-          </div>
-        </footer>
+          </footer>
+
+          <!-- Chapter dots (like the landing) -->
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 1 sections"></nav>
+        </div>
+        <!-- Invisible track: gives the story its scroll distance -->
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
       </div>
       <!-- ========================== End Stop 1 · Orientation ========================== -->
 
