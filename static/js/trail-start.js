@@ -73,8 +73,24 @@ const SCRIPTS = {
     tl: "Pinangangalagaan ang museong ito ng National Historical Commission of the Philippines. Malinaw ang serbisyo publiko rito — bawal manigarilyo, walang fixer, tuloy ang serbisyo sa tanghali, at bawal ang red tape. Kung may problema, nakapaskil ang mga daluyan ng reklamo para sa iyo.",
   },
   's2-next': {
-    en: "That completes our second stop. When Stop Three opens, we will step inside and meet the artifacts. Salamat — see you at the next stop.",
-    tl: "Tapos na ang ating ikalawang hinto. Kapag nabuksan na ang Ikatlong Hinto, papasok tayo at makikilala ang mga artepakto. Salamat — kita tayo sa susunod na hinto.",
+    en: "That completes our second stop. When you are ready, step inside with me — the artifacts are waiting to tell their stories. Tap Continue and let us go in.",
+    tl: "Tapos na ang ating ikalawang hinto. Kapag handa ka na, pumasok ka kasama ko — naghihintay ang mga artepaktong magkuwento. Pindutin ang Magpatuloy at tayo nang pumasok.",
+  },
+  's3-arrive': {
+    en: "Welcome inside the museum — our third stop. This whole place is yours to explore: drag to look around, follow the glowing rings deeper into the halls, and tap the pulsing markers to meet the artifacts. I will wait while you wander.",
+    tl: "Maligayang pagdating sa loob ng museo — ang ating ikatlong hinto. Sa iyo ang buong lugar na ito: i-drag upang lumingon, sundan ang mga kumikinang na singsing papasok sa mga bulwagan, at pindutin ang mga kumukutitap na marker upang makilala ang mga artepakto. Hihintayin kita habang namamasyal ka.",
+  },
+  's3-explore': {
+    en: "Every pulsing marker opens an artifact — its photo appears on the wall, and a voice tells its story in English or Tagalog. There are more than twenty of them across four halls. Take your time; the trail can wait.",
+    tl: "Bawat kumukutitap na marker ay nagbubukas ng isang artepakto — lilitaw ang larawan nito sa dingding, at may tinig na magkukuwento sa Ingles o Tagalog. Mahigit dalawampu ang mga ito sa apat na bulwagan. Huwag magmadali; kayang maghintay ng landas.",
+  },
+  's3-collection': {
+    en: "Some voices you should not miss: the balanghay, the boat that carried souls to the next life; the hanging coffins of Sagada; and the uloh of the Ifugao. Tap their names to read, or find their markers in the halls to hear them.",
+    tl: "Ilang tinig na hindi mo dapat palampasin: ang balanghay, ang bangkang naghatid ng mga kaluluwa sa kabilang buhay; ang mga nakabiting kabaong ng Sagada; at ang uloh ng mga Ifugao. Pindutin ang kanilang mga pangalan upang basahin, o hanapin ang kanilang mga marker sa mga bulwagan upang mapakinggan sila.",
+  },
+  's3-next': {
+    en: "That completes our third stop. When Stop Four opens, we will test what you have learned so far. Salamat — take one more look around before you go.",
+    tl: "Tapos na ang ating ikatlong hinto. Kapag nabuksan na ang Ikaapat na Hinto, susubukin natin ang iyong mga natutunan. Salamat — lumingon-lingon pa nang isang beses bago ka umalis.",
   },
 };
 
@@ -405,6 +421,8 @@ if (!Number.isFinite(FG.pitch)) FG.pitch = 1.8;
 
 // MiddleG-Museum start view (same numbers as the heritage page's Stop 2).
 const M2 = { yaw: -100, pitch: -5, hfov: 100 };
+// InsideMuseum start view (same numbers as the virtual tour, hfov capped).
+const M3 = { yaw: 90, pitch: -5, hfov: 140 };
 
 // Where the idle view settles per scene while a stop is active.
 const SCENE_BASE = {
@@ -412,15 +430,39 @@ const SCENE_BASE = {
   rightFrontGate: { yaw: 90, pitch: -20 },
   middleGMuseum: { yaw: M2.yaw, pitch: M2.pitch },
   frontMuseum: { yaw: 0, pitch: 0 },
+  insideMuseum: { yaw: M3.yaw, pitch: M3.pitch },
+  museum1: { yaw: 75, pitch: -20 },
+  museum2: { yaw: 80, pitch: -20 },
+  museum3: { yaw: 170, pitch: -12 },
 };
 // Default zoom per scene — Show Panels eases back to this before restoring.
-const SCENE_HFOV = { aerial: 100, frontGate: FG.hfov, rightFrontGate: 100, middleGMuseum: 100, frontMuseum: 100 };
+const SCENE_HFOV = {
+  aerial: 100,
+  frontGate: FG.hfov,
+  rightFrontGate: 100,
+  middleGMuseum: 100,
+  frontMuseum: 100,
+  insideMuseum: M3.hfov,
+  museum1: 140,
+  museum2: 100,
+  museum3: 100,
+};
 
 // Per-stop config: which 360 the stop opens on, its entry view, and the hash
 // that restores the stop on refresh. The scroll-lean follows the stop's scene.
 const STOP_CONF = {
   stop1: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-1' },
   stop2: { scene: 'middleGMuseum', pitch: M2.pitch, yaw: M2.yaw, hfov: M2.hfov, hash: '#stop-2' },
+  stop3: { scene: 'insideMuseum', pitch: M3.pitch, yaw: M3.yaw, hfov: M3.hfov, hash: '#stop-3' },
+};
+
+// Departure views: before travelling to the next stop, the current 360 turns
+// to face the way you'd walk — per scene, so it works from either viewpoint.
+const DEPART_VIEWS = {
+  frontGate: { yaw: -91.9, pitch: 0.6 },
+  rightFrontGate: { yaw: -91.1, pitch: -0.8 },
+  middleGMuseum: { yaw: -87.6, pitch: -5.7 },
+  frontMuseum: { yaw: 32.0, pitch: -9.4 },
 };
 
 const isImmersive = () => root.getAttribute('data-immersive') === 'true';
@@ -481,8 +523,9 @@ function enterStop(stopId) {
   storyApis[stopId]?.reset();                // step 0 → Ana narrates the arrival
 }
 
-/* Stop → stop: the guide slides out, the 360 crossfades to the next stop's
-   scene, and everything slides back in with the new chapters. */
+/* Stop → stop: the guide slides out, the current 360 turns to face the path
+   ahead (its scene's departure view) and leans in as if walking, then the
+   scene crossfades and everything slides back in with the new chapters. */
 function transitionToStop(stopId) {
   const conf = STOP_CONF[stopId];
   if (!conf || state.mode === stopId || root.getAttribute('data-phase') === 'depart') return;
@@ -490,7 +533,7 @@ function transitionToStop(stopId) {
   if (!viewer) { enterStop(stopId); return; }
   transitioning = true;
   root.setAttribute('data-phase', 'depart');
-  window.setTimeout(() => {
+  const crossfade = () => {
     try {
       viewer.loadScene(conf.scene, conf.pitch, conf.yaw, conf.hfov);
       window.setTimeout(() => enterStop(stopId), prefersReducedMotion ? 120 : 1300);
@@ -498,6 +541,13 @@ function transitionToStop(stopId) {
       console.warn('[Trail] Scene change failed:', err);
       enterStop(stopId);
     }
+  };
+  window.setTimeout(() => {
+    const look = DEPART_VIEWS[currentScene];
+    if (!look || prefersReducedMotion) { crossfade(); return; }
+    // Turn toward where we're walking, easing slightly closer (hfov 85).
+    try { viewer.lookAt(look.pitch, look.yaw, 85, 2000, crossfade); }
+    catch { crossfade(); }
   }, prefersReducedMotion ? 0 : 650);
 }
 
@@ -571,6 +621,22 @@ function initPanorama() {
   const h1AudioSrc = root.getAttribute('data-fg-h1-audio') || '';
   const midMuseumSrc = root.getAttribute('data-pano-middle-museum') || '';
   const frontMuseumSrc = root.getAttribute('data-pano-front-museum') || '';
+  const insideMuseumSrc = root.getAttribute('data-pano-inside-museum') || '';
+  const museum1Src = root.getAttribute('data-pano-museum1') || '';
+  const museum2Src = root.getAttribute('data-pano-museum2') || '';
+  const museum3Src = root.getAttribute('data-pano-museum3') || '';
+
+  // Artifact assets for the museum halls (image + EN/TL voice-over), copied
+  // off the virtual tour page via data attributes.
+  const ART_KEYS = ['balanghay', 'kabaong', 'uloh', 'kabila', 'banga', 'jar', 'kagamitan', 'bagongon', 'bogwa', 'pagpag', 'pahimakas', 'alay', 'antuk', 'pagtubas', 'tsapang', 'tboli', 'sisiw', 'sabwag', 'tausug', 'luksa', 'mensahe', 'pahiwatig', 'recuerdos'];
+  const ART = {};
+  ART_KEYS.forEach((key) => {
+    ART[key] = {
+      img: root.getAttribute(`data-art-${key}-img`) || '',
+      tl: root.getAttribute(`data-art-${key}-tl`) || '',
+      en: root.getAttribute(`data-art-${key}-en`) || '',
+    };
+  });
 
   /* Floating image hotspot — ported from the virtual tour (front-gate-hotspot-h1):
      tapping the pulsing marker pins the photo on the wall at the same spot and
@@ -645,7 +711,11 @@ function initPanorama() {
     try {
       viewer.addHotSpot(spot, currentScene);
       floatingWindow = { hotspotId: args.windowHotspotId, sceneId: currentScene };
-      playHotspotAudio(args.audioSrc);
+      // Voice-over: a fixed clip, or the guide language's clip when bilingual.
+      const vo = args.audioSrc || (args.audioByLanguage
+        ? (args.audioByLanguage[state.lang] || args.audioByLanguage.en || args.audioByLanguage.tl)
+        : '');
+      playHotspotAudio(vo);
     } catch (err) {
       console.warn('[Trail] Unable to open hotspot image:', err);
     }
@@ -759,6 +829,109 @@ function initPanorama() {
             targetHfov: 100,
             cssClass: 'tour-ground-hotspot',
           }],
+        };
+      }
+
+      // Stop 3 scenes — the museum halls, straight from the virtual tour:
+      // same viewpoints, same walk rings, same artifact markers (photo pins
+      // to the wall + voice-over in the guide's language). insideMuseum has
+      // deliberately NO exit ring back outside — the trail owns that journey.
+      const artSpot = (id, pitch, yaw, key, alt) => {
+        const asset = ART[key];
+        if (!asset || !asset.img) return null;
+        return {
+          id,
+          pitch,
+          yaw,
+          type: 'info',
+          text: '',
+          clickHandlerFunc: openFloatingImage,
+          clickHandlerArgs: {
+            sourceHotspotId: id,
+            windowHotspotId: `${id}-window`,
+            imageSrc: asset.img,
+            audioByLanguage: { tl: asset.tl, en: asset.en },
+            imageAlt: alt,
+            windowPitch: pitch,
+            windowYaw: yaw,
+          },
+          cssClass: 'tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon',
+        };
+      };
+      const spots = (list) => list.filter(Boolean);
+      if (insideMuseumSrc && museum1Src) {
+        scenes.insideMuseum = {
+          type: 'equirectangular',
+          panorama: insideMuseumSrc,
+          pitch: M3.pitch,
+          yaw: M3.yaw,
+          hfov: M3.hfov,
+          hotSpots: [{
+            pitch: -50,
+            yaw: 40,
+            type: 'scene',
+            sceneId: 'museum1',
+            cssClass: 'tour-ground-hotspot',
+          }],
+        };
+        scenes.museum1 = {
+          type: 'equirectangular',
+          panorama: museum1Src,
+          pitch: -20,
+          yaw: 75,
+          hfov: 140,
+          hotSpots: spots([
+            artSpot('museum1-balanghay', -20.31, 101.6, 'balanghay', 'Balanghay'),
+            artSpot('museum1-kabaong', -18.35, 26.68, 'kabaong', 'Kabaong'),
+            artSpot('museum1-uloh', -17.35, -128.78, 'uloh', 'Ulóh'),
+            ...(museum2Src ? [{ pitch: -30, yaw: -100, type: 'scene', sceneId: 'museum2', cssClass: 'tour-ground-hotspot' }] : []),
+            { pitch: -45, yaw: 180, type: 'scene', sceneId: 'insideMuseum', targetPitch: -20, targetYaw: 180, targetHfov: 140, cssClass: 'tour-ground-hotspot' },
+          ]),
+        };
+      }
+      if (museum2Src && museum1Src) {
+        scenes.museum2 = {
+          type: 'equirectangular',
+          panorama: museum2Src,
+          pitch: -20,
+          yaw: 80,
+          hfov: 100,
+          hotSpots: spots([
+            artSpot('museum2-kabila', -20.36, 47.56, 'kabila', 'Kabila'),
+            artSpot('museum2-banga', -17.11, 169.7, 'banga', 'Banga'),
+            artSpot('museum2-jar', -29.35, 169.12, 'jar', 'Jar'),
+            ...(museum3Src ? [{ pitch: -23, yaw: 83, type: 'scene', sceneId: 'museum3', cssClass: 'tour-ground-hotspot' }] : []),
+            { pitch: -30, yaw: -110, type: 'scene', sceneId: 'museum1', targetPitch: -20, targetYaw: 180, targetHfov: 140, cssClass: 'tour-ground-hotspot' },
+          ]),
+        };
+      }
+      if (museum3Src && museum2Src) {
+        scenes.museum3 = {
+          type: 'equirectangular',
+          panorama: museum3Src,
+          pitch: -12,
+          yaw: 170,
+          hfov: 100,
+          hotSpots: spots([
+            artSpot('museum3-kagamitan', -20.3, -92.86, 'kagamitan', 'Kagamitan'),
+            artSpot('museum3-bagongon', -12.37, -116.55, 'bagongon', 'Bagongon'),
+            artSpot('museum3-bogwa', -26.32, -122.8, 'bogwa', 'Bogwa'),
+            artSpot('museum3-pagpag', -12.59, -139.64, 'pagpag', 'Pagpag'),
+            artSpot('museum3-pahimakas', -24.85, -133.85, 'pahimakas', 'Pahimakas'),
+            artSpot('museum3-alay', -15.1, -165.57, 'alay', 'Alay'),
+            artSpot('museum3-antuk', -25.93, -177.89, 'antuk', 'Antuk'),
+            artSpot('museum3-pagtubas', -25.72, 168.51, 'pagtubas', 'Pagtubas'),
+            artSpot('museum3-tsapang', -18.18, 147.99, 'tsapang', 'Tsapang'),
+            artSpot('museum3-tboli', -7.75, 154.08, 'tboli', "T'boli"),
+            artSpot('museum3-sisiw', -7.99, 143.31, 'sisiw', 'Sisiw'),
+            artSpot('museum3-sabwag', -16.01, 137.14, 'sabwag', 'Sabwag'),
+            artSpot('museum3-tausug', -23.6, 140.94, 'tausug', 'Tausug'),
+            artSpot('museum3-luksa', -14.26, 116.98, 'luksa', 'Luksa'),
+            artSpot('museum3-mensahe', -14.29, 108.16, 'mensahe', 'Mensahe'),
+            artSpot('museum3-pahiwatig', -28.09, 104.25, 'pahiwatig', 'Pahiwatig'),
+            artSpot('museum3-recuerdos', -22.93, 78.03, 'recuerdos', 'Recuerdos'),
+            { pitch: -30, yaw: -10, type: 'scene', sceneId: 'museum2', targetPitch: -20, targetYaw: -100, targetHfov: 100, cssClass: 'tour-ground-hotspot' },
+          ]),
         };
       }
 
