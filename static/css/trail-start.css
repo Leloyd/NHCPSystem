@@ -650,14 +650,16 @@
   position: absolute;
   z-index: -1;
   pointer-events: none;
-  inset: -5rem -10rem -7rem -8rem;
-  background: radial-gradient(
-    115% 95% at 22% 86%,
-    rgba(13, 10, 4, 0.78) 0%,
-    rgba(13, 10, 4, 0.6) 32%,
-    rgba(13, 10, 4, 0.38) 52%,
-    rgba(13, 10, 4, 0.16) 70%,
-    rgba(13, 10, 4, 0) 88%
+  /* Bleed far past both edges so the veil spans the whole viewport width —
+     one continuous sheet, no seam anywhere in the middle. */
+  inset: 0 -60vw -7rem;
+  background: linear-gradient(
+    180deg,
+    rgba(13, 10, 4, 0) 0%,
+    rgba(13, 10, 4, 0) 34%,
+    rgba(13, 10, 4, 0.22) 56%,
+    rgba(13, 10, 4, 0.5) 76%,
+    rgba(13, 10, 4, 0.78) 100%
   );
 }
 
