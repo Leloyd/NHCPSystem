@@ -93,8 +93,28 @@ const SCRIPTS = {
     tl: "Isa pang lihim bago tayo magpatuloy: kayang lumabas ng mga artepaktong ito mula sa kanilang mga lalagyan. Buksan ang aming AR scanner at itutok ang iyong camera sa mga nakalimbag na marker — lilitaw ang mga artepakto sa harap mo nang 3D, kasama ang kanilang mga tinig. Gumagana ito kahit saan, ngunit pinakamainam ito onsite sa museo, kung saan naghihintay ang mga marker sa tabi ng bawat eksibit.",
   },
   's3-next': {
-    en: "That completes our third stop. When Stop Four opens, we will test what you have learned so far. Salamat — take one more look around before you go.",
-    tl: "Tapos na ang ating ikatlong hinto. Kapag nabuksan na ang Ikaapat na Hinto, susubukin natin ang iyong mga natutunan. Salamat — lumingon-lingon pa nang isang beses bago ka umalis.",
+    en: "That completes our third stop. When you are ready, come play with me — a little checkpoint of games waits ahead, and everything you need is already in your memory. Tap Continue.",
+    tl: "Tapos na ang ating ikatlong hinto. Kapag handa ka na, halika at maglaro tayo — may maliit na pagsubok ng mga laro sa unahan, at nasa alaala mo na ang lahat ng kakailanganin. Pindutin ang Magpatuloy.",
+  },
+  's4-arrive': {
+    en: "Welcome to our fourth stop — a playful checkpoint. No scores, no grades, nothing to lose: just three little games drawn from everything you have seen. The halls around you hold every answer.",
+    tl: "Maligayang pagdating sa ating ikaapat na hinto — isang masayang pagsubok. Walang puntos, walang grado, walang matatalo: tatlong maliliit na laro lamang mula sa lahat ng iyong nakita. Nasa mga bulwagan sa paligid mo ang bawat sagot.",
+  },
+  's4-riddle': {
+    en: "First, a riddle. Listen closely: in life I carried warriors across the seas; in death, I carried their souls to the next world. Who am I?",
+    tl: "Una, isang bugtong. Makinig nang mabuti: sa buhay, dinala ko ang mga mandirigma sa karagatan; sa kamatayan, inihatid ko ang kanilang mga kaluluwa sa kabilang daigdig. Sino ako?",
+  },
+  's4-order': {
+    en: "Now walk through time. Tap the four moments in the order they happened — from the year the cemetery was built, all the way to the day it became a national landmark.",
+    tl: "Ngayon, maglakad tayo sa panahon. Pindutin ang apat na pangyayari ayon sa pagkakasunod ng mga ito — mula sa taon ng pagkakatayo ng libingan, hanggang sa araw na naging pambansang palatandaan ito.",
+  },
+  's4-tf': {
+    en: "Last one: three quick claims. Tell me — true, or false? Take your best guess; wrong answers cost nothing here.",
+    tl: "Panghuli: tatlong mabilisang pahayag. Sabihin mo — totoo, o hindi? Manghula lang; walang kapalit ang mali rito.",
+  },
+  's4-next': {
+    en: "That completes our checkpoint — well played. When Stop Five opens, we will walk back to the gates and unfold the cemetery's history. Salamat!",
+    tl: "Tapos na ang ating pagsubok — mahusay ang paglalaro mo. Kapag nabuksan na ang Ikalimang Hinto, babalik tayo sa tarangkahan at ilalahad ang kasaysayan ng libingan. Salamat!",
   },
 };
 
@@ -458,6 +478,9 @@ const STOP_CONF = {
   stop1: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-1' },
   stop2: { scene: 'middleGMuseum', pitch: M2.pitch, yaw: M2.yaw, hfov: M2.hfov, hash: '#stop-2' },
   stop3: { scene: 'insideMuseum', pitch: M3.pitch, yaw: M3.yaw, hfov: M3.hfov, hash: '#stop-3' },
+  // The checkpoint plays over the deepest museum hall — the artifacts the
+  // games ask about are on the walls all around.
+  stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100, hash: '#stop-4' },
 };
 
 // Departure views: before travelling to the next stop, the current 360 turns
@@ -1380,6 +1403,57 @@ function setupStory(el) {
       const key = chip.getAttribute('data-detail');
       chips.forEach((b) => b.setAttribute('aria-pressed', String(b === chip)));
       detailPanes.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
+    });
+  });
+
+  // Mind games (Stop 4) — unscored, retry forever.
+  // Choice games (riddle / true-or-false): pick an answer, get feedback.
+  el.querySelectorAll('[data-game]').forEach((game) => {
+    const fbRight = game.querySelector('[data-fb-right]');
+    const fbWrong = game.querySelector('[data-fb-wrong]');
+    const choices = Array.from(game.querySelectorAll('[data-choice]'));
+    choices.forEach((btn) => {
+      btn.addEventListener('click', () => {
+        const ok = btn.getAttribute('data-choice') === 'right';
+        choices.forEach((b) => b.classList.remove('is-right', 'is-wrong'));
+        btn.classList.add(ok ? 'is-right' : 'is-wrong');
+        if (fbRight) fbRight.hidden = !ok;
+        if (fbWrong) fbWrong.hidden = ok;
+      });
+    });
+  });
+  // Order game: tap the tiles in sequence; a wrong order resets gently.
+  el.querySelectorAll('[data-order-game]').forEach((game) => {
+    const tiles = Array.from(game.querySelectorAll('[data-order]'));
+    const chapter = game.closest('.trailx__chapter');
+    const fbRight = chapter ? chapter.querySelector('[data-order-right]') : null;
+    const fbWrong = chapter ? chapter.querySelector('[data-order-wrong]') : null;
+    let picked = [];
+    const resetTiles = () => {
+      picked = [];
+      tiles.forEach((tile) => {
+        tile.classList.remove('is-picked');
+        tile.removeAttribute('data-pick');
+      });
+    };
+    tiles.forEach((tile) => {
+      tile.addEventListener('click', () => {
+        if (tile.classList.contains('is-picked')) return;
+        tile.classList.add('is-picked');
+        tile.setAttribute('data-pick', String(picked.length + 1));
+        picked.push(tile);
+        if (picked.length < tiles.length) return;
+        const correct = picked.every((t, i) => Number(t.getAttribute('data-order')) === i + 1);
+        if (fbRight) fbRight.hidden = !correct;
+        if (fbWrong) fbWrong.hidden = correct;
+        if (!correct) {
+          game.classList.add('is-shake');
+          window.setTimeout(() => {
+            game.classList.remove('is-shake');
+            resetTiles();
+          }, 900);
+        }
+      });
     });
   });
 

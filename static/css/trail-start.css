@@ -789,6 +789,114 @@
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
 }
 
+/* ==========================================================================
+   Stop 4 · mind games — unscored, gentle feedback in the trail's gold voice
+   ========================================================================== */
+.trailx__riddle {
+  margin: 0.4rem 0 1rem;
+  max-width: 32rem;
+  padding: 0.85rem 1.1rem;
+  border-left: 2px solid var(--tx-gold);
+  background: rgba(20, 13, 6, 0.4);
+  color: #fff;
+  font-family: "Cormorant Garamond", serif;
+  font-style: italic;
+  font-size: calc(1.15rem * var(--tx-font-scale, 1));
+  line-height: 1.55;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+.trailx__game-fb {
+  margin: 0.7rem 0 0;
+  max-width: 32rem;
+  padding-left: 0.95rem;
+  border-left: 2px solid var(--tx-gold);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Cormorant Garamond", serif;
+  font-size: calc(1rem * var(--tx-font-scale, 1));
+  line-height: 1.5;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+  animation: trailx-detail-in 0.45s ease;
+}
+.trailx__game-fb--wrong {
+  border-left-color: rgba(224, 130, 100, 0.85);
+  color: rgba(255, 222, 208, 0.95);
+}
+.trailx__choice.is-right {
+  background: var(--tx-gold);
+  border-color: var(--tx-gold);
+  color: var(--tx-ink);
+  font-weight: 600;
+}
+.trailx__choice.is-wrong {
+  border-color: rgba(224, 130, 100, 0.85);
+  color: rgba(255, 210, 195, 0.95);
+  animation: trailx-tease 0.5s ease;
+}
+
+/* Time Walk: tap the tiles in order; picks get a numbered gold badge. */
+.trailx__order {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0.9rem 0 0;
+  max-width: 30rem;
+}
+.trailx__order-tile {
+  position: relative;
+  padding: 0.8rem 0.95rem;
+  text-align: left;
+  border: 1px solid rgba(212, 175, 106, 0.4);
+  border-radius: 12px;
+  background: rgba(20, 13, 6, 0.62);
+  color: var(--tx-cream);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.76rem * var(--tx-font-scale, 1));
+  line-height: 1.4;
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.trailx__order-tile:hover { border-color: var(--tx-gold); background: rgba(212, 175, 106, 0.16); }
+.trailx__order-tile:active { transform: scale(0.97); }
+.trailx__order-tile.is-picked {
+  background: rgba(212, 175, 106, 0.22);
+  border-color: var(--tx-gold);
+}
+.trailx__order-tile[data-pick]::after {
+  content: attr(data-pick);
+  position: absolute;
+  top: -0.5rem;
+  right: -0.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background: var(--tx-gold);
+  color: var(--tx-ink);
+  font-weight: 700;
+  font-size: 0.72rem;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+}
+.trailx__order.is-shake { animation: trailx-tease 0.6s ease; }
+
+/* True-or-false rows */
+.trailx__tf {
+  padding: 0.6rem 0;
+  border-bottom: 1px solid rgba(212, 175, 106, 0.16);
+}
+.trailx__tf:last-child { border-bottom: 0; }
+.trailx__tf-q {
+  margin: 0 0 0.5rem;
+  max-width: 32rem;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Cormorant Garamond", serif;
+  font-size: calc(1.05rem * var(--tx-font-scale, 1));
+  line-height: 1.45;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.55);
+}
+.trailx__tf-btns { display: flex; gap: 0.5rem; }
+
 /* Chapter dots — right-edge rail, like the landing */
 .trailx__dots {
   position: absolute;
@@ -1374,6 +1482,13 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-art__title { margin-top: 1rem; font-size: calc(0.82rem * var(--tx-font-scale, 1)); }
   .trailx-art__close { width: 34px; height: 34px; margin-top: 0.55rem; font-size: 0.85rem; }
   .trailx-art__model { height: clamp(8.5rem, 30vw, 11rem); }
+  /* Stop 4 games on phones */
+  .trailx__riddle { font-size: calc(1rem * var(--tx-font-scale, 1)); padding: 0.7rem 0.9rem; }
+  .trailx__order { gap: 0.45rem; }
+  .trailx__order-tile { padding: 0.6rem 0.7rem; font-size: calc(0.7rem * var(--tx-font-scale, 1)); }
+  .trailx__game-fb { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
+  .trailx__tf-q { font-size: calc(0.95rem * var(--tx-font-scale, 1)); }
+  .trailx__tf { padding: 0.45rem 0; }
   .trailx-preview { padding: 1rem; }
   .trailx-preview__media img { max-height: 58vh; }
   .trailx-preview__model { height: 52vh; }
