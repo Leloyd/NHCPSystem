@@ -816,6 +816,28 @@ function initPanorama() {
           model.setAttribute('shadow-intensity', '1');
           model.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
           model.src = args.glbSrc;
+          // Tap the model → expanded 3D view (like the virtual tour). A drag
+          // or pinch still rotates/zooms in place — only a clean tap expands.
+          let downX = 0;
+          let downY = 0;
+          let downAt = 0;
+          let multiTouch = false;
+          let activePointers = 0;
+          model.addEventListener('pointerdown', (ev) => {
+            activePointers += 1;
+            if (activePointers > 1) multiTouch = true;
+            downX = ev.clientX;
+            downY = ev.clientY;
+            downAt = performance.now();
+          });
+          model.addEventListener('pointerup', (ev) => {
+            activePointers = Math.max(0, activePointers - 1);
+            if (activePointers > 0) return;
+            const moved = Math.hypot(ev.clientX - downX, ev.clientY - downY);
+            const quick = performance.now() - downAt < 500;
+            if (!multiTouch && moved < 7 && quick) openPreview(args, 'model');
+            multiTouch = false;
+          });
           mediaWrap.insertBefore(model, switchBtn);
         }
         zoomBtn.hidden = showingModel;
