@@ -16,8 +16,19 @@
   </head>
   <body class="ar-body" data-ar-analytics-endpoint="{{ analytics_endpoint }}">
     <div class="ar-overlay ar-overlay--top ar-overlay--minimal">
-      <a href="/digital-exhibits" class="ar-btn ar-btn--back">← Back</a>
+      <a href="/digital-exhibits" class="ar-btn ar-btn--back" id="arBackButton">← Back</a>
     </div>
+    <script>
+      // Arrived from the Heritage Trail's Stop 3 (?from=stop3)? Back returns
+      // there (the #stop-3 hash restores the stop). Otherwise: Digital Exhibits.
+      (function () {
+        try {
+          if (new URLSearchParams(window.location.search).get("from") === "stop3") {
+            document.getElementById("arBackButton").setAttribute("href", "/trail#stop-3");
+          }
+        } catch (e) { /* keep the default destination */ }
+      })();
+    </script>
 
     <div id="arScene" aria-label="WebAR camera scene"></div>
 

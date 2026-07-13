@@ -88,6 +88,10 @@ const SCRIPTS = {
     en: "Some voices you should not miss: the balanghay, the boat that carried souls to the next life; the hanging coffins of Sagada; and the uloh of the Ifugao. Tap their names to read, or find their markers in the halls to hear them.",
     tl: "Ilang tinig na hindi mo dapat palampasin: ang balanghay, ang bangkang naghatid ng mga kaluluwa sa kabilang buhay; ang mga nakabiting kabaong ng Sagada; at ang uloh ng mga Ifugao. Pindutin ang kanilang mga pangalan upang basahin, o hanapin ang kanilang mga marker sa mga bulwagan upang mapakinggan sila.",
   },
+  's3-ar': {
+    en: "One more secret before we move on: these artifacts can step out of their cases. Open our AR scanner and point your camera at the printed markers — the artifacts appear before you in 3D, voices and all. It works anywhere, but it is best onsite at the museum, where the markers wait beside each exhibit.",
+    tl: "Isa pang lihim bago tayo magpatuloy: kayang lumabas ng mga artepaktong ito mula sa kanilang mga lalagyan. Buksan ang aming AR scanner at itutok ang iyong camera sa mga nakalimbag na marker — lilitaw ang mga artepakto sa harap mo nang 3D, kasama ang kanilang mga tinig. Gumagana ito kahit saan, ngunit pinakamainam ito onsite sa museo, kung saan naghihintay ang mga marker sa tabi ng bawat eksibit.",
+  },
   's3-next': {
     en: "That completes our third stop. When Stop Four opens, we will test what you have learned so far. Salamat — take one more look around before you go.",
     tl: "Tapos na ang ating ikatlong hinto. Kapag nabuksan na ang Ikaapat na Hinto, susubukin natin ang iyong mga natutunan. Salamat — lumingon-lingon pa nang isang beses bago ka umalis.",
