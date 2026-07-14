@@ -702,7 +702,7 @@ zoomInBtn?.addEventListener('click', () => zoomBy(-10));
 zoomOutBtn?.addEventListener('click', () => zoomBy(10));
 
 /* --- Stop entry / transitions ------------------------------------------------ */
-function enterStop(stopId) {
+function enterStop(stopId, opts) {
   transitioning = false;
   const conf = STOP_CONF[stopId];
   if (!conf || state.mode === stopId) return;
@@ -711,11 +711,62 @@ function enterStop(stopId) {
   root.setAttribute('data-phase', 'guide'); // brings Ana + controls back in
   storyEls.forEach((el) => { el.hidden = el.getAttribute('data-trail-story') !== stopId; });
   activeStoryEl = storyEls.find((el) => !el.hidden) || null;
-  try { history.replaceState(null, '', conf.hash); } catch { /* ignore */ }
+  // History: forward travel pushes a new entry (so the browser/phone Back
+  // button walks back one stop at a time); refresh-restore replaces; Back /
+  // Forward navigation ('none') leaves the stack alone, as popstate already
+  // moved the pointer.
+  const hist = (opts && opts.history) || 'push';
+  try {
+    if (hist === 'push') history.pushState({ trailStop: stopId }, '', conf.hash);
+    else if (hist === 'replace') history.replaceState({ trailStop: stopId }, '', conf.hash);
+  } catch { /* ignore */ }
   charApi.reenter?.();                       // Ana glides in from the side again
   window.setTimeout(() => charApi.playGesture?.('greet'), 1000);
   storyApis[stopId]?.reset();                // step 0 → Ana narrates the arrival
 }
+
+/* Back / Forward (popstate) travel between stops: switch the 360 + chapters
+   directly, without writing history (the browser already moved the pointer). */
+function jumpToStop(stopId) {
+  const conf = STOP_CONF[stopId];
+  if (!conf || state.mode === stopId) return;
+  stopSpeaking();
+  root.removeAttribute('data-phase'); // clear any half-finished depart
+  if (viewer && currentScene !== conf.scene) {
+    try { viewer.loadScene(conf.scene, conf.pitch, conf.yaw, conf.hfov); }
+    catch { /* ignore */ }
+  }
+  enterStop(stopId, { history: 'none' });
+}
+
+/* Back past Stop 1 returns to the intro (Starting Point). From there the
+   browser's Back leaves the page entirely, back to wherever we came from. */
+function returnToIntro() {
+  if (state.mode === 'intro') return;
+  stopSpeaking();
+  transitioning = false;
+  if (viewer && currentScene !== 'aerial') {
+    try { viewer.loadScene('aerial'); } catch { /* ignore */ }
+  }
+  state.mode = 'intro';
+  state.scriptKey = 'intro';
+  root.setAttribute('data-mode', 'intro');
+  root.removeAttribute('data-phase');        // the intro panel slides back in
+  storyEls.forEach((el) => { el.hidden = true; });
+  activeStoryEl = null;
+  charApi.reenter?.();
+  narrate({ speakIt: false });               // reseed the intro bubble
+}
+
+/* Browser / phone Back + Forward: map the URL hash back to a stop (or the
+   intro when the hash clears). */
+window.addEventListener('popstate', () => {
+  const num = (window.location.hash.match(/stop-(\d+)/) || [])[1];
+  const target = num ? `stop${num}` : 'intro';
+  if (target === state.mode) return;
+  if (target === 'intro') returnToIntro();
+  else if (STOP_CONF[target]) jumpToStop(target);
+});
 
 /* Stop → stop: the guide slides out, the current 360 turns to face the path
    ahead (its scene's departure view) and leans in as if walking, then the
@@ -749,8 +800,9 @@ function transitionToStop(stopId) {
 function beginTrail() {
   if (state.mode !== 'intro' || root.getAttribute('data-phase') === 'depart') return;
   stopSpeaking();
-  // No panorama? Fall back to the old page transition so Begin never dead-ends.
-  if (!viewer) { leaveTo(beginLink?.getAttribute('href') || root.getAttribute('data-begin-url'), 'begin'); return; }
+  // No panorama? The trail is self-contained now, so just open Stop 1's
+  // story over the (failed) 360 rather than navigating away.
+  if (!viewer) { enterStop('stop1', { history: 'push' }); return; }
   transitioning = true;
   root.setAttribute('data-phase', 'depart'); // slide panel/Ana/bubble/controls out
   const crossfade = () => {
@@ -2223,6 +2275,6 @@ initPanorama();
 initCharacter();
 initStories();
 initDocViewer();
-if (wantsStop && STOP_CONF[wantsStop]) enterStop(wantsStop); // refresh → restore the stop
+if (wantsStop && STOP_CONF[wantsStop]) enterStop(wantsStop, { history: 'replace' }); // refresh → restore the stop
 attemptAutoSpeak();          // auto-play like the landing page…
 setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it
