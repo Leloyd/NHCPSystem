@@ -113,8 +113,24 @@ const SCRIPTS = {
     tl: "Panghuli: tatlong mabilisang pahayag. Sabihin mo — totoo, o hindi? Manghula lang; walang kapalit ang mali rito.",
   },
   's4-next': {
-    en: "That completes our checkpoint — well played. When Stop Five opens, we will walk back to the gates and unfold the cemetery's history. Salamat!",
-    tl: "Tapos na ang ating pagsubok — mahusay ang paglalaro mo. Kapag nabuksan na ang Ikalimang Hinto, babalik tayo sa tarangkahan at ilalahad ang kasaysayan ng libingan. Salamat!",
+    en: "That completes our checkpoint — well played. When you are ready, come with me back into the open air — the grounds have a long story to tell. Tap Continue.",
+    tl: "Tapos na ang ating pagsubok — mahusay ang paglalaro mo. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kuwento ng bakuran. Pindutin ang Magpatuloy.",
+  },
+  's5-arrive': {
+    en: "Welcome back to the open grounds — our fifth stop. Here the cemetery's history stands in stone. Drag to look around, and follow the glowing rings through the courtyard, the face of the church, and the quiet rows of tombs. When you are ready, scroll down.",
+    tl: "Maligayang pagbabalik sa bukas na bakuran — ang ating ikalimang hinto. Dito nakatindig sa bato ang kasaysayan ng libingan. I-drag upang lumingon, at sundan ang mga kumikinang na singsing sa patyo, sa harap ng simbahan, at sa tahimik na mga hanay ng puntod. Kapag handa ka na, mag-scroll pababa.",
+  },
+  's5-history': {
+    en: "Long before the tombs, the story began. The Spanish reached Nagcarlan in 1571 under Captain Juan de Salcedo. In 1578, the Franciscan missionaries Fray Juan de Plasencia and Fray Diego de Oropesa brought the Catholic faith. And in 1583, Nagcarlan became a pueblo under Fray Tomas de Miranda.",
+    tl: "Bago pa ang mga puntod, nagsimula na ang kuwento. Nakarating ang mga Kastila sa Nagcarlan noong 1571 sa pamumuno ni Kapitan Juan de Salcedo. Noong 1578, dinala ng mga Pransiskanong misyonerong sina Padre Juan de Plasencia at Padre Diego de Oropesa ang pananampalatayang Katoliko. At noong 1583, naging ganap na bayan ang Nagcarlan sa ilalim ni Padre Tomas de Miranda.",
+  },
+  's5-explore': {
+    en: "Now the grounds are yours. Step through the gate, cross to the church, and wander the rows of tombs on either side. The glowing rings carry you from one view to the next — take all the time you need.",
+    tl: "Ngayon, sa iyo na ang bakuran. Dumaan sa tarangkahan, tumawid sa simbahan, at libutin ang mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali.",
+  },
+  's5-next': {
+    en: "That completes our fifth stop. When Stop Six opens, we will stand before the church itself. Salamat — one more look around before we go.",
+    tl: "Tapos na ang ating ikalimang hinto. Kapag nabuksan na ang Ikaanim na Hinto, tatayo tayo sa harap ng mismong simbahan. Salamat — lumingon-lingon pa bago tayo umalis.",
   },
 };
 
@@ -458,6 +474,20 @@ const SCENE_BASE = {
   museum1: { yaw: 75, pitch: -20 },
   museum2: { yaw: 80, pitch: -20 },
   museum3: { yaw: 170, pitch: -12 },
+  // Stop 5 — cemetery grounds (church front + tomb rows), virtual-tour views.
+  insideFrontGate: { yaw: 0, pitch: 0 },
+  insideFrontGate1: { yaw: 0, pitch: 0 },
+  middleGInside: { yaw: 123, pitch: 0 },
+  frontChurch: { yaw: -10, pitch: 0 },
+  rightFrontChurch: { yaw: 0, pitch: 0 },
+  leftFrontChurch: { yaw: 0, pitch: 0 },
+  rightFrontTombs: { yaw: 0, pitch: 0 },
+  rightFrontTombs1: { yaw: -110, pitch: 0 },
+  rightFrontTombs2: { yaw: 0, pitch: 0 },
+  leftFirstTombs: { yaw: 0, pitch: 0 },
+  leftTombs: { yaw: 0, pitch: 0 },
+  leftMiddleTombs: { yaw: 0, pitch: 0 },
+  leftEndTombs: { yaw: 0, pitch: 0 },
 };
 // Default zoom per scene — Show Panels eases back to this before restoring.
 const SCENE_HFOV = {
@@ -470,6 +500,19 @@ const SCENE_HFOV = {
   museum1: 140,
   museum2: 100,
   museum3: 100,
+  insideFrontGate: 100,
+  insideFrontGate1: 100,
+  middleGInside: 100,
+  frontChurch: 100,
+  rightFrontChurch: 100,
+  leftFrontChurch: 100,
+  rightFrontTombs: 100,
+  rightFrontTombs1: 100,
+  rightFrontTombs2: 100,
+  leftFirstTombs: 100,
+  leftTombs: 100,
+  leftMiddleTombs: 100,
+  leftEndTombs: 100,
 };
 
 // Per-stop config: which 360 the stop opens on, its entry view, and the hash
@@ -481,6 +524,9 @@ const STOP_CONF = {
   // The checkpoint plays over the deepest museum hall — the artifacts the
   // games ask about are on the walls all around.
   stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100, hash: '#stop-4' },
+  // The grounds: enter just inside the front gate and walk out to the church
+  // and the tombs.
+  stop5: { scene: 'insideFrontGate', pitch: 0, yaw: 0, hfov: 100, hash: '#stop-5' },
 };
 
 // Departure views: before travelling to the next stop, the current 360 turns
@@ -652,6 +698,22 @@ function initPanorama() {
   const museum1Src = root.getAttribute('data-pano-museum1') || '';
   const museum2Src = root.getAttribute('data-pano-museum2') || '';
   const museum3Src = root.getAttribute('data-pano-museum3') || '';
+  // Stop 5 — cemetery-grounds panoramas (church front + tomb rows).
+  const s5 = {
+    insideFrontGate: root.getAttribute('data-pano-inside-front-gate') || '',
+    insideFrontGate1: root.getAttribute('data-pano-inside-front-gate1') || '',
+    middleGInside: root.getAttribute('data-pano-middle-g-inside') || '',
+    frontChurch: root.getAttribute('data-pano-front-church') || '',
+    rightFrontChurch: root.getAttribute('data-pano-right-front-church') || '',
+    leftFrontChurch: root.getAttribute('data-pano-left-front-church') || '',
+    rightFrontTombs: root.getAttribute('data-pano-right-front-tombs') || '',
+    rightFrontTombs1: root.getAttribute('data-pano-right-front-tombs1') || '',
+    rightFrontTombs2: root.getAttribute('data-pano-right-front-tombs2') || '',
+    leftFirstTombs: root.getAttribute('data-pano-left-first-tombs') || '',
+    leftTombs: root.getAttribute('data-pano-left-tombs') || '',
+    leftMiddleTombs: root.getAttribute('data-pano-left-middle-tombs') || '',
+    leftEndTombs: root.getAttribute('data-pano-left-end-tombs') || '',
+  };
 
   // Artifact assets for the museum halls (image + EN/TL voice-over + optional
   // 3D model), copied off the virtual tour page via data attributes.
@@ -1143,6 +1205,69 @@ function initPanorama() {
             { pitch: -30, yaw: -10, type: 'scene', sceneId: 'museum2', targetPitch: -20, targetYaw: -100, targetHfov: 100, cssClass: 'tour-ground-hotspot' },
           ]),
         };
+      }
+
+      // Stop 5 scenes — the cemetery grounds, church front, and tomb rows,
+      // straight from the virtual tour. Scene links keep only the paths that
+      // stay within this stop's set (the branches into the museum, the church
+      // interior, and the leftG middle nodes are dropped).
+      if (s5.insideFrontGate) {
+        const link = (pitch, yaw, sceneId, tPitch, tYaw) => {
+          const h = { pitch, yaw, type: 'scene', sceneId, cssClass: 'tour-ground-hotspot' };
+          if (tPitch !== undefined) { h.targetPitch = tPitch; h.targetYaw = tYaw; h.targetHfov = 100; }
+          return h;
+        };
+        const eq = (panorama, pitch, yaw, hotSpots) => ({ type: 'equirectangular', panorama, pitch, yaw, hfov: 100, hotSpots });
+        scenes.insideFrontGate = eq(s5.insideFrontGate, 0, 0, [
+          link(-18, 2, 'insideFrontGate1'),
+        ]);
+        scenes.insideFrontGate1 = eq(s5.insideFrontGate1, 0, 0, [
+          link(-5, -4, 'middleGInside'),
+          link(-15, 175, 'insideFrontGate', -20, 170),
+        ]);
+        scenes.middleGInside = eq(s5.middleGInside, 0, 123, [
+          link(-5, 125, 'frontChurch'),
+          link(-7, -55, 'insideFrontGate1', -20, 180),
+        ]);
+        scenes.frontChurch = eq(s5.frontChurch, 0, -10, [
+          link(-20, -75, 'leftFrontChurch', -20, -80),
+          link(-17, 48, 'rightFrontChurch'),
+          link(-7, 166, 'middleGInside', -20, -55),
+        ]);
+        scenes.leftFrontChurch = eq(s5.leftFrontChurch, 0, 0, [
+          link(-21.26, -80.65, 'leftFirstTombs', -1.82, 82.26),
+          link(-25, 66, 'frontChurch', -20, 55),
+        ]);
+        scenes.leftFirstTombs = eq(s5.leftFirstTombs, 0, 0, [
+          link(-14.72, 82.97, 'leftTombs', 0.56, 46.68),
+          link(-25.55, -25.99, 'leftFrontChurch', -1.46, 70.52),
+        ]);
+        scenes.leftTombs = eq(s5.leftTombs, 0, 0, [
+          link(-20.76, -89.75, 'leftFirstTombs'),
+          link(-7.73, 48.09, 'leftMiddleTombs', -1.02, 74.28),
+        ]);
+        scenes.leftMiddleTombs = eq(s5.leftMiddleTombs, 0, 0, [
+          link(-11.02, -105.65, 'leftTombs', -4.95, -89.26),
+          link(-8.41, 74.15, 'leftEndTombs', 0.74, 37.45),
+        ]);
+        scenes.leftEndTombs = eq(s5.leftEndTombs, 0, 0, [
+          link(-11.06, -99.54, 'leftMiddleTombs', -7.35, -106.9),
+        ]);
+        scenes.rightFrontChurch = eq(s5.rightFrontChurch, 0, 0, [
+          link(-17, -133, 'frontChurch', -20, -140),
+          link(-22, 27, 'rightFrontTombs', -6.57, -83.58),
+        ]);
+        scenes.rightFrontTombs = eq(s5.rightFrontTombs, 0, 0, [
+          link(-9, -67, 'rightFrontTombs1', -6.57, -83.58),
+          link(-14, 30, 'rightFrontChurch', -12, 180),
+        ]);
+        scenes.rightFrontTombs1 = eq(s5.rightFrontTombs1, 0, -110, [
+          link(-11.27, -99.92, 'rightFrontTombs2', -1.11, -53.2),
+          link(-5, 77, 'rightFrontTombs', 0.59, 34.92),
+        ]);
+        scenes.rightFrontTombs2 = eq(s5.rightFrontTombs2, 0, 0, [
+          link(-7.06, 86.13, 'rightFrontTombs1', 3.34, 80.68),
+        ]);
       }
 
       // Refresh restore: open directly on the remembered stop's scene.

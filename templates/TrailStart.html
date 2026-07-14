@@ -45,6 +45,19 @@
       data-pano-museum1="{{ url_for('virtual_tour_file', filename='1Museum.jpg') }}"
       data-pano-museum2="{{ url_for('virtual_tour_file', filename='2Museum.jpg') }}"
       data-pano-museum3="{{ url_for('virtual_tour_file', filename='3Museum.jpg') }}"
+      data-pano-inside-front-gate="{{ url_for('virtual_tour_file', filename='Inside-FrontGate.jpg') }}"
+      data-pano-inside-front-gate1="{{ url_for('virtual_tour_file', filename='1Inside-FrontGate.jpg') }}"
+      data-pano-middle-g-inside="{{ url_for('virtual_tour_file', filename='MiddleG-Inside.jpg') }}"
+      data-pano-front-church="{{ url_for('virtual_tour_file', filename='FrontChurch.jpg') }}"
+      data-pano-right-front-church="{{ url_for('virtual_tour_file', filename='right-FrontChurch.jpg') }}"
+      data-pano-left-front-church="{{ url_for('virtual_tour_file', filename='left-FrontChurch.jpg') }}"
+      data-pano-right-front-tombs="{{ url_for('virtual_tour_file', filename='rightFrontTombs.jpg') }}"
+      data-pano-right-front-tombs1="{{ url_for('virtual_tour_file', filename='1rightFrontTombs.jpg') }}"
+      data-pano-right-front-tombs2="{{ url_for('virtual_tour_file', filename='2rightFrontTombs.jpg') }}"
+      data-pano-left-first-tombs="{{ url_for('virtual_tour_file', filename='leftFirstTombs.jpg') }}"
+      data-pano-left-tombs="{{ url_for('virtual_tour_file', filename='leftTombs.jpg') }}"
+      data-pano-left-middle-tombs="{{ url_for('virtual_tour_file', filename='leftMiddleTombs.jpg') }}"
+      data-pano-left-end-tombs="{{ url_for('virtual_tour_file', filename='leftEndTombs.jpg') }}"
       data-art-balanghay-img="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.jpg') }}"
       data-art-balanghay-tl="{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/ANG BALANGHAY.mp3') }}"
       data-art-balanghay-en="{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/THE BALANGHAY.mp3') }}"
@@ -907,16 +920,12 @@
               Mahusay. Susunod, babalik tayo sa labas at ilalahad ang mahabang kuwento ng libingan.
             </p>
             <div class="trailx__actions">
-              <button class="trailx__begin" data-trail-next type="button">
+              <button class="trailx__begin" data-trail-goto="stop5" type="button">
                 <span data-lang-en>Continue to Stop 5</span>
                 <span data-lang-tl>Magpatuloy sa Hinto 5</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
             </div>
-            <p class="trailx__next-note" data-trail-next-note hidden>
-              <span data-lang-en>Stop 5 is still being prepared — it will open right here soon.</span>
-              <span data-lang-tl>Inihahanda pa ang Hinto 5 — malapit na itong buksan mismo dito.</span>
-            </p>
           </footer>
 
           <!-- Chapter dots -->
@@ -931,6 +940,99 @@
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>
       </div>
       <!-- ================== End Stop 4 · A Playful Checkpoint ================== -->
+
+      <!-- ============ Stop 5 · Cemetery History (the grounds) ============
+           Same engine as the other stops, over the church-front + tomb-row
+           360s from the virtual tour, with the founding-history information. -->
+      <div class="trailx__story" data-trail-story="stop5" aria-label="Stop 5 — Cemetery History" hidden>
+        <div class="trailx__stage" data-trail-stage>
+          <!-- Step 0 · Arrive on the grounds -->
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s5-arrive" data-side="left" data-title="Arrive">
+            <p class="trailx__s1-kicker"><span data-lang-en>Stop 5 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 5 ng 10 · Landas ng Pamana</span></p>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
+              <span data-lang-en>Cemetery <em>History</em></span>
+              <span data-lang-tl>Kasaysayan ng <em>Libingan</em></span>
+            </h2>
+            <p class="trailx__s1-tip">
+              <span data-lang-en>Drag to look around · Follow the glowing rings through the grounds, the church front, and the rows of tombs</span>
+              <span data-lang-tl>I-drag upang lumingon · Sundan ang mga kumikinang na singsing sa bakuran, sa harap ng simbahan, at sa mga hanay ng puntod</span>
+            </p>
+          </header>
+
+          <!-- Chapter I · Nagcarlan & the Franciscan Missions (the provided info) -->
+          <article class="trailx__chapter" data-chapter="s5-history" data-side="left" data-title="Missions">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Grounds · I</span><span data-lang-tl>Ang Bakuran · I</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Nagcarlan &amp; the<br /><em>Franciscan Missions</em></span>
+              <span data-lang-tl>Ang Nagcarlan at ang<br /><em>Misyong Pransiskano</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              THE SPANISH conquerors reached Nagcarlan in 1571 under Captain Juan de Salcedo. Several years later, in 1578, the Catholic faith was introduced through the efforts of the Franciscan missionaries Fray Juan de Plasencia and Fray Diego de Oropesa. Five years after, in 1583, Nagcarlan officially became a pueblo under the administration of Fray Tomas de Miranda.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              NAKARATING ANG mga mananakop na Kastila sa Nagcarlan noong 1571 sa pamumuno ni Kapitan Juan de Salcedo. Makalipas ang ilang taon, noong 1578, ipinakilala naman dito ang Katolisismo sa pamamagitan ng mga Pransiskanong misyonerong sina Padre Juan de Plasencia at Padre Diego de Oropesa. Pagkaraan ng limang taon, noong 1583, naging ganap na bayan ang Nagcarlan sa ilalim ng pamamahala ni Padre Tomas de Miranda.
+            </p>
+          </article>
+
+          <!-- Chapter II · Walk the grounds (explore the 360) -->
+          <article class="trailx__chapter" data-chapter="s5-explore" data-side="right" data-title="Explore">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Grounds · II</span><span data-lang-tl>Ang Bakuran · II</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Walk the<br /><em>Grounds</em></span>
+              <span data-lang-tl>Libutin ang<br /><em>Bakuran</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              This is where the story stands in stone. Step through the gate, cross the open court to the face of the church, then wander the quiet rows of tombs on either side. The glowing rings on the ground carry you from one view to the next — take your time before we move on.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Dito nakatindig sa bato ang kuwento. Dumaan sa tarangkahan, tumawid sa bukas na patyo patungo sa harap ng simbahan, pagkatapos ay libutin ang tahimik na mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing sa lupa ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali bago tayo magpatuloy.
+            </p>
+          </article>
+
+          <!-- Step 3 · Next stop -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s5-next" data-title="Next">
+            <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 6</span><span data-lang-tl>Susunod · Hinto 6</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Front of<br /><em>the Church</em></span>
+              <span data-lang-tl>Harap ng<br /><em>Simbahan</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Ahead stands the church itself — its facade, its bell tower, and the craftsmanship of centuries.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Sa unahan nakatayo ang mismong simbahan — ang harapan nito, ang kampanaryo, at ang sining ng mga siglo.
+            </p>
+            <div class="trailx__actions">
+              <button class="trailx__begin" data-trail-next type="button">
+                <span data-lang-en>Continue to Stop 6</span>
+                <span data-lang-tl>Magpatuloy sa Hinto 6</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+            <p class="trailx__next-note" data-trail-next-note hidden>
+              <span data-lang-en>Stop 6 is still being prepared — it will open right here soon.</span>
+              <span data-lang-tl>Inihahanda pa ang Hinto 6 — malapit na itong buksan mismo dito.</span>
+            </p>
+          </footer>
+
+          <!-- Chapter dots -->
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 5 sections"></nav>
+
+          <!-- Scroll hint -->
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true">
+            <span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span>
+          </div>
+        </div>
+        <!-- Invisible track: gives the story its scroll distance -->
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+      </div>
+      <!-- ================== End Stop 5 · Cemetery History ================== -->
 
       <!-- Guide controls (same family as the landing page) -->
       <div class="trailx__controls">
