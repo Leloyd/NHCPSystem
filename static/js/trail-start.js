@@ -1963,8 +1963,9 @@ function initDocViewer() {
 
   const relayout = () => {
     cards.forEach((card, i) => {
+      // Fan the back pages UP-left, away from the hint/close row below.
       card.style.zIndex = String(100 - i);
-      card.style.transform = `translateY(${i * 16}px) scale(${(1 - i * 0.055).toFixed(3)}) rotate(${(i * 0.6).toFixed(2)}deg)`;
+      card.style.transform = `translateY(${-i * 12}px) scale(${(1 - i * 0.05).toFixed(3)}) rotate(${(-i * 0.5).toFixed(2)}deg)`;
       card.style.opacity = i > 3 ? '0' : String(Math.max(0, 1 - i * 0.16).toFixed(2));
       card.style.pointerEvents = i === 0 ? 'auto' : 'none';
     });
