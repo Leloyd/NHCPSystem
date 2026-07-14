@@ -308,6 +308,7 @@
       clickHandlerArgs: {
         sourceHotspotId: options.id,
         windowHotspotId: `${options.id}-window`,
+        title: options.title || options.imageAlt || "",
         imageSrc: options.imageSrc,
         imageAlt: options.imageAlt,
         glbSrc: options.glbSrc || "",
@@ -543,6 +544,7 @@
           clickHandlerArgs: {
             sourceHotspotId: "front-gate-hotspot-h1",
             windowHotspotId: "front-gate-hotspot-h1-window",
+            title: "The Front Gate",
             imageSrc: frontGateHotspotH1Src,
             audioSrc: frontGateHotspotH1AudioSrc,
             imageAlt: "Front Gate hotspot image",
@@ -2470,17 +2472,31 @@
     }
   }
 
+  // The floating window's caption: the artifact/hotspot's name, shown above the
+  // close button (mirrors the Heritage Trail's floating window). Generic image
+  // alts aren't names, so they stay hidden.
+  function setFloatingWindowTitle(el, args) {
+    if (!el) {
+      return;
+    }
+    const generic = ["Hotspot image", "Artifact image", "Front Gate hotspot image"];
+    const name = (args && args.title) || (args && args.imageAlt && !generic.includes(args.imageAlt) ? args.imageAlt : "");
+    if (name) {
+      el.textContent = name;
+      el.hidden = false;
+    } else {
+      el.hidden = true;
+    }
+  }
+
   function renderFloatingImageHotspot(hotSpotDiv, args) {
     hotSpotDiv.classList.add("tour-floating-image-window-hotspot");
 
     const panel = document.createElement("div");
     panel.className = "tour-floating-image-window-shell";
 
-    const closeButton = document.createElement("button");
-    closeButton.className = "tour-floating-image-window-close";
-    closeButton.type = "button";
-    closeButton.setAttribute("aria-label", "Close floating hotspot image");
-    closeButton.textContent = "×";
+    const mediaWrap = document.createElement("div");
+    mediaWrap.className = "tour-floating-image-window-mediawrap";
 
     const imageButton = document.createElement("button");
     imageButton.className = "tour-floating-image-window-trigger";
@@ -2492,6 +2508,18 @@
     image.src = args.imageSrc;
     image.alt = args.imageAlt || "Hotspot image";
     image.draggable = false;
+
+    // Title above the close button (Heritage Trail floating-window pattern).
+    const title = document.createElement("p");
+    title.className = "tour-floating-image-window-title";
+    setFloatingWindowTitle(title, args);
+
+    // Close: centered under the title, in the flow so it never covers the image.
+    const closeButton = document.createElement("button");
+    closeButton.className = "tour-floating-image-window-close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close floating hotspot image");
+    closeButton.textContent = "×";
 
     closeButton.addEventListener("click", function (event) {
       event.preventDefault();
@@ -2506,8 +2534,10 @@
     });
 
     imageButton.appendChild(image);
+    mediaWrap.appendChild(imageButton);
+    panel.appendChild(mediaWrap);
+    panel.appendChild(title);
     panel.appendChild(closeButton);
-    panel.appendChild(imageButton);
     hotSpotDiv.appendChild(panel);
   }
 
@@ -2708,18 +2738,30 @@
     });
 
     imageButton.appendChild(image);
-    panel.appendChild(closeButton);
     switchButton.appendChild(switchIcon);
     switchButton.appendChild(switchLabel);
-    panel.appendChild(switchButton);
-    if (alternateAudioButton) {
-      panel.appendChild(alternateAudioButton);
-    }
-    panel.appendChild(imageButton);
-    panel.appendChild(model);
     modelNav.appendChild(prevButton);
     modelNav.appendChild(nextButton);
-    panel.appendChild(modelNav);
+
+    // Media (photo ↔ 3D) with its overlaid switch/audio/nav buttons, then the
+    // title, then a centered close button below — matching the Heritage Trail.
+    const mediaWrap = document.createElement("div");
+    mediaWrap.className = "tour-floating-image-window-mediawrap";
+    mediaWrap.appendChild(imageButton);
+    mediaWrap.appendChild(model);
+    mediaWrap.appendChild(switchButton);
+    if (alternateAudioButton) {
+      mediaWrap.appendChild(alternateAudioButton);
+    }
+    mediaWrap.appendChild(modelNav);
+
+    const title = document.createElement("p");
+    title.className = "tour-floating-image-window-title";
+    setFloatingWindowTitle(title, args);
+
+    panel.appendChild(mediaWrap);
+    panel.appendChild(title);
+    panel.appendChild(closeButton);
     hotSpotDiv.appendChild(panel);
     syncView(args.initialView || "image");
   }

@@ -474,18 +474,48 @@ body {
 .tour-floating-image-window-shell {
   position: relative;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Holds the photo/model plus its overlaid switch/audio/nav buttons, so those
+   hang off the media's edge while the title + close sit in the flow below. */
+.tour-floating-image-window-mediawrap {
+  position: relative;
+  width: 100%;
+}
+
+/* The hotspot's name, above the close button (Heritage Trail pattern). The
+   top margin clears the switch button that overhangs the media's bottom. */
+.tour-floating-image-window-title {
+  margin: 1.6rem 0 0;
+  text-align: center;
+  color: #f8fafc;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.98rem;
+  line-height: 1.3;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.78);
+}
+
+.tour-floating-image-window-title[hidden] {
+  display: none;
+}
+
+/* No title to carry the clearance? Give the close button the switch clearance. */
+.tour-floating-image-window-title[hidden] + .tour-floating-image-window-close {
+  margin-top: 1.6rem;
 }
 
 .tour-floating-image-window-close {
-  position: absolute;
-  top: -0.75rem;
-  right: -0.75rem;
+  position: static;
+  margin-top: 0.65rem;
   z-index: 1;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 2rem;
-  height: 2rem;
+  width: 2.2rem;
+  height: 2.2rem;
   border: 1px solid rgba(255, 255, 255, 0.2);
   border-radius: 999px;
   background: rgba(7, 10, 16, 0.8);
@@ -1151,11 +1181,19 @@ body {
     border-radius: 0;
   }
 
+  .tour-floating-image-window-title {
+    margin-top: 1.3rem;
+    font-size: 0.86rem;
+  }
+
+  .tour-floating-image-window-title[hidden] + .tour-floating-image-window-close {
+    margin-top: 1.3rem;
+  }
+
   .tour-floating-image-window-close {
-    top: -0.55rem;
-    right: -0.55rem;
-    width: 1.75rem;
-    height: 1.75rem;
+    margin-top: 0.5rem;
+    width: 1.9rem;
+    height: 1.9rem;
   }
 
   .tour-floating-media-window-switch {
