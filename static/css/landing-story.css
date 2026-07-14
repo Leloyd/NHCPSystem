@@ -991,6 +991,12 @@ body.is-trail-exit #publicNavHeader {
     width: auto;
     left: 1.1rem !important;
     right: 2rem !important; /* clears the chapter dots on the right edge */
+    /* Lift the chapter's bottom edge by the home-indicator safe area so ALL
+       content rises together with the controls / timeline / subtitle chip
+       (which also use env) when iOS Chrome hides its toolbar — keeping the
+       gap constant. env() is 0 elsewhere, so nothing changes on PC/Android
+       or when the toolbar is shown. */
+    bottom: env(safe-area-inset-bottom, 0px);
     justify-content: flex-end;
     /* Bottom padding leaves room for the subtitle chip + control bar. */
     padding: 6rem 0 8.6rem;
