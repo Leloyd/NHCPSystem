@@ -157,8 +157,8 @@ const SCRIPTS = {
     tl: "Nasa loob na tayo ng simbahan — ang ating ikapitong hinto. Damhin ito: i-drag upang lumingon sa nave, sa kisame, at patungo sa altar. Kapag handa ka na, mag-scroll pababa.",
   },
   's7-tapestry': {
-    en: "Near the altar you may notice a black cloth — the tapete. Embroidered with a skull and crossbones beside the cross of Christ, it is a Catholic symbol of death and remembrance, laid down amid candles and flowers as the focus of prayers for the departed.",
-    tl: "Malapit sa altar, mapapansin mo ang isang itim na tela — ang tapete. Binurdahan ng bungo at magkakrus na buto katabi ng krus ni Kristo, ito ay simbolong Katoliko ng kamatayan at pag-alaala, inilalatag kasama ng kandila at bulaklak bilang sentro ng dasal para sa mga yumao.",
+    en: "Let me show you one of the church's most meaningful objects — the tapete. Embroidered with a skull and crossbones beside the cross of Christ, this black cloth is a Catholic symbol of death and remembrance, laid amid candles and flowers as the focus of prayers for the departed.",
+    tl: "Ipakita ko sa iyo ang isa sa pinakamakabuluhang bagay sa simbahan — ang tapete. Binurdahan ng bungo at magkakrus na buto katabi ng krus ni Kristo, ang itim na telang ito ay simbolong Katoliko ng kamatayan at pag-alaala, inilalatag kasama ng kandila at bulaklak bilang sentro ng dasal para sa mga yumao.",
   },
   's7-explore': {
     en: "Take your time within these walls. Look at the aged timber and stone, and follow the glowing rings from the nave toward the altar. When you are ready, we will descend to the crypts below.",
