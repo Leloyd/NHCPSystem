@@ -202,8 +202,10 @@
   let capturePreviewImage = null;
   let floatingImagePreviewOverlay = null;
   let floatingImagePreviewImage = null;
+  let floatingImagePreviewTitle = null;
   let floatingArtifactPreviewOverlay = null;
   let floatingArtifactPreviewImage = null;
+  let floatingArtifactPreviewTitle = null;
   let floatingArtifactPreviewModel = null;
   let floatingArtifactPreviewModelNav = null;
   let floatingArtifactPreviewModelPrev = null;
@@ -2088,7 +2090,7 @@
     }
 
     const overlay = document.createElement("div");
-    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive";
+    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive tour-floating-preview-overlay";
     overlay.hidden = true;
     overlay.id = "tourFloatingImagePreviewOverlay";
 
@@ -2098,18 +2100,24 @@
     panel.setAttribute("aria-modal", "true");
     panel.setAttribute("aria-label", "Expanded hotspot image preview");
 
+    const image = document.createElement("img");
+    image.className = "tour-floating-image-preview__image";
+    image.alt = "";
+
+    // Title + centered close below the media (Heritage Trail viewer pattern).
+    const title = document.createElement("p");
+    title.className = "tour-floating-preview__title";
+    title.hidden = true;
+
     const closeButton = document.createElement("button");
     closeButton.className = "tour-floating-image-preview__close";
     closeButton.type = "button";
     closeButton.setAttribute("aria-label", "Return hotspot image to floating view");
     closeButton.textContent = "×";
 
-    const image = document.createElement("img");
-    image.className = "tour-floating-image-preview__image";
-    image.alt = "";
-
-    panel.appendChild(closeButton);
     panel.appendChild(image);
+    panel.appendChild(title);
+    panel.appendChild(closeButton);
     overlay.appendChild(panel);
     app.appendChild(overlay);
 
@@ -2125,6 +2133,7 @@
 
     floatingImagePreviewOverlay = overlay;
     floatingImagePreviewImage = image;
+    floatingImagePreviewTitle = title;
   }
 
   function showFloatingImagePreviewOverlay(args) {
@@ -2140,6 +2149,7 @@
 
     floatingImagePreviewImage.src = args.imageSrc;
     floatingImagePreviewImage.alt = args.imageAlt || "Hotspot image";
+    setFloatingWindowTitle(floatingImagePreviewTitle, args);
     floatingImagePreviewOverlay.hidden = false;
   }
 
@@ -2160,7 +2170,7 @@
     }
 
     const overlay = document.createElement("div");
-    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive";
+    overlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive tour-floating-preview-overlay";
     overlay.hidden = true;
     overlay.id = "tourFloatingArtifactPreviewOverlay";
 
@@ -2169,6 +2179,10 @@
     panel.setAttribute("role", "dialog");
     panel.setAttribute("aria-modal", "true");
     panel.setAttribute("aria-label", "Expanded floating artifact preview");
+
+    const title = document.createElement("p");
+    title.className = "tour-floating-preview__title";
+    title.hidden = true;
 
     const closeButton = document.createElement("button");
     closeButton.className = "tour-floating-media-preview__close";
@@ -2208,10 +2222,17 @@
     modelNav.appendChild(prevButton);
     modelNav.appendChild(nextButton);
 
+    // Media (photo/model + its nav) on top, then the title, then a centered
+    // close below — the Heritage Trail viewer layout.
+    const mediaWrap = document.createElement("div");
+    mediaWrap.className = "tour-floating-media-preview__mediawrap";
+    mediaWrap.appendChild(image);
+    mediaWrap.appendChild(model);
+    mediaWrap.appendChild(modelNav);
+
+    panel.appendChild(mediaWrap);
+    panel.appendChild(title);
     panel.appendChild(closeButton);
-    panel.appendChild(image);
-    panel.appendChild(model);
-    panel.appendChild(modelNav);
     overlay.appendChild(panel);
     app.appendChild(overlay);
 
@@ -2251,6 +2272,7 @@
     floatingArtifactPreviewModelNav = modelNav;
     floatingArtifactPreviewModelPrev = prevButton;
     floatingArtifactPreviewModelNext = nextButton;
+    floatingArtifactPreviewTitle = title;
   }
 
   function showFloatingArtifactPreviewOverlay(args, view) {
@@ -2271,6 +2293,7 @@
 
     floatingArtifactPreviewArgs = args;
 
+    setFloatingWindowTitle(floatingArtifactPreviewTitle, args);
     floatingArtifactPreviewImage.hidden = !showImage;
     floatingArtifactPreviewModel.hidden = !showGlb;
     floatingArtifactPreviewImage.style.display = showImage ? "block" : "none";

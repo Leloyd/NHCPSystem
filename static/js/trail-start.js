@@ -910,6 +910,7 @@ function initPanorama() {
       glb: root.getAttribute(`data-art-${key}-glb`) || '',
       tl: root.getAttribute(`data-art-${key}-tl`) || '',
       en: root.getAttribute(`data-art-${key}-en`) || '',
+      march: root.getAttribute(`data-art-${key}-march`) || '', // Pahimakas: the funeral-march recording
     };
   });
   // Display titles (shown above the window's close button, and in the viewer).
@@ -1121,6 +1122,25 @@ function initPanorama() {
       mediaWrap.appendChild(switchBtn);
     }
 
+    // Pahimakas: a button to play the funeral-march recording (the "song"),
+    // just like the virtual tour's floating window. It sits at the media's
+    // lower edge, to the left of the 3D switch (or centered if there's none).
+    if (args.marchAudioSrc) {
+      const songBtn = document.createElement('button');
+      songBtn.className = 'trailx-art__icon trailx-art__song';
+      if (!args.glbSrc) songBtn.classList.add('trailx-art__song--solo');
+      songBtn.type = 'button';
+      songBtn.setAttribute('aria-label', 'Play the funeral-march recording');
+      songBtn.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path></svg>';
+      songBtn.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        pauseSpeaking();
+        playHotspotAudio(args.marchAudioSrc);
+      });
+      mediaWrap.appendChild(songBtn);
+    }
+
     // Title above the close button (landing lightbox pattern).
     const title = document.createElement('p');
     title.className = 'trailx-art__title';
@@ -1308,6 +1328,7 @@ function initPanorama() {
             glbSrc: asset.glb,
             title: ART_TITLES[key],
             audioByLanguage: { tl: asset.tl, en: asset.en },
+            marchAudioSrc: asset.march, // Pahimakas: the funeral-march song button
             imageAlt: alt,
             windowPitch: pitch,
             windowYaw: yaw,

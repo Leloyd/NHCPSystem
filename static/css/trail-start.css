@@ -1209,6 +1209,15 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   color: var(--tx-ink);
   border-color: var(--tx-gold);
 }
+/* Pahimakas song button — sits to the left of the switch (centered if solo). */
+.trailx-art__song {
+  left: calc(50% - 3.2rem);
+  bottom: -1rem;
+  transform: translateX(-50%);
+}
+.trailx-art__song--solo { left: 50%; }
+.trailx-art__song:active { transform: translateX(-50%) scale(0.94); }
+.trailx-art__song svg { width: 15px; height: 15px; }
 .trailx-art__title {
   margin: 1.2rem 0 0; /* clears the overhanging switch button */
   text-align: center;
@@ -1578,7 +1587,9 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .tour-floating-image-window { border-radius: 1rem; }
   .trailx-art__icon { width: 1.75rem; height: 1.75rem; }
   .trailx-art__switch { bottom: -0.85rem; }
+  .trailx-art__song { left: calc(50% - 2.7rem); bottom: -0.85rem; }
   .trailx-art__icon svg { width: 12px; height: 12px; }
+  .trailx-art__song svg { width: 13px; height: 13px; }
   .trailx-art__title { margin-top: 1rem; font-size: calc(0.82rem * var(--tx-font-scale, 1)); }
   .trailx-art__close { width: 34px; height: 34px; margin-top: 0.55rem; font-size: 0.85rem; }
   .trailx-art__model { height: clamp(8.5rem, 30vw, 11rem); }
