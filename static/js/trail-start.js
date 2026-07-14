@@ -149,8 +149,80 @@ const SCRIPTS = {
     tl: "Ngunit hindi laging mabait ang panahon. Mula sa unang bahagi ng ikadalawampung siglo, matapos ang panahon ng mga Espanyol, hanggang sa taong 2000, nagdusa ang libingang ito sa ilalim ng lupa — inagnas ng puwersa ng kalikasan na sumubok sa mismong istruktura nito.",
   },
   's6-next': {
-    en: "That completes our sixth stop. When Stop Seven opens, we will step inside the church at last. Salamat — take one more look before we go in.",
-    tl: "Tapos na ang ating ikaanim na hinto. Kapag nabuksan na ang Ikapitong Hinto, papasok na tayo sa loob ng simbahan. Salamat — lumingon-lingon pa bago tayo pumasok.",
+    en: "That completes our sixth stop. When you are ready, step inside the church with me. Tap Continue.",
+    tl: "Tapos na ang ating ikaanim na hinto. Kapag handa ka na, pumasok ka sa simbahan kasama ko. Pindutin ang Magpatuloy.",
+  },
+  's7-arrive': {
+    en: "We are inside the church now — our seventh stop. Take it in: drag to look around the nave, up at the ceiling, and toward the altar. When you are ready, scroll down.",
+    tl: "Nasa loob na tayo ng simbahan — ang ating ikapitong hinto. Damhin ito: i-drag upang lumingon sa nave, sa kisame, at patungo sa altar. Kapag handa ka na, mag-scroll pababa.",
+  },
+  's7-tapestry': {
+    en: "Near the altar you may notice a black cloth — the tapete. Embroidered with a skull and crossbones beside the cross of Christ, it is a Catholic symbol of death and remembrance, laid down amid candles and flowers as the focus of prayers for the departed.",
+    tl: "Malapit sa altar, mapapansin mo ang isang itim na tela — ang tapete. Binurdahan ng bungo at magkakrus na buto katabi ng krus ni Kristo, ito ay simbolong Katoliko ng kamatayan at pag-alaala, inilalatag kasama ng kandila at bulaklak bilang sentro ng dasal para sa mga yumao.",
+  },
+  's7-explore': {
+    en: "Take your time within these walls. Look at the aged timber and stone, and follow the glowing rings from the nave toward the altar. When you are ready, we will descend to the crypts below.",
+    tl: "Maglaan ng panahon sa loob ng mga pader na ito. Tingnan ang lumang kahoy at bato, at sundan ang mga kumikinang na singsing mula sa nave patungo sa altar. Kapag handa ka na, bababa tayo sa mga kripta sa ilalim.",
+  },
+  's7-next': {
+    en: "That completes our seventh stop. When you are ready, come down with me into the underground crypts. Tap Continue.",
+    tl: "Tapos na ang ating ikapitong hinto. Kapag handa ka na, bumaba ka kasama ko sa mga kripta sa ilalim. Pindutin ang Magpatuloy.",
+  },
+  's8-arrive': {
+    en: "Here we are, beneath the earth — the underground crypts, our eighth stop. This is the heart of the cemetery. Drag to look around, follow the glowing rings through the chambers, and scroll down as I tell you the stories held down here.",
+    tl: "Narito na tayo, sa ilalim ng lupa — ang mga kripta, ang ating ikawalong hinto. Ito ang puso ng libingan. I-drag upang lumingon, sundan ang mga kumikinang na singsing sa mga silid, at mag-scroll pababa habang ikinukuwento ko ang mga kuwentong nasa ilalim dito.",
+  },
+  's8-acronyms': {
+    en: "Look closely at the gravestones. R.I.P., D.E.P., D.O.M. — Latin prayers for the dead. But on the graves of ordinary Filipinos you will more often find S.L.N.: Sumalangit Nawa, may their soul ascend to heaven.",
+    tl: "Tingnang mabuti ang mga puntod. R.I.P., D.E.P., D.O.M. — mga panalanging Latin para sa yumao. Ngunit sa mga puntod ng karaniwang Pilipino, mas madalas mong makikita ang S.L.N.: Sumalangit Nawa.",
+  },
+  's8-revolution': {
+    en: "These quiet chambers once held secrets. During the revolution against Spain, Katipuneros met here. In 1897, Pedro Paterno and General Severino Taiño gathered to discuss the talks that would lead to the Pact of Biak-na-Bato.",
+    tl: "Ang tahimik na mga silid na ito ay minsang nag-ingat ng mga lihim. Noong rebolusyon laban sa Espanya, nagpulong dito ang mga Katipunero. Noong 1897, nagtipon sina Pedro Paterno at Heneral Severino Taiño upang talakayin ang mga usaping humantong sa Kasunduan sa Biak-na-Bato.",
+  },
+  's8-biak': {
+    en: "The story of that pact reaches far beyond Nagcarlan — to the caves of Biak-na-Bato, where Aguinaldo made his stronghold, to a signed agreement in December 1897, and to an exile in Hong Kong. Read the full story here; take your time.",
+    tl: "Ang kuwento ng kasunduang iyon ay umaabot nang higit pa sa Nagcarlan — sa mga yungib ng Biak-na-Bato, kung saan itinatag ni Aguinaldo ang kanyang kuta, sa isang nilagdaang kasunduan noong Disyembre 1897, at sa pagkatapon sa Hong Kong. Basahin ang buong kuwento rito; huwag magmadali.",
+  },
+  's8-wwii': {
+    en: "The cemetery kept sheltering the brave. During the Japanese occupation, it became a stronghold for Filipino guerrillas, led by Colonel Guillermo Aynaga, until his capture and death in 1944. His remains now rest at the Libingan ng mga Bayani.",
+    tl: "Patuloy na nagkupkop ng matatapang ang libingan. Noong pananakop ng mga Hapon, naging kuta ito ng mga gerilyang Pilipino, sa pamumuno ni Koronel Guillermo Aynaga, hanggang sa kanyang pagkadakip at pagkamatay noong 1944. Ang kanyang labi ay nakahimlay na ngayon sa Libingan ng mga Bayani.",
+  },
+  's8-guerrillas': {
+    en: "They did not fight alone. The Nagcarlan guerrillas — the FAIT, the FAAC, and President Quezon's Own Guerrillas — fought in the mountains, sabotaged the enemy, and fed intelligence to the Allies, standing firm for Philippine freedom until the war's end.",
+    tl: "Hindi sila nag-isa. Ang mga gerilya ng Nagcarlan — ang FAIT, ang FAAC, at ang President Quezon's Own Guerrillas — ay nakipaglaban sa kabundukan, nanira sa kaaway, at nagbigay ng impormasyon sa mga Allied, na matatag para sa kalayaan ng Pilipinas hanggang sa katapusan ng digmaan.",
+  },
+  's8-next': {
+    en: "That completes our eighth stop. When you are ready, one last challenge waits before we return to the light. Tap Continue.",
+    tl: "Tapos na ang ating ikawalong hinto. Kapag handa ka na, may naghihintay na huling hamon bago tayo bumalik sa liwanag. Pindutin ang Magpatuloy.",
+  },
+  's9-arrive': {
+    en: "One last challenge — our ninth stop. No scores, no grades: just a few games drawn from everything you have seen, from the gates to these crypts. Scroll down and let us play.",
+    tl: "Isang huling hamon — ang ating ikasiyam na hinto. Walang puntos, walang grado: ilang laro lamang mula sa lahat ng iyong nakita, mula sa tarangkahan hanggang sa mga kriptang ito. Mag-scroll pababa at maglaro tayo.",
+  },
+  's9-riddle': {
+    en: "First, a riddle from the crypts. Katipuneros met in secret at Nagcarlan in 1897 — and those talks led, months later, to a famous agreement with Spain. Which one? Choose below.",
+    tl: "Una, isang bugtong mula sa mga kripta. Lihim na nagpulong ang mga Katipunero sa Nagcarlan noong 1897 — at ang mga usapang iyon ay humantong sa isang tanyag na kasunduan sa Espanya. Alin? Pumili sa ibaba.",
+  },
+  's9-order': {
+    en: "Now the whole story. Tap the four moments in the order they happened — from the friars who built this place to the day it became a national landmark.",
+    tl: "Ngayon, ang buong kuwento. Pindutin ang apat na pangyayari ayon sa pagkakasunod — mula sa mga prayleng nagtayo nito hanggang sa araw na naging pambansang palatandaan ito.",
+  },
+  's9-tf': {
+    en: "Last — four quick claims from across the whole trail. Tell me: true, or false? Take your best guess.",
+    tl: "Panghuli — apat na mabilisang pahayag mula sa buong landas. Sabihin mo: totoo, o hindi? Manghula lang.",
+  },
+  's9-next': {
+    en: "Well played — that was our final challenge. Let us climb back up into the light, and stand once more at the gates where we began. Tap Continue.",
+    tl: "Mahusay — iyon ang ating huling hamon. Umakyat tayong muli sa liwanag, at tumayo pang muli sa tarangkahang pinagsimulan natin. Pindutin ang Magpatuloy.",
+  },
+  's10-arrive': {
+    en: "And here we are again — the front gates, where our journey began. Take one last look around the place you now know so well.",
+    tl: "At narito na tayong muli — ang tarangkahan, kung saan nagsimula ang ating paglalakbay. Lumingon-lingon nang huling beses sa pook na kilalang-kilala mo na ngayon.",
+  },
+  's10-farewell': {
+    en: "Salamat — thank you for walking the whole trail with me. From the gates to the crypts, you have carried this history with you now. This heritage grows when you take part: share a story, leave your feedback, or come visit us onsite. Until we meet again, ingat — take care.",
+    tl: "Salamat — salamat sa paglakad sa buong landas kasama ako. Mula sa tarangkahan hanggang sa mga kripta, dala mo na ngayon ang kasaysayang ito. Lumalago ang pamanang ito kapag nakikibahagi ka: magbahagi ng kuwento, mag-iwan ng puna, o dalawin kami nang personal. Hanggang sa muli, ingat.",
   },
 };
 
@@ -508,6 +580,15 @@ const SCENE_BASE = {
   leftTombs: { yaw: 0, pitch: 0 },
   leftMiddleTombs: { yaw: 0, pitch: 0 },
   leftEndTombs: { yaw: 0, pitch: 0 },
+  // Stop 7 — church interior.
+  insideChurch: { yaw: -24, pitch: 0 },
+  insideChurch1: { yaw: 160, pitch: 0 },
+  // Stops 8 & 9 — underground crypts.
+  underground1: { yaw: -20, pitch: 0 },
+  middleUnderground: { yaw: -110, pitch: 0 },
+  frontAltarUnderground: { yaw: 0, pitch: 0 },
+  underground2: { yaw: -14, pitch: 0 },
+  underground3: { yaw: 0, pitch: 0 },
 };
 // Default zoom per scene — Show Panels eases back to this before restoring.
 const SCENE_HFOV = {
@@ -533,6 +614,13 @@ const SCENE_HFOV = {
   leftTombs: 100,
   leftMiddleTombs: 100,
   leftEndTombs: 100,
+  insideChurch: 100,
+  insideChurch1: 100,
+  underground1: 100,
+  middleUnderground: 100,
+  frontAltarUnderground: 100,
+  underground2: 100,
+  underground3: 100,
 };
 
 // Per-stop config: which 360 the stop opens on, its entry view, and the hash
@@ -548,6 +636,14 @@ const STOP_CONF = {
   stop5: { scene: 'insideFrontGate', pitch: 0, yaw: 0, hfov: 100, hash: '#stop-5' },
   // Front of the church + the tomb rows on either side.
   stop6: { scene: 'frontChurch', pitch: 0, yaw: -10, hfov: 100, hash: '#stop-6' },
+  // Inside the church.
+  stop7: { scene: 'insideChurch', pitch: 0, yaw: -24, hfov: 100, hash: '#stop-7' },
+  // The underground crypts.
+  stop8: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-8' },
+  // The final assessment plays over the same crypts as Stop 8.
+  stop9: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-9' },
+  // Back at the front gate, where the trail began.
+  stop10: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-10' },
 };
 
 // Departure views: before travelling to the next stop, the current 360 turns
@@ -559,6 +655,8 @@ const DEPART_VIEWS = {
   frontMuseum: { yaw: 32.0, pitch: -9.4 },
   // Stop 5 → 6: from the courtyard, turn to face the church before crossing.
   middleGInside: { yaw: 125, pitch: -5 },
+  // Stop 7 → 8: from inside the church, turn to the stairs before descending.
+  insideChurch: { yaw: 68, pitch: -29 },
 };
 
 const isImmersive = () => root.getAttribute('data-immersive') === 'true';
@@ -736,6 +834,18 @@ function initPanorama() {
     leftTombs: root.getAttribute('data-pano-left-tombs') || '',
     leftMiddleTombs: root.getAttribute('data-pano-left-middle-tombs') || '',
     leftEndTombs: root.getAttribute('data-pano-left-end-tombs') || '',
+  };
+  // Stop 7 (church interior) + Stops 8/9 (underground crypts) panoramas.
+  const s7 = {
+    insideChurch: root.getAttribute('data-pano-inside-church') || '',
+    insideChurch1: root.getAttribute('data-pano-inside-church1') || '',
+  };
+  const s8 = {
+    underground1: root.getAttribute('data-pano-underground1') || '',
+    middleUnderground: root.getAttribute('data-pano-middle-underground') || '',
+    frontAltarUnderground: root.getAttribute('data-pano-front-altar-underground') || '',
+    underground2: root.getAttribute('data-pano-underground2') || '',
+    underground3: root.getAttribute('data-pano-underground3') || '',
   };
 
   // Artifact assets for the museum halls (image + EN/TL voice-over + optional
@@ -1292,6 +1402,37 @@ function initPanorama() {
         scenes.rightFrontTombs2 = eq(s5.rightFrontTombs2, 0, 0, [
           link(-7.06, 86.13, 'rightFrontTombs1', 3.34, 80.68),
         ]);
+
+        // Stop 7 — inside the church (nave ↔ deeper toward the altar).
+        if (s7.insideChurch) {
+          scenes.insideChurch = eq(s7.insideChurch, 0, -24, [
+            link(-23, -24, 'insideChurch1'),
+          ]);
+          scenes.insideChurch1 = eq(s7.insideChurch1, 0, 160, [
+            link(-24, -20, 'insideChurch', -20, 160),
+          ]);
+        }
+        // Stops 8 & 9 — the underground crypts (virtual-tour walk, self-contained).
+        if (s8.underground1) {
+          scenes.underground1 = eq(s8.underground1, 0, -20, [
+            link(-36, -17, 'middleUnderground', 0, 60),
+          ]);
+          scenes.middleUnderground = eq(s8.middleUnderground, 0, -110, [
+            link(-33, -22, 'frontAltarUnderground', -5, 180),
+            link(-27, 67, 'underground2'),
+            link(-22, 158, 'underground3'),
+            link(-30, 248, 'underground1', 0, 170),
+          ]);
+          scenes.frontAltarUnderground = eq(s8.frontAltarUnderground, 0, 0, [
+            link(-45, -9, 'middleUnderground', 0, -200),
+          ]);
+          scenes.underground2 = eq(s8.underground2, 0, -14, [
+            link(-35, -17, 'middleUnderground'),
+          ]);
+          scenes.underground3 = eq(s8.underground3, 0, 0, [
+            link(-20, -5, 'middleUnderground', 0, -20),
+          ]);
+        }
       }
 
       // Refresh restore: open directly on the remembered stop's scene.

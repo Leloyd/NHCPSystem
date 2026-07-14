@@ -58,6 +58,13 @@
       data-pano-left-tombs="{{ url_for('virtual_tour_file', filename='leftTombs.jpg') }}"
       data-pano-left-middle-tombs="{{ url_for('virtual_tour_file', filename='leftMiddleTombs.jpg') }}"
       data-pano-left-end-tombs="{{ url_for('virtual_tour_file', filename='leftEndTombs.jpg') }}"
+      data-pano-inside-church="{{ url_for('virtual_tour_file', filename='InsideChurch.jpg') }}"
+      data-pano-inside-church1="{{ url_for('virtual_tour_file', filename='1InsideChurch.jpg') }}"
+      data-pano-underground1="{{ url_for('virtual_tour_file', filename='1Underground.jpg') }}"
+      data-pano-middle-underground="{{ url_for('virtual_tour_file', filename='MiddleUnderground.jpg') }}"
+      data-pano-front-altar-underground="{{ url_for('virtual_tour_file', filename='front-AltarUnderground.jpg') }}"
+      data-pano-underground2="{{ url_for('virtual_tour_file', filename='2Underground.jpg') }}"
+      data-pano-underground3="{{ url_for('virtual_tour_file', filename='3Underground.jpg') }}"
       data-art-balanghay-img="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.jpg') }}"
       data-art-balanghay-tl="{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/ANG BALANGHAY.mp3') }}"
       data-art-balanghay-en="{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/THE BALANGHAY.mp3') }}"
@@ -1129,16 +1136,12 @@
               Lampas sa mga pinto ay ang loob ng simbahan — ang altar nito, ang lumang kahoy, at ang katahimikang nasa loob ng mga pader nito.
             </p>
             <div class="trailx__actions">
-              <button class="trailx__begin" data-trail-next type="button">
+              <button class="trailx__begin" data-trail-goto="stop7" type="button">
                 <span data-lang-en>Continue to Stop 7</span>
                 <span data-lang-tl>Magpatuloy sa Hinto 7</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
             </div>
-            <p class="trailx__next-note" data-trail-next-note hidden>
-              <span data-lang-en>Stop 7 is still being prepared — it will open right here soon.</span>
-              <span data-lang-tl>Inihahanda pa ang Hinto 7 — malapit na itong buksan mismo dito.</span>
-            </p>
           </footer>
 
           <!-- Chapter dots -->
@@ -1153,6 +1156,484 @@
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>
       </div>
       <!-- ================== End Stop 6 · Front of the Church ================== -->
+
+      <!-- ============ Stop 7 · Inside the Church ============
+           The church-interior 360s (insideChurch ↔ insideChurch1). Information
+           on the church interior — the Black Tapestry now; the building
+           materials to be added before it later. -->
+      <div class="trailx__story" data-trail-story="stop7" aria-label="Stop 7 — Inside the Church" hidden>
+        <div class="trailx__stage" data-trail-stage>
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s7-arrive" data-side="left" data-title="Arrive">
+            <p class="trailx__s1-kicker"><span data-lang-en>Stop 7 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 7 ng 10 · Landas ng Pamana</span></p>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
+              <span data-lang-en>Inside <em>the Church</em></span>
+              <span data-lang-tl>Sa Loob ng <em>Simbahan</em></span>
+            </h2>
+            <p class="trailx__s1-tip">
+              <span data-lang-en>Drag to look around · Follow the glowing rings deeper into the church, from the nave toward the altar</span>
+              <span data-lang-tl>I-drag upang lumingon · Sundan ang mga kumikinang na singsing papasok sa simbahan, mula sa nave patungo sa altar</span>
+            </p>
+          </header>
+
+          <!-- Chapter I · Black Tapestry of Remembrance -->
+          <article class="trailx__chapter" data-chapter="s7-tapestry" data-side="left" data-title="Tapete">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Interior · I</span><span data-lang-tl>Ang Loob · I</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Black Tapestry<br /><em>of Remembrance</em></span>
+              <span data-lang-tl>Itim na Tela<br /><em>ng Pag-alaala</em></span>
+            </h3>
+            <p class="trailx__quote" data-lang-en>
+              "Indeed for your faithful, Lord, life is changed not ended, and, when this earthly dwelling turns to dust, an eternal dwelling is made ready for them in heaven." <span class="trailx__quote-src">— Preface of the Mass for the Dead</span>
+            </p>
+            <p class="trailx__quote" data-lang-tl>
+              "Tunay ngang para sa iyong tapat na mga anak, Panginoon, ang buhay ay nabago at hindi nagwawakas. At kapag ang katawang tahanan sa daigdig ay naging alabok, isang walang hanggang tahanan ang inihanda para sa kanila sa langit." <span class="trailx__quote-src">— Prepasyo ng Banal na Misa para sa Yumao</span>
+            </p>
+            <p class="trailx__chapter-copy" data-lang-en>
+              THE TAPETE, a black cloth often embroidered with a skull and crossbones alongside the cross of Christ, serves as a significant Catholic symbol of death and remembrance. It is laid near the altar and surrounded by candles and flowers, becoming the focal point for prayers and blessings offered for the departed.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              ANG TAPETE, isang itim na telang madalas na may burdang bungo at magkakrus na mga buto kasama ng krus ni Kristo, ay nagsisilbing mahalagang simbolo ng kamatayan at pag-alaala sa Simbahang Katolika. Inilalatag ito malapit sa altar at pinalilibutan ng kandila at bulaklak bilang sentro ng dasal at pagbabasbas para sa mga yumao.
+            </p>
+          </article>
+
+          <!-- === Building-materials chapters slot in here (to be provided) === -->
+
+          <!-- Chapter II · Explore the interior -->
+          <article class="trailx__chapter" data-chapter="s7-explore" data-side="right" data-title="Explore">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>The Interior · II</span><span data-lang-tl>Ang Loob · II</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Within<br /><em>the Walls</em></span>
+              <span data-lang-tl>Sa Loob ng<br /><em>mga Pader</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Take a moment inside. Drag to look up at the ceiling and along the aged timber and stone, and follow the glowing rings from the nave toward the altar. When you are ready, we will descend to the crypts below.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Maglaan ng sandali sa loob. I-drag upang tingnan ang kisame at ang lumang kahoy at bato, at sundan ang mga kumikinang na singsing mula sa nave patungo sa altar. Kapag handa ka na, bababa tayo sa mga kripta sa ilalim.
+            </p>
+          </article>
+
+          <!-- Step · Next stop -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s7-next" data-title="Next">
+            <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 8</span><span data-lang-tl>Susunod · Hinto 8</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Underground<br /><em>Crypts</em></span>
+              <span data-lang-tl>Ang mga Kripta<br /><em>sa Ilalim</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Beneath the altar, a stairway descends into the underground crypts — the heart of this singular cemetery.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Sa ilalim ng altar, may hagdanang pababa sa mga kripta sa ilalim ng lupa — ang puso ng natatanging libingang ito.
+            </p>
+            <div class="trailx__actions">
+              <button class="trailx__begin" data-trail-goto="stop8" type="button">
+                <span data-lang-en>Continue to Stop 8</span>
+                <span data-lang-tl>Magpatuloy sa Hinto 8</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </footer>
+
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 7 sections"></nav>
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true"><span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span></div>
+        </div>
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+      </div>
+      <!-- ================== End Stop 7 · Inside the Church ================== -->
+
+      <!-- ============ Stop 8 · The Underground Crypts ============
+           The underground 360s. Information on the grave acronyms and the
+           cemetery's role in the Revolution and the Second World War. -->
+      <div class="trailx__story" data-trail-story="stop8" aria-label="Stop 8 — The Underground Crypts" hidden>
+        <div class="trailx__stage" data-trail-stage>
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s8-arrive" data-side="left" data-title="Arrive">
+            <p class="trailx__s1-kicker"><span data-lang-en>Stop 8 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 8 ng 10 · Landas ng Pamana</span></p>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
+              <span data-lang-en>The Underground <em>Crypts</em></span>
+              <span data-lang-tl>Ang mga Kripta <em>sa Ilalim</em></span>
+            </h2>
+            <p class="trailx__s1-tip">
+              <span data-lang-en>Drag to look around · Follow the glowing rings through the crypt, the central chamber, and the altar below</span>
+              <span data-lang-tl>I-drag upang lumingon · Sundan ang mga kumikinang na singsing sa kripta, sa gitnang silid, at sa altar sa ilalim</span>
+            </p>
+          </header>
+
+          <!-- Chapter I · Acronyms on Graves -->
+          <article class="trailx__chapter" data-chapter="s8-acronyms" data-side="left" data-title="Acronyms">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · I</span><span data-lang-tl>Sa Ilalim · I</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Acronyms<br /><em>on Graves</em></span>
+              <span data-lang-tl>Mga Akronimo<br /><em>sa Puntod</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              FILIPINO GRAVESTONES often bear Catholic symbols such as R.I.P. (Requiescat in pace), D.E.P. (Descansar en paz), and D.O.M. (Deo Optimo Maximo), signifying prayers for the dead. Among ordinary Filipinos, the local inscription S.L.N., meaning "Sumalangit Nawa" (May their soul ascend to heaven), is more common.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              SA MGA PUNTOD sa Pilipinas, makikita ang mga panrelihiyong sagisag tulad ng R.I.P. (Requiescat in pace), D.E.P. (Descansar en paz), at D.O.M. (Deo Optimo Maximo). Ipinapahiwatig ng mga ito ang panalangin at pag-aalay ng kaluluwa sa Diyos. Sa mga puntod ng karaniwang mamamayan, madalas namang nakasulat ang S.L.N. o Sumalangit Nawa.
+            </p>
+          </article>
+
+          <!-- Chapter II · The Cemetery and the Revolution -->
+          <article class="trailx__chapter" data-chapter="s8-revolution" data-side="right" data-title="Revolution">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · II</span><span data-lang-tl>Sa Ilalim · II</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Cemetery &amp; the<br /><em>Revolution</em></span>
+              <span data-lang-tl>Ang Libingan at ang<br /><em>Rebolusyon</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              DURING THE Filipino revolution against Spain, the Nagcarlan Cemetery served as a secret meeting place for Katipuneros. In 1897, Pedro Paterno and General Severino Taiño of the Maluningning Chapter of the Katipunan met here to discuss matters that would later lead to the historic Pact of Biak-na-Bato.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              NOONG REBOLUSYON laban sa Espanya, nagsilbing lihim na tagpuan ng mga Katipunero ang Libingan ng Nagcarlan. Noong 1897, nagtagpo rito sina Pedro Paterno at Heneral Severino Taiño ng Balangay Maluningning ng Katipunan upang talakayin ang mga usaping humantong sa makasaysayang Kasunduan sa Biak-na-Bato.
+            </p>
+          </article>
+
+          <!-- Chapter III · The Pact of Biak-na-Bato (story, scrollable) -->
+          <article class="trailx__chapter" data-chapter="s8-biak" data-side="left" data-title="Biak-na-Bato">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · III</span><span data-lang-tl>Sa Ilalim · III</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Pact of<br /><em>Biak-na-Bato</em></span>
+              <span data-lang-tl>Ang Kasunduan sa<br /><em>Biak-na-Bato</em></span>
+            </h3>
+            <div class="trailx__scrollbox">
+              <div class="trailx__story-en" data-lang-en>
+                <p class="trailx__chapter-copy">BIAK-NA-BATO is part of the Sierra Madre mountain range, within the municipality of San Miguel, Bulacan. During the Philippine Revolution of 1896, the caves here served as hiding places for the Katipuneros of this part of Bulacan.</p>
+                <p class="trailx__chapter-copy">While fleeing the Spanish forces, General Emilio Aguinaldo's group reached Biak-na-Bato in June 1897. Because of its strategic location, Aguinaldo made the area his stronghold and headquarters. In November of that year, he established the government known as the República de Biak-na-Bato, based on a constitution drafted by Isabelo Artacho and Felix Ferrer.</p>
+                <p class="trailx__chapter-copy">In December 1897, Pedro Paterno brokered an agreement aimed at ending the conflict. On December 14, Governor-General Fernando Primo de Rivera signed it, and on December 15, Paterno signed as Aguinaldo's representative. On December 20, the revolutionary assembly ratified the document now known as the Pact of Biak-na-Bato.</p>
+                <p class="trailx__chapter-copy">The pact required the Spanish government to pay 800,000 pesos in exchange for the voluntary surrender of the revolution and the exile of Aguinaldo's group to Hong Kong — paid in three parts: 400,000 pesos after Aguinaldo left for Hong Kong; 200,000 after the surrender of arms; and 200,000 after a Te Deum at the Manila Cathedral and a declared general amnesty. On December 25, Christmas Day, Aguinaldo declared the end of the revolution, then sailed for Hong Kong.</p>
+                <p class="trailx__chapter-copy">Yet despite all of this, the Filipino revolutionaries' struggle for independence continued.</p>
+              </div>
+              <div class="trailx__story-tl" data-lang-tl>
+                <p class="trailx__chapter-copy">ANG BIAK-NA-BATO ay bahagi ng bulubunduking Sierra Madre na sakop ng bayan ng San Miguel, Bulacan. Sa panahon ng Himagsikang 1896, ang mga yungib dito ay nagsilbing taguan ng mga Katipunero ng bahaging ito ng Bulacan.</p>
+                <p class="trailx__chapter-copy">Sa pagtakas nila sa mga hukbong Espanyol, narating ng pangkat ni Heneral Emilio Aguinaldo ang Biak-na-Bato noong Hunyo 1897. Dahil sa estratehikong kinalalagyan, nagpasya si Aguinaldo na gawing kuta at himpilan ang lugar. Nobyembre ng nasabing taon, itinatag niya rito ang pamahalaang tinawag na Republika ng Biak-na-Bato ayon sa konstitusyong binuo nina Isabelo Artacho at Felix Ferrer.</p>
+                <p class="trailx__chapter-copy">Disyembre 1897 nang naisulong ni Pedro Paterno ang isang kasunduang naglalayong tuldukan ang labanan. 14 Disyembre, nilagdaan ni Gobernador-Heneral Fernando Primo de Rivera ang kasunduan, at ni Paterno bilang kinatawan ni Aguinaldo noong 15 Disyembre. Noong 20 Disyembre, pinagtibay ng kapulungang rebolusyonaryo ang dokumentong tinatawag ngayong Kasunduang Biak-na-Bato.</p>
+                <p class="trailx__chapter-copy">Itinakda ng Kasunduan ang pagbayad ng pamahalaang Espanyol ng 800,000 piso kapalit ng boluntaryong pagsuko ng rebolusyon at pagdistiyero sa grupo ni Aguinaldo sa Hong Kong. Binayaran ito sa tatlong bahagi: 400,000 para kay Aguinaldo matapos nitong lisanin ang Biak-na-Bato patungong Hong Kong; 200,000 pagkatapos maisuko ang mga armas; at 200,000 matapos maisagawa ang Te Deum sa katedral ng Maynila at maipahayag ang pangkalahatang amnestiya. 25 Disyembre, araw ng Pasko, iprinoklama ni Aguinaldo ang pagwawakas ng rebolusyon. Pagkatapos nito, naglayag siya patungong Hong Kong.</p>
+                <p class="trailx__chapter-copy">Gayunpaman, sa kabila ng lahat ng ito, nagpatuloy ang pakikipaglaban ng mga rebolusyonaryong Pilipino para sa kalayaan.</p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Chapter IV · The Cemetery during World War II -->
+          <article class="trailx__chapter" data-chapter="s8-wwii" data-side="right" data-title="World War II">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · IV</span><span data-lang-tl>Sa Ilalim · IV</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Cemetery in<br /><em>World War II</em></span>
+              <span data-lang-tl>Ang Libingan sa<br /><em>Ikalawang Digmaan</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              THE NAGCARLAN Cemetery became a stronghold for Filipino guerrillas during the Japanese occupation. Colonel Guillermo "Billy" Igay Aynaga Sr., founder of the First Laguna Division of the Fil-American Irregular Troops, led the movement until his capture and death in 1944. His remains were later moved to the Libingan ng mga Bayani.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              NAGING KUBLIHAN at kuta ng mga gerilyang Pilipino ang Libingan ng Nagcarlan noong pananakop ng mga Hapon. Pinamunuan ito ni Koronel Guillermo "Billy" Igay Aynaga Sr., na nagtatag ng Unang Sangay ng Fil-American Irregular Troops sa Laguna. Siya ay nadakip at pinaslang noong 1944, at kalaunan ay inilibing sa Libingan ng mga Bayani.
+            </p>
+          </article>
+
+          <!-- Chapter V · The Nagcarlan Guerrillas -->
+          <article class="trailx__chapter" data-chapter="s8-guerrillas" data-side="left" data-title="Guerrillas">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · V</span><span data-lang-tl>Sa Ilalim · V</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Nagcarlan<br /><em>Guerrillas</em></span>
+              <span data-lang-tl>Ang mga Gerilya<br /><em>ng Nagcarlan</em></span>
+            </h3>
+            <div class="trailx__scrollbox">
+              <p class="trailx__chapter-copy" data-lang-en>
+                THE NAGCARLAN Guerrillas played a crucial role in resisting Japanese occupation during World War II. Comprising various groups such as the Fil-American Irregular Troops (FAIT), Filipino American Air Corps (FAAC), and President Quezon's Own Guerrillas (PQOG), these forces fought in the mountains, launched sabotage operations, and provided intelligence to the Allied forces. Their contributions were vital to the resistance in Laguna, disrupting Japanese military operations and supporting returning soldiers. Despite limited resources and constant threats, these guerrilla units remained steadfast in their fight for Philippine freedom until the war's end.
+              </p>
+              <p class="trailx__chapter-copy" data-lang-tl>
+                MAHALAGA ANG naging papel ng mga Gerilya ng bayan ng Nagcarlan sa paglaban sa pananakop ng Hapon noong Ikalawang Digmaang Pandaigdig. Binubuo ng iba't ibang grupo tulad ng Fil-American Irregular Troops (FAIT), Filipino American Air Corps (FAAC), at President Quezon's Own Guerrilla (PQOG), ang mga hukbong ito ay nakipaglaban sa mga kabundukan, nagsagawa ng mga pagsabotahe, at nagbigay ng impormasyon sa mga pwersang Allied. Mahalaga ang kanilang kontribusyon sa paglaban sa Laguna dahil pinigilan nila ang mga operasyon ng mga Hapon at nagbigay ng suporta sa mga nagbabalik na sundalo. Sa kabila ng kakulangan sa mga kagamitan at walang humpay na panganib, nanatili silang matatag sa kanilang pakikibaka para sa kalayaan ng Pilipinas hanggang sa pagtatapos ng digmaan.
+              </p>
+            </div>
+          </article>
+
+          <!-- Step · Next stop -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s8-next" data-title="Next">
+            <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 9</span><span data-lang-tl>Susunod · Hinto 9</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>A Final<br /><em>Challenge</em></span>
+              <span data-lang-tl>Isang Huling<br /><em>Hamon</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              You have walked the whole story now. Before we return to the gates, let us play — one last challenge to bring it all together.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Natahak mo na ang buong kuwento. Bago tayo bumalik sa tarangkahan, maglaro tayo — isang huling hamon upang pagsama-samahin ang lahat.
+            </p>
+            <div class="trailx__actions">
+              <button class="trailx__begin" data-trail-goto="stop9" type="button">
+                <span data-lang-en>Continue to Stop 9</span>
+                <span data-lang-tl>Magpatuloy sa Hinto 9</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </footer>
+
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 8 sections"></nav>
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true"><span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span></div>
+        </div>
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+      </div>
+      <!-- ================== End Stop 8 · The Underground Crypts ================== -->
+
+      <!-- ============ Stop 9 · A Final Challenge (assessment) ============
+           Same underground 360 as Stop 8. Unscored interactive games that draw
+           on everything seen across the whole trail. -->
+      <div class="trailx__story" data-trail-story="stop9" aria-label="Stop 9 — A Final Challenge" hidden>
+        <div class="trailx__stage" data-trail-stage>
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s9-arrive" data-side="left" data-title="Arrive">
+            <p class="trailx__s1-kicker"><span data-lang-en>Stop 9 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 9 ng 10 · Landas ng Pamana</span></p>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
+              <span data-lang-en>A Final <em>Challenge</em></span>
+              <span data-lang-tl>Isang Huling <em>Hamon</em></span>
+            </h2>
+            <p class="trailx__s1-tip">
+              <span data-lang-en>No scores, no accounts — just play · Everything you need, you have already seen along the trail</span>
+              <span data-lang-tl>Walang puntos, walang account — laro lamang · Lahat ng kailangan mo ay nakita mo na sa landas</span>
+            </p>
+          </header>
+
+          <!-- Game I · Who Am I? (across the trail) -->
+          <article class="trailx__chapter" data-chapter="s9-riddle" data-side="left" data-title="Riddle">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Assessment · I</span><span data-lang-tl>Pagtatasa · I</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Which<br /><em>Pact?</em></span>
+              <span data-lang-tl>Aling<br /><em>Kasunduan?</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              A riddle from the crypts you just left. Read it, then choose — wrong guesses cost nothing.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Isang bugtong mula sa mga kriptang kaaalis mo lang. Basahin ito, pagkatapos ay pumili — walang kapalit ang maling hula.
+            </p>
+            <div class="trailx__game" data-game>
+              <p class="trailx__riddle">
+                <span data-lang-en>"Katipuneros met in secret at Nagcarlan in 1897. The talks that began there led, months later, to which historic agreement with Spain?"</span>
+                <span data-lang-tl>"Lihim na nagpulong ang mga Katipunero sa Nagcarlan noong 1897. Ang mga usapang nagsimula roon ay humantong, makalipas ang ilang buwan, sa aling makasaysayang kasunduan sa Espanya?"</span>
+              </p>
+              <div class="trailx__chips" role="group" aria-label="Riddle choices">
+                <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>The Treaty of Paris</span><span data-lang-tl>Ang Kasunduan sa Paris</span></button>
+                <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>The Pact of Biak-na-Bato</span><span data-lang-tl>Ang Kasunduan sa Biak-na-Bato</span></button>
+                <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>The Malolos Constitution</span><span data-lang-tl>Ang Konstitusyong Malolos</span></button>
+              </div>
+              <p class="trailx__game-fb" data-fb-right hidden>
+                <span data-lang-en>Yes — the Pact of Biak-na-Bato. You were listening in the crypts.</span>
+                <span data-lang-tl>Tama — ang Kasunduan sa Biak-na-Bato. Nakinig ka sa mga kripta.</span>
+              </p>
+              <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden>
+                <span data-lang-en>Not quite — think of the caves in Bulacan, and try again.</span>
+                <span data-lang-tl>Hindi pa — isipin ang mga yungib sa Bulacan, at subukan muli.</span>
+              </p>
+            </div>
+          </article>
+
+          <!-- Game II · Time Walk (the whole site) -->
+          <article class="trailx__chapter" data-chapter="s9-order" data-side="right" data-title="Time Walk">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Assessment · II</span><span data-lang-tl>Pagtatasa · II</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Whole<br /><em>Story</em></span>
+              <span data-lang-tl>Ang Buong<br /><em>Kuwento</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Tap the four moments in the order they happened — the arc of this site, from friars to national landmark.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Pindutin ang apat na pangyayari ayon sa pagkakasunod — ang kuwento ng pook, mula sa mga prayle hanggang maging pambansang palatandaan.
+            </p>
+            <div class="trailx__order" data-order-game>
+              <button class="trailx__order-tile" type="button" data-order="2">
+                <span data-lang-en>Katipuneros meet in secret at the cemetery</span>
+                <span data-lang-tl>Lihim na nagpupulong ang mga Katipunero sa libingan</span>
+              </button>
+              <button class="trailx__order-tile" type="button" data-order="4">
+                <span data-lang-en>Declared a National Historical Landmark</span>
+                <span data-lang-tl>Idineklarang Pambansang Palatandaang Pangkasaysayan</span>
+              </button>
+              <button class="trailx__order-tile" type="button" data-order="1">
+                <span data-lang-en>The cemetery is built under Fr. Vicente Velloc</span>
+                <span data-lang-tl>Itinayo ang libingan sa ilalim ni Padre Vicente Velloc</span>
+              </button>
+              <button class="trailx__order-tile" type="button" data-order="3">
+                <span data-lang-en>Guerrillas shelter here in World War II</span>
+                <span data-lang-tl>Kumukubli rito ang mga gerilya noong Ikalawang Digmaan</span>
+              </button>
+            </div>
+            <p class="trailx__game-fb" data-order-right hidden>
+              <span data-lang-en>Perfect — 1845, 1897, the war years, then 1981. The whole arc, in order.</span>
+              <span data-lang-tl>Tamang-tama — 1845, 1897, ang mga taon ng digmaan, at 1981. Ang buong kuwento, ayon sa pagkakasunod.</span>
+            </p>
+            <p class="trailx__game-fb trailx__game-fb--wrong" data-order-wrong hidden>
+              <span data-lang-en>Almost! The tiles have reset — walk the timeline again.</span>
+              <span data-lang-tl>Malapit na! Nag-reset ang mga tile — lakbayin muli ang panahon.</span>
+            </p>
+          </article>
+
+          <!-- Game III · True or False (the whole trail) -->
+          <article class="trailx__chapter" data-chapter="s9-tf" data-side="left" data-title="True or False">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Assessment · III</span><span data-lang-tl>Pagtatasa · III</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>True or<br /><em>False?</em></span>
+              <span data-lang-tl>Totoo o<br /><em>Hindi?</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Four claims from across the whole trail — call each one. Wrong answers cost nothing.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Apat na pahayag mula sa buong landas — hatulan ang bawat isa. Walang kapalit ang mali.
+            </p>
+            <div class="trailx__scrollbox">
+              <div class="trailx__tf" data-game>
+                <p class="trailx__tf-q"><span data-lang-en>The balanghay symbolized the soul's voyage to the afterlife.</span><span data-lang-tl>Sagisag ng balanghay ang paglalakbay ng kaluluwa sa kabilang buhay.</span></p>
+                <div class="trailx__tf-btns">
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
+                </div>
+                <p class="trailx__game-fb" data-fb-right hidden><span data-lang-en>True — from the museum halls in Stop 3.</span><span data-lang-tl>Totoo — mula sa mga bulwagan ng museo sa Hinto 3.</span></p>
+                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden><span data-lang-en>Its voice said otherwise — think of the boat of souls.</span><span data-lang-tl>Iba ang sabi ng tinig nito — isipin ang bangka ng mga kaluluwa.</span></p>
+              </div>
+              <div class="trailx__tf" data-game>
+                <p class="trailx__tf-q"><span data-lang-en>"S.L.N." on a gravestone means "Sumalangit Nawa."</span><span data-lang-tl>Ang "S.L.N." sa puntod ay nangangahulugang "Sumalangit Nawa."</span></p>
+                <div class="trailx__tf-btns">
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
+                </div>
+                <p class="trailx__game-fb" data-fb-right hidden><span data-lang-en>True — the acronyms you read in the crypts.</span><span data-lang-tl>Totoo — ang mga akronimong nabasa mo sa mga kripta.</span></p>
+                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden><span data-lang-en>Look again — it is the local prayer for the dead.</span><span data-lang-tl>Tingnang muli — ito ang panalangin para sa yumao.</span></p>
+              </div>
+              <div class="trailx__tf" data-game>
+                <p class="trailx__tf-q"><span data-lang-en>The cemetery was built in 1845 under Fr. Vicente Velloc.</span><span data-lang-tl>Itinayo ang libingan noong 1845 sa ilalim ni Padre Vicente Velloc.</span></p>
+                <div class="trailx__tf-btns">
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
+                </div>
+                <p class="trailx__game-fb" data-fb-right hidden><span data-lang-en>True — from the very first stop at the gates.</span><span data-lang-tl>Totoo — mula sa unang hinto sa tarangkahan.</span></p>
+                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden><span data-lang-en>Look again — 1845, under Fr. Vicente Velloc.</span><span data-lang-tl>Tingnang muli — 1845, sa ilalim ni Padre Vicente Velloc.</span></p>
+              </div>
+              <div class="trailx__tf" data-game>
+                <p class="trailx__tf-q"><span data-lang-en>The tapete is a white cloth laid over the museum's doorway.</span><span data-lang-tl>Ang tapete ay puting telang inilalatag sa pintuan ng museo.</span></p>
+                <div class="trailx__tf-btns">
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
+                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
+                </div>
+                <p class="trailx__game-fb" data-fb-right hidden><span data-lang-en>Right — it is a black cloth laid near the altar for the dead.</span><span data-lang-tl>Tama — ito ay itim na telang inilalatag malapit sa altar para sa yumao.</span></p>
+                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden><span data-lang-en>Not so — recall the church interior in Stop 7.</span><span data-lang-tl>Hindi — alalahanin ang loob ng simbahan sa Hinto 7.</span></p>
+              </div>
+            </div>
+          </article>
+
+          <!-- Step · Next stop -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s9-next" data-title="Next">
+            <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 10</span><span data-lang-tl>Susunod · Hinto 10</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Return to<br /><em>the Gates</em></span>
+              <span data-lang-tl>Balik sa<br /><em>Tarangkahan</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Well played. Let us climb back up into the light and stand once more at the gates where we began.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Mahusay. Umakyat tayong muli sa liwanag at tumayo pang muli sa tarangkahang pinagsimulan natin.
+            </p>
+            <div class="trailx__actions">
+              <button class="trailx__begin" data-trail-goto="stop10" type="button">
+                <span data-lang-en>Continue to Stop 10</span>
+                <span data-lang-tl>Magpatuloy sa Hinto 10</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </button>
+            </div>
+          </footer>
+
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 9 sections"></nav>
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true"><span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span></div>
+        </div>
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+      </div>
+      <!-- ================== End Stop 9 · A Final Challenge ================== -->
+
+      <!-- ============ Stop 10 · Return to the Gates (Thank You) ============
+           Back at the front gate, like Stop 1. A farewell + calls to keep
+           exploring: the community pages, or home. -->
+      <div class="trailx__story" data-trail-story="stop10" aria-label="Stop 10 — Thank You" hidden>
+        <div class="trailx__stage" data-trail-stage>
+          <header class="trailx__chapter trailx__chapter--hero" data-chapter="s10-arrive" data-side="left" data-title="Arrive">
+            <p class="trailx__s1-kicker"><span data-lang-en>Stop 10 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 10 ng 10 · Landas ng Pamana</span></p>
+            <h2 class="trailx__chapter-title trailx__chapter-title--hero">
+              <span data-lang-en>Salamat sa <em>Paglalakbay</em></span>
+              <span data-lang-tl>Salamat sa <em>Paglalakbay</em></span>
+            </h2>
+            <p class="trailx__s1-tip">
+              <span data-lang-en>We are back where we began — the front gates. Look around one last time.</span>
+              <span data-lang-tl>Bumalik na tayo sa pinagsimulan — ang tarangkahan. Lumingon-lingon nang huling beses.</span>
+            </p>
+          </header>
+
+          <!-- Farewell + calls to action -->
+          <footer class="trailx__chapter trailx__chapter--next" data-chapter="s10-farewell" data-title="Farewell">
+            <p class="trailx__s1-kicker"><span data-lang-en>The Trail's End</span><span data-lang-tl>Dulo ng Landas</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Thank You for<br /><em>Walking with Me</em></span>
+              <span data-lang-tl>Salamat sa<br /><em>Paglakad Kasama Ako</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              From the gates to the crypts below, you have seen how faith, history, and memory live on in this one small place. This heritage belongs to all of us — and it grows when you take part. Share a story, leave your feedback, or simply visit us onsite in Nagcarlan.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              Mula sa tarangkahan hanggang sa mga kripta sa ilalim, nakita mo kung paano nananatiling buhay ang pananampalataya, kasaysayan, at gunita sa isang maliit na pook na ito. Ang pamanang ito ay sa ating lahat — at lumalago ito kapag nakikibahagi ka. Magbahagi ng kuwento, mag-iwan ng puna, o dalawin kami nang personal sa Nagcarlan.
+            </p>
+            <div class="trailx__actions trailx__actions--end">
+              <a class="trailx__begin" href="{{ url_for('community_participation') }}">
+                <span data-lang-en>Join the Community</span>
+                <span data-lang-tl>Sumali sa Komunidad</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
+              </a>
+              <a class="trailx__cancel" href="{{ url_for('index') }}">
+                <span data-lang-en>Back to Home</span>
+                <span data-lang-tl>Bumalik sa Home</span>
+              </a>
+            </div>
+            <p class="trailx__chapter-copy trailx__chapter-copy--fine" data-lang-en>
+              Paalam — until your next visit. — Ana Kalang, Guardian of Nagcarlan
+            </p>
+            <p class="trailx__chapter-copy trailx__chapter-copy--fine" data-lang-tl>
+              Paalam — hanggang sa muli mong pagdalaw. — Ana Kalang, Tagapangalaga ng Nagcarlan
+            </p>
+          </footer>
+
+          <nav class="trailx__dots" data-trail-dots aria-label="Stop 10 sections"></nav>
+          <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true"><span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span></div>
+        </div>
+        <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+      </div>
+      <!-- ================== End Stop 10 · Thank You ================== -->
 
       <!-- Guide controls (same family as the landing page) -->
       <div class="trailx__controls">

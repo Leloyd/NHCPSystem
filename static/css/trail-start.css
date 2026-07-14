@@ -792,7 +792,8 @@
 /* ==========================================================================
    Stop 4 · mind games — unscored, gentle feedback in the trail's gold voice
    ========================================================================== */
-.trailx__riddle {
+.trailx__riddle,
+.trailx__quote {
   margin: 0.4rem 0 1rem;
   max-width: 32rem;
   padding: 0.85rem 1.1rem;
@@ -804,6 +805,16 @@
   font-size: calc(1.15rem * var(--tx-font-scale, 1));
   line-height: 1.55;
   text-shadow: 0 2px 12px rgba(0, 0, 0, 0.6);
+}
+/* Liturgical quote source line (Stop 7 tapete) */
+.trailx__quote-src {
+  display: block;
+  margin-top: 0.5rem;
+  font-style: normal;
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.68rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.08em;
+  color: var(--tx-gold);
 }
 .trailx__game-fb {
   margin: 0.7rem 0 0;
@@ -1267,6 +1278,9 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   height: 46px;
   font-size: 1.1rem;
 }
+
+/* Trail's-end calls to action (Stop 10) — allow the two links to wrap. */
+.trailx__actions--end { flex-wrap: wrap; align-items: center; gap: 1rem 1.4rem; }
 
 /* "View Documents" button (Stop 5 · Plasencia) */
 .trailx__docbtn {
