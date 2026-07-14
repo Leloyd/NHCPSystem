@@ -602,7 +602,7 @@ body {
 
 @media (max-width: 768px) {
   /* Rail sits just above the subtitle chip on phones. */
-  .story__timeline { bottom: 7.9rem; gap: 1.2rem; }
+  .story__timeline { bottom: calc(7.9rem + env(safe-area-inset-bottom, 0px)); gap: 1.2rem; }
   .story__timeline button { font-size: 0.82rem; }
   .story__timeline button + button::before { left: -1rem; width: 0.75rem; }
   /* Well below the sheet's top edge (which starts at the nav's bottom). */
@@ -613,7 +613,7 @@ body {
   .story__viewport .story-chapter.story-chapter--era { padding-bottom: 10.6rem; }
   /* Subtitles hidden → the rail drops into the chip's slot, keeping the
      same breathing room to the controls below and the info above. */
-  .story__viewport[data-subtitles="off"] .story__timeline { bottom: 4.7rem; }
+  .story__viewport[data-subtitles="off"] .story__timeline { bottom: calc(4.7rem + env(safe-area-inset-bottom, 0px)); }
   .story__viewport[data-subtitles="off"] .story-chapter.story-chapter--era { padding-bottom: 7.8rem; }
 }
 
@@ -1046,18 +1046,20 @@ body.is-trail-exit #publicNavHeader {
   .story__top {
     left: auto;
     right: 1.1rem;
-    bottom: 7.8rem;
+    bottom: calc(7.8rem + env(safe-area-inset-bottom, 0px));
     width: 42px;
     height: 42px;
     padding: 0;
   }
   .story__top span { display: none; }
-  .story__viewport[data-subtitles="off"] .story__top { bottom: 4.3rem; }
+  .story__viewport[data-subtitles="off"] .story__top { bottom: calc(4.3rem + env(safe-area-inset-bottom, 0px)); }
   /* Compact subtitle chip below the chapter text, above the controls —
      tap to expand/collapse (it expands upward over the sheet). */
   .story__bubble {
     top: auto;
-    bottom: 3.9rem;
+    /* Match the guidebar's safe-area offset so the chip rises WITH the
+       controls when the iOS toolbar hides (env grows) — never overlapping. */
+    bottom: calc(3.9rem + env(safe-area-inset-bottom, 0px));
     left: 1.1rem !important;
     right: 1.1rem !important;
     width: auto;
@@ -1093,6 +1095,12 @@ body.is-trail-exit #publicNavHeader {
   .story__bubble.is-expanded::after { content: "⌃"; }
   /* Subtitles hidden → give their reserved space back to the chapter text. */
   .story__viewport[data-subtitles="off"] .story-chapter { padding-bottom: 5rem; }
+  /* The Heritage Overview chapters (about1–3) are their own narration and show
+     NO subtitle bubble, so toggling subtitles must never reflow them — keep
+     their bottom padding constant in both subtitle states. */
+  .story-chapter[data-chapter="about1"],
+  .story-chapter[data-chapter="about2"],
+  .story-chapter[data-chapter="about3"] { padding-bottom: 5rem; }
   .story__dots { right: 0.6rem; gap: 0.6rem; }
   .story__dot { width: 8px; height: 8px; }
   .story__dot::after { display: none; }
