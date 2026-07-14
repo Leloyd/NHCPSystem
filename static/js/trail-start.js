@@ -133,8 +133,24 @@ const SCRIPTS = {
     tl: "Ngayon, sa iyo na ang bakuran. Dumaan sa tarangkahan, tumawid sa simbahan, at libutin ang mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali.",
   },
   's5-next': {
-    en: "That completes our fifth stop. When Stop Six opens, we will stand before the church itself. Salamat — one more look around before we go.",
-    tl: "Tapos na ang ating ikalimang hinto. Kapag nabuksan na ang Ikaanim na Hinto, tatayo tayo sa harap ng mismong simbahan. Salamat — lumingon-lingon pa bago tayo umalis.",
+    en: "That completes our fifth stop. When you are ready, come with me across the courtyard — the church and the tombs are just ahead. Tap Continue.",
+    tl: "Tapos na ang ating ikalimang hinto. Kapag handa ka na, sumama ka sa akin patawid sa patyo — nasa unahan lang ang simbahan at ang mga puntod. Pindutin ang Magpatuloy.",
+  },
+  's6-arrive': {
+    en: "Here we are, before the church — our sixth stop. Take it in: drag to look around, and follow the glowing rings across its face and along the rows of tombs on either side. When you are ready, scroll down and I will tell you how this place was cared for.",
+    tl: "Narito na tayo, sa harap ng simbahan — ang ating ikaanim na hinto. Damhin ito: i-drag upang lumingon, at sundan ang mga kumikinang na singsing sa harap nito at sa mga hanay ng puntod sa magkabilang gilid. Kapag handa ka na, mag-scroll pababa at ikukuwento ko kung paano inalagaan ang pook na ito.",
+  },
+  's6-renovations': {
+    en: "On the 24th of October, 1981, the National Historical Institute placed a marker here — and since then, the site has been in its care. As the National Historical Commission of the Philippines, it has restored the cemetery again and again: from 1982 to 1986, in 2008, from 2015 to 2016, and most recently from 2023 to 2024.",
+    tl: "Noong ika-24 ng Oktubre 1981, naglagay ng pananda rito ang Pambansang Suriang Pangkasaysayan — at mula noon, nasa pangangalaga na nito ang pook. Bilang Pambansang Komisyong Pangkasaysayan ng Pilipinas, paulit-ulit nitong isinaayos ang libingan: mula 1982 hanggang 1986, noong 2008, mula 2015 hanggang 2016, at kamakailan lang mula 2023 hanggang 2024.",
+  },
+  's6-deterioration': {
+    en: "Yet time was not always kind. From the early twentieth century, after the Spanish era, all the way to the year 2000, this underground burial site suffered — worn down by the forces of nature that tested its very structure.",
+    tl: "Ngunit hindi laging mabait ang panahon. Mula sa unang bahagi ng ikadalawampung siglo, matapos ang panahon ng mga Espanyol, hanggang sa taong 2000, nagdusa ang libingang ito sa ilalim ng lupa — inagnas ng puwersa ng kalikasan na sumubok sa mismong istruktura nito.",
+  },
+  's6-next': {
+    en: "That completes our sixth stop. When Stop Seven opens, we will step inside the church at last. Salamat — take one more look before we go in.",
+    tl: "Tapos na ang ating ikaanim na hinto. Kapag nabuksan na ang Ikapitong Hinto, papasok na tayo sa loob ng simbahan. Salamat — lumingon-lingon pa bago tayo pumasok.",
   },
 };
 
@@ -528,9 +544,10 @@ const STOP_CONF = {
   // The checkpoint plays over the deepest museum hall — the artifacts the
   // games ask about are on the walls all around.
   stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100, hash: '#stop-4' },
-  // The grounds: enter just inside the front gate and walk out to the church
-  // and the tombs.
+  // The grounds: enter just inside the front gate and cross into the courtyard.
   stop5: { scene: 'insideFrontGate', pitch: 0, yaw: 0, hfov: 100, hash: '#stop-5' },
+  // Front of the church + the tomb rows on either side.
+  stop6: { scene: 'frontChurch', pitch: 0, yaw: -10, hfov: 100, hash: '#stop-6' },
 };
 
 // Departure views: before travelling to the next stop, the current 360 turns
@@ -540,6 +557,8 @@ const DEPART_VIEWS = {
   rightFrontGate: { yaw: -91.1, pitch: -0.8 },
   middleGMuseum: { yaw: -87.6, pitch: -5.7 },
   frontMuseum: { yaw: 32.0, pitch: -9.4 },
+  // Stop 5 → 6: from the courtyard, turn to face the church before crossing.
+  middleGInside: { yaw: 125, pitch: -5 },
 };
 
 const isImmersive = () => root.getAttribute('data-immersive') === 'true';
@@ -1229,14 +1248,15 @@ function initPanorama() {
           link(-5, -4, 'middleGInside'),
           link(-15, 175, 'insideFrontGate', -20, 170),
         ]);
+        // Stop 5 ends here (entrance + courtyard): middleGInside does NOT lead
+        // on to the church — that's Stop 6's journey.
         scenes.middleGInside = eq(s5.middleGInside, 0, 123, [
-          link(-5, 125, 'frontChurch'),
           link(-7, -55, 'insideFrontGate1', -20, 180),
         ]);
+        // Stop 6 begins at the church front: no ring back to the courtyard.
         scenes.frontChurch = eq(s5.frontChurch, 0, -10, [
           link(-20, -75, 'leftFrontChurch', -20, -80),
           link(-17, 48, 'rightFrontChurch'),
-          link(-7, 166, 'middleGInside', -20, -55),
         ]);
         scenes.leftFrontChurch = eq(s5.leftFrontChurch, 0, 0, [
           link(-21.26, -80.65, 'leftFirstTombs', -1.82, 82.26),
