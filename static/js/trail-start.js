@@ -1504,6 +1504,56 @@ function initStories() {
     smoothScrollBy((e.deltaMode === 1 ? e.deltaY * 33 : e.deltaY) * 1.5);
   }, { passive: false, capture: true });
 
+  // Touch scroll driver. iOS Safari/Chrome (WebKit) will NOT scroll a
+  // pointer-events:none container even through its children, unlike Android
+  // (Blink) — so on iPhone the story never scrolled. We drive it ourselves on
+  // both platforms: a vertical drag scrolls the active story (with a momentum
+  // fling); a horizontal drag falls through so "drag to look around" still
+  // rotates the 360.
+  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-preview, model-viewer'));
+  let tStartY = 0;
+  let tStartX = 0;
+  let tLastY = 0;
+  let tLastT = 0;
+  let tVel = 0;
+  let tIntent = 'none'; // 'none' | 'scroll' | 'pano'
+  let tSkip = false;
+  window.addEventListener('touchstart', (e) => {
+    tIntent = 'none';
+    tSkip = isImmersive() || state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden ||
+      e.touches.length !== 1 || inExcluded(e.target);
+    if (tSkip) return;
+    tStartY = tLastY = e.touches[0].clientY;
+    tStartX = e.touches[0].clientX;
+    tVel = 0;
+    tLastT = performance.now();
+    if (window.gsap) window.gsap.killTweensOf(activeStoryEl);
+    scrollGoal = null;
+  }, { passive: true });
+  window.addEventListener('touchmove', (e) => {
+    if (tSkip || e.touches.length !== 1) return;
+    const y = e.touches[0].clientY;
+    const x = e.touches[0].clientX;
+    if (tIntent === 'none') {
+      const dy = Math.abs(y - tStartY);
+      const dx = Math.abs(x - tStartX);
+      if (dy < 6 && dx < 6) return;         // wait for a meaningful move
+      tIntent = dx > dy ? 'pano' : 'scroll'; // lock intent for the gesture
+    }
+    if (tIntent !== 'scroll') return;        // horizontal → panorama rotates
+    const now = performance.now();
+    const stepDy = y - tLastY;
+    activeStoryEl.scrollTop -= stepDy;       // finger down → earlier content
+    tVel = stepDy / Math.max(1, now - tLastT);
+    tLastY = y;
+    tLastT = now;
+    e.preventDefault();                      // stop the panorama from also moving
+  }, { passive: false });
+  window.addEventListener('touchend', () => {
+    if (tSkip || tIntent !== 'scroll') return;
+    if (Math.abs(tVel) > 0.06) smoothScrollBy(-tVel * 200); // momentum fling
+  }, { passive: true });
+
   // Keyboard: arrows / page / space step through the active stop's chapters.
   window.addEventListener('keydown', (e) => {
     const api = storyApis[state.mode];
@@ -1547,18 +1597,19 @@ function initCharacter() {
   if (!canvasWrap) return;
   const modelUrl = root.getAttribute('data-model-url') || '';
   const BASE_ROT_Y = -Math.PI / 2; // GLB authored facing screen-right → face camera
-  const mobile = window.matchMedia('(max-width: 820px)').matches;
   // Mobile uses the landing page's exact camera recipe so Ana's size and
   // position match it: FOV 34, distance 4.1 × a viewport-height compensation,
   // camera at y 1.42 looking at 1.4, a 35% swing toward her, and an edge-hug
   // stance at 92% / 8% with the same swing compensation. Desktop keeps this
-  // page's own framing.
-  const FOV = mobile ? 34 : 32;
-  const zoomComp = Math.min(1.75, Math.max(0.85, window.innerHeight / 900));
-  const CAM_Z = mobile ? 4.1 * zoomComp : 3.1;
-  const CAM_Y = mobile ? 1.42 : 1.5;
-  const LOOK_AT_Y = mobile ? 1.4 : 1.35;
-  const LOOK = mobile ? 0.35 : 0.2; // how far the camera swings toward Ana
+  // page's own framing. Everything is recomputed live on resize/breakpoint
+  // change (e.g. DevTools device emulation), never frozen at load time.
+  const mobileQuery = window.matchMedia('(max-width: 820px)');
+  let mobile = mobileQuery.matches;
+  let FOV = 32;
+  let CAM_Z = 3.1;
+  let CAM_Y = 1.5;
+  let LOOK_AT_Y = 1.35;
+  let LOOK = 0.2; // how far the camera swings toward Ana
   const SIDE_PCT = { right: 92, left: 8 }; // mobile edge-hug (landing values)
   const DESKTOP_X = 1.15; // desktop keeps her original fixed stance
   let currentSide = 'right';
@@ -1569,6 +1620,22 @@ function initCharacter() {
   let gestureFadingBack = false;
   const gestures = {};
   const pointer = { x: 0, y: 0 };
+
+  const computeCamera = () => {
+    mobile = mobileQuery.matches;
+    FOV = mobile ? 34 : 32;
+    const zoomComp = Math.min(1.75, Math.max(0.85, window.innerHeight / 900));
+    CAM_Z = mobile ? 4.1 * zoomComp : 3.1;
+    CAM_Y = mobile ? 1.42 : 1.5;
+    LOOK_AT_Y = mobile ? 1.4 : 1.35;
+    LOOK = mobile ? 0.35 : 0.2;
+    if (camera) {
+      camera.fov = FOV;
+      camera.position.z = CAM_Z;
+      camera.updateProjectionMatrix();
+    }
+  };
+  computeCamera();
 
   // Mobile: landing formula — screen % → world X, undoing the camera's
   // partial swing toward her, so she hugs the edge exactly like the landing.
@@ -1632,12 +1699,17 @@ function initCharacter() {
       const nw = Math.max(canvasWrap.clientWidth, 1);
       const nh = Math.max(canvasWrap.clientHeight, 1);
       renderer.setSize(nw, nh, false);
+      computeCamera();  // desktop ↔ mobile rig (FOV/distance/height/swing) live
       camera.aspect = nw / nh;
+      camera.position.y = CAM_Y;
       camera.updateProjectionMatrix();
-      applySide(); // re-derive her world X from the new aspect ratio
+      applySide(); // re-derive her world X from the new aspect ratio + rig
       projectAnaX();
     };
     window.addEventListener('resize', onResize);
+    // Also react when the breakpoint itself flips (device emulation, rotate).
+    if (mobileQuery.addEventListener) mobileQuery.addEventListener('change', onResize);
+    else if (mobileQuery.addListener) mobileQuery.addListener(onResize);
     projectAnaX();
     if (!prefersReducedMotion) {
       window.addEventListener('pointermove', (e) => {
