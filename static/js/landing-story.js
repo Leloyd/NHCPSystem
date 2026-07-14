@@ -1364,7 +1364,15 @@ if (story && viewport && chapters.length) {
   // Restored from the back/forward cache: the render loop resumes by itself;
   // just reset the transient audio state so the Listen button is accurate.
   window.addEventListener('pageshow', (event) => {
-    if (event.persisted) stopSpeaking();
+    if (!event.persisted) return;
+    stopSpeaking();
+    // We may have been frozen mid-exit toward the Heritage Trail, so the page
+    // is cached with the departing classes and a closed curtain still covering
+    // it — that's the black screen on Back. Clear them and the story reappears.
+    document.body.classList.remove('is-trail-exit');
+    viewport.classList.remove('is-departing');
+    document.querySelectorAll('.story__curtain').forEach((el) => el.remove());
+    onScroll();
   });
 
   setChapter(0);
