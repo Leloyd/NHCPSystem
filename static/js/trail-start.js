@@ -124,6 +124,10 @@ const SCRIPTS = {
     en: "Long before the tombs, the story began. The Spanish reached Nagcarlan in 1571 under Captain Juan de Salcedo. In 1578, the Franciscan missionaries Fray Juan de Plasencia and Fray Diego de Oropesa brought the Catholic faith. And in 1583, Nagcarlan became a pueblo under Fray Tomas de Miranda.",
     tl: "Bago pa ang mga puntod, nagsimula na ang kuwento. Nakarating ang mga Kastila sa Nagcarlan noong 1571 sa pamumuno ni Kapitan Juan de Salcedo. Noong 1578, dinala ng mga Pransiskanong misyonerong sina Padre Juan de Plasencia at Padre Diego de Oropesa ang pananampalatayang Katoliko. At noong 1583, naging ganap na bayan ang Nagcarlan sa ilalim ni Padre Tomas de Miranda.",
   },
+  's5-plasencia': {
+    en: "One of those Franciscan missionaries left words that still matter. Fray Juan de Plasencia wrote the Doctrina Cristiana — the very first book printed in the Philippines — and the Relación de las costumbres de los tagalos, which recorded and preserved the customs of our ancestors. Tap View Documents to see its first pages.",
+    tl: "Isa sa mga Pransiskanong misyonerong iyon ang nag-iwan ng mga salitang mahalaga pa rin hanggang ngayon. Isinulat ni Padre Juan de Plasencia ang Doctrina Cristiana — ang kauna-unahang aklat na inilimbag sa Pilipinas — at ang Relación de las costumbres de los tagalos, na nagtala at nag-ingat sa mga kaugalian ng ating mga ninuno. Pindutin ang Tingnan ang mga Dokumento upang makita ang mga unang pahina nito.",
+  },
   's5-explore': {
     en: "Now the grounds are yours. Step through the gate, cross to the church, and wander the rows of tombs on either side. The glowing rings carry you from one view to the next — take all the time you need.",
     tl: "Ngayon, sa iyo na ang bakuran. Dumaan sa tarangkahan, tumawid sa simbahan, at libutin ang mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali.",
@@ -1622,7 +1626,7 @@ function initStories() {
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
     // Inner scroll areas (rules box), the artifact viewer, and 3D models keep
     // their own native wheel behaviour.
-    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-preview, model-viewer')) return;
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-preview, .trailx-doc, model-viewer')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
@@ -1635,7 +1639,7 @@ function initStories() {
   // both platforms: a vertical drag scrolls the active story (with a momentum
   // fling); a horizontal drag falls through so "drag to look around" still
   // rotates the 360.
-  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-preview, model-viewer'));
+  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-preview, .trailx-doc, model-viewer'));
   let tStartY = 0;
   let tStartX = 0;
   let tLastY = 0;
@@ -1944,11 +1948,119 @@ function initCharacter() {
   }
 }
 
+/* --- Stacked document viewer (Stop 5 · Plasencia) ---------------------------
+   "View Documents" opens the source pages as a deck: the front page shows on
+   top; tapping it tosses it to the back and brings the next forward, cycling
+   through all four. Close with the ✕ below (landing lightbox pattern) or the
+   backdrop / Esc. */
+function initDocViewer() {
+  const triggers = Array.from(root.querySelectorAll('[data-trail-docs]'));
+  if (!triggers.length) return;
+  let overlay = null;
+  let deck = null;
+  let cards = []; // current stacking order — index 0 is the front page
+  let animating = false;
+
+  const relayout = () => {
+    cards.forEach((card, i) => {
+      card.style.zIndex = String(100 - i);
+      card.style.transform = `translateY(${i * 16}px) scale(${(1 - i * 0.055).toFixed(3)}) rotate(${(i * 0.6).toFixed(2)}deg)`;
+      card.style.opacity = i > 3 ? '0' : String(Math.max(0, 1 - i * 0.16).toFixed(2));
+      card.style.pointerEvents = i === 0 ? 'auto' : 'none';
+    });
+  };
+
+  const toss = () => {
+    if (animating || cards.length < 2) return;
+    animating = true;
+    const front = cards[0];
+    front.style.transition = 'transform 0.42s cubic-bezier(0.5, 0, 0.2, 1), opacity 0.42s ease';
+    front.style.transform = 'translateY(-46%) scale(0.86) rotate(-7deg)';
+    front.style.opacity = '0';
+    const done = () => {
+      front.removeEventListener('transitionend', done);
+      cards.push(cards.shift());  // front → back of the deck
+      front.style.transition = 'none';
+      relayout();                 // snaps to the back (dimmed, scaled)
+      window.requestAnimationFrame(() => {
+        cards.forEach((c) => { c.style.transition = ''; });
+        animating = false;
+      });
+    };
+    front.addEventListener('transitionend', done);
+  };
+
+  const hideDoc = () => {
+    if (!overlay) return;
+    overlay.classList.remove('is-open');
+    overlay.hidden = true;
+    animating = false;
+  };
+
+  const ensureOverlay = () => {
+    if (overlay) return;
+    overlay = document.createElement('div');
+    overlay.className = 'trailx-doc';
+    overlay.hidden = true;
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Document viewer');
+    deck = document.createElement('div');
+    deck.className = 'trailx-doc__deck';
+    const hint = document.createElement('p');
+    hint.className = 'trailx-doc__hint';
+    hint.innerHTML = '<span data-lang-en>Tap the page to see the next</span><span data-lang-tl>Pindutin ang pahina para sa susunod</span>';
+    const close = document.createElement('button');
+    close.className = 'trailx-xclose trailx-doc__close';
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close documents');
+    close.textContent = '✕';
+    close.addEventListener('click', hideDoc);
+    overlay.addEventListener('click', (e) => { if (e.target === overlay) hideDoc(); });
+    overlay.appendChild(deck);
+    overlay.appendChild(hint);
+    overlay.appendChild(close);
+    root.appendChild(overlay);
+  };
+
+  const build = (urls) => {
+    ensureOverlay();
+    deck.innerHTML = '';
+    animating = false;
+    cards = urls.map((url, i) => {
+      const card = document.createElement('button');
+      card.type = 'button';
+      card.className = 'trailx-doc__card';
+      card.setAttribute('aria-label', `Document page ${i + 1} of ${urls.length} — tap for the next`);
+      const img = document.createElement('img');
+      img.src = url;
+      img.alt = `Document page ${i + 1}`;
+      img.draggable = false;
+      card.appendChild(img);
+      card.addEventListener('click', toss);
+      deck.appendChild(card);
+      return card;
+    });
+    relayout();
+    overlay.hidden = false;
+    window.requestAnimationFrame(() => overlay.classList.add('is-open'));
+  };
+
+  triggers.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      const urls = (btn.getAttribute('data-trail-docs') || '').split(',').map((u) => u.trim()).filter(Boolean);
+      if (urls.length) build(urls);
+    });
+  });
+  window.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDoc(); });
+}
+
 /* --- Boot -------------------------------------------------------------------- */
 narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();
 initStories();
+initDocViewer();
 if (wantsStop && STOP_CONF[wantsStop]) enterStop(wantsStop); // refresh → restore the stop
 attemptAutoSpeak();          // auto-play like the landing page…
 setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it
