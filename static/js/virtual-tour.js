@@ -22,8 +22,15 @@
   const subtitlesButton = document.getElementById("tourSubs");
   const subtitleBar = document.getElementById("tourSubtitle");
   const subtitleTextEl = document.getElementById("tourSubtitleText");
+  const minimapEl = document.getElementById("tourMinimap");
+  const minimapImg = document.getElementById("tourMinimapImg");
+  const minimapFrame = document.getElementById("tourMinimapFrame");
+  const minimapDotsEl = document.getElementById("tourMinimapDots");
+  const minimapLabelEl = document.getElementById("tourMinimapLabel");
+  const minimapToggle = document.getElementById("tourMinimapToggle");
   const debugParams = new URLSearchParams(window.location.search);
   const hotspotDebugEnabled = debugParams.get("debugHotspots") === "1";
+  const minimapDebug = debugParams.get("minimapDebug") === "1";
   const userAgent = navigator.userAgent || "";
   const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isIOSChrome = isIOSDevice && /CriOS/.test(userAgent);
@@ -203,6 +210,12 @@
   let hotspotsVisible = true;
   let tourViewer = null;
   let resolvedScenes = null;
+  // Live "you are here" minimap
+  let minimapData = null;
+  const minimapDotEls = {};
+  let minimapConeEl = null;
+  let minimapActiveScene = "";
+  let minimapRaf = 0;
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
   let floatingImagePreviewOverlay = null;
@@ -2126,6 +2139,125 @@
     controlDock.classList.toggle("is-visible", isVisible);
   }
 
+  /* ===== Live "you are here" minimap ===== */
+  function initMinimap() {
+    if (!minimapEl || !minimapImg || !minimapDotsEl || !app) {
+      return;
+    }
+    const url = app.dataset.minimapUrl;
+    if (!url) {
+      return;
+    }
+
+    // Collapse / expand.
+    if (minimapToggle) {
+      minimapToggle.addEventListener("click", function () {
+        const collapsed = minimapEl.classList.toggle("is-collapsed");
+        minimapToggle.setAttribute("aria-expanded", collapsed ? "false" : "true");
+        minimapToggle.setAttribute("aria-label", collapsed ? "Expand map" : "Collapse map");
+      });
+    }
+
+    // Calibration helper: click the map to log the current scene's fractional
+    // x/y (and yaw) so the positions in tour-minimap.json can be dialed in.
+    if (minimapDebug && minimapFrame) {
+      minimapFrame.addEventListener("click", function (event) {
+        const rect = minimapFrame.getBoundingClientRect();
+        const x = Number(((event.clientX - rect.left) / rect.width).toFixed(3));
+        const y = Number(((event.clientY - rect.top) / rect.height).toFixed(3));
+        const scene = tourViewer && typeof tourViewer.getScene === "function" ? tourViewer.getScene() : "?";
+        const yaw = tourViewer && typeof tourViewer.getYaw === "function" ? Number(tourViewer.getYaw().toFixed(1)) : 0;
+        console.log(`[minimap] "${scene}": { "x": ${x}, "y": ${y} },   // yaw=${yaw}`);
+      });
+    }
+
+    fetch(url)
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        minimapData = data;
+        if (data.image) {
+          minimapImg.src = data.image;
+        }
+        buildMinimapDots(data);
+        if (minimapActiveScene) {
+          minimapSetActive(minimapActiveScene);
+        }
+      })
+      .catch(function (err) {
+        console.warn("Minimap data unavailable.", err);
+      });
+  }
+
+  function buildMinimapDots(data) {
+    minimapDotsEl.innerHTML = "";
+    const scenes = (data && data.scenes) || {};
+    Object.keys(scenes).forEach(function (sceneId) {
+      const pos = scenes[sceneId];
+      if (!pos || typeof pos.x !== "number" || typeof pos.y !== "number") {
+        return;
+      }
+      const dot = document.createElement("button");
+      dot.type = "button";
+      dot.className = "tour-minimap__dot";
+      dot.style.left = pos.x * 100 + "%";
+      dot.style.top = pos.y * 100 + "%";
+      dot.setAttribute("aria-label", pos.label || sceneId);
+      dot.title = pos.label || sceneId;
+      dot.addEventListener("click", function () {
+        if (tourViewer && typeof tourViewer.loadScene === "function" && sceneId !== minimapActiveScene) {
+          try { tourViewer.loadScene(sceneId); } catch (e) { /* ignore */ }
+        }
+      });
+      minimapDotEls[sceneId] = dot;
+      minimapDotsEl.appendChild(dot);
+    });
+  }
+
+  function minimapSetActive(sceneId) {
+    minimapActiveScene = sceneId;
+    if (!minimapData) {
+      return; // dots not built yet; will apply once loaded
+    }
+    Object.keys(minimapDotEls).forEach(function (id) {
+      minimapDotEls[id].classList.toggle("is-active", id === sceneId);
+    });
+    const dot = minimapDotEls[sceneId];
+    const pos = minimapData.scenes && minimapData.scenes[sceneId];
+    if (dot) {
+      if (!minimapConeEl) {
+        minimapConeEl = document.createElement("span");
+        minimapConeEl.className = "tour-minimap__cone";
+      }
+      dot.appendChild(minimapConeEl); // move the heading cone onto the active dot
+    }
+    if (minimapLabelEl) {
+      minimapLabelEl.textContent = (pos && pos.label) || sceneId || "";
+    }
+    startMinimapHeadingLoop();
+  }
+
+  function startMinimapHeadingLoop() {
+    if (minimapRaf) {
+      return;
+    }
+    const tick = function () {
+      minimapRaf = 0;
+      if (minimapConeEl && tourViewer && typeof tourViewer.getYaw === "function") {
+        const pos = minimapData && minimapData.scenes && minimapData.scenes[minimapActiveScene];
+        const north = (pos && typeof pos.north === "number") ? pos.north
+          : (minimapData && typeof minimapData.northYaw === "number" ? minimapData.northYaw : 0);
+        let deg = 0;
+        try { deg = tourViewer.getYaw() - north; } catch (e) { deg = 0; }
+        minimapConeEl.style.transform = "translate(-50%, -100%) rotate(" + deg + "deg)";
+      }
+      // Keep updating while the minimap is visible.
+      if (minimapEl && !minimapEl.hidden) {
+        minimapRaf = window.requestAnimationFrame(tick);
+      }
+    };
+    minimapRaf = window.requestAnimationFrame(tick);
+  }
+
   function degreesToRadians(value) {
     return (Number(value) * Math.PI) / 180;
   }
@@ -3528,6 +3660,7 @@
   }
   syncNarrationControls();
   renderSubtitle();
+  initMinimap();
 
   function createViewerWithCaptureSupport(scenes) {
     const originalGetContext = HTMLCanvasElement.prototype.getContext;
@@ -3667,6 +3800,7 @@
             }
           });
           syncSceneInUrl(sceneId);
+          minimapSetActive(sceneId);
           window.requestAnimationFrame(updateHotspotVisibilityState);
         });
 
@@ -3678,6 +3812,10 @@
             errorOverlay.hidden = true;
           }
           setControlDockVisibility(true);
+          if (minimapEl) {
+            minimapEl.hidden = false;
+          }
+          minimapSetActive(typeof viewer.getScene === "function" ? viewer.getScene() : initialScene);
         });
 
         if (hotspotDebugEnabled) {

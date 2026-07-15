@@ -66,6 +66,7 @@
       data-panorama-museum2-src="{{ url_for('virtual_tour_file', filename='2Museum.jpg') }}"
       data-panorama-museum3-src="{{ url_for('virtual_tour_file', filename='3Museum.jpg') }}"
       data-digital-exhibits-url="{{ url_for('digital_exhibits') }}"
+      data-minimap-url="{{ url_for('static', filename='data/tour-minimap.json') }}"
       data-balanghay-image-src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay.jpg') }}"
       data-balanghay-glb-src="{{ url_for('static', filename='AR-Artifacts/Balanghay/Balanghay-512(10K).glb') }}"
       data-balanghay-tagalog-audio-src="{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/ANG BALANGHAY.mp3') }}"
@@ -167,6 +168,21 @@
       <div class="tour-overlay tour-overlay--center tour-loader" id="tourLoadingOverlay">
         <div class="tour-loader__ring" aria-hidden="true"></div>
         <p class="tour-loader__text">Museo ng Libingan<br /><em>sa Ilalim ng Lupa ng Nagcarlan</em><span>Preparing the 360 view…</span></p>
+      </div>
+
+      <!-- Live "you are here" minimap: current scene + heading, tap a dot to jump -->
+      <div class="tour-minimap" id="tourMinimap" hidden>
+        <div class="tour-minimap__bar">
+          <span class="tour-minimap__heading">You are here</span>
+          <button class="tour-minimap__toggle" id="tourMinimapToggle" type="button" aria-label="Collapse map" aria-expanded="true">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+          </button>
+        </div>
+        <div class="tour-minimap__frame" id="tourMinimapFrame">
+          <img class="tour-minimap__img" id="tourMinimapImg" alt="Aerial map of the site" draggable="false" />
+          <div class="tour-minimap__dots" id="tourMinimapDots"></div>
+        </div>
+        <p class="tour-minimap__label" id="tourMinimapLabel"></p>
       </div>
 
       <div class="tour-overlay tour-overlay--center" id="tourErrorOverlay" hidden>
