@@ -2249,6 +2249,25 @@
       minimapDotEls[sceneId] = dot;
       mapxDotsEl.appendChild(dot);
     });
+
+    // Non-clickable place markers (Museum, Church) — a distinct pin + label.
+    (data.landmarks || []).forEach(function (lm) {
+      if (!lm || typeof lm.x !== "number" || typeof lm.y !== "number") {
+        return;
+      }
+      const mark = document.createElement("div");
+      mark.className = "tour-mapx__landmark";
+      mark.style.left = lm.x * 100 + "%";
+      mark.style.top = lm.y * 100 + "%";
+      const pin = document.createElement("span");
+      pin.className = "tour-mapx__landmark-pin";
+      const lbl = document.createElement("span");
+      lbl.className = "tour-mapx__landmark-label";
+      lbl.textContent = lm.label || "";
+      mark.appendChild(pin);
+      mark.appendChild(lbl);
+      mapxDotsEl.appendChild(mark);
+    });
   }
 
   // Slide + scale the circle's image so the current scene sits dead center.
@@ -2271,6 +2290,15 @@
     if (!minimapData) {
       return; // built once the data loads
     }
+    // Indoors (museum / church-underground): hide the whole map.
+    const hideList = minimapData.hideOn || [];
+    if (hideList.indexOf(sceneId) !== -1) {
+      if (minimapEl) { minimapEl.hidden = true; }
+      closeMapx();
+      return;
+    }
+    if (minimapEl) { minimapEl.hidden = false; }
+
     Object.keys(minimapDotEls).forEach(function (id) {
       minimapDotEls[id].classList.toggle("is-active", id === sceneId);
     });
@@ -3857,9 +3885,6 @@
             errorOverlay.hidden = true;
           }
           setControlDockVisibility(true);
-          if (minimapEl) {
-            minimapEl.hidden = false;
-          }
           minimapSetActive(typeof viewer.getScene === "function" ? viewer.getScene() : initialScene);
         });
 
