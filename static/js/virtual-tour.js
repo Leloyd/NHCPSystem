@@ -221,6 +221,8 @@
   let minimapActiveScene = "";
   let minimapRaf = 0;
   let minimapAspect = 3074 / 2250; // updated once the aerial image loads
+  let minimapNorths = null; // per-scene map orientation (deg), auto-derived
+  let minimapYawSign = -1;  // detected pannellum yaw handedness
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
   let floatingImagePreviewOverlay = null;
@@ -2310,18 +2312,98 @@
     startMinimapHeadingLoop();
   }
 
+  // Bearing (deg, clockwise from map-up) from scene a to scene b, using their
+  // fractional map positions.
+  function minimapBearing(a, b) {
+    const dx = b.x - a.x;
+    const dy = b.y - a.y;
+    if (Math.abs(dx) < 1e-4 && Math.abs(dy) < 1e-4) { return null; }
+    return (Math.atan2(dx, -dy) * 180) / Math.PI;
+  }
+
+  function minimapCircMean(list) {
+    let s = 0;
+    let c = 0;
+    list.forEach(function (deg) {
+      const r = (deg * Math.PI) / 180;
+      s += Math.sin(r);
+      c += Math.cos(r);
+    });
+    return { mean: (Math.atan2(s, c) * 180) / Math.PI, strength: Math.hypot(s, c) / (list.length || 1) };
+  }
+
+  /* Derive each scene's map orientation automatically: every "walk here" hotspot
+     points at a neighbour whose map position we know, so the offset between the
+     hotspot's 360 yaw and the on-map bearing to that neighbour tells us how the
+     scene's yaw frame is rotated relative to the map. Averaging the scene's
+     hotspots gives a robust per-scene north — so the heading pointer matches the
+     real look direction in every scene. */
+  function computeSceneNorths() {
+    if (!minimapData || !resolvedScenes) { return null; }
+    const scenes = minimapData.scenes || {};
+
+    // Detect the global yaw handedness (pannellum's sign) — the one that makes a
+    // scene's several hotspots agree on a single offset.
+    let bestSign = -1;
+    let bestScore = -1;
+    [-1, 1].forEach(function (sign) {
+      let total = 0;
+      let count = 0;
+      Object.keys(scenes).forEach(function (aId) {
+        const a = scenes[aId];
+        const rs = resolvedScenes[aId];
+        if (!a || !rs) { return; }
+        const offs = [];
+        (rs.hotSpots || []).forEach(function (h) {
+          if (h.type !== "scene" || !h.sceneId) { return; }
+          const b = scenes[h.sceneId];
+          if (!b) { return; }
+          const mb = minimapBearing(a, b);
+          if (mb === null) { return; }
+          offs.push(mb - sign * h.yaw);
+        });
+        if (offs.length >= 2) { total += minimapCircMean(offs).strength; count += 1; }
+      });
+      const score = count ? total / count : 0;
+      if (score > bestScore) { bestScore = score; bestSign = sign; }
+    });
+    minimapYawSign = (typeof minimapData.yawSign === "number") ? minimapData.yawSign : bestSign;
+
+    const norths = {};
+    Object.keys(scenes).forEach(function (aId) {
+      const a = scenes[aId];
+      const rs = resolvedScenes[aId];
+      if (!a || !rs) { return; }
+      const offs = [];
+      (rs.hotSpots || []).forEach(function (h) {
+        if (h.type !== "scene" || !h.sceneId) { return; }
+        const b = scenes[h.sceneId];
+        if (!b) { return; }
+        const mb = minimapBearing(a, b);
+        if (mb === null) { return; }
+        offs.push(mb - minimapYawSign * h.yaw);
+      });
+      if (offs.length) { norths[aId] = minimapCircMean(offs).mean; }
+    });
+    return norths;
+  }
+
   function startMinimapHeadingLoop() {
     if (minimapRaf) {
       return;
     }
     const tick = function () {
       minimapRaf = 0;
+      if (!minimapNorths) { minimapNorths = computeSceneNorths(); }
       if (minimapConeEl && tourViewer && typeof tourViewer.getYaw === "function") {
         const pos = minimapData && minimapData.scenes && minimapData.scenes[minimapActiveScene];
-        const north = (pos && typeof pos.north === "number") ? pos.north
-          : (minimapData && typeof minimapData.northYaw === "number" ? minimapData.northYaw : 0);
+        // Manual override wins; otherwise the auto-derived north; else 0.
+        let northOff = 0;
+        if (pos && typeof pos.north === "number") { northOff = pos.north; }
+        else if (minimapNorths && typeof minimapNorths[minimapActiveScene] === "number") { northOff = minimapNorths[minimapActiveScene]; }
+        else if (minimapData && typeof minimapData.northYaw === "number") { northOff = minimapData.northYaw; }
         let deg = 0;
-        try { deg = tourViewer.getYaw() - north; } catch (e) { deg = 0; }
+        try { deg = minimapYawSign * tourViewer.getYaw() + northOff; } catch (e) { deg = 0; }
         minimapConeEl.style.transform = "translate(-50%, -100%) rotate(" + deg + "deg)";
       }
       if (minimapEl && !minimapEl.hidden) {
