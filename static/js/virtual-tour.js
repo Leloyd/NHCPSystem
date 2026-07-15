@@ -2621,12 +2621,14 @@
   }
 
   function toggleNarration() {
-    if (floatingImageAudio && !floatingImageAudio.paused && !floatingImageAudio.ended) {
+    // Anything currently playing? Pause it — this is the primary Listen action.
+    if (floatingImageAudio && !floatingImageAudio.paused) {
       floatingImageAudio.pause();
       syncNarrationControls();
       return;
     }
-    if (floatingImageAudio && floatingImageAudio.paused && floatingImageAudioSrc) {
+    // Buffered but paused → resume from where it stopped.
+    if (floatingImageAudio && floatingImageAudioSrc) {
       const resume = floatingImageAudio.play();
       if (resume && typeof resume.catch === "function") {
         resume.catch(function () {});
