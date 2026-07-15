@@ -1,9 +1,10 @@
 {
-  "image": "/static/images/site-map/aerial-view.jpg",
-  "width": 3840,
-  "height": 2160,
+  "image": "/static/images/site-map/aerial-map.jpg",
+  "width": 3074,
+  "height": 2250,
+  "zoom": 3.2,
   "northYaw": 0,
-  "_note": "x/y are fractions (0..1) of the aerial image. 'north' (optional, per scene, degrees) is the pannellum yaw that points toward the top of the aerial, used to aim the heading cone; default 0. Open /virtual-tour?minimapDebug=1 and click the map to log the current scene's x/y (and its yaw) for precise calibration.",
+  "_note": "x/y are fractions (0..1) of the aerial image. 'zoom' is the minimap circle's magnification. 'north' (optional, per scene, degrees) is the pannellum yaw that points toward the top of the aerial, used to aim the heading pointer; default 0. Calibrate: open /virtual-tour?minimapDebug=1, tap the circle to expand, walk to each scene, click its true spot on the big map, and paste the logged x/y here.",
   "scenes": {
     "frontGate":                 { "x": 0.389, "y": 0.241, "label": "Front Gate" },
     "leftFrontGate":             { "x": 0.360, "y": 0.235, "label": "Front Gate · Left" },
