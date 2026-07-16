@@ -2501,18 +2501,35 @@ function initDocViewer() {
    TO ADD PHOTOS: fill in the eras below. Each photo is
      { src: 'https://…/Photo.jpg', caption: { en: 'One sentence.', tl: 'Isang pangungusap.' } }
    (caption may also be a plain string if there is no translation). ----------- */
+const HT_PICS = 'https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/HeritageTrails/Pics';
 const TIME_ALBUMS = {
   renovation: {
     title: { en: 'The Restorations', tl: 'Ang mga Pagsasaayos' },
     eras: [
       { label: '1982–1986', photos: [
-        // 8 photos
+        { src: `${HT_PICS}/1982-1981_1.png`, caption: { tl: 'Tarangkahan ng libingan, Agosto.', en: 'Gate of the cemetery, August.' } },
+        { src: `${HT_PICS}/1982-1981_2.png`, caption: { tl: 'Harap ng kapilya.', en: 'Facade of the chapel, August.' } },
+        { src: `${HT_PICS}/1982-1981_3.png`, caption: { tl: 'Nilinisan at muling pininturahan ang altar.', en: 'Altar was cleaned and repainted.' } },
+        { src: `${HT_PICS}/1982-1981_4.png`, caption: { tl: 'Inayos ang bubong at mga barakilan at naglagay ng mga bagong tisa.', en: 'The roof was repaired, beams were treated, and roof tiles were installed.' } },
+        { src: `${HT_PICS}/1982-1981_5.png`, caption: { tl: 'Inilatag ang maayos na daluyang-tubig.', en: 'Proper drainage was laid out.' } },
+        { src: `${HT_PICS}/1982-1981_6.png`, caption: { tl: 'Nilinis ang mga tambak ng kripta.', en: 'Rubbles were removed from the crypt.' } },
+        { src: `${HT_PICS}/1982-1981_7.png`, caption: { tl: 'Ang mga daanan ay nilatagan ng mga ladrilyong mula sa ginibang Insular Ice Plant sa Maynila.', en: 'The walkways were paved with clay bricks from the demolished Insular Ice Plant in Manila.' } },
+        { src: `${HT_PICS}/1982-1981_8.png`, caption: { tl: 'Inilatag ang mga poste ng ilaw sa mga daan.', en: 'Lamp posts were placed on the walkways.' } },
       ] },
       { label: { en: 'Feb–Oct 2008', tl: 'Peb–Okt 2008' }, photos: [
-        // 3 photos
+        { src: `${HT_PICS}/PebOk-2008_1.png`, caption: { tl: 'Tarangkahan ng Libingan, Pebrero.', en: 'Gate of the cemetery, February.' } },
+        { src: `${HT_PICS}/PebOk-2008_2.png`, caption: { tl: 'Harap ng kapilya, Oktubre.', en: 'Facade of the chapel, October.' } },
+        { src: `${HT_PICS}/PebOk-2008_3.png`, caption: { tl: 'Nilinisan ang tarangkahan at bakod, inalis ang mga ligaw na halaman at inayos ang altar.', en: 'Gate and fence were cleaned, growths were cleared, and the altar was restored.' } },
       ] },
-      { label: '2015–2016', photos: [
-        // 8 photos
+      { label: { en: 'Feb–Oct 2015–2016', tl: 'Peb–Okt 2015–2016' }, photos: [
+        { src: `${HT_PICS}/PebOk-2015-2016_1.png`, caption: { tl: 'Tarangkahan ng libingan, Pebrero.', en: 'Gate of the cemetery, February.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_2.png`, caption: { tl: 'Harap ng Kapilya, Oktubre.', en: 'Facade of the chapel, October.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_3.png`, caption: { tl: 'Inayos ang bakal ng tarangkahan.', en: 'The iron gate was repaired.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_4.png`, caption: { tl: 'Inayos ang tarangkahan at inalis ang mga ligaw na halaman.', en: 'The gate was cleaned and growths were cleared.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_5.png`, caption: { tl: 'Naglagay ng bagong mga pananggang bakal sa mga pako.', en: 'New iron stoppers were placed on the nails.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_6.png`, caption: { tl: 'Nilinisan ang bubong at ang harap ng kapilya.', en: 'The roof and the facade of the chapel were cleaned.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_7.png`, caption: { tl: 'Ang bulwagan sa tagiliran ay inayos at nilakihan.', en: 'The gallery at the side was repaired and expanded.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_8.png`, caption: { tl: 'Naghanda ng bagong palitada upang ayusin ang mga sirang bahagi ng dingding.', en: 'New plaster was prepared to repaint the damaged parts of the wall.' } },
       ] },
     ],
   },
@@ -2520,16 +2537,28 @@ const TIME_ALBUMS = {
     title: { en: 'The Deterioration', tl: 'Ang Pagkasira' },
     eras: [
       { label: '1911', photos: [
-        // 2 photos
+        { src: `${HT_PICS}/1911_1.png`, caption: { tl: 'Tarangkahan ng libingan.', en: 'Gate of the cemetery.' } },
+        { src: `${HT_PICS}/1911_2.png`, caption: { tl: 'Harap ng Kapilya.', en: 'Facade of the chapel.' } },
       ] },
       { label: '1982', photos: [
-        // 4 photos
+        { src: `${HT_PICS}/1982_1.png`, caption: { tl: 'Sinirang dingding ng kripta.', en: 'Vandalized crypt wall.' } },
+        { src: `${HT_PICS}/1982_2.png`, caption: { tl: 'Kumupas na pintura ng altar.', en: 'Faded paint on the altar.' } },
+        { src: `${HT_PICS}/1982_3.png`, caption: { tl: 'Kumupas na pintura ng kisame.', en: 'Faded paint on the ceiling.' } },
+        { src: `${HT_PICS}/1982_4.png`, caption: { tl: 'Mga bahagi ng dingding na kumupas na ang pintura.', en: 'Walls with areas of faded paint.' } },
       ] },
       { label: '1983', photos: [
-        // 2 photos
+        { src: `${HT_PICS}/1983_1.png`, caption: { tl: 'Nabubulok na kahoy.', en: 'Rotting wood.' } },
+        { src: `${HT_PICS}/1983_2.png`, caption: { tl: 'Nabubulok na pintuan at kinakalawang na bisagra.', en: 'Rotten door and rusted hinges.' } },
       ] },
       { label: '2000', photos: [
-        // 8 photos
+        { src: `${HT_PICS}/2000_1.png`, caption: { tl: 'Bahagi ng kisame ng kripta na may natuklap na palitada.', en: 'Portion of the crypt ceiling with chipped-off plaster.' } },
+        { src: `${HT_PICS}/2000_2.png`, caption: { tl: 'Nangitim at nilumot na bakod ng bato at nawawalang palamuti nito.', en: 'Darkened stone fence with moss and lichens and missing decorative parts.' } },
+        { src: `${HT_PICS}/2000_3.png`, caption: { tl: 'Tarangkahang tinubuan na ng mga ligaw na halaman.', en: 'Gate with plant growth.' } },
+        { src: `${HT_PICS}/2000_4.png`, caption: { tl: 'Kinakalawang na bubong.', en: 'Rusted roof.' } },
+        { src: `${HT_PICS}/2000_5.png`, caption: { tl: 'Nilulumot na dingding.', en: 'Walls with algae.' } },
+        { src: `${HT_PICS}/2000_6.png`, caption: { tl: 'Sirang bintana.', en: 'Broken window.' } },
+        { src: `${HT_PICS}/2000_7.png`, caption: { tl: 'Mga bitak sa dingding.', en: 'Cracks on the walls.' } },
+        { src: `${HT_PICS}/2000_8.png`, caption: { tl: 'Bintana at dingding ng kripta na namantsahan ng tubig.', en: 'Water-stained window and wall of the crypt.' } },
       ] },
     ],
   },
