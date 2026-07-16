@@ -545,8 +545,8 @@ body {
 .tour-minimap__circle {
   pointer-events: auto;
   position: relative;
-  width: clamp(74px, 13vw, 104px);
-  height: clamp(74px, 13vw, 104px);
+  width: clamp(112px, 18vw, 152px);
+  height: clamp(112px, 18vw, 152px);
   padding: 0;
   margin: 0;
   border-radius: 50%;
@@ -599,7 +599,7 @@ body {
 .tour-minimap__label {
   pointer-events: none;
   margin: 0;
-  max-width: 9rem;
+  max-width: 11rem;
   text-align: center;
   font-family: "Inter", "Segoe UI", sans-serif;
   font-size: 0.66rem;
@@ -766,10 +766,10 @@ body {
     right: calc(var(--tour-safe-right) + 0.6rem);
   }
   .tour-minimap__circle {
-    width: clamp(64px, 20vw, 84px);
-    height: clamp(64px, 20vw, 84px);
+    width: clamp(92px, 27vw, 118px);
+    height: clamp(92px, 27vw, 118px);
   }
-  .tour-minimap__label { font-size: 0.6rem; }
+  .tour-minimap__label { font-size: 0.6rem; max-width: 8.5rem; }
   .tour-mapx__dot { width: 16px; height: 16px; margin: -8px 0 0 -8px; }
   .tour-mapx__label { font-size: 0.86rem; }
 }
