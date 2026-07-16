@@ -2492,12 +2492,230 @@ function initDocViewer() {
   window.addEventListener('keydown', (e) => { if (e.key === 'Escape') hideDoc(); });
 }
 
+/* --- "Larawan ng Panahon" — era photo albums (Stop 6) -------------------------
+   Historical photographs of the cemetery grouped by era, presented as a
+   documentary-style album: a year rail on top, one photo at a time with a slow
+   Ken Burns drift and a vintage vignette, its one-sentence caption below, and
+   swipe / arrow navigation. Buttons stay hidden until an album has photos.
+
+   TO ADD PHOTOS: fill in the eras below. Each photo is
+     { src: 'https://…/Photo.jpg', caption: { en: 'One sentence.', tl: 'Isang pangungusap.' } }
+   (caption may also be a plain string if there is no translation). ----------- */
+const TIME_ALBUMS = {
+  renovation: {
+    title: { en: 'The Restorations', tl: 'Ang mga Pagsasaayos' },
+    eras: [
+      { label: '1982–1986', photos: [
+        // 8 photos
+      ] },
+      { label: { en: 'Feb–Oct 2008', tl: 'Peb–Okt 2008' }, photos: [
+        // 3 photos
+      ] },
+      { label: '2015–2016', photos: [
+        // 8 photos
+      ] },
+    ],
+  },
+  deterioration: {
+    title: { en: 'The Deterioration', tl: 'Ang Pagkasira' },
+    eras: [
+      { label: '1911', photos: [
+        // 2 photos
+      ] },
+      { label: '1982', photos: [
+        // 4 photos
+      ] },
+      { label: '1983', photos: [
+        // 2 photos
+      ] },
+      { label: '2000', photos: [
+        // 8 photos
+      ] },
+    ],
+  },
+};
+
+function initTimeAlbums() {
+  const triggers = Array.from(root.querySelectorAll('[data-trail-album]'));
+  if (!triggers.length) return;
+
+  // Bilingual helper: {en, tl} → language-switched spans; strings pass through.
+  const bi = (v) => {
+    if (v && typeof v === 'object') {
+      return `<span data-lang-en>${v.en || v.tl}</span><span data-lang-tl>${v.tl || v.en}</span>`;
+    }
+    return v || '';
+  };
+
+  let overlay = null;
+  let imgEl = null;
+  let capEl = null;
+  let metaEl = null;
+  let erasEl = null;
+  let titleEl = null;
+  let flat = [];      // [{ src, caption, eraIdx, nth, of }]
+  let eraBtns = [];
+  let cur = 0;
+
+  const ensureOverlay = () => {
+    if (overlay) return;
+    overlay = document.createElement('div');
+    overlay.className = 'trailx-album';
+    overlay.hidden = true;
+    overlay.setAttribute('role', 'dialog');
+    overlay.setAttribute('aria-modal', 'true');
+    overlay.setAttribute('aria-label', 'Historical photographs');
+
+    erasEl = document.createElement('nav');
+    erasEl.className = 'trailx-album__eras';
+
+    const stage = document.createElement('div');
+    stage.className = 'trailx-album__stage';
+    const prev = document.createElement('button');
+    prev.type = 'button';
+    prev.className = 'trailx-album__nav trailx-album__nav--prev';
+    prev.setAttribute('aria-label', 'Previous photograph');
+    prev.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M15 5l-7 7 7 7"/></svg>';
+    const frame = document.createElement('figure');
+    frame.className = 'trailx-album__frame';
+    imgEl = document.createElement('img');
+    imgEl.className = 'trailx-album__img';
+    imgEl.alt = '';
+    imgEl.draggable = false;
+    const vintage = document.createElement('span');
+    vintage.className = 'trailx-album__vintage';
+    frame.appendChild(imgEl);
+    frame.appendChild(vintage);
+    const next = document.createElement('button');
+    next.type = 'button';
+    next.className = 'trailx-album__nav trailx-album__nav--next';
+    next.setAttribute('aria-label', 'Next photograph');
+    next.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"/></svg>';
+    stage.appendChild(prev);
+    stage.appendChild(frame);
+    stage.appendChild(next);
+
+    capEl = document.createElement('p');
+    capEl.className = 'trailx-album__caption';
+    metaEl = document.createElement('p');
+    metaEl.className = 'trailx-album__meta';
+    titleEl = document.createElement('p');
+    titleEl.className = 'trailx-album__title';
+
+    const close = document.createElement('button');
+    close.type = 'button';
+    close.className = 'trailx-xclose trailx-album__close';
+    close.setAttribute('aria-label', 'Close photographs');
+    close.textContent = '✕';
+
+    overlay.appendChild(erasEl);
+    overlay.appendChild(stage);
+    overlay.appendChild(capEl);
+    overlay.appendChild(metaEl);
+    overlay.appendChild(titleEl);
+    overlay.appendChild(close);
+    root.appendChild(overlay);
+
+    const hide = () => {
+      overlay.classList.remove('is-open');
+      overlay.hidden = true;
+    };
+    close.addEventListener('click', hide);
+    prev.addEventListener('click', () => show(cur - 1));
+    next.addEventListener('click', () => show(cur + 1));
+    frame.addEventListener('click', () => show(cur + 1)); // tapping the photo advances
+    window.addEventListener('keydown', (e) => {
+      if (overlay.hidden) return;
+      if (e.key === 'Escape') hide();
+      else if (e.key === 'ArrowRight') show(cur + 1);
+      else if (e.key === 'ArrowLeft') show(cur - 1);
+    });
+    // Swipe left/right on the photo (phones).
+    let touchX = null;
+    stage.addEventListener('touchstart', (e) => { touchX = e.touches[0].clientX; }, { passive: true });
+    stage.addEventListener('touchend', (e) => {
+      if (touchX === null) return;
+      const dx = e.changedTouches[0].clientX - touchX;
+      touchX = null;
+      if (Math.abs(dx) > 40) show(dx < 0 ? cur + 1 : cur - 1);
+    }, { passive: true });
+  };
+
+  const show = (i) => {
+    if (!flat.length) return;
+    cur = (i + flat.length) % flat.length; // wraps around at both ends
+    const ph = flat[cur];
+    // Crossfade + restart the slow documentary drift for the incoming photo.
+    imgEl.classList.remove('is-live');
+    imgEl.style.opacity = '0';
+    const reveal = () => {
+      imgEl.removeEventListener('load', reveal);
+      imgEl.style.opacity = '1';
+      if (!prefersReducedMotion) {
+        void imgEl.offsetWidth; // restart the Ken Burns animation
+        imgEl.classList.add('is-live');
+      }
+    };
+    imgEl.addEventListener('load', reveal);
+    imgEl.src = ph.src;
+    if (imgEl.complete) reveal();
+    capEl.innerHTML = bi(ph.caption);
+    metaEl.innerHTML = `${bi(ph.eraLabel)} · ${ph.nth} / ${ph.of}`;
+    eraBtns.forEach((b, bi2) => b.classList.toggle('is-active', bi2 === ph.eraIdx));
+    const nxt = flat[(cur + 1) % flat.length];
+    if (nxt) { const pre = new Image(); pre.src = nxt.src; } // preload the next page
+  };
+
+  const open = (key) => {
+    const album = TIME_ALBUMS[key];
+    if (!album) return;
+    ensureOverlay();
+    // Flatten the eras into one continuous reel, remembering each photo's era.
+    flat = [];
+    album.eras.forEach((era, eraIdx) => {
+      const photos = (era.photos || []).filter((p) => p && p.src);
+      photos.forEach((p, j) => {
+        flat.push({ src: p.src, caption: p.caption || '', eraLabel: era.label, eraIdx, nth: j + 1, of: photos.length });
+      });
+    });
+    if (!flat.length) return;
+    pauseSpeaking(); // the album speaks for itself; Listen resumes Ana after
+    erasEl.innerHTML = '';
+    eraBtns = album.eras.map((era, eraIdx) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'trailx-album__era';
+      b.innerHTML = bi(era.label);
+      b.addEventListener('click', () => {
+        const first = flat.findIndex((p) => p.eraIdx === eraIdx);
+        if (first !== -1) show(first);
+      });
+      b.hidden = !flat.some((p) => p.eraIdx === eraIdx);
+      erasEl.appendChild(b);
+      return b;
+    });
+    titleEl.innerHTML = bi(album.title);
+    overlay.hidden = false;
+    window.requestAnimationFrame(() => overlay.classList.add('is-open'));
+    show(0);
+  };
+
+  triggers.forEach((btn) => {
+    const key = btn.getAttribute('data-trail-album');
+    const album = TIME_ALBUMS[key];
+    const count = album ? album.eras.reduce((n, e) => n + (e.photos || []).filter((p) => p && p.src).length, 0) : 0;
+    btn.hidden = count === 0; // appears as soon as photos are added above
+    btn.addEventListener('click', () => open(key));
+  });
+}
+
 /* --- Boot -------------------------------------------------------------------- */
 narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();
 initStories();
 initDocViewer();
+initTimeAlbums();
 if (wantsStop && STOP_CONF[wantsStop]) enterStop(wantsStop, { history: 'replace' }); // refresh → restore the stop
 attemptAutoSpeak();          // auto-play like the landing page…
 setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it
