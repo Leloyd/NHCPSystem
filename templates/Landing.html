@@ -34,21 +34,21 @@
       <section
         id="anaStory"
         class="story"
-        data-model-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-idle-1K.glb"
-        data-greet-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-greet-1k.glb"
-        data-heart-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-heart-1k.glb"
-        data-look-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-look-1k.glb"
-        data-wait-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-wait-1k.glb"
-        data-foldarm-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-foldarm-1k.glb"
+        data-model-url="{{ url_for('static', filename='AK-animation/AK-idle-1K.glb') }}"
+        data-greet-url="{{ url_for('static', filename='AK-animation/AK-greet-1k.glb') }}"
+        data-heart-url="{{ url_for('static', filename='AK-animation/AK-heart-1k.glb') }}"
+        data-look-url="{{ url_for('static', filename='AK-animation/AK-look-1k.glb') }}"
+        data-wait-url="{{ url_for('static', filename='AK-animation/AK-wait-1k.glb') }}"
+        data-foldarm-url="{{ url_for('static', filename='AK-animation/AK-foldarm-1k.glb') }}"
         aria-label="Guided tour of the museum by Ana Kalang"
       >
         <div class="story__viewport" data-story-viewport data-model-side="right" data-chapter="hero" data-muted="false" data-playing="false">
           <!-- Background layers: default + per-chapter crossfades -->
           <div class="story__bg" data-bg="default" style="background-image: url('/images/UndergroundBG.png');"></div>
           <div class="story__bg" data-bg="testament" style="background-image: url('{{ url_for('static', filename='images/living-testament.jpg') }}');"></div>
-          <div class="story__bg" data-bg="about1" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite1st.jpg');"></div>
-          <div class="story__bg" data-bg="about3" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite3.jpg');"></div>
-          <div class="story__bg" data-bg="about2" style="background-image: url('https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/AboutSite2.jpg');"></div>
+          <div class="story__bg" data-bg="about1" style="background-image: url('{{ url_for('static', filename='images/landing/AboutSite1st.jpg') }}');"></div>
+          <div class="story__bg" data-bg="about3" style="background-image: url('{{ url_for('static', filename='images/landing/AboutSite3.jpg') }}');"></div>
+          <div class="story__bg" data-bg="about2" style="background-image: url('{{ url_for('static', filename='images/landing/AboutSite2.jpg') }}');"></div>
           <div class="story__bg" data-bg="visitor-info" style="background-image: url('{{ url_for('static', filename='images/visitors-info.jpg') }}');"></div>
           <div class="story__bg-tint"></div>
           <div class="story__bg-texture"></div>
@@ -65,24 +65,24 @@
 
           <!-- Gravestone photo (About · II): appears after a beat and stays -->
           <figure class="story__father" data-story-puntod aria-hidden="true">
-            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Puntod.jpg" alt="Gravestone with S.L.N. inscription" loading="lazy" />
+            <img src="{{ url_for('static', filename='images/landing/Puntod.jpg') }}" alt="Gravestone with S.L.N. inscription" loading="lazy" />
             <figcaption>S.L.N. · Sumalangit Nawa</figcaption>
           </figure>
 
           <!-- Guerrilla-era photos (About · III): shown one after another -->
           <figure class="story__father" data-story-guerrilla-a aria-hidden="true">
-            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/A.jpg" alt="Colonel Guillermo I. Aynaga Sr." loading="lazy" />
+            <img src="{{ url_for('static', filename='images/landing/A.jpg') }}" alt="Colonel Guillermo I. Aynaga Sr." loading="lazy" />
             <figcaption>
               <span data-lang-en>Colonel Guillermo I. Aynaga Sr.</span>
               <span data-lang-tl>Koronel Guillermo "Billy" Igay Aynaga Sr.</span>
             </figcaption>
           </figure>
           <figure class="story__father" data-story-guerrilla-b aria-hidden="true">
-            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/B.jpg" alt="Historical photograph" loading="lazy" />
+            <img src="{{ url_for('static', filename='images/landing/B.jpg') }}" alt="Historical photograph" loading="lazy" />
             <figcaption>Courtesy of Mr. Joey Vistal</figcaption>
           </figure>
           <figure class="story__father" data-story-guerrilla-c aria-hidden="true">
-            <img src="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/C.jpg" alt="Filipino guerillas in Nagcarlan, 1945" loading="lazy" />
+            <img src="{{ url_for('static', filename='images/landing/C.jpg') }}" alt="Filipino guerillas in Nagcarlan, 1945" loading="lazy" />
             <figcaption>
               <span data-lang-en>Filipino guerillas in Nagcarlan, 1945<br /><small>WW2 Philippines via Pepito Achicocho</small></span>
               <span data-lang-tl>Mga gerilyang Pilipino sa Nagcarlan, 1945<br /><small>WW2 Philippines via Pepito Achicocho</small></span>

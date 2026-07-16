@@ -155,10 +155,10 @@
       data-art-pahiwatig-glb="{{ url_for('artifact_asset_file', filename='Pahiwatig/Pahiwating.glb') }}"
       data-art-recuerdos-glb="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}"
       data-art-tboli-glb='{{ url_for("artifact_asset_file", filename="Tboli/T\'boli-512(10k).glb") }}'
-      data-model-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-idle-1K.glb"
-      data-greet-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-greet-1k.glb"
-      data-heart-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-heart-1k.glb"
-      data-look-url="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/models/ana-kalang/AK-look-1k.glb"
+      data-model-url="{{ url_for('static', filename='AK-animation/AK-idle-1K.glb') }}"
+      data-greet-url="{{ url_for('static', filename='AK-animation/AK-greet-1k.glb') }}"
+      data-heart-url="{{ url_for('static', filename='AK-animation/AK-heart-1k.glb') }}"
+      data-look-url="{{ url_for('static', filename='AK-animation/AK-look-1k.glb') }}"
       data-cancel-url="{{ url_for('index') }}"
     >
       <!-- 360 aerial panorama (no controls / no leaflet) -->
@@ -1001,7 +1001,7 @@
               SI PADRE Juan de Plasencia ay kilala bilang isang mahusay na manunulat na naghangad na pag-ugnayin ang pag-unawa sa pagitan ng mga Espanyol at ng mga katutubo. Kanyang isinulat ang kauna-unahang aklat na inilimbag sa Pilipinas, ang Doctrina Cristiana noong 1593, na naglalaman ng mga katuruan ng pananampalatayang Katolisismo. Subalit, itinuturing na kanyang pinakamahalagang akda ang Relación de las costumbres de los tagalos (1589), na nagsilbing batayan hindi lamang sa pag-unawa at pagpapanatili ng kultura ng mga katutubo, kundi maging gabay din sa mga lokal na pinuno para sa mabuting pamamahala.
             </p>
             <div class="trailx__actions">
-              <button class="trailx__docbtn" type="button" data-trail-docs="https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Juan1.png,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Juan2.png,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Juan3.png,https://ayfudbwshjpjfxqrvdhq.supabase.co/storage/v1/object/public/nhcp-media/LandingPageVid-and-Pics/Pics/Juan4.png">
+              <button class="trailx__docbtn" type="button" data-trail-docs="{{ url_for('static', filename='images/landing/Juan1.png') }},{{ url_for('static', filename='images/landing/Juan2.png') }},{{ url_for('static', filename='images/landing/Juan3.png') }},{{ url_for('static', filename='images/landing/Juan4.png') }}">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M7 3h7l5 5v12a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z"/><path stroke-linecap="round" stroke-linejoin="round" d="M14 3v5h5M9 13h6M9 17h4"/></svg>
                 <span data-lang-en>View Documents</span>
                 <span data-lang-tl>Tingnan ang mga Dokumento</span>
