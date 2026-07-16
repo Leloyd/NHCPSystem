@@ -62,7 +62,7 @@ const SCRIPT = {
 
 /* Recorded voice-overs (Supabase). Chapters listed here play the MP3 in the
    active language; chapters without an entry fall back to browser TTS. */
-const VOICE_BASE = '/static/audio/landing-voice/';
+const VOICE_BASE = '/audio/landing-voice/';
 const VOICE = {
   hero: { en: `${VOICE_BASE}E1%20-%20Title.mp3`, tl: `${VOICE_BASE}T1%20-%20Title.mp3` },
   testament: { en: `${VOICE_BASE}E2%20-%20Testament.mp3`, tl: `${VOICE_BASE}T2%20-%20Testament.mp3` },

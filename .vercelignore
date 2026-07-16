@@ -5,7 +5,3 @@ __pycache__/
 .venv/
 venv/
 .env
-
-# Large character models are hosted on Supabase Storage, not bundled into the
-# Vercel serverless function (keeps the bundle under the 225 MB limit).
-static/AK-animation/

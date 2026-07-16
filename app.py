@@ -1269,6 +1269,37 @@ def artifact_asset_file(filename):
     return jsonify({"error": f"Artifact asset not found: {filename}"}), 404
 
 
+# The next three routes mirror Vercel's static hosting of public/ at the site
+# root, so the same root-style URLs work in local development too. On Vercel
+# these requests are served from the CDN and never reach the function (which
+# keeps the big media out of the 225 MB serverless bundle).
+@app.route("/images/<path:filename>")
+def public_images_file(filename):
+    images_dir = PROJECT_ROOT / "public" / "images"
+    candidate_path = _resolve_safe_path(images_dir, filename)
+    if candidate_path is not None and candidate_path.exists() and candidate_path.is_file():
+        return send_from_directory(str(images_dir), filename)
+    return jsonify({"error": f"Image not found: {filename}"}), 404
+
+
+@app.route("/audio/<path:filename>")
+def public_audio_file(filename):
+    audio_dir = PROJECT_ROOT / "public" / "audio"
+    candidate_path = _resolve_safe_path(audio_dir, filename)
+    if candidate_path is not None and candidate_path.exists() and candidate_path.is_file():
+        return send_from_directory(str(audio_dir), filename)
+    return jsonify({"error": f"Audio not found: {filename}"}), 404
+
+
+@app.route("/AK-animation/<path:filename>")
+def ana_kalang_model_file(filename):
+    models_dir = PROJECT_ROOT / "public" / "AK-animation"
+    candidate_path = _resolve_safe_path(models_dir, filename)
+    if candidate_path is not None and candidate_path.exists() and candidate_path.is_file():
+        return send_from_directory(str(models_dir), filename)
+    return jsonify({"error": f"Model not found: {filename}"}), 404
+
+
 @app.route("/trail")
 def trail_start():
     return render_template("TrailStart.html")

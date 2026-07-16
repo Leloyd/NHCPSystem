@@ -2515,7 +2515,7 @@ function initDocViewer() {
    TO ADD PHOTOS: fill in the eras below. Each photo is
      { src: 'https://…/Photo.jpg', caption: { en: 'One sentence.', tl: 'Isang pangungusap.' } }
    (caption may also be a plain string if there is no translation). ----------- */
-const HT_PICS = '/static/images/heritage-albums';
+const HT_PICS = '/images/heritage-albums';
 const TIME_ALBUMS = {
   renovation: {
     title: { en: 'The Restorations', tl: 'Ang mga Pagsasaayos' },

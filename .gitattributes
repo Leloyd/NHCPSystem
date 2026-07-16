@@ -12,6 +12,11 @@ public/360Hotspots/**/* -filter -diff -merge -text
 public/AR-Artifacts/* -filter -diff -merge -text
 public/AR-Artifacts/**/* -filter -diff -merge -text
 public/images/* -filter -diff -merge -text
+public/images/**/* -filter -diff -merge -text
+public/AK-animation/* -filter -diff -merge -text
+public/AK-animation/**/* -filter -diff -merge -text
+public/audio/* -filter -diff -merge -text
+public/audio/**/* -filter -diff -merge -text
 static/AR-Artifacts/* -filter -diff -merge -text
 static/AR-Artifacts/**/* -filter -diff -merge -text
 static/AK-animation/* -filter -diff -merge -text
