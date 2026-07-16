@@ -2529,7 +2529,7 @@ const TIME_ALBUMS = {
         { src: `${HT_PICS}/PebOk-2015-2016_5.png`, caption: { tl: 'Naglagay ng bagong mga pananggang bakal sa mga pako.', en: 'New iron stoppers were placed on the nails.' } },
         { src: `${HT_PICS}/PebOk-2015-2016_6.png`, caption: { tl: 'Nilinisan ang bubong at ang harap ng kapilya.', en: 'The roof and the facade of the chapel were cleaned.' } },
         { src: `${HT_PICS}/PebOk-2015-2016_7.png`, caption: { tl: 'Ang bulwagan sa tagiliran ay inayos at nilakihan.', en: 'The gallery at the side was repaired and expanded.' } },
-        { src: `${HT_PICS}/PebOk-2015-2016_8.png`, caption: { tl: 'Naghanda ng bagong palitada upang ayusin ang mga sirang bahagi ng dingding.', en: 'New plaster was prepared to repaint the damaged parts of the wall.' } },
+        { src: `${HT_PICS}/PebOk-2015-2016_8.png`, caption: { tl: 'Naglapat ng bagong palitada para sa muling pagpintura ng nasirang bahagi ng dingding.', en: 'New plaster was prepared to repaint the damaged parts of the wall.' } },
       ] },
     ],
   },
