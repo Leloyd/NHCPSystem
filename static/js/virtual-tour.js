@@ -30,6 +30,7 @@
   const mapxEl = document.getElementById("tourMapx");
   const mapxImg = document.getElementById("tourMapxImg");
   const mapxFrame = document.getElementById("tourMapxFrame");
+  const mapxStage = document.getElementById("tourMapxStage");
   const mapxDotsEl = document.getElementById("tourMapxDots");
   const mapxLabelEl = document.getElementById("tourMapxLabel");
   const mapxClose = document.getElementById("tourMapxClose");
@@ -223,6 +224,13 @@
   let minimapAspect = 3074 / 2250; // updated once the aerial image loads
   let minimapNorths = null; // per-scene map orientation (deg), auto-derived
   let minimapYawSign = -1;  // detected pannellum yaw handedness
+  // Expanded-map pan/zoom (the map zooms itself; the page never does)
+  let mapxScale = 1;
+  let mapxTx = 0;
+  let mapxTy = 0;
+  const mapxPointers = new Map();
+  let mapxPanning = false;
+  let mapxPinchDist = 0;
   let capturePreviewOverlay = null;
   let capturePreviewImage = null;
   let floatingImagePreviewOverlay = null;
@@ -2175,7 +2183,10 @@
     });
     window.addEventListener("resize", function () {
       if (minimapActiveScene) { centerMinimapOn(minimapActiveScene); }
+      resetMapxView(); // frame size changed — refit the map
     });
+
+    initMapxPanZoom();
 
     // Calibration helper: on the expanded map, click a scene's true spot to log
     // its fractional x/y (and yaw), ready to paste into tour-minimap.json.
@@ -2204,9 +2215,15 @@
           minimapImg.src = data.image;
           if (mapxImg) { mapxImg.src = data.image; }
         }
+        if (mapxEl) {
+          mapxEl.style.setProperty("--map-aspect", String(minimapAspect));
+        }
         minimapImg.addEventListener("load", function () {
           if (minimapImg.naturalWidth && minimapImg.naturalHeight) {
             minimapAspect = minimapImg.naturalWidth / minimapImg.naturalHeight;
+            if (mapxEl) {
+              mapxEl.style.setProperty("--map-aspect", String(minimapAspect));
+            }
           }
           if (minimapActiveScene) { centerMinimapOn(minimapActiveScene); }
         });
@@ -2220,9 +2237,133 @@
 
   function openMapx() {
     if (mapxEl) { mapxEl.hidden = false; }
+    resetMapxView(); // always open at fit-to-frame
   }
   function closeMapx() {
     if (mapxEl) { mapxEl.hidden = true; }
+    mapxPointers.clear();
+    mapxPanning = false;
+    if (mapxFrame) { mapxFrame.classList.remove("is-panning"); }
+  }
+
+  /* ---- Expanded map: its own pan + zoom -----------------------------------
+     Pinch / wheel / drag zoom and pan the MAP. Browser page-zoom is blocked on
+     this overlay: the page is a fixed, full-screen app, so a stray page-zoom
+     pushes the controls off-screen and the panorama then swallows the gestures
+     that would zoom back out — leaving the visitor stuck. */
+  function applyMapxTransform() {
+    if (mapxStage) {
+      mapxStage.style.transform =
+        "translate(" + mapxTx + "px, " + mapxTy + "px) scale(" + mapxScale + ")";
+    }
+    if (mapxFrame) {
+      mapxFrame.classList.toggle("is-zoomed", mapxScale > 1.01);
+    }
+  }
+
+  function resetMapxView() {
+    mapxScale = 1;
+    mapxTx = 0;
+    mapxTy = 0;
+    applyMapxTransform();
+  }
+
+  function clampMapxPan() {
+    if (!mapxFrame) { return; }
+    const fw = mapxFrame.clientWidth;
+    const fh = mapxFrame.clientHeight;
+    const w = fw * mapxScale;
+    const h = fh * mapxScale;
+    // Never let the map drift away from the frame.
+    mapxTx = Math.min(0, Math.max(Math.min(0, fw - w), mapxTx));
+    mapxTy = Math.min(0, Math.max(Math.min(0, fh - h), mapxTy));
+  }
+
+  function zoomMapxAt(clientX, clientY, factor) {
+    if (!mapxFrame) { return; }
+    const next = Math.min(6, Math.max(1, mapxScale * factor));
+    if (Math.abs(next - mapxScale) < 0.0001) { return; }
+    const r = mapxFrame.getBoundingClientRect();
+    const px = clientX - r.left;
+    const py = clientY - r.top;
+    // Keep the point under the fingers/cursor anchored while scaling.
+    mapxTx = px - (px - mapxTx) * (next / mapxScale);
+    mapxTy = py - (py - mapxTy) * (next / mapxScale);
+    mapxScale = next;
+    clampMapxPan();
+    applyMapxTransform();
+  }
+
+  function initMapxPanZoom() {
+    if (!mapxFrame || !mapxEl) { return; }
+
+    // Wheel / trackpad-pinch (ctrl+wheel) zooms the map, never the page.
+    mapxFrame.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      zoomMapxAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.18 : 1 / 1.18);
+    }, { passive: false });
+
+    // iOS Safari pinch fires gesture events — block them so the page can't zoom.
+    ["gesturestart", "gesturechange", "gestureend"].forEach(function (t) {
+      mapxEl.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+    });
+
+    mapxFrame.addEventListener("pointerdown", function (e) {
+      if (e.target.closest && e.target.closest(".tour-mapx__dot")) { return; }
+      mapxPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (mapxPointers.size === 2) {
+        const p = Array.from(mapxPointers.values());
+        mapxPinchDist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        mapxPanning = false;
+      } else if (mapxPointers.size === 1 && mapxScale > 1.01) {
+        mapxPanning = true;
+        mapxFrame.classList.add("is-panning");
+        try { mapxFrame.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      }
+    });
+
+    mapxFrame.addEventListener("pointermove", function (e) {
+      if (!mapxPointers.has(e.pointerId)) { return; }
+      const prev = mapxPointers.get(e.pointerId);
+      mapxPointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (mapxPointers.size === 2) {
+        const p = Array.from(mapxPointers.values());
+        const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        if (mapxPinchDist > 0 && dist > 0) {
+          zoomMapxAt((p[0].x + p[1].x) / 2, (p[0].y + p[1].y) / 2, dist / mapxPinchDist);
+        }
+        mapxPinchDist = dist;
+        e.preventDefault();
+        return;
+      }
+
+      if (mapxPanning) {
+        mapxTx += e.clientX - prev.x;
+        mapxTy += e.clientY - prev.y;
+        clampMapxPan();
+        applyMapxTransform();
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    const endPointer = function (e) {
+      mapxPointers.delete(e.pointerId);
+      if (mapxPointers.size < 2) { mapxPinchDist = 0; }
+      if (mapxPointers.size === 0) {
+        mapxPanning = false;
+        mapxFrame.classList.remove("is-panning");
+      }
+    };
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
+      mapxFrame.addEventListener(t, endPointer);
+    });
+
+    // Double-click / double-tap resets the map to fit.
+    mapxFrame.addEventListener("dblclick", function (e) {
+      e.preventDefault();
+      resetMapxView();
+    });
   }
 
   // Dots on the expanded (full) map.

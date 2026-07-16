@@ -621,6 +621,9 @@ body {
   background: rgba(13, 10, 4, 0.92);
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
+  /* The map does its own pinch/scroll zoom — never let the browser page-zoom
+     here, or the fixed controls end up outside the viewport with no way back. */
+  touch-action: none;
 }
 
 .tour-mapx[hidden] {
@@ -629,7 +632,10 @@ body {
 
 .tour-mapx__panel {
   position: relative;
-  width: min(96vw, 1000px);
+  /* Bound by the image's aspect (--map-aspect is set from the loaded image) so
+     the picture is never letterboxed inside its box — otherwise the markers
+     would no longer line up with the places they point to. */
+  width: min(96vw, 1000px, calc(80vh * var(--map-aspect, 1.366)));
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -642,14 +648,31 @@ body {
   overflow: hidden;
   border: 1px solid rgba(212, 175, 106, 0.4);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55);
+  touch-action: none;
+}
+
+/* Zoomed/panned by JS. Transform doesn't change layout, so the frame stays put
+   and acts as the window onto the map. */
+.tour-mapx__stage {
+  position: relative;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.tour-mapx__frame.is-zoomed {
+  cursor: grab;
+}
+
+.tour-mapx__frame.is-panning {
+  cursor: grabbing;
 }
 
 .tour-mapx__img {
   display: block;
   width: 100%;
   height: auto;
-  max-height: 82vh;
-  object-fit: contain;
+  -webkit-user-drag: none;
+  user-select: none;
 }
 
 .tour-mapx__dots {
