@@ -529,15 +529,29 @@ function attemptAutoSpeak() {
 }
 function setupAutoSpeakKickstart() {
   const types = ['pointerdown', 'keydown', 'touchend'];
-  const handler = (event) => {
+  let tries = 0;
+  let handler = null;
+  const disarm = () => types.forEach((t) => window.removeEventListener(t, handler, true));
+  handler = (event) => {
+    // Already talking? The kickstart's job is done.
+    if (synth && (synth.speaking || synth.pending)) { disarm(); return; }
+    // Prime the engine synchronously INSIDE this real gesture. Mobile only
+    // unlocks TTS for a speak() issued during a tap — and the boot attempt
+    // can leave state.unlocked stuck true (iOS blocks silently, so the
+    // not-allowed revert never fires), which used to skip this prime.
+    state.unlocked = true;
+    if (synth && !state.muted) synth.speak(new SpeechSynthesisUtterance(''));
     const target = event.target;
-    // On the guide controls, only unlock — their own handlers decide playback.
+    // On the guide controls, the buttons' own handlers decide playback.
     const onControls = target instanceof Element && target.closest('.trailx__controls');
-    if (!state.unlocked) unlockAudio();
-    if (!onControls && !state.playing && !narration.paused) {
+    if (!onControls && !narration.paused) {
       narrate({ speakIt: true });
     }
-    types.forEach((t) => window.removeEventListener(t, handler, true));
+    // Stay armed until speech is SEEN running (checked on the next tap), but
+    // give up after a few tries so devices with no TTS voices at all don't
+    // restart the typewriter on every touch.
+    tries += 1;
+    if (onControls || tries >= 3) disarm();
   };
   types.forEach((t) => window.addEventListener(t, handler, true));
 }
@@ -2541,10 +2555,10 @@ const TIME_ALBUMS = {
         { src: `${HT_PICS}/1911_2.png`, caption: { tl: 'Harap ng Kapilya.', en: 'Facade of the chapel.' } },
       ] },
       { label: '1982', photos: [
-        { src: `${HT_PICS}/1982_1.png`, caption: { tl: 'Sinirang dingding ng kripta.', en: 'Vandalized crypt wall.' } },
-        { src: `${HT_PICS}/1982_2.png`, caption: { tl: 'Kumupas na pintura ng altar.', en: 'Faded paint on the altar.' } },
-        { src: `${HT_PICS}/1982_3.png`, caption: { tl: 'Kumupas na pintura ng kisame.', en: 'Faded paint on the ceiling.' } },
-        { src: `${HT_PICS}/1982_4.png`, caption: { tl: 'Mga bahagi ng dingding na kumupas na ang pintura.', en: 'Walls with areas of faded paint.' } },
+        { src: `${HT_PICS}/1982_1.png`, caption: { tl: 'Kumupas na pintura ng kisame.', en: 'Faded paint on the ceiling.' } },
+        { src: `${HT_PICS}/1982_2.png`, caption: { tl: 'Mga bahagi ng dingding na kumupas na ang pintura.', en: 'Walls with areas of faded paint.' } },
+        { src: `${HT_PICS}/1982_3.png`, caption: { tl: 'Kumupas na pintura ng altar.', en: 'Faded paint on the altar.' } },
+        { src: `${HT_PICS}/1982_4.png`, caption: { tl: 'Sinirang dingding ng kripta.', en: 'Vandalized crypt wall.' } },
       ] },
       { label: '1983', photos: [
         { src: `${HT_PICS}/1983_1.png`, caption: { tl: 'Nabubulok na kahoy.', en: 'Rotting wood.' } },
