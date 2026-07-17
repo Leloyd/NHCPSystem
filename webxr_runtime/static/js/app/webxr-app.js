@@ -113,6 +113,7 @@ const QUALITY_PRESETS = {
     splatLodScale: 0.75,
   },
 };
+const CARDBOARD_SIZE = new THREE.Vector2();
 const XR_SESSION_MODE_AR = 'immersive-ar';
 const XR_SESSION_MODE_VR = 'immersive-vr';
 
@@ -175,6 +176,16 @@ export class WebXRApp {
     this.interactionSystem = null;
     this.activeXrReferenceSpaceType = null;
 
+    // "VR Box" (Cardboard) mode: gyro look + side-by-side stereo rendering,
+    // for phones without WebXR (every iOS browser). No XR session involved.
+    this.cardboard = {
+      active: false,
+      stereo: null,
+      lastTapAt: 0,
+      onTouchStart: null,
+      onTouchEnd: null,
+    };
+
     this.boundResize = this.onResize.bind(this);
     this.boundGlobalKeyDown = this._onGlobalKeyDown.bind(this);
     this.boundFullscreenChange = this._onFullscreenChange.bind(this);
@@ -228,16 +239,20 @@ export class WebXRApp {
       onGyroToggled: () => {
         void this._toggleGyroLook();
       },
+      onCardboardToggled: () => {
+        void this._toggleCardboard();
+      },
     });
 
     this.uiController.setMobileControlsVisible(true);
     this.uiController.setFullscreenState(Boolean(document.fullscreenElement));
 
-    // Gyro "magic window" is the look-around fallback for phones without
-    // WebXR (every iOS browser). Only offered where motion sensors exist.
+    // Gyro "magic window" + VR Box (Cardboard stereo) are the fallbacks for
+    // phones without WebXR (every iOS browser). Offered where sensors exist.
     const gyroCapable = typeof window.DeviceOrientationEvent !== 'undefined'
       && (this.mobileMode || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
     this.uiController.setGyroVisible(gyroCapable);
+    this.uiController.setCardboardVisible(gyroCapable);
   }
 
   async _toggleGyroLook() {
@@ -255,6 +270,128 @@ export class WebXRApp {
       this.uiController.setGyroState(false);
       this.uiController.showError(String(error?.message ?? error), 4500);
     }
+  }
+
+  /* --- "VR Box" (Cardboard) stereo mode ------------------------------------ */
+  async _toggleCardboard() {
+    if (!this.playerController) {
+      return;
+    }
+    if (this.cardboard.active) {
+      this._exitCardboard();
+      return;
+    }
+
+    // Gyro drives the head look; enabling it here also runs the iOS motion
+    // permission prompt inside this tap.
+    try {
+      await this.playerController.setGyroEnabled(true);
+      this.uiController.setGyroState(true);
+    } catch (error) {
+      this.uiController.showError(String(error?.message ?? error), 4500);
+      return;
+    }
+
+    if (!this.cardboard.stereo) {
+      this.cardboard.stereo = new THREE.StereoCamera();
+      this.cardboard.stereo.eyeSep = 0.064;
+    }
+
+    this.cardboard.active = true;
+    this.playerController.suppressDragLook = true;
+    if (this.interactionSystem) {
+      this.interactionSystem.suspended = true;
+    }
+    this.uiController.setMobileControlsVisible(false);
+    this.uiController.setCardboardState(true);
+    this.uiController.hideInteraction();
+
+    // Best effort — iPhone Safari supports neither; the page still works.
+    try { await document.documentElement.requestFullscreen?.(); } catch { /* unsupported */ }
+    try { await window.screen?.orientation?.lock?.('landscape'); } catch { /* unsupported */ }
+
+    // In the box the whole screen is the one button: hold = walk forward,
+    // double-tap = leave VR Box mode.
+    const element = this.renderer.domElement;
+    this.cardboard.onTouchStart = () => {
+      this.playerController.input.forward = true;
+    };
+    this.cardboard.onTouchEnd = () => {
+      this.playerController.input.forward = false;
+      const now = performance.now();
+      if (now - this.cardboard.lastTapAt < 350) {
+        this._exitCardboard();
+        return;
+      }
+      this.cardboard.lastTapAt = now;
+    };
+    element.addEventListener('touchstart', this.cardboard.onTouchStart, { passive: true });
+    element.addEventListener('touchend', this.cardboard.onTouchEnd, { passive: true });
+
+    const portrait = window.innerHeight > window.innerWidth;
+    this.uiController.showError(
+      `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Touch & hold = walk · double-tap = exit.`,
+      6000,
+    );
+  }
+
+  _exitCardboard() {
+    if (!this.cardboard.active) {
+      return;
+    }
+    this.cardboard.active = false;
+
+    const element = this.renderer.domElement;
+    if (this.cardboard.onTouchStart) {
+      element.removeEventListener('touchstart', this.cardboard.onTouchStart);
+      this.cardboard.onTouchStart = null;
+    }
+    if (this.cardboard.onTouchEnd) {
+      element.removeEventListener('touchend', this.cardboard.onTouchEnd);
+      this.cardboard.onTouchEnd = null;
+    }
+
+    if (this.playerController) {
+      this.playerController.input.forward = false;
+      this.playerController.suppressDragLook = false;
+    }
+    if (this.interactionSystem) {
+      this.interactionSystem.suspended = false;
+    }
+    this.uiController.setMobileControlsVisible(true);
+    this.uiController.setCardboardState(false);
+
+    try { window.screen?.orientation?.unlock?.(); } catch { /* unsupported */ }
+    if (document.fullscreenElement) {
+      void document.exitFullscreen?.().catch(() => {});
+    }
+    // Gyro look stays on — the visitor is still holding the phone; the Gyro
+    // button turns it off if they want drag-look back.
+  }
+
+  _renderCardboardStereo() {
+    const renderer = this.renderer;
+    renderer.getSize(CARDBOARD_SIZE);
+    const halfWidth = Math.floor(CARDBOARD_SIZE.x / 2);
+    const height = CARDBOARD_SIZE.y;
+
+    this.camera.updateWorldMatrix(true, false);
+    const stereo = this.cardboard.stereo;
+    stereo.aspect = 0.5;
+    stereo.update(this.camera);
+
+    renderer.setScissorTest(true);
+    renderer.setScissor(0, 0, halfWidth, height);
+    renderer.setViewport(0, 0, halfWidth, height);
+    renderer.render(this.scene, stereo.cameraL);
+
+    renderer.setScissor(halfWidth, 0, CARDBOARD_SIZE.x - halfWidth, height);
+    renderer.setViewport(halfWidth, 0, CARDBOARD_SIZE.x - halfWidth, height);
+    renderer.render(this.scene, stereo.cameraR);
+
+    renderer.setScissorTest(false);
+    renderer.setViewport(0, 0, CARDBOARD_SIZE.x, CARDBOARD_SIZE.y);
+    renderer.setScissor(0, 0, CARDBOARD_SIZE.x, CARDBOARD_SIZE.y);
   }
 
   _handleBackRequested() {
@@ -1561,6 +1698,10 @@ export class WebXRApp {
 
     this._updateFloatingHotspotLabels();
 
-    this.renderer.render(this.scene, this.camera);
+    if (this.cardboard.active && !this.renderer.xr.isPresenting) {
+      this._renderCardboardStereo();
+    } else {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 }

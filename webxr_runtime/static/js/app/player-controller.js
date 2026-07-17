@@ -86,6 +86,10 @@ export class PlayerController {
     this.xrPhysicalOffsetInitialized = false;
     this.xrPhysicalOffsetBaseline = new THREE.Vector3();
 
+    // While "VR Box" stereo mode is on, screen touches mean "walk", so the
+    // drag-look pointer handling must stand down.
+    this.suppressDragLook = false;
+
     // Gyro "magic window" look: point the phone to look around. Works on
     // browsers without WebXR (all iOS browsers) using DeviceOrientation.
     this.gyro = {
@@ -166,7 +170,7 @@ export class PlayerController {
     }
 
     const onPointerDown = (event) => {
-      if (this.renderer.xr.isPresenting) {
+      if (this.renderer.xr.isPresenting || this.suppressDragLook) {
         return;
       }
 
