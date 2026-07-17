@@ -945,6 +945,23 @@ body {
   cursor: grab;
 }
 
+/* Framed exhibit panels already contain their own paper/background. Keep the
+   expanded viewer transparent so only a fine Heritage-gold outline surrounds
+   the image instead of adding a second, noticeable cream mount. */
+.tour-preview-zoomframe--outline {
+  width: fit-content;
+  max-width: 100%;
+  padding: 1px;
+  background: transparent;
+  border-color: rgba(212, 175, 106, 0.72);
+}
+
+.tour-preview-zoomframe--outline .tour-floating-media-preview__image {
+  width: auto;
+  max-width: 100%;
+  max-height: calc(72vh - 2px);
+}
+
 .tour-preview-zoomframe.is-zoomed {
   cursor: zoom-out;
 }

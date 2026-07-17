@@ -588,6 +588,7 @@
         glbAlt: options.glbAlt || `${options.imageAlt} 3D model`,
         audioByLanguage: options.audioByLanguage && typeof options.audioByLanguage === "object" ? { ...options.audioByLanguage } : null,
         alternateAudioSrc: options.alternateAudioSrc || "",
+        previewFrameStyle: options.previewFrameStyle || "",
         windowPitch: options.pitch,
         windowYaw: options.yaw,
       },
@@ -602,6 +603,7 @@
       yaw: 26.8,
       imageSrc: museum3ArtifactAssets.inscription.imageSrc,
       imageAlt: "Inscription",
+      previewFrameStyle: "outline",
     }),
     buildFloatingArtifactHotspot({
       id: "museum3-map-marker",
@@ -609,6 +611,7 @@
       yaw: -72.4,
       imageSrc: museum3ArtifactAssets.map.imageSrc,
       imageAlt: "Map",
+      previewFrameStyle: "outline",
     }),
     buildFloatingArtifactHotspot({
       id: "museum3-kagamitan-marker",
@@ -818,6 +821,7 @@
       yaw: -118.57,
       imageSrc: insideChapelImageAssets.pagkasira,
       imageAlt: "Pagkasira",
+      previewFrameStyle: "outline",
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-pransiskano-marker",
@@ -825,6 +829,7 @@
       yaw: -135.02,
       imageSrc: insideChapelImageAssets.pransiskano,
       imageAlt: "Pransiskano",
+      previewFrameStyle: "outline",
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-pagsaayos-marker",
@@ -832,6 +837,7 @@
       yaw: 91.92,
       imageSrc: insideChapelImageAssets.pagsaayos,
       imageAlt: "Pagsaayos",
+      previewFrameStyle: "outline",
     }),
   ];
 
@@ -3192,6 +3198,7 @@
     if (floatingArtifactPreviewImageFrame) {
       floatingArtifactPreviewImageFrame.hidden = !showImage;
       floatingArtifactPreviewImageFrame.style.display = showImage ? "block" : "none";
+      floatingArtifactPreviewImageFrame.classList.toggle("tour-preview-zoomframe--outline", args.previewFrameStyle === "outline");
     }
     floatingArtifactPreviewImage.style.display = showImage ? "block" : "none";
     floatingArtifactPreviewModel.style.display = showGlb ? "block" : "none";
@@ -3892,6 +3899,7 @@
         glbSources: Array.isArray(args.glbSources) ? args.glbSources.filter(Boolean) : [],
         audioByLanguage: artifactAudioByLanguage,
         alternateAudioSrc: artifactAlternateAudioSrc,
+        previewFrameStyle: args.previewFrameStyle || "",
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
         currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,
