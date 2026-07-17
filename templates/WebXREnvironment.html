@@ -2,7 +2,13 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <meta name="theme-color" content="#050608" />
+    <!-- iPhone can't fullscreen web pages (WebKit allows it for video only),
+         but a Home-Screen launch runs truly fullscreen via these: -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>3D Environment | Museo ng Libingan sa Ilalim ng Lupa</title>
     <link rel="stylesheet" href="{{ url_for('webxr_static_file', filename='css/app.css') }}" />
     <script type="importmap">

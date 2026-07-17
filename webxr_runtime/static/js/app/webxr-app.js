@@ -306,8 +306,7 @@ export class WebXRApp {
     this.uiController.setCardboardState(true);
     this.uiController.hideInteraction();
 
-    // Best effort — iPhone Safari supports neither; the page still works.
-    try { await document.documentElement.requestFullscreen?.(); } catch { /* unsupported */ }
+    const gotFullscreen = await this._requestBestFullscreen();
     try { await window.screen?.orientation?.lock?.('landscape'); } catch { /* unsupported */ }
 
     // In the box the whole screen is the one button: hold = walk forward,
@@ -329,10 +328,34 @@ export class WebXRApp {
     element.addEventListener('touchend', this.cardboard.onTouchEnd, { passive: true });
 
     const portrait = window.innerHeight > window.innerWidth;
-    this.uiController.showError(
-      `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Touch & hold = walk · double-tap = exit.`,
-      6000,
-    );
+    const isStandalone = Boolean(window.navigator.standalone)
+      || Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches);
+    let hint = `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Touch & hold = walk · double-tap = exit.`;
+    if (!gotFullscreen && !isStandalone) {
+      // iPhone WebKit only fullscreens <video>; a Home-Screen launch is the
+      // one way Apple allows a truly full screen page.
+      hint += ' Tip: for full screen on iPhone, use Share → Add to Home Screen and open from there.';
+    }
+    this.uiController.showError(hint, gotFullscreen ? 6000 : 9000);
+  }
+
+  /* Try every fullscreen mechanism a browser might offer. Returns true when
+     one of them took; false on iPhone WebKit, where none exists for pages. */
+  async _requestBestFullscreen() {
+    const root = document.documentElement;
+    try {
+      if (root.requestFullscreen) {
+        await root.requestFullscreen();
+        return true;
+      }
+    } catch { /* fall through */ }
+    try {
+      if (root.webkitRequestFullscreen) {
+        root.webkitRequestFullscreen(); // iPad + older WebKit/Blink
+        return Boolean(document.webkitFullscreenElement);
+      }
+    } catch { /* fall through */ }
+    return false;
   }
 
   _exitCardboard() {
@@ -364,6 +387,8 @@ export class WebXRApp {
     try { window.screen?.orientation?.unlock?.(); } catch { /* unsupported */ }
     if (document.fullscreenElement) {
       void document.exitFullscreen?.().catch(() => {});
+    } else if (document.webkitFullscreenElement) {
+      try { document.webkitExitFullscreen?.(); } catch { /* unsupported */ }
     }
     // Gyro look stays on — the visitor is still holding the phone; the Gyro
     // button turns it off if they want drag-look back.
