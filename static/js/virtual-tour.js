@@ -245,8 +245,11 @@
   let floatingImagePreviewOverlay = null;
   let floatingImagePreviewImage = null;
   let floatingImagePreviewTitle = null;
+  let floatingImagePreviewZoom = null; // pinch/scroll/drag zoom controller
   let floatingArtifactPreviewOverlay = null;
   let floatingArtifactPreviewImage = null;
+  let floatingArtifactPreviewImageFrame = null;
+  let floatingArtifactPreviewImageZoom = null;
   let floatingArtifactPreviewTitle = null;
   let floatingArtifactPreviewModel = null;
   let floatingArtifactPreviewModelNav = null;
@@ -2796,6 +2799,131 @@
     capturePreviewOverlay.hidden = false;
   }
 
+  // Belt-and-suspenders with the CSS touch-action:none — stop iOS Safari from
+  // page-zooming when a pinch lands on the overlay backdrop or the 3D area.
+  function blockOverlayPageZoom(overlay) {
+    if (!overlay) { return; }
+    ["gesturestart", "gesturechange", "gestureend"].forEach(function (t) {
+      overlay.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+    });
+  }
+
+  /* ---- Expanded photo: its own pan + zoom (same guard as the map) ---------
+     Pinch / wheel / drag zoom and pan the PHOTO inside its frame. Browser
+     page-zoom is blocked on the overlay (touch-action:none + gesture events),
+     so a stray pinch can no longer zoom the whole page / panorama and leave
+     the visitor stuck zoomed after closing. Returns { reset }. */
+  function createPreviewImageZoom(frame, img) {
+    const st = { scale: 1, tx: 0, ty: 0, pointers: new Map(), panning: false, pinch: 0 };
+
+    function apply() {
+      img.style.transformOrigin = "0 0";
+      img.style.transform = "translate(" + st.tx + "px, " + st.ty + "px) scale(" + st.scale + ")";
+      frame.classList.toggle("is-zoomed", st.scale > 1.01);
+    }
+
+    function reset() {
+      st.scale = 1;
+      st.tx = 0;
+      st.ty = 0;
+      st.pointers.clear();
+      st.panning = false;
+      st.pinch = 0;
+      frame.classList.remove("is-panning");
+      apply();
+    }
+
+    function clamp() {
+      const fw = frame.clientWidth;
+      const fh = frame.clientHeight;
+      const w = fw * st.scale;
+      const h = fh * st.scale;
+      st.tx = Math.min(0, Math.max(Math.min(0, fw - w), st.tx));
+      st.ty = Math.min(0, Math.max(Math.min(0, fh - h), st.ty));
+    }
+
+    function zoomAt(clientX, clientY, factor) {
+      const next = Math.min(5, Math.max(1, st.scale * factor));
+      if (Math.abs(next - st.scale) < 0.0001) { return; }
+      const r = frame.getBoundingClientRect();
+      const px = clientX - r.left;
+      const py = clientY - r.top;
+      st.tx = px - (px - st.tx) * (next / st.scale);
+      st.ty = py - (py - st.ty) * (next / st.scale);
+      st.scale = next;
+      clamp();
+      apply();
+    }
+
+    frame.addEventListener("wheel", function (e) {
+      e.preventDefault();
+      zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.18 : 1 / 1.18);
+    }, { passive: false });
+
+    // iOS Safari pinch fires gesture events — block them so the page can't zoom.
+    ["gesturestart", "gesturechange", "gestureend"].forEach(function (t) {
+      frame.addEventListener(t, function (e) { e.preventDefault(); }, { passive: false });
+    });
+
+    frame.addEventListener("pointerdown", function (e) {
+      st.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (st.pointers.size === 2) {
+        const p = Array.from(st.pointers.values());
+        st.pinch = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        st.panning = false;
+      } else if (st.pointers.size === 1 && st.scale > 1.01) {
+        st.panning = true;
+        frame.classList.add("is-panning");
+        try { frame.setPointerCapture(e.pointerId); } catch (err) { /* ignore */ }
+      }
+    });
+
+    frame.addEventListener("pointermove", function (e) {
+      if (!st.pointers.has(e.pointerId)) { return; }
+      const prev = st.pointers.get(e.pointerId);
+      st.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+      if (st.pointers.size === 2) {
+        const p = Array.from(st.pointers.values());
+        const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        if (st.pinch > 0 && dist > 0) {
+          zoomAt((p[0].x + p[1].x) / 2, (p[0].y + p[1].y) / 2, dist / st.pinch);
+        }
+        st.pinch = dist;
+        e.preventDefault();
+        return;
+      }
+
+      if (st.panning) {
+        st.tx += e.clientX - prev.x;
+        st.ty += e.clientY - prev.y;
+        clamp();
+        apply();
+        e.preventDefault();
+      }
+    }, { passive: false });
+
+    const endPointer = function (e) {
+      st.pointers.delete(e.pointerId);
+      if (st.pointers.size < 2) { st.pinch = 0; }
+      if (st.pointers.size === 0) {
+        st.panning = false;
+        frame.classList.remove("is-panning");
+      }
+    };
+    ["pointerup", "pointercancel", "pointerleave"].forEach(function (t) {
+      frame.addEventListener(t, endPointer);
+    });
+
+    // Double-click / double-tap resets to fit.
+    frame.addEventListener("dblclick", function (e) {
+      e.preventDefault();
+      reset();
+    });
+
+    return { reset: reset };
+  }
+
   function ensureFloatingImagePreviewOverlay() {
     if (floatingImagePreviewOverlay && floatingImagePreviewImage) {
       return;
@@ -2812,9 +2940,15 @@
     panel.setAttribute("aria-modal", "true");
     panel.setAttribute("aria-label", "Expanded hotspot image preview");
 
+    // The photo lives inside a zoom frame so pinch/scroll/drag zooms the
+    // picture, never the page underneath.
+    const frame = document.createElement("div");
+    frame.className = "tour-preview-zoomframe";
+
     const image = document.createElement("img");
     image.className = "tour-floating-image-preview__image";
     image.alt = "";
+    frame.appendChild(image);
 
     // Title + centered close below the media (Heritage Trail viewer pattern).
     const title = document.createElement("p");
@@ -2827,11 +2961,14 @@
     closeButton.setAttribute("aria-label", "Return hotspot image to floating view");
     closeButton.textContent = "×";
 
-    panel.appendChild(image);
+    panel.appendChild(frame);
     panel.appendChild(title);
     panel.appendChild(closeButton);
     overlay.appendChild(panel);
     app.appendChild(overlay);
+
+    blockOverlayPageZoom(overlay);
+    floatingImagePreviewZoom = createPreviewImageZoom(frame, image);
 
     closeButton.addEventListener("click", function () {
       hideFloatingImagePreviewOverlay();
@@ -2862,6 +2999,7 @@
     floatingImagePreviewImage.src = args.imageSrc;
     floatingImagePreviewImage.alt = args.imageAlt || "Hotspot image";
     setFloatingWindowTitle(floatingImagePreviewTitle, args);
+    if (floatingImagePreviewZoom) { floatingImagePreviewZoom.reset(); } // start unzoomed
     floatingImagePreviewOverlay.hidden = false;
   }
 
@@ -2869,6 +3007,8 @@
     if (floatingImagePreviewOverlay) {
       floatingImagePreviewOverlay.hidden = true;
     }
+
+    if (floatingImagePreviewZoom) { floatingImagePreviewZoom.reset(); } // never carry zoom out
 
     if (floatingImagePreviewImage) {
       floatingImagePreviewImage.removeAttribute("src");
@@ -2902,15 +3042,21 @@
     closeButton.setAttribute("aria-label", "Return floating artifact to tour view");
     closeButton.textContent = "×";
 
+    // The photo lives inside a zoom frame (pinch/scroll/drag zooms the picture,
+    // never the page). The 3D model keeps its own gesture handling.
+    const imageFrame = document.createElement("div");
+    imageFrame.className = "tour-preview-zoomframe";
+    imageFrame.hidden = true;
+
     const image = document.createElement("img");
     image.className = "tour-floating-media-preview__image";
     image.alt = "";
-    image.hidden = true;
+    imageFrame.appendChild(image);
 
     const model = document.createElement("model-viewer");
     model.className = "tour-floating-media-preview__model";
     model.setAttribute("camera-controls", "");
-    model.setAttribute("touch-action", "pan-y");
+    model.setAttribute("touch-action", "none");
     model.setAttribute("auto-rotate", "");
     model.setAttribute("shadow-intensity", "1");
     // Real-world AR: WebXR/Scene Viewer on Android, Quick Look on iPhone
@@ -2942,7 +3088,7 @@
     // close below — the Heritage Trail viewer layout.
     const mediaWrap = document.createElement("div");
     mediaWrap.className = "tour-floating-media-preview__mediawrap";
-    mediaWrap.appendChild(image);
+    mediaWrap.appendChild(imageFrame);
     mediaWrap.appendChild(model);
     mediaWrap.appendChild(modelNav);
     floatingArtifactPreviewArButton = installModelArControl(model, mediaWrap);
@@ -2986,8 +3132,12 @@
       showFloatingArtifactPreviewOverlay(floatingArtifactPreviewArgs, "glb");
     });
 
+    blockOverlayPageZoom(overlay);
+    floatingArtifactPreviewImageZoom = createPreviewImageZoom(imageFrame, image);
+
     floatingArtifactPreviewOverlay = overlay;
     floatingArtifactPreviewImage = image;
+    floatingArtifactPreviewImageFrame = imageFrame;
     floatingArtifactPreviewModel = model;
     floatingArtifactPreviewModelNav = modelNav;
     floatingArtifactPreviewModelPrev = prevButton;
@@ -3019,9 +3169,14 @@
     if (floatingArtifactPreviewArButton) {
       floatingArtifactPreviewArButton.hidden = !showGlb;
     }
+    if (floatingArtifactPreviewImageFrame) {
+      floatingArtifactPreviewImageFrame.hidden = !showImage;
+      floatingArtifactPreviewImageFrame.style.display = showImage ? "block" : "none";
+    }
     floatingArtifactPreviewImage.style.display = showImage ? "block" : "none";
     floatingArtifactPreviewModel.style.display = showGlb ? "block" : "none";
     floatingArtifactPreviewModel.style.pointerEvents = showGlb ? "auto" : "none";
+    if (floatingArtifactPreviewImageZoom) { floatingArtifactPreviewImageZoom.reset(); } // fresh photo, no carried zoom
 
     if (showImage) {
       floatingArtifactPreviewImage.src = args.imageSrc;
@@ -3054,6 +3209,13 @@
   function hideFloatingArtifactPreviewOverlay() {
     if (floatingArtifactPreviewOverlay) {
       floatingArtifactPreviewOverlay.hidden = true;
+    }
+
+    if (floatingArtifactPreviewImageZoom) { floatingArtifactPreviewImageZoom.reset(); } // never carry zoom out
+
+    if (floatingArtifactPreviewImageFrame) {
+      floatingArtifactPreviewImageFrame.hidden = true;
+      floatingArtifactPreviewImageFrame.style.display = "none";
     }
 
     if (floatingArtifactPreviewImage) {
