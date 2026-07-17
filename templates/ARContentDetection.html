@@ -3,39 +3,47 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, maximum-scale=1.0, user-scalable=no" />
-    <meta name="theme-color" content="#0b1017" />
+    <meta name="theme-color" content="#0d0a04" />
     <title>AR Content Detection</title>
 
     <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ar.css') }}" />
 
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/build/ar-threex.js"></script>
+    <script defer src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/ar-three-pipeline.js') }}"></script>
   </head>
   <body class="ar-body" data-ar-analytics-endpoint="{{ analytics_endpoint }}">
-    <div class="ar-overlay ar-overlay--top ar-overlay--minimal">
-      <a href="/digital-exhibits" class="ar-btn ar-btn--back" id="arBackButton">← Back</a>
-    </div>
-    <script>
-      // Arrived from the Heritage Trail's Stop 3 (?from=stop3)? Back returns
-      // there (the #stop-3 hash restores the stop). Otherwise: Digital Exhibits.
-      (function () {
-        try {
-          if (new URLSearchParams(window.location.search).get("from") === "stop3") {
-            document.getElementById("arBackButton").setAttribute("href", "/trail#stop-3");
-          }
-        } catch (e) { /* keep the default destination */ }
-      })();
-    </script>
-
     <div id="arScene" aria-label="WebAR camera scene"></div>
 
-    <div class="ar-overlay ar-overlay--bottom ar-overlay--centered">
-      <button id="arAudioLanguageToggle" class="ar-btn ar-btn--translation" type="button" aria-label="Audio unavailable until an artifact is detected" aria-disabled="true" disabled>
-        Audio
-      </button>
+    <!-- Marker narration subtitle + controls — shared Heritage design with the Virtual Tour. -->
+    <div class="ar-dock" id="arControlDock" aria-label="AR artifact narration controls">
+      <div class="ar-subtitle" id="arSubtitle" hidden aria-live="polite">
+        <p class="ar-subtitle__eyebrow" id="arSubtitleEyebrow">Narration</p>
+        <p class="ar-subtitle__text" id="arSubtitleText"></p>
+      </div>
+
+      <div class="ar-guidebar">
+        <button class="ar-control-btn ar-control-btn--primary" id="arListen" type="button" aria-pressed="false" aria-label="Narration unavailable until an artifact is detected" aria-disabled="true" disabled>
+          <svg class="ar-ico--play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
+          <svg class="ar-ico--pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
+          <span id="arListenLabel">Listen</span>
+        </button>
+        <button class="ar-control-btn" id="arMute" type="button" aria-pressed="false" aria-label="Narration unavailable until an artifact is detected" aria-disabled="true" disabled>
+          <svg class="ar-ico--sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>
+          <svg class="ar-ico--sound-off" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M22 9l-6 6M16 9l6 6"/></svg>
+        </button>
+        <button class="ar-control-btn" id="arLanguage" type="button" aria-label="Narration language unavailable" aria-disabled="true" disabled>TL</button>
+        <button class="ar-control-btn is-active" id="arSubtitles" type="button" aria-pressed="true" aria-label="Subtitles unavailable until an artifact is detected" aria-disabled="true" disabled>CC</button>
+        <a class="ar-control-btn" id="arBackButton" href="/digital-exhibits" aria-label="Back to Digital Exhibits">
+          <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.53 5.47a.75.75 0 0 1 0 1.06L5.81 11.25H20a.75.75 0 0 1 0 1.5H5.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z"/></svg>
+        </a>
+      </div>
     </div>
 
     <script id="ar-three-config" type="application/json">
@@ -236,7 +244,7 @@
           {
             "key": "tboli",
             "patternUrl": "{{ url_for('artifact_asset_file', filename='Tboli/Tboli.patt') }}",
-            "modelUrl": "{{ url_for('artifact_asset_file', filename="Tboli/T'boli-512(10k).glb") }}",
+            "modelUrl": {{ url_for('artifact_asset_file', filename="Tboli/T'boli-512(10k).glb") | tojson }},
             "imageUrl": "{{ url_for('artifact_asset_file', filename='Tboli/Tboli.png') }}",
             "audioByLanguage": {
               "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Tboli/ANG KALULUWA NG MGA T_BOLI.mp3') }}",

@@ -3,10 +3,20 @@
 
   var body = document.body;
   var rootEl = document.getElementById("arScene");
-  var audioToggleButton = document.getElementById("arAudioLanguageToggle");
+  var listenButton = document.getElementById("arListen");
+  var muteButton = document.getElementById("arMute");
+  var languageButton = document.getElementById("arLanguage");
+  var subtitlesButton = document.getElementById("arSubtitles");
+  var subtitleBar = document.getElementById("arSubtitle");
+  var subtitleTextEl = document.getElementById("arSubtitleText");
+  var subtitleEyebrow = document.getElementById("arSubtitleEyebrow");
+  var listenLabel = document.getElementById("arListenLabel");
+  var backButton = document.getElementById("arBackButton");
   if (!body || !rootEl) {
     return;
   }
+
+  configureBackButton();
 
   var THREE_NS = window.THREE;
   var THREEx_NS = window.THREEx;
@@ -25,7 +35,7 @@
   var IS_MOBILE = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
   var CONTENT_LAYER = 0;
   var OCCLUSION_LAYER = 1;
-  var BALANGHAY_KEY = "balanghay";
+  var ARTIFACT_SUBTITLES = window.NHCP_ARTIFACT_SUBTITLES || {};
 
   var MODEL_CONFIG = {
     balanghay: {
@@ -326,9 +336,11 @@
     markerFilter: "all",
     rafId: 0,
     audioElement: null,
-    audioToggleButton: audioToggleButton,
     activeAudioEntry: null,
     audioLanguage: "tl",
+    narrationMuted: false,
+    subtitlesOn: true,
+    renderedSubtitleText: "",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
     destroyed: false,
@@ -860,12 +872,14 @@
     var playResult = runtime.audioElement.play();
     if (!playResult || typeof playResult.then !== "function") {
       runtime.pendingAudioSrc = "";
+      removePendingAudioUnlockHandler();
       return;
     }
 
     playResult
       .then(function () {
         runtime.pendingAudioSrc = "";
+        removePendingAudioUnlockHandler();
       })
       .catch(function () {
         schedulePendingAudioRetry();
@@ -877,14 +891,20 @@
       return;
     }
 
-    runtime.audioUnlockHandler = function () {
+    runtime.audioUnlockHandler = function (event) {
+      // Let the Listen button own its gesture. Otherwise the document-level
+      // unlock would start playback on pointerdown and the following click
+      // would immediately interpret that state as a request to pause.
+      if (event && event.target && event.target.closest && event.target.closest("#arListen")) {
+        return;
+      }
       removePendingAudioUnlockHandler();
       retryPendingAudioPlayback();
     };
 
-    document.addEventListener("pointerdown", runtime.audioUnlockHandler, { once: true, passive: true });
-    document.addEventListener("touchend", runtime.audioUnlockHandler, { once: true, passive: true });
-    document.addEventListener("keydown", runtime.audioUnlockHandler, { once: true });
+    document.addEventListener("pointerdown", runtime.audioUnlockHandler, { passive: true });
+    document.addEventListener("touchend", runtime.audioUnlockHandler, { passive: true });
+    document.addEventListener("keydown", runtime.audioUnlockHandler);
   }
 
   function ensureAudioElement() {
@@ -897,6 +917,10 @@
     audioEl.hidden = true;
     audioEl.setAttribute("playsinline", "");
     audioEl.playsInline = true;
+    audioEl.muted = runtime.narrationMuted;
+    ["play", "pause", "ended", "volumechange"].forEach(function (eventName) {
+      audioEl.addEventListener(eventName, updateNarrationControls);
+    });
     body.appendChild(audioEl);
     runtime.audioElement = audioEl;
     return audioEl;
@@ -920,29 +944,105 @@
     }
   }
 
-  function updateAudioToggleButton() {
-    if (!runtime.audioToggleButton) {
+  function getActiveSubtitle() {
+    if (!runtime.activeAudioEntry) {
+      return null;
+    }
+    return ARTIFACT_SUBTITLES[runtime.activeAudioEntry.key] || null;
+  }
+
+  function renderSubtitle() {
+    if (!subtitleBar || !subtitleTextEl) {
       return;
     }
 
+    var subtitle = getActiveSubtitle();
+    var text = subtitle ? String(subtitle[runtime.audioLanguage] || "") : "";
+    var wasHidden = subtitleBar.hidden;
+    subtitleTextEl.textContent = text;
+    subtitleBar.hidden = !(runtime.subtitlesOn && text);
+
+    if (!subtitleBar.hidden && (wasHidden || runtime.renderedSubtitleText !== text)) {
+      subtitleBar.scrollTop = 0;
+    }
+    runtime.renderedSubtitleText = text;
+
+    if (subtitleEyebrow) {
+      subtitleEyebrow.textContent = runtime.audioLanguage === "tl" ? "Salaysay" : "Narration";
+    }
+  }
+
+  function isNarrationPlaying() {
+    return Boolean(runtime.audioElement && !runtime.audioElement.paused && !runtime.audioElement.ended);
+  }
+
+  function setControlAvailability(control, enabled) {
+    if (!control) {
+      return;
+    }
+    control.disabled = !enabled;
+    control.setAttribute("aria-disabled", enabled ? "false" : "true");
+  }
+
+  function updateNarrationControls() {
     var audioConfig = getEntryAudioConfig(runtime.activeAudioEntry);
     var hasTagalog = Boolean(audioConfig && String(audioConfig.tl || "").trim());
     var hasEnglish = Boolean(audioConfig && String(audioConfig.en || "").trim());
-    var isEnabled = Boolean(runtime.activeAudioEntry && (hasTagalog || hasEnglish));
+    var hasAudio = Boolean(runtime.activeAudioEntry && (hasTagalog || hasEnglish));
+    var hasSubtitle = Boolean(getActiveSubtitle());
+    var playing = isNarrationPlaying();
 
-    runtime.audioToggleButton.disabled = !isEnabled;
-    runtime.audioToggleButton.setAttribute("aria-disabled", isEnabled ? "false" : "true");
+    setControlAvailability(listenButton, hasAudio);
+    setControlAvailability(muteButton, hasAudio);
+    setControlAvailability(languageButton, hasAudio && hasTagalog && hasEnglish);
+    setControlAvailability(subtitlesButton, Boolean(runtime.activeAudioEntry && hasSubtitle));
 
-    if (!isEnabled) {
-      runtime.audioToggleButton.textContent = "Audio";
-      runtime.audioToggleButton.setAttribute("aria-label", "Audio unavailable until an artifact is detected");
-      return;
+    if (listenButton) {
+      listenButton.classList.toggle("is-playing", playing);
+      listenButton.setAttribute("aria-pressed", playing ? "true" : "false");
+      listenButton.setAttribute(
+        "aria-label",
+        hasAudio ? (playing ? "Pause narration" : "Play narration") : "Narration unavailable until an artifact is detected"
+      );
     }
 
-    var targetLanguage = runtime.audioLanguage === "tl" ? (hasEnglish ? "en" : "tl") : (hasTagalog ? "tl" : "en");
-    var label = targetLanguage === "en" ? "English" : "Tagalog";
-    runtime.audioToggleButton.textContent = label;
-    runtime.audioToggleButton.setAttribute("aria-label", "Switch audio to " + label + " for " + runtime.activeAudioEntry.key);
+    if (listenLabel) {
+      listenLabel.textContent = "Listen";
+    }
+
+    if (muteButton) {
+      muteButton.classList.toggle("is-muted", runtime.narrationMuted);
+      muteButton.setAttribute("aria-pressed", runtime.narrationMuted ? "true" : "false");
+      muteButton.setAttribute(
+        "aria-label",
+        hasAudio
+          ? (runtime.narrationMuted ? "Unmute narration" : "Mute narration")
+          : "Narration unavailable until an artifact is detected"
+      );
+    }
+
+    if (languageButton) {
+      languageButton.textContent = runtime.audioLanguage === "en" ? "EN" : "TL";
+      languageButton.setAttribute(
+        "aria-label",
+        hasAudio && hasTagalog && hasEnglish
+          ? "Switch narration to " + (runtime.audioLanguage === "tl" ? "English" : "Tagalog")
+          : "Narration language unavailable"
+      );
+    }
+
+    if (subtitlesButton) {
+      subtitlesButton.classList.toggle("is-active", runtime.subtitlesOn);
+      subtitlesButton.setAttribute("aria-pressed", runtime.subtitlesOn ? "true" : "false");
+      subtitlesButton.setAttribute(
+        "aria-label",
+        hasSubtitle
+          ? (runtime.subtitlesOn ? "Hide subtitles" : "Show subtitles")
+          : "Subtitles unavailable until an artifact is detected"
+      );
+    }
+
+    renderSubtitle();
   }
 
   function playAudioForEntry(entry, language, shouldRestart) {
@@ -950,7 +1050,7 @@
     var nextSrc = resolveAudioSource(audioConfig, language);
     if (!nextSrc) {
       stopActiveAudio(true);
-      updateAudioToggleButton();
+      updateNarrationControls();
       return;
     }
 
@@ -960,6 +1060,7 @@
     var currentSrc = audioEl.getAttribute("data-audio-src") || "";
 
     runtime.audioLanguage = resolvedLanguage;
+    audioEl.muted = runtime.narrationMuted;
 
     if (shouldRestart || currentSrc !== nextSrc) {
       audioEl.pause();
@@ -977,19 +1078,21 @@
     var playResult = audioEl.play();
     if (!playResult || typeof playResult.then !== "function") {
       runtime.pendingAudioSrc = "";
-      updateAudioToggleButton();
+      removePendingAudioUnlockHandler();
+      updateNarrationControls();
       return;
     }
 
     playResult
       .then(function () {
         runtime.pendingAudioSrc = "";
+        removePendingAudioUnlockHandler();
       })
       .catch(function () {
         schedulePendingAudioRetry();
       });
 
-    updateAudioToggleButton();
+    updateNarrationControls();
   }
 
   function getPreferredAudioEntry() {
@@ -1026,8 +1129,8 @@
         runtime.activeAudioEntry = null;
         runtime.audioLanguage = "tl";
         stopActiveAudio(true);
+        updateNarrationControls();
       }
-      updateAudioToggleButton();
       return;
     }
 
@@ -1038,10 +1141,9 @@
       return;
     }
 
-    updateAudioToggleButton();
   }
 
-  function handleAudioToggleClick() {
+  function handleLanguageToggleClick() {
     if (!runtime.activeAudioEntry) {
       return;
     }
@@ -1050,14 +1152,81 @@
     playAudioForEntry(runtime.activeAudioEntry, nextLanguage, true);
   }
 
-  function bindAudioToggleButton() {
-    if (!runtime.audioToggleButton || runtime.audioToggleButton.dataset.bound === "1") {
+  function handleListenClick() {
+    if (!runtime.activeAudioEntry) {
       return;
     }
 
-    runtime.audioToggleButton.dataset.bound = "1";
-    runtime.audioToggleButton.addEventListener("click", handleAudioToggleClick);
-    updateAudioToggleButton();
+    removePendingAudioUnlockHandler();
+
+    if (runtime.audioElement && !runtime.audioElement.paused) {
+      runtime.audioElement.pause();
+      updateNarrationControls();
+      return;
+    }
+
+    if (runtime.audioElement && runtime.audioElement.getAttribute("data-audio-src") && !runtime.audioElement.ended) {
+      runtime.pendingAudioSrc = runtime.audioElement.getAttribute("data-audio-src") || "";
+      retryPendingAudioPlayback();
+      updateNarrationControls();
+      return;
+    }
+
+    playAudioForEntry(runtime.activeAudioEntry, runtime.audioLanguage, true);
+  }
+
+  function handleMuteClick() {
+    if (!runtime.activeAudioEntry) {
+      return;
+    }
+
+    runtime.narrationMuted = !runtime.narrationMuted;
+    if (runtime.audioElement) {
+      runtime.audioElement.muted = runtime.narrationMuted;
+    }
+    updateNarrationControls();
+  }
+
+  function handleSubtitlesClick() {
+    if (!runtime.activeAudioEntry || !getActiveSubtitle()) {
+      return;
+    }
+
+    runtime.subtitlesOn = !runtime.subtitlesOn;
+    updateNarrationControls();
+  }
+
+  function configureBackButton() {
+    if (!backButton) {
+      return;
+    }
+
+    try {
+      if (new URLSearchParams(window.location.search).get("from") === "stop3") {
+        backButton.setAttribute("href", "/trail#stop-3");
+        backButton.setAttribute("aria-label", "Back to Heritage Trail Stop 3");
+      }
+    } catch (error) {
+      return;
+    }
+  }
+
+  function bindNarrationControls() {
+    if (listenButton) {
+      listenButton.addEventListener("click", handleListenClick);
+    }
+    if (muteButton) {
+      muteButton.addEventListener("click", handleMuteClick);
+    }
+    if (languageButton) {
+      languageButton.addEventListener("click", handleLanguageToggleClick);
+    }
+    if (subtitlesButton) {
+      subtitlesButton.addEventListener("click", handleSubtitlesClick);
+    }
+
+    configureBackButton();
+    updateNarrationControls();
   }
 
   function updateSmoothedPose(entry, nowMs) {
@@ -1641,7 +1810,7 @@
       })
     );
 
-    bindAudioToggleButton();
+    bindNarrationControls();
     initRendererScene();
     initArToolkit();
     buildMarkerEntries(enabledMarkers);

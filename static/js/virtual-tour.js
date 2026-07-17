@@ -256,7 +256,7 @@
 
   // Per-artifact narration subtitles (Tagalog + English), keyed by a normalized
   // artifact name that matches each hotspot's imageAlt (e.g. "Ulóh" -> "uloh").
-  const ARTIFACT_SUBTITLES = {
+  const ARTIFACT_SUBTITLES = window.NHCP_ARTIFACT_SUBTITLES || {
     balanghay: {
       tl: "Ang Balanghay ay isang sasakyang-pandagat na ginamit noon pang 320 A.D. na kumakatawan sa kakayahang pandagat at paniniwalang espiritwal ng mga sinaunang Pilipino. Higit pa sa papel nito sa kalakalan at pakikidigma, sinasagisag nito ang paglalakbay ng kaluluwa sa kabilang buhay, kabilang ang mga kilalang mandirigma at mandaragat na kadalasang inililibing sa loob o kasama ng kanilang mga bangka upang ipagpatuloy ang kanilang paglalakbay sa kabilang daigdig.",
       en: "The Balanghay, a seafaring vessel dating back to 320 A.D., exemplified the maritime skill and spiritual beliefs of pre-colonial Filipinos. It symbolized the soul's voyage to the afterlife, with notable warriors and seafarers often buried in or with their boats to continue their journey in the netherworld.",
