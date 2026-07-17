@@ -15,6 +15,8 @@
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
     <script src="https://cdn.jsdelivr.net/gh/AR-js-org/AR.js/three.js/build/ar-threex.js"></script>
+    <!-- Quick Look / Scene Viewer launcher for the solved anamorphic puzzle -->
+    <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <script defer src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/ar-three-pipeline.js') }}"></script>
   </head>
@@ -43,6 +45,9 @@
         <button class="ar-control-btn ar-control-btn--march" id="arPahimakasMarch" type="button" aria-pressed="false" aria-label="Play the Pahimakas funeral march" hidden disabled>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path></svg>
         </button>
+        <button class="ar-control-btn ar-control-btn--arview" id="arViewInSpace" type="button" aria-label="View the restored artifact in your space" hidden disabled>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 19 6.2v8.1L12 17.75 5 14.3V6.2L12 2.75Zm0 7.05L5.4 6.55M12 9.8l6.6-3.25M12 9.8v7.6"/><path stroke-linecap="round" d="M8.25 20.5h7.5"/></svg>
+        </button>
         <a class="ar-control-btn" id="arBackButton" href="/digital-exhibits" aria-label="Back to Digital Exhibits">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.53 5.47a.75.75 0 0 1 0 1.06L5.81 11.25H20a.75.75 0 0 1 0 1.5H5.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z"/></svg>
         </a>
@@ -62,7 +67,8 @@
               "en": "{{ url_for('virtual_tour_hotspot_file', filename='Balanghay/THE BALANGHAY.mp3') }}"
             },
             "infoTitle": "Balanghay",
-            "infoText": "The balanghay is an early Philippine wooden boat linked to precolonial maritime travel, trade, and community life."
+            "infoText": "The balanghay is an early Philippine wooden boat linked to precolonial maritime travel, trade, and community life.",
+            "anamorphicPuzzle": true
           },
           {
             "key": "kabaong",

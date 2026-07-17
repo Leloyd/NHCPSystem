@@ -292,3 +292,78 @@ video {
     transition: none;
   }
 }
+
+/* ==== Anamorphic puzzle ===================================================
+   Hint chip guiding the visitor toward the hidden alignment angle, and the
+   gold "view in your space" button that appears once the artifact is whole. */
+.ar-puzzle-hint {
+  position: fixed;
+  top: calc(0.9rem + env(safe-area-inset-top, 0px));
+  left: 50%;
+  transform: translateX(-50%) translateY(-0.4rem);
+  z-index: 60;
+  max-width: min(92vw, 30rem);
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  background: rgba(20, 13, 6, 0.82);
+  color: #faf7f2;
+  font-family: "Inter", "Segoe UI", sans-serif;
+  font-size: 0.78rem;
+  letter-spacing: 0.03em;
+  text-align: center;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease, transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+}
+
+.ar-puzzle-hint.is-visible {
+  opacity: 1;
+  transform: translateX(-50%) translateY(0);
+}
+
+.ar-puzzle-hint[hidden] {
+  display: none;
+}
+
+.ar-puzzle-hint.is-warm {
+  border-color: rgba(212, 175, 106, 0.75);
+  box-shadow: 0 0 14px rgba(212, 175, 106, 0.25);
+}
+
+.ar-puzzle-hint.is-hot {
+  border-color: #d4af6a;
+  box-shadow: 0 0 22px rgba(212, 175, 106, 0.5);
+  animation: ar-puzzle-hot 0.9s ease-in-out infinite;
+}
+
+.ar-puzzle-hint.is-solved {
+  border-color: #d4af6a;
+  background: rgba(212, 175, 106, 0.92);
+  color: #1c1208;
+  font-weight: 600;
+  box-shadow: 0 0 26px rgba(212, 175, 106, 0.6);
+}
+
+.ar-puzzle-hint.is-noAr {
+  border-color: rgba(255, 122, 122, 0.6);
+}
+
+@keyframes ar-puzzle-hot {
+  0%, 100% { box-shadow: 0 0 14px rgba(212, 175, 106, 0.35); }
+  50% { box-shadow: 0 0 26px rgba(212, 175, 106, 0.65); }
+}
+
+/* The reward button glints gold so it reads as the puzzle's prize. */
+.ar-control-btn--arview {
+  border-color: #d4af6a;
+  box-shadow: 0 0 14px rgba(212, 175, 106, 0.4);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .ar-puzzle-hint.is-hot {
+    animation: none;
+  }
+}

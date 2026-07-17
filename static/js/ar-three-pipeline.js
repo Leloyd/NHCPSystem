@@ -349,6 +349,13 @@
     audioPrimeUrl: "",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
+    // Anamorphic puzzle UI
+    puzzleHintEl: null,
+    puzzleHintState: "",
+    puzzleHintTimerId: 0,
+    quickLookViewer: null,
+    viewInSpaceButton: null,
+    solvedPuzzleEntry: null,
     destroyed: false,
   };
 
@@ -1560,6 +1567,7 @@
     });
 
     syncActiveAudioEntry();
+    updateAnamorphicPuzzles(nowMs);
   }
 
   function updateGroundOccluder(entry, modelSettings, size, fitScale) {
@@ -1652,6 +1660,509 @@
     });
   }
 
+  /* ==== Anamorphic puzzle ====================================================
+     The artifact appears as broken shards floating apart. Each shard is
+     displaced ALONG ONE HIDDEN SIGHT-LINE and scaled by (D + t) / D — a true
+     anamorphosis: viewed from that exact direction the perspective projection
+     realigns the pieces into the intact artifact; from anywhere else it reads
+     as debris. Hold the correct angle briefly and the shards fly home, the
+     solve persists for the whole session, and a "view in your space"
+     (Quick Look / Scene Viewer) button appears. */
+  var PUZZLE = {
+    pieces: 7,            // target shard count
+    eyeDistanceR: 6,      // eye distance along the sight-line, in bounding radii
+    minOffsetR: 0.4,      // min |displacement| in radii (so it clearly looks broken)
+    maxOffsetR: 1.5,      // max displacement in radii
+    solveAngleDeg: 8,     // aligned when camera dir is within this of the sight-line
+    warmAngleDeg: 30,     // hint feedback thresholds
+    hotAngleDeg: 14,
+    dwellMs: 450,         // must hold alignment this long
+    settleMs: 900,        // shard fly-home animation time
+    elevationDeg: 35,     // sight-line tilt above the marker plane
+  };
+
+  function puzzleStorageKey(key) {
+    return "arPuzzleSolved:" + key;
+  }
+
+  function isPuzzleSolvedInSession(key) {
+    try {
+      return window.sessionStorage.getItem(puzzleStorageKey(key)) === "1";
+    } catch (error) {
+      return false;
+    }
+  }
+
+  function markPuzzleSolvedInSession(key) {
+    try {
+      window.sessionStorage.setItem(puzzleStorageKey(key), "1");
+    } catch (error) {
+      /* private mode — solved state just won't survive reloads */
+    }
+  }
+
+  // Local matrix of `obj` relative to `ancestor` (walks the parent chain).
+  function getMatrixRelativeTo(obj, ancestor) {
+    var matrix = new THREE_NS.Matrix4();
+    var node = obj;
+    while (node && node !== ancestor) {
+      node.updateMatrix();
+      matrix.premultiply(node.matrix);
+      node = node.parent;
+    }
+    return matrix;
+  }
+
+  /* Split a geometry into `pieceCount` jagged shards: cluster triangles around
+     k seed centroids (a light k-means), then rebuild one geometry per cluster
+     with every vertex attribute preserved. */
+  function splitGeometryIntoShards(geometry, pieceCount) {
+    var source = geometry.index ? geometry.toNonIndexed() : geometry.clone();
+    var positions = source.getAttribute("position");
+    if (!positions) {
+      return null;
+    }
+
+    // Interleaved attributes use a strided layout this splitter can't slice —
+    // leave such a mesh whole rather than corrupt it.
+    var interleaved = Object.keys(source.attributes).some(function (name) {
+      return Boolean(source.attributes[name].isInterleavedBufferAttribute);
+    });
+    if (interleaved) {
+      return null;
+    }
+
+    var triangleCount = Math.floor(positions.count / 3);
+    var k = Math.max(2, Math.min(pieceCount, triangleCount));
+
+    var centroids = new Float32Array(triangleCount * 3);
+    for (var t = 0; t < triangleCount; t += 1) {
+      var base = t * 9;
+      centroids[t * 3] = (positions.array[base] + positions.array[base + 3] + positions.array[base + 6]) / 3;
+      centroids[t * 3 + 1] = (positions.array[base + 1] + positions.array[base + 4] + positions.array[base + 7]) / 3;
+      centroids[t * 3 + 2] = (positions.array[base + 2] + positions.array[base + 5] + positions.array[base + 8]) / 3;
+    }
+
+    // Seed the cluster means from evenly spread triangles, then refine.
+    var means = [];
+    for (var seed = 0; seed < k; seed += 1) {
+      var pick = Math.floor((seed + 0.5) * (triangleCount / k)) * 3;
+      means.push([centroids[pick], centroids[pick + 1], centroids[pick + 2]]);
+    }
+
+    var assignment = new Uint32Array(triangleCount);
+    for (var iter = 0; iter < 8; iter += 1) {
+      var sums = [];
+      var counts = [];
+      for (var c = 0; c < k; c += 1) {
+        sums.push([0, 0, 0]);
+        counts.push(0);
+      }
+      for (var tri = 0; tri < triangleCount; tri += 1) {
+        var cx = centroids[tri * 3];
+        var cy = centroids[tri * 3 + 1];
+        var cz = centroids[tri * 3 + 2];
+        var best = 0;
+        var bestDist = Infinity;
+        for (var m = 0; m < k; m += 1) {
+          var dx = cx - means[m][0];
+          var dy = cy - means[m][1];
+          var dz = cz - means[m][2];
+          var dist = dx * dx + dy * dy + dz * dz;
+          if (dist < bestDist) {
+            bestDist = dist;
+            best = m;
+          }
+        }
+        assignment[tri] = best;
+        sums[best][0] += cx;
+        sums[best][1] += cy;
+        sums[best][2] += cz;
+        counts[best] += 1;
+      }
+      for (var mm = 0; mm < k; mm += 1) {
+        if (counts[mm] > 0) {
+          means[mm][0] = sums[mm][0] / counts[mm];
+          means[mm][1] = sums[mm][1] / counts[mm];
+          means[mm][2] = sums[mm][2] / counts[mm];
+        }
+      }
+    }
+
+    var attributeNames = Object.keys(source.attributes);
+    var shards = [];
+    for (var cluster = 0; cluster < k; cluster += 1) {
+      var triIndices = [];
+      for (var ti = 0; ti < triangleCount; ti += 1) {
+        if (assignment[ti] === cluster) {
+          triIndices.push(ti);
+        }
+      }
+      if (!triIndices.length) {
+        continue;
+      }
+
+      var shardGeometry = new THREE_NS.BufferGeometry();
+      attributeNames.forEach(function (name) {
+        var attr = source.getAttribute(name);
+        var itemSize = attr.itemSize;
+        var out = new Float32Array(triIndices.length * 3 * itemSize);
+        for (var idx = 0; idx < triIndices.length; idx += 1) {
+          var start = triIndices[idx] * 3;
+          for (var v = 0; v < 3; v += 1) {
+            for (var comp = 0; comp < itemSize; comp += 1) {
+              out[(idx * 3 + v) * itemSize + comp] = attr.array[(start + v) * itemSize + comp];
+            }
+          }
+        }
+        shardGeometry.setAttribute(name, new THREE_NS.BufferAttribute(out, itemSize));
+      });
+      shards.push(shardGeometry);
+    }
+
+    return shards.length >= 2 ? shards : null;
+  }
+
+  function setupAnamorphicPuzzle(entry) {
+    if (!entry || !entry.puzzleEnabled || !entry.modelScene) {
+      return;
+    }
+
+    if (isPuzzleSolvedInSession(entry.key)) {
+      entry.puzzleSolved = true; // intact for the whole session
+      return;
+    }
+
+    var scene = entry.modelScene;
+    scene.updateMatrixWorld(true);
+
+    // Model bounds in modelScene space — the puzzle's working space.
+    var bounds = new THREE_NS.Box3().setFromObject(scene);
+    if (bounds.isEmpty()) {
+      return;
+    }
+    var center = new THREE_NS.Vector3();
+    var size = new THREE_NS.Vector3();
+    bounds.getCenter(center);
+    bounds.getSize(size);
+    var radius = Math.max(size.x, size.y, size.z, 0.0001) * 0.5;
+
+    // The hidden sight-line: random azimuth, fixed elevation above the marker.
+    var azimuth = Math.random() * Math.PI * 2;
+    var elevation = degToRad(PUZZLE.elevationDeg);
+    var sight = new THREE_NS.Vector3(
+      Math.cos(elevation) * Math.cos(azimuth),
+      Math.sin(elevation),
+      Math.cos(elevation) * Math.sin(azimuth)
+    ).normalize();
+    var eyeDistance = radius * PUZZLE.eyeDistanceR;
+    var eye = center.clone().addScaledVector(sight, eyeDistance);
+
+    // Collect meshes first (can't mutate the tree while traversing).
+    var meshes = [];
+    scene.traverse(function (node) {
+      if (node.isMesh && node.geometry && !Array.isArray(node.material)) {
+        meshes.push(node);
+      }
+    });
+    if (!meshes.length) {
+      return;
+    }
+
+    var piecesPerMesh = Math.max(2, Math.round(PUZZLE.pieces / meshes.length));
+    var shardRecords = [];
+
+    meshes.forEach(function (mesh) {
+      var shardGeometries = splitGeometryIntoShards(mesh.geometry, piecesPerMesh);
+      if (!shardGeometries) {
+        return;
+      }
+
+      // Replace the mesh with a group holding its shards (same local transform).
+      var group = new THREE_NS.Group();
+      group.position.copy(mesh.position);
+      group.quaternion.copy(mesh.quaternion);
+      group.scale.copy(mesh.scale);
+      mesh.parent.add(group);
+      mesh.parent.remove(mesh);
+
+      var toScene = getMatrixRelativeTo(group, scene);
+      var fromScene = toScene.clone().invert();
+
+      shardGeometries.forEach(function (shardGeometry) {
+        // Recenter the shard on its own centroid so position == home point.
+        shardGeometry.computeBoundingBox();
+        var home = new THREE_NS.Vector3();
+        shardGeometry.boundingBox.getCenter(home);
+        shardGeometry.translate(-home.x, -home.y, -home.z);
+
+        var shard = new THREE_NS.Mesh(shardGeometry, mesh.material);
+        shard.position.copy(home);
+        group.add(shard);
+
+        // Anamorphic scatter: push along the sight-line, scale about the eye.
+        var homeScene = home.clone().applyMatrix4(toScene);
+        var offset = (PUZZLE.minOffsetR + Math.random() * (PUZZLE.maxOffsetR - PUZZLE.minOffsetR)) * radius;
+        if (Math.random() < 0.45) {
+          offset = -offset * 0.55; // some shards float toward the viewer
+        }
+        var scale = (eyeDistance + offset) / eyeDistance;
+        var scatterScene = eye.clone().add(homeScene.clone().sub(eye).multiplyScalar(scale));
+        var scatterLocal = scatterScene.applyMatrix4(fromScene);
+
+        shard.position.copy(scatterLocal);
+        shard.scale.setScalar(scale);
+
+        shardRecords.push({
+          mesh: shard,
+          home: home.clone(),
+          scatterPosition: scatterLocal.clone(),
+          scatterScale: scale,
+        });
+      });
+    });
+
+    if (!shardRecords.length) {
+      return;
+    }
+
+    entry.puzzle = {
+      shards: shardRecords,
+      center: center,
+      sight: sight,
+      alignedSince: 0,
+      solving: false,
+      solveStartedAt: 0,
+      lastHintState: "",
+    };
+
+    sendAnalytics("puzzle_started", { marker: entry.key });
+  }
+
+  /* --- Puzzle hint chip ---------------------------------------------------- */
+  var PUZZLE_HINTS = {
+    far: {
+      en: "A broken artifact… move around to find the right angle",
+      tl: "May basag na artifact… gumalaw upang mahanap ang tamang anggulo",
+    },
+    warm: {
+      en: "Getting closer… keep adjusting your angle",
+      tl: "Papalapit ka na… ituloy ang paghahanap ng anggulo",
+    },
+    hot: {
+      en: "Almost there — hold steady…",
+      tl: "Malapit na — steady lang…",
+    },
+    solved: {
+      en: "Restored! The artifact is whole again.",
+      tl: "Naibuo! Muli nang buo ang artifact.",
+    },
+    noAr: {
+      en: "AR view is not supported on this device or browser.",
+      tl: "Hindi suportado ang AR view sa device o browser na ito.",
+    },
+  };
+
+  function ensurePuzzleHint() {
+    if (runtime.puzzleHintEl) {
+      return runtime.puzzleHintEl;
+    }
+    var hint = document.createElement("div");
+    hint.className = "ar-puzzle-hint";
+    hint.hidden = true;
+    hint.setAttribute("role", "status");
+    hint.setAttribute("aria-live", "polite");
+    document.body.appendChild(hint);
+    runtime.puzzleHintEl = hint;
+    return hint;
+  }
+
+  function setPuzzleHint(state) {
+    var hint = ensurePuzzleHint();
+    if (!state) {
+      hint.hidden = true;
+      hint.className = "ar-puzzle-hint";
+      runtime.puzzleHintState = "";
+      return;
+    }
+    var language = runtime.audioLanguage === "en" ? "en" : "tl";
+    var stateKey = state + ":" + language;
+    if (runtime.puzzleHintState === stateKey && !hint.hidden) {
+      return;
+    }
+    runtime.puzzleHintState = stateKey;
+    hint.textContent = (PUZZLE_HINTS[state] && PUZZLE_HINTS[state][language]) || "";
+    hint.className = "ar-puzzle-hint is-visible is-" + state;
+    hint.hidden = false;
+  }
+
+  function flashPuzzleHint(state, holdMs) {
+    setPuzzleHint(state);
+    window.clearTimeout(runtime.puzzleHintTimerId);
+    runtime.puzzleHintTimerId = window.setTimeout(function () {
+      setPuzzleHint("");
+    }, holdMs || 2600);
+  }
+
+  /* --- View in your space (Quick Look / Scene Viewer) ----------------------- */
+  function ensureQuickLookViewer(modelUrl) {
+    if (runtime.quickLookViewer) {
+      if (modelUrl && runtime.quickLookViewer.getAttribute("src") !== modelUrl) {
+        runtime.quickLookViewer.setAttribute("src", modelUrl);
+      }
+      return runtime.quickLookViewer;
+    }
+    var viewer = document.createElement("model-viewer");
+    viewer.setAttribute("ar", "");
+    viewer.setAttribute("ar-modes", "webxr scene-viewer quick-look");
+    if (modelUrl) {
+      viewer.setAttribute("src", modelUrl);
+    }
+    // Kept offscreen but rendered — Quick Look needs a live element.
+    viewer.style.cssText = "position:fixed;left:-9999px;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;";
+    document.body.appendChild(viewer);
+    runtime.quickLookViewer = viewer;
+    return viewer;
+  }
+
+  function bindViewInSpaceButton() {
+    var button = document.getElementById("arViewInSpace");
+    if (!button) {
+      return;
+    }
+    runtime.viewInSpaceButton = button;
+    button.addEventListener("click", function () {
+      var entry = runtime.solvedPuzzleEntry;
+      if (!entry || !entry.modelUrl) {
+        return;
+      }
+      var viewer = ensureQuickLookViewer(entry.modelUrl);
+      var launch = function () {
+        try {
+          if (viewer.canActivateAR && typeof viewer.activateAR === "function") {
+            viewer.activateAR();
+          } else {
+            flashPuzzleHint("noAr", 3600);
+          }
+        } catch (error) {
+          flashPuzzleHint("noAr", 3600);
+        }
+      };
+      if (window.customElements && window.customElements.whenDefined) {
+        window.customElements.whenDefined("model-viewer").then(launch, launch);
+      } else {
+        launch();
+      }
+    });
+  }
+
+  function setViewInSpaceVisible(entry, visible) {
+    var button = runtime.viewInSpaceButton;
+    if (!button) {
+      return;
+    }
+    if (visible && entry) {
+      runtime.solvedPuzzleEntry = entry;
+      ensureQuickLookViewer(entry.modelUrl); // preload so Quick Look is instant
+    }
+    button.hidden = !visible;
+    button.disabled = !visible;
+  }
+
+  /* --- Per-frame puzzle update ---------------------------------------------- */
+  var PUZZLE_TMP_CAMERA = null;
+
+  function solvePuzzleShardsProgress(puzzle, progress) {
+    var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
+    puzzle.shards.forEach(function (record) {
+      record.mesh.position.lerpVectors(record.scatterPosition, record.home, eased);
+      var scale = record.scatterScale + (1 - record.scatterScale) * eased;
+      record.mesh.scale.setScalar(scale);
+    });
+  }
+
+  function updateAnamorphicPuzzles(nowMs) {
+    var anySolvedVisible = null;
+
+    runtime.markerEntries.forEach(function (entry) {
+      if (!entry || !entry.puzzleEnabled || !entry.modelLoaded) {
+        return;
+      }
+
+      var visible = Boolean(entry.renderRoot && entry.renderRoot.visible && entry.isVisibleStable);
+
+      if (entry.puzzleSolved) {
+        if (visible) {
+          anySolvedVisible = entry;
+        }
+        return;
+      }
+
+      var puzzle = entry.puzzle;
+      if (!puzzle) {
+        return;
+      }
+
+      if (!visible) {
+        puzzle.alignedSince = 0;
+        if (!puzzle.solving && runtime.puzzleHintState) {
+          setPuzzleHint("");
+        }
+        return;
+      }
+
+      if (puzzle.solving) {
+        var progress = Math.min(1, (nowMs - puzzle.solveStartedAt) / PUZZLE.settleMs);
+        solvePuzzleShardsProgress(puzzle, progress);
+        if (progress >= 1) {
+          puzzle.solving = false;
+          entry.puzzleSolved = true;
+          markPuzzleSolvedInSession(entry.key);
+          flashPuzzleHint("solved", 3200);
+          sendAnalytics("puzzle_solved", { marker: entry.key });
+        }
+        return;
+      }
+
+      // Camera (world origin) direction in modelScene space vs the sight-line.
+      if (!PUZZLE_TMP_CAMERA) {
+        PUZZLE_TMP_CAMERA = new THREE_NS.Vector3();
+      }
+      entry.modelScene.updateWorldMatrix(true, false);
+      PUZZLE_TMP_CAMERA.set(0, 0, 0);
+      entry.modelScene.worldToLocal(PUZZLE_TMP_CAMERA);
+      var direction = PUZZLE_TMP_CAMERA.sub(puzzle.center);
+      if (direction.lengthSq() < 0.000001) {
+        return;
+      }
+      direction.normalize();
+      var angleDeg = Math.acos(Math.max(-1, Math.min(1, direction.dot(puzzle.sight)))) * (180 / Math.PI);
+
+      if (angleDeg <= PUZZLE.solveAngleDeg) {
+        if (!puzzle.alignedSince) {
+          puzzle.alignedSince = nowMs;
+        }
+        setPuzzleHint("hot");
+        if (nowMs - puzzle.alignedSince >= PUZZLE.dwellMs) {
+          puzzle.solving = true;
+          puzzle.solveStartedAt = nowMs;
+        }
+      } else {
+        puzzle.alignedSince = 0;
+        if (angleDeg <= PUZZLE.hotAngleDeg) {
+          setPuzzleHint("hot");
+        } else if (angleDeg <= PUZZLE.warmAngleDeg) {
+          setPuzzleHint("warm");
+        } else {
+          setPuzzleHint("far");
+        }
+      }
+    });
+
+    // The "view in your space" button lives while a solved artifact is on screen.
+    setViewInSpaceVisible(anySolvedVisible, Boolean(anySolvedVisible));
+  }
+
   function normalizeModel(entry, loadedScene, modelSettings) {
     if (!entry || !entry.modelContainer || !loadedScene) {
       return;
@@ -1716,6 +2227,8 @@
         normalizeModel(entry, scene, modelSettings);
         entry.modelLoaded = true;
 
+        setupAnamorphicPuzzle(entry);
+
         sendAnalytics("model_loaded", { model: entry.key });
       },
       undefined,
@@ -1770,6 +2283,10 @@
         modelScene: null,
         audioByLanguage: markerConfig.audioByLanguage || null,
         alternateAudioUrl: markerConfig.alternateAudioUrl || "",
+        modelUrl: markerConfig.modelUrl || "",
+        puzzleEnabled: markerConfig.anamorphicPuzzle === true,
+        puzzleSolved: false,
+        puzzle: null,
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -2078,6 +2595,7 @@
     );
 
     bindNarrationControls();
+    bindViewInSpaceButton();
     setupAudioPriming();
     initRendererScene();
     initArToolkit();
