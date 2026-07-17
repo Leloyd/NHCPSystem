@@ -1308,6 +1308,10 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   opacity: 0;
   transition: opacity 0.3s ease;
   cursor: zoom-out;
+  /* Block browser pinch page-zoom here so zooming the expanded photo/3D can
+     never leave the 360 stuck zoomed after closing (photo has its own zoom). */
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 .trailx-preview.is-open { opacity: 1; }
 .trailx-preview[hidden] { display: none; }
@@ -1316,16 +1320,34 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   max-width: min(920px, 92vw);
   cursor: default;
 }
-.trailx-preview__media img {
-  display: block;
+/* The photo's cream mount doubles as the zoom frame: it clips the picture as
+   it's pinched/dragged, while its own drop-shadow renders outside the clip. */
+.trailx-preview__frame {
+  position: relative;
   max-width: 100%;
   max-height: 72vh;
   margin: 0 auto;
-  object-fit: contain;
+  overflow: hidden;
   padding: 0.6rem;
   background: var(--tx-cream);
   border: 1px solid rgba(184, 146, 58, 0.5);
   box-shadow: 0 30px 80px rgba(0, 0, 0, 0.6);
+  touch-action: none;
+  cursor: grab;
+}
+.trailx-preview__frame.is-zoomed { cursor: zoom-out; }
+.trailx-preview__frame.is-panning { cursor: grabbing; }
+.trailx-preview__media img {
+  display: block;
+  max-width: 100%;
+  max-height: calc(72vh - 1.2rem);
+  margin: 0 auto;
+  object-fit: contain;
+  transform-origin: 0 0;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
 }
 .trailx-preview__model {
   width: min(920px, 92vw);
@@ -1765,7 +1787,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__tf-q { font-size: calc(0.95rem * var(--tx-font-scale, 1)); }
   .trailx__tf { padding: 0.45rem 0; }
   .trailx-preview { padding: 1rem; }
-  .trailx-preview__media img { max-height: 58vh; }
+  .trailx-preview__frame { max-height: 58vh; }
+  .trailx-preview__media img { max-height: calc(58vh - 1.2rem); }
   .trailx-preview__model { height: 52vh; }
   .trailx-preview__title { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
   .trailx-preview__close { margin-top: 1rem; }

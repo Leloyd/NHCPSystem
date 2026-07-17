@@ -1393,6 +1393,103 @@ function initPanorama() {
       el.hidden = true;
     }
   };
+  // Block iOS Safari page pinch-zoom on the overlay backdrop / 3D area (works
+  // with the CSS touch-action:none) so a stray pinch can't zoom the whole page.
+  const blockOverlayPageZoom = (overlay) => {
+    if (!overlay) return;
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => {
+      overlay.addEventListener(t, (e) => e.preventDefault(), { passive: false });
+    });
+  };
+
+  /* Contained pinch / wheel / drag zoom for the expanded photo — the picture
+     zooms inside its frame, never the page or the 360 underneath. */
+  const createPreviewImageZoom = (frame, img) => {
+    const st = { scale: 1, tx: 0, ty: 0, pointers: new Map(), panning: false, pinch: 0 };
+    const apply = () => {
+      img.style.transformOrigin = '0 0';
+      img.style.transform = `translate(${st.tx}px, ${st.ty}px) scale(${st.scale})`;
+      frame.classList.toggle('is-zoomed', st.scale > 1.01);
+    };
+    const clamp = () => {
+      const fw = frame.clientWidth;
+      const fh = frame.clientHeight;
+      const w = fw * st.scale;
+      const h = fh * st.scale;
+      st.tx = Math.min(0, Math.max(Math.min(0, fw - w), st.tx));
+      st.ty = Math.min(0, Math.max(Math.min(0, fh - h), st.ty));
+    };
+    const zoomAt = (clientX, clientY, factor) => {
+      const next = Math.min(5, Math.max(1, st.scale * factor));
+      if (Math.abs(next - st.scale) < 0.0001) return;
+      const r = frame.getBoundingClientRect();
+      const px = clientX - r.left;
+      const py = clientY - r.top;
+      st.tx = px - (px - st.tx) * (next / st.scale);
+      st.ty = py - (py - st.ty) * (next / st.scale);
+      st.scale = next;
+      clamp();
+      apply();
+    };
+    frame.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.18 : 1 / 1.18);
+    }, { passive: false });
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => {
+      frame.addEventListener(t, (e) => e.preventDefault(), { passive: false });
+    });
+    frame.addEventListener('pointerdown', (e) => {
+      st.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (st.pointers.size === 2) {
+        const p = Array.from(st.pointers.values());
+        st.pinch = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        st.panning = false;
+      } else if (st.pointers.size === 1 && st.scale > 1.01) {
+        st.panning = true;
+        frame.classList.add('is-panning');
+        try { frame.setPointerCapture(e.pointerId); } catch { /* ignore */ }
+      }
+    });
+    frame.addEventListener('pointermove', (e) => {
+      if (!st.pointers.has(e.pointerId)) return;
+      const prev = st.pointers.get(e.pointerId);
+      st.pointers.set(e.pointerId, { x: e.clientX, y: e.clientY });
+      if (st.pointers.size === 2) {
+        const p = Array.from(st.pointers.values());
+        const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        if (st.pinch > 0 && dist > 0) {
+          zoomAt((p[0].x + p[1].x) / 2, (p[0].y + p[1].y) / 2, dist / st.pinch);
+        }
+        st.pinch = dist;
+        e.preventDefault();
+        return;
+      }
+      if (st.panning) {
+        st.tx += e.clientX - prev.x;
+        st.ty += e.clientY - prev.y;
+        clamp();
+        apply();
+        e.preventDefault();
+      }
+    }, { passive: false });
+    const endPointer = (e) => {
+      st.pointers.delete(e.pointerId);
+      if (st.pointers.size < 2) st.pinch = 0;
+      if (st.pointers.size === 0) {
+        st.panning = false;
+        frame.classList.remove('is-panning');
+      }
+    };
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => {
+      frame.addEventListener(t, endPointer);
+    });
+    frame.addEventListener('dblclick', (e) => {
+      e.preventDefault();
+      st.scale = 1; st.tx = 0; st.ty = 0;
+      apply();
+    });
+  };
+
   const ensurePreview = () => {
     if (previewEl) return;
     previewEl = document.createElement('div');
@@ -1416,6 +1513,7 @@ function initPanorama() {
     previewEl.appendChild(previewTitle);
     previewEl.appendChild(closeBtn);
     root.appendChild(previewEl);
+    blockOverlayPageZoom(previewEl);
   };
   const openPreview = (args, view) => {
     ensurePreview();
@@ -1424,7 +1522,7 @@ function initPanorama() {
       const big = document.createElement('model-viewer');
       big.className = 'trailx-preview__model';
       big.setAttribute('camera-controls', '');
-      big.setAttribute('touch-action', 'pan-y');
+      big.setAttribute('touch-action', 'none');
       big.setAttribute('auto-rotate', '');
       big.setAttribute('shadow-intensity', '1');
       // Real-world AR: WebXR/Scene Viewer on Android, Quick Look on iPhone
@@ -1436,10 +1534,15 @@ function initPanorama() {
       previewMedia.appendChild(big);
       installModelArControl(big, previewMedia);
     } else {
+      // Photo in a zoom frame: pinch/scroll/drag zooms the picture, never the page.
+      const frame = document.createElement('div');
+      frame.className = 'trailx-preview__frame';
       const big = document.createElement('img');
       big.src = args.imageSrc;
       big.alt = args.imageAlt || 'Artifact image';
-      previewMedia.appendChild(big);
+      frame.appendChild(big);
+      previewMedia.appendChild(frame);
+      createPreviewImageZoom(frame, big);
     }
     setTitleHtml(previewTitle, args.title, args.imageAlt || '');
     previewEl.hidden = false;
