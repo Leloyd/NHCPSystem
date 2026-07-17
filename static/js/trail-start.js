@@ -2621,6 +2621,7 @@ function initDocViewer() {
   let deck = null;
   let cards = []; // current stacking order — index 0 is the front page
   let animating = false;
+  let resumeNarrationOnClose = false;
 
   const relayout = () => {
     cards.forEach((card, i) => {
@@ -2653,10 +2654,13 @@ function initDocViewer() {
   };
 
   const hideDoc = () => {
-    if (!overlay) return;
+    if (!overlay || overlay.hidden) return;
+    const shouldResume = resumeNarrationOnClose;
+    resumeNarrationOnClose = false;
     overlay.classList.remove('is-open');
     overlay.hidden = true;
     animating = false;
+    if (shouldResume && narration.paused) resumeSpeaking();
   };
 
   const ensureOverlay = () => {
@@ -2687,6 +2691,8 @@ function initDocViewer() {
 
   const build = (urls) => {
     ensureOverlay();
+    resumeNarrationOnClose = state.playing;
+    if (resumeNarrationOnClose) pauseSpeaking();
     deck.innerHTML = '';
     animating = false;
     cards = urls.map((url, i) => {
