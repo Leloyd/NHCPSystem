@@ -187,6 +187,10 @@ video {
   height: 16px;
 }
 
+.ar-control-btn[hidden] {
+  display: none !important;
+}
+
 .ar-control-btn[disabled] {
   opacity: 0.4;
   cursor: default;

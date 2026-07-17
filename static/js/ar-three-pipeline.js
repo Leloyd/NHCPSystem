@@ -7,6 +7,7 @@
   var muteButton = document.getElementById("arMute");
   var languageButton = document.getElementById("arLanguage");
   var subtitlesButton = document.getElementById("arSubtitles");
+  var pahimakasMarchButton = document.getElementById("arPahimakasMarch");
   var subtitleBar = document.getElementById("arSubtitle");
   var subtitleTextEl = document.getElementById("arSubtitleText");
   var subtitleEyebrow = document.getElementById("arSubtitleEyebrow");
@@ -251,7 +252,7 @@
       targetSize: 0.8,
       scaleMultiplier: 2,
       position: [0, 0, 0],
-      rotation: [0, 0, 0],
+      rotation: [0, -90, 0],
       occluder: {
         enabled: true,
         sizeMultiplier: 1.15,
@@ -336,6 +337,7 @@
     markerFilter: "all",
     rafId: 0,
     audioElement: null,
+    marchAudioElement: null,
     activeAudioEntry: null,
     audioLanguage: "tl",
     narrationMuted: false,
@@ -419,6 +421,7 @@
                 en: String(item.audioByLanguage.en || ""),
               }
             : null,
+          alternateAudioUrl: String(item && item.alternateAudioUrl ? item.alternateAudioUrl : ""),
           infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
           infoText: String(item && item.infoText ? item.infoText : ""),
         };
@@ -932,6 +935,40 @@
     return audioEl;
   }
 
+  function ensureMarchAudioElement() {
+    if (runtime.marchAudioElement) {
+      return runtime.marchAudioElement;
+    }
+
+    var audioEl = document.createElement("audio");
+    audioEl.preload = "auto";
+    audioEl.hidden = true;
+    audioEl.setAttribute("playsinline", "");
+    audioEl.playsInline = true;
+    audioEl.muted = runtime.narrationMuted;
+    ["play", "pause", "ended", "volumechange"].forEach(function (eventName) {
+      audioEl.addEventListener(eventName, updateNarrationControls);
+    });
+    body.appendChild(audioEl);
+    runtime.marchAudioElement = audioEl;
+    return audioEl;
+  }
+
+  function stopPahimakasMarch(resetTime) {
+    if (!runtime.marchAudioElement) {
+      return;
+    }
+
+    runtime.marchAudioElement.pause();
+    if (resetTime) {
+      try {
+        runtime.marchAudioElement.currentTime = 0;
+      } catch (error) {
+        return;
+      }
+    }
+  }
+
   function createSilentAudioUrl() {
     if (runtime.audioPrimeUrl) {
       return runtime.audioPrimeUrl;
@@ -1061,6 +1098,7 @@
   function stopActiveAudio(resetTime) {
     removePendingAudioUnlockHandler();
     runtime.pendingAudioSrc = "";
+    stopPahimakasMarch(resetTime);
 
     if (!runtime.audioElement) {
       return;
@@ -1108,6 +1146,10 @@
     return Boolean(runtime.audioElement && !runtime.audioElement.paused && !runtime.audioElement.ended);
   }
 
+  function isPahimakasMarchPlaying() {
+    return Boolean(runtime.marchAudioElement && !runtime.marchAudioElement.paused && !runtime.marchAudioElement.ended);
+  }
+
   function setControlAvailability(control, enabled) {
     if (!control) {
       return;
@@ -1123,6 +1165,12 @@
     var hasAudio = Boolean(runtime.activeAudioEntry && (hasTagalog || hasEnglish));
     var hasSubtitle = Boolean(getActiveSubtitle());
     var playing = isNarrationPlaying();
+    var isPahimakas = Boolean(
+      runtime.activeAudioEntry &&
+      runtime.activeAudioEntry.key === "pahimakas" &&
+      runtime.activeAudioEntry.alternateAudioUrl
+    );
+    var marchPlaying = isPahimakasMarchPlaying();
 
     setControlAvailability(listenButton, hasAudio);
     setControlAvailability(muteButton, hasAudio);
@@ -1174,10 +1222,24 @@
       );
     }
 
+    if (pahimakasMarchButton) {
+      pahimakasMarchButton.hidden = !isPahimakas;
+      setControlAvailability(pahimakasMarchButton, isPahimakas);
+      pahimakasMarchButton.classList.toggle("is-active", marchPlaying);
+      pahimakasMarchButton.classList.toggle("is-playing", marchPlaying);
+      pahimakasMarchButton.setAttribute("aria-pressed", marchPlaying ? "true" : "false");
+      pahimakasMarchButton.setAttribute(
+        "aria-label",
+        marchPlaying ? "Pause the Pahimakas funeral march" : "Play the Pahimakas funeral march"
+      );
+    }
+
     renderSubtitle();
   }
 
   function playAudioForEntry(entry, language, shouldRestart) {
+    stopPahimakasMarch(true);
+
     var audioConfig = getEntryAudioConfig(entry);
     var nextSrc = resolveAudioSource(audioConfig, language);
     if (!nextSrc) {
@@ -1294,6 +1356,7 @@
     }
 
     removePendingAudioUnlockHandler();
+    stopPahimakasMarch(true);
 
     if (runtime.audioElement && !runtime.audioElement.paused) {
       runtime.audioElement.pause();
@@ -1319,6 +1382,56 @@
     runtime.narrationMuted = !runtime.narrationMuted;
     if (runtime.audioElement) {
       runtime.audioElement.muted = runtime.narrationMuted;
+    }
+    if (runtime.marchAudioElement) {
+      runtime.marchAudioElement.muted = runtime.narrationMuted;
+    }
+    updateNarrationControls();
+  }
+
+  function handlePahimakasMarchClick() {
+    var entry = runtime.activeAudioEntry;
+    if (!entry || entry.key !== "pahimakas" || !entry.alternateAudioUrl) {
+      return;
+    }
+
+    var marchAudio = ensureMarchAudioElement();
+    if (!marchAudio.paused && !marchAudio.ended) {
+      marchAudio.pause();
+      updateNarrationControls();
+      return;
+    }
+
+    removePendingAudioUnlockHandler();
+    runtime.pendingAudioSrc = "";
+    if (runtime.audioElement) {
+      runtime.audioElement.pause();
+    }
+
+    var currentSrc = marchAudio.getAttribute("data-march-src") || "";
+    if (currentSrc !== entry.alternateAudioUrl) {
+      marchAudio.src = entry.alternateAudioUrl;
+      marchAudio.setAttribute("data-march-src", entry.alternateAudioUrl);
+      try {
+        marchAudio.currentTime = 0;
+      } catch (error) {
+        return;
+      }
+    } else if (marchAudio.ended) {
+      try {
+        marchAudio.currentTime = 0;
+      } catch (error) {
+        return;
+      }
+    }
+
+    marchAudio.muted = runtime.narrationMuted;
+    var playResult = marchAudio.play();
+    if (playResult && typeof playResult.catch === "function") {
+      playResult.catch(function (error) {
+        console.warn("[AR] Unable to play the Pahimakas funeral march.", error);
+        updateNarrationControls();
+      });
     }
     updateNarrationControls();
   }
@@ -1359,6 +1472,9 @@
     }
     if (subtitlesButton) {
       subtitlesButton.addEventListener("click", handleSubtitlesClick);
+    }
+    if (pahimakasMarchButton) {
+      pahimakasMarchButton.addEventListener("click", handlePahimakasMarchClick);
     }
 
     configureBackButton();
@@ -1653,6 +1769,7 @@
         modelContainer: modelContainer,
         modelScene: null,
         audioByLanguage: markerConfig.audioByLanguage || null,
+        alternateAudioUrl: markerConfig.alternateAudioUrl || "",
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -1892,6 +2009,14 @@
       runtime.audioElement.load();
       runtime.audioElement.remove();
       runtime.audioElement = null;
+    }
+
+    if (runtime.marchAudioElement) {
+      runtime.marchAudioElement.pause();
+      runtime.marchAudioElement.removeAttribute("src");
+      runtime.marchAudioElement.load();
+      runtime.marchAudioElement.remove();
+      runtime.marchAudioElement = null;
     }
 
     if (runtime.audioPrimeUrl && window.URL && typeof window.URL.revokeObjectURL === "function") {

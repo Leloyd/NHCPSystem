@@ -40,6 +40,9 @@
         </button>
         <button class="ar-control-btn" id="arLanguage" type="button" aria-label="Narration language unavailable" aria-disabled="true" disabled>TL</button>
         <button class="ar-control-btn is-active" id="arSubtitles" type="button" aria-pressed="true" aria-label="Subtitles unavailable until an artifact is detected" aria-disabled="true" disabled>CC</button>
+        <button class="ar-control-btn ar-control-btn--march" id="arPahimakasMarch" type="button" aria-pressed="false" aria-label="Play the Pahimakas funeral march" hidden disabled>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M15.5 3.75a.75.75 0 0 1 .75.75v10.84a3.5 3.5 0 1 1-1.5-2.88V8.91l-5.96 1.48a.75.75 0 0 1-.93-.73V5.93c0-.34.23-.64.56-.73l6.9-1.72a.76.76 0 0 1 .18-.03ZM8.75 6.52v2.18l6-1.49V5.02l-6 1.5Zm4.25 10.23a2 2 0 1 0-4 0 2 2 0 0 0 4 0Z" fill="currentColor"></path></svg>
+        </button>
         <a class="ar-control-btn" id="arBackButton" href="/digital-exhibits" aria-label="Back to Digital Exhibits">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.53 5.47a.75.75 0 0 1 0 1.06L5.81 11.25H20a.75.75 0 0 1 0 1.5H5.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z"/></svg>
         </a>
@@ -139,7 +142,8 @@
             "audioByLanguage": {
               "tl": "{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/PAHIMAKAS AT IBA PANG MARCHA FUNEBRE NI NAKPIL.mp3') }}",
               "en": "{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/NAKPIL_S PAHIMAKAS AND OTHER FUNERAL MARCHES.mp3') }}"
-            }
+            },
+            "alternateAudioUrl": "{{ url_for('virtual_tour_hotspot_file', filename='Pahimakas/Pahimakas_ Marche funébre, Ob. 21a (1897).mp3') }}"
           },
           {
             "key": "uloh",
