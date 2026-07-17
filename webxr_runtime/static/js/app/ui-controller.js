@@ -7,9 +7,10 @@ export class UiController {
     this.errorResetTimer = null;
   }
 
-  bindHandlers({ onBackRequested, onFullscreenToggled }) {
+  bindHandlers({ onBackRequested, onFullscreenToggled, onGyroToggled }) {
     this.onBackRequested = onBackRequested;
     this.onFullscreenToggled = onFullscreenToggled;
+    this.onGyroToggled = onGyroToggled;
 
     this.refs.backButton?.addEventListener('click', () => {
       this.onBackRequested?.();
@@ -18,6 +19,24 @@ export class UiController {
     this.refs.fullscreenButton?.addEventListener('click', () => {
       this.onFullscreenToggled?.();
     });
+
+    this.refs.gyroButton?.addEventListener('click', () => {
+      this.onGyroToggled?.();
+    });
+  }
+
+  setGyroVisible(visible) {
+    if (this.refs.gyroButton) {
+      this.refs.gyroButton.hidden = !visible;
+    }
+  }
+
+  setGyroState(active) {
+    if (!this.refs.gyroButton) {
+      return;
+    }
+    this.refs.gyroButton.classList.toggle('is-active', Boolean(active));
+    this.refs.gyroButton.setAttribute('aria-pressed', active ? 'true' : 'false');
   }
 
   setLoadingProgress(progress, label) {

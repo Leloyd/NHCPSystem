@@ -2741,6 +2741,10 @@
     model.setAttribute("touch-action", "pan-y");
     model.setAttribute("auto-rotate", "");
     model.setAttribute("shadow-intensity", "1");
+    // Real-world AR: WebXR/Scene Viewer on Android, Quick Look on iPhone
+    // (model-viewer converts the GLB to USDZ on the device).
+    model.setAttribute("ar", "");
+    model.setAttribute("ar-modes", "webxr scene-viewer quick-look");
     model.hidden = true;
 
     const modelNav = document.createElement("div");
@@ -3244,6 +3248,8 @@
     model.setAttribute("touch-action", "pan-y");
     model.setAttribute("auto-rotate", "");
     model.setAttribute("shadow-intensity", "1");
+    model.setAttribute("ar", "");
+    model.setAttribute("ar-modes", "webxr scene-viewer quick-look");
     const glbSources = getArtifactGlbSources(args);
     if (!Number.isInteger(args.currentGlbIndex)) {
       args.currentGlbIndex = 0;

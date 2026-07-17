@@ -225,10 +225,36 @@ export class WebXRApp {
       onFullscreenToggled: () => {
         void this._toggleFullscreen();
       },
+      onGyroToggled: () => {
+        void this._toggleGyroLook();
+      },
     });
 
     this.uiController.setMobileControlsVisible(true);
     this.uiController.setFullscreenState(Boolean(document.fullscreenElement));
+
+    // Gyro "magic window" is the look-around fallback for phones without
+    // WebXR (every iOS browser). Only offered where motion sensors exist.
+    const gyroCapable = typeof window.DeviceOrientationEvent !== 'undefined'
+      && (this.mobileMode || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
+    this.uiController.setGyroVisible(gyroCapable);
+  }
+
+  async _toggleGyroLook() {
+    if (!this.playerController) {
+      return;
+    }
+    const next = !this.playerController.gyro.enabled;
+    try {
+      await this.playerController.setGyroEnabled(next);
+      this.uiController.setGyroState(next);
+      if (next) {
+        this.uiController.showError('Gyro look on — move your phone to look around.', 2600);
+      }
+    } catch (error) {
+      this.uiController.setGyroState(false);
+      this.uiController.showError(String(error?.message ?? error), 4500);
+    }
   }
 
   _handleBackRequested() {
@@ -422,7 +448,7 @@ export class WebXRApp {
           }
 
           if (name === 'NotSupportedError') {
-            return `Full 3D XR unsupported (${detail}). This device/browser does not support immersive-vr.`;
+            return `Full 3D XR unsupported (${detail}). Tip: on phones without VR support (like iPhone), use the Gyro button to look around by moving your phone.`;
           }
 
           return `Full 3D XR start failed (${detail}).`;
@@ -430,11 +456,11 @@ export class WebXRApp {
 
         const showUnsupportedModeMessage = (sessionMode) => {
           if (sessionMode === XR_SESSION_MODE_AR) {
-            this.uiController.showError('AR is not supported on this device/browser.', 3200);
+            this.uiController.showError('AR needs Chrome on Android (with Google Play Services for AR). On iPhone, use the artifact 3D viewers’ AR button instead.', 4500);
             return;
           }
 
-          this.uiController.showError('VR is not supported on this device/browser.', 3200);
+          this.uiController.showError('VR headset mode is not available on this device/browser. Tip: tap the Gyro button to look around by moving your phone.', 4500);
         };
 
         const requestArSessionWithFallback = async () => {

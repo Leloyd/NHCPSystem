@@ -7,6 +7,13 @@ const FORWARD = new THREE.Vector3();
 const RIGHT = new THREE.Vector3();
 const DESIRED_MOVE = new THREE.Vector3();
 const XR_LOCAL_OFFSET = new THREE.Vector3();
+
+// Scratch objects for the gyro "magic window" math (no per-frame allocation).
+const GYRO_ZEE = new THREE.Vector3(0, 0, 1);
+const GYRO_EULER = new THREE.Euler();
+const GYRO_Q0 = new THREE.Quaternion();
+const GYRO_Q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
+const GYRO_QUAT = new THREE.Quaternion();
 const XR_SESSION_MODE_AR = 'immersive-ar';
 const XR_SESSION_MODE_VR = 'immersive-vr';
 const VR_MIN_TRACKED_HEAD_HEIGHT = 1.0;
@@ -78,6 +85,19 @@ export class PlayerController {
     this.wasVrPresenting = false;
     this.xrPhysicalOffsetInitialized = false;
     this.xrPhysicalOffsetBaseline = new THREE.Vector3();
+
+    // Gyro "magic window" look: point the phone to look around. Works on
+    // browsers without WebXR (all iOS browsers) using DeviceOrientation.
+    this.gyro = {
+      enabled: false,
+      hasReading: false,
+      needsSync: false,
+      yawOffset: 0,
+      alpha: 0,
+      beta: 0,
+      gamma: 0,
+      onOrientation: null,
+    };
 
     this.mobilePad = this._createMobilePadState(mobileRefs);
 
@@ -204,12 +224,102 @@ export class PlayerController {
 
   _applyLookDelta(deltaX, deltaY) {
     const sensitivity = this.mobileMode ? 0.0062 : 0.0046;
+    if (this.gyro.enabled) {
+      // While the gyro owns the camera, dragging re-aims the heading instead
+      // (pitch stays with the device so the horizon never fights the sensor).
+      this.gyro.yawOffset -= deltaX * sensitivity;
+      return;
+    }
     this.camera.rotation.y -= deltaX * sensitivity;
     this.camera.rotation.x = clamp(
       this.camera.rotation.x - deltaY * sensitivity,
       -Math.PI * 0.495,
       Math.PI * 0.495,
     );
+  }
+
+  /* --- Gyro "magic window" -------------------------------------------------
+     Turns DeviceOrientation readings into camera yaw/pitch so visitors look
+     around by moving the phone. This is the cross-browser fallback for
+     devices without WebXR (every iOS browser). iOS 13+ requires an explicit
+     motion permission that MUST be requested inside a user tap — which is
+     why setGyroEnabled is async and called from the Gyro button. */
+  async setGyroEnabled(enabled) {
+    if (!enabled) {
+      if (this.gyro.onOrientation) {
+        window.removeEventListener('deviceorientation', this.gyro.onOrientation, true);
+        this.gyro.onOrientation = null;
+      }
+      this.gyro.enabled = false;
+      this.gyro.hasReading = false;
+      return true;
+    }
+
+    if (typeof window.DeviceOrientationEvent === 'undefined') {
+      throw new Error('This device does not report motion.');
+    }
+
+    // iOS motion-permission gate (no-op elsewhere).
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      let response;
+      try {
+        response = await DeviceOrientationEvent.requestPermission();
+      } catch {
+        throw new Error('Motion permission request failed. Use HTTPS and tap the button again.');
+      }
+      if (response !== 'granted') {
+        throw new Error('Motion access was denied. Allow motion & orientation access to use gyro look.');
+      }
+    }
+
+    this.gyro.onOrientation = (event) => {
+      if (event.alpha === null || event.alpha === undefined) {
+        return;
+      }
+      this.gyro.alpha = event.alpha;
+      this.gyro.beta = event.beta ?? 0;
+      this.gyro.gamma = event.gamma ?? 0;
+      this.gyro.hasReading = true;
+    };
+    window.addEventListener('deviceorientation', this.gyro.onOrientation, true);
+
+    this.gyro.enabled = true;
+    this.gyro.hasReading = false;
+    this.gyro.needsSync = true; // keep the current view direction as the anchor
+    return true;
+  }
+
+  _updateGyroLook() {
+    if (!this.gyro.enabled || !this.gyro.hasReading || this.renderer.xr.isPresenting) {
+      return;
+    }
+
+    const degToRad = Math.PI / 180;
+    const alpha = this.gyro.alpha * degToRad;
+    const beta = this.gyro.beta * degToRad;
+    const gamma = this.gyro.gamma * degToRad;
+    const screenAngle = ((window.screen?.orientation?.angle ?? window.orientation ?? 0) || 0) * degToRad;
+
+    // Standard DeviceOrientation → camera quaternion (the three.js
+    // DeviceOrientationControls recipe): device euler, look out of the back
+    // of the screen, then compensate for the screen rotation.
+    GYRO_EULER.set(beta, alpha, -gamma, 'YXZ');
+    GYRO_QUAT.setFromEuler(GYRO_EULER);
+    GYRO_QUAT.multiply(GYRO_Q1);
+    GYRO_QUAT.multiply(GYRO_Q0.setFromAxisAngle(GYRO_ZEE, -screenAngle));
+
+    // Reduce to yaw/pitch (drop roll — this is a window, not a headset).
+    GYRO_EULER.setFromQuaternion(GYRO_QUAT, 'YXZ');
+
+    if (this.gyro.needsSync) {
+      // First reading: anchor so the view doesn't jump when gyro turns on.
+      this.gyro.yawOffset = this.camera.rotation.y - GYRO_EULER.y;
+      this.gyro.needsSync = false;
+    }
+
+    this.camera.rotation.y = this.gyro.yawOffset + GYRO_EULER.y;
+    this.camera.rotation.x = clamp(GYRO_EULER.x, -Math.PI * 0.495, Math.PI * 0.495);
+    this.camera.rotation.z = 0;
   }
 
   _isMoveStickTarget(target) {
@@ -355,6 +465,8 @@ export class PlayerController {
       : null;
     const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
     const isVrPresenting = sessionMode === XR_SESSION_MODE_VR;
+
+    this._updateGyroLook();
 
     this._readXrMoveAxes(sessionMode);
 

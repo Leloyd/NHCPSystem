@@ -1226,6 +1226,10 @@ function initPanorama() {
       big.setAttribute('touch-action', 'pan-y');
       big.setAttribute('auto-rotate', '');
       big.setAttribute('shadow-intensity', '1');
+      // Real-world AR: WebXR/Scene Viewer on Android, Quick Look on iPhone
+      // (model-viewer converts the GLB to USDZ on the device).
+      big.setAttribute('ar', '');
+      big.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
       big.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
       big.src = args.glbSrc;
       previewMedia.appendChild(big);
@@ -1299,6 +1303,8 @@ function initPanorama() {
           model.setAttribute('touch-action', 'pan-y');
           model.setAttribute('auto-rotate', '');
           model.setAttribute('shadow-intensity', '1');
+          model.setAttribute('ar', '');
+          model.setAttribute('ar-modes', 'webxr scene-viewer quick-look');
           model.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
           model.src = args.glbSrc;
           // Tap the model → expanded 3D view (like the virtual tour). A drag
