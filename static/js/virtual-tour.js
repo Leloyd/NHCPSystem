@@ -76,6 +76,12 @@
     pagsaayos: app ? app.dataset.insideChapelPagsaayosImageSrc : "",
   };
   const museum3ArtifactAssets = {
+    inscription: {
+      imageSrc: app ? app.dataset.museum3InscriptionImageSrc : "",
+    },
+    map: {
+      imageSrc: app ? app.dataset.museum3MapImageSrc : "",
+    },
     kagamitan: {
       imageSrc: app ? app.dataset.kagamitanImageSrc : "",
       glbSrc: app ? app.dataset.kagamitanGlbSrc : "",
@@ -590,6 +596,20 @@
   }
 
   const museum3ArtifactHotspots = [
+    buildFloatingArtifactHotspot({
+      id: "museum3-inscription-marker",
+      pitch: -10.62,
+      yaw: 26.8,
+      imageSrc: museum3ArtifactAssets.inscription.imageSrc,
+      imageAlt: "Inscription",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "museum3-map-marker",
+      pitch: -17.76,
+      yaw: -72.4,
+      imageSrc: museum3ArtifactAssets.map.imageSrc,
+      imageAlt: "Map",
+    }),
     buildFloatingArtifactHotspot({
       id: "museum3-kagamitan-marker",
       pitch: -20.3,
