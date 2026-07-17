@@ -1291,6 +1291,15 @@ def public_audio_file(filename):
     return jsonify({"error": f"Audio not found: {filename}"}), 404
 
 
+@app.route("/videos/<path:filename>")
+def public_video_file(filename):
+    videos_dir = PROJECT_ROOT / "public" / "videos"
+    candidate_path = _resolve_safe_path(videos_dir, filename)
+    if candidate_path is not None and candidate_path.exists() and candidate_path.is_file():
+        return send_from_directory(str(videos_dir), filename, conditional=True)
+    return jsonify({"error": f"Video not found: {filename}"}), 404
+
+
 @app.route("/AK-animation/<path:filename>")
 def ana_kalang_model_file(filename):
     models_dir = PROJECT_ROOT / "public" / "AK-animation"

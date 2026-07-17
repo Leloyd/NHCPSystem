@@ -40,6 +40,9 @@
         data-look-url="/AK-animation/AK-look-1k.glb"
         data-wait-url="/AK-animation/AK-wait-1k.glb"
         data-foldarm-url="/AK-animation/AK-foldarm-1k.glb"
+        data-about-videos="/videos/Outside.mp4,/videos/GateView.mp4,/videos/UndergroundCrypts.mp4,/videos/AerealShot.mp4"
+        data-about2-videos="/videos/OutsideGrave.MOV,/videos/UnderGroundStairs.mp4,/videos/UnderGroundGrave1.mp4,/videos/UnderGroundGrave2.mp4"
+        data-about3-videos="/videos/GateView.mp4,/videos/UnderGroundStairs.mp4,/videos/UnderGroundGrave2.mp4,/videos/UndergroundCrypts.mp4"
         aria-label="Guided tour of the museum by Ana Kalang"
       >
         <div class="story__viewport" data-story-viewport data-model-side="right" data-chapter="hero" data-muted="false" data-playing="false">
@@ -50,6 +53,10 @@
           <div class="story__bg" data-bg="about3" style="background-image: url('/images/landing/AboutSite3.jpg');"></div>
           <div class="story__bg" data-bg="about2" style="background-image: url('/images/landing/AboutSite2.jpg');"></div>
           <div class="story__bg" data-bg="visitor-info" style="background-image: url('{{ url_for('static', filename='images/visitors-info.jpg') }}');"></div>
+          <!-- Video backgrounds: a double-buffered pair so the About playlist
+               (Outside → Gate → Crypts → Aerial) crossfades between clips -->
+          <video class="story__bg-video" data-story-video-a muted playsinline preload="none" aria-hidden="true"></video>
+          <video class="story__bg-video" data-story-video-b muted playsinline preload="none" aria-hidden="true"></video>
           <div class="story__bg-tint"></div>
           <div class="story__bg-texture"></div>
           <div class="story__glow" aria-hidden="true"></div>
