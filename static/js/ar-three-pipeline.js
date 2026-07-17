@@ -341,6 +341,10 @@
     narrationMuted: false,
     subtitlesOn: true,
     renderedSubtitleText: "",
+    audioPrimed: false,
+    audioPriming: false,
+    audioPrimeHandler: null,
+    audioPrimeUrl: "",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
     destroyed: false,
@@ -879,6 +883,8 @@
     playResult
       .then(function () {
         runtime.pendingAudioSrc = "";
+        runtime.audioPrimed = true;
+        removeAudioPrimeHandler();
         removePendingAudioUnlockHandler();
       })
       .catch(function () {
@@ -924,6 +930,132 @@
     body.appendChild(audioEl);
     runtime.audioElement = audioEl;
     return audioEl;
+  }
+
+  function createSilentAudioUrl() {
+    if (runtime.audioPrimeUrl) {
+      return runtime.audioPrimeUrl;
+    }
+
+    if (!window.URL || typeof window.URL.createObjectURL !== "function" || typeof window.Blob !== "function") {
+      return "";
+    }
+
+    // A valid 100 ms, 8-bit mono WAV containing only silence. Playing this
+    // inside the first page gesture unlocks the same HTMLAudioElement that
+    // later carries the detected artifact's narration.
+    var sampleRate = 8000;
+    var sampleCount = 800;
+    var buffer = new ArrayBuffer(44 + sampleCount);
+    var view = new DataView(buffer);
+
+    function writeAscii(offset, value) {
+      for (var index = 0; index < value.length; index += 1) {
+        view.setUint8(offset + index, value.charCodeAt(index));
+      }
+    }
+
+    writeAscii(0, "RIFF");
+    view.setUint32(4, 36 + sampleCount, true);
+    writeAscii(8, "WAVE");
+    writeAscii(12, "fmt ");
+    view.setUint32(16, 16, true);
+    view.setUint16(20, 1, true);
+    view.setUint16(22, 1, true);
+    view.setUint32(24, sampleRate, true);
+    view.setUint32(28, sampleRate, true);
+    view.setUint16(32, 1, true);
+    view.setUint16(34, 8, true);
+    writeAscii(36, "data");
+    view.setUint32(40, sampleCount, true);
+
+    for (var sampleIndex = 44; sampleIndex < 44 + sampleCount; sampleIndex += 1) {
+      view.setUint8(sampleIndex, 128);
+    }
+
+    runtime.audioPrimeUrl = window.URL.createObjectURL(new Blob([buffer], { type: "audio/wav" }));
+    return runtime.audioPrimeUrl;
+  }
+
+  function removeAudioPrimeHandler() {
+    if (!runtime.audioPrimeHandler) {
+      return;
+    }
+
+    document.removeEventListener("pointerdown", runtime.audioPrimeHandler);
+    document.removeEventListener("touchend", runtime.audioPrimeHandler);
+    document.removeEventListener("keydown", runtime.audioPrimeHandler);
+    runtime.audioPrimeHandler = null;
+  }
+
+  function finishAudioPriming(audioEl, succeeded) {
+    runtime.audioPriming = false;
+    runtime.audioPrimed = runtime.audioPrimed || Boolean(succeeded);
+
+    if (audioEl && audioEl.getAttribute("data-audio-prime") === "1") {
+      audioEl.pause();
+      try {
+        audioEl.currentTime = 0;
+      } catch (error) {
+        // The silent clip may already have ended; it is still safe to reuse.
+      }
+      audioEl.removeAttribute("data-audio-prime");
+    }
+
+    if (succeeded) {
+      removeAudioPrimeHandler();
+    }
+  }
+
+  function primeAudioForMarkerAutoplay() {
+    if (runtime.audioPrimed || runtime.audioPriming || runtime.activeAudioEntry) {
+      if (runtime.activeAudioEntry) {
+        removeAudioPrimeHandler();
+      }
+      return;
+    }
+
+    var silentUrl = createSilentAudioUrl();
+    if (!silentUrl) {
+      removeAudioPrimeHandler();
+      return;
+    }
+
+    var audioEl = ensureAudioElement();
+    runtime.audioPriming = true;
+    audioEl.pause();
+    audioEl.removeAttribute("data-audio-src");
+    audioEl.setAttribute("data-audio-prime", "1");
+    audioEl.src = silentUrl;
+    audioEl.load();
+
+    var playResult = audioEl.play();
+    if (!playResult || typeof playResult.then !== "function") {
+      finishAudioPriming(audioEl, true);
+      return;
+    }
+
+    playResult
+      .then(function () {
+        finishAudioPriming(audioEl, true);
+      })
+      .catch(function () {
+        finishAudioPriming(audioEl, false);
+      });
+  }
+
+  function setupAudioPriming() {
+    if (runtime.audioPrimeHandler || runtime.audioPrimed) {
+      return;
+    }
+
+    runtime.audioPrimeHandler = function () {
+      primeAudioForMarkerAutoplay();
+    };
+
+    document.addEventListener("pointerdown", runtime.audioPrimeHandler, { passive: true });
+    document.addEventListener("touchend", runtime.audioPrimeHandler, { passive: true });
+    document.addEventListener("keydown", runtime.audioPrimeHandler);
   }
 
   function stopActiveAudio(resetTime) {
@@ -1060,6 +1192,8 @@
     var currentSrc = audioEl.getAttribute("data-audio-src") || "";
 
     runtime.audioLanguage = resolvedLanguage;
+    runtime.audioPriming = false;
+    audioEl.removeAttribute("data-audio-prime");
     audioEl.muted = runtime.narrationMuted;
 
     if (shouldRestart || currentSrc !== nextSrc) {
@@ -1086,6 +1220,8 @@
     playResult
       .then(function () {
         runtime.pendingAudioSrc = "";
+        runtime.audioPrimed = true;
+        removeAudioPrimeHandler();
         removePendingAudioUnlockHandler();
       })
       .catch(function () {
@@ -1746,6 +1882,7 @@
     runtime.destroyed = true;
 
     clearViewportSettleTimers();
+    removeAudioPrimeHandler();
     removePendingAudioUnlockHandler();
     stopActiveAudio(true);
 
@@ -1755,6 +1892,11 @@
       runtime.audioElement.load();
       runtime.audioElement.remove();
       runtime.audioElement = null;
+    }
+
+    if (runtime.audioPrimeUrl && window.URL && typeof window.URL.revokeObjectURL === "function") {
+      window.URL.revokeObjectURL(runtime.audioPrimeUrl);
+      runtime.audioPrimeUrl = "";
     }
 
     if (runtime.resizeRafId) {
@@ -1811,6 +1953,7 @@
     );
 
     bindNarrationControls();
+    setupAudioPriming();
     initRendererScene();
     initArToolkit();
     buildMarkerEntries(enabledMarkers);
