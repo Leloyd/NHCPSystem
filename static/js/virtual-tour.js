@@ -75,6 +75,16 @@
     pransiskano: app ? app.dataset.insideChapelPransiskanoImageSrc : "",
     pagsaayos: app ? app.dataset.insideChapelPagsaayosImageSrc : "",
   };
+  const insideMuseumImageAssets = {
+    hulingTaludtod: app ? app.dataset.insideMuseumHulingTaludtodImageSrc : "",
+  };
+  const undergroundImageAssets = {
+    tela: app ? app.dataset.undergroundTelaImageSrc : "",
+    puntod: app ? app.dataset.undergroundPuntodImageSrc : "",
+    rebulusyonEspanya: app ? app.dataset.undergroundRebulusyonEspanyaImageSrc : "",
+    secondDigmaan: app ? app.dataset.undergroundSecondDigmaanImageSrc : "",
+    gerilya: app ? app.dataset.undergroundGerilyaImageSrc : "",
+  };
   const museum3ArtifactAssets = {
     inscription: {
       imageSrc: app ? app.dataset.museum3InscriptionImageSrc : "",
@@ -841,6 +851,63 @@
     }),
   ];
 
+  const insideMuseumImageHotspots = [
+    buildFloatingArtifactHotspot({
+      id: "inside-museum-huling-taludtod-marker",
+      pitch: -26.23,
+      yaw: -108.89,
+      imageSrc: insideMuseumImageAssets.hulingTaludtod,
+      imageAlt: "Huling Taludtod",
+      previewFrameStyle: "outline",
+    }),
+  ];
+
+  const underground1ImageHotspots = [
+    buildFloatingArtifactHotspot({
+      id: "underground1-tela-marker",
+      pitch: -35.47,
+      yaw: -122.69,
+      imageSrc: undergroundImageAssets.tela,
+      imageAlt: "Tela",
+      previewFrameStyle: "outline",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "underground1-puntod-marker",
+      pitch: -28.9,
+      yaw: 94.27,
+      imageSrc: undergroundImageAssets.puntod,
+      imageAlt: "Puntod",
+      previewFrameStyle: "outline",
+    }),
+  ];
+
+  const underground2ImageHotspots = [
+    buildFloatingArtifactHotspot({
+      id: "underground2-rebulusyon-espanya-marker",
+      pitch: -31.31,
+      yaw: 80.39,
+      imageSrc: undergroundImageAssets.rebulusyonEspanya,
+      imageAlt: "RebulusyonEspanya",
+      previewFrameStyle: "outline",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "underground2-second-digmaan-marker",
+      pitch: -39.85,
+      yaw: 164.48,
+      imageSrc: undergroundImageAssets.secondDigmaan,
+      imageAlt: "2ndDigmaan",
+      previewFrameStyle: "outline",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "underground2-gerilya-marker",
+      pitch: -27.43,
+      yaw: -110.17,
+      imageSrc: undergroundImageAssets.gerilya,
+      imageAlt: "Gerilya",
+      previewFrameStyle: "outline",
+    }),
+  ];
+
   const rawScenes = {
     frontGate: {
       type: "equirectangular",
@@ -1474,6 +1541,7 @@
       yaw: -20,
       hfov: 100,
       hotSpots: [
+        ...underground1ImageHotspots,
         {
           id: "go-middle-underground",
           pitch: -36,
@@ -1576,6 +1644,7 @@
       yaw: -14,
       hfov: 100,
       hotSpots: [
+        ...underground2ImageHotspots,
         {
           id: "return-middle-underground-from-underground-2",
           pitch: -35,
@@ -2050,6 +2119,7 @@
       yaw: 90,
       hfov: 150,
       hotSpots: [
+        ...insideMuseumImageHotspots,
         {
           id: "go-museum-1",
           pitch: -50,
