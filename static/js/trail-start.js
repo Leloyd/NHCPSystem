@@ -9,7 +9,8 @@
      hotspots as the heritage page + gold info spots), Ana returns with the
      controls, and a scrollable story layer (GSAP-choreographed, like the
      landing page) tells the Orientation chapters.
-   - Narration engine ported from the landing page: auto-plays on arrival,
+   - Narration engine ported from the landing page: recorded VO through Stop 3,
+     then browser TTS fallback; auto-plays on arrival,
      Listen = pause/resume from the same spot, Mute = volume switch (the
      narration keeps advancing silently and can come back mid-sentence).
    ========================================================================== */
@@ -226,6 +227,22 @@ const SCRIPTS = {
   },
 };
 
+/* Recorded Ana Kalang narration currently covers the Starting Point through
+   Stop 3. File names deliberately mirror the SCRIPTS keys; later stops fall
+   back to browser TTS until their recordings are added. */
+const TRAIL_VOICE_KEYS = [
+  'intro',
+  's1-arrive', 's1-threshold', 's1-1845', 's1-landmark', 's1-details', 's1-next',
+  's2-arrive', 's2-registration', 's2-hours', 's2-rules', 's2-service', 's2-next',
+  's3-arrive', 's3-explore', 's3-collection', 's3-ar', 's3-next',
+];
+const rawTrailVoiceBase = root.dataset.voiceBase || '/audio/trail/';
+const TRAIL_VOICE_BASE = rawTrailVoiceBase.endsWith('/') ? rawTrailVoiceBase : `${rawTrailVoiceBase}/`;
+const TRAIL_VOICE = Object.fromEntries(TRAIL_VOICE_KEYS.map((key) => [key, {
+  en: `${TRAIL_VOICE_BASE}${key}-en.mp3`,
+  tl: `${TRAIL_VOICE_BASE}${key}-tl.mp3`,
+}]));
+
 /* --- Refs & state ----------------------------------------------------------- */
 const panoEl = document.getElementById('trailPano');
 const curtain = root.querySelector('[data-trail-curtain]');
@@ -323,12 +340,76 @@ function setPlaying(p) {
    pauses/resumes from the same spot instead of restarting. The utterGen
    counter invalidates callbacks from cancelled utterances. */
 let utterGen = 0;
-const narration = { full: '', pos: 0, paused: false, startPos: 0, startedAt: 0, boundaryFired: false };
+const narration = { full: '', pos: 0, paused: false, startPos: 0, startedAt: 0, boundaryFired: false, mode: 'tts' };
+
+/* One shared player keeps pause/resume and mute behavior consistent while
+   chapters and languages change. A failed recording falls back to TTS. */
+const voiceEl = typeof Audio !== 'undefined' ? new Audio() : null;
+if (voiceEl) {
+  voiceEl.preload = 'auto';
+  voiceEl.addEventListener('play', () => {
+    if (narration.mode === 'audio') setPlaying(true);
+  });
+  voiceEl.addEventListener('ended', () => {
+    if (narration.mode === 'audio') {
+      narration.paused = false;
+      setPlaying(false);
+    }
+  });
+  voiceEl.addEventListener('error', () => {
+    if (narration.mode === 'audio' && state.unlocked && narration.full) {
+      narration.mode = 'tts';
+      speakFrom(0);
+    }
+  });
+}
+
+/* Mobile browsers allow muted autoplay more reliably than audible autoplay.
+   If the first audible attempt is blocked, start silently and unmute on the
+   visitor's first gesture, matching the Landing narration behavior. */
+let autoMutedStart = false;
+
+function playVoiceFrom(url, seconds) {
+  if (!voiceEl) return false;
+  narration.mode = 'audio';
+  narration.paused = false;
+  utterGen += 1;
+  if (synth) synth.cancel();
+  if (voiceEl.src !== url) voiceEl.src = url;
+  try { voiceEl.currentTime = seconds || 0; } catch { /* metadata not ready */ }
+  voiceEl.muted = state.muted || autoMutedStart;
+  const playing = voiceEl.play();
+  if (playing && playing.catch) {
+    playing.catch((error) => {
+      if (error && error.name === 'NotAllowedError') {
+        if (!autoMutedStart) {
+          autoMutedStart = true;
+          voiceEl.muted = true;
+          const retry = voiceEl.play();
+          if (retry && retry.catch) {
+            retry.catch(() => {
+              state.unlocked = false;
+              setPlaying(false);
+            });
+          }
+          return;
+        }
+        state.unlocked = false;
+      }
+      setPlaying(false);
+    });
+  }
+  return true;
+}
 
 /* Android Chrome never fires word-boundary events, so estimate the spoken
    position from elapsed time instead, snapped back to a word start. */
 const SPEECH_CHARS_PER_SEC = 14; // ≈150 wpm at our speaking rate
 function currentSpeechPos() {
+  if (narration.mode === 'audio' && voiceEl) {
+    if (!voiceEl.duration || !Number.isFinite(voiceEl.duration)) return 0;
+    return Math.min(narration.full.length, Math.round((voiceEl.currentTime / voiceEl.duration) * narration.full.length));
+  }
   if (narration.boundaryFired || !state.playing) return narration.pos;
   const elapsed = (performance.now() - narration.startedAt) / 1000;
   let pos = Math.min(narration.full.length, narration.startPos + Math.round(elapsed * SPEECH_CHARS_PER_SEC));
@@ -339,6 +420,10 @@ function currentSpeechPos() {
 function stopSpeaking() {
   utterGen += 1;
   if (synth) synth.cancel();
+  if (voiceEl) {
+    voiceEl.pause();
+    try { voiceEl.currentTime = 0; } catch { /* metadata not ready */ }
+  }
   narration.paused = false;
   narration.pos = 0;
   setPlaying(false);
@@ -389,12 +474,25 @@ function speakFrom(pos) {
   }, 80);
 }
 
-function speak(text) {
+function speak(text, key) {
   narration.full = text;
+  const voiceUrl = key && TRAIL_VOICE[key] ? TRAIL_VOICE[key][state.lang] || TRAIL_VOICE[key].en : null;
+  if (voiceUrl && voiceEl) {
+    playVoiceFrom(voiceUrl, 0);
+    return;
+  }
+  narration.mode = 'tts';
+  if (voiceEl) voiceEl.pause();
   speakFrom(0);
 }
 
 function pauseSpeaking() {
+  if (narration.mode === 'audio' && voiceEl) {
+    voiceEl.pause();
+    narration.paused = true;
+    setPlaying(false);
+    return;
+  }
   narration.pos = currentSpeechPos(); // capture before playing flips off
   narration.paused = true;
   utterGen += 1; // silence callbacks from the utterance we cancel
@@ -403,6 +501,13 @@ function pauseSpeaking() {
 }
 
 function resumeSpeaking() {
+  if (narration.mode === 'audio' && voiceEl) {
+    voiceEl.muted = state.muted;
+    const playing = voiceEl.play();
+    if (playing && playing.catch) playing.catch(() => setPlaying(false));
+    narration.paused = false;
+    return;
+  }
   speakFrom(narration.pos);
 }
 
@@ -428,7 +533,7 @@ function narrate({ speakIt } = {}) {
   const script = SCRIPTS[state.scriptKey] || SCRIPTS.intro;
   const text = script[state.lang] || script.en;
   renderBubble(text);
-  if (speakIt) speak(text);
+  if (speakIt) speak(text, state.scriptKey);
   else stopSpeaking();
 }
 
@@ -441,9 +546,10 @@ function setMuted(m) {
     muteBtn.setAttribute('aria-pressed', String(m));
     muteBtn.setAttribute('aria-label', m ? 'Unmute narration' : 'Mute narration');
   }
-  // Mute is a volume switch, not a stop: re-speak the remainder from the
-  // current word at the new volume so she keeps (or regains) her place.
-  if (state.playing) speakFrom(currentSpeechPos());
+  // Mute is a volume switch, not a stop. Recorded VO mutes natively; TTS
+  // re-speaks the remainder from the current word at the new volume.
+  if (voiceEl) voiceEl.muted = m;
+  if (state.playing && narration.mode !== 'audio') speakFrom(currentSpeechPos());
 }
 function setLang(lang) {
   state.lang = lang;
@@ -497,7 +603,7 @@ playBtn?.addEventListener('click', () => {
     return;
   }
   if (!state.subtitles) setSubtitles(true); // playing reveals her words
-  if (narration.paused && narration.pos > 0) {
+  if (narration.paused && (narration.mode === 'audio' || narration.pos > 0)) {
     resumeSpeaking(); // …and resumes from the same spot,
   } else {
     narrate({ speakIt: true }); // or restarts when finished.
@@ -518,10 +624,9 @@ textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1
 // it expands the full narration (pointer-events are off on desktop → inert).
 bubble?.addEventListener('click', () => bubble.classList.toggle('is-expanded'));
 
-/* Auto-start narration on load (like the landing page). Browsers usually
-   block TTS before the first gesture, so: try immediately (the not-allowed
-   handler reverts the unlock if refused), and arm a one-shot kickstart so
-   the visitor's very first tap/click/keypress starts her speaking. */
+/* Auto-start narration on load (like the landing page). Browsers may block
+   audible media or TTS before the first gesture, so try immediately and arm
+   a kickstart for the visitor's first tap/click/keypress. */
 function attemptAutoSpeak() {
   if (state.playing || state.unlocked) return;
   state.unlocked = true; // optimistic — revoked by the not-allowed error
@@ -533,8 +638,15 @@ function setupAutoSpeakKickstart() {
   let handler = null;
   const disarm = () => types.forEach((t) => window.removeEventListener(t, handler, true));
   handler = (event) => {
+    // Mobile may have started the recorded VO silently. The first real gesture
+    // restores sound at the recording's current position.
+    if (autoMutedStart) {
+      autoMutedStart = false;
+      if (voiceEl && !state.muted) voiceEl.muted = false;
+    }
     // Already talking? The kickstart's job is done.
-    if (synth && (synth.speaking || synth.pending)) { disarm(); return; }
+    const recordedVoiceRunning = narration.mode === 'audio' && voiceEl && !voiceEl.paused;
+    if (recordedVoiceRunning || (synth && (synth.speaking || synth.pending))) { disarm(); return; }
     // Prime the engine synchronously INSIDE this real gesture. Mobile only
     // unlocks TTS for a speak() issued during a tap — and the boot attempt
     // can leave state.unlocked stuck true (iOS blocks silently, so the
