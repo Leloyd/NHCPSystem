@@ -1335,6 +1335,18 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   touch-action: none;
   cursor: grab;
 }
+.trailx-preview__frame--outline {
+  width: fit-content;
+  max-width: 100%;
+  padding: 1px;
+  background: transparent;
+  border-color: rgba(212, 175, 106, 0.72);
+}
+.trailx-preview__frame--outline img {
+  width: auto;
+  max-width: 100%;
+  max-height: calc(72vh - 2px);
+}
 .trailx-preview__frame.is-zoomed { cursor: zoom-out; }
 .trailx-preview__frame.is-panning { cursor: grabbing; }
 .trailx-preview__media img {
@@ -1789,6 +1801,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-preview { padding: 1rem; }
   .trailx-preview__frame { max-height: 58vh; }
   .trailx-preview__media img { max-height: calc(58vh - 1.2rem); }
+  .trailx-preview__frame--outline img { max-height: calc(58vh - 2px); }
   .trailx-preview__model { height: 52vh; }
   .trailx-preview__title { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
   .trailx-preview__close { margin-top: 1rem; }

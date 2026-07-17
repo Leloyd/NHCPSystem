@@ -1043,6 +1043,84 @@ function initPanorama() {
     underground3: root.getAttribute('data-pano-underground3') || '',
   };
 
+  // Image-only information panels shared with the Virtual Tour. These use the
+  // same floating card and expanded viewer as artifacts, but have no GLB,
+  // audio, or subtitle yet. Framed panels use only a thin outline when opened;
+  // the four table artifacts keep the regular cream mount.
+  const INFO = {
+    inscription: {
+      img: root.getAttribute('data-info-inscription-img') || '',
+      title: { en: 'Inscription', tl: 'Inskripsiyon' },
+      outline: true,
+    },
+    map: {
+      img: root.getAttribute('data-info-map-img') || '',
+      title: { en: 'Map', tl: 'Mapa' },
+      outline: true,
+    },
+    hulingTaludtod: {
+      img: root.getAttribute('data-info-huling-taludtod-img') || '',
+      title: { en: 'Final Stanza', tl: 'Huling Taludtod' },
+      outline: true,
+    },
+    art1LeftTable: {
+      img: root.getAttribute('data-info-art1-left-table-img') || '',
+      title: { en: 'Art1-LeftTable', tl: 'Art1-LeftTable' },
+    },
+    art2LeftTable: {
+      img: root.getAttribute('data-info-art2-left-table-img') || '',
+      title: { en: 'Art2-LeftTable', tl: 'Art2-LeftTable' },
+    },
+    art1RightTable: {
+      img: root.getAttribute('data-info-art1-right-table-img') || '',
+      title: { en: 'Art1-RightTable', tl: 'Art1-RightTable' },
+    },
+    art2RightTable: {
+      img: root.getAttribute('data-info-art2-right-table-img') || '',
+      title: { en: 'Art2-RightTable', tl: 'Art2-RightTable' },
+    },
+    pagkasira: {
+      img: root.getAttribute('data-info-pagkasira-img') || '',
+      title: { en: 'Deterioration', tl: 'Pagkasira' },
+      outline: true,
+    },
+    pransiskano: {
+      img: root.getAttribute('data-info-pransiskano-img') || '',
+      title: { en: 'Franciscans', tl: 'Mga Pransiskano' },
+      outline: true,
+    },
+    pagsaayos: {
+      img: root.getAttribute('data-info-pagsaayos-img') || '',
+      title: { en: 'Restoration', tl: 'Pagsasaayos' },
+      outline: true,
+    },
+    tela: {
+      img: root.getAttribute('data-info-tela-img') || '',
+      title: { en: 'Cloth', tl: 'Tela' },
+      outline: true,
+    },
+    puntod: {
+      img: root.getAttribute('data-info-puntod-img') || '',
+      title: { en: 'Gravestone', tl: 'Puntod' },
+      outline: true,
+    },
+    rebulusyonEspanya: {
+      img: root.getAttribute('data-info-rebulusyon-espanya-img') || '',
+      title: { en: 'Revolution Against Spain', tl: 'Rebolusyon Laban sa Espanya' },
+      outline: true,
+    },
+    secondDigmaan: {
+      img: root.getAttribute('data-info-second-digmaan-img') || '',
+      title: { en: 'Second World War', tl: 'Ikalawang Digmaang Pandaigdig' },
+      outline: true,
+    },
+    gerilya: {
+      img: root.getAttribute('data-info-gerilya-img') || '',
+      title: { en: 'Guerrillas', tl: 'Mga Gerilya' },
+      outline: true,
+    },
+  };
+
   // Artifact assets for the museum halls (image + EN/TL voice-over + optional
   // 3D model), copied off the virtual tour page via data attributes.
   const ART_KEYS = ['balanghay', 'kabaong', 'uloh', 'kabila', 'banga', 'jar', 'kagamitan', 'bagongon', 'bogwa', 'pagpag', 'pahimakas', 'alay', 'antuk', 'pagtubas', 'tsapang', 'tboli', 'sisiw', 'sabwag', 'tausug', 'luksa', 'mensahe', 'pahiwatig', 'recuerdos'];
@@ -1537,6 +1615,7 @@ function initPanorama() {
       // Photo in a zoom frame: pinch/scroll/drag zooms the picture, never the page.
       const frame = document.createElement('div');
       frame.className = 'trailx-preview__frame';
+      if (args.previewFrameStyle === 'outline') frame.classList.add('trailx-preview__frame--outline');
       const big = document.createElement('img');
       big.src = args.imageSrc;
       big.alt = args.imageAlt || 'Artifact image';
@@ -1695,7 +1774,11 @@ function initPanorama() {
       return;
     }
     closeFloatingImage();
-    pauseSpeaking(); // let the audio guide speak alone; Listen resumes Ana after
+    const hasMarkerNarration = Boolean(
+      args.audioSrc || args.subtitle || args.marchAudioSrc ||
+      (args.audioByLanguage && (args.audioByLanguage.tl || args.audioByLanguage.en))
+    );
+    if (hasMarkerNarration) pauseSpeaking(); // image-only panels do not interrupt Ana
     const spot = {
       id: args.windowHotspotId,
       pitch: args.windowPitch,
@@ -1866,6 +1949,29 @@ function initPanorama() {
           cssClass: 'tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon',
         };
       };
+      const infoSpot = (id, pitch, yaw, key, alt) => {
+        const asset = INFO[key];
+        if (!asset || !asset.img) return null;
+        return {
+          id,
+          pitch,
+          yaw,
+          type: 'info',
+          text: '',
+          clickHandlerFunc: openFloatingImage,
+          clickHandlerArgs: {
+            sourceHotspotId: id,
+            windowHotspotId: `${id}-window`,
+            imageSrc: asset.img,
+            title: asset.title,
+            imageAlt: alt,
+            previewFrameStyle: asset.outline ? 'outline' : '',
+            windowPitch: pitch,
+            windowYaw: yaw,
+          },
+          cssClass: 'tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon',
+        };
+      };
       const spots = (list) => list.filter(Boolean);
       if (insideMuseumSrc && museum1Src) {
         scenes.insideMuseum = {
@@ -1874,13 +1980,16 @@ function initPanorama() {
           pitch: M3.pitch,
           yaw: M3.yaw,
           hfov: M3.hfov,
-          hotSpots: [{
-            pitch: -50,
-            yaw: 40,
-            type: 'scene',
-            sceneId: 'museum1',
-            cssClass: 'tour-ground-hotspot',
-          }],
+          hotSpots: spots([
+            infoSpot('inside-museum-huling-taludtod', -26.23, -108.89, 'hulingTaludtod', 'Huling Taludtod'),
+            {
+              pitch: -50,
+              yaw: 40,
+              type: 'scene',
+              sceneId: 'museum1',
+              cssClass: 'tour-ground-hotspot',
+            },
+          ]),
         };
         scenes.museum1 = {
           type: 'equirectangular',
@@ -1921,6 +2030,8 @@ function initPanorama() {
           yaw: 170,
           hfov: 100,
           hotSpots: spots([
+            infoSpot('museum3-inscription', -10.62, 26.8, 'inscription', 'Inscription'),
+            infoSpot('museum3-map', -17.76, -72.4, 'map', 'Map'),
             artSpot('museum3-kagamitan', -20.3, -92.86, 'kagamitan', 'Kagamitan'),
             artSpot('museum3-bagongon', -12.37, -116.55, 'bagongon', 'Bagongon'),
             artSpot('museum3-bogwa', -26.32, -122.8, 'bogwa', 'Bogwa'),
@@ -2008,18 +2119,27 @@ function initPanorama() {
 
         // Stop 7 — inside the chapel (nave ↔ deeper toward the altar).
         if (s7.insideChurch) {
-          scenes.insideChurch = eq(s7.insideChurch, 0, -24, [
+          scenes.insideChurch = eq(s7.insideChurch, 0, -24, spots([
+            infoSpot('inside-chapel-art1-left-table', -26.98, -95.71, 'art1LeftTable', 'Art1-LeftTable'),
+            infoSpot('inside-chapel-art2-left-table', -39.25, -82.8, 'art2LeftTable', 'Art2-LeftTable'),
+            infoSpot('inside-chapel-art1-right-table', -36.02, 36.94, 'art1RightTable', 'Art1-RightTable'),
+            infoSpot('inside-chapel-art2-right-table', -24.26, 46.29, 'art2RightTable', 'Art2-RightTable'),
+            infoSpot('inside-chapel-pagkasira', -16.07, -118.57, 'pagkasira', 'Pagkasira'),
+            infoSpot('inside-chapel-pransiskano', -18.22, -135.02, 'pransiskano', 'Pransiskano'),
+            infoSpot('inside-chapel-pagsaayos', -18.35, 91.92, 'pagsaayos', 'Pagsaayos'),
             link(-23, -24, 'insideChurch1'),
-          ]);
+          ]));
           scenes.insideChurch1 = eq(s7.insideChurch1, 0, 160, [
             link(-24, -20, 'insideChurch', -20, 160),
           ]);
         }
         // Stops 8 & 9 — the underground crypts (virtual-tour walk, self-contained).
         if (s8.underground1) {
-          scenes.underground1 = eq(s8.underground1, 0, -20, [
+          scenes.underground1 = eq(s8.underground1, 0, -20, spots([
+            infoSpot('underground1-tela', -35.47, -122.69, 'tela', 'Tela'),
+            infoSpot('underground1-puntod', -28.9, 94.27, 'puntod', 'Puntod'),
             link(-36, -17, 'middleUnderground', 0, 60),
-          ]);
+          ]));
           scenes.middleUnderground = eq(s8.middleUnderground, 0, -110, [
             link(-33, -22, 'frontAltarUnderground', -5, 180),
             link(-27, 67, 'underground2'),
@@ -2029,9 +2149,12 @@ function initPanorama() {
           scenes.frontAltarUnderground = eq(s8.frontAltarUnderground, 0, 0, [
             link(-45, -9, 'middleUnderground', 0, -200),
           ]);
-          scenes.underground2 = eq(s8.underground2, 0, -14, [
+          scenes.underground2 = eq(s8.underground2, 0, -14, spots([
+            infoSpot('underground2-rebulusyon-espanya', -31.31, 80.39, 'rebulusyonEspanya', 'RebulusyonEspanya'),
+            infoSpot('underground2-second-digmaan', -39.85, 164.48, 'secondDigmaan', '2ndDigmaan'),
+            infoSpot('underground2-gerilya', -27.43, -110.17, 'gerilya', 'Gerilya'),
             link(-35, -17, 'middleUnderground'),
-          ]);
+          ]));
           scenes.underground3 = eq(s8.underground3, 0, 0, [
             link(-20, -5, 'middleUnderground', 0, -20),
           ]);
