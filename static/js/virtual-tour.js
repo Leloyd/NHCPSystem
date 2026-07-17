@@ -66,6 +66,15 @@
   const jarImageSrc = app ? app.dataset.jarImageSrc : "";
   const jarTagalogAudioSrc = app ? app.dataset.jarTagalogAudioSrc : "";
   const jarEnglishAudioSrc = app ? app.dataset.jarEnglishAudioSrc : "";
+  const insideChapelImageAssets = {
+    art1LeftTable: app ? app.dataset.insideChapelArt1LeftTableImageSrc : "",
+    art2LeftTable: app ? app.dataset.insideChapelArt2LeftTableImageSrc : "",
+    art1RightTable: app ? app.dataset.insideChapelArt1RightTableImageSrc : "",
+    art2RightTable: app ? app.dataset.insideChapelArt2RightTableImageSrc : "",
+    pagkasira: app ? app.dataset.insideChapelPagkasiraImageSrc : "",
+    pransiskano: app ? app.dataset.insideChapelPransiskanoImageSrc : "",
+    pagsaayos: app ? app.dataset.insideChapelPagsaayosImageSrc : "",
+  };
   const museum3ArtifactAssets = {
     kagamitan: {
       imageSrc: app ? app.dataset.kagamitanImageSrc : "",
@@ -749,6 +758,60 @@
     }),
   ];
 
+  // Image-only exhibits inside the chapel. They use the museum artifact card
+  // and expanded preview, but omit the image/3D switch because no GLBs exist.
+  const insideChapelImageHotspots = [
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-art1-left-table-marker",
+      pitch: -26.98,
+      yaw: -95.71,
+      imageSrc: insideChapelImageAssets.art1LeftTable,
+      imageAlt: "Art1-LeftTable",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-art2-left-table-marker",
+      pitch: -39.25,
+      yaw: -82.8,
+      imageSrc: insideChapelImageAssets.art2LeftTable,
+      imageAlt: "Art2-LeftTable",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-art1-right-table-marker",
+      pitch: -36.02,
+      yaw: 36.94,
+      imageSrc: insideChapelImageAssets.art1RightTable,
+      imageAlt: "Art1-RightTable",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-art2-right-table-marker",
+      pitch: -24.26,
+      yaw: 46.29,
+      imageSrc: insideChapelImageAssets.art2RightTable,
+      imageAlt: "Art2-RightTable",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-pagkasira-marker",
+      pitch: -16.07,
+      yaw: -118.57,
+      imageSrc: insideChapelImageAssets.pagkasira,
+      imageAlt: "Pagkasira",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-pransiskano-marker",
+      pitch: -18.22,
+      yaw: -135.02,
+      imageSrc: insideChapelImageAssets.pransiskano,
+      imageAlt: "Pransiskano",
+    }),
+    buildFloatingArtifactHotspot({
+      id: "inside-chapel-pagsaayos-marker",
+      pitch: -18.35,
+      yaw: 91.92,
+      imageSrc: insideChapelImageAssets.pagsaayos,
+      imageAlt: "Pagsaayos",
+    }),
+  ];
+
   const rawScenes = {
     frontGate: {
       type: "equirectangular",
@@ -1317,6 +1380,7 @@
       yaw: -24,
       hfov: 100,
       hotSpots: [
+        ...insideChapelImageHotspots,
         {
           id: "go-stairs-church",
           pitch: -29,
