@@ -374,6 +374,7 @@
   bottom: 1.5rem;
   display: flex;
   align-items: center;
+  flex-wrap: nowrap;
   gap: 0.5rem;
   opacity: 0;
 }
@@ -409,6 +410,8 @@
   font-size: 0.72rem;
   letter-spacing: 0.05em;
   cursor: pointer;
+  flex: 0 0 auto;
+  white-space: nowrap;
   backdrop-filter: blur(6px);
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
 }
@@ -1309,6 +1312,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-preview.is-open { opacity: 1; }
 .trailx-preview[hidden] { display: none; }
 .trailx-preview__media {
+  position: relative;
   max-width: min(920px, 92vw);
   cursor: default;
 }
@@ -1327,6 +1331,99 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   width: min(920px, 92vw);
   height: 66vh;
   background: transparent; /* no shade behind the model, like the tour */
+}
+
+/* Always-visible AR action. Unsupported devices can tap it and receive a
+   clear compatibility notice instead of seeing model-viewer's button vanish. */
+.trailx-model--managed-ar::part(default-ar-button) { display: none; }
+.trailx-model-ar-button {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.62);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.88);
+  color: var(--tx-cream);
+  box-shadow: 0 0.85rem 2rem rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+.trailx-model-ar-button:hover { background: rgba(212, 175, 106, 0.3); border-color: var(--tx-gold); }
+.trailx-model-ar-button:active { transform: scale(0.95); }
+.trailx-model-ar-button:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 2px; }
+.trailx-model-ar-button[hidden] { display: none !important; }
+.trailx-model-ar-button svg { width: 1.35rem; height: 1.35rem; }
+
+.trailx-ar-notice {
+  position: fixed;
+  z-index: 80;
+  top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(32rem, calc(100vw - 1.5rem));
+  padding: 0.72rem 0.75rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(212, 175, 106, 0.58);
+  border-radius: 1.1rem;
+  background: rgba(20, 13, 6, 0.94);
+  color: var(--tx-cream);
+  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transform: translate(-50%, -0.7rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+.trailx-ar-notice.is-visible { opacity: 1; transform: translate(-50%, 0); }
+.trailx-ar-notice[hidden], .trailx-ar-notice [hidden] { display: none !important; }
+.trailx-ar-notice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(212, 175, 106, 0.7);
+  border-radius: 999px;
+  background: var(--tx-gold);
+  color: var(--tx-ink);
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
+}
+.trailx-ar-notice__copy { min-width: 0; flex: 1; font-family: "Inter", sans-serif; }
+.trailx-ar-notice__copy strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--tx-gold);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 0.95rem;
+}
+.trailx-ar-notice__copy > span { display: block; font-size: 0.74rem; line-height: 1.4; color: rgba(250, 247, 242, 0.88); }
+.trailx-ar-notice__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tx-cream);
+  font-size: 1.15rem;
+  cursor: pointer;
 }
 .trailx-preview__title {
   margin: 0.9rem 0 0;
@@ -1658,6 +1755,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-art__title { margin-top: 1rem; font-size: calc(0.82rem * var(--tx-font-scale, 1)); }
   .trailx-art__close { width: 34px; height: 34px; margin-top: 0.55rem; font-size: 0.85rem; }
   .trailx-art__model { height: clamp(8.5rem, 30vw, 11rem); }
+  .trailx-model-ar-button { width: 2.35rem; height: 2.35rem; right: 0.55rem; bottom: 0.55rem; }
+  .trailx-model-ar-button svg { width: 1.1rem; height: 1.1rem; }
   /* Stop 4 games on phones */
   .trailx__riddle { font-size: calc(1rem * var(--tx-font-scale, 1)); padding: 0.7rem 0.9rem; }
   .trailx__order { gap: 0.45rem; }
@@ -1689,6 +1788,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .trailx-ar-notice,
+  .trailx-model-ar-button { transition: none; }
   .trailx__panel,
   .trailx__panel > *,
   .trailx__ana,

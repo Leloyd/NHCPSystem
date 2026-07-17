@@ -1071,6 +1071,95 @@ function initPanorama() {
   /* Floating image hotspot — ported from the virtual tour (front-gate-hotspot-h1):
      tapping the pulsing marker pins the photo on the wall at the same spot and
      plays its audio guide; tapping again (or ×) closes it and stops the audio. */
+  let arNotice = null;
+  let arNoticeTimer = 0;
+  const managedArModels = new WeakSet();
+  const arButtonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 19 6.2v8.1L12 17.75 5 14.3V6.2L12 2.75Zm0 7.05L5.4 6.55M12 9.8l6.6-3.25M12 9.8v7.6"/><path stroke-linecap="round" d="M8.25 20.5h7.5"/></svg>';
+
+  const ensureArNotice = () => {
+    if (arNotice) return arNotice;
+
+    arNotice = document.createElement('div');
+    arNotice.className = 'trailx-ar-notice';
+    arNotice.hidden = true;
+    arNotice.setAttribute('role', 'alert');
+    arNotice.setAttribute('aria-live', 'assertive');
+    arNotice.setAttribute('aria-atomic', 'true');
+    arNotice.innerHTML = `
+      <span class="trailx-ar-notice__icon" aria-hidden="true">!</span>
+      <span class="trailx-ar-notice__copy">
+        <strong data-ar-notice-lang="en">AR is unavailable</strong>
+        <strong data-ar-notice-lang="tl">Hindi suportado ang AR</strong>
+        <span data-ar-notice-lang="en">This device or browser does not support Quick Look, WebXR, or Scene Viewer AR. You can still explore the 3D model here.</span>
+        <span data-ar-notice-lang="tl">Hindi sinusuportahan ng device o browser na ito ang Quick Look, WebXR, o Scene Viewer AR. Maaari mo pa ring galugarin ang 3D model dito.</span>
+      </span>
+      <button class="trailx-ar-notice__close" type="button" aria-label="Close AR compatibility notice">&times;</button>`;
+    arNotice.querySelector('.trailx-ar-notice__close')?.addEventListener('click', () => {
+      window.clearTimeout(arNoticeTimer);
+      arNotice.classList.remove('is-visible');
+      arNotice.hidden = true;
+    });
+    root.appendChild(arNotice);
+    return arNotice;
+  };
+
+  const showArCompatibilityNotice = () => {
+    const notice = ensureArNotice();
+    const language = state.lang === 'tl' ? 'tl' : 'en';
+    notice.querySelectorAll('[data-ar-notice-lang]').forEach((node) => {
+      node.hidden = node.dataset.arNoticeLang !== language;
+    });
+    window.clearTimeout(arNoticeTimer);
+    notice.hidden = false;
+    window.requestAnimationFrame(() => notice.classList.add('is-visible'));
+    arNoticeTimer = window.setTimeout(() => {
+      notice.classList.remove('is-visible');
+      window.setTimeout(() => {
+        if (!notice.classList.contains('is-visible')) arNotice.hidden = true;
+      }, 220);
+    }, 6000);
+  };
+
+  const installModelArControl = (model, container) => {
+    if (!model || !container) return null;
+    const existingButton = container.querySelector(':scope > .trailx-model-ar-button');
+    if (existingButton) return existingButton;
+
+    model.classList.add('trailx-model--managed-ar');
+    const button = document.createElement('button');
+    button.className = 'trailx-model-ar-button';
+    button.type = 'button';
+    button.setAttribute('aria-label', 'View artifact in your space / Tingnan ang artifact sa iyong paligid');
+    button.setAttribute('title', 'View in your space / Tingnan sa iyong paligid');
+    button.innerHTML = arButtonIcon;
+    container.appendChild(button);
+
+    if (!managedArModels.has(model)) {
+      managedArModels.add(model);
+      model.addEventListener('ar-status', (event) => {
+        if (event.detail && event.detail.status === 'failed') showArCompatibilityNotice();
+      });
+    }
+
+    button.addEventListener('click', async (event) => {
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        await window.customElements.whenDefined('model-viewer');
+        if (!model.src || typeof model.activateAR !== 'function' || !model.canActivateAR) {
+          showArCompatibilityNotice();
+          return;
+        }
+        await model.activateAR();
+      } catch (error) {
+        console.warn('[Trail] Unable to launch artifact AR.', error);
+        showArCompatibilityNotice();
+      }
+    });
+
+    return button;
+  };
+
   let floatingWindow = null; // { hotspotId, sceneId }
   let hotspotAudio = null;
   // Full View (Stop 3/4): the guide controls drive the tapped artifact's audio.
@@ -1233,6 +1322,7 @@ function initPanorama() {
       big.setAttribute('alt', args.imageAlt || 'Artifact 3D model');
       big.src = args.glbSrc;
       previewMedia.appendChild(big);
+      installModelArControl(big, previewMedia);
     } else {
       const big = document.createElement('img');
       big.src = args.imageSrc;
@@ -1262,6 +1352,7 @@ function initPanorama() {
     shell.className = 'tour-floating-image-window-shell trailx-art';
     let showingModel = false;
     let model = null;
+    let arButton = null;
 
     const mediaWrap = document.createElement('div');
     mediaWrap.className = 'trailx-art__mediawrap';
@@ -1330,9 +1421,11 @@ function initPanorama() {
             multiTouch = false;
           });
           mediaWrap.insertBefore(model, switchBtn);
+          arButton = installModelArControl(model, mediaWrap);
         }
         zoomBtn.hidden = showingModel;
         if (model) model.hidden = !showingModel;
+        if (arButton) arButton.hidden = !showingModel;
         switchBtn.setAttribute('aria-pressed', String(showingModel));
       });
       mediaWrap.appendChild(switchBtn);

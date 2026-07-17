@@ -418,8 +418,9 @@ body {
   display: none;
   align-items: center;
   justify-content: center;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
   gap: 0.5rem;
+  width: 100%;
   pointer-events: auto;
   font-family: "Inter", "Segoe UI", sans-serif;
 }
@@ -448,6 +449,8 @@ body {
   font-size: 0.74rem;
   letter-spacing: 0.05em;
   cursor: pointer;
+  flex: 0 0 auto;
+  white-space: nowrap;
   -webkit-backdrop-filter: blur(6px);
   backdrop-filter: blur(6px);
   transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
@@ -946,6 +949,108 @@ body {
   overflow: visible;
 }
 
+/* Persistent AR action: unlike model-viewer's default button, this remains
+   tappable on unsupported devices so it can explain the compatibility issue. */
+.tour-model--managed-ar::part(default-ar-button) {
+  display: none;
+}
+
+.tour-model-ar-button {
+  position: absolute;
+  right: 0.8rem;
+  bottom: 0.8rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.62);
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.88);
+  color: var(--tx-cream);
+  box-shadow: 0 0.85rem 2rem rgba(0, 0, 0, 0.38);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  cursor: pointer;
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
+}
+
+.tour-model-ar-button:hover {
+  background: rgba(212, 175, 106, 0.3);
+  border-color: var(--tx-gold);
+}
+
+.tour-model-ar-button:active { transform: scale(0.95); }
+.tour-model-ar-button:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 2px; }
+.tour-model-ar-button[hidden] { display: none !important; }
+.tour-model-ar-button svg { width: 1.35rem; height: 1.35rem; }
+
+.tour-ar-notice {
+  position: fixed;
+  z-index: 80;
+  top: calc(env(safe-area-inset-top, 0px) + 1rem);
+  left: 50%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  width: min(32rem, calc(100vw - 1.5rem));
+  padding: 0.72rem 0.75rem;
+  box-sizing: border-box;
+  border: 1px solid rgba(212, 175, 106, 0.58);
+  border-radius: 1.1rem;
+  background: rgba(20, 13, 6, 0.94);
+  color: var(--tx-cream);
+  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.48);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  opacity: 0;
+  transform: translate(-50%, -0.7rem);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.tour-ar-notice.is-visible { opacity: 1; transform: translate(-50%, 0); }
+.tour-ar-notice[hidden], .tour-ar-notice [hidden] { display: none !important; }
+.tour-ar-notice__icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2.25rem;
+  height: 2.25rem;
+  border: 1px solid rgba(212, 175, 106, 0.7);
+  border-radius: 999px;
+  background: var(--tx-gold);
+  color: var(--tx-ink);
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 700;
+}
+.tour-ar-notice__copy { min-width: 0; flex: 1; font-family: "Inter", "Segoe UI", sans-serif; }
+.tour-ar-notice__copy strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--tx-gold);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 0.95rem;
+}
+.tour-ar-notice__copy > span { display: block; font-size: 0.74rem; line-height: 1.4; color: rgba(250, 247, 242, 0.88); }
+.tour-ar-notice__close {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--tx-cream);
+  font-size: 1.15rem;
+  cursor: pointer;
+}
+
 .tour-floating-preview__title {
   margin: 0.9rem 0 0;
   text-align: center;
@@ -1379,6 +1484,7 @@ body {
 }
 
 .tour-artifact-modal__model-wrap {
+  position: relative;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -1554,15 +1660,18 @@ body {
   }
 
   .tour-guidebar {
-    gap: 0.4rem;
+    gap: 0.28rem;
   }
 
   .tour-btn {
-    height: 38px;
-    min-width: 38px;
-    padding: 0 0.6rem;
-    font-size: 0.72rem;
+    height: 34px;
+    min-width: 32px;
+    padding: 0 0.48rem;
+    font-size: 0.64rem;
+    gap: 0.24rem;
   }
+
+  .tour-btn svg { width: 13px; height: 13px; }
 
   .tour-subtitle {
     /* Pull in from the screen edges so it isn't cramped against the sides,
@@ -1855,6 +1964,17 @@ body {
   .tour-floating-media-preview__model {
     height: min(62vh, 28rem);
   }
+}
+
+@media (max-width: 359px) {
+  .tour-guidebar { gap: 0.22rem; }
+  .tour-btn { padding: 0 0.4rem; }
+  .tour-btn--primary > span { display: none; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .tour-ar-notice,
+  .tour-model-ar-button { transition: none; }
 }
 
 @media (min-width: 769px) {

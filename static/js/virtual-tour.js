@@ -243,6 +243,7 @@
   let floatingArtifactPreviewModelNav = null;
   let floatingArtifactPreviewModelPrev = null;
   let floatingArtifactPreviewModelNext = null;
+  let floatingArtifactPreviewArButton = null;
   let floatingArtifactPreviewArgs = null;
   const floatingImageHotspots = new Map();
   const floatingArtifactHotspots = new Map();
@@ -385,6 +386,113 @@
     englishText:
       "THE ULÓH iS a traditional Ifugao textile made of three distinct parts: adolna(center), balingbing(sides), and talungtong(edges), woven separately and stitched together using a unique technique, typically in black and red. It plays a central role in the bogwa death ritual, where the deceased's bones are exhumed, cleansed, and rewrapped in a new Ulóh as a gesture of reverence and ongoing care, with specific types like kinuttiyan, inlha’dang, pinagpagan, and gamong used for funerary purposes.",
   };
+
+  let arNotice = null;
+  let arNoticeTimer = 0;
+  const managedArModels = new WeakSet();
+  const arButtonIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 19 6.2v8.1L12 17.75 5 14.3V6.2L12 2.75Zm0 7.05L5.4 6.55M12 9.8l6.6-3.25M12 9.8v7.6"/><path stroke-linecap="round" d="M8.25 20.5h7.5"/></svg>';
+
+  function ensureArNotice() {
+    if (arNotice) {
+      return arNotice;
+    }
+
+    const notice = document.createElement("div");
+    notice.className = "tour-ar-notice";
+    notice.hidden = true;
+    notice.setAttribute("role", "alert");
+    notice.setAttribute("aria-live", "assertive");
+    notice.setAttribute("aria-atomic", "true");
+    notice.innerHTML = `
+      <span class="tour-ar-notice__icon" aria-hidden="true">!</span>
+      <span class="tour-ar-notice__copy">
+        <strong data-ar-notice-lang="en">AR is unavailable</strong>
+        <strong data-ar-notice-lang="tl">Hindi suportado ang AR</strong>
+        <span data-ar-notice-lang="en">This device or browser does not support Quick Look, WebXR, or Scene Viewer AR. You can still explore the 3D model here.</span>
+        <span data-ar-notice-lang="tl">Hindi sinusuportahan ng device o browser na ito ang Quick Look, WebXR, o Scene Viewer AR. Maaari mo pa ring galugarin ang 3D model dito.</span>
+      </span>
+      <button class="tour-ar-notice__close" type="button" aria-label="Close AR compatibility notice">&times;</button>`;
+
+    notice.querySelector(".tour-ar-notice__close")?.addEventListener("click", function () {
+      window.clearTimeout(arNoticeTimer);
+      notice.classList.remove("is-visible");
+      notice.hidden = true;
+    });
+    app?.appendChild(notice);
+    arNotice = notice;
+    return notice;
+  }
+
+  function showArCompatibilityNotice() {
+    const notice = ensureArNotice();
+    const language = floatingArtifactAudioLanguage === "en" ? "en" : "tl";
+    notice.querySelectorAll("[data-ar-notice-lang]").forEach(function (node) {
+      node.hidden = node.dataset.arNoticeLang !== language;
+    });
+    window.clearTimeout(arNoticeTimer);
+    notice.hidden = false;
+    window.requestAnimationFrame(function () {
+      notice.classList.add("is-visible");
+    });
+    arNoticeTimer = window.setTimeout(function () {
+      notice.classList.remove("is-visible");
+      window.setTimeout(function () {
+        if (!notice.classList.contains("is-visible")) {
+          notice.hidden = true;
+        }
+      }, 220);
+    }, 6000);
+  }
+
+  function installModelArControl(model, container) {
+    if (!model || !container) {
+      return null;
+    }
+
+    const existingButton = container.querySelector(":scope > .tour-model-ar-button");
+    if (existingButton) {
+      return existingButton;
+    }
+
+    model.classList.add("tour-model--managed-ar");
+    const button = document.createElement("button");
+    button.className = "tour-model-ar-button";
+    button.type = "button";
+    button.setAttribute("aria-label", "View artifact in your space / Tingnan ang artifact sa iyong paligid");
+    button.setAttribute("title", "View in your space / Tingnan sa iyong paligid");
+    button.innerHTML = arButtonIcon;
+    container.appendChild(button);
+
+    if (!managedArModels.has(model)) {
+      managedArModels.add(model);
+      model.addEventListener("ar-status", function (event) {
+        if (event.detail && event.detail.status === "failed") {
+          showArCompatibilityNotice();
+        }
+      });
+    }
+
+    button.addEventListener("click", async function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+
+      try {
+        await window.customElements.whenDefined("model-viewer");
+        if (!model.src || typeof model.activateAR !== "function" || !model.canActivateAR) {
+          showArCompatibilityNotice();
+          return;
+        }
+        await model.activateAR();
+      } catch (error) {
+        console.warn("Unable to launch artifact AR.", error);
+        showArCompatibilityNotice();
+      }
+    });
+
+    return button;
+  }
+
+  installModelArControl(artifactModel, artifactModel?.parentElement);
 
   if (!app || !viewerContainer || !window.pannellum) {
     if (loadingOverlay) {
@@ -2773,6 +2881,10 @@
     mediaWrap.appendChild(image);
     mediaWrap.appendChild(model);
     mediaWrap.appendChild(modelNav);
+    floatingArtifactPreviewArButton = installModelArControl(model, mediaWrap);
+    if (floatingArtifactPreviewArButton) {
+      floatingArtifactPreviewArButton.hidden = true;
+    }
 
     panel.appendChild(mediaWrap);
     panel.appendChild(title);
@@ -2840,6 +2952,9 @@
     setFloatingWindowTitle(floatingArtifactPreviewTitle, args);
     floatingArtifactPreviewImage.hidden = !showImage;
     floatingArtifactPreviewModel.hidden = !showGlb;
+    if (floatingArtifactPreviewArButton) {
+      floatingArtifactPreviewArButton.hidden = !showGlb;
+    }
     floatingArtifactPreviewImage.style.display = showImage ? "block" : "none";
     floatingArtifactPreviewModel.style.display = showGlb ? "block" : "none";
     floatingArtifactPreviewModel.style.pointerEvents = showGlb ? "auto" : "none";
@@ -3250,6 +3365,7 @@
     model.setAttribute("shadow-intensity", "1");
     model.setAttribute("ar", "");
     model.setAttribute("ar-modes", "webxr scene-viewer quick-look");
+    let arButton = null;
     const glbSources = getArtifactGlbSources(args);
     if (!Number.isInteger(args.currentGlbIndex)) {
       args.currentGlbIndex = 0;
@@ -3301,6 +3417,9 @@
       image.style.display = isImageView ? "block" : "none";
       model.hidden = isImageView;
       model.style.display = isImageView ? "none" : "block";
+      if (arButton) {
+        arButton.hidden = isImageView;
+      }
       modelNav.hidden = !showModelNav;
       modelNav.style.display = showModelNav ? "flex" : "none";
       prevButton.disabled = !showModelNav || currentGlbIndex <= 0;
@@ -3409,6 +3528,10 @@
     mediaWrap.className = "tour-floating-image-window-mediawrap";
     mediaWrap.appendChild(imageButton);
     mediaWrap.appendChild(model);
+    arButton = installModelArControl(model, mediaWrap);
+    if (arButton) {
+      arButton.hidden = true;
+    }
     mediaWrap.appendChild(switchButton);
     if (alternateAudioButton) {
       mediaWrap.appendChild(alternateAudioButton);
