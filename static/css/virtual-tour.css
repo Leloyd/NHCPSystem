@@ -724,7 +724,7 @@ body {
   100% { transform: scale(2.6); opacity: 0; }
 }
 
-/* Non-clickable place markers (Museum, Church): a gold diamond + always-on label */
+/* Non-clickable place markers (Museum, Chapel): a gold diamond + always-on label */
 .tour-mapx__landmark {
   position: absolute;
   transform: translate(-50%, -50%);

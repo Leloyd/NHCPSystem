@@ -12,7 +12,7 @@
   ],
   "landmarks": [
     { "x": 0.108, "y": 0.416, "label": "Museum" },
-    { "x": 0.697, "y": 0.119, "label": "Church" }
+    { "x": 0.697, "y": 0.119, "label": "Chapel" }
   ],
   "scenes": {
     "frontGate":                 { "x": 0.307, "y": 0.757, "label": "Front Gate" },
@@ -24,8 +24,8 @@
     "insideFrontGate":           { "x": 0.352, "y": 0.673, "label": "Inside the Front Gate" },
     "insideFrontGate1":          { "x": 0.422, "y": 0.577, "label": "Inside the Front Gate · II" },
     "middleGInside":             { "x": 0.526, "y": 0.420, "label": "Middle Ground" },
-    "frontChurch":               { "x": 0.651, "y": 0.233, "label": "Front of the Church" },
-    "rightFrontChurch":          { "x": 0.709, "y": 0.235, "label": "Church Front · Right" },
+    "frontChurch":               { "x": 0.651, "y": 0.233, "label": "Front of the Chapel" },
+    "rightFrontChurch":          { "x": 0.709, "y": 0.235, "label": "Chapel Front · Right" },
     "rightFrontTombs":           { "x": 0.761, "y": 0.237, "label": "Right Tombs" },
     "rightFrontTombs1":          { "x": 0.810, "y": 0.339, "label": "Right Tombs · II" },
     "rightFrontTombs2":          { "x": 0.864, "y": 0.466, "label": "Right Tombs · III" },
@@ -42,6 +42,6 @@
     "leftMiddleTombs":           { "x": 0.491, "y": 0.148, "label": "Left Tombs · Middle" },
     "leftTombs":                 { "x": 0.584, "y": 0.136, "label": "Left Tombs" },
     "leftFirstTombs":            { "x": 0.630, "y": 0.164, "label": "Left Tombs · First" },
-    "leftFrontChurch":           { "x": 0.629, "y": 0.201, "label": "Church Front · Left" }
+    "leftFrontChurch":           { "x": 0.629, "y": 0.201, "label": "Chapel Front · Left" }
   }
 }

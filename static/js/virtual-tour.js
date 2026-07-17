@@ -1148,7 +1148,7 @@
           pitch: -25.55,
           yaw: -25.99,
           type: "scene",
-          text: "Return to left front church view",
+          text: "Return to left front chapel view",
           sceneId: "leftFrontChurch",
           targetPitch: -1.46,
           targetYaw: 70.52,
@@ -1199,7 +1199,7 @@
           pitch: -5,
           yaw: 125,
           type: "scene",
-          text: "Move to front church view",
+          text: "Move to front chapel view",
           sceneId: "frontChurch",
           cssClass: "tour-ground-hotspot",
         },
@@ -1229,7 +1229,7 @@
           pitch: -20,
           yaw: -75,
           type: "scene",
-          text: "Move to left church view",
+          text: "Move to left chapel view",
           sceneId: "leftFrontChurch",
           targetPitch: -20,
           targetYaw: -80,
@@ -1241,7 +1241,7 @@
           pitch: -17,
           yaw: 48,
           type: "scene",
-          text: "Move to right church view",
+          text: "Move to right chapel view",
           sceneId: "rightFrontChurch",
           cssClass: "tour-ground-hotspot",
         },
@@ -1250,7 +1250,7 @@
           pitch: 0,
           yaw: -15,
           type: "scene",
-          text: "Move inside the church",
+          text: "Move inside the chapel",
           sceneId: "insideChurch",
           cssClass: "tour-ground-hotspot tour-ground-hotspot--enter",
         },
@@ -1292,7 +1292,7 @@
           pitch: -25,
           yaw: 66,
           type: "scene",
-          text: "Return to front church view",
+          text: "Return to front chapel view",
           sceneId: "frontChurch",
           targetPitch: -20,
           targetYaw: 55,
@@ -1304,7 +1304,7 @@
           pitch: 0,
           yaw: -18,
           type: "scene",
-          text: "Move inside the church",
+          text: "Move inside the chapel",
           sceneId: "insideChurch",
           cssClass: "tour-ground-hotspot tour-ground-hotspot--enter",
         },
@@ -1322,7 +1322,7 @@
           pitch: -29,
           yaw: 68,
           type: "scene",
-          text: "Move to church stairs view",
+          text: "Move to chapel stairs view",
           sceneId: "stairsChurch",
           cssClass: "tour-ground-hotspot",
         },
@@ -1331,7 +1331,7 @@
           pitch: -23,
           yaw: -24,
           type: "scene",
-          text: "Move deeper inside the church",
+          text: "Move deeper inside the chapel",
           sceneId: "insideChurch1",
           cssClass: "tour-ground-hotspot",
         },
@@ -1340,7 +1340,7 @@
           pitch: -12,
           yaw: 155,
           type: "scene",
-          text: "Return to front church view",
+          text: "Return to front chapel view",
           sceneId: "frontChurch",
           sceneId: "frontChurch",
           cssClass: "tour-ground-hotspot tour-ground-hotspot--exit",
@@ -1368,7 +1368,7 @@
           pitch: 2,
           yaw: -50,
           type: "scene",
-          text: "Return to inside church view",
+          text: "Return to inside chapel view",
           sceneId: "insideChurch",
           cssClass: "tour-ground-hotspot",
         },
@@ -1398,7 +1398,7 @@
           pitch: -6,
           yaw: 164,
           type: "scene",
-          text: "Return to church stairs view",
+          text: "Return to chapel stairs view",
           sceneId: "stairsChurch",
           cssClass: "tour-ground-hotspot",
         },
@@ -1527,7 +1527,7 @@
           pitch: -24,
           yaw: -20,
           type: "scene",
-          text: "Return to inside church view",
+          text: "Return to inside chapel view",
           sceneId: "insideChurch",
           targetPitch: -20,
           targetYaw: 160,
@@ -1548,7 +1548,7 @@
           pitch: -17,
           yaw: -133,
           type: "scene",
-          text: "Return to front church view",
+          text: "Return to front chapel view",
           sceneId: "frontChurch",
           targetPitch: -20,
           targetYaw: -140,
@@ -1572,7 +1572,7 @@
           pitch: 0,
           yaw: -64,
           type: "scene",
-          text: "Move inside the church",
+          text: "Move inside the chapel",
           sceneId: "insideChurch",
           cssClass: "tour-ground-hotspot tour-ground-hotspot--enter",
         },
@@ -1602,7 +1602,7 @@
           pitch: -14,
           yaw: 30,
           type: "scene",
-          text: "Return to right church view",
+          text: "Return to right chapel view",
           sceneId: "rightFrontChurch",
           targetPitch: -12,
           targetYaw: 180,
@@ -2501,7 +2501,7 @@
       mapxDotsEl.appendChild(dot);
     });
 
-    // Non-clickable place markers (Museum, Church) — a distinct pin + label.
+    // Non-clickable place markers (Museum, Chapel) — a distinct pin + label.
     (data.landmarks || []).forEach(function (lm) {
       if (!lm || typeof lm.x !== "number" || typeof lm.y !== "number") {
         return;
@@ -2541,7 +2541,7 @@
     if (!minimapData) {
       return; // built once the data loads
     }
-    // Indoors (museum / church-underground): hide the whole map.
+    // Indoors (museum / chapel-underground): hide the whole map.
     const hideList = minimapData.hideOn || [];
     if (hideList.indexOf(sceneId) !== -1) {
       if (minimapEl) { minimapEl.hidden = true; }

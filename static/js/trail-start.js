@@ -118,8 +118,8 @@ const SCRIPTS = {
     tl: "Tapos na ang ating pagsubok — mahusay ang paglalaro mo. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kuwento ng bakuran. Pindutin ang Magpatuloy.",
   },
   's5-arrive': {
-    en: "Welcome back to the open grounds — our fifth stop. Here the cemetery's history stands in stone. Drag to look around, and follow the glowing rings through the courtyard, the face of the church, and the quiet rows of tombs. When you are ready, scroll down.",
-    tl: "Maligayang pagbabalik sa bukas na bakuran — ang ating ikalimang hinto. Dito nakatindig sa bato ang kasaysayan ng libingan. I-drag upang lumingon, at sundan ang mga kumikinang na singsing sa patyo, sa harap ng simbahan, at sa tahimik na mga hanay ng puntod. Kapag handa ka na, mag-scroll pababa.",
+    en: "Welcome back to the open grounds — our fifth stop. Here the cemetery's history stands in stone. Drag to look around, and follow the glowing rings through the courtyard, the face of the chapel, and the quiet rows of tombs. When you are ready, scroll down.",
+    tl: "Maligayang pagbabalik sa bukas na bakuran — ang ating ikalimang hinto. Dito nakatindig sa bato ang kasaysayan ng libingan. I-drag upang lumingon, at sundan ang mga kumikinang na singsing sa patyo, sa harap ng kapilya, at sa tahimik na mga hanay ng puntod. Kapag handa ka na, mag-scroll pababa.",
   },
   's5-history': {
     en: "Long before the tombs, the story began. The Spanish reached Nagcarlan in 1571 under Captain Juan de Salcedo. In 1578, the Franciscan missionaries Fray Juan de Plasencia and Fray Diego de Oropesa brought the Catholic faith. And in 1583, Nagcarlan became a pueblo under Fray Tomas de Miranda.",
@@ -130,16 +130,16 @@ const SCRIPTS = {
     tl: "Isa sa mga Pransiskanong misyonerong iyon ang nag-iwan ng mga salitang mahalaga pa rin hanggang ngayon. Isinulat ni Padre Juan de Plasencia ang Doctrina Cristiana — ang kauna-unahang aklat na inilimbag sa Pilipinas — at ang Relación de las costumbres de los tagalos, na nagtala at nag-ingat sa mga kaugalian ng ating mga ninuno. Pindutin ang Tingnan ang mga Dokumento upang makita ang mga unang pahina nito.",
   },
   's5-explore': {
-    en: "Now the grounds are yours. Step through the gate, cross to the church, and wander the rows of tombs on either side. The glowing rings carry you from one view to the next — take all the time you need.",
-    tl: "Ngayon, sa iyo na ang bakuran. Dumaan sa tarangkahan, tumawid sa simbahan, at libutin ang mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali.",
+    en: "Now the grounds are yours. Step through the gate, cross to the chapel, and wander the rows of tombs on either side. The glowing rings carry you from one view to the next — take all the time you need.",
+    tl: "Ngayon, sa iyo na ang bakuran. Dumaan sa tarangkahan, tumawid sa kapilya, at libutin ang mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali.",
   },
   's5-next': {
-    en: "That completes our fifth stop. When you are ready, come with me across the courtyard — the church and the tombs are just ahead. Tap Continue.",
-    tl: "Tapos na ang ating ikalimang hinto. Kapag handa ka na, sumama ka sa akin patawid sa patyo — nasa unahan lang ang simbahan at ang mga puntod. Pindutin ang Magpatuloy.",
+    en: "That completes our fifth stop. When you are ready, come with me across the courtyard — the chapel and the tombs are just ahead. Tap Continue.",
+    tl: "Tapos na ang ating ikalimang hinto. Kapag handa ka na, sumama ka sa akin patawid sa patyo — nasa unahan lang ang kapilya at ang mga puntod. Pindutin ang Magpatuloy.",
   },
   's6-arrive': {
-    en: "Here we are, before the church — our sixth stop. Take it in: drag to look around, and follow the glowing rings across its face and along the rows of tombs on either side. When you are ready, scroll down and I will tell you how this place was cared for.",
-    tl: "Narito na tayo, sa harap ng simbahan — ang ating ikaanim na hinto. Damhin ito: i-drag upang lumingon, at sundan ang mga kumikinang na singsing sa harap nito at sa mga hanay ng puntod sa magkabilang gilid. Kapag handa ka na, mag-scroll pababa at ikukuwento ko kung paano inalagaan ang pook na ito.",
+    en: "Here we are, before the chapel — our sixth stop. Take it in: drag to look around, and follow the glowing rings across its face and along the rows of tombs on either side. When you are ready, scroll down and I will tell you how this place was cared for.",
+    tl: "Narito na tayo, sa harap ng kapilya — ang ating ikaanim na hinto. Damhin ito: i-drag upang lumingon, at sundan ang mga kumikinang na singsing sa harap nito at sa mga hanay ng puntod sa magkabilang gilid. Kapag handa ka na, mag-scroll pababa at ikukuwento ko kung paano inalagaan ang pook na ito.",
   },
   's6-renovations': {
     en: "On the 24th of October, 1981, the National Historical Institute placed a marker here — and since then, the site has been in its care. As the National Historical Commission of the Philippines, it has restored the cemetery again and again: from 1982 to 1986, in 2008, from 2015 to 2016, and most recently from 2023 to 2024.",
@@ -150,16 +150,16 @@ const SCRIPTS = {
     tl: "Ngunit hindi laging mabait ang panahon. Mula sa unang bahagi ng ikadalawampung siglo, matapos ang panahon ng mga Espanyol, hanggang sa taong 2000, nagdusa ang libingang ito sa ilalim ng lupa — inagnas ng puwersa ng kalikasan na sumubok sa mismong istruktura nito.",
   },
   's6-next': {
-    en: "That completes our sixth stop. When you are ready, step inside the church with me. Tap Continue.",
-    tl: "Tapos na ang ating ikaanim na hinto. Kapag handa ka na, pumasok ka sa simbahan kasama ko. Pindutin ang Magpatuloy.",
+    en: "That completes our sixth stop. When you are ready, step inside the chapel with me. Tap Continue.",
+    tl: "Tapos na ang ating ikaanim na hinto. Kapag handa ka na, pumasok ka sa kapilya kasama ko. Pindutin ang Magpatuloy.",
   },
   's7-arrive': {
-    en: "We are inside the church now — our seventh stop. Take it in: drag to look around the nave, up at the ceiling, and toward the altar. When you are ready, scroll down.",
-    tl: "Nasa loob na tayo ng simbahan — ang ating ikapitong hinto. Damhin ito: i-drag upang lumingon sa nave, sa kisame, at patungo sa altar. Kapag handa ka na, mag-scroll pababa.",
+    en: "We are inside the chapel now — our seventh stop. Take it in: drag to look around the nave, up at the ceiling, and toward the altar. When you are ready, scroll down.",
+    tl: "Nasa loob na tayo ng kapilya — ang ating ikapitong hinto. Damhin ito: i-drag upang lumingon sa nave, sa kisame, at patungo sa altar. Kapag handa ka na, mag-scroll pababa.",
   },
   's7-tapestry': {
-    en: "Let me show you one of the church's most meaningful objects — the tapete. Embroidered with a skull and crossbones beside the cross of Christ, this black cloth is a Catholic symbol of death and remembrance, laid amid candles and flowers as the focus of prayers for the departed.",
-    tl: "Ipakita ko sa iyo ang isa sa pinakamakabuluhang bagay sa simbahan — ang tapete. Binurdahan ng bungo at magkakrus na buto katabi ng krus ni Kristo, ang itim na telang ito ay simbolong Katoliko ng kamatayan at pag-alaala, inilalatag kasama ng kandila at bulaklak bilang sentro ng dasal para sa mga yumao.",
+    en: "Let me show you one of the chapel's most meaningful objects — the tapete. Embroidered with a skull and crossbones beside the cross of Christ, this black cloth is a Catholic symbol of death and remembrance, laid amid candles and flowers as the focus of prayers for the departed.",
+    tl: "Ipakita ko sa iyo ang isa sa pinakamakabuluhang bagay sa kapilya — ang tapete. Binurdahan ng bungo at magkakrus na buto katabi ng krus ni Kristo, ang itim na telang ito ay simbolong Katoliko ng kamatayan at pag-alaala, inilalatag kasama ng kandila at bulaklak bilang sentro ng dasal para sa mga yumao.",
   },
   's7-explore': {
     en: "Take your time within these walls. Look at the aged timber and stone, and follow the glowing rings from the nave toward the altar. When you are ready, we will descend to the crypts below.",
@@ -704,7 +704,7 @@ const SCENE_BASE = {
   museum1: { yaw: 75, pitch: -20 },
   museum2: { yaw: 80, pitch: -20 },
   museum3: { yaw: 170, pitch: -12 },
-  // Stop 5 — cemetery grounds (church front + tomb rows), virtual-tour views.
+  // Stop 5 — cemetery grounds (chapel front + tomb rows), virtual-tour views.
   insideFrontGate: { yaw: 0, pitch: 0 },
   insideFrontGate1: { yaw: 0, pitch: 0 },
   middleGInside: { yaw: 123, pitch: 0 },
@@ -718,7 +718,7 @@ const SCENE_BASE = {
   leftTombs: { yaw: 0, pitch: 0 },
   leftMiddleTombs: { yaw: 0, pitch: 0 },
   leftEndTombs: { yaw: 0, pitch: 0 },
-  // Stop 7 — church interior.
+  // Stop 7 — chapel interior.
   insideChurch: { yaw: -24, pitch: 0 },
   insideChurch1: { yaw: 160, pitch: 0 },
   // Stops 8 & 9 — underground crypts.
@@ -772,9 +772,9 @@ const STOP_CONF = {
   stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100, hash: '#stop-4' },
   // The grounds: enter just inside the front gate and cross into the courtyard.
   stop5: { scene: 'insideFrontGate', pitch: 0, yaw: 0, hfov: 100, hash: '#stop-5' },
-  // Front of the church + the tomb rows on either side.
+  // Front of the chapel + the tomb rows on either side.
   stop6: { scene: 'frontChurch', pitch: 0, yaw: -10, hfov: 100, hash: '#stop-6' },
-  // Inside the church.
+  // Inside the chapel.
   stop7: { scene: 'insideChurch', pitch: 0, yaw: -24, hfov: 100, hash: '#stop-7' },
   // The underground crypts.
   stop8: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-8' },
@@ -791,9 +791,9 @@ const DEPART_VIEWS = {
   rightFrontGate: { yaw: -91.1, pitch: -0.8 },
   middleGMuseum: { yaw: -87.6, pitch: -5.7 },
   frontMuseum: { yaw: 32.0, pitch: -9.4 },
-  // Stop 5 → 6: from the courtyard, turn to face the church before crossing.
+  // Stop 5 → 6: from the courtyard, turn to face the chapel before crossing.
   middleGInside: { yaw: 125, pitch: -5 },
-  // Stop 7 → 8: from inside the church, turn to the stairs before descending.
+  // Stop 7 → 8: from inside the chapel, turn to the stairs before descending.
   insideChurch: { yaw: 68, pitch: -29 },
 };
 
@@ -1014,7 +1014,7 @@ function initPanorama() {
   const museum1Src = root.getAttribute('data-pano-museum1') || '';
   const museum2Src = root.getAttribute('data-pano-museum2') || '';
   const museum3Src = root.getAttribute('data-pano-museum3') || '';
-  // Stop 5 — cemetery-grounds panoramas (church front + tomb rows).
+  // Stop 5 — cemetery-grounds panoramas (chapel front + tomb rows).
   const s5 = {
     insideFrontGate: root.getAttribute('data-pano-inside-front-gate') || '',
     insideFrontGate1: root.getAttribute('data-pano-inside-front-gate1') || '',
@@ -1030,7 +1030,7 @@ function initPanorama() {
     leftMiddleTombs: root.getAttribute('data-pano-left-middle-tombs') || '',
     leftEndTombs: root.getAttribute('data-pano-left-end-tombs') || '',
   };
-  // Stop 7 (church interior) + Stops 8/9 (underground crypts) panoramas.
+  // Stop 7 (chapel interior) + Stops 8/9 (underground crypts) panoramas.
   const s7 = {
     insideChurch: root.getAttribute('data-pano-inside-church') || '',
     insideChurch1: root.getAttribute('data-pano-inside-church1') || '',
@@ -1840,9 +1840,9 @@ function initPanorama() {
         };
       }
 
-      // Stop 5 scenes — the cemetery grounds, church front, and tomb rows,
+      // Stop 5 scenes — the cemetery grounds, chapel front, and tomb rows,
       // straight from the virtual tour. Scene links keep only the paths that
-      // stay within this stop's set (the branches into the museum, the church
+      // stay within this stop's set (the branches into the museum, the chapel
       // interior, and the leftG middle nodes are dropped).
       if (s5.insideFrontGate) {
         const link = (pitch, yaw, sceneId, tPitch, tYaw) => {
@@ -1859,11 +1859,11 @@ function initPanorama() {
           link(-15, 175, 'insideFrontGate', -20, 170),
         ]);
         // Stop 5 ends here (entrance + courtyard): middleGInside does NOT lead
-        // on to the church — that's Stop 6's journey.
+        // on to the chapel — that's Stop 6's journey.
         scenes.middleGInside = eq(s5.middleGInside, 0, 123, [
           link(-7, -55, 'insideFrontGate1', -20, 180),
         ]);
-        // Stop 6 begins at the church front: no ring back to the courtyard.
+        // Stop 6 begins at the chapel front: no ring back to the courtyard.
         scenes.frontChurch = eq(s5.frontChurch, 0, -10, [
           link(-20, -75, 'leftFrontChurch', -20, -80),
           link(-17, 48, 'rightFrontChurch'),
@@ -1903,7 +1903,7 @@ function initPanorama() {
           link(-7.06, 86.13, 'rightFrontTombs1', 3.34, 80.68),
         ]);
 
-        // Stop 7 — inside the church (nave ↔ deeper toward the altar).
+        // Stop 7 — inside the chapel (nave ↔ deeper toward the altar).
         if (s7.insideChurch) {
           scenes.insideChurch = eq(s7.insideChurch, 0, -24, [
             link(-23, -24, 'insideChurch1'),
