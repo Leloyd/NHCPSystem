@@ -8,6 +8,10 @@
   --danger: #ff5f6f;
   --border: rgba(255, 255, 255, 0.16);
   --radius: 12px;
+  --tx-gold: #d4af6a;
+  --tx-gold-deep: #b8923a;
+  --tx-ink: #1c1208;
+  --tx-cream: #faf7f2;
   --shadow: 0 10px 32px rgba(0, 0, 0, 0.4);
 }
 
@@ -51,52 +55,75 @@ canvas {
 .loading-overlay {
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
-  background: rgba(0, 0, 0, 0.6);
-  backdrop-filter: blur(10px);
   z-index: 100;
-  transition: opacity 220ms ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.1rem;
+  background: #0d0a04;
+  transition: opacity 0.8s ease, visibility 0.8s ease;
 }
 
+/* Fade out like the Landing loader (out-specifies the global .hidden). */
 .loading-overlay.hidden {
+  display: flex !important;
   opacity: 0;
+  visibility: hidden;
   pointer-events: none;
 }
 
-.loading-card {
-  width: min(90vw, 420px);
-  padding: 20px;
-  border-radius: var(--radius);
-  background: var(--bg-panel);
-  border: 1px solid var(--border);
-  box-shadow: var(--shadow);
+.loading-ring {
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 106, 0.25);
+  border-top-color: var(--tx-gold);
+  animation: xr-loader-spin 1.1s linear infinite;
 }
 
-.loading-card h1 {
-  margin: 0 0 6px;
+.loading-title {
+  margin: 0;
+  text-align: center;
+  color: var(--tx-cream);
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500;
   font-size: 1.15rem;
+  animation: xr-loader-breathe 2.2s ease-in-out infinite;
 }
 
-.loading-card p {
-  margin: 0 0 14px;
-  color: var(--muted);
+.loading-title em {
+  font-style: italic;
+  color: var(--tx-gold);
+}
+
+.loading-text {
+  margin: 0;
+  text-align: center;
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: rgba(212, 175, 106, 0.8);
 }
 
 .progress-track {
-  width: 100%;
-  height: 8px;
+  width: min(240px, 64vw);
+  height: 2px;
   border-radius: 999px;
-  background: rgba(255, 255, 255, 0.12);
+  background: rgba(212, 175, 106, 0.18);
   overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
   width: 0%;
-  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+  background: var(--tx-gold);
   transition: width 180ms ease;
 }
+
+@keyframes xr-loader-spin { to { transform: rotate(360deg); } }
+@keyframes xr-loader-breathe { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
 
 .error-banner {
   position: fixed;
@@ -273,147 +300,167 @@ canvas {
   word-break: break-word;
 }
 
+/* Guide controls — the Landing page's gold pill bar, floating over the 3D
+   scene. Left/right button groups flank a joystick that is ALWAYS dead-center
+   and a size up from the pills. */
 .tour-control-dock {
   position: fixed;
   left: 50%;
-  bottom: max(12px, env(safe-area-inset-bottom, 0px));
+  bottom: max(14px, env(safe-area-inset-bottom, 0px));
   transform: translateX(-50%);
-  width: min(23rem, calc(100vw - 2rem));
-  min-height: 0;
-  padding: 0.62rem 0.72rem;
-  border-radius: 1.8rem;
-  border: 1px solid rgba(255, 255, 255, 0.24);
-  background: rgba(255, 255, 255, 0.9);
-  box-shadow: 0 22px 48px rgba(0, 0, 0, 0.28);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
+  width: min(44rem, calc(100vw - 1.4rem));
   z-index: 45;
-  display: grid;
-  grid-auto-flow: column;
-  grid-auto-columns: minmax(0, 1fr);
-  align-items: end;
-  gap: 0.38rem;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
   box-sizing: border-box;
+  color: var(--tx-cream);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  pointer-events: none; /* the groups and joystick re-enable their own */
   touch-action: none;
 }
+
+.tour-control-dock__group {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  flex-wrap: wrap;
+  max-width: calc(50% - 2.6rem); /* keeps clear of the centered joystick */
+  pointer-events: auto;
+}
+
+.tour-control-dock__group--left { justify-content: flex-start; }
+.tour-control-dock__group--right { justify-content: flex-end; }
 
 .tour-control-dock__xr {
   display: contents;
 }
 
+/* Landing's .story-btn pill — for the template buttons AND the JS-injected
+   XR buttons (hence the !importants overriding their inline-ish styling). */
 .tour-control-dock__action,
 .tour-control-dock__xr > button,
 .tour-control-dock__xr > a {
   display: inline-flex !important;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  min-width: 0;
-  min-height: 3.75rem;
+  height: 38px;
+  min-width: 38px;
   margin: 0 !important;
-  padding: 0 !important;
-  border: 0 !important;
-  background: transparent !important;
-  color: #111827 !important;
+  padding: 0 0.7rem !important;
+  border: 1px solid rgba(212, 175, 106, 0.45) !important;
+  border-radius: 999px;
+  background: rgba(20, 13, 6, 0.78) !important;
+  color: var(--tx-cream) !important;
+  font: 500 0.72rem "Inter", "Segoe UI", sans-serif !important;
+  letter-spacing: 0.05em;
   text-decoration: none !important;
-  text-align: center;
   cursor: pointer;
-  font: 600 0.72rem "Segoe UI", system-ui, sans-serif !important;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  transition: background 0.2s ease, border-color 0.2s ease, transform 0.15s ease;
   opacity: 1 !important;
   position: static !important;
-  left: auto !important;
-  right: auto !important;
-  bottom: auto !important;
-  z-index: auto !important;
+  box-sizing: border-box;
 }
 
-.tour-control-dock__icon,
-.tour-control-dock__xr > button .tour-control-dock__icon,
-.tour-control-dock__xr > a .tour-control-dock__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 2.55rem;
-  height: 2.55rem;
-  border-radius: 0.92rem;
-  background: rgba(255, 255, 255, 0.72);
-  color: #171717;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8), 0 10px 20px rgba(15, 23, 42, 0.12);
-  transition: transform 0.18s ease, background 0.18s ease, color 0.18s ease, box-shadow 0.18s ease;
+.tour-control-dock__action:hover,
+.tour-control-dock__xr > button:hover,
+.tour-control-dock__xr > a:hover {
+  background: rgba(212, 175, 106, 0.22) !important;
+  border-color: var(--tx-gold) !important;
 }
 
-.tour-control-dock__icon svg,
-.tour-control-dock__camera-icon svg {
-  width: 1.2rem;
-  height: 1.2rem;
+.tour-control-dock__action:active,
+.tour-control-dock__xr > button:active {
+  transform: scale(0.96);
 }
 
-.tour-control-dock__label {
-  font-size: 0.66rem;
-  font-weight: 600;
-  line-height: 1;
-  color: rgba(23, 23, 23, 0.78);
+.tour-control-dock__action:focus-visible,
+.tour-control-dock__xr > button:focus-visible {
+  outline: 2px solid var(--tx-gold);
+  outline-offset: 2px;
 }
 
-.tour-control-dock__xr .tour-control-dock__label {
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
-}
-
-.tour-control-dock__action:disabled {
+.tour-control-dock__action:disabled,
+.tour-control-dock__xr > button:disabled {
   opacity: 0.5 !important;
   cursor: default;
 }
 
-.tour-control-dock__action:hover .tour-control-dock__icon,
-.tour-control-dock__action.is-active .tour-control-dock__icon,
-.tour-control-dock__action:focus-visible .tour-control-dock__icon {
-  transform: translateY(-1px);
+.tour-control-dock__action.is-active {
+  background: var(--tx-gold) !important;
+  border-color: var(--tx-gold) !important;
+  color: var(--tx-ink) !important;
 }
 
-.tour-control-dock__action.is-active .tour-control-dock__icon {
-  background: linear-gradient(180deg, rgba(251, 191, 36, 0.32), rgba(245, 158, 11, 0.18));
-  color: #8a5a00;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 14px 24px rgba(245, 158, 11, 0.18);
-}
-
-.tour-control-dock__camera {
-  position: relative;
+.tour-control-dock__icon {
   display: inline-flex;
-  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+}
+
+.tour-control-dock__icon svg {
+  width: 15px;
+  height: 15px;
+}
+
+/* The injected XR buttons carry a text "icon" plus a label with the same
+   word — show only the label so the pill reads "VR", not "VRVR". */
+.tour-control-dock__xr .tour-control-dock__icon { display: none; }
+.tour-control-dock__xr .tour-control-dock__label {
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+/* Joystick — always dead-center of the bar, bigger than the pills. */
+.tour-control-dock__camera {
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 64px;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 106, 0.55);
+  background: rgba(20, 13, 6, 0.8);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.38);
+  pointer-events: auto;
   touch-action: none;
-  transform: translateY(-0.32rem);
 }
 
 .tour-control-dock__camera-icon {
+  position: absolute;
+  inset: 0;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 3.8rem;
-  height: 3.8rem;
-  border-radius: 999px;
-  background: #050505;
-  color: #ffffff;
-  box-shadow: 0 20px 34px rgba(0, 0, 0, 0.32);
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  color: rgba(250, 247, 242, 0.38);
+  pointer-events: none;
+}
+
+.tour-control-dock__camera-icon svg {
+  width: 20px;
+  height: 20px;
 }
 
 .tour-control-dock__joystick-thumb {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 1.9rem;
-  height: 1.9rem;
-  margin-left: -0.95rem;
-  margin-top: -0.95rem;
+  width: 28px;
+  height: 28px;
+  margin-left: -14px;
+  margin-top: -14px;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  background: radial-gradient(circle at 30% 30%, rgba(255, 255, 255, 0.48), rgba(255, 255, 255, 0.18));
-  box-shadow: inset 0 2px 8px rgba(0, 0, 0, 0.25), 0 6px 12px rgba(0, 0, 0, 0.22);
+  border: 1px solid rgba(212, 175, 106, 0.7);
+  background: radial-gradient(circle at 32% 30%, #faf7f2, #d4af6a 78%);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.35);
   pointer-events: none;
 }
 
@@ -422,11 +469,11 @@ canvas {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 4.4rem;
-  height: 4.4rem;
+  width: 76px;
+  height: 76px;
   transform: translate(-50%, -50%);
   border-radius: 999px;
-  border: 1px dashed rgba(255, 255, 255, 0.28);
+  border: 1px dashed rgba(212, 175, 106, 0.3);
   pointer-events: none;
 }
 
@@ -438,37 +485,42 @@ canvas {
   }
 
   .tour-control-dock {
-    width: min(20.5rem, calc(100vw - 0.9rem));
-    padding: 0.58rem 0.65rem calc(0.62rem + (env(safe-area-inset-bottom, 0px) * 0.18));
-    gap: 0.3rem;
-    border-radius: 1.65rem;
+    width: calc(100vw - 1rem);
+  }
+
+  .tour-control-dock__group {
+    gap: 0.4rem;
+    max-width: calc(50% - 2.3rem);
   }
 
   .tour-control-dock__action,
   .tour-control-dock__xr > button,
   .tour-control-dock__xr > a {
-    min-height: 3.5rem;
+    height: 34px;
+    min-width: 34px;
+    padding: 0 0.55rem !important;
+    font-size: 0.66rem !important;
   }
 
-  .tour-control-dock__icon,
-  .tour-control-dock__xr > button .tour-control-dock__icon,
-  .tour-control-dock__xr > a .tour-control-dock__icon {
-    width: 2.35rem;
-    height: 2.35rem;
-    border-radius: 0.85rem;
+  .tour-control-dock__icon svg {
+    width: 13px;
+    height: 13px;
   }
 
-  .tour-control-dock__camera-icon {
-    width: 3.45rem;
-    height: 3.45rem;
-  }
-
-  .tour-control-dock__label {
-    font-size: 0.62rem;
+  .tour-control-dock__camera {
+    width: 56px;
+    height: 56px;
   }
 
   .tour-control-dock__camera::after {
-    width: 3.9rem;
-    height: 3.9rem;
+    width: 66px;
+    height: 66px;
+  }
+
+  .tour-control-dock__joystick-thumb {
+    width: 24px;
+    height: 24px;
+    margin-left: -12px;
+    margin-top: -12px;
   }
 }
