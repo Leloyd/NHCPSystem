@@ -73,6 +73,7 @@
       targetSize: 0.76,
       scaleMultiplier: 2,
       position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
         enabled: true,
@@ -1491,7 +1492,7 @@
 
     runtime.activeNarrationKind = "guidance";
     runtime.activeGuidanceState = state;
-    entry.puzzle.playedGuidance[state] = true;
+    entry.puzzle.lastGuidanceNarratedState = state;
     playAudioForEntry(entry, language || runtime.audioLanguage, true);
   }
 
@@ -1530,25 +1531,48 @@
     }
 
     entry.puzzle.guidanceState = "far";
+    entry.puzzle.pendingGuidanceState = "far";
+    entry.puzzle.guidanceStateSince = 0;
     entry.puzzle.initialGuidanceFinished = false;
-    entry.puzzle.playedGuidance = {};
+    entry.puzzle.lastGuidanceNarratedState = "";
     playPuzzleGuidanceForEntry(entry, "far", runtime.audioLanguage);
   }
 
-  function updatePuzzleGuidanceForEntry(entry, state) {
+  function updatePuzzleGuidanceForEntry(entry, state, nowMs) {
     if (!entry || !entry.puzzle || entry.puzzleSolved || !PUZZLE_HINTS[state]) {
       return;
     }
 
     var puzzle = entry.puzzle;
+    var currentTime = clampNumber(nowMs, performance.now(), 0, Number.MAX_SAFE_INTEGER);
+
+    if (puzzle.pendingGuidanceState !== state) {
+      puzzle.pendingGuidanceState = state;
+      puzzle.guidanceStateSince = currentTime;
+      return;
+    }
+
+    if (
+      puzzle.guidanceState === state ||
+      currentTime - puzzle.guidanceStateSince < PUZZLE.guidanceDebounceMs
+    ) {
+      return;
+    }
+
     puzzle.guidanceState = state;
+
+    // Returning to the far zone rearms both proximity messages. Re-entering
+    // warm or hot can therefore narrate that cue again during the same scan.
+    if (state === "far") {
+      puzzle.lastGuidanceNarratedState = "far";
+      return;
+    }
 
     if (
       runtime.activeAudioEntry !== entry ||
       !puzzle.initialGuidanceFinished ||
       runtime.narrationPausedByUser ||
-      state === "far" ||
-      puzzle.playedGuidance[state]
+      puzzle.lastGuidanceNarratedState === state
     ) {
       return;
     }
@@ -1604,7 +1628,7 @@
     var nextState = entry.puzzle.guidanceState;
     if (
       (nextState === "warm" || nextState === "hot") &&
-      !entry.puzzle.playedGuidance[nextState]
+      entry.puzzle.lastGuidanceNarratedState !== nextState
     ) {
       playPuzzleGuidanceForEntry(entry, nextState, runtime.audioLanguage);
       return;
@@ -2004,8 +2028,9 @@
     solveAngleDeg: 8,     // aligned when camera dir is within this of the sight-line
     warmAngleDeg: 30,     // hint feedback thresholds
     hotAngleDeg: 14,
+    guidanceDebounceMs: 350, // require a stable zone before replaying its cue
     dwellMs: 450,         // must hold alignment this long
-    settleMs: 900,        // shard fly-home animation time
+    settleMs: 1400,       // shard fly-home + solved-position animation time
     elevationDeg: 35,     // sight-line tilt above the marker plane
   };
 
@@ -2163,8 +2188,19 @@
       return false;
     }
 
+    var modelSettings = getModelConfig(entry.key);
+    var solvedPosition = Array.isArray(modelSettings.solvedPosition)
+      ? modelSettings.solvedPosition
+      : [0, 0, 0];
+    var solvedContainerPosition = new THREE_NS.Vector3(
+      clampNumber(solvedPosition[0], 0, -100, 100),
+      clampNumber(solvedPosition[1], 0, -100, 100),
+      clampNumber(solvedPosition[2], 0, -100, 100)
+    );
+
     if (isPuzzleSolvedInSession(entry.key)) {
       entry.puzzleSolved = true; // intact for the whole session
+      entry.modelContainer.position.copy(solvedContainerPosition);
       console.log("[AR puzzle] '" + entry.key + "' already solved this session — shown intact.");
       return true;
     }
@@ -2270,8 +2306,12 @@
       solving: false,
       solveStartedAt: 0,
       guidanceState: "far",
+      pendingGuidanceState: "far",
+      guidanceStateSince: 0,
       initialGuidanceFinished: false,
-      playedGuidance: {},
+      lastGuidanceNarratedState: "",
+      brokenContainerPosition: entry.modelContainer.position.clone(),
+      solvedContainerPosition: solvedContainerPosition,
     };
 
     console.log("[AR puzzle] '" + entry.key + "' shattered into " + shardRecords.length + " shards.");
@@ -2544,13 +2584,21 @@
   /* --- Per-frame puzzle update ---------------------------------------------- */
   var PUZZLE_TMP_CAMERA = null;
 
-  function solvePuzzleShardsProgress(puzzle, progress) {
+  function solvePuzzleShardsProgress(entry, puzzle, progress) {
     var eased = 1 - Math.pow(1 - progress, 3); // easeOutCubic
     puzzle.shards.forEach(function (record) {
       record.mesh.position.lerpVectors(record.scatterPosition, record.home, eased);
       var scale = record.scatterScale + (1 - record.scatterScale) * eased;
       record.mesh.scale.setScalar(scale);
     });
+
+    if (entry && entry.modelContainer) {
+      entry.modelContainer.position.lerpVectors(
+        puzzle.brokenContainerPosition,
+        puzzle.solvedContainerPosition,
+        eased
+      );
+    }
   }
 
   function updateAnamorphicPuzzles(nowMs) {
@@ -2589,7 +2637,7 @@
 
       if (puzzle.solving) {
         var progress = Math.min(1, (nowMs - puzzle.solveStartedAt) / PUZZLE.settleMs);
-        solvePuzzleShardsProgress(puzzle, progress);
+        solvePuzzleShardsProgress(entry, puzzle, progress);
         if (progress >= 1) {
           puzzle.solving = false;
           entry.puzzleSolved = true;
@@ -2619,7 +2667,11 @@
         if (!puzzle.alignedSince) {
           puzzle.alignedSince = nowMs;
         }
-        updatePuzzleGuidanceForEntry(entry, "hot");
+        updatePuzzleGuidanceForEntry(entry, "hot", nowMs);
+        if (puzzle.guidanceState !== "hot") {
+          puzzle.alignedSince = 0;
+          return;
+        }
         if (nowMs - puzzle.alignedSince >= PUZZLE.dwellMs) {
           puzzle.solving = true;
           puzzle.solveStartedAt = nowMs;
@@ -2627,11 +2679,11 @@
       } else {
         puzzle.alignedSince = 0;
         if (angleDeg <= PUZZLE.hotAngleDeg) {
-          updatePuzzleGuidanceForEntry(entry, "hot");
+          updatePuzzleGuidanceForEntry(entry, "hot", nowMs);
         } else if (angleDeg <= PUZZLE.warmAngleDeg) {
-          updatePuzzleGuidanceForEntry(entry, "warm");
+          updatePuzzleGuidanceForEntry(entry, "warm", nowMs);
         } else {
-          updatePuzzleGuidanceForEntry(entry, "far");
+          updatePuzzleGuidanceForEntry(entry, "far", nowMs);
         }
       }
     });
