@@ -13,8 +13,37 @@
   var subtitleEyebrow = document.getElementById("arSubtitleEyebrow");
   var listenLabel = document.getElementById("arListenLabel");
   var backButton = document.getElementById("arBackButton");
+  var preloaderEl = document.getElementById("arPreloader");
+  var preloaderProgressEl = document.getElementById("arLoaderProgress");
+  var preloaderProgressBar = document.getElementById("arLoaderProgressBar");
+  var preloaderStatusEl = document.getElementById("arLoaderStatus");
+  var preloaderCountEl = document.getElementById("arLoaderCount");
+  var preloaderRetryButton = document.getElementById("arLoaderRetry");
   if (!body || !rootEl) {
     return;
+  }
+
+  function showBootstrapLoaderError(message) {
+    if (!preloaderEl) {
+      return;
+    }
+    preloaderEl.hidden = false;
+    preloaderEl.classList.remove("is-done");
+    preloaderEl.classList.add("has-error");
+    preloaderEl.setAttribute("aria-busy", "false");
+    preloaderEl.removeAttribute("aria-hidden");
+    if (preloaderStatusEl) {
+      preloaderStatusEl.textContent = message;
+    }
+    if (preloaderRetryButton) {
+      preloaderRetryButton.hidden = false;
+    }
+  }
+
+  if (preloaderRetryButton) {
+    preloaderRetryButton.addEventListener("click", function () {
+      window.location.reload();
+    });
   }
 
   configureBackButton();
@@ -30,6 +59,7 @@
     !THREEx_NS.ArMarkerControls
   ) {
     console.error("[AR] Missing custom pipeline dependencies.");
+    showBootstrapLoaderError("The AR components could not load. Check your connection and retry. / Hindi nag-load ang mga bahagi ng AR. Suriin ang koneksiyon at subukang muli.");
     return;
   }
 
@@ -349,6 +379,11 @@
     audioPrimeUrl: "",
     pendingAudioSrc: "",
     audioUnlockHandler: null,
+    // Preload gate: model downloads + shard preparation finish before camera.
+    preloadTotal: 0,
+    preloadReady: 0,
+    preloadFractions: {},
+    cameraStartTimeoutId: 0,
     // Anamorphic puzzle UI
     puzzleHintEl: null,
     puzzleHintState: "",
@@ -361,6 +396,88 @@
     modelRotationHandlers: null,
     destroyed: false,
   };
+
+  function renderPreloadProgress() {
+    var total = Math.max(0, runtime.preloadTotal);
+    var sum = Object.keys(runtime.preloadFractions).reduce(function (value, key) {
+      return value + clampNumber(runtime.preloadFractions[key], 0, 0, 1);
+    }, 0);
+    var percent = total ? Math.min(100, Math.round((sum / total) * 100)) : 0;
+
+    if (preloaderProgressBar) {
+      preloaderProgressBar.style.width = percent + "%";
+    }
+    if (preloaderProgressEl) {
+      preloaderProgressEl.setAttribute("aria-valuenow", String(percent));
+    }
+    if (preloaderCountEl) {
+      preloaderCountEl.textContent = runtime.preloadReady + " of " + total + " artifacts ready / " + runtime.preloadReady + " sa " + total + " artifact handa · " + percent + "%";
+    }
+  }
+
+  function initializePreloader(total) {
+    runtime.preloadTotal = Math.max(0, total || 0);
+    runtime.preloadReady = 0;
+    runtime.preloadFractions = {};
+    if (preloaderEl) {
+      preloaderEl.hidden = false;
+      preloaderEl.classList.remove("is-done", "has-error");
+      preloaderEl.setAttribute("aria-busy", "true");
+      preloaderEl.removeAttribute("aria-hidden");
+    }
+    if (preloaderRetryButton) {
+      preloaderRetryButton.hidden = true;
+    }
+    if (preloaderStatusEl) {
+      preloaderStatusEl.textContent = "Preparing 3D artifacts… / Inihahanda ang mga 3D artifact…";
+    }
+    renderPreloadProgress();
+  }
+
+  function reportModelDownload(key, event) {
+    if (!key || !event || !event.lengthComputable || !event.total) {
+      return;
+    }
+    var fraction = Math.min(0.9, Math.max(0, event.loaded / event.total) * 0.9);
+    runtime.preloadFractions[key] = Math.max(runtime.preloadFractions[key] || 0, fraction);
+    renderPreloadProgress();
+  }
+
+  function markModelPrepared(key) {
+    if (!key || runtime.preloadFractions[key] === 1) {
+      return;
+    }
+    runtime.preloadFractions[key] = 1;
+    runtime.preloadReady += 1;
+    renderPreloadProgress();
+  }
+
+  function setPreloaderStatus(message) {
+    if (preloaderStatusEl) {
+      preloaderStatusEl.textContent = message;
+    }
+  }
+
+  function showPreloaderError(message) {
+    showBootstrapLoaderError(message);
+    if (preloaderCountEl) {
+      preloaderCountEl.textContent = runtime.preloadReady + " of " + runtime.preloadTotal + " artifacts prepared / " + runtime.preloadReady + " sa " + runtime.preloadTotal + " artifact ang nahanda bago nagkaroon ng error.";
+    }
+  }
+
+  function dismissPreloader() {
+    if (!preloaderEl || preloaderEl.classList.contains("is-done")) {
+      return;
+    }
+    runtime.preloadReady = runtime.preloadTotal;
+    Object.keys(runtime.preloadFractions).forEach(function (key) {
+      runtime.preloadFractions[key] = 1;
+    });
+    renderPreloadProgress();
+    preloaderEl.setAttribute("aria-busy", "false");
+    preloaderEl.setAttribute("aria-hidden", "true");
+    preloaderEl.classList.add("is-done");
+  }
 
   function clampNumber(value, fallback, min, max) {
     var parsed = Number(value);
@@ -535,6 +652,11 @@
     runtime.cameraError = true;
     var message = parseErrorMessage(rawError);
     console.error("[AR]", message);
+    if (runtime.cameraStartTimeoutId) {
+      window.clearTimeout(runtime.cameraStartTimeoutId);
+      runtime.cameraStartTimeoutId = 0;
+    }
+    showPreloaderError("The camera could not start. Allow camera access, then retry. / Hindi mabuksan ang camera. Payagan ang camera access at subukang muli.");
     sendAnalytics("camera_error", { error: message });
   }
 
@@ -544,6 +666,11 @@
     }
 
     runtime.cameraReady = true;
+    if (runtime.cameraStartTimeoutId) {
+      window.clearTimeout(runtime.cameraStartTimeoutId);
+      runtime.cameraStartTimeoutId = 0;
+    }
+    dismissPreloader();
     sendAnalytics("camera_ready", { source: source });
   }
 
@@ -1724,6 +1851,7 @@
     var source = geometry.index ? geometry.toNonIndexed() : geometry.clone();
     var positions = source.getAttribute("position");
     if (!positions) {
+      source.dispose();
       return null;
     }
 
@@ -1733,6 +1861,7 @@
       return Boolean(source.attributes[name].isInterleavedBufferAttribute);
     });
     if (interleaved) {
+      source.dispose();
       return null;
     }
 
@@ -1824,7 +1953,9 @@
       shards.push(shardGeometry);
     }
 
-    return shards.length >= 2 ? shards : null;
+    var result = shards.length >= 2 ? shards : null;
+    source.dispose();
+    return result;
   }
 
   function setupAnamorphicPuzzle(entry) {
@@ -1832,13 +1963,13 @@
       if (entry && entry.puzzleEnabled) {
         console.warn("[AR puzzle] '" + entry.key + "' enabled but no modelScene to shatter.");
       }
-      return;
+      return false;
     }
 
     if (isPuzzleSolvedInSession(entry.key)) {
       entry.puzzleSolved = true; // intact for the whole session
       console.log("[AR puzzle] '" + entry.key + "' already solved this session — shown intact.");
-      return;
+      return true;
     }
 
     var scene = entry.modelScene;
@@ -1847,7 +1978,7 @@
     // Model bounds in modelScene space — the puzzle's working space.
     var bounds = new THREE_NS.Box3().setFromObject(scene);
     if (bounds.isEmpty()) {
-      return;
+      return false;
     }
     var center = new THREE_NS.Vector3();
     var size = new THREE_NS.Vector3();
@@ -1874,7 +2005,7 @@
       }
     });
     if (!meshes.length) {
-      return;
+      return false;
     }
 
     var piecesPerMesh = Math.max(2, Math.round(PUZZLE.pieces / meshes.length));
@@ -1931,7 +2062,7 @@
     });
 
     if (!shardRecords.length) {
-      return;
+      return false;
     }
 
     entry.puzzle = {
@@ -1946,6 +2077,7 @@
 
     console.log("[AR puzzle] '" + entry.key + "' shattered into " + shardRecords.length + " shards.");
     sendAnalytics("puzzle_started", { marker: entry.key });
+    return true;
   }
 
   /* --- Puzzle hint chip ---------------------------------------------------- */
@@ -2320,56 +2452,83 @@
 
   function loadMarkerModel(entry, markerConfig) {
     if (!runtime.loader || !entry) {
-      return;
+      return Promise.reject(new Error("The GLB loader is unavailable."));
     }
 
-    runtime.loader.load(
-      markerConfig.modelUrl,
-      function (gltf) {
-        var scene = gltf && (gltf.scene || (gltf.scenes && gltf.scenes[0]));
-        if (!scene) {
-          throw new Error("GLB scene is empty.");
+    return new Promise(function (resolve, reject) {
+      runtime.loader.load(
+        markerConfig.modelUrl,
+        function (gltf) {
+          // Yield once before the CPU-heavy normalization and shard build so
+          // the branded loader can repaint between completed downloads.
+          window.setTimeout(function () {
+            try {
+              if (runtime.destroyed) {
+                throw new Error("AR preparation was cancelled.");
+              }
+              var scene = gltf && (gltf.scene || (gltf.scenes && gltf.scenes[0]));
+              if (!scene) {
+                throw new Error("GLB scene is empty.");
+              }
+
+              var modelSettings = getModelConfig(entry.key);
+              tuneModelMaterials(scene);
+              entry.modelScene = scene;
+              entry.modelContainer.add(scene);
+              normalizeModel(entry, scene, modelSettings);
+
+              var puzzleReady = setupAnamorphicPuzzle(entry);
+              if (entry.puzzleEnabled && !puzzleReady) {
+                throw new Error("The anamorphic shards could not be prepared.");
+              }
+
+              entry.modelLoaded = true;
+              sendAnalytics("model_loaded", { model: entry.key });
+              resolve(entry);
+            } catch (error) {
+              entry.modelLoaded = false;
+              sendAnalytics("model_error", {
+                model: entry.key,
+                error: parseErrorMessage(error),
+              });
+              reject(new Error(entry.key + ": " + parseErrorMessage(error)));
+            }
+          }, 0);
+        },
+        function (event) {
+          reportModelDownload(entry.key, event);
+        },
+        function (error) {
+          sendAnalytics("model_error", {
+            model: entry.key,
+            error: parseErrorMessage(error),
+          });
+          reject(new Error(entry.key + ": " + parseErrorMessage(error)));
         }
+      );
+    });
+  }
 
-        var modelSettings = getModelConfig(entry.key);
-        tuneModelMaterials(scene);
-        entry.modelScene = scene;
-        entry.modelContainer.add(scene);
-        normalizeModel(entry, scene, modelSettings);
-        entry.modelLoaded = true;
-
-        setupAnamorphicPuzzle(entry);
-
-        sendAnalytics("model_loaded", { model: entry.key });
-      },
-      undefined,
-      function (error) {
-        sendAnalytics("model_error", {
-          model: entry.key,
-          error: parseErrorMessage(error),
-        });
+  function preloadMarkerPattern(markerConfig) {
+    if (!markerConfig || !markerConfig.patternUrl || typeof window.fetch !== "function") {
+      return Promise.resolve();
+    }
+    return window.fetch(markerConfig.patternUrl, { cache: "force-cache" }).then(function (response) {
+      if (!response.ok) {
+        throw new Error(markerConfig.key + ": marker pattern returned HTTP " + response.status + ".");
       }
-    );
+      return response.text(); // consume the response so the browser can cache it
+    });
   }
 
   function buildMarkerEntries(markers) {
     runtime.markerEntries = [];
+    var preparationTasks = [];
 
     markers.forEach(function (markerConfig) {
       var trackingRoot = new THREE_NS.Group();
       trackingRoot.visible = false;
       runtime.scene.add(trackingRoot);
-
-      var markerControls = new THREEx_NS.ArMarkerControls(runtime.arContext, trackingRoot, {
-        type: "pattern",
-        patternUrl: markerConfig.patternUrl,
-        changeMatrixMode: "modelViewMatrix",
-        minConfidence: clampUnit(CONFIG.markerControls.minConfidence),
-        smooth: CONFIG.markerControls.smooth,
-        smoothCount: Math.round(clampNumber(CONFIG.markerControls.smoothCount, 8, 1, 40)),
-        smoothTolerance: clampNumber(CONFIG.markerControls.smoothTolerance, 0.01, 0.0001, 1),
-        smoothThreshold: Math.round(clampNumber(CONFIG.markerControls.smoothThreshold, 2, 1, 20)),
-      });
 
       var renderRoot = new THREE_NS.Group();
       renderRoot.visible = false;
@@ -2389,7 +2548,8 @@
         renderRoot: renderRoot,
         occluderRoot: occluderRoot,
         occluderMesh: null,
-        markerControls: markerControls,
+        markerControls: null,
+        patternUrl: markerConfig.patternUrl,
         modelContainer: modelContainer,
         modelScene: null,
         audioByLanguage: markerConfig.audioByLanguage || null,
@@ -2415,9 +2575,16 @@
         smoothedScale: new THREE_NS.Vector3(1, 1, 1),
       };
 
-      loadMarkerModel(entry, markerConfig);
       runtime.markerEntries.push(entry);
+      preparationTasks.push(
+        Promise.all([loadMarkerModel(entry, markerConfig), preloadMarkerPattern(markerConfig)]).then(function () {
+          markModelPrepared(entry.key);
+          return entry;
+        })
+      );
     });
+
+    return Promise.all(preparationTasks);
   }
 
   function initRendererScene() {
@@ -2456,7 +2623,36 @@
     runtime.loader = new THREE_NS.GLTFLoader();
   }
 
+  function attachMarkerControls() {
+    if (!runtime.arContext) {
+      throw new Error("The AR tracking context is unavailable.");
+    }
+
+    runtime.markerEntries.forEach(function (entry) {
+      if (entry.markerControls) {
+        return;
+      }
+
+      entry.markerControls = new THREEx_NS.ArMarkerControls(runtime.arContext, entry.trackingRoot, {
+        type: "pattern",
+        patternUrl: entry.patternUrl,
+        changeMatrixMode: "modelViewMatrix",
+        minConfidence: clampUnit(CONFIG.markerControls.minConfidence),
+        smooth: CONFIG.markerControls.smooth,
+        smoothCount: Math.round(clampNumber(CONFIG.markerControls.smoothCount, 8, 1, 40)),
+        smoothTolerance: clampNumber(CONFIG.markerControls.smoothTolerance, 0.01, 0.0001, 1),
+        smoothThreshold: Math.round(clampNumber(CONFIG.markerControls.smoothThreshold, 2, 1, 20)),
+      });
+    });
+  }
+
   function initArToolkit() {
+    runtime.cameraStartTimeoutId = window.setTimeout(function () {
+      if (!runtime.cameraReady && !runtime.cameraError && !runtime.destroyed) {
+        showCameraError("AR camera initialization timed out.");
+      }
+    }, 45000);
+
     runtime.arSource = new THREEx_NS.ArToolkitSource({
       sourceType: CONFIG.source.sourceType,
       sourceWidth: CONFIG.source.sourceWidth,
@@ -2476,23 +2672,41 @@
     });
 
     runtime.arContext.init(function onContextReady() {
-      if (runtime.camera && typeof runtime.arContext.getProjectionMatrix === "function") {
-        runtime.camera.projectionMatrix.copy(runtime.arContext.getProjectionMatrix());
+      if (runtime.destroyed) {
+        return;
       }
 
-      requestViewportSync("context-ready", true);
-    });
+      try {
+        if (runtime.camera && typeof runtime.arContext.getProjectionMatrix === "function") {
+          runtime.camera.projectionMatrix.copy(runtime.arContext.getProjectionMatrix());
+        }
 
-    runtime.arSource.init(
-      function onSourceReady() {
-        markCameraReady("source-ready");
-        bindVideoListeners();
-        scheduleViewportSettle("source-ready");
-      },
-      function onSourceError(error) {
+        attachMarkerControls();
+        requestViewportSync("context-ready", true);
+        setPreloaderStatus("Artifacts ready. Starting the camera… / Handa na ang mga artifact. Binubuksan ang camera…");
+        startVideoWatcher();
+
+        // Camera access is intentionally requested only after every GLB has
+        // downloaded and every anamorphic shard set has been constructed.
+        runtime.arSource.init(
+          function onSourceReady() {
+            bindVideoListeners();
+            requestViewportSync("source-ready", true);
+            scheduleViewportSettle("source-ready");
+
+            var videoEl = getArVideoElement();
+            if (videoEl && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+              markCameraReady("source-ready-with-video");
+            }
+          },
+          function onSourceError(error) {
+            showCameraError(error);
+          }
+        );
+      } catch (error) {
         showCameraError(error);
       }
-    );
+    });
   }
 
   function bindVideoListeners() {
@@ -2678,6 +2892,11 @@
       runtime.videoWatcherIntervalId = 0;
     }
 
+    if (runtime.cameraStartTimeoutId) {
+      window.clearTimeout(runtime.cameraStartTimeoutId);
+      runtime.cameraStartTimeoutId = 0;
+    }
+
     runtime.markerEntries.forEach(function (entry) {
       clearMarkerLostTimer(entry);
 
@@ -2706,6 +2925,7 @@
     var enabledMarkers = getEnabledMarkers(configPayload.markers || []);
     if (!enabledMarkers.length) {
       console.error("[AR] No valid marker/model entries found in config.");
+      showPreloaderError("No AR artifacts are configured. / Walang naka-configure na AR artifact.");
       return;
     }
 
@@ -2721,11 +2941,9 @@
     setupModelRotationControls();
     setupAudioPriming();
     initRendererScene();
-    initArToolkit();
-    buildMarkerEntries(enabledMarkers);
     setupViewportListeners();
     setupErrorListeners();
-    startVideoWatcher();
+    initializePreloader(enabledMarkers.length);
 
     requestViewportSync("init", true);
     scheduleViewportSettle("init");
@@ -2733,6 +2951,26 @@
 
     window.addEventListener("beforeunload", teardown);
     animate(performance.now());
+
+    buildMarkerEntries(enabledMarkers)
+      .then(function () {
+        if (runtime.destroyed) {
+          return;
+        }
+
+        setPreloaderStatus("All 3D artifacts are ready. Preparing AR… / Handa na ang lahat ng 3D artifact. Inihahanda ang AR…");
+        sendAnalytics("preload_complete", { models: enabledMarkers.length });
+        initArToolkit();
+      })
+      .catch(function (error) {
+        if (runtime.destroyed) {
+          return;
+        }
+
+        console.error("[AR] Artifact preparation failed:", error);
+        showPreloaderError("One or more 3D artifacts could not be prepared. Check your connection and retry. / May 3D artifact na hindi naihanda. Suriin ang koneksiyon at subukang muli.");
+        sendAnalytics("preload_error", { error: parseErrorMessage(error) });
+      });
   }
 
   init();
