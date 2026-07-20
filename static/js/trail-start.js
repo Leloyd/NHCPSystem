@@ -1130,6 +1130,11 @@ function initPanorama() {
       title: { en: 'Guerrillas', tl: 'Mga Gerilya' },
       outline: true,
     },
+    estebanGuillermo: {
+      img: root.getAttribute('data-info-esteban-guillermo-img') || '',
+      title: { en: 'Rev. Fr. Esteban R. Guillermo', tl: 'Rev. Fr. Esteban R. Guillermo' },
+      outline: true,
+    },
   };
 
   // Artifact assets for the museum halls (image + EN/TL voice-over + optional
@@ -2166,9 +2171,10 @@ function initPanorama() {
             link(-22, 158, 'underground3'),
             link(-30, 248, 'underground1', 0, 170),
           ]);
-          scenes.frontAltarUnderground = eq(s8.frontAltarUnderground, 0, 0, [
+          scenes.frontAltarUnderground = eq(s8.frontAltarUnderground, 0, 0, spots([
+            infoSpot('front-altar-esteban-guillermo', -21.3, 80.79, 'estebanGuillermo', 'Rev. Fr. Esteban R. Guillermo'),
             link(-45, -9, 'middleUnderground', 0, -200),
-          ]);
+          ]));
           scenes.underground2 = eq(s8.underground2, 0, -14, spots([
             infoSpot('underground2-rebulusyon-espanya', -31.31, 80.39, 'rebulusyonEspanya', 'RebulusyonEspanya'),
             infoSpot('underground2-second-digmaan', -39.85, 164.48, 'secondDigmaan', '2ndDigmaan'),
