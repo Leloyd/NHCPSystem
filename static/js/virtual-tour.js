@@ -90,6 +90,7 @@
     rebulusyonEspanya: app ? app.dataset.undergroundRebulusyonEspanyaImageSrc : "",
     secondDigmaan: app ? app.dataset.undergroundSecondDigmaanImageSrc : "",
     gerilya: app ? app.dataset.undergroundGerilyaImageSrc : "",
+    estebanGuillermo: app ? app.dataset.undergroundEstebanGuillermoImageSrc : "",
   };
   const museum3ArtifactAssets = {
     inscription: {
@@ -1644,6 +1645,14 @@
       yaw: 0,
       hfov: 100,
       hotSpots: [
+        buildFloatingArtifactHotspot({
+          id: "front-altar-esteban-guillermo-marker",
+          pitch: -21.3,
+          yaw: 80.79,
+          imageSrc: undergroundImageAssets.estebanGuillermo,
+          imageAlt: "Rev. Fr. Esteban R. Guillermo",
+          previewFrameStyle: "outline",
+        }),
         {
           id: "return-middle-underground-from-front-altar",
           pitch: -45,
