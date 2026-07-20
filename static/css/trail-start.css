@@ -2806,3 +2806,264 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-memory__altar-line { clip-path: none; opacity: 1; }
   .trailx-memory__seal.is-awake::before { opacity: 1; }
 }
+
+/* ==========================================================================
+   Stop 4 · Map of Traditions — carry each custom home; the archipelago lights
+   ========================================================================== */
+.trailx__story--map .trailx__chapter--map { width: min(680px, 52vw); }
+
+.trailx-map {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  margin-top: 0.6rem;
+}
+
+/* The map board: a portrait archipelago on a dark sea. */
+.trailx-map__board {
+  position: relative;
+  height: clamp(15rem, 46vh, 23rem);
+  aspect-ratio: 100 / 150;
+  border-radius: 1rem;
+  border: 1px solid rgba(212, 175, 106, 0.32);
+  background:
+    radial-gradient(120% 80% at 50% -6%, rgba(212, 175, 106, 0.12), transparent 55%),
+    linear-gradient(180deg, #0c1a20 0%, #081217 60%, #050c10 100%);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.4), inset 0 1px rgba(255, 255, 255, 0.05);
+  overflow: hidden;
+  isolation: isolate;
+}
+.trailx-map__svg,
+.trailx-map__threads {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+.trailx-map__land {
+  fill: rgba(28, 22, 12, 0.9);
+  stroke: rgba(212, 175, 106, 0.55);
+  stroke-width: 0.5;
+  transition: fill 0.6s ease, stroke 0.6s ease;
+}
+.trailx-map__board.is-complete .trailx-map__land {
+  fill: rgba(60, 46, 22, 0.92);
+  stroke: rgba(247, 217, 143, 0.8);
+}
+.trailx-map__threads { pointer-events: none; z-index: 3; }
+.trailx-map__thread {
+  stroke: rgba(247, 217, 143, 0.7);
+  stroke-width: 0.5;
+  stroke-linecap: round;
+  filter: drop-shadow(0 0 1.5px rgba(212, 175, 106, 0.8));
+  stroke-dasharray: 200;
+  stroke-dashoffset: 200;
+  animation: trailx-map-thread 0.9s ease forwards;
+  animation-delay: var(--thread-delay, 0s);
+}
+@keyframes trailx-map-thread { to { stroke-dashoffset: 0; } }
+
+/* Markers: faint targets that light into the placed artifact. */
+.trailx-map__markers { position: absolute; inset: 0; z-index: 4; }
+.trailx-map__marker {
+  position: absolute;
+  width: 2.4rem;
+  height: 2.4rem;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: default;
+}
+.trailx-map__pin {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 106, 0.6);
+  background: rgba(212, 175, 106, 0.14);
+  box-shadow: 0 0 0 3px rgba(212, 175, 106, 0.08);
+  transition: opacity 0.4s ease;
+}
+.trailx-map__thumb {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: 50%;
+  border: 2px solid rgba(247, 217, 143, 0.9);
+  opacity: 0;
+  transform: scale(0.2);
+  transition: opacity 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.trailx-map__marker.is-lit { cursor: pointer; }
+.trailx-map__marker.is-lit .trailx-map__pin { opacity: 0; }
+.trailx-map__marker.is-lit .trailx-map__thumb {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 0 16px rgba(247, 217, 143, 0.7), 0 4px 10px rgba(0, 0, 0, 0.5);
+  animation: trailx-map-pop 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes trailx-map-pop { 0% { transform: scale(0.2); } 60% { transform: scale(1.25); } 100% { transform: scale(1); } }
+
+/* Progress line + revealed story. */
+.trailx-map__progress {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.7);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.62rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.trailx-map__reveal {
+  width: min(34rem, 100%);
+  padding: 0.7rem 0.85rem;
+  border-left: 2px solid var(--tx-gold);
+  border-radius: 0.3rem;
+  background: rgba(212, 175, 106, 0.1);
+  opacity: 0;
+  transform: translateY(6px);
+}
+.trailx-map__reveal.is-in { animation: trailx-detail-in 0.5s ease forwards; }
+.trailx-map__reveal[hidden] { display: none !important; }
+.trailx-map__reveal-region {
+  margin: 0 0 0.25rem;
+  color: #f7d98f;
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.6rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+.trailx-map__reveal-story {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: calc(0.98rem * var(--tx-font-scale, 1));
+  line-height: 1.4;
+}
+
+/* The tray of tradition cards to carry home. */
+.trailx-map__tray {
+  display: flex;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.2rem 0.1rem 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  -webkit-overflow-scrolling: touch;
+}
+.trailx-map__card {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.25rem;
+  width: 4.4rem;
+  padding: 0.4rem 0.3rem;
+  border: 1px solid rgba(212, 175, 106, 0.44);
+  border-radius: 0.7rem;
+  background: rgba(250, 247, 242, 0.06);
+  color: #fff;
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.55rem * var(--tx-font-scale, 1));
+  text-align: center;
+  cursor: grab;
+  touch-action: none;
+  transform: translate3d(var(--map-drag-x, 0), var(--map-drag-y, 0), 0);
+  transition: opacity 0.35s ease, transform 0.25s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.trailx-map__card img {
+  width: 3rem;
+  height: 3rem;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  pointer-events: none;
+}
+.trailx-map__card span { line-height: 1.1; letter-spacing: 0.02em; }
+.trailx-map__card:hover { border-color: var(--tx-gold); background: rgba(212, 175, 106, 0.14); }
+.trailx-map__card.is-dragging { z-index: 20; cursor: grabbing; transition: none; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); }
+.trailx-map__card.is-placed { opacity: 0.32; cursor: default; }
+.trailx-map__card.is-placed::after {
+  content: "\2713";
+  position: absolute;
+  top: 0.2rem;
+  right: 0.35rem;
+  color: #f7d98f;
+  font-size: 0.7rem;
+}
+
+/* The flying artifact clone as a card is carried to its island. */
+.trailx-map__fly {
+  position: fixed;
+  z-index: 120;
+  width: 3rem;
+  height: 3rem;
+  margin: 0;
+  object-fit: cover;
+  border-radius: 0.5rem;
+  border: 2px solid rgba(247, 217, 143, 0.9);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+  transition: transform 0.75s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.75s ease;
+}
+
+/* Completion chapter. */
+.trailx__chapter--map-done {
+  left: 0;
+  right: 0;
+  width: min(620px, 92vw);
+  margin: 0 auto;
+  align-items: center;
+  text-align: center;
+}
+.trailx__chapter--map-done .trailx__chapter-copy { margin-left: auto; margin-right: auto; }
+.trailx-map__final-copy {
+  max-width: 34rem;
+  margin: 0.7rem auto 0;
+  padding-top: 0.7rem;
+  border-top: 1px solid var(--tx-gold);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-style: italic;
+  font-size: calc(1rem * var(--tx-font-scale, 1));
+  line-height: 1.45;
+  animation: trailx-detail-in 0.6s ease both;
+}
+.trailx-map__final-copy[hidden] { display: none !important; }
+.trailx-map__reset {
+  margin-top: 0.9rem;
+  padding: 0.46rem 0.8rem;
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  border-radius: 999px;
+  background: rgba(212, 175, 106, 0.12);
+  color: #f7d98f;
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.6rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.trailx-map__reset:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--tx-gold); }
+
+@media (max-width: 820px) {
+  .trailx__story--map .trailx__chapter--map { width: min(94vw, 30rem); }
+  .trailx-map__board { height: clamp(13rem, 40vh, 19rem); }
+  .trailx-map__card { width: 3.9rem; }
+  .trailx-map__card img { width: 2.6rem; height: 2.6rem; }
+  .trailx-map__reveal-story { font-size: calc(0.9rem * var(--tx-font-scale, 1)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trailx-map__thread,
+  .trailx-map__marker.is-lit .trailx-map__thumb,
+  .trailx-map__reveal.is-in,
+  .trailx-map__final-copy { animation: none !important; }
+  .trailx-map__thread { stroke-dashoffset: 0; }
+  .trailx-map__reveal.is-in { opacity: 1; transform: none; }
+}

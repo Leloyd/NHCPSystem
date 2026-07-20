@@ -98,28 +98,20 @@ const SCRIPTS = {
     tl: "Tapos na ang ating ikatlong hinto. Ngunit bago tayo umalis sa museo, kailangan ng mga kuwento nito ng tagapag-ingat. Sa unahan, tatlong kumukupas na alaala ang naghihintay sa iyong mga kamay. Pindutin ang Magpatuloy.",
   },
   's4-arrive': {
-    en: "Welcome to Fragments of Memory. There are no questions and no scores here. Three stories from the museum are fading: a journey, an act of care, and a remembrance. Restore them with your hands, and the museum will reveal its memory seal.",
-    tl: "Maligayang pagdating sa Mga Piraso ng Alaala. Walang tanong at walang puntos dito. Kumukupas ang tatlong kuwento mula sa museo: isang paglalakbay, isang pagkalinga, at isang pag-alaala. Muli mong buuin ang mga ito gamit ang iyong mga kamay, at ihahayag ng museo ang sagisag ng alaala.",
+    en: "Welcome to Islands of Farewell. There are no questions and no scores here. Every artifact you met in the museum has a home somewhere in our islands — from Batanes in the far north to Sulu in the south. Carry each custom back to where it belongs, and light the whole archipelago.",
+    tl: "Maligayang pagdating sa Mga Pulo ng Paalam. Walang tanong at walang puntos dito. May pinagmulan ang bawat artifact na nakilala mo sa museo — mula Batanes sa hilaga hanggang Sulu sa timog. Ihatid ang bawat kaugalian pabalik sa pinagmulan nito, at liwanagan ang buong kapuluan.",
   },
-  's4-journey': {
-    en: "First memory: the journey. Draw the balanghay across the luminous current. As the boat reaches the other shore, remember that it carried more than travelers — it also represented the soul's voyage to the next life.",
-    tl: "Unang alaala: ang paglalakbay. Igabay ang balanghay sa kumikinang na agos. Habang nararating ng bangka ang kabilang pampang, alalahaning higit pa sa mga manlalakbay ang dala nito — kinakatawan din nito ang paglalakbay ng kaluluwa tungo sa kabilang buhay.",
+  's4-map': {
+    en: "Here is our archipelago. Tap or drag any tradition below, and it will find its island and share its story. There is no wrong place — each custom simply returns home. Take your time, and let every island light up.",
+    tl: "Narito ang ating kapuluan. Pindutin o i-drag ang alinmang tradisyon sa ibaba, at hahanapin nito ang pulo nito at ibabahagi ang kuwento. Walang maling lugar — babalik lamang sa pinagmulan ang bawat kaugalian. Huwag magmadali, at hayaang lumiwanag ang bawat pulo.",
   },
-  's4-care': {
-    en: "Second memory: continuing care. Swipe across the cloth three times to restore the uloh. In the Ifugao bogwa tradition, the departed are still treated with care as their remains are cleansed and wrapped in a new burial cloth.",
-    tl: "Ikalawang alaala: patuloy na pagkalinga. Humagod sa tela nang tatlong beses upang maibalik ang uloh. Sa tradisyong bogwa ng mga Ifugao, patuloy na inaalagaan ang yumao habang nililinis ang kanilang mga labi at muling binabalot sa bagong telang panlibing.",
-  },
-  's4-remembrance': {
-    en: "Final memory: remembrance. Carry each token into the circle. Alay nourishes the bond with the departed, Pahimakas honors through music, and Recuerdos preserves a face and a moment for those who remain.",
-    tl: "Huling alaala: pag-alaala. Dalhin ang bawat sagisag sa bilog. Pinatitibay ng alay ang ugnayan sa yumao, nagbibigay-pugay ang Pahimakas sa pamamagitan ng musika, at iniingatan ng Recuerdos ang mukha at sandali para sa mga naiwan.",
-  },
-  's4-seal': {
-    en: "The memory seal gathers three lessons from the museum: journey, continuing care, and remembrance. When all three shine together, the stories become whole again.",
-    tl: "Pinagsasama ng sagisag ng alaala ang tatlong aral mula sa museo: paglalakbay, patuloy na pagkalinga, at pag-alaala. Kapag sabay na lumiwanag ang tatlo, muling mabubuo ang mga kuwento.",
+  's4-complete': {
+    en: "Look how the islands shine. From the hanging coffins of Sagada to the burial jars of Mindanao, every people has its own farewell — yet all share one wish: that the dead are cared for, and never forgotten. One thread now runs through them all.",
+    tl: "Tingnan kung paano lumiliwanag ang mga pulo. Mula sa nakasabit na kabaong ng Sagada hanggang sa mga bangang panlibing ng Mindanao, may sariling paalam ang bawat pamayanan — ngunit iisa ang hangarin: na maalagaan ang yumao, at hindi kalimutan kailanman. May isang sinulid nang dumadaloy sa kanilang lahat.",
   },
   's4-next': {
-    en: "Carry those stories with you. When you are ready, come with me back into the open air — the grounds have a long history to tell. Tap Continue.",
-    tl: "Dalhin mo ang mga kuwentong iyon. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kasaysayang ikukuwento ng bakuran. Pindutin ang Magpatuloy.",
+    en: "Carry those farewells with you. When you are ready, come with me back into the open air — the grounds have a long history to tell. Tap Continue.",
+    tl: "Dalhin mo ang mga paalam na iyon. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kasaysayang ikukuwento ng bakuran. Pindutin ang Magpatuloy.",
   },
   's5-arrive': {
     en: "Welcome back to the open grounds — our fifth stop. Here the cemetery's history stands in stone. Drag to look around, and follow the glowing rings through the courtyard, the face of the chapel, and the quiet rows of tombs. When you are ready, scroll down.",
@@ -2714,6 +2706,226 @@ function setupMemoryQuest(el, options = {}) {
   return { reset, stopAudio: stopMarch };
 }
 
+/* Stop 4 · Map of Traditions ------------------------------------------------
+   A discovery map: carry each Stop 3 custom home to its island. Tap or drag a
+   card; it flies to its region, the island lights up with the artifact, and
+   its story is revealed. There is no wrong placement — it always returns home.
+   Lighting every island draws one thread through the whole archipelago. */
+function setupTraditionMap(el, options = {}) {
+  if (!el || !el.hasAttribute('data-tradition-map')) return null;
+
+  const board = el.querySelector('[data-map-board]');
+  const markersWrap = el.querySelector('[data-map-markers]');
+  const threadsSvg = el.querySelector('[data-map-threads]');
+  const progress = el.querySelector('[data-map-progress]');
+  const reveal = el.querySelector('[data-map-reveal]');
+  const resetButton = el.querySelector('[data-map-reset]');
+  const finalWait = el.querySelector('[data-map-final-wait]');
+  const finalComplete = el.querySelector('[data-map-final-complete]');
+  const cards = Array.from(el.querySelectorAll('[data-map-card]'));
+  const total = cards.length;
+  const placed = new Set();
+  const markerByKey = {};
+  let announced = false;
+  let doneTimer = 0;
+
+  const pulse = (pattern = 16) => {
+    try { if (navigator.vibrate) navigator.vibrate(pattern); } catch { /* optional */ }
+  };
+  const setCountText = (node, en, tl) => {
+    if (!node) return;
+    const e = node.querySelector('[data-lang-en]');
+    const t = node.querySelector('[data-lang-tl]');
+    if (e) e.textContent = en;
+    if (t) t.textContent = tl;
+  };
+  const esc = (v) => String(v == null ? '' : v)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+
+  const showReveal = (card) => {
+    if (!reveal) return;
+    reveal.innerHTML =
+      '<p class="trailx-map__reveal-region"><span data-lang-en>' + esc(card.dataset.regionEn) + '</span><span data-lang-tl>' + esc(card.dataset.regionTl) + '</span></p>' +
+      '<p class="trailx-map__reveal-story"><span data-lang-en>' + esc(card.dataset.storyEn) + '</span><span data-lang-tl>' + esc(card.dataset.storyTl) + '</span></p>';
+    reveal.hidden = false;
+    reveal.classList.remove('is-in');
+    void reveal.offsetWidth; // restart the entrance each reveal
+    reveal.classList.add('is-in');
+  };
+
+  // A target marker for every card, positioned on the stylized map.
+  cards.forEach((card) => {
+    const key = card.dataset.mapCard;
+    const x = parseFloat(card.dataset.mapX) || 0;
+    const y = parseFloat(card.dataset.mapY) || 0;
+    const marker = document.createElement('button');
+    marker.type = 'button';
+    marker.className = 'trailx-map__marker';
+    marker.dataset.mapMarker = key;
+    marker.style.left = x + '%';
+    marker.style.top = (y / 1.5) + '%'; // viewBox is 0 0 100 150
+    marker.setAttribute('aria-label', card.dataset.regionEn || key);
+    marker.innerHTML = '<span class="trailx-map__pin" aria-hidden="true"></span><img class="trailx-map__thumb" alt="" />';
+    markersWrap?.appendChild(marker);
+    markerByKey[key] = marker;
+    marker.addEventListener('click', () => { if (placed.has(key)) showReveal(card); });
+  });
+
+  const flyToMarker = (card, marker) => {
+    if (prefersReducedMotion || !card || !marker) return;
+    const srcImg = card.querySelector('img');
+    if (!srcImg) return;
+    const cr = srcImg.getBoundingClientRect();
+    const mr = marker.getBoundingClientRect();
+    const clone = srcImg.cloneNode();
+    clone.className = 'trailx-map__fly';
+    clone.style.left = (cr.left + cr.width / 2) + 'px';
+    clone.style.top = (cr.top + cr.height / 2) + 'px';
+    document.body.appendChild(clone);
+    const dx = (mr.left + mr.width / 2) - (cr.left + cr.width / 2);
+    const dy = (mr.top + mr.height / 2) - (cr.top + cr.height / 2);
+    requestAnimationFrame(() => {
+      clone.style.transform = 'translate(-50%, -50%) translate(' + dx + 'px, ' + dy + 'px) scale(0.32)';
+      clone.style.opacity = '0.12';
+    });
+    let gone = false;
+    const remove = () => { if (gone) return; gone = true; clone.remove(); };
+    clone.addEventListener('transitionend', remove, { once: true });
+    window.setTimeout(remove, 1000);
+  };
+
+  const drawThreads = () => {
+    if (!threadsSvg) return;
+    threadsSvg.innerHTML = '';
+    const pts = cards.slice()
+      .sort((a, b) => (parseFloat(a.dataset.mapY) || 0) - (parseFloat(b.dataset.mapY) || 0))
+      .map((c) => ({ x: parseFloat(c.dataset.mapX) || 0, y: parseFloat(c.dataset.mapY) || 0 }));
+    for (let i = 0; i < pts.length - 1; i += 1) {
+      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+      line.setAttribute('x1', pts[i].x);
+      line.setAttribute('y1', pts[i].y);
+      line.setAttribute('x2', pts[i + 1].x);
+      line.setAttribute('y2', pts[i + 1].y);
+      line.setAttribute('class', 'trailx-map__thread');
+      line.style.setProperty('--thread-delay', (i * 0.12) + 's');
+      threadsSvg.appendChild(line);
+    }
+  };
+
+  const updateProgress = () => {
+    setCountText(progress,
+      placed.size + ' of ' + total + ' traditions placed',
+      placed.size + ' sa ' + total + ' tradisyon ang nailagay');
+    const whole = placed.size === total && total > 0;
+    board?.classList.toggle('is-complete', whole);
+    if (finalWait) finalWait.hidden = whole;
+    if (finalComplete) finalComplete.hidden = !whole;
+    if (whole && !announced) {
+      announced = true;
+      pulse([24, 55, 24, 55, 40]);
+      drawThreads();
+      charApi.playGesture?.('heart');
+      window.clearTimeout(doneTimer);
+      doneTimer = window.setTimeout(() => {
+        if (state.mode === 'stop4') options.onAllComplete?.();
+      }, prefersReducedMotion ? 300 : 1500);
+    }
+  };
+
+  const placeCard = (card) => {
+    if (!card) return;
+    const key = card.dataset.mapCard;
+    if (!key || placed.has(key)) return;
+    placed.add(key);
+    const marker = markerByKey[key];
+    const srcImg = card.querySelector('img');
+    const thumb = marker?.querySelector('.trailx-map__thumb');
+    if (thumb && srcImg) thumb.src = srcImg.currentSrc || srcImg.src;
+    flyToMarker(card, marker);
+    window.setTimeout(() => marker?.classList.add('is-lit'), prefersReducedMotion ? 0 : 250);
+    card.classList.add('is-placed');
+    card.disabled = true;
+    card.style.removeProperty('--map-drag-x');
+    card.style.removeProperty('--map-drag-y');
+    pulse(16);
+    showReveal(card);
+    updateProgress();
+  };
+
+  // Tap places; drag also places on release (never "wrong" — it reveals).
+  cards.forEach((card) => {
+    let drag = null;
+    let suppressClickUntil = 0;
+    card.addEventListener('pointerdown', (event) => {
+      if (card.disabled || event.button > 0) return;
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+      card.setPointerCapture?.(event.pointerId);
+      card.classList.add('is-dragging');
+    });
+    card.addEventListener('pointermove', (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (Math.hypot(dx, dy) > 6) drag.moved = true;
+      if (!drag.moved) return;
+      event.preventDefault();
+      card.style.setProperty('--map-drag-x', dx + 'px');
+      card.style.setProperty('--map-drag-y', dy + 'px');
+    });
+    const finish = (event, cancelled) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      drag = null;
+      card.classList.remove('is-dragging');
+      suppressClickUntil = performance.now() + 350;
+      if (!cancelled) placeCard(card);
+      else {
+        card.style.removeProperty('--map-drag-x');
+        card.style.removeProperty('--map-drag-y');
+      }
+    };
+    card.addEventListener('pointerup', (event) => finish(event, false));
+    card.addEventListener('pointercancel', (event) => finish(event, true));
+    card.addEventListener('click', () => {
+      if (performance.now() < suppressClickUntil) return;
+      placeCard(card);
+    });
+  });
+
+  const reset = () => {
+    window.clearTimeout(doneTimer);
+    announced = false;
+    placed.clear();
+    if (threadsSvg) threadsSvg.innerHTML = '';
+    if (reveal) { reveal.hidden = true; reveal.innerHTML = ''; }
+    Object.values(markerByKey).forEach((marker) => {
+      marker.classList.remove('is-lit');
+      const thumb = marker.querySelector('.trailx-map__thumb');
+      if (thumb) thumb.removeAttribute('src');
+    });
+    cards.forEach((card) => {
+      card.disabled = false;
+      card.classList.remove('is-placed', 'is-dragging');
+      card.style.removeProperty('--map-drag-x');
+      card.style.removeProperty('--map-drag-y');
+    });
+    board?.classList.remove('is-complete');
+    updateProgress();
+  };
+
+  resetButton?.addEventListener('click', () => {
+    reset();
+    options.onReset?.();
+  });
+
+  // Keep the shared controls' hooks valid (no audio in this activity).
+  memoryApi.reset = reset;
+  memoryApi.stopAudio = () => {};
+  memoryApi.setMuted = () => {};
+  updateProgress();
+
+  return { reset };
+}
+
 /* The landing page's chapter engine, instantiated once per stop: scroll
    progress picks the active step; the leaving panel slides up and out, the
    next rises in from below, and the active panel's children stagger in — all
@@ -2852,14 +3064,14 @@ function setupStory(el) {
     scrollGoal = null;
   }, { passive: true });
 
-  const memoryFinalIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-seal');
-  const memoryJourneyIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-journey');
-  setupMemoryQuest(el, {
+  const mapCompleteIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-complete');
+  const mapActivityIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-map');
+  setupTraditionMap(el, {
     onAllComplete: () => {
-      if (memoryFinalIndex >= 0) scrollToStep(memoryFinalIndex);
+      if (mapCompleteIndex >= 0) scrollToStep(mapCompleteIndex);
     },
     onReset: () => {
-      if (memoryJourneyIndex >= 0) scrollToStep(memoryJourneyIndex);
+      if (mapActivityIndex >= 0) scrollToStep(mapActivityIndex);
     },
   });
 

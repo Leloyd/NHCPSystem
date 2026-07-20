@@ -774,183 +774,135 @@
       </div>
       <!-- ============ End Stop 3 · Museum Artifact Interpretation ============ -->
 
-      <!-- ============ Stop 4 · Fragments of Memory ============
-           One connected, unscored museum-memory experience. Visitors restore
-           three ideas from Stop 3 through movement rather than questions. -->
-      <div class="trailx__story trailx__story--memory" data-trail-story="stop4" data-memory-quest aria-label="Stop 4 — Fragments of Memory" hidden>
+      <!-- ============ Stop 4 · Map of Traditions ============
+           An unscored discovery map. Visitors carry each Stop 3 custom home to
+           its island; the region blooms and tells its story. No right/wrong. -->
+      <div class="trailx__story trailx__story--map" data-trail-story="stop4" data-tradition-map aria-label="Stop 4 — Map of Traditions" hidden>
         <div class="trailx__stage" data-trail-stage>
           <!-- Step 0 · Arrive -->
           <header class="trailx__chapter trailx__chapter--hero" data-chapter="s4-arrive" data-side="left" data-title="Arrive">
             <p class="trailx__s1-kicker"><span data-lang-en>Stop 4 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 4 ng 10 · Landas ng Pamana</span></p>
             <h2 class="trailx__chapter-title trailx__chapter-title--hero">
-              <span data-lang-en>Fragments of <em>Memory</em></span>
-              <span data-lang-tl>Mga Piraso ng <em>Alaala</em></span>
+              <span data-lang-en>Islands of <em>Farewell</em></span>
+              <span data-lang-tl>Mga Pulo ng <em>Paalam</em></span>
             </h2>
             <p class="trailx__s1-tip">
-              <span data-lang-en>No questions · No scores · Restore three stories with your hands</span>
-              <span data-lang-tl>Walang tanong · Walang puntos · Buuin ang tatlong kuwento gamit ang iyong mga kamay</span>
+              <span data-lang-en>No questions · No scores · Carry each custom home and watch the islands remember</span>
+              <span data-lang-tl>Walang tanong · Walang puntos · Ihatid ang bawat kaugalian sa pinagmulan nito</span>
             </p>
-            <div class="trailx-memory__legend" aria-label="Three memories to restore">
-              <span data-memory-legend="journey"><i aria-hidden="true"></i><span data-lang-en>Journey</span><span data-lang-tl>Paglalakbay</span></span>
-              <span data-memory-legend="care"><i aria-hidden="true"></i><span data-lang-en>Care</span><span data-lang-tl>Pagkalinga</span></span>
-              <span data-memory-legend="remembrance"><i aria-hidden="true"></i><span data-lang-en>Remembrance</span><span data-lang-tl>Pag-alaala</span></span>
-            </div>
+            <p class="trailx__chapter-copy" data-lang-en>
+              Every artifact you met in the museum has a home. From Batanes down to Sulu, each people bids farewell in its own way. Send each custom back to its island and light the whole archipelago.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              May pinagmulan ang bawat artifact na nakilala mo sa museo. Mula Batanes hanggang Sulu, may sariling paraan ng paalam ang bawat pamayanan. Ibalik ang bawat kaugalian sa pulo nito at liwanagan ang buong kapuluan.
+            </p>
           </header>
 
-          <!-- Memory I · The Journey -->
-          <article class="trailx__chapter trailx__chapter--memory" data-chapter="s4-journey" data-side="left" data-title="Journey" data-memory-scene="museum1" data-memory-yaw="10">
+          <!-- The Map · one interactive discovery board -->
+          <article class="trailx__chapter trailx__chapter--map" data-chapter="s4-map" data-side="left" data-title="Map" data-memory-scene="museum3" data-memory-yaw="0">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory · I</span><span data-lang-tl>Alaala · I</span></span>
+              <span class="trailx__label-text"><span data-lang-en>The Archipelago</span><span data-lang-tl>Ang Kapuluan</span></span>
             </div>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>Guide the <em>Voyage</em></span>
-              <span data-lang-tl>Gabayan ang <em>Paglalakbay</em></span>
+              <span data-lang-en>Carry Each Custom <em>Home</em></span>
+              <span data-lang-tl>Ihatid ang Kaugalian <em>Pauwi</em></span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              Draw the Balanghay along the current until it reaches the other shore.
+              Tap or drag a tradition below — it will find its island and share its story.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Igabay ang Balanghay sa agos hanggang marating nito ang kabilang pampang.
+              Pindutin o i-drag ang isang tradisyon sa ibaba — hahanapin nito ang pulo nito at ibabahagi ang kuwento.
             </p>
-            <div class="trailx-memory trailx-memory--journey" data-memory-act="journey">
-              <div class="trailx-memory__river" data-memory-river style="--memory-progress: 0%">
-                <span class="trailx-memory__shore trailx-memory__shore--start" aria-hidden="true"></span>
-                <span class="trailx-memory__current" aria-hidden="true"></span>
-                <span class="trailx-memory__shore trailx-memory__shore--end" aria-hidden="true"></span>
-                <span class="trailx-memory__boat" data-memory-boat aria-hidden="true">
-                  <!-- Real 3D Balanghay, revealed once the Journey act is in view.
-                       The CSS-drawn boat below shows until the model loads. -->
-                  <model-viewer class="trailx-memory__boat-mv"
-                    data-mv-src="{{ url_for('artifact_asset_file', filename='Balanghay/Balanghay-512(10K).glb') }}"
-                    camera-orbit="12deg 80deg 100%" disable-zoom disable-pan disable-tap
-                    interaction-prompt="none" auto-rotate auto-rotate-delay="0"
-                    rotation-per-second="16deg" shadow-intensity="0.85" shadow-softness="1"
-                    exposure="1.15" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
-                </span>
-                <input class="trailx-memory__range" data-memory-journey type="range" min="0" max="100" value="0" aria-label="Guide the Balanghay to the other shore / Igabay ang Balanghay sa kabilang pampang" />
-              </div>
-              <p class="trailx-memory__prompt" data-memory-prompt="journey" aria-live="polite">
-                <span data-lang-en>Drag the boat across the current</span><span data-lang-tl>I-drag ang bangka sa agos</span>
-              </p>
-              <p class="trailx-memory__insight" data-memory-insight="journey" hidden>
-                <span data-lang-en>The Balanghay carried people across the sea and symbolized the soul's voyage to the next life.</span>
-                <span data-lang-tl>Naghatid ang Balanghay ng mga tao sa dagat at sumagisag sa paglalakbay ng kaluluwa tungo sa kabilang buhay.</span>
-              </p>
-            </div>
-          </article>
 
-          <!-- Memory II · Continuing Care -->
-          <article class="trailx__chapter trailx__chapter--memory" data-chapter="s4-care" data-side="right" data-title="Care" data-memory-scene="museum1" data-memory-yaw="100">
-            <div class="trailx__label">
-              <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory · II</span><span data-lang-tl>Alaala · II</span></span>
-            </div>
-            <h3 class="trailx__chapter-title">
-              <span data-lang-en>Continue the <em>Care</em></span>
-              <span data-lang-tl>Ipagpatuloy ang <em>Pagkalinga</em></span>
-            </h3>
-            <p class="trailx__chapter-copy" data-lang-en>
-              Swipe across the cloth three times to wrap the symbolic bundle in a restored Ulóh.
-            </p>
-            <p class="trailx__chapter-copy" data-lang-tl>
-              Humagod sa tela nang tatlong beses upang balutin ang sagisag na hugis sa isang naibalik na Ulóh.
-            </p>
-            <div class="trailx-memory trailx-memory--care" data-memory-act="care">
-              <div class="trailx-memory__wrap" data-memory-wrap-zone tabindex="0" role="button" aria-label="Swipe to wrap the Ulóh / Humagod upang ibalot ang Ulóh">
-                <span class="trailx-memory__bundle" aria-hidden="true"></span>
-                <span class="trailx-memory__cloth trailx-memory__cloth--one" aria-hidden="true"></span>
-                <span class="trailx-memory__cloth trailx-memory__cloth--two" aria-hidden="true"></span>
-                <span class="trailx-memory__cloth trailx-memory__cloth--three" aria-hidden="true"></span>
-                <span class="trailx-memory__swipe" aria-hidden="true">↔</span>
+            <div class="trailx-map" data-tradition-map-stage>
+              <div class="trailx-map__board" data-map-board>
+                <svg class="trailx-map__svg" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
+                  <!-- Batanes -->
+                  <circle class="trailx-map__land" cx="56" cy="7" r="1.6" />
+                  <circle class="trailx-map__land" cx="58.5" cy="10.5" r="1.2" />
+                  <!-- Luzon -->
+                  <path class="trailx-map__land" d="M50,19 C43,21 37,28 39,37 C40,45 43,50 47,54 C50,57 52,58 55,62 C58,67 63,68 67,66 C72,64 74,66 77,64 C81,61 76,56 72,53 C69,50 71,44 69,38 C67,29 59,17 50,19 Z" />
+                  <!-- Mindoro -->
+                  <ellipse class="trailx-map__land" cx="42" cy="64" rx="4.4" ry="3.8" />
+                  <!-- Palawan -->
+                  <ellipse class="trailx-map__land" cx="23" cy="88" rx="4" ry="18" transform="rotate(28 23 88)" />
+                  <!-- Visayas -->
+                  <ellipse class="trailx-map__land" cx="50" cy="76" rx="4.2" ry="5" />
+                  <ellipse class="trailx-map__land" cx="57" cy="83" rx="3.4" ry="6" />
+                  <ellipse class="trailx-map__land" cx="63" cy="82" rx="2" ry="6" />
+                  <ellipse class="trailx-map__land" cx="66" cy="89" rx="3" ry="3" />
+                  <ellipse class="trailx-map__land" cx="71" cy="80" rx="3" ry="5.2" />
+                  <ellipse class="trailx-map__land" cx="75" cy="73" rx="3.6" ry="5" />
+                  <!-- Mindanao -->
+                  <path class="trailx-map__land" d="M60,100 C54,104 55,114 58,122 C60,128 57,135 63,138 C71,141 80,139 85,132 C91,126 91,117 87,111 C83,105 75,99 67,100 C64,100 62,99 60,100 Z" />
+                  <!-- Sulu chain -->
+                  <circle class="trailx-map__land" cx="50" cy="122" r="1.6" />
+                  <circle class="trailx-map__land" cx="44" cy="128" r="1.4" />
+                  <circle class="trailx-map__land" cx="38" cy="133" r="1.3" />
+                  <circle class="trailx-map__land" cx="32" cy="138" r="1.2" />
+                </svg>
+                <svg class="trailx-map__threads" data-map-threads viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                <div class="trailx-map__markers" data-map-markers></div>
               </div>
-              <div class="trailx-memory__care-tools">
-                <p class="trailx-memory__prompt" data-memory-wrap-count aria-live="polite"><span data-lang-en>0 of 3 layers restored</span><span data-lang-tl>0 sa 3 sapin ang naibalik</span></p>
-                <button class="trailx-memory__assist" type="button" data-memory-wrap-next><span data-lang-en>Wrap next layer</span><span data-lang-tl>Ibalot ang susunod na sapin</span></button>
-              </div>
-              <p class="trailx-memory__insight" data-memory-insight="care" hidden>
-                <span data-lang-en>In Bogwa, the Ifugao cleanse and rewrap the departed's remains in a new Ulóh as an act of continuing care.</span>
-                <span data-lang-tl>Sa Bogwa, nililinis at muling binabalot ng mga Ifugao ang mga labi ng yumao sa bagong Ulóh bilang patuloy na pagkalinga.</span>
-              </p>
-            </div>
-          </article>
 
-          <!-- Memory III · Remembrance -->
-          <article class="trailx__chapter trailx__chapter--memory" data-chapter="s4-remembrance" data-side="left" data-title="Remembrance" data-memory-scene="museum3" data-memory-yaw="-150">
-            <div class="trailx__label">
-              <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory · III</span><span data-lang-tl>Alaala · III</span></span>
-            </div>
-            <h3 class="trailx__chapter-title">
-              <span data-lang-en>Keep a Memory <em>Alive</em></span>
-              <span data-lang-tl>Panatilihing <em>Buhay</em> ang Alaala</span>
-            </h3>
-            <p class="trailx__chapter-copy" data-lang-en>
-              Drag each token into the remembrance circle. You may place them in any order.
-            </p>
-            <p class="trailx__chapter-copy" data-lang-tl>
-              I-drag ang bawat sagisag papunta sa bilog ng pag-alaala. Maaari mong ilagay ang mga ito sa anumang ayos.
-            </p>
-            <div class="trailx-memory trailx-memory--remembrance" data-memory-act="remembrance">
-              <div class="trailx-memory__tokens" aria-label="Memory tokens">
-                <button class="trailx-memory__token" type="button" data-memory-token="alay" aria-label="Place Alay in the remembrance circle">
-                  <img data-memory-image="alay" alt="" draggable="false" /><span>Alay</span>
+              <p class="trailx-map__progress" data-map-progress aria-live="polite">
+                <span data-lang-en>0 of 10 traditions placed</span><span data-lang-tl>0 sa 10 tradisyon ang nailagay</span>
+              </p>
+
+              <div class="trailx-map__reveal" data-map-reveal hidden aria-live="polite"></div>
+
+              <div class="trailx-map__tray" data-map-tray aria-label="Traditions to carry home">
+                <button class="trailx-map__card" type="button" data-map-card="kagamitan" data-map-x="57" data-map-y="8" data-region-en="Batanes" data-region-tl="Batanes" data-story-en="Ivatan graves held paddles, obsidian blades and arrowheads — tools to guide and guard the soul." data-story-tl="May sagwan, obsidian, at pana sa libingan ng Ivatan — gabay at sanggalang sa kaluluwa.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan.png') }}" alt="" draggable="false" /><span>Kagamitan</span>
                 </button>
-                <button class="trailx-memory__token" type="button" data-memory-token="pahimakas" aria-label="Place Pahimakas in the remembrance circle">
-                  <img data-memory-image="pahimakas" alt="" draggable="false" /><span>Pahimakas</span>
+                <button class="trailx-map__card" type="button" data-map-card="bagongon" data-map-x="42" data-map-y="30" data-region-en="Ilocos" data-region-tl="Ilocos" data-story-en="Only the spouse may dress the Ilocano dead, believed to carry the departed's final message." data-story-tl="Ang asawa lamang ang nagbibihis sa yumaong Ilokano, tagadala ng huling habilin.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon.png') }}" alt="" draggable="false" /><span>Bagongon</span>
                 </button>
-                <button class="trailx-memory__token" type="button" data-memory-token="recuerdos" aria-label="Place Recuerdos in the remembrance circle">
-                  <img data-memory-image="recuerdos" alt="" draggable="false" /><span>Recuerdos</span>
+                <button class="trailx-map__card" type="button" data-map-card="kabaong" data-map-x="50" data-map-y="30" data-region-en="Sagada, Mountain Province" data-region-tl="Sagada, Lalawigan ng Bundok" data-story-en="In Sagada, coffins hang on cliffs; elders carve their own, the body curled to return to the earth." data-story-tl="Sa Sagada, nakasabit sa bangin ang kabaong; mala-sanggol, pagbabalik sa lupa.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Kabaong/Kabaong.jpg') }}" alt="" draggable="false" /><span>Kabaong</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="bogwa" data-map-x="58" data-map-y="33" data-region-en="Ifugao" data-region-tl="Ifugao" data-story-en="The Ifugao exhume, cleanse and rewrap a loved one's bones in a new woven Ulóh — care without end." data-story-tl="Hinuhukay, nililinis, at muling binabalot ng Ifugao ang buto sa bagong Ulóh — walang hanggang pagkalinga.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa.png') }}" alt="" draggable="false" /><span>Bogwa</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="sabwag" data-map-x="76" data-map-y="62" data-region-en="Bikol" data-region-tl="Bikol" data-story-en="In Bikol, mourners are dusted with ash from a coconut shell — a reminder that we return to ashes." data-story-tl="Sa Bikol, binubudburan ng abo mula sa bao ng niyog ang nakiramay — babalik tayo sa alabok.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag.png') }}" alt="" draggable="false" /><span>Sabwag</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="banga" data-map-x="22" data-map-y="90" data-region-en="Palawan" data-region-tl="Palawan" data-story-en="Palawan's Manunggul Jar bears a boat and two figures on its lid — the soul's voyage to the next life." data-story-tl="May bangka't dalawang pigura ang takip ng Banga ng Manunggul — paglalakbay ng kaluluwa.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Banga/Banga.png') }}" alt="" draggable="false" /><span>Banga</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="pagtubas" data-map-x="74" data-map-y="78" data-region-en="Eastern Visayas" data-region-tl="Silangang Kabisayaan" data-story-en="Waray families sprinkle blessed water and carry the coffin feet-first so the spirit will not return." data-story-tl="Winiwisikan ng bendisyong tubig; paa ang una sa kabaong upang di na bumalik ang kaluluwa.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas.png') }}" alt="" draggable="false" /><span>Pagtubas</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="balanghay" data-map-x="74" data-map-y="104" data-region-en="Butuan" data-region-tl="Butuan" data-story-en="The Balanghay boat carried the soul across the sea; warriors were buried with their vessels." data-story-tl="Naghatid ang Balanghay ng kaluluwa sa dagat; inililibing ang mandirigma kasama ang bangka.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Balanghay/Balanghay.jpg') }}" alt="" draggable="false" /><span>Balanghay</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="jar" data-map-x="72" data-map-y="134" data-region-en="Sarangani (Maitum)" data-region-tl="Sarangani (Maitum)" data-story-en="The Maitum Jars of Sarangani are shaped like human faces — burial vessels of ancient Mindanao." data-story-tl="Hugis-mukha ang Banga ng Maitum sa Sarangani — sisidlang panlibing ng sinaunang Mindanao.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Jar/jar.png') }}" alt="" draggable="false" /><span>Banga ng Maitum</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="tausug" data-map-x="40" data-map-y="136" data-region-en="Sulu" data-region-tl="Sulu" data-story-en="Tausug burials follow four Islamic stages — wash, wrap, pray, bury — graves aligned north to south." data-story-tl="Apat na yugto ayon sa Islam: paglinis, pagbalot, panalangin, at paglibing; hilaga-timog ang libingan.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Tausug/Tausug.png') }}" alt="" draggable="false" /><span>Tausug</span>
                 </button>
               </div>
-              <div class="trailx-memory__altar" data-memory-altar aria-label="Remembrance circle">
-                <span class="trailx-memory__altar-ring" aria-hidden="true"></span>
-                <span class="trailx-memory__candle trailx-memory__candle--left" aria-hidden="true"></span>
-                <span class="trailx-memory__candle trailx-memory__candle--right" aria-hidden="true"></span>
-                <span class="trailx-memory__slot" data-memory-slot="alay">
-                  <model-viewer class="trailx-memory__slot-mv" data-mv-src="{{ url_for('artifact_asset_file', filename='Alay/Alay-512(10k).glb') }}" poster="{{ url_for('artifact_asset_file', filename='Alay/Alay.png') }}" camera-orbit="0deg 76deg 100%" disable-zoom disable-pan disable-tap interaction-prompt="none" auto-rotate auto-rotate-delay="0" rotation-per-second="12deg" shadow-intensity="0.7" exposure="1.05" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
-                  <b>Alay</b><small data-lang-en>Nourishment</small><small data-lang-tl>Pag-aalay</small>
-                </span>
-                <span class="trailx-memory__slot" data-memory-slot="pahimakas">
-                  <model-viewer class="trailx-memory__slot-mv" data-mv-src="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas-512(10k).glb') }}" poster="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas.png') }}" camera-orbit="0deg 76deg 100%" disable-zoom disable-pan disable-tap interaction-prompt="none" auto-rotate auto-rotate-delay="0" rotation-per-second="12deg" shadow-intensity="0.7" exposure="1.05" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
-                  <b>Pahimakas</b><small data-lang-en>Music</small><small data-lang-tl>Musika</small>
-                </span>
-                <span class="trailx-memory__slot" data-memory-slot="recuerdos">
-                  <model-viewer class="trailx-memory__slot-mv" data-mv-src="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}" poster="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}" camera-orbit="0deg 76deg 100%" disable-zoom disable-pan disable-tap interaction-prompt="none" auto-rotate auto-rotate-delay="0" rotation-per-second="12deg" shadow-intensity="0.7" exposure="1.05" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
-                  <b>Recuerdos</b><small data-lang-en>Memory</small><small data-lang-tl>Alaala</small>
-                </span>
-              </div>
-              <p class="trailx-memory__prompt" data-memory-prompt="remembrance" aria-live="polite"><span data-lang-en>0 of 3 memories placed</span><span data-lang-tl>0 sa 3 alaala ang nailagay</span></p>
-              <p class="trailx-memory__insight" data-memory-insight="remembrance" hidden>
-                <span data-lang-en>Alay, music, and photographs show three ways relationships with the departed are kept alive.</span>
-                <span data-lang-tl>Ipinapakita ng alay, musika, at mga larawan ang tatlong paraan upang manatiling buhay ang ugnayan sa yumao.</span>
-              </p>
             </div>
           </article>
 
-          <!-- Memory Seal · the three restored ideas become one keepsake -->
-          <article class="trailx__chapter trailx__chapter--memory-seal" data-chapter="s4-seal" data-title="Memory Seal" data-memory-scene="museum3" data-memory-yaw="170">
-            <p class="trailx__s1-kicker"><span data-lang-en>Three stories · One memory</span><span data-lang-tl>Tatlong kuwento · Isang alaala</span></p>
-            <div class="trailx-memory__seal" data-memory-final aria-live="polite">
-              <span class="trailx-memory__seal-orbit" aria-hidden="true"></span>
-              <span class="trailx-memory__seal-mark trailx-memory__seal-mark--journey" data-memory-seal="journey" aria-hidden="true">✦</span>
-              <span class="trailx-memory__seal-mark trailx-memory__seal-mark--care" data-memory-seal="care" aria-hidden="true">✦</span>
-              <span class="trailx-memory__seal-mark trailx-memory__seal-mark--remembrance" data-memory-seal="remembrance" aria-hidden="true">✦</span>
-              <span class="trailx-memory__seal-center"><span data-lang-en>Memory<br />Keeper</span><span data-lang-tl>Tagapag-ingat<br />ng Alaala</span></span>
-            </div>
-            <h3 class="trailx__chapter-title"><span data-lang-en>The Memory <em>Seal</em></span><span data-lang-tl>Ang Sagisag ng <em>Alaala</em></span></h3>
-            <p class="trailx__chapter-copy" data-memory-final-wait>
-              <span data-lang-en>The seal awakens as you restore Journey, Care, and Remembrance. You may return to any unfinished memory.</span>
-              <span data-lang-tl>Magigising ang sagisag kapag naibalik mo ang Paglalakbay, Pagkalinga, at Pag-alaala. Maaari kang bumalik sa anumang hindi pa tapos na alaala.</span>
+          <!-- Completion · the whole archipelago remembers -->
+          <article class="trailx__chapter trailx__chapter--map-done" data-chapter="s4-complete" data-title="Whole" data-memory-scene="museum3" data-memory-yaw="170">
+            <p class="trailx__s1-kicker"><span data-lang-en>One archipelago · Many farewells</span><span data-lang-tl>Isang kapuluan · Maraming paalam</span></p>
+            <h3 class="trailx__chapter-title"><span data-lang-en>A Constellation of <em>Farewells</em></span><span data-lang-tl>Isang Konstelasyon ng <em>Paalam</em></span></h3>
+            <p class="trailx__chapter-copy" data-map-final-wait>
+              <span data-lang-en>Light every island — from Batanes to Sulu — and the map draws one thread through them all. You may return to any island you missed.</span>
+              <span data-lang-tl>Liwanagan ang bawat pulo — mula Batanes hanggang Sulu — at buburahin ng mapa ang isang sinulid sa kanilang lahat. Maaari kang bumalik sa alinmang pulo.</span>
             </p>
-            <p class="trailx-memory__final-copy" data-memory-final-complete hidden>
-              <span data-lang-en>“You did not simply remember the artifacts. You restored the stories they carry.”</span>
-              <span data-lang-tl>“Hindi mo lamang inalala ang mga artifact. Muli mong binuo ang mga kuwentong taglay nila.”</span>
+            <p class="trailx-map__final-copy" data-map-final-complete hidden>
+              <span data-lang-en>“One archipelago, a thousand farewells — yet a single wish: that the dead are cared for, and never forgotten.”</span>
+              <span data-lang-tl>“Isang kapuluan, libong paalam — ngunit iisang hangarin: na maalagaan ang yumao, at hindi kalimutan kailanman.”</span>
             </p>
-            <button class="trailx-memory__assist" type="button" data-memory-reset><span data-lang-en>Restore the memories again</span><span data-lang-tl>Buuin muli ang mga alaala</span></button>
+            <button class="trailx-map__reset" type="button" data-map-reset><span data-lang-en>Light the islands again</span><span data-lang-tl>Liwanagan muli ang mga pulo</span></button>
           </article>
 
-          <!-- Step 4 · Next stop -->
+          <!-- Step · Next stop -->
           <footer class="trailx__chapter trailx__chapter--next" data-chapter="s4-next" data-title="Next">
             <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 5</span><span data-lang-tl>Susunod · Hinto 5</span></p>
             <h3 class="trailx__chapter-title">
@@ -958,10 +910,10 @@
               <span data-lang-tl>Dalhin ang mga Kuwento<br /><em>sa Liwanag</em></span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              The museum's memories travel with you. Next, we return to the open air and unfold the cemetery's long history.
+              The islands' farewells travel with you. Next, we return to the open air and unfold the cemetery's long history.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Kasama mo na ang mga alaala ng museo. Susunod, babalik tayo sa labas at ilalahad ang mahabang kasaysayan ng libingan.
+              Kasama mo na ang mga paalam ng kapuluan. Susunod, babalik tayo sa labas at ilalahad ang mahabang kasaysayan ng libingan.
             </p>
             <div class="trailx__actions">
               <button class="trailx__begin" data-trail-goto="stop5" type="button">
@@ -983,7 +935,7 @@
         <!-- Invisible track: gives the story its scroll distance -->
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>
       </div>
-      <!-- ================== End Stop 4 · Fragments of Memory ================== -->
+      <!-- ================== End Stop 4 · Map of Traditions ================== -->
 
       <!-- ============ Stop 5 · Cemetery History (the grounds) ============
            Same engine as the other stops, over the chapel-front + tomb-row
