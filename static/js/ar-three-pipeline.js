@@ -356,6 +356,9 @@
     quickLookViewer: null,
     viewInSpaceButton: null,
     solvedPuzzleEntry: null,
+    // Touch-drag to rotate the on-screen artifact
+    modelDrag: { active: false, pointerId: null, lastX: 0, lastY: 0, entry: null },
+    modelRotationHandlers: null,
     destroyed: false,
   };
 
@@ -2031,6 +2034,99 @@
     return viewer;
   }
 
+  /* --- Touch-drag to rotate the on-screen artifact -------------------------
+     A drag on the camera view spins the artifact the marker is showing. During
+     the anamorphic puzzle this is a second way to hunt the alignment angle
+     (rotating the model is equivalent to circling it); afterwards it lets the
+     visitor turn the restored piece to inspect it. */
+  function applyEntryUserRotation(entry) {
+    if (!entry || !entry.modelContainer || !entry.baseRotation) {
+      return;
+    }
+    entry.modelContainer.rotation.set(
+      entry.baseRotation.x + entry.userPitch,
+      entry.baseRotation.y + entry.userYaw,
+      entry.baseRotation.z
+    );
+  }
+
+  function getActiveVisibleEntry() {
+    var visible = runtime.markerEntries.filter(function (entry) {
+      return entry && entry.modelLoaded && entry.renderRoot && entry.renderRoot.visible && entry.isVisibleStable;
+    });
+    if (!visible.length) {
+      return null;
+    }
+    visible.sort(function (a, b) {
+      return b.lastSeenAt - a.lastSeenAt; // most recently seen wins
+    });
+    return visible[0];
+  }
+
+  function isRotationBlockingTarget(target) {
+    return Boolean(target && target.closest && target.closest(".ar-dock, .ar-puzzle-hint, button, a"));
+  }
+
+  function setupModelRotationControls() {
+    var sceneEl = document.getElementById("arScene");
+
+    var onPointerDown = function (event) {
+      if (isRotationBlockingTarget(event.target)) {
+        return; // let the controls handle their own taps
+      }
+      var entry = getActiveVisibleEntry();
+      if (!entry) {
+        return;
+      }
+      runtime.modelDrag.active = true;
+      runtime.modelDrag.pointerId = event.pointerId;
+      runtime.modelDrag.lastX = event.clientX;
+      runtime.modelDrag.lastY = event.clientY;
+      runtime.modelDrag.entry = entry;
+      if (sceneEl) {
+        sceneEl.classList.add("is-rotating");
+      }
+    };
+
+    var onPointerMove = function (event) {
+      var drag = runtime.modelDrag;
+      if (!drag.active || event.pointerId !== drag.pointerId || !drag.entry) {
+        return;
+      }
+      var dx = event.clientX - drag.lastX;
+      var dy = event.clientY - drag.lastY;
+      drag.lastX = event.clientX;
+      drag.lastY = event.clientY;
+      drag.entry.userYaw += dx * 0.011; // ~0.63°/px horizontal spin
+      drag.entry.userPitch = clampNumber(drag.entry.userPitch + dy * 0.009, 0, -1.05, 1.05); // ±60° tilt
+      applyEntryUserRotation(drag.entry);
+    };
+
+    var onPointerUp = function (event) {
+      var drag = runtime.modelDrag;
+      if (drag.pointerId !== null && event.pointerId !== drag.pointerId) {
+        return;
+      }
+      drag.active = false;
+      drag.pointerId = null;
+      drag.entry = null;
+      if (sceneEl) {
+        sceneEl.classList.remove("is-rotating");
+      }
+    };
+
+    document.addEventListener("pointerdown", onPointerDown, { passive: true });
+    document.addEventListener("pointermove", onPointerMove, { passive: true });
+    document.addEventListener("pointerup", onPointerUp, { passive: true });
+    document.addEventListener("pointercancel", onPointerUp, { passive: true });
+
+    runtime.modelRotationHandlers = {
+      onPointerDown: onPointerDown,
+      onPointerMove: onPointerMove,
+      onPointerUp: onPointerUp,
+    };
+  }
+
   function bindViewInSpaceButton() {
     var button = document.getElementById("arViewInSpace");
     if (!button) {
@@ -2209,6 +2305,15 @@
       degToRad(clampNumber(rotation[2], 0, -360, 360))
     );
 
+    // Remember the configured rotation so touch-drag rotates relative to it,
+    // then re-apply any spin the visitor has already dialed in.
+    entry.baseRotation = {
+      x: entry.modelContainer.rotation.x,
+      y: entry.modelContainer.rotation.y,
+      z: entry.modelContainer.rotation.z,
+    };
+    applyEntryUserRotation(entry);
+
     entry.modelContainer.scale.setScalar(fitScale);
     updateGroundOccluder(entry, modelSettings, size, fitScale);
   }
@@ -2293,6 +2398,9 @@
         puzzleEnabled: markerConfig.anamorphicPuzzle === true,
         puzzleSolved: false,
         puzzle: null,
+        baseRotation: null, // configured rotation; user drag rotates on top
+        userYaw: 0,
+        userPitch: 0,
         modelLoaded: false,
         isVisibleStable: false,
         lastSeenAt: 0,
@@ -2526,6 +2634,14 @@
     removePendingAudioUnlockHandler();
     stopActiveAudio(true);
 
+    if (runtime.modelRotationHandlers) {
+      document.removeEventListener("pointerdown", runtime.modelRotationHandlers.onPointerDown);
+      document.removeEventListener("pointermove", runtime.modelRotationHandlers.onPointerMove);
+      document.removeEventListener("pointerup", runtime.modelRotationHandlers.onPointerUp);
+      document.removeEventListener("pointercancel", runtime.modelRotationHandlers.onPointerUp);
+      runtime.modelRotationHandlers = null;
+    }
+
     if (runtime.audioElement) {
       runtime.audioElement.pause();
       runtime.audioElement.removeAttribute("src");
@@ -2602,6 +2718,7 @@
 
     bindNarrationControls();
     bindViewInSpaceButton();
+    setupModelRotationControls();
     setupAudioPriming();
     initRendererScene();
     initArToolkit();

@@ -53,6 +53,14 @@ video {
 #arScene {
   width: var(--app-width) !important;
   height: var(--app-height) !important;
+  /* Drags on the camera view rotate the artifact — take full touch control so
+     the browser doesn't pan/zoom the page mid-spin. */
+  touch-action: none;
+  cursor: grab;
+}
+
+#arScene.is-rotating {
+  cursor: grabbing;
 }
 
 #arjs-video,
