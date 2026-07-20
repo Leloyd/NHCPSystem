@@ -817,70 +817,64 @@
 
             <div class="trailx-map" data-tradition-map-stage>
               <div class="trailx-map__board" data-map-board>
-                <svg class="trailx-map__svg" viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true">
-                  <!-- Batanes -->
-                  <circle class="trailx-map__land" cx="56" cy="7" r="1.6" />
-                  <circle class="trailx-map__land" cx="58.5" cy="10.5" r="1.2" />
-                  <!-- Luzon -->
-                  <path class="trailx-map__land" d="M50,19 C43,21 37,28 39,37 C40,45 43,50 47,54 C50,57 52,58 55,62 C58,67 63,68 67,66 C72,64 74,66 77,64 C81,61 76,56 72,53 C69,50 71,44 69,38 C67,29 59,17 50,19 Z" />
-                  <!-- Mindoro -->
-                  <ellipse class="trailx-map__land" cx="42" cy="64" rx="4.4" ry="3.8" />
-                  <!-- Palawan -->
-                  <ellipse class="trailx-map__land" cx="23" cy="88" rx="4" ry="18" transform="rotate(28 23 88)" />
-                  <!-- Visayas -->
-                  <ellipse class="trailx-map__land" cx="50" cy="76" rx="4.2" ry="5" />
-                  <ellipse class="trailx-map__land" cx="57" cy="83" rx="3.4" ry="6" />
-                  <ellipse class="trailx-map__land" cx="63" cy="82" rx="2" ry="6" />
-                  <ellipse class="trailx-map__land" cx="66" cy="89" rx="3" ry="3" />
-                  <ellipse class="trailx-map__land" cx="71" cy="80" rx="3" ry="5.2" />
-                  <ellipse class="trailx-map__land" cx="75" cy="73" rx="3.6" ry="5" />
-                  <!-- Mindanao -->
-                  <path class="trailx-map__land" d="M60,100 C54,104 55,114 58,122 C60,128 57,135 63,138 C71,141 80,139 85,132 C91,126 91,117 87,111 C83,105 75,99 67,100 C64,100 62,99 60,100 Z" />
-                  <!-- Sulu chain -->
-                  <circle class="trailx-map__land" cx="50" cy="122" r="1.6" />
-                  <circle class="trailx-map__land" cx="44" cy="128" r="1.4" />
-                  <circle class="trailx-map__land" cx="38" cy="133" r="1.3" />
-                  <circle class="trailx-map__land" cx="32" cy="138" r="1.2" />
-                </svg>
-                <svg class="trailx-map__threads" data-map-threads viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg>
+                <img class="trailx-map__img" src="{{ url_for('public_images_file', filename='InsideMuseum/golden_ph_map.webp') }}" alt="Map of the Philippines" draggable="false" />
+                <svg class="trailx-map__threads" data-map-threads viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true"></svg>
                 <div class="trailx-map__markers" data-map-markers></div>
+                <button class="trailx-map__expand" type="button" data-map-expand aria-label="Expand the map / Palakihin ang mapa">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 9V5a1 1 0 0 1 1-1h4M15 4h4a1 1 0 0 1 1 1v4M20 15v4a1 1 0 0 1-1 1h-4M9 20H5a1 1 0 0 1-1-1v-4"/></svg>
+                </button>
               </div>
 
               <p class="trailx-map__progress" data-map-progress aria-live="polite">
-                <span data-lang-en>0 of 10 traditions placed</span><span data-lang-tl>0 sa 10 tradisyon ang nailagay</span>
+                <span data-lang-en>0 of 13 traditions placed</span><span data-lang-tl>0 sa 13 tradisyon ang nailagay</span>
               </p>
 
-              <div class="trailx-map__reveal" data-map-reveal hidden aria-live="polite"></div>
+              <div class="trailx-map__reveal" data-map-reveal hidden aria-live="polite">
+                <model-viewer class="trailx-map__reveal-mv" data-map-reveal-mv camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="0" rotation-per-second="18deg" interaction-prompt="none" shadow-intensity="0.6" exposure="1.1" environment-image="neutral" reveal="auto"></model-viewer>
+                <div class="trailx-map__reveal-text">
+                  <p class="trailx-map__reveal-region" data-map-reveal-region></p>
+                  <p class="trailx-map__reveal-story" data-map-reveal-story></p>
+                </div>
+              </div>
 
               <div class="trailx-map__tray" data-map-tray aria-label="Traditions to carry home">
-                <button class="trailx-map__card" type="button" data-map-card="kagamitan" data-map-x="57" data-map-y="8" data-region-en="Batanes" data-region-tl="Batanes" data-story-en="Ivatan graves held paddles, obsidian blades and arrowheads — tools to guide and guard the soul." data-story-tl="May sagwan, obsidian, at pana sa libingan ng Ivatan — gabay at sanggalang sa kaluluwa.">
+                <button class="trailx-map__card" type="button" data-map-card="kagamitan" data-map-x="45" data-map-y="7" data-map-glb="{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan-512(10k).glb') }}" data-region-en="Batanes" data-region-tl="Batanes" data-story-en="Ivatan graves held paddles, obsidian blades and arrowheads — tools to guide and guard the soul." data-story-tl="May sagwan, obsidian, at pana sa libingan ng Ivatan — gabay at sanggalang sa kaluluwa.">
                   <img src="{{ url_for('artifact_asset_file', filename='Kagamitan/Kagamitan.png') }}" alt="" draggable="false" /><span>Kagamitan</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="bagongon" data-map-x="42" data-map-y="30" data-region-en="Ilocos" data-region-tl="Ilocos" data-story-en="Only the spouse may dress the Ilocano dead, believed to carry the departed's final message." data-story-tl="Ang asawa lamang ang nagbibihis sa yumaong Ilokano, tagadala ng huling habilin.">
+                <button class="trailx-map__card" type="button" data-map-card="bagongon" data-map-x="39" data-map-y="19" data-map-glb="{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon-512(10k).glb') }}" data-region-en="Ilocos" data-region-tl="Ilocos" data-story-en="Only the spouse may dress the Ilocano dead, believed to carry the departed's final message." data-story-tl="Ang asawa lamang ang nagbibihis sa yumaong Ilokano, tagadala ng huling habilin.">
                   <img src="{{ url_for('artifact_asset_file', filename='Bagongon/Bagongon.png') }}" alt="" draggable="false" /><span>Bagongon</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="kabaong" data-map-x="50" data-map-y="30" data-region-en="Sagada, Mountain Province" data-region-tl="Sagada, Lalawigan ng Bundok" data-story-en="In Sagada, coffins hang on cliffs; elders carve their own, the body curled to return to the earth." data-story-tl="Sa Sagada, nakasabit sa bangin ang kabaong; mala-sanggol, pagbabalik sa lupa.">
+                <button class="trailx-map__card" type="button" data-map-card="kabaong" data-map-x="44" data-map-y="18" data-map-glb="{{ url_for('artifact_asset_file', filename='Kabaong/Kabaong-512(10k).glb') }}" data-region-en="Sagada, Mountain Province" data-region-tl="Sagada, Lalawigan ng Bundok" data-story-en="In Sagada, coffins hang on cliffs; elders carve their own, the body curled to return to the earth." data-story-tl="Sa Sagada, nakasabit sa bangin ang kabaong; mala-sanggol, pagbabalik sa lupa.">
                   <img src="{{ url_for('artifact_asset_file', filename='Kabaong/Kabaong.jpg') }}" alt="" draggable="false" /><span>Kabaong</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="bogwa" data-map-x="58" data-map-y="33" data-region-en="Ifugao" data-region-tl="Ifugao" data-story-en="The Ifugao exhume, cleanse and rewrap a loved one's bones in a new woven Ulóh — care without end." data-story-tl="Hinuhukay, nililinis, at muling binabalot ng Ifugao ang buto sa bagong Ulóh — walang hanggang pagkalinga.">
+                <button class="trailx-map__card" type="button" data-map-card="bogwa" data-map-x="47" data-map-y="21" data-map-glb="{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa-512(10k).glb') }}" data-region-en="Ifugao" data-region-tl="Ifugao" data-story-en="The Ifugao exhume, cleanse and rewrap a loved one's bones in a new woven Ulóh — care without end." data-story-tl="Hinuhukay, nililinis, at muling binabalot ng Ifugao ang buto sa bagong Ulóh — walang hanggang pagkalinga.">
                   <img src="{{ url_for('artifact_asset_file', filename='Bogwa/Bogwa.png') }}" alt="" draggable="false" /><span>Bogwa</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="sabwag" data-map-x="76" data-map-y="62" data-region-en="Bikol" data-region-tl="Bikol" data-story-en="In Bikol, mourners are dusted with ash from a coconut shell — a reminder that we return to ashes." data-story-tl="Sa Bikol, binubudburan ng abo mula sa bao ng niyog ang nakiramay — babalik tayo sa alabok.">
+                <button class="trailx-map__card" type="button" data-map-card="pahimakas" data-map-x="42" data-map-y="30" data-map-glb="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas-512(10k).glb') }}" data-region-en="Manila" data-region-tl="Maynila" data-story-en="Julio Nakpil composed the funeral march Pahimakas in Manila as a tribute to Dr. Jose Rizal." data-story-tl="Sa Maynila binuo ni Julio Nakpil ang marcha funebre na Pahimakas bilang pagpupugay kay Dr. Jose Rizal.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas.png') }}" alt="" draggable="false" /><span>Pahimakas</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="alay" data-map-x="46" data-map-y="33" data-map-glb="{{ url_for('artifact_asset_file', filename='Alay/Alay-512(10k).glb') }}" data-region-en="Southern Tagalog" data-region-tl="Katagalugan" data-story-en="Alay, atang, halad — offering food to the dead is a custom across the islands, aiding the journey onward." data-story-tl="Alay, atang, halad — laganap na kaugalian ang pag-aalay ng pagkain sa yumao, tulong sa paglalakbay.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Alay/Alay.png') }}" alt="" draggable="false" /><span>Alay</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="sabwag" data-map-x="55" data-map-y="38" data-map-glb="{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag-512(10k).glb') }}" data-region-en="Bikol" data-region-tl="Bikol" data-story-en="In Bikol, mourners are dusted with ash from a coconut shell — a reminder that we return to ashes." data-story-tl="Sa Bikol, binubudburan ng abo mula sa bao ng niyog ang nakiramay — babalik tayo sa alabok.">
                   <img src="{{ url_for('artifact_asset_file', filename='Sabwag/Sabwag.png') }}" alt="" draggable="false" /><span>Sabwag</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="banga" data-map-x="22" data-map-y="90" data-region-en="Palawan" data-region-tl="Palawan" data-story-en="Palawan's Manunggul Jar bears a boat and two figures on its lid — the soul's voyage to the next life." data-story-tl="May bangka't dalawang pigura ang takip ng Banga ng Manunggul — paglalakbay ng kaluluwa.">
+                <button class="trailx-map__card" type="button" data-map-card="banga" data-map-x="23" data-map-y="60" data-map-glb="{{ url_for('artifact_asset_file', filename='Banga/Banga-512(10k).glb') }}" data-region-en="Palawan" data-region-tl="Palawan" data-story-en="Palawan's Manunggul Jar bears a boat and two figures on its lid — the soul's voyage to the next life." data-story-tl="May bangka't dalawang pigura ang takip ng Banga ng Manunggul — paglalakbay ng kaluluwa.">
                   <img src="{{ url_for('artifact_asset_file', filename='Banga/Banga.png') }}" alt="" draggable="false" /><span>Banga</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="pagtubas" data-map-x="74" data-map-y="78" data-region-en="Eastern Visayas" data-region-tl="Silangang Kabisayaan" data-story-en="Waray families sprinkle blessed water and carry the coffin feet-first so the spirit will not return." data-story-tl="Winiwisikan ng bendisyong tubig; paa ang una sa kabaong upang di na bumalik ang kaluluwa.">
+                <button class="trailx-map__card" type="button" data-map-card="pagtubas" data-map-x="60" data-map-y="48" data-map-glb="{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas-512(10k).glb') }}" data-region-en="Eastern Visayas" data-region-tl="Silangang Kabisayaan" data-story-en="Waray families sprinkle blessed water and carry the coffin feet-first so the spirit will not return." data-story-tl="Winiwisikan ng bendisyong tubig; paa ang una sa kabaong upang di na bumalik ang kaluluwa.">
                   <img src="{{ url_for('artifact_asset_file', filename='Pagtubas/Pagtubas.png') }}" alt="" draggable="false" /><span>Pagtubas</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="balanghay" data-map-x="74" data-map-y="104" data-region-en="Butuan" data-region-tl="Butuan" data-story-en="The Balanghay boat carried the soul across the sea; warriors were buried with their vessels." data-story-tl="Naghatid ang Balanghay ng kaluluwa sa dagat; inililibing ang mandirigma kasama ang bangka.">
-                  <img src="{{ url_for('artifact_asset_file', filename='Balanghay/Balanghay.jpg') }}" alt="" draggable="false" /><span>Balanghay</span>
+                <button class="trailx-map__card" type="button" data-map-card="recuerdos" data-map-x="55" data-map-y="57" data-map-glb="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}" data-region-en="Central Visayas" data-region-tl="Gitnang Kabisayaan" data-story-en="Recuerdos de patay — photographing the departed at their wake kept their face and moment alive." data-story-tl="Recuerdos de patay — ang pagriritrato sa yumao sa lamay upang manatiling buhay ang mukha at sandali.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}" alt="" draggable="false" /><span>Recuerdos</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="jar" data-map-x="72" data-map-y="134" data-region-en="Sarangani (Maitum)" data-region-tl="Sarangani (Maitum)" data-story-en="The Maitum Jars of Sarangani are shaped like human faces — burial vessels of ancient Mindanao." data-story-tl="Hugis-mukha ang Banga ng Maitum sa Sarangani — sisidlang panlibing ng sinaunang Mindanao.">
-                  <img src="{{ url_for('artifact_asset_file', filename='Jar/jar.png') }}" alt="" draggable="false" /><span>Banga ng Maitum</span>
+                <button class="trailx-map__card" type="button" data-map-card="antuk" data-map-x="70" data-map-y="78" data-map-glb="{{ url_for('artifact_asset_file', filename='Antuk/Antuk-512(10k).glb') }}" data-region-en="Davao (Ata-Manobo)" data-region-tl="Davao (Ata-Manobo)" data-story-en="Among the Ata-Manobo, kin gather to sing, dance and play music through the wake to ease their grief." data-story-tl="Sa Ata-Manobo, nagtitipon ang mga kamag-anak upang umawit, sumayaw, at tumugtog sa buong lamay.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Antuk/Antuk.png') }}" alt="" draggable="false" /><span>Antuk</span>
                 </button>
-                <button class="trailx-map__card" type="button" data-map-card="tausug" data-map-x="40" data-map-y="136" data-region-en="Sulu" data-region-tl="Sulu" data-story-en="Tausug burials follow four Islamic stages — wash, wrap, pray, bury — graves aligned north to south." data-story-tl="Apat na yugto ayon sa Islam: paglinis, pagbalot, panalangin, at paglibing; hilaga-timog ang libingan.">
+                <button class="trailx-map__card" type="button" data-map-card="tboli" data-map-x="62" data-map-y="80" data-map-glb="{{ url_for('artifact_asset_file', filename="Tboli/T'boli-512(10k).glb") }}" data-region-en="South Cotabato (T'boli)" data-region-tl="South Cotabato (T'boli)" data-story-en="The T'boli lay their dead in a boat-shaped coffin, keeping the departed's virtues among the living." data-story-tl="Inililibing ng T'boli ang yumao sa kabaong na hugis-bangka, pinananatili ang mabubuting katangian nito.">
+                  <img src="{{ url_for('artifact_asset_file', filename='Tboli/Tboli.png') }}" alt="" draggable="false" /><span>T'boli</span>
+                </button>
+                <button class="trailx-map__card" type="button" data-map-card="tausug" data-map-x="38" data-map-y="86" data-map-glb="{{ url_for('artifact_asset_file', filename='Tausug/Tausug1-512(10k).glb') }}" data-region-en="Sulu" data-region-tl="Sulu" data-story-en="Tausug burials follow four Islamic stages — wash, wrap, pray, bury — graves aligned north to south." data-story-tl="Apat na yugto ayon sa Islam: paglinis, pagbalot, panalangin, at paglibing; hilaga-timog ang libingan.">
                   <img src="{{ url_for('artifact_asset_file', filename='Tausug/Tausug.png') }}" alt="" draggable="false" /><span>Tausug</span>
                 </button>
               </div>

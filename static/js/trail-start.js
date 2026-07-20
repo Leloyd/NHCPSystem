@@ -2714,11 +2714,16 @@ function setupMemoryQuest(el, options = {}) {
 function setupTraditionMap(el, options = {}) {
   if (!el || !el.hasAttribute('data-tradition-map')) return null;
 
+  const mapStage = el.querySelector('[data-tradition-map-stage]');
   const board = el.querySelector('[data-map-board]');
   const markersWrap = el.querySelector('[data-map-markers]');
   const threadsSvg = el.querySelector('[data-map-threads]');
   const progress = el.querySelector('[data-map-progress]');
   const reveal = el.querySelector('[data-map-reveal]');
+  const revealMv = el.querySelector('[data-map-reveal-mv]');
+  const revealRegion = el.querySelector('[data-map-reveal-region]');
+  const revealStory = el.querySelector('[data-map-reveal-story]');
+  const expandBtn = el.querySelector('[data-map-expand]');
   const resetButton = el.querySelector('[data-map-reset]');
   const finalWait = el.querySelector('[data-map-final-wait]');
   const finalComplete = el.querySelector('[data-map-final-complete]');
@@ -2741,19 +2746,58 @@ function setupTraditionMap(el, options = {}) {
   };
   const esc = (v) => String(v == null ? '' : v)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const cardPoster = (card) => {
+    const img = card.querySelector('img');
+    return img ? (img.currentSrc || img.src) : '';
+  };
+
+  // A small, static 3D model of the artifact — created only when placed, so
+  // WebGL contexts ramp up with play rather than all at once. Static (no
+  // auto-rotate) keeps ongoing GPU cost low; the poster image covers loading.
+  const buildMarkerModel = (card) => {
+    const mv = document.createElement('model-viewer');
+    mv.className = 'trailx-map__marker-mv';
+    mv.setAttribute('camera-orbit', '0deg 74deg 100%');
+    mv.setAttribute('disable-zoom', '');
+    mv.setAttribute('disable-pan', '');
+    mv.setAttribute('disable-tap', '');
+    mv.setAttribute('interaction-prompt', 'none');
+    mv.setAttribute('shadow-intensity', '0.4');
+    mv.setAttribute('exposure', '1.05');
+    mv.setAttribute('environment-image', 'neutral');
+    mv.setAttribute('reveal', 'auto');
+    mv.setAttribute('aria-hidden', 'true');
+    const poster = cardPoster(card);
+    if (poster) mv.setAttribute('poster', poster);
+    if (card.dataset.mapGlb) mv.setAttribute('src', card.dataset.mapGlb);
+    return mv;
+  };
 
   const showReveal = (card) => {
     if (!reveal) return;
-    reveal.innerHTML =
-      '<p class="trailx-map__reveal-region"><span data-lang-en>' + esc(card.dataset.regionEn) + '</span><span data-lang-tl>' + esc(card.dataset.regionTl) + '</span></p>' +
-      '<p class="trailx-map__reveal-story"><span data-lang-en>' + esc(card.dataset.storyEn) + '</span><span data-lang-tl>' + esc(card.dataset.storyTl) + '</span></p>';
+    if (revealRegion) {
+      revealRegion.innerHTML =
+        '<span data-lang-en>' + esc(card.dataset.regionEn) + '</span><span data-lang-tl>' + esc(card.dataset.regionTl) + '</span>';
+    }
+    if (revealStory) {
+      revealStory.innerHTML =
+        '<span data-lang-en>' + esc(card.dataset.storyEn) + '</span><span data-lang-tl>' + esc(card.dataset.storyTl) + '</span>';
+    }
+    if (revealMv) {
+      if (prefersReducedMotion) revealMv.removeAttribute('auto-rotate');
+      const poster = cardPoster(card);
+      if (poster) revealMv.setAttribute('poster', poster);
+      if (card.dataset.mapGlb && revealMv.getAttribute('src') !== card.dataset.mapGlb) {
+        revealMv.setAttribute('src', card.dataset.mapGlb);
+      }
+    }
     reveal.hidden = false;
     reveal.classList.remove('is-in');
     void reveal.offsetWidth; // restart the entrance each reveal
     reveal.classList.add('is-in');
   };
 
-  // A target marker for every card, positioned on the stylized map.
+  // A target marker for every card, positioned on the real map (x%, y%).
   cards.forEach((card) => {
     const key = card.dataset.mapCard;
     const x = parseFloat(card.dataset.mapX) || 0;
@@ -2763,13 +2807,26 @@ function setupTraditionMap(el, options = {}) {
     marker.className = 'trailx-map__marker';
     marker.dataset.mapMarker = key;
     marker.style.left = x + '%';
-    marker.style.top = (y / 1.5) + '%'; // viewBox is 0 0 100 150
+    marker.style.top = y + '%';
     marker.setAttribute('aria-label', card.dataset.regionEn || key);
-    marker.innerHTML = '<span class="trailx-map__pin" aria-hidden="true"></span><img class="trailx-map__thumb" alt="" />';
+    marker.innerHTML = '<span class="trailx-map__pin" aria-hidden="true"></span>';
     markersWrap?.appendChild(marker);
     markerByKey[key] = marker;
     marker.addEventListener('click', () => { if (placed.has(key)) showReveal(card); });
   });
+
+  // Expand the map to fill the screen so the clustered markers spread out.
+  let expanded = false;
+  const setExpanded = (value) => {
+    expanded = value;
+    mapStage?.classList.toggle('is-expanded', value);
+    expandBtn?.setAttribute('aria-pressed', String(value));
+    expandBtn?.setAttribute('aria-label', value
+      ? 'Close the map / Isara ang mapa'
+      : 'Expand the map / Palakihin ang mapa');
+  };
+  expandBtn?.addEventListener('click', () => setExpanded(!expanded));
+  window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && expanded) setExpanded(false); });
 
   const flyToMarker = (card, marker) => {
     if (prefersReducedMotion || !card || !marker) return;
@@ -2838,9 +2895,9 @@ function setupTraditionMap(el, options = {}) {
     if (!key || placed.has(key)) return;
     placed.add(key);
     const marker = markerByKey[key];
-    const srcImg = card.querySelector('img');
-    const thumb = marker?.querySelector('.trailx-map__thumb');
-    if (thumb && srcImg) thumb.src = srcImg.currentSrc || srcImg.src;
+    if (marker && !marker.querySelector('model-viewer')) {
+      marker.appendChild(buildMarkerModel(card)); // the artifact rises in 3D
+    }
     flyToMarker(card, marker);
     window.setTimeout(() => marker?.classList.add('is-lit'), prefersReducedMotion ? 0 : 250);
     card.classList.add('is-placed');
@@ -2896,11 +2953,11 @@ function setupTraditionMap(el, options = {}) {
     announced = false;
     placed.clear();
     if (threadsSvg) threadsSvg.innerHTML = '';
-    if (reveal) { reveal.hidden = true; reveal.innerHTML = ''; }
+    if (reveal) reveal.hidden = true;
+    if (revealMv) revealMv.removeAttribute('src'); // free the reveal's WebGL context
     Object.values(markerByKey).forEach((marker) => {
       marker.classList.remove('is-lit');
-      const thumb = marker.querySelector('.trailx-map__thumb');
-      if (thumb) thumb.removeAttribute('src');
+      marker.querySelector('model-viewer')?.remove(); // free each marker's context
     });
     cards.forEach((card) => {
       card.disabled = false;
