@@ -431,6 +431,7 @@
           alternateAudioUrl: String(item && item.alternateAudioUrl ? item.alternateAudioUrl : ""),
           infoTitle: String(item && item.infoTitle ? item.infoTitle : ""),
           infoText: String(item && item.infoText ? item.infoText : ""),
+          anamorphicPuzzle: item && item.anamorphicPuzzle === true,
         };
       })
       .filter(function (item) {
@@ -1825,11 +1826,15 @@
 
   function setupAnamorphicPuzzle(entry) {
     if (!entry || !entry.puzzleEnabled || !entry.modelScene) {
+      if (entry && entry.puzzleEnabled) {
+        console.warn("[AR puzzle] '" + entry.key + "' enabled but no modelScene to shatter.");
+      }
       return;
     }
 
     if (isPuzzleSolvedInSession(entry.key)) {
       entry.puzzleSolved = true; // intact for the whole session
+      console.log("[AR puzzle] '" + entry.key + "' already solved this session — shown intact.");
       return;
     }
 
@@ -1936,6 +1941,7 @@
       lastHintState: "",
     };
 
+    console.log("[AR puzzle] '" + entry.key + "' shattered into " + shardRecords.length + " shards.");
     sendAnalytics("puzzle_started", { marker: entry.key });
   }
 
