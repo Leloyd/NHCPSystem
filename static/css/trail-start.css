@@ -2433,3 +2433,195 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 @media (prefers-reduced-motion: reduce) {
   .trailx-album__img.is-live { animation: none; }
 }
+
+/* ==========================================================================
+   Stop 4 · Fragments of Memory — experience polish (reward beats & "juice")
+   Additive layer over the base act styles above: completion blooms, a boat
+   wake + arrival flash, a wrapping shimmer, a constellation that draws itself
+   between the placed tokens, and a stronger seal awakening.
+   ========================================================================== */
+
+/* Golden light burst spawned in an act (or the seal) the moment it's restored. */
+.trailx-memory__bloom {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 3rem;
+  height: 3rem;
+  margin: -1.5rem 0 0 -1.5rem;
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 9;
+  background: radial-gradient(circle, rgba(247, 217, 143, 0.9), rgba(212, 175, 106, 0.35) 45%, transparent 70%);
+  animation: trailx-memory-bloom 1s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+@keyframes trailx-memory-bloom {
+  0% { opacity: 0.95; transform: scale(0.2); }
+  70% { opacity: 0.5; }
+  100% { opacity: 0; transform: scale(7); }
+}
+
+/* The whole act card gives a brief gold pulse when it completes. */
+.trailx-memory.is-justrestored {
+  animation: trailx-memory-cardpulse 0.9s ease;
+}
+@keyframes trailx-memory-cardpulse {
+  0% { box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), inset 0 1px rgba(255, 255, 255, 0.06); }
+  35% { box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), 0 0 46px rgba(247, 217, 143, 0.5), inset 0 1px rgba(255, 255, 255, 0.12); }
+  100% { box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), 0 0 28px rgba(212, 175, 106, 0.11), inset 0 1px rgba(255, 255, 255, 0.08); }
+}
+
+/* Memory I · Journey — the boat now bobs, leaves a wake, and the far shore
+   brightens as it nears; arrival gives a shore flash. */
+.trailx-memory__boat {
+  transition: box-shadow 0.3s ease, left 0.05s linear;
+}
+.trailx-memory__river.is-moving .trailx-memory__boat {
+  animation: trailx-memory-bob 2.1s ease-in-out infinite;
+}
+@keyframes trailx-memory-bob {
+  0%, 100% { transform: translate(-50%, -50%) rotate(-2deg); }
+  50% { transform: translate(-50%, -58%) rotate(2deg); }
+}
+/* Wake trail: a soft luminous streak from the start shore to the boat. */
+.trailx-memory__river::after {
+  content: "";
+  position: absolute;
+  z-index: 2;
+  left: 8%;
+  top: 50%;
+  height: 0.5rem;
+  width: calc(clamp(8%, var(--memory-progress, 8%), 92%) - 8%);
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: linear-gradient(90deg, transparent, rgba(247, 217, 143, 0.4));
+  opacity: calc(0.3 + var(--memory-approach, 0) * 0.5);
+  pointer-events: none;
+}
+/* Far shore glows brighter the closer the boat gets. */
+.trailx-memory__shore--end {
+  filter: brightness(calc(1 + var(--memory-approach, 0) * 0.8));
+  box-shadow: 0 -3px 18px rgba(212, 175, 106, calc(0.18 + var(--memory-approach, 0) * 0.55));
+  transition: filter 0.2s linear, box-shadow 0.2s linear;
+}
+.trailx-memory__river.is-arrived .trailx-memory__shore--end {
+  animation: trailx-memory-arrive 0.9s ease;
+}
+@keyframes trailx-memory-arrive {
+  0% { box-shadow: 0 -3px 18px rgba(212, 175, 106, 0.7); }
+  30% { box-shadow: 0 -6px 40px rgba(247, 217, 143, 0.95); filter: brightness(2); }
+  100% { box-shadow: 0 -3px 22px rgba(212, 175, 106, 0.7); filter: brightness(1.8); }
+}
+
+/* Memory II · Care — the bundle grows fuller and warmer with each layer, and a
+   shimmer sweeps across the cloth on every successful swipe. */
+.trailx-memory__bundle {
+  transition: transform 0.5s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.5s ease, filter 0.5s ease;
+}
+.trailx-memory__wrap[data-layer="1"] .trailx-memory__bundle { box-shadow: 0 0 30px rgba(212, 175, 106, 0.22); }
+.trailx-memory__wrap[data-layer="2"] .trailx-memory__bundle { box-shadow: 0 0 38px rgba(212, 175, 106, 0.32); filter: brightness(1.08); }
+.trailx-memory__wrap[data-layer="3"] .trailx-memory__bundle {
+  transform: translate(-50%, -50%) scale(1.06);
+  box-shadow: 0 0 48px rgba(247, 217, 143, 0.5);
+  filter: brightness(1.16);
+}
+.trailx-memory__wrap.just-wrapped::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background: linear-gradient(105deg, transparent 30%, rgba(247, 217, 143, 0.4) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: trailx-memory-shimmer 0.7s ease;
+}
+@keyframes trailx-memory-shimmer {
+  to { transform: translateX(100%); }
+}
+
+/* Memory III · Remembrance — placed slots become bright nodes and, once all
+   three are set, luminous lines draw between them into one constellation. */
+.trailx-memory__slot.is-filled::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.55rem;
+  width: 0.5rem;
+  height: 0.5rem;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: var(--tx-gold);
+  box-shadow: 0 0 14px rgba(247, 217, 143, 0.9);
+  animation: trailx-memory-node 0.5s ease;
+}
+@keyframes trailx-memory-node {
+  0% { transform: translateX(-50%) scale(0); }
+  60% { transform: translateX(-50%) scale(1.5); }
+  100% { transform: translateX(-50%) scale(1); }
+}
+.trailx-memory__altar-line {
+  position: absolute;
+  z-index: 1;
+  height: 2px;
+  transform-origin: left center;
+  background: linear-gradient(90deg, rgba(247, 217, 143, 0.85), rgba(212, 175, 106, 0.35));
+  box-shadow: 0 0 10px rgba(212, 175, 106, 0.6);
+  pointer-events: none;
+  animation: trailx-memory-line 0.7s ease both;
+  animation-delay: var(--memory-line-delay, 0s);
+}
+@keyframes trailx-memory-line {
+  from { opacity: 0; clip-path: inset(0 100% 0 0); }
+  to { opacity: 1; clip-path: inset(0 0 0 0); }
+}
+.trailx-memory__altar.is-complete .trailx-memory__altar-ring {
+  border-color: rgba(247, 217, 143, 0.85);
+  box-shadow: inset 0 0 30px rgba(212, 175, 106, 0.28), 0 0 30px rgba(212, 175, 106, 0.35);
+  animation: trailx-memory-ringpulse 2.4s ease-in-out infinite;
+}
+@keyframes trailx-memory-ringpulse {
+  50% { box-shadow: inset 0 0 40px rgba(212, 175, 106, 0.42), 0 0 42px rgba(247, 217, 143, 0.5); }
+}
+
+/* Memory Seal — a burst of rays behind the seal the moment it fully awakens. */
+.trailx-memory__seal::before {
+  content: "";
+  position: absolute;
+  inset: -22%;
+  z-index: 0;
+  border-radius: 50%;
+  opacity: 0;
+  background: repeating-conic-gradient(from 0deg, rgba(247, 217, 143, 0.34) 0deg 6deg, transparent 6deg 18deg);
+  -webkit-mask: radial-gradient(circle, transparent 44%, #000 46%, transparent 74%);
+  mask: radial-gradient(circle, transparent 44%, #000 46%, transparent 74%);
+  transition: opacity 0.8s ease;
+}
+.trailx-memory__seal.is-awake::before {
+  opacity: 1;
+  animation: trailx-memory-orbit 22s linear infinite;
+}
+.trailx-memory__seal.is-awake .trailx-memory__seal-center {
+  animation: trailx-memory-sealpop 0.8s cubic-bezier(0.22, 1, 0.36, 1);
+}
+@keyframes trailx-memory-sealpop {
+  0% { transform: scale(0.8); }
+  55% { transform: scale(1.12); }
+  100% { transform: scale(1); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trailx-memory__bloom,
+  .trailx-memory.is-justrestored,
+  .trailx-memory__river.is-moving .trailx-memory__boat,
+  .trailx-memory__river.is-arrived .trailx-memory__shore--end,
+  .trailx-memory__wrap.just-wrapped::after,
+  .trailx-memory__slot.is-filled::before,
+  .trailx-memory__altar-line,
+  .trailx-memory__altar.is-complete .trailx-memory__altar-ring,
+  .trailx-memory__seal.is-awake::before,
+  .trailx-memory__seal.is-awake .trailx-memory__seal-center {
+    animation: none !important;
+  }
+  .trailx-memory__altar-line { clip-path: none; opacity: 1; }
+  .trailx-memory__seal.is-awake::before { opacity: 1; }
+}

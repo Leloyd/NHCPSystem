@@ -2453,7 +2453,8 @@ function setupMemoryQuest(el, options = {}) {
 
     if (whole && !completionAnnounced) {
       completionAnnounced = true;
-      pulse([24, 55, 24]);
+      pulse([24, 55, 24, 55, 40]);
+      spawnBloom(finalEl);
       charApi.playGesture?.('heart');
       window.clearTimeout(completionTimer);
       completionTimer = window.setTimeout(() => {
@@ -2462,23 +2463,46 @@ function setupMemoryQuest(el, options = {}) {
     }
   };
 
+  // A short-lived golden light burst — the reward beat each act was missing.
+  const spawnBloom = (host) => {
+    if (!host || prefersReducedMotion) return;
+    const bloom = document.createElement('span');
+    bloom.className = 'trailx-memory__bloom';
+    bloom.setAttribute('aria-hidden', 'true');
+    host.appendChild(bloom);
+    window.setTimeout(() => bloom.remove(), 1100);
+  };
+
   const completeAct = (key) => {
     if (!key || completed.has(key)) return;
     completed.add(key);
     const insight = insights.get(key);
     if (insight) insight.hidden = false;
-    pulse();
+    const actEl = actEls.get(key);
+    if (actEl) {
+      spawnBloom(actEl);
+      actEl.classList.add('is-justrestored');
+      window.setTimeout(() => actEl.classList.remove('is-justrestored'), 1000);
+    }
+    pulse([18, 45, 30]);
     renderProgress();
   };
 
   const setJourneyProgress = (value) => {
     const progress = Math.max(0, Math.min(100, Number(value) || 0));
-    if (river) river.style.setProperty('--memory-progress', `${progress}%`);
+    if (river) {
+      river.style.setProperty('--memory-progress', `${progress}%`);
+      // 0..1 approach drives the far shore's glow (brightens as you near it)
+      // and the wake trail length behind the boat.
+      river.style.setProperty('--memory-approach', (progress / 100).toFixed(3));
+      river.classList.toggle('is-moving', progress > 1 && progress < 96);
+    }
     if (progress >= 96) {
       if (journeyInput) {
         journeyInput.value = '100';
         journeyInput.disabled = true;
       }
+      if (river) river.classList.add('is-arrived');
       const prompt = el.querySelector('[data-memory-prompt="journey"]');
       setCountText(prompt, 'The other shore is reached', 'Narating na ang kabilang pampang');
       completeAct('journey');
@@ -2491,6 +2515,12 @@ function setupMemoryQuest(el, options = {}) {
     if (wrapLayers >= 3) return;
     wrapLayers += 1;
     wrapZone?.setAttribute('data-layer', String(wrapLayers));
+    if (wrapZone && !prefersReducedMotion) {
+      wrapZone.classList.remove('just-wrapped');
+      // reflow so the shimmer sweep restarts on every swipe
+      void wrapZone.offsetWidth;
+      wrapZone.classList.add('just-wrapped');
+    }
     setCountText(
       wrapCount,
       `${wrapLayers} of 3 layers restored`,
@@ -2532,6 +2562,44 @@ function setupMemoryQuest(el, options = {}) {
   wrapButton?.addEventListener('click', restoreWrapLayer);
 
   const placedTokens = new Set();
+
+  // When all three tokens are placed, draw glowing lines between the slots so
+  // the three memories visibly become one constellation. Geometry is measured
+  // from the live layout so it stays correct on any screen.
+  const altarLines = [];
+  const clearConstellation = () => {
+    while (altarLines.length) altarLines.pop().remove();
+  };
+  const drawConstellation = () => {
+    if (!altar) return;
+    clearConstellation();
+    const ar = altar.getBoundingClientRect();
+    if (!ar.width) return;
+    const centers = ['alay', 'pahimakas', 'recuerdos'].map((key) => {
+      const slot = slots.find((node) => node.dataset.memorySlot === key);
+      if (!slot) return null;
+      const r = slot.getBoundingClientRect();
+      return { x: r.left + r.width / 2 - ar.left, y: r.top + r.height / 2 - ar.top };
+    });
+    if (centers.some((point) => !point)) return;
+    [[0, 1], [1, 2], [2, 0]].forEach(([a, b], index) => {
+      const p1 = centers[a];
+      const p2 = centers[b];
+      const len = Math.hypot(p2.x - p1.x, p2.y - p1.y);
+      const angle = Math.atan2(p2.y - p1.y, p2.x - p1.x) * 180 / Math.PI;
+      const line = document.createElement('span');
+      line.className = 'trailx-memory__altar-line';
+      line.setAttribute('aria-hidden', 'true');
+      line.style.left = `${p1.x}px`;
+      line.style.top = `${p1.y}px`;
+      line.style.width = `${len}px`;
+      line.style.transform = `rotate(${angle}deg)`;
+      line.style.setProperty('--memory-line-delay', `${index * 0.18}s`);
+      altar.appendChild(line);
+      altarLines.push(line);
+    });
+  };
+
   const placeToken = (token) => {
     if (!token) return;
     const key = token.dataset.memoryToken;
@@ -2553,6 +2621,8 @@ function setupMemoryQuest(el, options = {}) {
     );
     if (placedTokens.size === 3) {
       setCountText(remembrancePrompt, 'The remembrance circle is complete', 'Buo na ang bilog ng pag-alaala');
+      altar?.classList.add('is-complete');
+      drawConstellation();
       completeAct('remembrance');
     }
   };
@@ -2608,13 +2678,17 @@ function setupMemoryQuest(el, options = {}) {
       journeyInput.disabled = false;
       journeyInput.value = '0';
     }
+    if (river) river.classList.remove('is-arrived', 'is-moving');
     setJourneyProgress(0);
     setCountText(el.querySelector('[data-memory-prompt="journey"]'), 'Drag the boat across the current', 'I-drag ang bangka sa agos');
     wrapLayers = 0;
     wrapZone?.setAttribute('data-layer', '0');
+    wrapZone?.classList.remove('just-wrapped');
     if (wrapButton) wrapButton.disabled = false;
     setCountText(wrapCount, '0 of 3 layers restored', '0 sa 3 sapin ang naibalik');
     placedTokens.clear();
+    altar?.classList.remove('is-complete');
+    clearConstellation();
     tokens.forEach((token) => {
       token.disabled = false;
       token.classList.remove('is-placed', 'is-dragging');
