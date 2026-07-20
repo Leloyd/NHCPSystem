@@ -1512,7 +1512,6 @@
     }
 
     runtime.narrationPausedByUser = false;
-    runtime.subtitlesOn = false;
     prefetchArtifactDescription(entry);
 
     if (entry.puzzleSolved) {
@@ -1671,9 +1670,7 @@
         runtime.activeAudioEntry = null;
         runtime.activeNarrationKind = "";
         runtime.activeGuidanceState = "";
-        runtime.audioLanguage = "tl";
         runtime.narrationPausedByUser = false;
-        runtime.subtitlesOn = false;
         stopActiveAudio(true);
         updateNarrationControls();
       }
@@ -1682,7 +1679,6 @@
 
     if (!runtime.activeAudioEntry || runtime.activeAudioEntry.key !== nextEntry.key) {
       runtime.activeAudioEntry = nextEntry;
-      runtime.audioLanguage = "tl";
       beginNarrationForEntry(nextEntry);
       return;
     }
