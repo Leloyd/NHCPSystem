@@ -94,28 +94,32 @@ const SCRIPTS = {
     tl: "Isa pang lihim bago tayo magpatuloy: kayang lumabas ng mga artepaktong ito mula sa kanilang mga lalagyan. Buksan ang aming AR scanner at itutok ang iyong camera sa mga nakalimbag na marker — lilitaw ang mga artepakto sa harap mo nang 3D, kasama ang kanilang mga tinig. Gumagana ito kahit saan, ngunit pinakamainam ito onsite sa museo, kung saan naghihintay ang mga marker sa tabi ng bawat eksibit.",
   },
   's3-next': {
-    en: "That completes our third stop. When you are ready, come play with me — a little checkpoint of games waits ahead, and everything you need is already in your memory. Tap Continue.",
-    tl: "Tapos na ang ating ikatlong hinto. Kapag handa ka na, halika at maglaro tayo — may maliit na pagsubok ng mga laro sa unahan, at nasa alaala mo na ang lahat ng kakailanganin. Pindutin ang Magpatuloy.",
+    en: "That completes our third stop. But before we leave the museum, its stories need a keeper. Ahead, three fading memories are waiting for your hands. Tap Continue.",
+    tl: "Tapos na ang ating ikatlong hinto. Ngunit bago tayo umalis sa museo, kailangan ng mga kuwento nito ng tagapag-ingat. Sa unahan, tatlong kumukupas na alaala ang naghihintay sa iyong mga kamay. Pindutin ang Magpatuloy.",
   },
   's4-arrive': {
-    en: "Welcome to our fourth stop — a playful checkpoint. No scores, no grades, nothing to lose: just three little games drawn from everything you have seen. The halls around you hold every answer.",
-    tl: "Maligayang pagdating sa ating ikaapat na hinto — isang masayang pagsubok. Walang puntos, walang grado, walang matatalo: tatlong maliliit na laro lamang mula sa lahat ng iyong nakita. Nasa mga bulwagan sa paligid mo ang bawat sagot.",
+    en: "Welcome to Fragments of Memory. There are no questions and no scores here. Three stories from the museum are fading: a journey, an act of care, and a remembrance. Restore them with your hands, and the museum will reveal its memory seal.",
+    tl: "Maligayang pagdating sa Mga Piraso ng Alaala. Walang tanong at walang puntos dito. Kumukupas ang tatlong kuwento mula sa museo: isang paglalakbay, isang pagkalinga, at isang pag-alaala. Muli mong buuin ang mga ito gamit ang iyong mga kamay, at ihahayag ng museo ang sagisag ng alaala.",
   },
-  's4-riddle': {
-    en: "First, a riddle. Listen closely: in life I carried warriors across the seas; in death, I carried their souls to the next world. Who am I?",
-    tl: "Una, isang bugtong. Makinig nang mabuti: sa buhay, dinala ko ang mga mandirigma sa karagatan; sa kamatayan, inihatid ko ang kanilang mga kaluluwa sa kabilang daigdig. Sino ako?",
+  's4-journey': {
+    en: "First memory: the journey. Draw the balanghay across the luminous current. As the boat reaches the other shore, remember that it carried more than travelers — it also represented the soul's voyage to the next life.",
+    tl: "Unang alaala: ang paglalakbay. Igabay ang balanghay sa kumikinang na agos. Habang nararating ng bangka ang kabilang pampang, alalahaning higit pa sa mga manlalakbay ang dala nito — kinakatawan din nito ang paglalakbay ng kaluluwa tungo sa kabilang buhay.",
   },
-  's4-order': {
-    en: "Now walk through time. Tap the four moments in the order they happened — from the year the cemetery was built, all the way to the day it became a national landmark.",
-    tl: "Ngayon, maglakad tayo sa panahon. Pindutin ang apat na pangyayari ayon sa pagkakasunod ng mga ito — mula sa taon ng pagkakatayo ng libingan, hanggang sa araw na naging pambansang palatandaan ito.",
+  's4-care': {
+    en: "Second memory: continuing care. Swipe across the cloth three times to restore the uloh. In the Ifugao bogwa tradition, the departed are still treated with care as their remains are cleansed and wrapped in a new burial cloth.",
+    tl: "Ikalawang alaala: patuloy na pagkalinga. Humagod sa tela nang tatlong beses upang maibalik ang uloh. Sa tradisyong bogwa ng mga Ifugao, patuloy na inaalagaan ang yumao habang nililinis ang kanilang mga labi at muling binabalot sa bagong telang panlibing.",
   },
-  's4-tf': {
-    en: "Last one: three quick claims. Tell me — true, or false? Take your best guess; wrong answers cost nothing here.",
-    tl: "Panghuli: tatlong mabilisang pahayag. Sabihin mo — totoo, o hindi? Manghula lang; walang kapalit ang mali rito.",
+  's4-remembrance': {
+    en: "Final memory: remembrance. Carry each token into the circle. Alay nourishes the bond with the departed, Pahimakas honors through music, and Recuerdos preserves a face and a moment for those who remain.",
+    tl: "Huling alaala: pag-alaala. Dalhin ang bawat sagisag sa bilog. Pinatitibay ng alay ang ugnayan sa yumao, nagbibigay-pugay ang Pahimakas sa pamamagitan ng musika, at iniingatan ng Recuerdos ang mukha at sandali para sa mga naiwan.",
+  },
+  's4-seal': {
+    en: "The memory seal gathers three lessons from the museum: journey, continuing care, and remembrance. When all three shine together, the stories become whole again.",
+    tl: "Pinagsasama ng sagisag ng alaala ang tatlong aral mula sa museo: paglalakbay, patuloy na pagkalinga, at pag-alaala. Kapag sabay na lumiwanag ang tatlo, muling mabubuo ang mga kuwento.",
   },
   's4-next': {
-    en: "That completes our checkpoint — well played. When you are ready, come with me back into the open air — the grounds have a long story to tell. Tap Continue.",
-    tl: "Tapos na ang ating pagsubok — mahusay ang paglalaro mo. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kuwento ng bakuran. Pindutin ang Magpatuloy.",
+    en: "Carry those stories with you. When you are ready, come with me back into the open air — the grounds have a long history to tell. Tap Continue.",
+    tl: "Dalhin mo ang mga kuwentong iyon. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kasaysayang ikukuwento ng bakuran. Pindutin ang Magpatuloy.",
   },
   's5-arrive': {
     en: "Welcome back to the open grounds — our fifth stop. Here the cemetery's history stands in stone. Drag to look around, and follow the glowing rings through the courtyard, the face of the chapel, and the quiet rows of tombs. When you are ready, scroll down.",
@@ -296,6 +300,10 @@ const charApi = {};
 /* Full-View artifact-controls handle (populated by initPanorama). In Full View
    on the museum stops the guide controls drive the tapped artifact's audio. */
 const artApi = {};
+
+/* Stop 4's Fragments of Memory controls. Populated when its story is set up
+   so stop transitions and the global mute control can also manage its music. */
+const memoryApi = {};
 
 /* --- Arrival ---------------------------------------------------------------- */
 // Whether we came here via the landing "Start Heritage Trail" exit.
@@ -546,6 +554,7 @@ function setMuted(m) {
     muteBtn.setAttribute('aria-pressed', String(m));
     muteBtn.setAttribute('aria-label', m ? 'Unmute narration' : 'Mute narration');
   }
+  memoryApi.setMuted?.(m);
   // Mute is a volume switch, not a stop. Recorded VO mutes natively; TTS
   // re-speaks the remainder from the current word at the new volume.
   if (voiceEl) voiceEl.muted = m;
@@ -848,6 +857,7 @@ function enterStop(stopId, opts) {
   transitioning = false;
   const conf = STOP_CONF[stopId];
   if (!conf || state.mode === stopId) return;
+  if (stopId !== 'stop4') memoryApi.stopAudio?.();
   state.mode = stopId;
   root.setAttribute('data-mode', stopId);
   root.setAttribute('data-phase', 'guide'); // brings Ana + controls back in
@@ -887,6 +897,7 @@ function jumpToStop(stopId) {
 function returnToIntro() {
   if (state.mode === 'intro') return;
   stopSpeaking();
+  memoryApi.stopAudio?.();
   transitioning = false;
   if (viewer && currentScene !== 'aerial') {
     try { viewer.loadScene('aerial'); } catch { /* ignore */ }
@@ -918,6 +929,7 @@ function transitionToStop(stopId) {
   const conf = STOP_CONF[stopId];
   if (!conf || state.mode === stopId || root.getAttribute('data-phase') === 'depart') return;
   stopSpeaking();
+  if (stopId !== 'stop4') memoryApi.stopAudio?.();
   if (!viewer) { enterStop(stopId); return; }
   transitioning = true;
   root.setAttribute('data-phase', 'depart');
@@ -2331,6 +2343,289 @@ function smoothScrollBy(delta) {
   }
 }
 
+/* Stop 4 · Fragments of Memory ----------------------------------------------
+   Three gesture-led interactions replace the old quiz: guide the Balanghay,
+   wrap an abstract bundle in the Ulóh, then carry three remembrance tokens
+   into a shared circle. There are no wrong states or scores. */
+function setupMemoryQuest(el, options = {}) {
+  if (!el || !el.hasAttribute('data-memory-quest')) return null;
+
+  const completed = new Set();
+  const actEls = new Map(Array.from(el.querySelectorAll('[data-memory-act]')).map((node) => [node.dataset.memoryAct, node]));
+  const insights = new Map(Array.from(el.querySelectorAll('[data-memory-insight]')).map((node) => [node.dataset.memoryInsight, node]));
+  const legends = Array.from(el.querySelectorAll('[data-memory-legend]'));
+  const sealMarks = Array.from(el.querySelectorAll('[data-memory-seal]'));
+  const finalEl = el.querySelector('[data-memory-final]');
+  const finalWait = el.querySelector('[data-memory-final-wait]');
+  const finalComplete = el.querySelector('[data-memory-final-complete]');
+  const resetButton = el.querySelector('[data-memory-reset]');
+  const journeyInput = el.querySelector('[data-memory-journey]');
+  const river = el.querySelector('[data-memory-river]');
+  const wrapZone = el.querySelector('[data-memory-wrap-zone]');
+  const wrapButton = el.querySelector('[data-memory-wrap-next]');
+  const wrapCount = el.querySelector('[data-memory-wrap-count]');
+  const altar = el.querySelector('[data-memory-altar]');
+  const remembrancePrompt = el.querySelector('[data-memory-prompt="remembrance"]');
+  const tokens = Array.from(el.querySelectorAll('[data-memory-token]'));
+  const slots = Array.from(el.querySelectorAll('[data-memory-slot]'));
+  const marchSrc = root.getAttribute('data-art-pahimakas-march') || '';
+  const assets = {
+    balanghay: root.getAttribute('data-art-balanghay-img') || '',
+    uloh: root.getAttribute('data-art-uloh-img') || '',
+    alay: root.getAttribute('data-art-alay-img') || '',
+    pahimakas: root.getAttribute('data-art-pahimakas-img') || '',
+    recuerdos: root.getAttribute('data-art-recuerdos-img') || '',
+  };
+
+  let wrapLayers = 0;
+  let marchAudio = null;
+  let marchTimer = 0;
+  let completionTimer = 0;
+  let completionAnnounced = false;
+
+  el.querySelectorAll('[data-memory-image]').forEach((image) => {
+    const src = assets[image.dataset.memoryImage] || '';
+    if (src) image.src = src;
+    else image.hidden = true;
+  });
+  if (assets.uloh) el.style.setProperty('--memory-uloh-image', `url("${assets.uloh.replace(/"/g, '\\"')}")`);
+
+  const pulse = (pattern = 18) => {
+    try {
+      if (navigator.vibrate) navigator.vibrate(pattern);
+    } catch { /* haptics are optional */ }
+  };
+
+  const setCountText = (node, en, tl) => {
+    if (!node) return;
+    const enNode = node.querySelector('[data-lang-en]');
+    const tlNode = node.querySelector('[data-lang-tl]');
+    if (enNode) enNode.textContent = en;
+    if (tlNode) tlNode.textContent = tl;
+  };
+
+  const stopMarch = () => {
+    window.clearTimeout(marchTimer);
+    marchTimer = 0;
+    if (!marchAudio) return;
+    marchAudio.pause();
+    try { marchAudio.currentTime = 0; } catch { /* metadata may not be ready */ }
+  };
+
+  const playMarchExcerpt = () => {
+    if (!marchSrc) return;
+    if (!marchAudio) {
+      marchAudio = new Audio(marchSrc);
+      marchAudio.preload = 'auto';
+      marchAudio.playsInline = true;
+      marchAudio.volume = 0.42;
+    }
+    stopMarch();
+    marchAudio.muted = state.muted;
+    const playing = marchAudio.play();
+    if (playing && playing.catch) playing.catch(() => {});
+    marchTimer = window.setTimeout(stopMarch, 8500);
+  };
+
+  const renderProgress = () => {
+    legends.forEach((node) => node.classList.toggle('is-restored', completed.has(node.dataset.memoryLegend)));
+    sealMarks.forEach((node) => node.classList.toggle('is-restored', completed.has(node.dataset.memorySeal)));
+    actEls.forEach((node, key) => node.classList.toggle('is-restored', completed.has(key)));
+
+    const whole = completed.size === 3;
+    if (finalEl) finalEl.classList.toggle('is-awake', whole);
+    if (finalWait) finalWait.hidden = whole;
+    if (finalComplete) finalComplete.hidden = !whole;
+
+    if (whole && !completionAnnounced) {
+      completionAnnounced = true;
+      pulse([24, 55, 24]);
+      charApi.playGesture?.('heart');
+      window.clearTimeout(completionTimer);
+      completionTimer = window.setTimeout(() => {
+        if (state.mode === 'stop4') options.onAllComplete?.();
+      }, prefersReducedMotion ? 250 : 1200);
+    }
+  };
+
+  const completeAct = (key) => {
+    if (!key || completed.has(key)) return;
+    completed.add(key);
+    const insight = insights.get(key);
+    if (insight) insight.hidden = false;
+    pulse();
+    renderProgress();
+  };
+
+  const setJourneyProgress = (value) => {
+    const progress = Math.max(0, Math.min(100, Number(value) || 0));
+    if (river) river.style.setProperty('--memory-progress', `${progress}%`);
+    if (progress >= 96) {
+      if (journeyInput) {
+        journeyInput.value = '100';
+        journeyInput.disabled = true;
+      }
+      const prompt = el.querySelector('[data-memory-prompt="journey"]');
+      setCountText(prompt, 'The other shore is reached', 'Narating na ang kabilang pampang');
+      completeAct('journey');
+    }
+  };
+  journeyInput?.addEventListener('input', () => setJourneyProgress(journeyInput.value));
+  journeyInput?.addEventListener('change', () => setJourneyProgress(journeyInput.value));
+
+  const restoreWrapLayer = () => {
+    if (wrapLayers >= 3) return;
+    wrapLayers += 1;
+    wrapZone?.setAttribute('data-layer', String(wrapLayers));
+    setCountText(
+      wrapCount,
+      `${wrapLayers} of 3 layers restored`,
+      `${wrapLayers} sa 3 sapin ang naibalik`
+    );
+    pulse(14);
+    if (wrapLayers === 3) {
+      if (wrapButton) wrapButton.disabled = true;
+      setCountText(wrapCount, 'The Ulóh is restored', 'Naibalik na ang Ulóh');
+      completeAct('care');
+    }
+  };
+
+  let wrapPointer = null;
+  wrapZone?.addEventListener('pointerdown', (event) => {
+    if (wrapLayers >= 3 || event.button > 0) return;
+    wrapPointer = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    wrapZone.setPointerCapture?.(event.pointerId);
+    wrapZone.classList.add('is-swiping');
+  });
+  const finishWrapPointer = (event) => {
+    if (!wrapPointer || event.pointerId !== wrapPointer.id) return;
+    const dx = event.clientX - wrapPointer.x;
+    const dy = event.clientY - wrapPointer.y;
+    wrapPointer = null;
+    wrapZone?.classList.remove('is-swiping');
+    if (Math.abs(dx) >= 44 && Math.abs(dx) > Math.abs(dy)) restoreWrapLayer();
+  };
+  wrapZone?.addEventListener('pointerup', finishWrapPointer);
+  wrapZone?.addEventListener('pointercancel', () => {
+    wrapPointer = null;
+    wrapZone?.classList.remove('is-swiping');
+  });
+  wrapZone?.addEventListener('keydown', (event) => {
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    restoreWrapLayer();
+  });
+  wrapButton?.addEventListener('click', restoreWrapLayer);
+
+  const placedTokens = new Set();
+  const placeToken = (token) => {
+    if (!token) return;
+    const key = token.dataset.memoryToken;
+    if (!key || placedTokens.has(key)) return;
+    placedTokens.add(key);
+    token.classList.remove('is-dragging');
+    token.classList.add('is-placed');
+    token.style.removeProperty('--memory-drag-x');
+    token.style.removeProperty('--memory-drag-y');
+    token.disabled = true;
+    const slot = slots.find((node) => node.dataset.memorySlot === key);
+    slot?.classList.add('is-filled');
+    if (key === 'pahimakas') playMarchExcerpt();
+    pulse(16);
+    setCountText(
+      remembrancePrompt,
+      `${placedTokens.size} of 3 memories placed`,
+      `${placedTokens.size} sa 3 alaala ang nailagay`
+    );
+    if (placedTokens.size === 3) {
+      setCountText(remembrancePrompt, 'The remembrance circle is complete', 'Buo na ang bilog ng pag-alaala');
+      completeAct('remembrance');
+    }
+  };
+
+  tokens.forEach((token) => {
+    let drag = null;
+    let suppressClickUntil = 0;
+    token.addEventListener('pointerdown', (event) => {
+      if (token.disabled || event.button > 0) return;
+      drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+      token.setPointerCapture?.(event.pointerId);
+      token.classList.add('is-dragging');
+    });
+    token.addEventListener('pointermove', (event) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const dx = event.clientX - drag.x;
+      const dy = event.clientY - drag.y;
+      if (Math.hypot(dx, dy) > 6) drag.moved = true;
+      if (!drag.moved) return;
+      event.preventDefault();
+      token.style.setProperty('--memory-drag-x', `${dx}px`);
+      token.style.setProperty('--memory-drag-y', `${dy}px`);
+    });
+    const finishTokenDrag = (event, cancelled) => {
+      if (!drag || event.pointerId !== drag.id) return;
+      const wasMoved = drag.moved;
+      drag = null;
+      token.classList.remove('is-dragging');
+      const bounds = altar?.getBoundingClientRect();
+      const overAltar = Boolean(bounds && event.clientX >= bounds.left - 12 && event.clientX <= bounds.right + 12 && event.clientY >= bounds.top - 12 && event.clientY <= bounds.bottom + 12);
+      suppressClickUntil = performance.now() + 350;
+      if (!cancelled && (!wasMoved || overAltar)) placeToken(token);
+      else {
+        token.style.removeProperty('--memory-drag-x');
+        token.style.removeProperty('--memory-drag-y');
+      }
+    };
+    token.addEventListener('pointerup', (event) => finishTokenDrag(event, false));
+    token.addEventListener('pointercancel', (event) => finishTokenDrag(event, true));
+    token.addEventListener('click', () => {
+      if (performance.now() < suppressClickUntil) return;
+      placeToken(token);
+    });
+  });
+
+  const reset = () => {
+    window.clearTimeout(completionTimer);
+    completionAnnounced = false;
+    completed.clear();
+    stopMarch();
+    insights.forEach((node) => { node.hidden = true; });
+    if (journeyInput) {
+      journeyInput.disabled = false;
+      journeyInput.value = '0';
+    }
+    setJourneyProgress(0);
+    setCountText(el.querySelector('[data-memory-prompt="journey"]'), 'Drag the boat across the current', 'I-drag ang bangka sa agos');
+    wrapLayers = 0;
+    wrapZone?.setAttribute('data-layer', '0');
+    if (wrapButton) wrapButton.disabled = false;
+    setCountText(wrapCount, '0 of 3 layers restored', '0 sa 3 sapin ang naibalik');
+    placedTokens.clear();
+    tokens.forEach((token) => {
+      token.disabled = false;
+      token.classList.remove('is-placed', 'is-dragging');
+      token.style.removeProperty('--memory-drag-x');
+      token.style.removeProperty('--memory-drag-y');
+    });
+    slots.forEach((slot) => slot.classList.remove('is-filled'));
+    setCountText(remembrancePrompt, '0 of 3 memories placed', '0 sa 3 alaala ang nailagay');
+    renderProgress();
+  };
+
+  resetButton?.addEventListener('click', () => {
+    reset();
+    options.onReset?.();
+  });
+
+  memoryApi.stopAudio = stopMarch;
+  memoryApi.setMuted = (muted) => { if (marchAudio) marchAudio.muted = Boolean(muted); };
+  memoryApi.reset = reset;
+  window.addEventListener('pagehide', stopMarch);
+  renderProgress();
+
+  return { reset, stopAudio: stopMarch };
+}
+
 /* The landing page's chapter engine, instantiated once per stop: scroll
    progress picks the active step; the leaving panel slides up and out, the
    next rises in from below, and the active panel's children stagger in — all
@@ -2345,6 +2640,7 @@ function setupStory(el) {
   const STEPS = panels.length;
   if (!STEPS) return null;
   let step = -1;
+  let memorySceneTimer = 0;
 
   // Scroll distance per step, sized in real pixels from the story's visible
   // height so the mobile URL bar (dvh) never desyncs the steps. Less than a
@@ -2414,6 +2710,24 @@ function setupStory(el) {
     // advancing, so unmuting rejoins mid-sentence; landing behaviour).
     const key = panels[index].getAttribute('data-chapter');
     root.setAttribute('data-step', key || ''); // drives the reading tint depth
+
+    // Stop 4 travels through the same halls the visitor explored in Stop 3.
+    // Each act quietly turns or crossfades the panorama toward its artifacts.
+    const memoryScene = panels[index].getAttribute('data-memory-scene');
+    if (stopId === 'stop4' && state.mode === stopId && memoryScene && viewer && !transitioning) {
+      const pitch = Number(panels[index].getAttribute('data-memory-pitch')) || 0;
+      const yawValue = Number(panels[index].getAttribute('data-memory-yaw'));
+      const yaw = Number.isFinite(yawValue) ? yawValue : 0;
+      window.clearTimeout(memorySceneTimer);
+      memorySceneTimer = window.setTimeout(() => {
+        if (state.mode !== 'stop4' || !viewer || transitioning) return;
+        try {
+          if (currentScene !== memoryScene) viewer.loadScene(memoryScene, pitch, yaw, 100);
+          else viewer.lookAt(pitch, yaw, 100, prefersReducedMotion ? false : 900);
+        } catch { /* panorama may still be crossfading */ }
+      }, prefersReducedMotion ? 0 : 220);
+    }
+
     if (state.mode === stopId && SCRIPTS[key] && key !== state.scriptKey) {
       state.scriptKey = key;
       narrate({ speakIt: state.unlocked });
@@ -2436,6 +2750,17 @@ function setupStory(el) {
     if (window.gsap) window.gsap.killTweensOf(el);
     scrollGoal = null;
   }, { passive: true });
+
+  const memoryFinalIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-seal');
+  const memoryJourneyIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-journey');
+  setupMemoryQuest(el, {
+    onAllComplete: () => {
+      if (memoryFinalIndex >= 0) scrollToStep(memoryFinalIndex);
+    },
+    onReset: () => {
+      if (memoryJourneyIndex >= 0) scrollToStep(memoryJourneyIndex);
+    },
+  });
 
   // Detail chips (e.g. gate elements, registration forms): one pane at a time.
   const chips = Array.from(el.querySelectorAll('[data-detail]'));
@@ -2539,7 +2864,7 @@ function initStories() {
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
     // Inner scroll areas (rules box), the artifact viewer, and 3D models keep
     // their own native wheel behaviour.
-    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-preview, .trailx-doc, model-viewer')) return;
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, model-viewer')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
@@ -2552,7 +2877,7 @@ function initStories() {
   // both platforms: a vertical drag scrolls the active story (with a momentum
   // fling); a horizontal drag falls through so "drag to look around" still
   // rotates the 360.
-  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-preview, .trailx-doc, model-viewer'));
+  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, model-viewer'));
   let tStartY = 0;
   let tStartX = 0;
   let tLastY = 0;

@@ -736,7 +736,7 @@
             </p>
           </article>
 
-          <!-- Step 4 · Next stop -->
+          <!-- Carry the restored stories forward -->
           <footer class="trailx__chapter trailx__chapter--next" data-chapter="s3-next" data-title="Next">
             <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 4</span><span data-lang-tl>Susunod · Hinto 4</span></p>
             <h3 class="trailx__chapter-title">
@@ -771,182 +771,176 @@
       </div>
       <!-- ============ End Stop 3 · Museum Artifact Interpretation ============ -->
 
-      <!-- ============ Stop 4 · A Playful Checkpoint ============
-           No scores, no accounts — three little mind games drawn from what
-           the visitor has seen, over the same museum-hall 360. -->
-      <div class="trailx__story" data-trail-story="stop4" aria-label="Stop 4 — A Playful Checkpoint" hidden>
+      <!-- ============ Stop 4 · Fragments of Memory ============
+           One connected, unscored museum-memory experience. Visitors restore
+           three ideas from Stop 3 through movement rather than questions. -->
+      <div class="trailx__story trailx__story--memory" data-trail-story="stop4" data-memory-quest aria-label="Stop 4 — Fragments of Memory" hidden>
         <div class="trailx__stage" data-trail-stage>
           <!-- Step 0 · Arrive -->
           <header class="trailx__chapter trailx__chapter--hero" data-chapter="s4-arrive" data-side="left" data-title="Arrive">
             <p class="trailx__s1-kicker"><span data-lang-en>Stop 4 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 4 ng 10 · Landas ng Pamana</span></p>
             <h2 class="trailx__chapter-title trailx__chapter-title--hero">
-              <span data-lang-en>A Playful <em>Checkpoint</em></span>
-              <span data-lang-tl>Isang Masayang <em>Pagsubok</em></span>
+              <span data-lang-en>Fragments of <em>Memory</em></span>
+              <span data-lang-tl>Mga Piraso ng <em>Alaala</em></span>
             </h2>
             <p class="trailx__s1-tip">
-              <span data-lang-en>No scores, no accounts — just play · Every answer lives in the halls around you</span>
-              <span data-lang-tl>Walang puntos, walang account — laro lamang · Nasa mga bulwagan sa paligid mo ang bawat sagot</span>
+              <span data-lang-en>No questions · No scores · Restore three stories with your hands</span>
+              <span data-lang-tl>Walang tanong · Walang puntos · Buuin ang tatlong kuwento gamit ang iyong mga kamay</span>
             </p>
+            <div class="trailx-memory__legend" aria-label="Three memories to restore">
+              <span data-memory-legend="journey"><i aria-hidden="true"></i><span data-lang-en>Journey</span><span data-lang-tl>Paglalakbay</span></span>
+              <span data-memory-legend="care"><i aria-hidden="true"></i><span data-lang-en>Care</span><span data-lang-tl>Pagkalinga</span></span>
+              <span data-memory-legend="remembrance"><i aria-hidden="true"></i><span data-lang-en>Remembrance</span><span data-lang-tl>Pag-alaala</span></span>
+            </div>
           </header>
 
-          <!-- Game I · Who Am I? (riddle) -->
-          <article class="trailx__chapter" data-chapter="s4-riddle" data-side="left" data-title="Riddle">
+          <!-- Memory I · The Journey -->
+          <article class="trailx__chapter trailx__chapter--memory" data-chapter="s4-journey" data-side="left" data-title="Journey" data-memory-scene="museum1" data-memory-yaw="10">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Checkpoint · I</span><span data-lang-tl>Pagsubok · I</span></span>
+              <span class="trailx__label-text"><span data-lang-en>Memory · I</span><span data-lang-tl>Alaala · I</span></span>
             </div>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>Who<br /><em>Am I?</em></span>
-              <span data-lang-tl>Sino<br /><em>Ako?</em></span>
+              <span data-lang-en>Guide the <em>Voyage</em></span>
+              <span data-lang-tl>Gabayan ang <em>Paglalakbay</em></span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              A riddle from the halls you just walked. Read it, then choose — wrong guesses cost nothing.
+              Draw the Balanghay along the current until it reaches the other shore.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Isang bugtong mula sa mga bulwagang kalalakad mo lang. Basahin ito, pagkatapos ay pumili — walang kapalit ang maling hula.
+              Igabay ang Balanghay sa agos hanggang marating nito ang kabilang pampang.
             </p>
-            <div class="trailx__game" data-game>
-              <p class="trailx__riddle">
-                <span data-lang-en>"In life I carried warriors across the seas. In death, I carried their souls to the next world."</span>
-                <span data-lang-tl>"Sa buhay, dinala ko ang mga mandirigma sa karagatan. Sa kamatayan, inihatid ko ang kanilang mga kaluluwa sa kabilang daigdig."</span>
-              </p>
-              <div class="trailx__chips" role="group" aria-label="Riddle choices">
-                <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>The Manunggul Jar</span><span data-lang-tl>Ang Banga ng Manunggul</span></button>
-                <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>The Balanghay</span><span data-lang-tl>Ang Balanghay</span></button>
-                <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>The Ulóh</span><span data-lang-tl>Ang Ulóh</span></button>
+            <div class="trailx-memory trailx-memory--journey" data-memory-act="journey">
+              <div class="trailx-memory__river" data-memory-river style="--memory-progress: 0%">
+                <span class="trailx-memory__shore trailx-memory__shore--start" aria-hidden="true"></span>
+                <span class="trailx-memory__current" aria-hidden="true"></span>
+                <span class="trailx-memory__shore trailx-memory__shore--end" aria-hidden="true"></span>
+                <span class="trailx-memory__boat" data-memory-boat aria-hidden="true">
+                  <img data-memory-image="balanghay" alt="" draggable="false" />
+                </span>
+                <input class="trailx-memory__range" data-memory-journey type="range" min="0" max="100" value="0" aria-label="Guide the Balanghay to the other shore / Igabay ang Balanghay sa kabilang pampang" />
               </div>
-              <p class="trailx__game-fb" data-fb-right hidden>
-                <span data-lang-en>Yes — the balanghay, the boat of souls. You listened well in the halls.</span>
-                <span data-lang-tl>Tama — ang balanghay, ang bangka ng mga kaluluwa. Nakinig kang mabuti sa mga bulwagan.</span>
+              <p class="trailx-memory__prompt" data-memory-prompt="journey" aria-live="polite">
+                <span data-lang-en>Drag the boat across the current</span><span data-lang-tl>I-drag ang bangka sa agos</span>
               </p>
-              <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden>
-                <span data-lang-en>Not quite — think of the sea, and try again.</span>
-                <span data-lang-tl>Hindi pa tama — isipin ang dagat, at subukan muli.</span>
+              <p class="trailx-memory__insight" data-memory-insight="journey" hidden>
+                <span data-lang-en>The Balanghay carried people across the sea and symbolized the soul's voyage to the next life.</span>
+                <span data-lang-tl>Naghatid ang Balanghay ng mga tao sa dagat at sumagisag sa paglalakbay ng kaluluwa tungo sa kabilang buhay.</span>
               </p>
             </div>
           </article>
 
-          <!-- Game II · Time Walk (order puzzle) -->
-          <article class="trailx__chapter" data-chapter="s4-order" data-side="right" data-title="Time Walk">
+          <!-- Memory II · Continuing Care -->
+          <article class="trailx__chapter trailx__chapter--memory" data-chapter="s4-care" data-side="right" data-title="Care" data-memory-scene="museum1" data-memory-yaw="100">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Checkpoint · II</span><span data-lang-tl>Pagsubok · II</span></span>
+              <span class="trailx__label-text"><span data-lang-en>Memory · II</span><span data-lang-tl>Alaala · II</span></span>
             </div>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>Time<br /><em>Walk</em></span>
-              <span data-lang-tl>Lakbay-<br /><em>Panahon</em></span>
+              <span data-lang-en>Continue the <em>Care</em></span>
+              <span data-lang-tl>Ipagpatuloy ang <em>Pagkalinga</em></span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              Tap the four moments in the order they happened — the story of this site, from first stone to national landmark.
+              Swipe across the cloth three times to wrap the symbolic bundle in a restored Ulóh.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Pindutin ang apat na pangyayari ayon sa pagkakasunod ng mga ito — ang kuwento ng pook, mula sa unang bato hanggang maging pambansang palatandaan.
+              Humagod sa tela nang tatlong beses upang balutin ang sagisag na hugis sa isang naibalik na Ulóh.
             </p>
-            <div class="trailx__order" data-order-game>
-              <button class="trailx__order-tile" type="button" data-order="2">
-                <span data-lang-en>The Katipunan meets in secret below the chapel</span>
-                <span data-lang-tl>Lihim na nagpupulong ang Katipunan sa ilalim ng kapilya</span>
-              </button>
-              <button class="trailx__order-tile" type="button" data-order="4">
-                <span data-lang-en>Declared a National Historical Landmark</span>
-                <span data-lang-tl>Idineklarang Pambansang Palatandaang Pangkasaysayan</span>
-              </button>
-              <button class="trailx__order-tile" type="button" data-order="1">
-                <span data-lang-en>The cemetery is built under Fr. Vicente Velloc</span>
-                <span data-lang-tl>Itinayo ang libingan sa ilalim ni Padre Vicente Velloc</span>
-              </button>
-              <button class="trailx__order-tile" type="button" data-order="3">
-                <span data-lang-en>Guerrillas shelter here during the war</span>
-                <span data-lang-tl>Kumukubli rito ang mga gerilya noong digmaan</span>
-              </button>
+            <div class="trailx-memory trailx-memory--care" data-memory-act="care">
+              <div class="trailx-memory__wrap" data-memory-wrap-zone tabindex="0" role="button" aria-label="Swipe to wrap the Ulóh / Humagod upang ibalot ang Ulóh">
+                <span class="trailx-memory__bundle" aria-hidden="true"></span>
+                <span class="trailx-memory__cloth trailx-memory__cloth--one" aria-hidden="true"></span>
+                <span class="trailx-memory__cloth trailx-memory__cloth--two" aria-hidden="true"></span>
+                <span class="trailx-memory__cloth trailx-memory__cloth--three" aria-hidden="true"></span>
+                <span class="trailx-memory__swipe" aria-hidden="true">↔</span>
+              </div>
+              <div class="trailx-memory__care-tools">
+                <p class="trailx-memory__prompt" data-memory-wrap-count aria-live="polite"><span data-lang-en>0 of 3 layers restored</span><span data-lang-tl>0 sa 3 sapin ang naibalik</span></p>
+                <button class="trailx-memory__assist" type="button" data-memory-wrap-next><span data-lang-en>Wrap next layer</span><span data-lang-tl>Ibalot ang susunod na sapin</span></button>
+              </div>
+              <p class="trailx-memory__insight" data-memory-insight="care" hidden>
+                <span data-lang-en>In Bogwa, the Ifugao cleanse and rewrap the departed's remains in a new Ulóh as an act of continuing care.</span>
+                <span data-lang-tl>Sa Bogwa, nililinis at muling binabalot ng mga Ifugao ang mga labi ng yumao sa bagong Ulóh bilang patuloy na pagkalinga.</span>
+              </p>
             </div>
-            <p class="trailx__game-fb" data-order-right hidden>
-              <span data-lang-en>Perfect — 1845, 1896, the war years, then 1981. The site lived through it all.</span>
-              <span data-lang-tl>Tamang-tama — 1845, 1896, ang mga taon ng digmaan, at 1981. Nilagpasan ng pook ang lahat ng iyon.</span>
-            </p>
-            <p class="trailx__game-fb trailx__game-fb--wrong" data-order-wrong hidden>
-              <span data-lang-en>Almost! The tiles have reset — walk the timeline again.</span>
-              <span data-lang-tl>Malapit na! Nag-reset ang mga tile — lakbayin muli ang panahon.</span>
-            </p>
           </article>
 
-          <!-- Game III · True or False -->
-          <article class="trailx__chapter" data-chapter="s4-tf" data-side="left" data-title="True or False">
+          <!-- Memory III · Remembrance -->
+          <article class="trailx__chapter trailx__chapter--memory" data-chapter="s4-remembrance" data-side="left" data-title="Remembrance" data-memory-scene="museum3" data-memory-yaw="-150">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Checkpoint · III</span><span data-lang-tl>Pagsubok · III</span></span>
+              <span class="trailx__label-text"><span data-lang-en>Memory · III</span><span data-lang-tl>Alaala · III</span></span>
             </div>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>True or<br /><em>False?</em></span>
-              <span data-lang-tl>Totoo o<br /><em>Hindi?</em></span>
+              <span data-lang-en>Keep a Memory <em>Alive</em></span>
+              <span data-lang-tl>Panatilihing <em>Buhay</em> ang Alaala</span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              Three quick claims — call each one. Take your best guess; wrong answers cost nothing here.
+              Drag each token into the remembrance circle. You may place them in any order.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Tatlong mabilisang pahayag — hatulan ang bawat isa. Manghula lang; walang kapalit ang mali rito.
+              I-drag ang bawat sagisag papunta sa bilog ng pag-alaala. Maaari mong ilagay ang mga ito sa anumang ayos.
             </p>
-            <div class="trailx__scrollbox">
-              <div class="trailx__tf" data-game>
-                <p class="trailx__tf-q"><span data-lang-en>Admission to the museum is free.</span><span data-lang-tl>Libre ang pagpasok sa museo.</span></p>
-                <div class="trailx__tf-btns">
-                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
-                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
-                </div>
-                <p class="trailx__game-fb" data-fb-right hidden>
-                  <span data-lang-en>True! Entry is free for everyone — heritage is for all.</span>
-                  <span data-lang-tl>Totoo! Libre ang pagpasok para sa lahat — para sa lahat ang pamana.</span>
-                </p>
-                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden>
-                  <span data-lang-en>Look again — remember Stop 2's welcome desk.</span>
-                  <span data-lang-tl>Tingnang muli — alalahanin ang pagtanggap sa Hinto 2.</span>
-                </p>
+            <div class="trailx-memory trailx-memory--remembrance" data-memory-act="remembrance">
+              <div class="trailx-memory__tokens" aria-label="Memory tokens">
+                <button class="trailx-memory__token" type="button" data-memory-token="alay" aria-label="Place Alay in the remembrance circle">
+                  <img data-memory-image="alay" alt="" draggable="false" /><span>Alay</span>
+                </button>
+                <button class="trailx-memory__token" type="button" data-memory-token="pahimakas" aria-label="Place Pahimakas in the remembrance circle">
+                  <img data-memory-image="pahimakas" alt="" draggable="false" /><span>Pahimakas</span>
+                </button>
+                <button class="trailx-memory__token" type="button" data-memory-token="recuerdos" aria-label="Place Recuerdos in the remembrance circle">
+                  <img data-memory-image="recuerdos" alt="" draggable="false" /><span>Recuerdos</span>
+                </button>
               </div>
-              <div class="trailx__tf" data-game>
-                <p class="trailx__tf-q"><span data-lang-en>The cemetery was built in 1945.</span><span data-lang-tl>Itinayo ang libingan noong 1945.</span></p>
-                <div class="trailx__tf-btns">
-                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
-                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
-                </div>
-                <p class="trailx__game-fb" data-fb-right hidden>
-                  <span data-lang-en>Right — 1845, a full century earlier, under Fr. Vicente Velloc.</span>
-                  <span data-lang-tl>Tama — 1845, isang buong siglo nang mas maaga, sa ilalim ni Padre Vicente Velloc.</span>
-                </p>
-                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden>
-                  <span data-lang-en>Check the year again — it is older than that.</span>
-                  <span data-lang-tl>Suriin muli ang taon — mas matanda pa ito roon.</span>
-                </p>
+              <div class="trailx-memory__altar" data-memory-altar aria-label="Remembrance circle">
+                <span class="trailx-memory__altar-ring" aria-hidden="true"></span>
+                <span class="trailx-memory__slot" data-memory-slot="alay"><b>Alay</b><small data-lang-en>Nourishment</small><small data-lang-tl>Pag-aalay</small></span>
+                <span class="trailx-memory__slot" data-memory-slot="pahimakas"><b>Pahimakas</b><small data-lang-en>Music</small><small data-lang-tl>Musika</small></span>
+                <span class="trailx-memory__slot" data-memory-slot="recuerdos"><b>Recuerdos</b><small data-lang-en>Memory</small><small data-lang-tl>Alaala</small></span>
               </div>
-              <div class="trailx__tf" data-game>
-                <p class="trailx__tf-q"><span data-lang-en>The balanghay symbolized the soul's voyage to the afterlife.</span><span data-lang-tl>Sagisag ng balanghay ang paglalakbay ng kaluluwa sa kabilang buhay.</span></p>
-                <div class="trailx__tf-btns">
-                  <button class="trailx__chip trailx__choice" type="button" data-choice="right"><span data-lang-en>True</span><span data-lang-tl>Totoo</span></button>
-                  <button class="trailx__chip trailx__choice" type="button" data-choice="wrong"><span data-lang-en>False</span><span data-lang-tl>Hindi</span></button>
-                </div>
-                <p class="trailx__game-fb" data-fb-right hidden>
-                  <span data-lang-en>True — warriors and seafarers were even buried with their boats.</span>
-                  <span data-lang-tl>Totoo — ang mga mandirigma at mandaragat ay inililibing pa nga kasama ng kanilang mga bangka.</span>
-                </p>
-                <p class="trailx__game-fb trailx__game-fb--wrong" data-fb-wrong hidden>
-                  <span data-lang-en>Its voice in hall one says otherwise — listen again.</span>
-                  <span data-lang-tl>Iba ang sabi ng tinig nito sa unang bulwagan — makinig muli.</span>
-                </p>
-              </div>
+              <p class="trailx-memory__prompt" data-memory-prompt="remembrance" aria-live="polite"><span data-lang-en>0 of 3 memories placed</span><span data-lang-tl>0 sa 3 alaala ang nailagay</span></p>
+              <p class="trailx-memory__insight" data-memory-insight="remembrance" hidden>
+                <span data-lang-en>Alay, music, and photographs show three ways relationships with the departed are kept alive.</span>
+                <span data-lang-tl>Ipinapakita ng alay, musika, at mga larawan ang tatlong paraan upang manatiling buhay ang ugnayan sa yumao.</span>
+              </p>
             </div>
+          </article>
+
+          <!-- Memory Seal · the three restored ideas become one keepsake -->
+          <article class="trailx__chapter trailx__chapter--memory-seal" data-chapter="s4-seal" data-title="Memory Seal" data-memory-scene="museum3" data-memory-yaw="170">
+            <p class="trailx__s1-kicker"><span data-lang-en>Three stories · One memory</span><span data-lang-tl>Tatlong kuwento · Isang alaala</span></p>
+            <div class="trailx-memory__seal" data-memory-final aria-live="polite">
+              <span class="trailx-memory__seal-orbit" aria-hidden="true"></span>
+              <span class="trailx-memory__seal-mark trailx-memory__seal-mark--journey" data-memory-seal="journey" aria-hidden="true">✦</span>
+              <span class="trailx-memory__seal-mark trailx-memory__seal-mark--care" data-memory-seal="care" aria-hidden="true">✦</span>
+              <span class="trailx-memory__seal-mark trailx-memory__seal-mark--remembrance" data-memory-seal="remembrance" aria-hidden="true">✦</span>
+              <span class="trailx-memory__seal-center"><span data-lang-en>Memory<br />Keeper</span><span data-lang-tl>Tagapag-ingat<br />ng Alaala</span></span>
+            </div>
+            <h3 class="trailx__chapter-title"><span data-lang-en>The Memory <em>Seal</em></span><span data-lang-tl>Ang Sagisag ng <em>Alaala</em></span></h3>
+            <p class="trailx__chapter-copy" data-memory-final-wait>
+              <span data-lang-en>The seal awakens as you restore Journey, Care, and Remembrance. You may return to any unfinished memory.</span>
+              <span data-lang-tl>Magigising ang sagisag kapag naibalik mo ang Paglalakbay, Pagkalinga, at Pag-alaala. Maaari kang bumalik sa anumang hindi pa tapos na alaala.</span>
+            </p>
+            <p class="trailx-memory__final-copy" data-memory-final-complete hidden>
+              <span data-lang-en>“You did not simply remember the artifacts. You restored the stories they carry.”</span>
+              <span data-lang-tl>“Hindi mo lamang inalala ang mga artifact. Muli mong binuo ang mga kuwentong taglay nila.”</span>
+            </p>
+            <button class="trailx-memory__assist" type="button" data-memory-reset><span data-lang-en>Restore the memories again</span><span data-lang-tl>Buuin muli ang mga alaala</span></button>
           </article>
 
           <!-- Step 4 · Next stop -->
           <footer class="trailx__chapter trailx__chapter--next" data-chapter="s4-next" data-title="Next">
             <p class="trailx__s1-kicker"><span data-lang-en>Up next · Stop 5</span><span data-lang-tl>Susunod · Hinto 5</span></p>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>Return to the Gates<br /><em>Cemetery History</em></span>
-              <span data-lang-tl>Balik sa Tarangkahan<br /><em>Kasaysayan ng Libingan</em></span>
+              <span data-lang-en>Carry the Stories<br /><em>into the Light</em></span>
+              <span data-lang-tl>Dalhin ang mga Kuwento<br /><em>sa Liwanag</em></span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              Well played. Next, we step back into the open air and unfold the cemetery's long story.
+              The museum's memories travel with you. Next, we return to the open air and unfold the cemetery's long history.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Mahusay. Susunod, babalik tayo sa labas at ilalahad ang mahabang kuwento ng libingan.
+              Kasama mo na ang mga alaala ng museo. Susunod, babalik tayo sa labas at ilalahad ang mahabang kasaysayan ng libingan.
             </p>
             <div class="trailx__actions">
               <button class="trailx__begin" data-trail-goto="stop5" type="button">
@@ -968,7 +962,7 @@
         <!-- Invisible track: gives the story its scroll distance -->
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>
       </div>
-      <!-- ================== End Stop 4 · A Playful Checkpoint ================== -->
+      <!-- ================== End Stop 4 · Fragments of Memory ================== -->
 
       <!-- ============ Stop 5 · Cemetery History (the grounds) ============
            Same engine as the other stops, over the chapel-front + tomb-row

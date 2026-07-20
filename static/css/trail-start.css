@@ -967,6 +967,380 @@
 }
 .trailx__tf-btns { display: flex; gap: 0.5rem; }
 
+/* ===========================================================================
+   Stop 4 · Fragments of Memory — gesture-led, unscored museum experience
+   ========================================================================== */
+.trailx__story--memory .trailx__chapter--memory {
+  width: min(620px, 47vw);
+}
+
+.trailx-memory__legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.55rem;
+  margin-top: 0.5rem;
+}
+.trailx-memory__legend > span {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  padding: 0.42rem 0.7rem;
+  border: 1px solid rgba(212, 175, 106, 0.3);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.42);
+  color: rgba(255, 255, 255, 0.66);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.62rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: color 0.35s ease, border-color 0.35s ease, background 0.35s ease;
+}
+.trailx-memory__legend i {
+  width: 0.45rem;
+  height: 0.45rem;
+  transform: rotate(45deg);
+  border: 1px solid currentColor;
+  background: transparent;
+  transition: background 0.35s ease, box-shadow 0.35s ease;
+}
+.trailx-memory__legend > span.is-restored {
+  color: #f7d98f;
+  border-color: rgba(212, 175, 106, 0.72);
+  background: rgba(212, 175, 106, 0.13);
+}
+.trailx-memory__legend > span.is-restored i {
+  background: var(--tx-gold);
+  box-shadow: 0 0 14px rgba(212, 175, 106, 0.8);
+}
+
+.trailx-memory {
+  position: relative;
+  width: min(34rem, 100%);
+  padding: 0.8rem;
+  border: 1px solid rgba(212, 175, 106, 0.4);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(212, 175, 106, 0.13), transparent 48%),
+    rgba(13, 10, 4, 0.72);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), inset 0 1px rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(9px);
+  backdrop-filter: blur(9px);
+}
+.trailx-memory.is-restored {
+  border-color: rgba(212, 175, 106, 0.78);
+  box-shadow: 0 18px 55px rgba(0, 0, 0, 0.34), 0 0 28px rgba(212, 175, 106, 0.11), inset 0 1px rgba(255, 255, 255, 0.08);
+}
+.trailx-memory__prompt {
+  margin: 0.65rem 0 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.64rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.07em;
+  text-align: center;
+  text-transform: uppercase;
+}
+.trailx-memory__insight,
+.trailx-memory__final-copy {
+  margin: 0.7rem 0 0;
+  padding: 0.65rem 0.75rem;
+  border-left: 2px solid var(--tx-gold);
+  background: rgba(212, 175, 106, 0.09);
+  color: rgba(255, 255, 255, 0.92);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: calc(0.94rem * var(--tx-font-scale, 1));
+  line-height: 1.4;
+  animation: trailx-detail-in 0.5s ease both;
+}
+.trailx-memory__insight[hidden],
+.trailx-memory__final-copy[hidden] { display: none !important; }
+
+/* Memory I: an artifact medallion rides a luminous current. The native range
+   remains on top for touch, keyboard and screen-reader accessibility. */
+.trailx-memory__river {
+  position: relative;
+  height: 8.2rem;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  background:
+    radial-gradient(ellipse at 50% 115%, rgba(212, 175, 106, 0.3), transparent 62%),
+    linear-gradient(180deg, rgba(26, 42, 49, 0.58), rgba(9, 22, 28, 0.86));
+  isolation: isolate;
+}
+.trailx-memory__current {
+  position: absolute;
+  inset: 40% -12% auto;
+  height: 45%;
+  opacity: 0.7;
+  background: repeating-radial-gradient(ellipse at 50% 120%, transparent 0 13px, rgba(212, 175, 106, 0.24) 14px 15px, transparent 16px 27px);
+  animation: trailx-memory-current 5s linear infinite;
+}
+.trailx-memory__shore {
+  position: absolute;
+  z-index: 1;
+  bottom: -0.7rem;
+  width: 18%;
+  height: 48%;
+  border-radius: 50% 50% 0 0;
+  background: linear-gradient(180deg, rgba(212, 175, 106, 0.52), rgba(69, 44, 16, 0.85));
+  box-shadow: 0 -3px 18px rgba(212, 175, 106, 0.18);
+}
+.trailx-memory__shore--start { left: -5%; transform: rotate(7deg); }
+.trailx-memory__shore--end { right: -5%; transform: rotate(-7deg); }
+.trailx-memory__boat {
+  position: absolute;
+  z-index: 3;
+  left: clamp(8%, var(--memory-progress, 8%), 92%);
+  top: 50%;
+  width: 4.25rem;
+  height: 4.25rem;
+  transform: translate(-50%, -50%);
+  overflow: hidden;
+  border: 2px solid rgba(247, 217, 143, 0.9);
+  border-radius: 50%;
+  background: #161006;
+  box-shadow: 0 0 0 6px rgba(212, 175, 106, 0.1), 0 10px 28px rgba(0, 0, 0, 0.55), 0 0 22px rgba(212, 175, 106, 0.38);
+  transition: box-shadow 0.3s ease;
+}
+.trailx-memory__boat img { width: 100%; height: 100%; object-fit: cover; pointer-events: none; }
+.trailx-memory__range {
+  position: absolute;
+  z-index: 5;
+  inset: 0.7rem 5%;
+  width: 90%;
+  height: calc(100% - 1.4rem);
+  margin: 0;
+  opacity: 0.001;
+  cursor: grab;
+  touch-action: pan-y;
+}
+.trailx-memory__range:active { cursor: grabbing; }
+.trailx-memory__river:has(.trailx-memory__range:focus-visible) { outline: 2px solid var(--tx-gold); outline-offset: 3px; }
+.trailx-memory--journey.is-restored .trailx-memory__boat { box-shadow: 0 0 0 8px rgba(212, 175, 106, 0.14), 0 0 34px rgba(247, 217, 143, 0.7); }
+@keyframes trailx-memory-current { to { transform: translateX(8%); } }
+
+/* Memory II: three visual cloth layers respond to horizontal swipes. */
+.trailx-memory__wrap {
+  position: relative;
+  height: 8.8rem;
+  overflow: hidden;
+  border-radius: 0.85rem;
+  background:
+    radial-gradient(circle at 50% 48%, rgba(212, 175, 106, 0.2), transparent 46%),
+    linear-gradient(135deg, rgba(34, 24, 13, 0.92), rgba(12, 9, 5, 0.92));
+  cursor: ew-resize;
+  touch-action: pan-y;
+}
+.trailx-memory__wrap:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 3px; }
+.trailx-memory__bundle {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 5.2rem;
+  height: 7rem;
+  transform: translate(-50%, -50%);
+  border: 1px solid rgba(250, 247, 242, 0.4);
+  border-radius: 52% 52% 42% 42%;
+  background: radial-gradient(circle at 50% 22%, rgba(250, 247, 242, 0.54), rgba(156, 139, 110, 0.18) 58%, transparent 60%);
+  box-shadow: 0 0 28px rgba(250, 247, 242, 0.1);
+}
+.trailx-memory__cloth {
+  position: absolute;
+  z-index: 2;
+  left: 50%;
+  width: 8.8rem;
+  height: 2.65rem;
+  opacity: 0;
+  border: 1px solid rgba(212, 175, 106, 0.55);
+  border-radius: 42% 56% 45% 58%;
+  background-image: linear-gradient(90deg, rgba(15, 8, 4, 0.16), rgba(212, 175, 106, 0.12)), var(--memory-uloh-image);
+  background-position: center;
+  background-size: cover;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.42);
+  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.trailx-memory__cloth--one { top: 18%; transform: translate(-135%, -8%) rotate(-8deg); }
+.trailx-memory__cloth--two { top: 39%; transform: translate(35%, 2%) rotate(7deg); }
+.trailx-memory__cloth--three { top: 59%; transform: translate(-135%, 8%) rotate(-5deg); }
+.trailx-memory__wrap[data-layer="1"] .trailx-memory__cloth--one,
+.trailx-memory__wrap[data-layer="2"] .trailx-memory__cloth--one,
+.trailx-memory__wrap[data-layer="3"] .trailx-memory__cloth--one,
+.trailx-memory__wrap[data-layer="2"] .trailx-memory__cloth--two,
+.trailx-memory__wrap[data-layer="3"] .trailx-memory__cloth--two,
+.trailx-memory__wrap[data-layer="3"] .trailx-memory__cloth--three {
+  opacity: 0.94;
+  transform: translate(-50%, 0) rotate(0);
+}
+.trailx-memory__swipe {
+  position: absolute;
+  z-index: 4;
+  right: 0.75rem;
+  bottom: 0.45rem;
+  color: rgba(247, 217, 143, 0.72);
+  font: 500 1.2rem/1 "Inter", sans-serif;
+  animation: trailx-memory-swipe 1.8s ease-in-out infinite;
+}
+.trailx-memory__wrap[data-layer="3"] .trailx-memory__swipe { display: none; }
+.trailx-memory__care-tools { display: flex; align-items: center; justify-content: space-between; gap: 0.7rem; }
+.trailx-memory__care-tools .trailx-memory__prompt { text-align: left; }
+.trailx-memory__assist {
+  margin-top: 0.65rem;
+  padding: 0.46rem 0.72rem;
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  border-radius: 999px;
+  background: rgba(212, 175, 106, 0.12);
+  color: #f7d98f;
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.6rem * var(--tx-font-scale, 1));
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.trailx-memory__assist:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--tx-gold); }
+.trailx-memory__assist:disabled { opacity: 0.45; cursor: default; }
+@keyframes trailx-memory-swipe { 50% { transform: translateX(-0.6rem); opacity: 0.45; } }
+
+/* Memory III: tokens can be dragged into the circle on touch/mouse, or tapped
+   and activated from the keyboard as an equivalent accessible gesture. */
+.trailx-memory--remembrance {
+  display: grid;
+  grid-template-columns: minmax(7.4rem, 0.85fr) minmax(11rem, 1.15fr);
+  gap: 0.7rem;
+  align-items: stretch;
+}
+.trailx-memory__tokens { display: grid; gap: 0.42rem; }
+.trailx-memory__token {
+  position: relative;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: 2.5rem 1fr;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 3.1rem;
+  padding: 0.28rem 0.55rem 0.28rem 0.3rem;
+  border: 1px solid rgba(212, 175, 106, 0.44);
+  border-radius: 0.75rem;
+  background: rgba(250, 247, 242, 0.08);
+  color: #fff;
+  font-family: "Playfair Display", serif;
+  font-size: calc(0.76rem * var(--tx-font-scale, 1));
+  text-align: left;
+  cursor: grab;
+  touch-action: none;
+  transform: translate3d(var(--memory-drag-x, 0), var(--memory-drag-y, 0), 0);
+  transition: opacity 0.35s ease, transform 0.3s ease, border-color 0.3s ease, background 0.3s ease;
+}
+.trailx-memory__token img { width: 2.5rem; height: 2.5rem; object-fit: cover; border-radius: 0.55rem; pointer-events: none; }
+.trailx-memory__token:hover { border-color: var(--tx-gold); background: rgba(212, 175, 106, 0.14); }
+.trailx-memory__token.is-dragging { z-index: 8; cursor: grabbing; transition: none; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); }
+.trailx-memory__token.is-placed { opacity: 0.26; transform: scale(0.92); cursor: default; }
+.trailx-memory__altar {
+  position: relative;
+  min-height: 10.2rem;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 106, 0.35);
+  border-radius: 50% 50% 1rem 1rem;
+  background: radial-gradient(circle at 50% 46%, rgba(212, 175, 106, 0.2), transparent 56%), rgba(8, 6, 3, 0.5);
+}
+.trailx-memory__altar-ring {
+  position: absolute;
+  inset: 1.2rem 14% 1.5rem;
+  border: 1px solid rgba(247, 217, 143, 0.48);
+  border-radius: 50%;
+  box-shadow: inset 0 0 22px rgba(212, 175, 106, 0.1), 0 0 18px rgba(212, 175, 106, 0.1);
+}
+.trailx-memory__slot {
+  position: absolute;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: rgba(255, 255, 255, 0.35);
+  font-family: "Inter", sans-serif;
+  font-size: 0.55rem;
+  letter-spacing: 0.04em;
+  transition: color 0.4s ease, text-shadow 0.4s ease, transform 0.4s ease;
+}
+.trailx-memory__slot b { font-family: "Playfair Display", serif; font-size: 0.72rem; font-weight: 500; }
+.trailx-memory__slot small { font-size: 0.48rem; text-transform: uppercase; }
+.trailx-memory__slot[data-memory-slot="alay"] { left: 12%; bottom: 18%; }
+.trailx-memory__slot[data-memory-slot="pahimakas"] { left: 50%; top: 18%; transform: translateX(-50%); }
+.trailx-memory__slot[data-memory-slot="recuerdos"] { right: 8%; bottom: 18%; }
+.trailx-memory__slot.is-filled { color: #f7d98f; text-shadow: 0 0 15px rgba(212, 175, 106, 0.75); transform: scale(1.08); }
+.trailx-memory__slot[data-memory-slot="pahimakas"].is-filled { transform: translateX(-50%) scale(1.08); }
+.trailx-memory--remembrance > .trailx-memory__prompt,
+.trailx-memory--remembrance > .trailx-memory__insight { grid-column: 1 / -1; }
+
+/* The final seal stays dim until all three ideas are restored. */
+.trailx__chapter--memory-seal {
+  left: 0;
+  right: 0;
+  width: min(620px, 92vw);
+  margin: 0 auto;
+  align-items: center;
+  text-align: center;
+}
+.trailx__chapter--memory-seal .trailx__chapter-copy { margin-left: auto; margin-right: auto; }
+.trailx-memory__seal {
+  position: relative;
+  width: 10.5rem;
+  height: 10.5rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  opacity: 0.58;
+  transition: opacity 0.7s ease, filter 0.7s ease;
+}
+.trailx-memory__seal-orbit {
+  position: absolute;
+  inset: 0;
+  border: 1px solid rgba(212, 175, 106, 0.55);
+  border-radius: 50%;
+  box-shadow: inset 0 0 30px rgba(212, 175, 106, 0.08);
+}
+.trailx-memory__seal-orbit::before,
+.trailx-memory__seal-orbit::after {
+  content: "";
+  position: absolute;
+  inset: 13%;
+  border: 1px solid rgba(212, 175, 106, 0.27);
+  transform: rotate(45deg);
+}
+.trailx-memory__seal-orbit::after { inset: 27%; transform: rotate(0); }
+.trailx-memory__seal-center {
+  position: absolute;
+  inset: 31%;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  border-radius: 50%;
+  background: #161006;
+  color: rgba(247, 217, 143, 0.75);
+  font-family: "Playfair Display", serif;
+  font-size: calc(0.6rem * var(--tx-font-scale, 1));
+  line-height: 1.15;
+}
+.trailx-memory__seal-mark {
+  position: absolute;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid rgba(212, 175, 106, 0.45);
+  border-radius: 50%;
+  background: #161006;
+  color: rgba(212, 175, 106, 0.2);
+  transition: color 0.5s ease, box-shadow 0.5s ease, transform 0.5s ease;
+}
+.trailx-memory__seal-mark--journey { left: 50%; top: -0.8rem; transform: translateX(-50%); }
+.trailx-memory__seal-mark--care { left: -0.35rem; bottom: 0.8rem; }
+.trailx-memory__seal-mark--remembrance { right: -0.35rem; bottom: 0.8rem; }
+.trailx-memory__seal-mark.is-restored { color: #f7d98f; box-shadow: 0 0 20px rgba(212, 175, 106, 0.66); }
+.trailx-memory__seal.is-awake { opacity: 1; filter: drop-shadow(0 0 24px rgba(212, 175, 106, 0.38)); }
+.trailx-memory__seal.is-awake .trailx-memory__seal-orbit { animation: trailx-memory-orbit 12s linear infinite; }
+.trailx-memory__seal.is-awake .trailx-memory__seal-center { color: #f7d98f; box-shadow: 0 0 24px rgba(212, 175, 106, 0.34); }
+.trailx-memory__final-copy { max-width: 34rem; border-left: 0; border-top: 1px solid var(--tx-gold); text-align: center; font-style: italic; }
+@keyframes trailx-memory-orbit { to { transform: rotate(360deg); } }
+
 /* Chapter dots — right-edge rail, like the landing */
 .trailx__dots {
   position: absolute;
@@ -1799,6 +2173,39 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__game-fb { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
   .trailx__tf-q { font-size: calc(0.95rem * var(--tx-font-scale, 1)); }
   .trailx__tf { padding: 0.45rem 0; }
+  /* Fragments of Memory stays touchable without crowding the one-row dock. */
+  .trailx__story--memory .trailx__chapter--memory,
+  .trailx__chapter--memory-seal {
+    width: auto;
+    left: 0.8rem;
+    right: 1.65rem;
+  }
+  .trailx__story--memory .trailx__label { margin-bottom: 0.55rem; }
+  .trailx__story--memory .trailx__chapter-title { margin-bottom: 0.45rem; }
+  .trailx__story--memory .trailx__chapter-copy { font-size: calc(0.88rem * var(--tx-font-scale, 1)); margin-bottom: 0.4rem; }
+  .trailx-memory__legend { gap: 0.32rem; margin-top: 0.25rem; }
+  .trailx-memory__legend > span { padding: 0.3rem 0.45rem; font-size: calc(0.52rem * var(--tx-font-scale, 1)); }
+  .trailx-memory { padding: 0.52rem; border-radius: 0.85rem; }
+  .trailx-memory__river { height: 6.1rem; }
+  .trailx-memory__boat { width: 3.35rem; height: 3.35rem; }
+  .trailx-memory__wrap { height: 6.3rem; }
+  .trailx-memory__bundle { width: 4rem; height: 5.2rem; }
+  .trailx-memory__cloth { width: 7rem; height: 2rem; }
+  .trailx-memory__prompt { margin-top: 0.42rem; font-size: calc(0.54rem * var(--tx-font-scale, 1)); }
+  .trailx-memory__insight { margin-top: 0.42rem; padding: 0.45rem 0.55rem; font-size: calc(0.82rem * var(--tx-font-scale, 1)); line-height: 1.3; }
+  .trailx-memory__assist { margin-top: 0.42rem; padding: 0.38rem 0.55rem; font-size: calc(0.52rem * var(--tx-font-scale, 1)); }
+  .trailx-memory--remembrance { grid-template-columns: minmax(6.6rem, 0.85fr) minmax(8.5rem, 1.15fr); gap: 0.45rem; }
+  .trailx-memory__tokens { gap: 0.3rem; }
+  .trailx-memory__token { grid-template-columns: 2rem 1fr; min-height: 2.45rem; padding: 0.2rem 0.35rem 0.2rem 0.22rem; font-size: calc(0.62rem * var(--tx-font-scale, 1)); }
+  .trailx-memory__token img { width: 2rem; height: 2rem; border-radius: 0.4rem; }
+  .trailx-memory__altar { min-height: 8rem; }
+  .trailx-memory__altar-ring { inset: 0.9rem 10% 1.1rem; }
+  .trailx-memory__slot b { font-size: 0.58rem; }
+  .trailx-memory__slot small { font-size: 0.4rem; }
+  .trailx-memory__seal { width: 7.5rem; height: 7.5rem; margin-bottom: 0.6rem; }
+  .trailx-memory__seal-mark { width: 1.6rem; height: 1.6rem; }
+  .trailx-memory__seal-center { font-size: calc(0.5rem * var(--tx-font-scale, 1)); }
+  .trailx-memory__final-copy { font-size: calc(0.86rem * var(--tx-font-scale, 1)); }
   .trailx-preview { padding: 1rem; }
   .trailx-preview__frame { max-height: 58vh; }
   .trailx-preview__media img { max-height: calc(58vh - 1.2rem); }
@@ -1827,6 +2234,9 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 @media (prefers-reduced-motion: reduce) {
   .trailx-ar-notice,
   .trailx-model-ar-button { transition: none; }
+  .trailx-memory__current,
+  .trailx-memory__swipe,
+  .trailx-memory__seal.is-awake .trailx-memory__seal-orbit { animation: none !important; }
   .trailx__panel,
   .trailx__panel > *,
   .trailx__ana,
