@@ -76,7 +76,13 @@
     pagsaayos: app ? app.dataset.insideChapelPagsaayosImageSrc : "",
   };
   const insideMuseumImageAssets = {
-    hulingTaludtod: app ? app.dataset.insideMuseumHulingTaludtodImageSrc : "",
+    hulingTaludtod: {
+      imageSrc: app ? app.dataset.insideMuseumHulingTaludtodImageSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.insideMuseumHulingTaludtodTagalogAudioSrc : "",
+        en: app ? app.dataset.insideMuseumHulingTaludtodEnglishAudioSrc : "",
+      },
+    },
   };
   const undergroundImageAssets = {
     tela: app ? app.dataset.undergroundTelaImageSrc : "",
@@ -88,6 +94,10 @@
   const museum3ArtifactAssets = {
     inscription: {
       imageSrc: app ? app.dataset.museum3InscriptionImageSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.museum3InscriptionTagalogAudioSrc : "",
+        en: app ? app.dataset.museum3InscriptionEnglishAudioSrc : "",
+      },
     },
     map: {
       imageSrc: app ? app.dataset.museum3MapImageSrc : "",
@@ -613,6 +623,7 @@
       yaw: 26.8,
       imageSrc: museum3ArtifactAssets.inscription.imageSrc,
       imageAlt: "Inscription",
+      audioByLanguage: museum3ArtifactAssets.inscription.audioByLanguage,
       previewFrameStyle: "outline",
     }),
     buildFloatingArtifactHotspot({
@@ -856,8 +867,9 @@
       id: "inside-museum-huling-taludtod-marker",
       pitch: -26.23,
       yaw: -108.89,
-      imageSrc: insideMuseumImageAssets.hulingTaludtod,
+      imageSrc: insideMuseumImageAssets.hulingTaludtod.imageSrc,
       imageAlt: "Huling Taludtod",
+      audioByLanguage: insideMuseumImageAssets.hulingTaludtod.audioByLanguage,
       previewFrameStyle: "outline",
     }),
   ];
@@ -1514,6 +1526,15 @@
       yaw: 0,
       hfov: 100,
       hotSpots: [
+        buildFloatingArtifactHotspot({
+          id: "stairs-church-inscription-marker",
+          pitch: 13.3,
+          yaw: -21.33,
+          imageSrc: museum3ArtifactAssets.inscription.imageSrc,
+          imageAlt: "Inscription",
+          audioByLanguage: museum3ArtifactAssets.inscription.audioByLanguage,
+          previewFrameStyle: "outline",
+        }),
         {
           id: "go-underground-1",
           pitch: -45,

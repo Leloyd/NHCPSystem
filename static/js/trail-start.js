@@ -1034,6 +1034,7 @@ function initPanorama() {
   const s7 = {
     insideChurch: root.getAttribute('data-pano-inside-church') || '',
     insideChurch1: root.getAttribute('data-pano-inside-church1') || '',
+    stairsChurch: root.getAttribute('data-pano-stairs-church') || '',
   };
   const s8 = {
     underground1: root.getAttribute('data-pano-underground1') || '',
@@ -1043,14 +1044,19 @@ function initPanorama() {
     underground3: root.getAttribute('data-pano-underground3') || '',
   };
 
-  // Image-only information panels shared with the Virtual Tour. These use the
-  // same floating card and expanded viewer as artifacts, but have no GLB,
-  // audio, or subtitle yet. Framed panels use only a thin outline when opened;
-  // the four table artifacts keep the regular cream mount.
+  // Image-only information panels shared with the Virtual Tour. Framed panels
+  // use only a thin outline when opened; the four table artifacts keep the
+  // regular cream mount.
+  const INFO_SUBTITLES = window.NHCP_ARTIFACT_SUBTITLES || {};
   const INFO = {
     inscription: {
       img: root.getAttribute('data-info-inscription-img') || '',
       title: { en: 'Inscription', tl: 'Inskripsiyon' },
+      audioByLanguage: {
+        tl: root.getAttribute('data-info-inscription-tl') || '',
+        en: root.getAttribute('data-info-inscription-en') || '',
+      },
+      subtitle: INFO_SUBTITLES.inscription || null,
       outline: true,
     },
     map: {
@@ -1061,6 +1067,11 @@ function initPanorama() {
     hulingTaludtod: {
       img: root.getAttribute('data-info-huling-taludtod-img') || '',
       title: { en: 'Final Stanza', tl: 'Huling Taludtod' },
+      audioByLanguage: {
+        tl: root.getAttribute('data-info-huling-taludtod-tl') || '',
+        en: root.getAttribute('data-info-huling-taludtod-en') || '',
+      },
+      subtitle: INFO_SUBTITLES.hulingtaludtod || null,
       outline: true,
     },
     art1LeftTable: {
@@ -1964,6 +1975,8 @@ function initPanorama() {
             windowHotspotId: `${id}-window`,
             imageSrc: asset.img,
             title: asset.title,
+            subtitle: asset.subtitle || null,
+            audioByLanguage: asset.audioByLanguage || null,
             imageAlt: alt,
             previewFrameStyle: asset.outline ? 'outline' : '',
             windowPitch: pitch,
@@ -2127,11 +2140,18 @@ function initPanorama() {
             infoSpot('inside-chapel-pagkasira', -16.07, -118.57, 'pagkasira', 'Pagkasira'),
             infoSpot('inside-chapel-pransiskano', -18.22, -135.02, 'pransiskano', 'Pransiskano'),
             infoSpot('inside-chapel-pagsaayos', -18.35, 91.92, 'pagsaayos', 'Pagsaayos'),
+            ...(s7.stairsChurch ? [link(-29, 68, 'stairsChurch')] : []),
             link(-23, -24, 'insideChurch1'),
           ]));
           scenes.insideChurch1 = eq(s7.insideChurch1, 0, 160, [
             link(-24, -20, 'insideChurch', -20, 160),
           ]);
+          if (s7.stairsChurch) {
+            scenes.stairsChurch = eq(s7.stairsChurch, 0, 0, spots([
+              infoSpot('stairs-church-inscription', 13.3, -21.33, 'inscription', 'Inscription'),
+              link(2, -50, 'insideChurch'),
+            ]));
+          }
         }
         // Stops 8 & 9 — the underground crypts (virtual-tour walk, self-contained).
         if (s8.underground1) {

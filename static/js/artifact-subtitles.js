@@ -4,6 +4,14 @@
   // Shared by the Virtual Tour floating artifacts and AR marker detection.
   // Keys are normalized artifact names; values mirror the recorded TL/EN audio.
   window.NHCP_ARTIFACT_SUBTITLES = Object.freeze({
+    inscription: {
+      tl: "HUMAYO ka, mortal na nilalang, tigib ng buhay.\nMalugod mong isinadya ngayon itong himlayan.\nDatapwa’t sa iyong paglisan,\ngunitain dini’y may isang himlayang\nsa iyo’y inilaan.",
+      en: "Go forth, mortal man, full of life.\nToday you happily visited this shelter.\nBut after you have gone out,\nremember, you have a resting place here\nprepared for you.",
+    },
+    hulingtaludtod: {
+      tl: "Paalam, magulang at mga kapatid kapilas ng aking kaluluwa’t dibdib,\nMga kaibigan bata pang maliit sa aking tahanan di na masisilip.\nPag pasalamatan at napahinga rin, paalam estrangherang kasuyo ko’t aliw.\nPaalam sa inyo mga ginigiliw: mamatay ay siyang pagkagupiling!",
+      en: "FAREWELL, fathers and brothers, fragments of my soul,\nFriends of my childhood in this ruined abode.\nGive thanks that I rest now from this tiresome day;\nFarewell, sweet stranger, my friend, my joy;\nFarewell, to all I love: to die is to rest.",
+    },
     balanghay: {
       tl: "Ang Balanghay ay isang sasakyang-pandagat na ginamit noon pang 320 A.D. na kumakatawan sa kakayahang pandagat at paniniwalang espiritwal ng mga sinaunang Pilipino. Higit pa sa papel nito sa kalakalan at pakikidigma, sinasagisag nito ang paglalakbay ng kaluluwa sa kabilang buhay, kabilang ang mga kilalang mandirigma at mandaragat na kadalasang inililibing sa loob o kasama ng kanilang mga bangka upang ipagpatuloy ang kanilang paglalakbay sa kabilang daigdig.",
       en: "The Balanghay, a seafaring vessel dating back to 320 A.D., exemplified the maritime skill and spiritual beliefs of pre-colonial Filipinos. It symbolized the soul's voyage to the afterlife, with notable warriors and seafarers often buried in or with their boats to continue their journey in the netherworld.",

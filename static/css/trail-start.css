@@ -514,6 +514,7 @@
   font-family: Georgia, "Times New Roman", serif;
   font-size: calc(0.98rem * var(--tx-font-scale, 1));
   line-height: 1.5;
+  white-space: pre-line;
 }
 
 /* Icon + label swap on the toggle button */
