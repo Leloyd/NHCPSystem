@@ -80,27 +80,17 @@ body {
 
 .ar-loader__title {
   margin: 0;
-  color: var(--tx-cream);
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: clamp(1.05rem, 4.5vw, 1.3rem);
-  line-height: 1.35;
+  color: rgba(250, 247, 242, 0.72);
+  font-family: "Inter", sans-serif;
+  font-size: clamp(0.43rem, 2vw, 0.62rem);
+  line-height: 1;
   text-align: center;
+  white-space: nowrap;
   animation: ar-loader-breathe 2.2s ease-in-out infinite;
 }
 
-.ar-loader__title em {
-  color: var(--tx-gold);
-  font-style: italic;
-}
-
 .ar-loader__title span {
-  display: block;
-  margin-top: 0.55rem;
-  color: rgba(250, 247, 242, 0.72);
-  font-family: "Inter", sans-serif;
-  font-size: 0.62rem;
-  font-style: normal;
-  letter-spacing: 0.25em;
+  letter-spacing: 0.1em;
   text-transform: uppercase;
 }
 
@@ -129,12 +119,18 @@ body {
 
 .ar-loader__status,
 .ar-loader__count {
+  display: none;
   max-width: min(32rem, 90vw);
   margin: 0;
   color: rgba(250, 247, 242, 0.8);
   font-size: 0.72rem;
   line-height: 1.55;
   text-align: center;
+}
+
+.ar-loader.has-error .ar-loader__status,
+.ar-loader.has-error .ar-loader__count {
+  display: block;
 }
 
 .ar-loader__count {
