@@ -42,7 +42,7 @@
     balanghay: {
       targetSize: 0.76,
       scaleMultiplier: 2,
-      position: [0, 0.5, 0],
+      position: [0, 1, 0],
       rotation: [0, 0, 0],
       occluder: {
         enabled: true,
