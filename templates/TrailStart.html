@@ -819,7 +819,14 @@
                 <span class="trailx-memory__current" aria-hidden="true"></span>
                 <span class="trailx-memory__shore trailx-memory__shore--end" aria-hidden="true"></span>
                 <span class="trailx-memory__boat" data-memory-boat aria-hidden="true">
-                  <img data-memory-image="balanghay" alt="" draggable="false" />
+                  <!-- Real 3D Balanghay, revealed once the Journey act is in view.
+                       The CSS-drawn boat below shows until the model loads. -->
+                  <model-viewer class="trailx-memory__boat-mv"
+                    data-mv-src="{{ url_for('artifact_asset_file', filename='Balanghay/Balanghay-512(10K).glb') }}"
+                    camera-orbit="12deg 80deg 100%" disable-zoom disable-pan disable-tap
+                    interaction-prompt="none" auto-rotate auto-rotate-delay="0"
+                    rotation-per-second="16deg" shadow-intensity="0.85" shadow-softness="1"
+                    exposure="1.15" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
                 </span>
                 <input class="trailx-memory__range" data-memory-journey type="range" min="0" max="100" value="0" aria-label="Guide the Balanghay to the other shore / Igabay ang Balanghay sa kabilang pampang" />
               </div>
@@ -900,9 +907,18 @@
                 <span class="trailx-memory__altar-ring" aria-hidden="true"></span>
                 <span class="trailx-memory__candle trailx-memory__candle--left" aria-hidden="true"></span>
                 <span class="trailx-memory__candle trailx-memory__candle--right" aria-hidden="true"></span>
-                <span class="trailx-memory__slot" data-memory-slot="alay"><img class="trailx-memory__slot-img" data-memory-image="alay" alt="" draggable="false" /><b>Alay</b><small data-lang-en>Nourishment</small><small data-lang-tl>Pag-aalay</small></span>
-                <span class="trailx-memory__slot" data-memory-slot="pahimakas"><img class="trailx-memory__slot-img" data-memory-image="pahimakas" alt="" draggable="false" /><b>Pahimakas</b><small data-lang-en>Music</small><small data-lang-tl>Musika</small></span>
-                <span class="trailx-memory__slot" data-memory-slot="recuerdos"><img class="trailx-memory__slot-img" data-memory-image="recuerdos" alt="" draggable="false" /><b>Recuerdos</b><small data-lang-en>Memory</small><small data-lang-tl>Alaala</small></span>
+                <span class="trailx-memory__slot" data-memory-slot="alay">
+                  <model-viewer class="trailx-memory__slot-mv" data-mv-src="{{ url_for('artifact_asset_file', filename='Alay/Alay-512(10k).glb') }}" poster="{{ url_for('artifact_asset_file', filename='Alay/Alay.png') }}" camera-orbit="0deg 76deg 100%" disable-zoom disable-pan disable-tap interaction-prompt="none" auto-rotate auto-rotate-delay="0" rotation-per-second="12deg" shadow-intensity="0.7" exposure="1.05" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
+                  <b>Alay</b><small data-lang-en>Nourishment</small><small data-lang-tl>Pag-aalay</small>
+                </span>
+                <span class="trailx-memory__slot" data-memory-slot="pahimakas">
+                  <model-viewer class="trailx-memory__slot-mv" data-mv-src="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas-512(10k).glb') }}" poster="{{ url_for('artifact_asset_file', filename='Pahimakas/Pahimakas.png') }}" camera-orbit="0deg 76deg 100%" disable-zoom disable-pan disable-tap interaction-prompt="none" auto-rotate auto-rotate-delay="0" rotation-per-second="12deg" shadow-intensity="0.7" exposure="1.05" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
+                  <b>Pahimakas</b><small data-lang-en>Music</small><small data-lang-tl>Musika</small>
+                </span>
+                <span class="trailx-memory__slot" data-memory-slot="recuerdos">
+                  <model-viewer class="trailx-memory__slot-mv" data-mv-src="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos-512(10k).glb') }}" poster="{{ url_for('artifact_asset_file', filename='Recuerdos/Recuerdos.png') }}" camera-orbit="0deg 76deg 100%" disable-zoom disable-pan disable-tap interaction-prompt="none" auto-rotate auto-rotate-delay="0" rotation-per-second="12deg" shadow-intensity="0.7" exposure="1.05" environment-image="neutral" reveal="auto" aria-hidden="true"></model-viewer>
+                  <b>Recuerdos</b><small data-lang-en>Memory</small><small data-lang-tl>Alaala</small>
+                </span>
               </div>
               <p class="trailx-memory__prompt" data-memory-prompt="remembrance" aria-live="polite"><span data-lang-en>0 of 3 memories placed</span><span data-lang-tl>0 sa 3 alaala ang nailagay</span></p>
               <p class="trailx-memory__insight" data-memory-insight="remembrance" hidden>

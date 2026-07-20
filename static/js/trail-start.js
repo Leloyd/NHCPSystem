@@ -2799,6 +2799,19 @@ function setupStory(el) {
     const key = panels[index].getAttribute('data-chapter');
     root.setAttribute('data-step', key || ''); // drives the reading tint depth
 
+    // Real 3D artifacts (Stop 4): a model-viewer only loads its GLB once its
+    // act scrolls into view, so at most one act's models render at a time.
+    panels[index].querySelectorAll('model-viewer[data-mv-src]').forEach((mv) => {
+      if (mv.getAttribute('src')) return;
+      if (prefersReducedMotion) mv.removeAttribute('auto-rotate'); // no spin if unwanted
+      mv.setAttribute('src', mv.getAttribute('data-mv-src'));
+      if (mv.classList.contains('trailx-memory__boat-mv')) {
+        mv.addEventListener('load', () => {
+          mv.closest('[data-memory-boat]')?.classList.add('mv-ready');
+        }, { once: true });
+      }
+    });
+
     // Stop 4 travels through the same halls the visitor explored in Stop 3.
     // Each act quietly turns or crossfades the panorama toward its artifacts.
     const memoryScene = panels[index].getAttribute('data-memory-scene');

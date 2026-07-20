@@ -1142,13 +1142,27 @@
   position: absolute;
   z-index: 3;
   left: clamp(10%, var(--memory-progress, 10%), 90%);
-  top: 60%;
-  width: 4.6rem;
-  height: 3.1rem;
+  top: 56%;
+  width: 5.8rem;
+  height: 4.6rem;
   transform: translate(-50%, -50%);
   filter: drop-shadow(0 6px 5px rgba(0, 0, 0, 0.45));
 }
-.trailx-memory__boat img { display: none; } /* the boat is drawn, not photographed */
+/* Real 3D Balanghay — fades in over the drawn boat once the model loads. */
+.trailx-memory__boat-mv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  --poster-color: transparent;
+  transition: opacity 0.6s ease;
+}
+.trailx-memory__boat.mv-ready .trailx-memory__boat-mv { opacity: 1; }
+.trailx-memory__boat.mv-ready::before,
+.trailx-memory__boat.mv-ready::after { display: none; } /* hide the drawn fallback */
 /* wooden hull with plank lines and raised ends */
 .trailx-memory__boat::before {
   content: "";
@@ -1407,23 +1421,22 @@
   letter-spacing: 0.04em;
   transition: color 0.4s ease, text-shadow 0.4s ease, transform 0.4s ease;
 }
-/* the offering image, hidden until its token is placed */
-.trailx-memory__slot-img {
-  width: 2.35rem;
-  height: 2.35rem;
-  margin-bottom: 0.2rem;
-  object-fit: cover;
-  border-radius: 0.45rem;
-  border: 1px solid rgba(212, 175, 106, 0.6);
+/* the real 3D offering, hidden until its token is placed on the altar */
+.trailx-memory__slot-mv {
+  width: 3rem;
+  height: 3rem;
+  margin-bottom: 0.15rem;
+  background: transparent;
+  --poster-color: transparent;
   opacity: 0;
   transform: scale(0.3);
-  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
   pointer-events: none;
 }
-.trailx-memory__slot.is-filled .trailx-memory__slot-img {
+.trailx-memory__slot.is-filled .trailx-memory__slot-mv {
   opacity: 1;
   transform: scale(1);
-  box-shadow: 0 0 16px rgba(247, 217, 143, 0.6);
+  filter: drop-shadow(0 0 12px rgba(247, 217, 143, 0.55));
 }
 .trailx-memory__slot b { font-family: "Playfair Display", serif; font-size: 0.72rem; font-weight: 500; }
 .trailx-memory__slot small { font-size: 0.48rem; text-transform: uppercase; }
