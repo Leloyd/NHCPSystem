@@ -1192,48 +1192,72 @@
 .trailx-memory--journey.is-restored .trailx-memory__boat { filter: drop-shadow(0 0 14px rgba(247, 217, 143, 0.75)); }
 
 /* Memory II: three visual cloth layers respond to horizontal swipes. */
+/* Memory II: the Bogwa rite — a shrouded bundle rests on a woven mat in warm
+   candlelight; each swipe wraps another band of the Ulóh around it until the
+   form is fully covered. */
 .trailx-memory__wrap {
   position: relative;
   height: 8.8rem;
   overflow: hidden;
   border-radius: 0.85rem;
+  isolation: isolate;
   background:
-    radial-gradient(circle at 50% 48%, rgba(212, 175, 106, 0.2), transparent 46%),
-    linear-gradient(135deg, rgba(34, 24, 13, 0.92), rgba(12, 9, 5, 0.92));
+    radial-gradient(78% 58% at 50% 24%, rgba(247, 217, 143, 0.26), transparent 62%),
+    linear-gradient(180deg, #241606 0%, #1a1108 55%, #0c0804 100%);
   cursor: ew-resize;
   touch-action: pan-y;
 }
 .trailx-memory__wrap:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 3px; }
+/* the woven mat the bundle rests on */
+.trailx-memory__wrap::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  left: 8%;
+  right: 8%;
+  bottom: 0.55rem;
+  height: 1.35rem;
+  border-radius: 42% 42% 14% 14% / 70% 70% 22% 22%;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.3) 0 4px, transparent 4px 9px),
+    linear-gradient(180deg, #7c5a2d, #3a2a13);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.5);
+}
+/* the shrouded bundle standing on the mat */
 .trailx-memory__bundle {
   position: absolute;
+  z-index: 1;
   left: 50%;
-  top: 50%;
-  width: 5.2rem;
-  height: 7rem;
-  transform: translate(-50%, -50%);
-  border: 1px solid rgba(250, 247, 242, 0.4);
-  border-radius: 52% 52% 42% 42%;
-  background: radial-gradient(circle at 50% 22%, rgba(250, 247, 242, 0.54), rgba(156, 139, 110, 0.18) 58%, transparent 60%);
-  box-shadow: 0 0 28px rgba(250, 247, 242, 0.1);
+  bottom: 1.35rem;
+  width: 4.5rem;
+  height: 6rem;
+  transform: translateX(-50%);
+  border-radius: 52% 52% 30% 30% / 42% 42% 14% 14%;
+  background:
+    linear-gradient(100deg, rgba(0, 0, 0, 0.34) 0 12%, transparent 34% 66%, rgba(0, 0, 0, 0.36) 88%),
+    linear-gradient(180deg, #efe6d4 0%, #d7c8ac 55%, #b4a17e 100%);
+  box-shadow: 0 0 26px rgba(250, 247, 242, 0.12), inset 0 6px 12px rgba(255, 255, 255, 0.22);
 }
+/* woven Ulóh bands that wrap the bundle, one per swipe */
 .trailx-memory__cloth {
   position: absolute;
   z-index: 2;
   left: 50%;
-  width: 8.8rem;
-  height: 2.65rem;
+  width: 5.7rem;
+  height: 2.2rem;
   opacity: 0;
-  border: 1px solid rgba(212, 175, 106, 0.55);
-  border-radius: 42% 56% 45% 58%;
-  background-image: linear-gradient(90deg, rgba(15, 8, 4, 0.16), rgba(212, 175, 106, 0.12)), var(--memory-uloh-image);
+  border-radius: 50%;
+  background-image:
+    linear-gradient(100deg, rgba(0, 0, 0, 0.42) 0 10%, transparent 30% 70%, rgba(0, 0, 0, 0.44) 90%),
+    var(--memory-uloh-image);
   background-position: center;
   background-size: cover;
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.42);
-  transition: opacity 0.55s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+  box-shadow: 0 6px 14px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(212, 175, 106, 0.5);
+  transition: opacity 0.5s ease, transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
-.trailx-memory__cloth--one { top: 18%; transform: translate(-135%, -8%) rotate(-8deg); }
-.trailx-memory__cloth--two { top: 39%; transform: translate(35%, 2%) rotate(7deg); }
-.trailx-memory__cloth--three { top: 59%; transform: translate(-135%, 8%) rotate(-5deg); }
+.trailx-memory__cloth--one { bottom: 5rem; transform: translate(-150%, 0) rotate(-10deg); }
+.trailx-memory__cloth--two { bottom: 3.35rem; transform: translate(50%, 0) rotate(8deg); }
+.trailx-memory__cloth--three { bottom: 1.7rem; transform: translate(-150%, 0) rotate(-6deg); }
 .trailx-memory__wrap[data-layer="1"] .trailx-memory__cloth--one,
 .trailx-memory__wrap[data-layer="2"] .trailx-memory__cloth--one,
 .trailx-memory__wrap[data-layer="3"] .trailx-memory__cloth--one,
@@ -1306,24 +1330,74 @@
 .trailx-memory__token:hover { border-color: var(--tx-gold); background: rgba(212, 175, 106, 0.14); }
 .trailx-memory__token.is-dragging { z-index: 8; cursor: grabbing; transition: none; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); }
 .trailx-memory__token.is-placed { opacity: 0.26; transform: scale(0.92); cursor: default; }
+/* Memory III: a candlelit remembrance altar. Each offering physically seats on
+   the ledge when placed, lit by a warm glow. */
 .trailx-memory__altar {
   position: relative;
   min-height: 10.2rem;
   overflow: hidden;
   border: 1px solid rgba(212, 175, 106, 0.35);
-  border-radius: 50% 50% 1rem 1rem;
-  background: radial-gradient(circle at 50% 46%, rgba(212, 175, 106, 0.2), transparent 56%), rgba(8, 6, 3, 0.5);
+  border-radius: 46% 46% 0.9rem 0.9rem / 30% 30% 0.9rem 0.9rem;
+  background:
+    radial-gradient(72% 50% at 50% 30%, rgba(247, 217, 143, 0.34), transparent 60%),  /* candle glow */
+    linear-gradient(180deg, #241a10 0%, #17110a 62%, #0b0805 100%);                     /* warm niche */
+}
+/* the altar ledge the offerings rest on */
+.trailx-memory__altar::after {
+  content: "";
+  position: absolute;
+  left: 6%;
+  right: 6%;
+  bottom: 0.6rem;
+  height: 1.5rem;
+  border-radius: 0.35rem;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.24) 0 5px, transparent 5px 11px),
+    linear-gradient(180deg, #6a4c25, #34260f);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.55), inset 0 1px rgba(255, 255, 255, 0.14);
 }
 .trailx-memory__altar-ring {
   position: absolute;
-  inset: 1.2rem 14% 1.5rem;
-  border: 1px solid rgba(247, 217, 143, 0.48);
+  z-index: 1;
+  inset: 1.5rem 16% 2.4rem;
+  border: 1px solid rgba(247, 217, 143, 0.4);
   border-radius: 50%;
-  box-shadow: inset 0 0 22px rgba(212, 175, 106, 0.1), 0 0 18px rgba(212, 175, 106, 0.1);
+  box-shadow: inset 0 0 26px rgba(212, 175, 106, 0.14), 0 0 18px rgba(212, 175, 106, 0.1);
+}
+/* two altar candles with flickering flames */
+.trailx-memory__candle {
+  position: absolute;
+  z-index: 3;
+  bottom: 2rem;
+  width: 0.5rem;
+  height: 1.7rem;
+  border-radius: 0.14rem;
+  background: linear-gradient(180deg, #faf3e2, #cbb589);
+  box-shadow: 0 0 10px rgba(247, 217, 143, 0.3);
+}
+.trailx-memory__candle--left { left: 26%; }
+.trailx-memory__candle--right { right: 26%; }
+.trailx-memory__candle::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: -0.7rem;
+  width: 0.4rem;
+  height: 0.7rem;
+  transform: translateX(-50%);
+  border-radius: 50% 50% 50% 50% / 62% 62% 38% 38%;
+  background: radial-gradient(50% 60% at 50% 70%, #fff6da 0 30%, #f7c24a 55%, rgba(247, 120, 40, 0.6) 80%, transparent);
+  box-shadow: 0 0 12px rgba(247, 190, 74, 0.85);
+  transform-origin: 50% 100%;
+  animation: trailx-memory-flame 1.6s ease-in-out infinite;
+}
+@keyframes trailx-memory-flame {
+  0%, 100% { transform: translateX(-50%) scale(1) rotate(-2deg); opacity: 0.92; }
+  50% { transform: translateX(-50%) scale(1.08, 1.14) rotate(2deg); opacity: 1; }
 }
 .trailx-memory__slot {
   position: absolute;
-  z-index: 2;
+  z-index: 4;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1333,13 +1407,31 @@
   letter-spacing: 0.04em;
   transition: color 0.4s ease, text-shadow 0.4s ease, transform 0.4s ease;
 }
+/* the offering image, hidden until its token is placed */
+.trailx-memory__slot-img {
+  width: 2.35rem;
+  height: 2.35rem;
+  margin-bottom: 0.2rem;
+  object-fit: cover;
+  border-radius: 0.45rem;
+  border: 1px solid rgba(212, 175, 106, 0.6);
+  opacity: 0;
+  transform: scale(0.3);
+  transition: opacity 0.45s ease, transform 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  pointer-events: none;
+}
+.trailx-memory__slot.is-filled .trailx-memory__slot-img {
+  opacity: 1;
+  transform: scale(1);
+  box-shadow: 0 0 16px rgba(247, 217, 143, 0.6);
+}
 .trailx-memory__slot b { font-family: "Playfair Display", serif; font-size: 0.72rem; font-weight: 500; }
 .trailx-memory__slot small { font-size: 0.48rem; text-transform: uppercase; }
-.trailx-memory__slot[data-memory-slot="alay"] { left: 12%; bottom: 18%; }
-.trailx-memory__slot[data-memory-slot="pahimakas"] { left: 50%; top: 18%; transform: translateX(-50%); }
-.trailx-memory__slot[data-memory-slot="recuerdos"] { right: 8%; bottom: 18%; }
-.trailx-memory__slot.is-filled { color: #f7d98f; text-shadow: 0 0 15px rgba(212, 175, 106, 0.75); transform: scale(1.08); }
-.trailx-memory__slot[data-memory-slot="pahimakas"].is-filled { transform: translateX(-50%) scale(1.08); }
+.trailx-memory__slot[data-memory-slot="alay"] { left: 6%; bottom: 2.2rem; }
+.trailx-memory__slot[data-memory-slot="pahimakas"] { left: 50%; top: 1.3rem; transform: translateX(-50%); }
+.trailx-memory__slot[data-memory-slot="recuerdos"] { right: 5%; bottom: 2.2rem; }
+.trailx-memory__slot.is-filled { color: #f7d98f; text-shadow: 0 0 15px rgba(212, 175, 106, 0.75); }
+.trailx-memory__slot[data-memory-slot="pahimakas"].is-filled { transform: translateX(-50%); }
 .trailx-memory--remembrance > .trailx-memory__prompt,
 .trailx-memory--remembrance > .trailx-memory__insight { grid-column: 1 / -1; }
 
@@ -2595,7 +2687,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-memory__wrap[data-layer="1"] .trailx-memory__bundle { box-shadow: 0 0 30px rgba(212, 175, 106, 0.22); }
 .trailx-memory__wrap[data-layer="2"] .trailx-memory__bundle { box-shadow: 0 0 38px rgba(212, 175, 106, 0.32); filter: brightness(1.08); }
 .trailx-memory__wrap[data-layer="3"] .trailx-memory__bundle {
-  transform: translate(-50%, -50%) scale(1.06);
+  transform: translateX(-50%) scale(1.05);
   box-shadow: 0 0 48px rgba(247, 217, 143, 0.5);
   filter: brightness(1.16);
 }
@@ -2684,6 +2776,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .trailx-memory__candle::before,
   .trailx-memory__river::before,
   .trailx-memory__bloom,
   .trailx-memory.is-justrestored,
