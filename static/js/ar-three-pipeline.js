@@ -84,7 +84,8 @@
     alay: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -95,7 +96,8 @@
     antuk: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -106,7 +108,8 @@
     bagongon: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -117,7 +120,8 @@
     bogwa: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -130, 0],
       occluder: {
         enabled: true,
@@ -128,7 +132,8 @@
     kabaong: {
       targetSize: 0.84,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
         enabled: true,
@@ -139,7 +144,8 @@
     banga: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
         enabled: true,
@@ -150,7 +156,8 @@
     pagpag: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -161,7 +168,8 @@
     pahimakas: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -172,7 +180,8 @@
     uloh: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -183,7 +192,8 @@
     tsapang: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -194,7 +204,8 @@
     kagamitan: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -205,7 +216,8 @@
     luksa: {
       targetSize: 0.8,
       scaleMultiplier: 2.5,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -180, 0],
       occluder: {
         enabled: true,
@@ -216,7 +228,8 @@
     pagtubas: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -227,7 +240,8 @@
     pahiwatig: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -120, 0],
       occluder: {
         enabled: true,
@@ -238,7 +252,8 @@
     recuerdos: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -249,7 +264,8 @@
     sabwag: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -260,7 +276,8 @@
     sisiw: {
       targetSize: 0.8,
       scaleMultiplier: 2.5,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, 0, 0],
       occluder: {
         enabled: true,
@@ -271,7 +288,8 @@
     tausug: {
       targetSize: 0.8,
       scaleMultiplier: 2.5,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
@@ -282,7 +300,8 @@
     tboli: {
       targetSize: 0.8,
       scaleMultiplier: 2,
-      position: [0, 0, 0],
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
       rotation: [0, -90, 0],
       occluder: {
         enabled: true,
