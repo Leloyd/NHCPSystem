@@ -4,6 +4,10 @@
   // Shared by the Virtual Tour floating artifacts and AR marker detection.
   // Keys are normalized artifact names; values mirror the recorded TL/EN audio.
   window.NHCP_ARTIFACT_SUBTITLES = Object.freeze({
+    thenagcarlanundergroundcemetery: {
+      tl: "ANG LIBINGAN sa Ilalim ng Lupa ng Nagcarlan, itinayo sa patnubay ni Padre Vicente Velloc nong 1845, ay isang makasaysayang palatandaan na nagsilbing libingan, tagpuan ng mga rebolusyonaryo, at taguan ng mga gerilya noong panahon ng digmaan. Idineklarang Pambansang Palatandaang Pangkasaysayan noong 24 Oktubre 1981, patuloy nitong kinakatawan ang pananampalataya, kasaysayan, at kabuuang gunita ng Nagcarlan.",
+      en: "THE NAGCARLAN Underground Cemetery, built in 1845 under Fray Vicente Velloc, stands as a historic landmark that served as a burial site, a revolutionary meeting place, and a hideout of guerillas. Declared a National Historical Landmark on 24 October 1981, it continues to embody Nagcarlan's faith, history, and collective memory.",
+    },
     inscription: {
       tl: "HUMAYO ka, mortal na nilalang, tigib ng buhay.\nMalugod mong isinadya ngayon itong himlayan.\nDatapwa’t sa iyong paglisan,\ngunitain dini’y may isang himlayang\nsa iyo’y inilaan.",
       en: "Go forth, mortal man, full of life.\nToday you happily visited this shelter.\nBut after you have gone out,\nremember, you have a resting place here\nprepared for you.",

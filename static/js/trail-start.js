@@ -1086,6 +1086,19 @@ function initPanorama() {
       subtitle: INFO_SUBTITLES.hulingtaludtod || null,
       outline: true,
     },
+    nagcarlanCemetery: {
+      img: root.getAttribute('data-info-nagcarlan-cemetery-img') || '',
+      title: {
+        en: 'The Nagcarlan Underground Cemetery',
+        tl: 'Ang Libingan sa Ilalim ng Lupa ng Nagcarlan',
+      },
+      audioByLanguage: {
+        tl: root.getAttribute('data-info-nagcarlan-cemetery-tl') || '',
+        en: root.getAttribute('data-info-nagcarlan-cemetery-en') || '',
+      },
+      subtitle: INFO_SUBTITLES.thenagcarlanundergroundcemetery || null,
+      outline: true,
+    },
     art1LeftTable: {
       img: root.getAttribute('data-info-art1-left-table-img') || '',
       title: { en: 'Art1-LeftTable', tl: 'Art1-LeftTable' },
@@ -2011,6 +2024,7 @@ function initPanorama() {
           yaw: M3.yaw,
           hfov: M3.hfov,
           hotSpots: spots([
+            infoSpot('inside-museum-nagcarlan-cemetery', -40.54, -44.97, 'nagcarlanCemetery', 'The Nagcarlan Underground Cemetery'),
             infoSpot('inside-museum-huling-taludtod', -26.23, -108.89, 'hulingTaludtod', 'Huling Taludtod'),
             {
               pitch: -50,

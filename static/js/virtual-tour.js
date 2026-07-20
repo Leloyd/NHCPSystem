@@ -76,6 +76,13 @@
     pagsaayos: app ? app.dataset.insideChapelPagsaayosImageSrc : "",
   };
   const insideMuseumImageAssets = {
+    nagcarlanCemetery: {
+      imageSrc: app ? app.dataset.insideMuseumNagcarlanCemeteryImageSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.insideMuseumNagcarlanCemeteryTagalogAudioSrc : "",
+        en: app ? app.dataset.insideMuseumNagcarlanCemeteryEnglishAudioSrc : "",
+      },
+    },
     hulingTaludtod: {
       imageSrc: app ? app.dataset.insideMuseumHulingTaludtodImageSrc : "",
       audioByLanguage: {
@@ -864,6 +871,15 @@
   ];
 
   const insideMuseumImageHotspots = [
+    buildFloatingArtifactHotspot({
+      id: "inside-museum-nagcarlan-cemetery-marker",
+      pitch: -40.54,
+      yaw: -44.97,
+      imageSrc: insideMuseumImageAssets.nagcarlanCemetery.imageSrc,
+      imageAlt: "The Nagcarlan Underground Cemetery",
+      audioByLanguage: insideMuseumImageAssets.nagcarlanCemetery.audioByLanguage,
+      previewFrameStyle: "outline",
+    }),
     buildFloatingArtifactHotspot({
       id: "inside-museum-huling-taludtod-marker",
       pitch: -26.23,
