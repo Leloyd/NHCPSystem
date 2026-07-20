@@ -369,9 +369,12 @@
     audioElement: null,
     marchAudioElement: null,
     activeAudioEntry: null,
+    activeNarrationKind: "",
+    activeGuidanceState: "",
     audioLanguage: "tl",
     narrationMuted: false,
-    subtitlesOn: true,
+    narrationPausedByUser: false,
+    subtitlesOn: false,
     renderedSubtitleText: "",
     audioPrimed: false,
     audioPriming: false,
@@ -1068,6 +1071,7 @@
     ["play", "pause", "ended", "volumechange"].forEach(function (eventName) {
       audioEl.addEventListener(eventName, updateNarrationControls);
     });
+    audioEl.addEventListener("ended", handleNarrationEnded);
     body.appendChild(audioEl);
     runtime.audioElement = audioEl;
     return audioEl;
@@ -1256,7 +1260,33 @@
     if (!runtime.activeAudioEntry) {
       return null;
     }
+
+    if (runtime.activeNarrationKind === "guidance") {
+      return PUZZLE_HINTS[runtime.activeGuidanceState] || null;
+    }
+
+    if (runtime.activeNarrationKind !== "artifact" || !runtime.activeAudioEntry.puzzleSolved) {
+      return null;
+    }
+
     return ARTIFACT_SUBTITLES[runtime.activeAudioEntry.key] || null;
+  }
+
+  function getActiveNarrationAudioConfig() {
+    if (!runtime.activeAudioEntry) {
+      return null;
+    }
+
+    if (runtime.activeNarrationKind === "guidance") {
+      var guidance = PUZZLE_HINTS[runtime.activeGuidanceState];
+      return guidance && guidance.audioByLanguage ? guidance.audioByLanguage : null;
+    }
+
+    if (runtime.activeNarrationKind === "artifact" && runtime.activeAudioEntry.puzzleSolved) {
+      return getEntryAudioConfig(runtime.activeAudioEntry);
+    }
+
+    return null;
   }
 
   function renderSubtitle() {
@@ -1276,7 +1306,9 @@
     runtime.renderedSubtitleText = text;
 
     if (subtitleEyebrow) {
-      subtitleEyebrow.textContent = runtime.audioLanguage === "tl" ? "Salaysay" : "Narration";
+      subtitleEyebrow.textContent = runtime.activeNarrationKind === "guidance"
+        ? (runtime.audioLanguage === "tl" ? "Gabay" : "Guide")
+        : (runtime.audioLanguage === "tl" ? "Salaysay" : "Narration");
     }
   }
 
@@ -1297,7 +1329,7 @@
   }
 
   function updateNarrationControls() {
-    var audioConfig = getEntryAudioConfig(runtime.activeAudioEntry);
+    var audioConfig = getActiveNarrationAudioConfig();
     var hasTagalog = Boolean(audioConfig && String(audioConfig.tl || "").trim());
     var hasEnglish = Boolean(audioConfig && String(audioConfig.en || "").trim());
     var hasAudio = Boolean(runtime.activeAudioEntry && (hasTagalog || hasEnglish));
@@ -1306,6 +1338,7 @@
     var isPahimakas = Boolean(
       runtime.activeAudioEntry &&
       runtime.activeAudioEntry.key === "pahimakas" &&
+      runtime.activeAudioEntry.puzzleSolved &&
       runtime.activeAudioEntry.alternateAudioUrl
     );
     var marchPlaying = isPahimakasMarchPlaying();
@@ -1378,7 +1411,7 @@
   function playAudioForEntry(entry, language, shouldRestart) {
     stopPahimakasMarch(true);
 
-    var audioConfig = getEntryAudioConfig(entry);
+    var audioConfig = getActiveNarrationAudioConfig();
     var nextSrc = resolveAudioSource(audioConfig, language);
     if (!nextSrc) {
       stopActiveAudio(true);
@@ -1431,6 +1464,155 @@
     updateNarrationControls();
   }
 
+  function prefetchArtifactDescription(entry) {
+    if (!entry || entry.descriptionAudioPrefetched || typeof window.fetch !== "function") {
+      return;
+    }
+
+    entry.descriptionAudioPrefetched = true;
+    var audioConfig = getEntryAudioConfig(entry);
+    var urls = audioConfig ? [audioConfig.tl, audioConfig.en].filter(Boolean) : [];
+    urls.forEach(function (url) {
+      window.fetch(url, { cache: "force-cache" }).then(function (response) {
+        if (!response.ok) {
+          throw new Error("HTTP " + response.status);
+        }
+        return response.arrayBuffer();
+      }).catch(function (error) {
+        console.warn("[AR] Unable to prefetch an artifact narration.", entry.key, error);
+      });
+    });
+  }
+
+  function playPuzzleGuidanceForEntry(entry, state, language) {
+    if (!entry || !entry.puzzle || !PUZZLE_HINTS[state]) {
+      return;
+    }
+
+    runtime.activeNarrationKind = "guidance";
+    runtime.activeGuidanceState = state;
+    entry.puzzle.playedGuidance[state] = true;
+    playAudioForEntry(entry, language || runtime.audioLanguage, true);
+  }
+
+  function playArtifactDescriptionForEntry(entry, language) {
+    if (!entry || !entry.puzzleSolved) {
+      return;
+    }
+
+    runtime.activeNarrationKind = "artifact";
+    runtime.activeGuidanceState = "";
+    playAudioForEntry(entry, language || runtime.audioLanguage, true);
+  }
+
+  function beginNarrationForEntry(entry) {
+    if (!entry) {
+      return;
+    }
+
+    runtime.narrationPausedByUser = false;
+    runtime.subtitlesOn = false;
+    prefetchArtifactDescription(entry);
+
+    if (entry.puzzleSolved) {
+      if (entry.solvedAnnouncementPending && entry.puzzle) {
+        playPuzzleGuidanceForEntry(entry, "solved", runtime.audioLanguage);
+      } else {
+        playArtifactDescriptionForEntry(entry, runtime.audioLanguage);
+      }
+      return;
+    }
+
+    if (!entry.puzzle) {
+      stopActiveAudio(true);
+      updateNarrationControls();
+      return;
+    }
+
+    entry.puzzle.guidanceState = "far";
+    entry.puzzle.initialGuidanceFinished = false;
+    entry.puzzle.playedGuidance = {};
+    playPuzzleGuidanceForEntry(entry, "far", runtime.audioLanguage);
+  }
+
+  function updatePuzzleGuidanceForEntry(entry, state) {
+    if (!entry || !entry.puzzle || entry.puzzleSolved || !PUZZLE_HINTS[state]) {
+      return;
+    }
+
+    var puzzle = entry.puzzle;
+    puzzle.guidanceState = state;
+
+    if (
+      runtime.activeAudioEntry !== entry ||
+      !puzzle.initialGuidanceFinished ||
+      runtime.narrationPausedByUser ||
+      state === "far" ||
+      puzzle.playedGuidance[state]
+    ) {
+      return;
+    }
+
+    playPuzzleGuidanceForEntry(entry, state, runtime.audioLanguage);
+  }
+
+  function handlePuzzleSolved(entry) {
+    if (!entry || runtime.activeAudioEntry !== entry) {
+      return;
+    }
+
+    if (runtime.narrationPausedByUser) {
+      updateNarrationControls();
+      return;
+    }
+
+    playPuzzleGuidanceForEntry(entry, "solved", runtime.audioLanguage);
+  }
+
+  function handleNarrationEnded() {
+    var entry = runtime.activeAudioEntry;
+    if (!entry || !entry.isVisibleStable || runtime.narrationPausedByUser) {
+      updateNarrationControls();
+      return;
+    }
+
+    if (runtime.activeNarrationKind !== "guidance") {
+      updateNarrationControls();
+      return;
+    }
+
+    if (runtime.activeGuidanceState === "solved") {
+      entry.solvedAnnouncementPending = false;
+      playArtifactDescriptionForEntry(entry, runtime.audioLanguage);
+      return;
+    }
+
+    if (!entry.puzzle) {
+      updateNarrationControls();
+      return;
+    }
+
+    if (runtime.activeGuidanceState === "far") {
+      entry.puzzle.initialGuidanceFinished = true;
+    }
+
+    if (entry.puzzleSolved) {
+      playPuzzleGuidanceForEntry(entry, "solved", runtime.audioLanguage);
+      return;
+    }
+
+    var nextState = entry.puzzle.guidanceState;
+    if (
+      (nextState === "warm" || nextState === "hot") &&
+      !entry.puzzle.playedGuidance[nextState]
+    ) {
+      playPuzzleGuidanceForEntry(entry, nextState, runtime.audioLanguage);
+      return;
+    }
+
+    updateNarrationControls();
+  }
+
   function getPreferredAudioEntry() {
     var visibleEntries = runtime.markerEntries.filter(function (entry) {
       return Boolean(entry && entry.modelLoaded && entry.isVisibleStable && entry.renderRoot && entry.renderRoot.visible);
@@ -1463,7 +1645,11 @@
     if (!nextEntry) {
       if (runtime.activeAudioEntry) {
         runtime.activeAudioEntry = null;
+        runtime.activeNarrationKind = "";
+        runtime.activeGuidanceState = "";
         runtime.audioLanguage = "tl";
+        runtime.narrationPausedByUser = false;
+        runtime.subtitlesOn = false;
         stopActiveAudio(true);
         updateNarrationControls();
       }
@@ -1473,7 +1659,7 @@
     if (!runtime.activeAudioEntry || runtime.activeAudioEntry.key !== nextEntry.key) {
       runtime.activeAudioEntry = nextEntry;
       runtime.audioLanguage = "tl";
-      playAudioForEntry(nextEntry, "tl", true);
+      beginNarrationForEntry(nextEntry);
       return;
     }
 
@@ -1485,7 +1671,15 @@
     }
 
     var nextLanguage = runtime.audioLanguage === "tl" ? "en" : "tl";
-    playAudioForEntry(runtime.activeAudioEntry, nextLanguage, true);
+    runtime.narrationPausedByUser = false;
+    if (
+      runtime.activeAudioEntry.puzzleSolved &&
+      runtime.activeAudioEntry.solvedAnnouncementPending
+    ) {
+      playPuzzleGuidanceForEntry(runtime.activeAudioEntry, "solved", nextLanguage);
+    } else {
+      playAudioForEntry(runtime.activeAudioEntry, nextLanguage, true);
+    }
   }
 
   function handleListenClick() {
@@ -1497,10 +1691,13 @@
     stopPahimakasMarch(true);
 
     if (runtime.audioElement && !runtime.audioElement.paused) {
+      runtime.narrationPausedByUser = true;
       runtime.audioElement.pause();
       updateNarrationControls();
       return;
     }
+
+    runtime.narrationPausedByUser = false;
 
     if (runtime.audioElement && runtime.audioElement.getAttribute("data-audio-src") && !runtime.audioElement.ended) {
       runtime.pendingAudioSrc = runtime.audioElement.getAttribute("data-audio-src") || "";
@@ -1800,7 +1997,7 @@
      solve persists for the whole session, and a "view in your space"
      (Quick Look / Scene Viewer) button appears. */
   var PUZZLE = {
-    pieces: 7,            // target shard count
+    pieces: 18,           // target shard count; denser break-up makes alignment harder
     eyeDistanceR: 6,      // eye distance along the sight-line, in bounding radii
     minOffsetR: 0.4,      // min |displacement| in radii (so it clearly looks broken)
     maxOffsetR: 1.5,      // max displacement in radii
@@ -2072,7 +2269,9 @@
       alignedSince: 0,
       solving: false,
       solveStartedAt: 0,
-      lastHintState: "",
+      guidanceState: "far",
+      initialGuidanceFinished: false,
+      playedGuidance: {},
     };
 
     console.log("[AR puzzle] '" + entry.key + "' shattered into " + shardRecords.length + " shards.");
@@ -2085,24 +2284,63 @@
     far: {
       en: "A broken artifact… move around to find the right angle",
       tl: "May basag na artifact… gumalaw upang mahanap ang tamang anggulo",
+      audioByLanguage: {
+        en: "/audio/ARContents/InMess-eng.mp3",
+        tl: "/audio/ARContents/InMess-tg.mp3",
+      },
     },
     warm: {
       en: "Getting closer… keep adjusting your angle",
       tl: "Papalapit ka na… ituloy ang paghahanap ng anggulo",
+      audioByLanguage: {
+        en: "/audio/ARContents/GetClose-eng.mp3",
+        tl: "/audio/ARContents/GetClose-tg.mp3",
+      },
     },
     hot: {
       en: "Almost there — hold steady…",
       tl: "Malapit na — steady lang…",
+      audioByLanguage: {
+        en: "/audio/ARContents/Almost-eng.mp3",
+        tl: "/audio/ARContents/Almost-tg.mp3",
+      },
     },
     solved: {
       en: "Restored! The artifact is whole again.",
       tl: "Naibuo! Muli nang buo ang artifact.",
+      audioByLanguage: {
+        en: "/audio/ARContents/solved-eng.mp3",
+        tl: "/audio/ARContents/solved-tg.mp3",
+      },
     },
     noAr: {
       en: "AR view is not supported on this device or browser.",
       tl: "Hindi suportado ang AR view sa device o browser na ito.",
     },
   };
+
+  function preloadPuzzleGuidanceAudio() {
+    if (typeof window.fetch !== "function") {
+      return Promise.resolve();
+    }
+
+    var urls = [];
+    ["far", "warm", "hot", "solved"].forEach(function (state) {
+      var audioConfig = PUZZLE_HINTS[state] && PUZZLE_HINTS[state].audioByLanguage;
+      if (audioConfig) {
+        urls.push(audioConfig.tl, audioConfig.en);
+      }
+    });
+
+    return Promise.all(urls.filter(Boolean).map(function (url) {
+      return window.fetch(url, { cache: "force-cache" }).then(function (response) {
+        if (!response.ok) {
+          throw new Error("Puzzle guidance audio returned HTTP " + response.status + ": " + url);
+        }
+        return response.arrayBuffer();
+      });
+    }));
+  }
 
   function ensurePuzzleHint() {
     if (runtime.puzzleHintEl) {
@@ -2339,9 +2577,13 @@
 
       if (!visible) {
         puzzle.alignedSince = 0;
-        if (!puzzle.solving && runtime.puzzleHintState) {
-          setPuzzleHint("");
-        }
+        return;
+      }
+
+      // Let the initial instruction finish before accepting alignment. This
+      // guarantees the spoken sequence begins with the complete explanation.
+      if (!puzzle.initialGuidanceFinished) {
+        puzzle.alignedSince = 0;
         return;
       }
 
@@ -2351,8 +2593,9 @@
         if (progress >= 1) {
           puzzle.solving = false;
           entry.puzzleSolved = true;
+          entry.solvedAnnouncementPending = true;
           markPuzzleSolvedInSession(entry.key);
-          flashPuzzleHint("solved", 3200);
+          handlePuzzleSolved(entry);
           sendAnalytics("puzzle_solved", { marker: entry.key });
         }
         return;
@@ -2376,7 +2619,7 @@
         if (!puzzle.alignedSince) {
           puzzle.alignedSince = nowMs;
         }
-        setPuzzleHint("hot");
+        updatePuzzleGuidanceForEntry(entry, "hot");
         if (nowMs - puzzle.alignedSince >= PUZZLE.dwellMs) {
           puzzle.solving = true;
           puzzle.solveStartedAt = nowMs;
@@ -2384,11 +2627,11 @@
       } else {
         puzzle.alignedSince = 0;
         if (angleDeg <= PUZZLE.hotAngleDeg) {
-          setPuzzleHint("hot");
+          updatePuzzleGuidanceForEntry(entry, "hot");
         } else if (angleDeg <= PUZZLE.warmAngleDeg) {
-          setPuzzleHint("warm");
+          updatePuzzleGuidanceForEntry(entry, "warm");
         } else {
-          setPuzzleHint("far");
+          updatePuzzleGuidanceForEntry(entry, "far");
         }
       }
     });
@@ -2562,6 +2805,8 @@
         userYaw: 0,
         userPitch: 0,
         modelLoaded: false,
+        descriptionAudioPrefetched: false,
+        solvedAnnouncementPending: false,
         isVisibleStable: false,
         lastSeenAt: 0,
         lostTimerId: 0,
@@ -2584,7 +2829,9 @@
       );
     });
 
-    return Promise.all(preparationTasks);
+    return Promise.all([Promise.all(preparationTasks), preloadPuzzleGuidanceAudio()]).then(function (results) {
+      return results[0];
+    });
   }
 
   function initRendererScene() {
