@@ -4,6 +4,9 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Marble WebXR Viewer</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}" />
     <script type="importmap">
       {
@@ -19,12 +22,11 @@
     <div id="app-root" class="app-root"></div>
 
     <div id="loading-overlay" class="loading-overlay">
-      <div class="loading-card">
-        <h1>Loading Marble Scene</h1>
-        <p id="loading-text">Initializing...</p>
-        <div class="progress-track">
-          <div id="loading-progress" class="progress-fill"></div>
-        </div>
+      <div class="loading-ring" aria-hidden="true"></div>
+      <p class="loading-title">Museo ng Libingan<br /><em>sa Ilalim ng Lupa ng Nagcarlan</em><span>Preparing the 3D Environment…</span></p>
+      <p id="loading-text" class="loading-text" aria-live="polite">Initializing…</p>
+      <div class="progress-track">
+        <div id="loading-progress" class="progress-fill"></div>
       </div>
     </div>
 

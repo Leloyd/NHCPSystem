@@ -60,7 +60,7 @@ canvas {
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 1.1rem;
+  gap: 1.4rem;
   background: #0d0a04;
   transition: opacity 0.8s ease, visibility 0.8s ease;
 }
@@ -86,8 +86,7 @@ canvas {
   margin: 0;
   text-align: center;
   color: var(--tx-cream);
-  font-family: "Playfair Display", Georgia, serif;
-  font-weight: 500;
+  font-family: "Playfair Display", Georgia, "Times New Roman", serif;
   font-size: 1.15rem;
   animation: xr-loader-breathe 2.2s ease-in-out infinite;
 }
@@ -97,14 +96,27 @@ canvas {
   color: var(--tx-gold);
 }
 
-.loading-text {
-  margin: 0;
-  text-align: center;
-  font-family: "Inter", sans-serif;
+.loading-title span {
+  display: block;
+  margin-top: 0.5rem;
+  font-family: "Inter", "Segoe UI", sans-serif;
   font-size: 0.62rem;
   letter-spacing: 0.28em;
   text-transform: uppercase;
   color: rgba(212, 175, 106, 0.8);
+}
+
+/* Runtime progress messages remain announced without adding extra visual copy. */
+.loading-text {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .progress-track {
@@ -124,6 +136,18 @@ canvas {
 
 @keyframes xr-loader-spin { to { transform: rotate(360deg); } }
 @keyframes xr-loader-breathe { 0%, 100% { opacity: 0.65; } 50% { opacity: 1; } }
+
+@media (prefers-reduced-motion: reduce) {
+  .loading-overlay,
+  .progress-fill {
+    transition: none;
+  }
+
+  .loading-ring,
+  .loading-title {
+    animation: none;
+  }
+}
 
 .error-banner {
   position: fixed;
