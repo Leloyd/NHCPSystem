@@ -2739,6 +2739,22 @@ function setupTraditionMap(el, options = {}) {
   let doneTimer = 0;
   let selectedCard = null;
   let gateMessageAt = 0;
+  let hintTimer = 0;
+  let feedbackTimer = 0;
+  let revealTimer = 0;
+
+  const hideFeedbackNotice = () => {
+    window.clearTimeout(feedbackTimer);
+    feedbackTimer = 0;
+    if (feedback) feedback.hidden = true;
+  };
+  const hideRevealNotice = () => {
+    window.clearTimeout(revealTimer);
+    revealTimer = 0;
+    if (!reveal) return;
+    reveal.hidden = true;
+    reveal.classList.remove('is-in');
+  };
 
   const pulse = (pattern = 16) => {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch { /* optional */ }
@@ -2864,6 +2880,9 @@ function setupTraditionMap(el, options = {}) {
   };
 
   const showReveal = (card) => {
+    // The story reveal and feedback/hints share one notification slot.
+    hideFeedbackNotice();
+    hideRevealNotice();
     if (!reveal) return;
     if (revealRegion) {
       revealRegion.innerHTML =
@@ -2886,6 +2905,7 @@ function setupTraditionMap(el, options = {}) {
     reveal.classList.remove('is-in');
     void reveal.offsetWidth; // restart the entrance each reveal
     reveal.classList.add('is-in');
+    revealTimer = window.setTimeout(hideRevealNotice, 5000);
   };
 
   /* --- The map itself: Leaflet over the archipelago image ------------------
@@ -2893,8 +2913,6 @@ function setupTraditionMap(el, options = {}) {
      both the inline board and the expanded view — expanding only resizes it,
      so there is a single set of markers to keep in step. */
   const leafletEl = el.querySelector('[data-map-leaflet]');
-  const zoomControls = el.querySelector('[data-map-zoom-controls]');
-  const zoomButtons = Array.from(el.querySelectorAll('[data-map-zoom]'));
   const MAP_W = Number(leafletEl && leafletEl.dataset.mapW) || 1024;
   const MAP_H = Number(leafletEl && leafletEl.dataset.mapH) || 1536;
   const MAP_BOUNDS = [[0, 0], [MAP_H, MAP_W]];
@@ -3081,7 +3099,6 @@ function setupTraditionMap(el, options = {}) {
     root.classList.toggle('is-map-expanded', value);
     document.documentElement.classList.toggle('trailx-map-modal-open', value);
     document.body.classList.toggle('trailx-map-modal-open', value);
-    if (zoomControls) zoomControls.hidden = !value;
     expandBtn?.setAttribute('aria-pressed', String(value));
     expandBtn?.setAttribute('aria-label', value
       ? 'Close the map / Isara ang mapa'
@@ -3097,15 +3114,6 @@ function setupTraditionMap(el, options = {}) {
     window.requestAnimationFrame(fitMap);
     window.setTimeout(fitMap, 260);
   };
-
-  zoomButtons.forEach((btn) => {
-    btn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      if (!lmap) return;
-      if (btn.dataset.mapZoom === 'in') lmap.zoomIn(0.6);
-      else lmap.zoomOut(0.6);
-    });
-  });
 
   expandBtn?.addEventListener('click', (event) => {
     event.stopPropagation();
@@ -3201,7 +3209,6 @@ function setupTraditionMap(el, options = {}) {
     card.disabled = true;
     card.style.removeProperty('--map-drag-x');
     card.style.removeProperty('--map-drag-y');
-    if (feedback) feedback.hidden = true; // the story is the reward now
     pulse(16);
     showReveal(card);
     updateProgress();
@@ -3212,17 +3219,18 @@ function setupTraditionMap(el, options = {}) {
      island is never punished — the card simply returns, the map says which
      island you hit, and after a few misses it quietly points the way. */
   const wrongCounts = {};
-  let hintTimer = 0;
-  let feedbackTimer = 0;
 
   const showFeedback = (en, tl, tone) => {
+    // A new wrong-placement notice or hint replaces the current artifact
+    // story instead of stacking over it at the bottom of the map.
+    hideRevealNotice();
+    hideFeedbackNotice();
     if (!feedback) return;
     feedback.innerHTML = '<span data-lang-en>' + esc(en) + '</span><span data-lang-tl>' + esc(tl) + '</span>';
     feedback.hidden = false;
     feedback.classList.remove('is-wrong', 'is-hint', 'is-good');
     if (tone) feedback.classList.add('is-' + tone);
-    window.clearTimeout(feedbackTimer);
-    feedbackTimer = window.setTimeout(() => { feedback.hidden = true; }, 4200);
+    feedbackTimer = window.setTimeout(hideFeedbackNotice, 5000);
   };
 
   const showIncompleteGate = () => {
@@ -3445,14 +3453,13 @@ function setupTraditionMap(el, options = {}) {
     if (expanded) setExpanded(false);
     window.clearTimeout(doneTimer);
     window.clearTimeout(hintTimer);
-    window.clearTimeout(feedbackTimer);
+    hideFeedbackNotice();
+    hideRevealNotice();
     announced = false;
     placed.clear();
     Object.keys(wrongCounts).forEach((k) => { delete wrongCounts[k]; });
     clearSelection();
-    if (feedback) feedback.hidden = true;
     if (threadLine) { threadLine.remove(); threadLine = null; }
-    if (reveal) reveal.hidden = true;
     if (revealMv) revealMv.removeAttribute('src'); // free the reveal's WebGL context
     Object.keys(markerByKey).forEach((k) => {
       const node = markerEl(k);
@@ -3782,7 +3789,7 @@ function initStories() {
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
     // Inner scroll areas (rules box), the artifact viewer, and 3D models keep
     // their own native wheel behaviour.
-    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, model-viewer')) return;
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, model-viewer')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
@@ -3795,7 +3802,7 @@ function initStories() {
   // both platforms: a vertical drag scrolls the active story (with a momentum
   // fling); a horizontal drag falls through so "drag to look around" still
   // rotates the 360.
-  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, model-viewer'));
+  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, model-viewer'));
   let tStartY = 0;
   let tStartX = 0;
   let tLastY = 0;
