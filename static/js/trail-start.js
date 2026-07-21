@@ -2715,6 +2715,10 @@ function setupTraditionMap(el, options = {}) {
   if (!el || !el.hasAttribute('data-tradition-map')) return null;
 
   const mapStage = el.querySelector('[data-tradition-map-stage]');
+  const mapStageHome = mapStage ? {
+    parent: mapStage.parentNode,
+    nextSibling: mapStage.nextSibling,
+  } : null;
   const board = el.querySelector('[data-map-board]');
   const progress = el.querySelector('[data-map-progress]');
   const reveal = el.querySelector('[data-map-reveal]');
@@ -2723,6 +2727,7 @@ function setupTraditionMap(el, options = {}) {
   const revealStory = el.querySelector('[data-map-reveal-story]');
   const feedback = el.querySelector('[data-map-feedback]');
   const expandBtn = el.querySelector('[data-map-expand]');
+  const tray = el.querySelector('[data-map-tray]');
   const resetButton = el.querySelector('[data-map-reset]');
   const finalWait = el.querySelector('[data-map-final-wait]');
   const finalComplete = el.querySelector('[data-map-final-complete]');
@@ -2874,9 +2879,12 @@ function setupTraditionMap(el, options = {}) {
     if (!lmap) return;
     lmap.invalidateSize(false);
     lmap.setMinZoom(-8); // unlock so fitBounds can find the true fit
-    lmap.fitBounds(MAP_BOUNDS, { animate: false, padding: [10, 10] });
-    // Zooming out stops at the whole archipelago — never smaller.
-    lmap.setMinZoom(lmap.getZoom());
+    const bounds = window.L.latLngBounds(MAP_BOUNDS);
+    // Inline: show the whole image. Expanded: cover the viewport edge-to-edge,
+    // like a real map canvas; visitors can pan to any cropped edge.
+    const fittedZoom = lmap.getBoundsZoom(bounds, expanded, [0, 0]);
+    lmap.setView(bounds.getCenter(), fittedZoom, { animate: false });
+    lmap.setMinZoom(fittedZoom);
   };
 
   // Inline it reads as a picture; expanded it becomes a real map.
@@ -2937,22 +2945,23 @@ function setupTraditionMap(el, options = {}) {
     window.addEventListener('resize', () => { if (lmap) lmap.invalidateSize(false); });
   }
 
-  /* While the map is open the wheel belongs to it. Captured on the way down so
-     nothing underneath can scroll, but never stopped — Leaflet still gets the
-     event and zooms. Over the artifact dock the wheel scrolls it sideways. */
+  /* While expanded, vertical wheel movement over the artifact dock becomes
+     horizontal movement. It must never leak through to the chapter scroller. */
+  tray?.addEventListener('wheel', (event) => {
+    if (!expanded) return;
+    const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+    event.preventDefault();
+    event.stopPropagation();
+    if (delta) tray.scrollLeft += delta;
+  }, { passive: false });
+
+  /* Leaflet receives map-wheel events first and performs the zoom. This
+     bubbling guard then prevents the gesture from scrolling the Trail. */
   mapStage?.addEventListener('wheel', (event) => {
     if (!expanded) return;
-    const overTray = event.target.closest('[data-map-tray]');
-    if (overTray) {
-      const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
-      if (delta) {
-        event.preventDefault();
-        overTray.scrollLeft += delta;
-      }
-      return;
-    }
-    event.preventDefault(); // the map zooms instead of the page scrolling
-  }, { passive: false, capture: true });
+    event.preventDefault();
+    event.stopPropagation();
+  }, { passive: false });
 
   mapStage?.addEventListener('touchmove', (event) => {
     if (expanded && !event.target.closest('[data-map-tray]')) event.preventDefault();
@@ -2960,13 +2969,25 @@ function setupTraditionMap(el, options = {}) {
 
   const setExpanded = (value) => {
     expanded = value;
+    // The animated chapter creates a containing block for fixed descendants.
+    // Move the expanded map to the Trail root so it uses the full viewport.
+    if (value && mapStage && mapStage.parentNode !== root) root.appendChild(mapStage);
     mapStage?.classList.toggle('is-expanded', value);
+    root.classList.toggle('is-map-expanded', value);
+    document.documentElement.classList.toggle('trailx-map-modal-open', value);
+    document.body.classList.toggle('trailx-map-modal-open', value);
     if (zoomControls) zoomControls.hidden = !value;
     expandBtn?.setAttribute('aria-pressed', String(value));
     expandBtn?.setAttribute('aria-label', value
       ? 'Close the map / Isara ang mapa'
       : 'Expand the map / Palakihin ang mapa');
     setMapInteractive(value);
+    if (!value && mapStage && mapStageHome && mapStageHome.parent) {
+      const anchor = mapStageHome.nextSibling && mapStageHome.nextSibling.parentNode === mapStageHome.parent
+        ? mapStageHome.nextSibling
+        : null;
+      mapStageHome.parent.insertBefore(mapStage, anchor);
+    }
     // Re-measure once the new layout has been applied.
     window.requestAnimationFrame(fitMap);
     window.setTimeout(fitMap, 260);
@@ -3237,6 +3258,7 @@ function setupTraditionMap(el, options = {}) {
   });
 
   const reset = () => {
+    if (expanded) setExpanded(false);
     window.clearTimeout(doneTimer);
     window.clearTimeout(hintTimer);
     window.clearTimeout(feedbackTimer);

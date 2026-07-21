@@ -3750,8 +3750,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 
 /* --- The frame ---------------------------------------------------------- */
 .trailx-map.is-expanded {
-  padding: 0.75rem 0.75rem 0;
-  gap: 0.75rem;                        /* space between map and the dock */
+  padding: 0;
+  gap: 0;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(212, 175, 106, 0.09), transparent 60%),
     rgba(4, 7, 9, 0.97);
@@ -3759,7 +3759,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-map.is-expanded .trailx-map__board {
   background: transparent;             /* no panel — just the map */
   border: 1px solid rgba(212, 175, 106, 0.5);
-  border-radius: 0.7rem;
+  border-radius: 0;
   box-shadow:
     0 0 22px rgba(212, 175, 106, 0.3),
     0 0 60px rgba(212, 175, 106, 0.12),
@@ -3770,7 +3770,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-map.is-expanded .trailx-map__leaflet.leaflet-container,
 .trailx-map.is-expanded .trailx-map__board .leaflet-container {
   background: transparent;
-  border-radius: 0.7rem;
+  border-radius: 0;
 }
 
 /* --- Islands: always named, always findable ------------------------------ */
@@ -3821,7 +3821,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   height: 7rem;
   padding: 0.55rem 0.7rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(212, 175, 106, 0.35);
-  border-radius: 0.7rem 0.7rem 0 0;
+  border-radius: 0;
   background:
     linear-gradient(180deg, rgba(212, 175, 106, 0.08), transparent 40%),
     rgba(9, 7, 4, 0.97);
@@ -3829,6 +3829,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   scroll-snap-type: x proximity;
   scrollbar-width: thin;
   scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
+  overscroll-behavior-inline: contain;
 }
 .trailx-map.is-expanded .trailx-map__tray::-webkit-scrollbar { height: 5px; }
 .trailx-map.is-expanded .trailx-map__tray::-webkit-scrollbar-thumb {
@@ -3856,6 +3857,18 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   bottom: calc(8.6rem + env(safe-area-inset-bottom, 0px));
 }
 .trailx-map.is-expanded .trailx-map__expand { top: 1rem; right: 1rem; }
+
+/* Expanded map gestures belong to Leaflet or the artifact rail, never to the
+   chapter scroller underneath the modal surface. */
+html.trailx-map-modal-open,
+body.trailx-map-modal-open {
+  overflow: hidden !important;
+  overscroll-behavior: none;
+}
+.trailx.is-map-expanded .trailx__story {
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
 @media (prefers-reduced-motion: reduce) {
   .trailx-map.is-expanded .trailx-map__marker:not(.is-lit) .trailx-map__pin { animation: none; }
