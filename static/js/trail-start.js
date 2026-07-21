@@ -2716,8 +2716,6 @@ function setupTraditionMap(el, options = {}) {
 
   const mapStage = el.querySelector('[data-tradition-map-stage]');
   const board = el.querySelector('[data-map-board]');
-  const markersWrap = el.querySelector('[data-map-markers]');
-  const threadsSvg = el.querySelector('[data-map-threads]');
   const progress = el.querySelector('[data-map-progress]');
   const reveal = el.querySelector('[data-map-reveal]');
   const revealMv = el.querySelector('[data-map-reveal-mv]');
@@ -2845,180 +2843,96 @@ function setupTraditionMap(el, options = {}) {
     reveal.classList.add('is-in');
   };
 
-  // A target marker for every card, positioned on the real map (x%, y%).
-  cards.forEach((card) => {
-    const key = card.dataset.mapCard;
-    const x = parseFloat(card.dataset.mapX) || 0;
-    const y = parseFloat(card.dataset.mapY) || 0;
-    const marker = document.createElement('button');
-    marker.type = 'button';
-    marker.className = 'trailx-map__marker';
-    marker.dataset.mapMarker = key;
-    marker.style.left = x + '%';
-    marker.style.top = y + '%';
-    marker.setAttribute('aria-label', card.dataset.regionEn || key);
-    // Region names label the islands while you're placing, so the match is
-    // learnable rather than guesswork.
-    marker.dataset.regionEn = card.dataset.regionEn || '';
-    marker.dataset.regionTl = card.dataset.regionTl || card.dataset.regionEn || '';
-    marker.innerHTML = '<span class="trailx-map__pin" aria-hidden="true"></span>';
-    markersWrap?.appendChild(marker);
-    markerByKey[key] = marker;
-    marker.addEventListener('click', () => {
-      if (selectedCard) { attemptPlace(selectedCard, key); return; } // tap-to-place
-      if (placed.has(key)) showReveal(card);
-    });
-  });
-
-  /* Expand the map to fill the screen so the clustered markers spread out.
-     Expanded, it becomes a scroller: zoom in with +/− and simply scroll up and
-     down the archipelago. */
+  /* --- The map itself: Leaflet over the archipelago image ------------------
+     CRS.Simple turns the PNG into a pannable, zoomable plane. One map serves
+     both the inline board and the expanded view — expanding only resizes it,
+     so there is a single set of markers to keep in step. */
+  const leafletEl = el.querySelector('[data-map-leaflet]');
   const zoomControls = el.querySelector('[data-map-zoom-controls]');
   const zoomButtons = Array.from(el.querySelectorAll('[data-map-zoom]'));
-  const panEl = el.querySelector('[data-map-pan]');
-  const ZOOM_MIN = 1;
-  const ZOOM_MAX = 5;
+  const MAP_W = Number(leafletEl && leafletEl.dataset.mapW) || 1024;
+  const MAP_H = Number(leafletEl && leafletEl.dataset.mapH) || 1536;
+  const MAP_BOUNDS = [[0, 0], [MAP_H, MAP_W]];
+  let lmap = null;
+  let threadLine = null;
   let expanded = false;
 
-  /* A Leaflet-style canvas: drag to pan, pinch / wheel / buttons to zoom. The
-     whole map layer is transformed, so the markers travel with it and stay
-     exactly on their islands (drop-testing uses live rects, so placing still
-     works at any zoom). */
-  let mapScale = 1;
-  let mapTx = 0;
-  let mapTy = 0;
-  const mapPointers = new Map();
-  let mapPanning = false;
-  let mapPinch = 0;
+  // A card's home, as a CRS.Simple point (x% from the left, y% from the top).
+  const pointFor = (card) => {
+    const x = parseFloat(card.dataset.mapX) || 0;
+    const y = parseFloat(card.dataset.mapY) || 0;
+    return [MAP_H * (1 - y / 100), MAP_W * (x / 100)];
+  };
 
-  const applyMapTransform = () => {
-    if (panEl) {
-      panEl.style.setProperty('--pan-x', mapTx + 'px');
-      panEl.style.setProperty('--pan-y', mapTy + 'px');
-      panEl.style.setProperty('--map-zoom', String(mapScale));
-    }
-    zoomButtons.forEach((btn) => {
-      btn.disabled = btn.dataset.mapZoom === 'in' ? mapScale >= ZOOM_MAX : mapScale <= ZOOM_MIN;
+  // Markers are Leaflet markers; this is their DOM element.
+  const markerEl = (key) => {
+    const m = markerByKey[key];
+    return m && typeof m.getElement === 'function' ? m.getElement() : null;
+  };
+
+  const fitMap = () => {
+    if (!lmap) return;
+    lmap.invalidateSize(false);
+    lmap.fitBounds(MAP_BOUNDS, { animate: false, padding: [6, 6] });
+  };
+
+  // Inline it reads as a picture; expanded it becomes a real map.
+  const setMapInteractive = (on) => {
+    if (!lmap) return;
+    ['dragging', 'touchZoom', 'doubleClickZoom', 'scrollWheelZoom', 'boxZoom', 'keyboard'].forEach((name) => {
+      const handler = lmap[name];
+      if (handler && handler.enable) { if (on) handler.enable(); else handler.disable(); }
     });
   };
 
-  const clampPan = () => {
-    if (!board || !panEl) return;
-    const vw = board.clientWidth;
-    const vh = board.clientHeight;
-    const w = panEl.offsetWidth * mapScale;
-    const h = panEl.offsetHeight * mapScale;
-    // Centre the map while it is smaller than the view; otherwise keep its
-    // edges from drifting inside the frame.
-    mapTx = w <= vw ? (vw - w) / 2 : Math.min(0, Math.max(vw - w, mapTx));
-    mapTy = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, mapTy));
-  };
-
-  const zoomAt = (clientX, clientY, factor) => {
-    if (!board) return;
-    const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, mapScale * factor));
-    if (Math.abs(next - mapScale) < 0.001) return;
-    const r = board.getBoundingClientRect();
-    const px = clientX - r.left;
-    const py = clientY - r.top;
-    mapTx = px - (px - mapTx) * (next / mapScale); // anchor under the fingers
-    mapTy = py - (py - mapTy) * (next / mapScale);
-    mapScale = next;
-    clampPan();
-    applyMapTransform();
-  };
-
-  const resetMapView = () => {
-    mapScale = 1;
-    mapTx = 0;
-    mapTy = 0;
-    mapPointers.clear();
-    mapPanning = false;
-    mapPinch = 0;
-    clampPan();
-    applyMapTransform();
-  };
-
-  if (board) {
-    board.addEventListener('wheel', (event) => {
-      if (!expanded) return;
-      event.preventDefault();
-      zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1.16 : 1 / 1.16);
-    }, { passive: false });
-
-    // iOS pinch fires gesture events — block them so the page can't zoom.
-    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => {
-      board.addEventListener(t, (event) => { if (expanded) event.preventDefault(); }, { passive: false });
+  if (leafletEl && window.L) {
+    const L = window.L;
+    lmap = L.map(leafletEl, {
+      crs: L.CRS.Simple,
+      attributionControl: false,
+      zoomControl: false,
+      zoomSnap: 0,
+      minZoom: -4,
+      maxZoom: 4,
+      maxBoundsViscosity: 0.9,
     });
+    L.imageOverlay(leafletEl.dataset.mapSrc, MAP_BOUNDS).addTo(lmap);
+    lmap.setMaxBounds(MAP_BOUNDS);
+    fitMap();
+    setMapInteractive(false);
 
-    board.addEventListener('pointerdown', (event) => {
-      if (!expanded) return;
-      // Taps on a marker or the close button are theirs, not the canvas's.
-      if (event.target.closest('.trailx-map__marker, .trailx-map__expand')) return;
-      mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-      if (mapPointers.size === 2) {
-        const p = Array.from(mapPointers.values());
-        mapPinch = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
-        mapPanning = false;
-      } else if (mapPointers.size === 1) {
-        mapPanning = true;
-        board.classList.add('is-panning');
-        try { board.setPointerCapture(event.pointerId); } catch { /* ignore */ }
+    cards.forEach((card) => {
+      const key = card.dataset.mapCard;
+      const marker = L.marker(pointFor(card), {
+        icon: L.divIcon({
+          className: 'trailx-map__marker',
+          html: '<span class="trailx-map__pin" aria-hidden="true"></span>',
+          iconSize: [44, 44],
+          iconAnchor: [22, 22],
+        }),
+        keyboard: true,
+        riseOnHover: true,
+      }).addTo(lmap);
+      markerByKey[key] = marker;
+
+      marker.on('click', () => {
+        if (selectedCard) { attemptPlace(selectedCard, key); return; } // tap-to-place
+        if (placed.has(key)) showReveal(card);
+      });
+
+      const node = marker.getElement();
+      if (node) {
+        node.dataset.mapMarker = key;
+        // Region names label the islands while placing, so the match is
+        // learnable rather than guesswork.
+        node.dataset.regionEn = card.dataset.regionEn || '';
+        node.dataset.regionTl = card.dataset.regionTl || card.dataset.regionEn || '';
+        node.setAttribute('aria-label', card.dataset.regionEn || key);
       }
     });
 
-    board.addEventListener('pointermove', (event) => {
-      if (!expanded || !mapPointers.has(event.pointerId)) return;
-      const prev = mapPointers.get(event.pointerId);
-      mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
-
-      if (mapPointers.size === 2) {
-        const p = Array.from(mapPointers.values());
-        const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
-        if (mapPinch > 0 && dist > 0) {
-          zoomAt((p[0].x + p[1].x) / 2, (p[0].y + p[1].y) / 2, dist / mapPinch);
-        }
-        mapPinch = dist;
-        event.preventDefault();
-        return;
-      }
-
-      if (mapPanning) {
-        mapTx += event.clientX - prev.x;
-        mapTy += event.clientY - prev.y;
-        clampPan();
-        applyMapTransform();
-        event.preventDefault();
-      }
-    }, { passive: false });
-
-    const endMapPointer = (event) => {
-      mapPointers.delete(event.pointerId);
-      if (mapPointers.size < 2) mapPinch = 0;
-      if (mapPointers.size === 0) {
-        mapPanning = false;
-        board.classList.remove('is-panning');
-      }
-    };
-    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => {
-      board.addEventListener(t, endMapPointer);
-    });
-
-    board.addEventListener('dblclick', (event) => {
-      if (!expanded) return;
-      event.preventDefault();
-      zoomAt(event.clientX, event.clientY, 1.7);
-    });
+    window.addEventListener('resize', () => { if (lmap) lmap.invalidateSize(false); });
   }
-
-  zoomButtons.forEach((btn) => {
-    btn.addEventListener('click', (event) => {
-      event.stopPropagation();
-      const r = board?.getBoundingClientRect();
-      if (!r) return;
-      zoomAt(r.left + r.width / 2, r.top + r.height / 2, btn.dataset.mapZoom === 'in' ? 1.5 : 1 / 1.5);
-    });
-  });
 
   const setExpanded = (value) => {
     expanded = value;
@@ -3028,15 +2942,27 @@ function setupTraditionMap(el, options = {}) {
     expandBtn?.setAttribute('aria-label', value
       ? 'Close the map / Isara ang mapa'
       : 'Expand the map / Palakihin ang mapa');
-    // Recentre once the new layout has been measured.
-    window.requestAnimationFrame(resetMapView);
+    setMapInteractive(value);
+    // Re-measure once the new layout has been applied.
+    window.requestAnimationFrame(fitMap);
+    window.setTimeout(fitMap, 260);
   };
+
+  zoomButtons.forEach((btn) => {
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      if (!lmap) return;
+      if (btn.dataset.mapZoom === 'in') lmap.zoomIn(0.6);
+      else lmap.zoomOut(0.6);
+    });
+  });
+
   expandBtn?.addEventListener('click', (event) => {
     event.stopPropagation();
     setExpanded(!expanded);
   });
-  // Tapping the map itself opens it full screen (but never while you're
-  // aiming at an island, and never as a way to close it by accident).
+  // Tapping the inline map opens it full screen (never while aiming a card,
+  // and never on a marker).
   board?.addEventListener('click', (event) => {
     if (expanded || selectedCard) return;
     if (event.target.closest('.trailx-map__marker, .trailx-map__expand')) return;
@@ -3067,22 +2993,21 @@ function setupTraditionMap(el, options = {}) {
     window.setTimeout(remove, 1000);
   };
 
+  // One thread drawn down the archipelago, north to south, when all are home.
   const drawThreads = () => {
-    if (!threadsSvg) return;
-    threadsSvg.innerHTML = '';
+    if (!lmap || !window.L) return;
+    if (threadLine) { threadLine.remove(); threadLine = null; }
     const pts = cards.slice()
       .sort((a, b) => (parseFloat(a.dataset.mapY) || 0) - (parseFloat(b.dataset.mapY) || 0))
-      .map((c) => ({ x: parseFloat(c.dataset.mapX) || 0, y: parseFloat(c.dataset.mapY) || 0 }));
-    for (let i = 0; i < pts.length - 1; i += 1) {
-      const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
-      line.setAttribute('x1', pts[i].x);
-      line.setAttribute('y1', pts[i].y);
-      line.setAttribute('x2', pts[i + 1].x);
-      line.setAttribute('y2', pts[i + 1].y);
-      line.setAttribute('class', 'trailx-map__thread');
-      line.style.setProperty('--thread-delay', (i * 0.12) + 's');
-      threadsSvg.appendChild(line);
-    }
+      .map(pointFor);
+    threadLine = window.L.polyline(pts, {
+      className: 'trailx-map__thread',
+      color: '#f7d98f',
+      weight: 2,
+      opacity: 0.9,
+      dashArray: '7 9',
+      interactive: false,
+    }).addTo(lmap);
   };
 
   const updateProgress = () => {
@@ -3110,7 +3035,7 @@ function setupTraditionMap(el, options = {}) {
     const key = card.dataset.mapCard;
     if (!key || placed.has(key)) return;
     placed.add(key);
-    const marker = markerByKey[key];
+    const marker = markerEl(key);
     if (marker && !marker.querySelector('model-viewer')) {
       marker.appendChild(buildMarkerModel(card)); // the artifact rises in 3D
     }
@@ -3153,7 +3078,7 @@ function setupTraditionMap(el, options = {}) {
     if (selectedCard) selectedCard.classList.remove('is-selected');
     selectedCard = null;
     mapStage?.classList.remove('is-placing');
-    Object.values(markerByKey).forEach((m) => m.classList.remove('is-target'));
+    Object.keys(markerByKey).forEach((k) => markerEl(k)?.classList.remove('is-target'));
   };
 
   const selectCard = (card) => {
@@ -3179,7 +3104,9 @@ function setupTraditionMap(el, options = {}) {
     let bestKey = null;
     let bestDist = Infinity;
     Object.keys(markerByKey).forEach((key) => {
-      const r = markerByKey[key].getBoundingClientRect();
+      const node = markerEl(key);
+      if (!node) return;
+      const r = node.getBoundingClientRect();
       const dist = Math.hypot(clientX - (r.left + r.width / 2), clientY - (r.top + r.height / 2));
       if (dist < bestDist) { bestDist = dist; bestKey = key; }
     });
@@ -3189,7 +3116,7 @@ function setupTraditionMap(el, options = {}) {
   };
 
   const hintFor = (key) => {
-    const marker = markerByKey[key];
+    const marker = markerEl(key);
     if (!marker) return;
     marker.classList.add('is-hint');
     window.clearTimeout(hintTimer);
@@ -3209,7 +3136,7 @@ function setupTraditionMap(el, options = {}) {
       return;
     }
     // Wrong island — say which one it was, and keep it gentle.
-    const wrongMarker = markerByKey[targetKey];
+    const wrongMarker = markerEl(targetKey);
     const regionEn = wrongMarker?.dataset.regionEn || 'that island';
     const regionTl = wrongMarker?.dataset.regionTl || 'ang pulong iyon';
     wrongCounts[key] = (wrongCounts[key] || 0) + 1;
@@ -3222,7 +3149,7 @@ function setupTraditionMap(el, options = {}) {
     pulse(28);
     returnCard(card);
     if (wrongCounts[key] >= 3) {
-      const right = markerByKey[key];
+      const right = markerEl(key);
       hintFor(key);
       showFeedback(
         'Hint: look to ' + (right?.dataset.regionEn || '') + '.',
@@ -3261,7 +3188,7 @@ function setupTraditionMap(el, options = {}) {
       // Highlight the island currently under the card.
       const over = markerAtPoint(event.clientX, event.clientY);
       Object.keys(markerByKey).forEach((k) => {
-        markerByKey[k].classList.toggle('is-target', k === over);
+        markerEl(k)?.classList.toggle('is-target', k === over);
       });
     });
     const finish = (event, cancelled) => {
@@ -3269,7 +3196,7 @@ function setupTraditionMap(el, options = {}) {
       const moved = drag.moved;
       drag = null;
       card.classList.remove('is-dragging');
-      Object.values(markerByKey).forEach((m) => m.classList.remove('is-target'));
+      Object.keys(markerByKey).forEach((k) => markerEl(k)?.classList.remove('is-target'));
       if (cancelled) { returnCard(card); mapStage?.classList.remove('is-placing'); return; }
       if (moved) {
         suppressClickUntil = performance.now() + 350;
@@ -3294,12 +3221,14 @@ function setupTraditionMap(el, options = {}) {
     Object.keys(wrongCounts).forEach((k) => { delete wrongCounts[k]; });
     clearSelection();
     if (feedback) feedback.hidden = true;
-    if (threadsSvg) threadsSvg.innerHTML = '';
+    if (threadLine) { threadLine.remove(); threadLine = null; }
     if (reveal) reveal.hidden = true;
     if (revealMv) revealMv.removeAttribute('src'); // free the reveal's WebGL context
-    Object.values(markerByKey).forEach((marker) => {
-      marker.classList.remove('is-lit');
-      marker.querySelector('model-viewer')?.remove(); // free each marker's context
+    Object.keys(markerByKey).forEach((k) => {
+      const node = markerEl(k);
+      if (!node) return;
+      node.classList.remove('is-lit', 'is-target', 'is-hint', 'is-wrong');
+      node.querySelector('model-viewer')?.remove(); // free each marker's context
     });
     cards.forEach((card) => {
       card.disabled = false;

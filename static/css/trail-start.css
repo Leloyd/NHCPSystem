@@ -3570,3 +3570,163 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 
 /* The inline map advertises that it opens. */
 .trailx-map:not(.is-expanded) .trailx-map__board { cursor: zoom-in; }
+
+/* ==========================================================================
+   Stop 4 · Map of Traditions — Leaflet edition
+   The archipelago PNG is a CRS.Simple Leaflet plane: drag to pan, pinch/wheel
+   to zoom. Inline it behaves like a picture; expanded it fills the screen with
+   the 3D artifacts docked beneath and notices overlaying its lower edge.
+   ========================================================================== */
+.trailx-map__leaflet {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: inherit;
+  background: #071016;
+  z-index: 0;
+}
+.trailx-map__leaflet .leaflet-container {
+  background: #071016;
+  font-family: "Inter", sans-serif;
+  outline: none;
+}
+/* Leaflet positions markers itself — never fight it with our own transform. */
+.trailx-map__marker {
+  position: absolute;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+}
+.trailx-map__marker .trailx-map__pin {
+  position: static;
+  transform: none;
+  width: 0.55rem;
+  height: 0.55rem;
+  border-radius: 50%;
+  border: 1px solid rgba(212, 175, 106, 0.75);
+  background: rgba(212, 175, 106, 0.2);
+  box-shadow: 0 0 0 3px rgba(212, 175, 106, 0.12);
+  transition: opacity 0.35s ease, transform 0.25s ease, box-shadow 0.25s ease;
+}
+.trailx-map__marker.is-target .trailx-map__pin {
+  background: rgba(247, 217, 143, 0.55);
+  border-color: #f7d98f;
+  box-shadow: 0 0 0 7px rgba(212, 175, 106, 0.22), 0 0 14px rgba(247, 217, 143, 0.85);
+  transform: scale(1.5);
+}
+.trailx-map__marker.is-wrong .trailx-map__pin {
+  border-color: #ff8f8f;
+  background: rgba(255, 120, 120, 0.4);
+  box-shadow: 0 0 14px rgba(255, 120, 120, 0.75);
+}
+.trailx-map__marker.is-hint .trailx-map__pin { animation: trailx-map-beckon 1.1s ease-in-out infinite; }
+.trailx-map__marker.is-lit .trailx-map__pin { opacity: 0; }
+.trailx-map__marker .trailx-map__marker-mv {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  pointer-events: none;
+  background: transparent;
+  --poster-color: transparent;
+  transform: scale(0.3);
+  transition: opacity 0.45s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+}
+.trailx-map__marker.is-lit .trailx-map__marker-mv {
+  opacity: 1;
+  transform: scale(1);
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.55));
+}
+/* Island names, shown while placing. */
+.trailx-map__marker::after {
+  top: 100%;
+  margin-top: -0.2rem;
+}
+/* The completion thread. */
+.trailx-map__thread { filter: drop-shadow(0 0 3px rgba(212, 175, 106, 0.8)); }
+
+/* ---- Expanded: full screen, artifacts docked below ---------------------- */
+.trailx-map.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  background: rgba(5, 8, 10, 0.97);
+}
+.trailx-map.is-expanded .trailx-map__board {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  aspect-ratio: auto;
+  border: 0;
+  border-radius: 0;
+  overflow: hidden;
+  box-shadow: none;
+  cursor: default;
+}
+.trailx-map.is-expanded .trailx-map__tray {
+  position: relative;
+  flex: 0 0 auto;
+  height: 6.6rem;
+  width: auto;
+  margin: 0;
+  padding: 0.5rem 0.6rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(9, 7, 4, 0.96);
+  border-top: 1px solid rgba(212, 175, 106, 0.3);
+  z-index: 84;
+}
+/* Notices and the story overlay the map's lower edge, above the dock. */
+.trailx-map.is-expanded .trailx-map__feedback,
+.trailx-map.is-expanded .trailx-map__reveal {
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  width: auto;
+  margin: 0;
+  bottom: calc(7.2rem + env(safe-area-inset-bottom, 0px));
+}
+.trailx-map.is-expanded .trailx-map__feedback {
+  z-index: 86;
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.45rem;
+  background: rgba(9, 7, 4, 0.94);
+  border: 1px solid rgba(212, 175, 106, 0.35);
+}
+.trailx-map.is-expanded .trailx-map__feedback.is-wrong { border-color: rgba(255, 143, 143, 0.7); }
+.trailx-map.is-expanded .trailx-map__reveal {
+  z-index: 85;
+  max-height: 24vh;
+  overflow-y: auto;
+  border-radius: 0.45rem;
+  background: rgba(20, 13, 6, 0.95);
+}
+.trailx-map.is-expanded .trailx-map__reveal-mv { width: 3.4rem; height: 3.4rem; }
+.trailx-map.is-expanded .trailx-map__zoom {
+  position: absolute;
+  right: 0.7rem;
+  bottom: calc(7.4rem + env(safe-area-inset-bottom, 0px));
+  z-index: 86;
+}
+.trailx-map.is-expanded .trailx-map__expand { position: absolute; top: 0.7rem; right: 0.7rem; z-index: 86; }
+
+/* The inline map advertises that it opens. */
+/* Inline, panning/zooming is disabled in JS, so a tap opens the map — while
+   marker taps still work for placing. */
+.trailx-map:not(.is-expanded) .trailx-map__board { cursor: zoom-in; }
