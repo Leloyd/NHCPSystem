@@ -2796,9 +2796,15 @@ function setupTraditionMap(el, options = {}) {
   };
 
   // Only start loading once the map act is the step being read.
-  if (root.getAttribute('data-step') === 's4-map') loadTrayModels();
+  if (root.getAttribute('data-step') === 's4-map') {
+    loadTrayModels();
+    window.requestAnimationFrame(() => fitMap());
+  }
   const stepWatcher = new MutationObserver(() => {
-    if (root.getAttribute('data-step') === 's4-map') loadTrayModels();
+    if (root.getAttribute('data-step') === 's4-map') {
+      loadTrayModels();
+      window.requestAnimationFrame(() => fitMap());
+    }
   });
   stepWatcher.observe(root, { attributes: true, attributeFilter: ['data-step'] });
 
@@ -2942,7 +2948,22 @@ function setupTraditionMap(el, options = {}) {
       }
     });
 
-    window.addEventListener('resize', () => { if (lmap) lmap.invalidateSize(false); });
+    window.addEventListener('resize', () => window.requestAnimationFrame(fitMap));
+
+    // Stop 4 starts hidden, so Leaflet may initially measure a 0x0 box.
+    // Refit as soon as the inline board becomes visible or changes size.
+    if (window.ResizeObserver && board) {
+      let lastMapSize = '';
+      const mapResizeObserver = new ResizeObserver((entries) => {
+        const rect = entries[0] && entries[0].contentRect;
+        if (!rect || rect.width < 1 || rect.height < 1) return;
+        const sizeKey = Math.round(rect.width) + 'x' + Math.round(rect.height);
+        if (sizeKey === lastMapSize) return;
+        lastMapSize = sizeKey;
+        window.requestAnimationFrame(fitMap);
+      });
+      mapResizeObserver.observe(board);
+    }
   }
 
   /* While expanded, vertical wheel movement over the artifact dock becomes
@@ -3212,18 +3233,75 @@ function setupTraditionMap(el, options = {}) {
   cards.forEach((card) => {
     let drag = null;
     let suppressClickUntil = 0;
+
+    const liftCardAboveMap = (event) => {
+      if (!drag || drag.lifted) return;
+      const rect = card.getBoundingClientRect();
+      const placeholder = document.createElement('span');
+      placeholder.className = 'trailx-map__card-placeholder';
+      placeholder.setAttribute('aria-hidden', 'true');
+      placeholder.style.width = rect.width + 'px';
+      placeholder.style.height = rect.height + 'px';
+      placeholder.style.flexBasis = rect.width + 'px';
+      card.parentNode?.insertBefore(placeholder, card);
+      root.appendChild(card);
+      card.style.setProperty('--map-drag-left', rect.left + 'px');
+      card.style.setProperty('--map-drag-top', rect.top + 'px');
+      card.style.setProperty('--map-drag-width', rect.width + 'px');
+      card.style.setProperty('--map-drag-height', rect.height + 'px');
+      card.classList.add('is-dragging');
+      card.setPointerCapture?.(event.pointerId);
+      drag.lifted = true;
+      drag.placeholder = placeholder;
+    };
+
+    const restoreLiftedCard = (dragState) => {
+      if (!dragState || !dragState.lifted) return;
+      const placeholder = dragState.placeholder;
+      if (placeholder?.parentNode) placeholder.parentNode.insertBefore(card, placeholder);
+      placeholder?.remove();
+      card.classList.remove('is-dragging');
+      card.style.removeProperty('--map-drag-left');
+      card.style.removeProperty('--map-drag-top');
+      card.style.removeProperty('--map-drag-width');
+      card.style.removeProperty('--map-drag-height');
+    };
+
     card.addEventListener('pointerdown', (event) => {
       if (card.disabled || event.button > 0) return;
-      drag = { id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
-      card.setPointerCapture?.(event.pointerId);
-      card.classList.add('is-dragging');
+      drag = {
+        id: event.pointerId,
+        pointerType: event.pointerType || 'mouse',
+        x: event.clientX,
+        y: event.clientY,
+        moved: false,
+        scrolling: false,
+        lifted: false,
+        placeholder: null,
+      };
+      if (drag.pointerType !== 'touch') card.setPointerCapture?.(event.pointerId);
     });
     card.addEventListener('pointermove', (event) => {
       if (!drag || event.pointerId !== drag.id) return;
       const dx = event.clientX - drag.x;
       const dy = event.clientY - drag.y;
+      const absX = Math.abs(dx);
+      const absY = Math.abs(dy);
+
+      // On touchscreens a sideways gesture browses the rail. A mostly
+      // vertical gesture picks the artifact up and carries it onto the map.
+      if (!drag.moved && drag.pointerType === 'touch') {
+        if (absX > 7 && absX > absY * 1.15) {
+          drag.scrolling = true;
+          suppressClickUntil = performance.now() + 500;
+          return;
+        }
+        if (drag.scrolling || absY <= 7 || absY < absX) return;
+      }
+
       if (Math.hypot(dx, dy) > 6 && !drag.moved) {
         drag.moved = true;
+        liftCardAboveMap(event);
         mapStage?.classList.add('is-placing'); // show island names while dragging
       }
       if (!drag.moved) return;
@@ -3238,14 +3316,20 @@ function setupTraditionMap(el, options = {}) {
     });
     const finish = (event, cancelled) => {
       if (!drag || event.pointerId !== drag.id) return;
-      const moved = drag.moved;
+      const dragState = drag;
+      const moved = dragState.moved;
+      const targetKey = moved ? markerAtPoint(event.clientX, event.clientY) : null;
       drag = null;
-      card.classList.remove('is-dragging');
+      restoreLiftedCard(dragState);
       Object.keys(markerByKey).forEach((k) => markerEl(k)?.classList.remove('is-target'));
+      if (dragState.scrolling) {
+        suppressClickUntil = performance.now() + 400;
+        return;
+      }
       if (cancelled) { returnCard(card); mapStage?.classList.remove('is-placing'); return; }
       if (moved) {
         suppressClickUntil = performance.now() + 350;
-        attemptPlace(card, markerAtPoint(event.clientX, event.clientY));
+        attemptPlace(card, targetKey);
         if (!selectedCard) mapStage?.classList.remove('is-placing');
       }
     };

@@ -2954,6 +2954,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   width: 100%;
   padding: 0.2rem 0.1rem 0.4rem;
   overflow-x: auto;
+  overscroll-behavior-inline: contain;
+  touch-action: pan-x;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
 }
@@ -2974,7 +2976,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   font-size: calc(0.55rem * var(--tx-font-scale, 1));
   text-align: center;
   cursor: grab;
-  touch-action: none;
+  touch-action: pan-x;
   transform: translate3d(var(--map-drag-x, 0), var(--map-drag-y, 0), 0);
   transition: opacity 0.35s ease, transform 0.25s ease, border-color 0.3s ease, background 0.3s ease;
 }
@@ -2987,7 +2989,25 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 .trailx-map__card span { line-height: 1.1; letter-spacing: 0.02em; }
 .trailx-map__card:hover { border-color: var(--tx-gold); background: rgba(212, 175, 106, 0.14); }
-.trailx-map__card.is-dragging { z-index: 20; cursor: grabbing; transition: none; box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5); }
+.trailx-map__card.is-dragging {
+  position: fixed;
+  left: var(--map-drag-left, 0);
+  top: var(--map-drag-top, 0);
+  z-index: 120;
+  width: var(--map-drag-width, 4.4rem);
+  height: var(--map-drag-height, auto);
+  margin: 0;
+  cursor: grabbing;
+  touch-action: none;
+  transition: none;
+  box-shadow: 0 14px 30px rgba(0, 0, 0, 0.5), 0 0 24px rgba(212, 175, 106, 0.32);
+  pointer-events: none;
+}
+.trailx-map__card-placeholder {
+  flex: 0 0 auto;
+  display: block;
+  visibility: hidden;
+}
 .trailx-map__card.is-placed { opacity: 0.32; cursor: default; }
 .trailx-map__card.is-placed::after {
   content: "\2713";
@@ -3260,6 +3280,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   display: block;
   width: 3rem;
   height: 3rem;
+  touch-action: pan-x;
 }
 .trailx-map__card-img {
   position: absolute;
@@ -3281,6 +3302,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   background: transparent;
   --poster-color: transparent;
   pointer-events: none; /* the card itself handles the drag */
+  touch-action: pan-x !important;
 }
 /* the old flat-image rule no longer applies to the card's picture */
 .trailx-map__card img { width: 100%; height: 100%; }
@@ -3751,7 +3773,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 /* --- The frame ---------------------------------------------------------- */
 .trailx-map.is-expanded {
   padding: 0;
-  gap: 0;
+  gap: 0.65rem;
   background:
     radial-gradient(120% 80% at 50% 0%, rgba(212, 175, 106, 0.09), transparent 60%),
     rgba(4, 7, 9, 0.97);
@@ -3759,7 +3781,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-map.is-expanded .trailx-map__board {
   background: transparent;             /* no panel — just the map */
   border: 1px solid rgba(212, 175, 106, 0.5);
-  border-radius: 0;
+  border-radius: 0.7rem;
   box-shadow:
     0 0 22px rgba(212, 175, 106, 0.3),
     0 0 60px rgba(212, 175, 106, 0.12),
@@ -3770,7 +3792,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx-map.is-expanded .trailx-map__leaflet.leaflet-container,
 .trailx-map.is-expanded .trailx-map__board .leaflet-container {
   background: transparent;
-  border-radius: 0;
+  border-radius: 0.7rem;
 }
 
 /* --- Islands: always named, always findable ------------------------------ */
@@ -3821,7 +3843,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   height: 7rem;
   padding: 0.55rem 0.7rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
   border-top: 1px solid rgba(212, 175, 106, 0.35);
-  border-radius: 0;
+  border-radius: 0.7rem 0.7rem 0 0;
   background:
     linear-gradient(180deg, rgba(212, 175, 106, 0.08), transparent 40%),
     rgba(9, 7, 4, 0.97);
