@@ -2875,36 +2875,148 @@ function setupTraditionMap(el, options = {}) {
      down the archipelago. */
   const zoomControls = el.querySelector('[data-map-zoom-controls]');
   const zoomButtons = Array.from(el.querySelectorAll('[data-map-zoom]'));
+  const panEl = el.querySelector('[data-map-pan]');
   const ZOOM_MIN = 1;
-  const ZOOM_MAX = 3;
+  const ZOOM_MAX = 5;
   let expanded = false;
-  let zoom = 1;
 
-  const applyZoom = () => {
-    mapStage?.style.setProperty('--map-zoom', String(zoom));
+  /* A Leaflet-style canvas: drag to pan, pinch / wheel / buttons to zoom. The
+     whole map layer is transformed, so the markers travel with it and stay
+     exactly on their islands (drop-testing uses live rects, so placing still
+     works at any zoom). */
+  let mapScale = 1;
+  let mapTx = 0;
+  let mapTy = 0;
+  const mapPointers = new Map();
+  let mapPanning = false;
+  let mapPinch = 0;
+
+  const applyMapTransform = () => {
+    if (panEl) {
+      panEl.style.setProperty('--pan-x', mapTx + 'px');
+      panEl.style.setProperty('--pan-y', mapTy + 'px');
+      panEl.style.setProperty('--map-zoom', String(mapScale));
+    }
     zoomButtons.forEach((btn) => {
-      btn.disabled = btn.dataset.mapZoom === 'in' ? zoom >= ZOOM_MAX : zoom <= ZOOM_MIN;
+      btn.disabled = btn.dataset.mapZoom === 'in' ? mapScale >= ZOOM_MAX : mapScale <= ZOOM_MIN;
     });
   };
 
-  const setZoom = (next, anchorCentre) => {
-    const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next));
-    if (clamped === zoom) return;
-    // Keep the middle of what you're looking at roughly put as it scales.
-    const before = mapStage ? mapStage.scrollTop + mapStage.clientHeight / 2 : 0;
-    const ratio = clamped / zoom;
-    zoom = clamped;
-    applyZoom();
-    if (mapStage && anchorCentre !== false) {
-      window.requestAnimationFrame(() => {
-        mapStage.scrollTop = Math.max(0, before * ratio - mapStage.clientHeight / 2);
-      });
-    }
+  const clampPan = () => {
+    if (!board || !panEl) return;
+    const vw = board.clientWidth;
+    const vh = board.clientHeight;
+    const w = panEl.offsetWidth * mapScale;
+    const h = panEl.offsetHeight * mapScale;
+    // Centre the map while it is smaller than the view; otherwise keep its
+    // edges from drifting inside the frame.
+    mapTx = w <= vw ? (vw - w) / 2 : Math.min(0, Math.max(vw - w, mapTx));
+    mapTy = h <= vh ? (vh - h) / 2 : Math.min(0, Math.max(vh - h, mapTy));
   };
 
+  const zoomAt = (clientX, clientY, factor) => {
+    if (!board) return;
+    const next = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, mapScale * factor));
+    if (Math.abs(next - mapScale) < 0.001) return;
+    const r = board.getBoundingClientRect();
+    const px = clientX - r.left;
+    const py = clientY - r.top;
+    mapTx = px - (px - mapTx) * (next / mapScale); // anchor under the fingers
+    mapTy = py - (py - mapTy) * (next / mapScale);
+    mapScale = next;
+    clampPan();
+    applyMapTransform();
+  };
+
+  const resetMapView = () => {
+    mapScale = 1;
+    mapTx = 0;
+    mapTy = 0;
+    mapPointers.clear();
+    mapPanning = false;
+    mapPinch = 0;
+    clampPan();
+    applyMapTransform();
+  };
+
+  if (board) {
+    board.addEventListener('wheel', (event) => {
+      if (!expanded) return;
+      event.preventDefault();
+      zoomAt(event.clientX, event.clientY, event.deltaY < 0 ? 1.16 : 1 / 1.16);
+    }, { passive: false });
+
+    // iOS pinch fires gesture events — block them so the page can't zoom.
+    ['gesturestart', 'gesturechange', 'gestureend'].forEach((t) => {
+      board.addEventListener(t, (event) => { if (expanded) event.preventDefault(); }, { passive: false });
+    });
+
+    board.addEventListener('pointerdown', (event) => {
+      if (!expanded) return;
+      // Taps on a marker or the close button are theirs, not the canvas's.
+      if (event.target.closest('.trailx-map__marker, .trailx-map__expand')) return;
+      mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+      if (mapPointers.size === 2) {
+        const p = Array.from(mapPointers.values());
+        mapPinch = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        mapPanning = false;
+      } else if (mapPointers.size === 1) {
+        mapPanning = true;
+        board.classList.add('is-panning');
+        try { board.setPointerCapture(event.pointerId); } catch { /* ignore */ }
+      }
+    });
+
+    board.addEventListener('pointermove', (event) => {
+      if (!expanded || !mapPointers.has(event.pointerId)) return;
+      const prev = mapPointers.get(event.pointerId);
+      mapPointers.set(event.pointerId, { x: event.clientX, y: event.clientY });
+
+      if (mapPointers.size === 2) {
+        const p = Array.from(mapPointers.values());
+        const dist = Math.hypot(p[0].x - p[1].x, p[0].y - p[1].y);
+        if (mapPinch > 0 && dist > 0) {
+          zoomAt((p[0].x + p[1].x) / 2, (p[0].y + p[1].y) / 2, dist / mapPinch);
+        }
+        mapPinch = dist;
+        event.preventDefault();
+        return;
+      }
+
+      if (mapPanning) {
+        mapTx += event.clientX - prev.x;
+        mapTy += event.clientY - prev.y;
+        clampPan();
+        applyMapTransform();
+        event.preventDefault();
+      }
+    }, { passive: false });
+
+    const endMapPointer = (event) => {
+      mapPointers.delete(event.pointerId);
+      if (mapPointers.size < 2) mapPinch = 0;
+      if (mapPointers.size === 0) {
+        mapPanning = false;
+        board.classList.remove('is-panning');
+      }
+    };
+    ['pointerup', 'pointercancel', 'pointerleave'].forEach((t) => {
+      board.addEventListener(t, endMapPointer);
+    });
+
+    board.addEventListener('dblclick', (event) => {
+      if (!expanded) return;
+      event.preventDefault();
+      zoomAt(event.clientX, event.clientY, 1.7);
+    });
+  }
+
   zoomButtons.forEach((btn) => {
-    btn.addEventListener('click', () => {
-      setZoom(zoom + (btn.dataset.mapZoom === 'in' ? 0.5 : -0.5));
+    btn.addEventListener('click', (event) => {
+      event.stopPropagation();
+      const r = board?.getBoundingClientRect();
+      if (!r) return;
+      zoomAt(r.left + r.width / 2, r.top + r.height / 2, btn.dataset.mapZoom === 'in' ? 1.5 : 1 / 1.5);
     });
   });
 
@@ -2916,13 +3028,8 @@ function setupTraditionMap(el, options = {}) {
     expandBtn?.setAttribute('aria-label', value
       ? 'Close the map / Isara ang mapa'
       : 'Expand the map / Palakihin ang mapa');
-    if (!value) {
-      zoom = 1;
-      applyZoom();
-      if (mapStage) mapStage.scrollTop = 0;
-    } else {
-      applyZoom();
-    }
+    // Recentre once the new layout has been measured.
+    window.requestAnimationFrame(resetMapView);
   };
   expandBtn?.addEventListener('click', (event) => {
     event.stopPropagation();

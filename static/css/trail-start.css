@@ -3455,3 +3455,118 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 
 /* Tapping the map opens it; a hint that it is tappable. */
 .trailx-map:not(.is-expanded) .trailx-map__board { cursor: zoom-in; }
+
+/* ==========================================================================
+   Stop 4 · Expanded map — a Leaflet-style canvas: drag to pan, pinch/wheel/
+   buttons to zoom. The 3D artifacts stay docked underneath so you can drag
+   them straight onto the map, and right/wrong notices overlay its lower edge.
+   ========================================================================== */
+
+/* The pannable layer holding the map, threads and markers together. */
+.trailx-map__pan {
+  position: absolute;
+  inset: 0;
+  transform-origin: 0 0;
+}
+
+.trailx-map.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;              /* the canvas pans; the page never scrolls */
+  background: rgba(5, 8, 10, 0.97);
+  touch-action: none;
+}
+
+/* Map viewport: everything above the artifact dock. */
+.trailx-map.is-expanded .trailx-map__board {
+  position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  width: 100%;
+  height: auto;
+  max-height: none;
+  margin: 0;
+  aspect-ratio: auto;
+  border-radius: 0;
+  border: 0;
+  overflow: hidden;
+  cursor: grab;
+  touch-action: none;
+  box-shadow: none;
+}
+.trailx-map.is-expanded .trailx-map__board.is-panning { cursor: grabbing; }
+
+/* Inside the viewport the map sits at "fit width", then pans and scales. */
+.trailx-map.is-expanded .trailx-map__pan {
+  inset: auto;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 100 / 150;
+  transform: translate(var(--pan-x, 0px), var(--pan-y, 0px)) scale(var(--map-zoom, 1));
+}
+
+/* The 3D artifacts, docked below the map and always draggable onto it. */
+.trailx-map.is-expanded .trailx-map__tray {
+  position: relative;
+  left: auto;
+  right: auto;
+  bottom: auto;
+  flex: 0 0 auto;
+  height: 6.6rem;
+  width: auto;
+  margin: 0;
+  padding: 0.5rem 0.6rem calc(0.4rem + env(safe-area-inset-bottom, 0px));
+  background: rgba(9, 7, 4, 0.96);
+  border-top: 1px solid rgba(212, 175, 106, 0.3);
+  z-index: 84;
+}
+
+/* Notices and the revealed story overlay the lower part of the map. */
+.trailx-map.is-expanded .trailx-map__feedback,
+.trailx-map.is-expanded .trailx-map__reveal {
+  position: absolute;
+  left: 0.6rem;
+  right: 0.6rem;
+  width: auto;
+  margin: 0;
+  bottom: calc(7.2rem + env(safe-area-inset-bottom, 0px));
+}
+.trailx-map.is-expanded .trailx-map__feedback {
+  z-index: 86;                   /* the notice sits over the story briefly */
+  padding: 0.45rem 0.6rem;
+  border-radius: 0.45rem;
+  background: rgba(9, 7, 4, 0.94);
+  border: 1px solid rgba(212, 175, 106, 0.35);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.trailx-map.is-expanded .trailx-map__feedback.is-wrong { border-color: rgba(255, 143, 143, 0.7); }
+.trailx-map.is-expanded .trailx-map__reveal {
+  z-index: 85;
+  max-height: 24vh;
+  overflow-y: auto;
+  border-radius: 0.45rem;
+  background: rgba(20, 13, 6, 0.95);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.trailx-map.is-expanded .trailx-map__reveal-mv { width: 3.4rem; height: 3.4rem; }
+
+/* Zoom buttons clear of the dock. */
+.trailx-map.is-expanded .trailx-map__zoom {
+  position: absolute;
+  right: 0.7rem;
+  bottom: calc(7.4rem + env(safe-area-inset-bottom, 0px));
+  z-index: 86;
+}
+
+/* The inline map advertises that it opens. */
+.trailx-map:not(.is-expanded) .trailx-map__board { cursor: zoom-in; }
