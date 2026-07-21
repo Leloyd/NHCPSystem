@@ -72,25 +72,6 @@
       </div>
     </div>
 
-    <!-- Restored artifact viewer — a real, laid-out model-viewer (the Virtual
-         Tour's proven pattern) so Quick Look / Scene Viewer launch reliably. -->
-    <div class="ar-artifact-overlay" id="arArtifactOverlay" hidden>
-      <section class="ar-artifact-panel" role="dialog" aria-modal="true" aria-label="Restored artifact">
-        <p class="ar-artifact-panel__title" id="arArtifactTitle"></p>
-        <div class="ar-artifact-panel__media" id="arArtifactMedia">
-          <model-viewer class="ar-artifact-panel__model" id="arArtifactModel"
-            camera-controls touch-action="pan-y" auto-rotate auto-rotate-delay="0"
-            shadow-intensity="1" exposure="1.1" environment-image="neutral"
-            ar ar-modes="webxr scene-viewer quick-look" reveal="auto"></model-viewer>
-        </div>
-        <p class="ar-artifact-panel__hint">
-          <span data-ar-panel-lang="en">Tap the cube to place it in your space</span>
-          <span data-ar-panel-lang="tl">Pindutin ang kubo upang ilagay ito sa iyong paligid</span>
-        </p>
-        <button class="ar-artifact-panel__close" id="arArtifactClose" type="button" aria-label="Close artifact viewer">&times;</button>
-      </section>
-    </div>
-
     <script id="ar-three-config" type="application/json">
       {
         "markers": [

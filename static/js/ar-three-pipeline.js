@@ -2439,82 +2439,71 @@
   }
 
   /* --- View in your space (Quick Look / Scene Viewer) ----------------------- */
-  /* The restored artifact opens in a real, on-screen model-viewer — the same
-     shape the Virtual Tour uses. A hidden, 2px viewer can't host WebXR and is
-     often not even finished loading when tapped, which is why AR used to fall
-     back to showing the object instead of launching. */
-  var AR_CUBE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 19 6.2v8.1L12 17.75 5 14.3V6.2L12 2.75Zm0 7.05L5.4 6.55M12 9.8l6.6-3.25M12 9.8v7.6"/><path stroke-linecap="round" d="M8.25 20.5h7.5"/></svg>';
+  /* Tapping the button hands the artifact straight to the phone's own AR
+     viewer (Quick Look on iOS, Scene Viewer on Android).
 
+     The catch on this page: AR.js already owns the camera. iOS cannot start
+     ARKit's camera session for Quick Look while the browser still holds a
+     getUserMedia stream, so Quick Look silently opens in "Object" mode instead
+     of "AR". Releasing the camera first is what lets it open pointing at the
+     room. `webxr` is deliberately left out of ar-modes so the phone's native
+     viewer is used rather than an in-page session. */
   function ensureQuickLookViewer(modelUrl) {
-    var viewer = runtime.quickLookViewer || document.getElementById("arArtifactModel");
+    var viewer = runtime.quickLookViewer;
     if (!viewer) {
-      return null;
-    }
-    runtime.quickLookViewer = viewer;
-    // Preload the moment the artifact is restored, so AR is ready on the tap.
-    if (modelUrl && viewer.getAttribute("src") !== modelUrl) {
-      viewer.setAttribute("src", modelUrl);
-    }
-    if (!runtime.arStatusBound) {
-      runtime.arStatusBound = true;
+      viewer = document.createElement("model-viewer");
+      viewer.setAttribute("ar", "");
+      viewer.setAttribute("ar-modes", "scene-viewer quick-look");
+      viewer.setAttribute("ar-scale", "auto");
+      viewer.style.cssText = "position:fixed;left:0;bottom:0;width:1px;height:1px;opacity:0;pointer-events:none;";
       viewer.addEventListener("ar-status", function (event) {
         if (event && event.detail && event.detail.status === "failed") {
           flashPuzzleHint("noAr", 3600);
         }
       });
+      document.body.appendChild(viewer);
+      runtime.quickLookViewer = viewer;
+    }
+    // Preloaded the moment the artifact is restored, so AR is ready on the tap.
+    if (modelUrl && viewer.getAttribute("src") !== modelUrl) {
+      viewer.setAttribute("src", modelUrl);
     }
     return viewer;
   }
 
-  // A gold AR launcher sitting on the model, exactly like the Virtual Tour's.
-  function installArModelControl(viewer, container) {
-    if (!viewer || !container || container.querySelector(".ar-artifact-panel__ar")) {
-      return;
+  // Hand the camera back to the system so the native AR viewer can use it.
+  function releaseCameraForAr() {
+    var video = getArVideoElement();
+    var stream = video && video.srcObject;
+    if (stream && typeof stream.getTracks === "function") {
+      stream.getTracks().forEach(function (track) {
+        try { track.stop(); } catch (error) { /* already stopped */ }
+      });
+      runtime.cameraReleased = true;
     }
-    viewer.classList.add("ar-model--managed-ar");
-    var button = document.createElement("button");
-    button.type = "button";
-    button.className = "ar-artifact-panel__ar";
-    button.setAttribute("aria-label", "View artifact in your space / Tingnan ang artifact sa iyong paligid");
-    button.innerHTML = AR_CUBE_ICON;
-    container.appendChild(button);
+    if (video) {
+      try { video.pause(); } catch (error) { /* ignore */ }
+    }
+  }
 
-    button.addEventListener("click", function (event) {
-      event.preventDefault();
-      event.stopPropagation();
-      try {
-        if (viewer.canActivateAR && typeof viewer.activateAR === "function") {
-          viewer.activateAR(); // called straight from the tap — no awaiting
-        } else {
-          flashPuzzleHint("noAr", 3600);
-        }
-      } catch (error) {
-        flashPuzzleHint("noAr", 3600);
+  // Coming back from Quick Look/Scene Viewer, the old stream is dead. Restart
+  // the page so the marker camera works again (solved puzzles persist in
+  // sessionStorage, so nothing is lost).
+  function watchForArReturn() {
+    document.addEventListener("visibilitychange", function () {
+      if (document.visibilityState !== "visible" || !runtime.cameraReleased) {
+        return;
+      }
+      runtime.cameraReleased = false;
+      var video = getArVideoElement();
+      var stream = video && video.srcObject;
+      var live = Boolean(stream && typeof stream.getTracks === "function" && stream.getTracks().some(function (track) {
+        return track.readyState === "live";
+      }));
+      if (!live) {
+        window.setTimeout(function () { window.location.reload(); }, 300);
       }
     });
-  }
-
-  function openArtifactViewer(entry) {
-    var overlay = document.getElementById("arArtifactOverlay");
-    var viewer = ensureQuickLookViewer(entry && entry.modelUrl);
-    if (!overlay || !viewer) {
-      return;
-    }
-    var title = document.getElementById("arArtifactTitle");
-    if (title) {
-      title.textContent = (entry && (entry.infoTitle || entry.key)) || "";
-    }
-    installArModelControl(viewer, document.getElementById("arArtifactMedia"));
-    overlay.hidden = false;
-    document.body.classList.add("ar-artifact-open");
-  }
-
-  function closeArtifactViewer() {
-    var overlay = document.getElementById("arArtifactOverlay");
-    if (overlay) {
-      overlay.hidden = true;
-    }
-    document.body.classList.remove("ar-artifact-open");
   }
 
   /* --- Touch-drag to rotate the on-screen artifact -------------------------
@@ -2616,24 +2605,26 @@
       return;
     }
     runtime.viewInSpaceButton = button;
+    watchForArReturn();
+
     button.addEventListener("click", function () {
       var entry = runtime.solvedPuzzleEntry;
       if (!entry || !entry.modelUrl) {
         return;
       }
-      openArtifactViewer(entry); // real viewer first; AR launches from its own tap
-    });
-
-    var overlay = document.getElementById("arArtifactOverlay");
-    document.getElementById("arArtifactClose")?.addEventListener("click", closeArtifactViewer);
-    overlay?.addEventListener("click", function (event) {
-      if (event.target === overlay) {
-        closeArtifactViewer();
+      var viewer = ensureQuickLookViewer(entry.modelUrl);
+      if (!viewer || !viewer.canActivateAR || typeof viewer.activateAR !== "function") {
+        flashPuzzleHint("noAr", 3600);
+        return;
       }
-    });
-    window.addEventListener("keydown", function (event) {
-      if (event.key === "Escape") {
-        closeArtifactViewer();
+      // Free the camera first, then launch straight from this tap so iOS keeps
+      // the gesture and Quick Look opens in AR mode rather than Object mode.
+      stopActiveAudio(true);
+      releaseCameraForAr();
+      try {
+        viewer.activateAR();
+      } catch (error) {
+        flashPuzzleHint("noAr", 3600);
       }
     });
   }
