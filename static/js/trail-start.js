@@ -2924,7 +2924,17 @@ function setupTraditionMap(el, options = {}) {
       applyZoom();
     }
   };
-  expandBtn?.addEventListener('click', () => setExpanded(!expanded));
+  expandBtn?.addEventListener('click', (event) => {
+    event.stopPropagation();
+    setExpanded(!expanded);
+  });
+  // Tapping the map itself opens it full screen (but never while you're
+  // aiming at an island, and never as a way to close it by accident).
+  board?.addEventListener('click', (event) => {
+    if (expanded || selectedCard) return;
+    if (event.target.closest('.trailx-map__marker, .trailx-map__expand')) return;
+    setExpanded(true);
+  });
   window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && expanded) setExpanded(false); });
 
   const flyToMarker = (card, marker) => {

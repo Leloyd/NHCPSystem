@@ -3324,8 +3324,9 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   background: rgba(5, 8, 10, 0.94);
   -webkit-overflow-scrolling: touch;
 }
-/* While expanded, only the map itself is on screen. */
-.trailx-map.is-expanded > :not(.trailx-map__board):not(.trailx-map__zoom) { display: none !important; }
+/* While expanded, the running count steps aside — the map, the artifacts and
+   their feedback stay. */
+.trailx-map.is-expanded > .trailx-map__progress { display: none !important; }
 
 .trailx-map.is-expanded .trailx-map__board {
   position: relative;
@@ -3366,3 +3367,91 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 .trailx-map__zoom-btn:hover:not(:disabled) { background: rgba(212, 175, 106, 0.28); border-color: var(--tx-gold); }
 .trailx-map__zoom-btn:disabled { opacity: 0.4; cursor: default; }
+
+/* ==========================================================================
+   Stop 4 · Expanded map — fills the screen, scrolls up and down, and keeps the
+   3D artifacts docked below so you can still drag them onto their islands.
+   The map is sized to the full width, which is the largest it can be without
+   ever needing sideways scrolling.
+   ========================================================================== */
+.trailx-map.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: block;                 /* a plain scroller, not a flex row */
+  margin: 0;
+  padding: 0.5rem 0.5rem 0;
+  overflow-y: auto;
+  overflow-x: auto;               /* only ever needed once you zoom past 1x */
+  overscroll-behavior: contain;
+  touch-action: pan-y;            /* scroll up/down; no page pinch-zoom */
+  background: rgba(5, 8, 10, 0.96);
+  -webkit-overflow-scrolling: touch;
+  /* room for the docked artifact tray (and its feedback) at the bottom */
+  padding-bottom: 10.5rem;
+  scroll-padding-bottom: 10.5rem;
+}
+
+.trailx-map.is-expanded .trailx-map__board {
+  position: relative;
+  inset: auto;
+  flex: none;
+  margin: 0 auto;
+  width: calc(100% * var(--map-zoom, 1));
+  height: auto;
+  max-height: none;
+  aspect-ratio: 100 / 150;        /* height follows the map's true proportions */
+  border-radius: 0.4rem;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* The artifacts stay reachable at the bottom of the screen. */
+.trailx-map.is-expanded .trailx-map__tray {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 84;
+  width: auto;
+  margin: 0;
+  padding: 0.5rem 0.6rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  background: linear-gradient(180deg, rgba(5, 8, 10, 0.4), rgba(5, 8, 10, 0.96) 38%);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  border-top: 1px solid rgba(212, 175, 106, 0.25);
+}
+
+/* Guidance and the revealed story float just above the tray. */
+.trailx-map.is-expanded .trailx-map__feedback {
+  position: fixed;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: calc(6.4rem + env(safe-area-inset-bottom, 0px));
+  z-index: 84;
+  margin: 0;
+  padding: 0.35rem 0.5rem;
+  border-radius: 0.4rem;
+  background: rgba(5, 8, 10, 0.8);
+}
+.trailx-map.is-expanded .trailx-map__reveal {
+  position: fixed;
+  left: 0.6rem;
+  right: 0.6rem;
+  bottom: calc(6.4rem + env(safe-area-inset-bottom, 0px));
+  z-index: 83;
+  width: auto;
+  max-height: 26vh;
+  overflow-y: auto;
+  background: rgba(20, 13, 6, 0.94);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+.trailx-map.is-expanded .trailx-map__reveal-mv { width: 3.6rem; height: 3.6rem; }
+
+/* Zoom sits clear of the tray. */
+.trailx-map.is-expanded .trailx-map__zoom {
+  bottom: calc(11rem + env(safe-area-inset-bottom, 0px));
+}
+
+/* Tapping the map opens it; a hint that it is tappable. */
+.trailx-map:not(.is-expanded) .trailx-map__board { cursor: zoom-in; }
