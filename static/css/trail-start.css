@@ -3302,3 +3302,67 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 /* the whole map must be visible — never cropped */
 .trailx-map__img { object-fit: contain; background: #071016; }
+
+/* ==========================================================================
+   Stop 4 · Map of Traditions — expanded view: centred, zoomable, scrollable
+   The expanded map stage becomes the scroll container; the board is centred
+   with `margin:auto` on a flex item (the one centring method that still lets
+   you scroll to the top edge once the content is taller than the screen).
+   ========================================================================== */
+.trailx-map.is-expanded {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: flex;
+  flex-direction: row;
+  gap: 0;
+  margin: 0;
+  padding: 0.6rem;
+  overflow: auto;
+  overscroll-behavior: contain;
+  touch-action: pan-y;              /* scroll up/down; no page pinch-zoom */
+  background: rgba(5, 8, 10, 0.94);
+  -webkit-overflow-scrolling: touch;
+}
+/* While expanded, only the map itself is on screen. */
+.trailx-map.is-expanded > :not(.trailx-map__board):not(.trailx-map__zoom) { display: none !important; }
+
+.trailx-map.is-expanded .trailx-map__board {
+  position: relative;
+  inset: auto;
+  flex: 0 0 auto;
+  margin: auto;                     /* centres both axes, overflow-safe */
+  --map-fit: min(94vw, calc(88vh / 1.5));
+  width: calc(var(--map-fit) * var(--map-zoom, 1));
+  height: calc(var(--map-fit) * var(--map-zoom, 1) * 1.5); /* definite height => real centring */
+  max-height: none;
+  aspect-ratio: auto;
+  border-radius: 0.4rem;
+  box-shadow: 0 18px 60px rgba(0, 0, 0, 0.6);
+}
+
+/* Zoom controls float over the expanded map. */
+.trailx-map__zoom {
+  position: fixed;
+  right: 0.9rem;
+  bottom: max(0.9rem, env(safe-area-inset-bottom, 0px));
+  z-index: 82;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.trailx-map__zoom[hidden] { display: none !important; }
+.trailx-map__zoom-btn {
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.6rem;
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  background: rgba(13, 10, 4, 0.82);
+  color: #f7d98f;
+  font: 500 1.1rem/1 "Inter", sans-serif;
+  cursor: pointer;
+  -webkit-backdrop-filter: blur(6px);
+  backdrop-filter: blur(6px);
+}
+.trailx-map__zoom-btn:hover:not(:disabled) { background: rgba(212, 175, 106, 0.28); border-color: var(--tx-gold); }
+.trailx-map__zoom-btn:disabled { opacity: 0.4; cursor: default; }

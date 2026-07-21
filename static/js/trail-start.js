@@ -2870,15 +2870,59 @@ function setupTraditionMap(el, options = {}) {
     });
   });
 
-  // Expand the map to fill the screen so the clustered markers spread out.
+  /* Expand the map to fill the screen so the clustered markers spread out.
+     Expanded, it becomes a scroller: zoom in with +/− and simply scroll up and
+     down the archipelago. */
+  const zoomControls = el.querySelector('[data-map-zoom-controls]');
+  const zoomButtons = Array.from(el.querySelectorAll('[data-map-zoom]'));
+  const ZOOM_MIN = 1;
+  const ZOOM_MAX = 3;
   let expanded = false;
+  let zoom = 1;
+
+  const applyZoom = () => {
+    mapStage?.style.setProperty('--map-zoom', String(zoom));
+    zoomButtons.forEach((btn) => {
+      btn.disabled = btn.dataset.mapZoom === 'in' ? zoom >= ZOOM_MAX : zoom <= ZOOM_MIN;
+    });
+  };
+
+  const setZoom = (next, anchorCentre) => {
+    const clamped = Math.min(ZOOM_MAX, Math.max(ZOOM_MIN, next));
+    if (clamped === zoom) return;
+    // Keep the middle of what you're looking at roughly put as it scales.
+    const before = mapStage ? mapStage.scrollTop + mapStage.clientHeight / 2 : 0;
+    const ratio = clamped / zoom;
+    zoom = clamped;
+    applyZoom();
+    if (mapStage && anchorCentre !== false) {
+      window.requestAnimationFrame(() => {
+        mapStage.scrollTop = Math.max(0, before * ratio - mapStage.clientHeight / 2);
+      });
+    }
+  };
+
+  zoomButtons.forEach((btn) => {
+    btn.addEventListener('click', () => {
+      setZoom(zoom + (btn.dataset.mapZoom === 'in' ? 0.5 : -0.5));
+    });
+  });
+
   const setExpanded = (value) => {
     expanded = value;
     mapStage?.classList.toggle('is-expanded', value);
+    if (zoomControls) zoomControls.hidden = !value;
     expandBtn?.setAttribute('aria-pressed', String(value));
     expandBtn?.setAttribute('aria-label', value
       ? 'Close the map / Isara ang mapa'
       : 'Expand the map / Palakihin ang mapa');
+    if (!value) {
+      zoom = 1;
+      applyZoom();
+      if (mapStage) mapStage.scrollTop = 0;
+    } else {
+      applyZoom();
+    }
   };
   expandBtn?.addEventListener('click', () => setExpanded(!expanded));
   window.addEventListener('keydown', (event) => { if (event.key === 'Escape' && expanded) setExpanded(false); });
