@@ -2975,14 +2975,56 @@ function setupTraditionMap(el, options = {}) {
     }
   }
 
-  /* While expanded, vertical wheel movement over the artifact dock becomes
-     horizontal movement. It must never leak through to the chapter scroller. */
+  /* The artifact rail owns horizontal touch gestures. Handling the movement
+     here avoids model-viewer/card gesture rules swallowing native overflow
+     scrolling on iOS and Android. Vertical movement remains artifact drag. */
+  let trayGesture = null;
+  tray?.addEventListener('pointerdown', (event) => {
+    if (event.pointerType !== 'touch' || event.isPrimary === false) return;
+    trayGesture = {
+      id: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      startScrollLeft: tray.scrollLeft,
+      axis: '',
+    };
+  });
+  tray?.addEventListener('pointermove', (event) => {
+    if (!trayGesture || event.pointerId !== trayGesture.id) return;
+    const dx = event.clientX - trayGesture.startX;
+    const dy = event.clientY - trayGesture.startY;
+    const absX = Math.abs(dx);
+    const absY = Math.abs(dy);
+
+    if (!trayGesture.axis) {
+      if (absX < 7 && absY < 7) return;
+      if (absX > absY * 1.15) trayGesture.axis = 'x';
+      else if (absY > absX * 1.15) trayGesture.axis = 'y';
+      else return;
+    }
+    if (trayGesture.axis !== 'x') return;
+
+    event.preventDefault();
+    event.stopPropagation();
+    tray.scrollLeft = trayGesture.startScrollLeft - dx;
+    tray.classList.add('is-swiping');
+  });
+  const finishTrayGesture = (event) => {
+    if (!trayGesture || event.pointerId !== trayGesture.id) return;
+    trayGesture = null;
+    tray?.classList.remove('is-swiping');
+  };
+  tray?.addEventListener('pointerup', finishTrayGesture);
+  tray?.addEventListener('pointercancel', finishTrayGesture);
+
+  /* A mouse wheel or trackpad over the rail scrolls it sideways in both the
+     inline and expanded layouts, without moving the chapter underneath. */
   tray?.addEventListener('wheel', (event) => {
-    if (!expanded) return;
     const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
     event.preventDefault();
     event.stopPropagation();
-    if (delta) tray.scrollLeft += delta;
+    const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? tray.clientWidth : 1;
+    if (delta) tray.scrollLeft += delta * unit;
   }, { passive: false });
 
   /* Leaflet receives map-wheel events first and performs the zoom. This
@@ -3245,6 +3287,10 @@ function setupTraditionMap(el, options = {}) {
 
     const liftCardAboveMap = (event) => {
       if (!drag || drag.lifted) return;
+      if (trayGesture && trayGesture.id === event.pointerId) {
+        trayGesture = null;
+        tray?.classList.remove('is-swiping');
+      }
       const rect = card.getBoundingClientRect();
       const placeholder = document.createElement('span');
       placeholder.className = 'trailx-map__card-placeholder';

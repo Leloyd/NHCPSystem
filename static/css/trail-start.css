@@ -2955,9 +2955,14 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   padding: 0.2rem 0.1rem 0.4rem;
   overflow-x: auto;
   overscroll-behavior-inline: contain;
-  touch-action: pan-x;
+  touch-action: none;
+  user-select: none;
   scrollbar-width: thin;
   -webkit-overflow-scrolling: touch;
+}
+.trailx-map__tray.is-swiping {
+  cursor: grabbing;
+  scroll-snap-type: none !important;
 }
 .trailx-map__card {
   position: relative;
@@ -2976,7 +2981,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   font-size: calc(0.55rem * var(--tx-font-scale, 1));
   text-align: center;
   cursor: grab;
-  touch-action: pan-x;
+  touch-action: none;
   transform: translate3d(var(--map-drag-x, 0), var(--map-drag-y, 0), 0);
   transition: opacity 0.35s ease, transform 0.25s ease, border-color 0.3s ease, background 0.3s ease;
 }
@@ -3280,7 +3285,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   display: block;
   width: 3rem;
   height: 3rem;
-  touch-action: pan-x;
+  touch-action: none;
 }
 .trailx-map__card-img {
   position: absolute;
@@ -3302,7 +3307,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   background: transparent;
   --poster-color: transparent;
   pointer-events: none; /* the card itself handles the drag */
-  touch-action: pan-x !important;
+  touch-action: none !important;
 }
 /* the old flat-image rule no longer applies to the card's picture */
 .trailx-map__card img { width: 100%; height: 100%; }
