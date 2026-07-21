@@ -2732,6 +2732,31 @@ function setupTraditionMap(el, options = {}) {
   const finalWait = el.querySelector('[data-map-final-wait]');
   const finalComplete = el.querySelector('[data-map-final-complete]');
   const cards = Array.from(el.querySelectorAll('[data-map-card]'));
+  let trayShell = null;
+  let trayPrevButton = null;
+  let trayNextButton = null;
+
+  if (tray && tray.parentNode) {
+    trayShell = document.createElement('div');
+    trayShell.className = 'trailx-map__tray-shell';
+    tray.parentNode.insertBefore(trayShell, tray);
+
+    const makeTrayArrow = (direction, label, path) => {
+      const button = document.createElement('button');
+      button.className = 'trailx-map__tray-nav trailx-map__tray-nav--' + direction;
+      button.type = 'button';
+      button.dataset.mapTrayNav = direction;
+      button.setAttribute('aria-label', label);
+      button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="' + path + '"/></svg>';
+      return button;
+    };
+
+    trayPrevButton = makeTrayArrow('prev', 'Previous artifacts / Mga naunang artifact', 'M15 5l-7 7 7 7');
+    trayNextButton = makeTrayArrow('next', 'Next artifacts / Mga susunod na artifact', 'M9 5l7 7-7 7');
+    trayShell.appendChild(trayPrevButton);
+    trayShell.appendChild(tray);
+    trayShell.appendChild(trayNextButton);
+  }
   const total = cards.length;
   const placed = new Set();
   const markerByKey = {};
@@ -2755,6 +2780,11 @@ function setupTraditionMap(el, options = {}) {
     const img = card.querySelector('.trailx-map__card-img');
     return img ? (img.currentSrc || img.src) : '';
   };
+  const applyMapModelOrientation = (model, card) => {
+    if (!model || !card) return;
+    if (card.dataset.mapCard === 'kabaong') model.removeAttribute('orientation');
+    else model.setAttribute('orientation', '0deg -90deg 0deg');
+  };
 
   /* The tray holds real 3D artifacts you pick up and drag. To keep the WebGL
      count flat, a card's model is destroyed the moment its twin appears on the
@@ -2772,6 +2802,7 @@ function setupTraditionMap(el, options = {}) {
     const mv = document.createElement('model-viewer');
     mv.className = 'trailx-map__card-mv';
     Object.keys(CARD_MV_ATTRS).forEach((k) => mv.setAttribute(k, CARD_MV_ATTRS[k]));
+    applyMapModelOrientation(mv, card);
     mv.setAttribute('aria-hidden', 'true');
     const poster = cardPoster(card);
     if (poster) mv.setAttribute('poster', poster);
@@ -2785,6 +2816,7 @@ function setupTraditionMap(el, options = {}) {
     cards.forEach((card, index) => {
       const mv = card.querySelector('.trailx-map__card-mv');
       if (!mv) return;
+      applyMapModelOrientation(mv, card);
       const poster = cardPoster(card);
       if (poster && !mv.getAttribute('poster')) mv.setAttribute('poster', poster);
       window.setTimeout(() => {
@@ -2824,6 +2856,7 @@ function setupTraditionMap(el, options = {}) {
     mv.setAttribute('environment-image', 'neutral');
     mv.setAttribute('reveal', 'auto');
     mv.setAttribute('aria-hidden', 'true');
+    applyMapModelOrientation(mv, card);
     const poster = cardPoster(card);
     if (poster) mv.setAttribute('poster', poster);
     if (card.dataset.mapGlb) mv.setAttribute('src', card.dataset.mapGlb);
@@ -2842,6 +2875,7 @@ function setupTraditionMap(el, options = {}) {
     }
     if (revealMv) {
       if (prefersReducedMotion) revealMv.removeAttribute('auto-rotate');
+      applyMapModelOrientation(revealMv, card);
       const poster = cardPoster(card);
       if (poster) revealMv.setAttribute('poster', poster);
       if (card.dataset.mapGlb && revealMv.getAttribute('src') !== card.dataset.mapGlb) {
@@ -2966,6 +3000,31 @@ function setupTraditionMap(el, options = {}) {
     }
   }
 
+  const updateTrayNavigation = () => {
+    if (!tray) return;
+    const maxScroll = Math.max(0, tray.scrollWidth - tray.clientWidth);
+    if (trayPrevButton) trayPrevButton.disabled = tray.scrollLeft <= 2;
+    if (trayNextButton) trayNextButton.disabled = tray.scrollLeft >= maxScroll - 2;
+  };
+
+  const scrollArtifactTray = (direction) => {
+    if (!tray) return;
+    const firstCard = cards.find((card) => !card.classList.contains('is-dragging'));
+    const cardWidth = firstCard ? firstCard.getBoundingClientRect().width : 72;
+    const step = Math.max(cardWidth * 2.4, tray.clientWidth * 0.68);
+    tray.scrollBy({
+      left: direction * step,
+      behavior: prefersReducedMotion ? 'auto' : 'smooth',
+    });
+    window.setTimeout(updateTrayNavigation, prefersReducedMotion ? 0 : 320);
+  };
+
+  trayPrevButton?.addEventListener('click', () => scrollArtifactTray(-1));
+  trayNextButton?.addEventListener('click', () => scrollArtifactTray(1));
+  tray?.addEventListener('scroll', updateTrayNavigation, { passive: true });
+  window.addEventListener('resize', updateTrayNavigation);
+  window.requestAnimationFrame(updateTrayNavigation);
+
   /* While expanded, vertical wheel movement over the artifact dock becomes
      horizontal movement. It must never leak through to the chapter scroller. */
   tray?.addEventListener('wheel', (event) => {
@@ -3010,8 +3069,14 @@ function setupTraditionMap(el, options = {}) {
       mapStageHome.parent.insertBefore(mapStage, anchor);
     }
     // Re-measure once the new layout has been applied.
-    window.requestAnimationFrame(fitMap);
-    window.setTimeout(fitMap, 260);
+    window.requestAnimationFrame(() => {
+      fitMap();
+      updateTrayNavigation();
+    });
+    window.setTimeout(() => {
+      fitMap();
+      updateTrayNavigation();
+    }, 260);
   };
 
   zoomButtons.forEach((btn) => {
