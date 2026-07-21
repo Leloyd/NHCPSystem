@@ -2749,9 +2749,55 @@ function setupTraditionMap(el, options = {}) {
   const esc = (v) => String(v == null ? '' : v)
     .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
   const cardPoster = (card) => {
-    const img = card.querySelector('img');
+    const img = card.querySelector('.trailx-map__card-img');
     return img ? (img.currentSrc || img.src) : '';
   };
+
+  /* The tray holds real 3D artifacts you pick up and drag. To keep the WebGL
+     count flat, a card's model is destroyed the moment its twin appears on the
+     map — so it is always ~13 live models, never 26. Loading is staggered and
+     only begins once this act is on screen. */
+  const CARD_MV_ATTRS = {
+    'camera-orbit': '0deg 75deg 100%',
+    'disable-zoom': '', 'disable-pan': '', 'disable-tap': '',
+    'interaction-prompt': 'none', 'shadow-intensity': '0.4',
+    'exposure': '1.05', 'environment-image': 'neutral', 'reveal': 'auto',
+  };
+  let trayLoaded = false;
+
+  const makeCardModel = (card) => {
+    const mv = document.createElement('model-viewer');
+    mv.className = 'trailx-map__card-mv';
+    Object.keys(CARD_MV_ATTRS).forEach((k) => mv.setAttribute(k, CARD_MV_ATTRS[k]));
+    mv.setAttribute('aria-hidden', 'true');
+    const poster = cardPoster(card);
+    if (poster) mv.setAttribute('poster', poster);
+    if (trayLoaded && card.dataset.mapGlb) mv.setAttribute('src', card.dataset.mapGlb);
+    return mv;
+  };
+
+  const loadTrayModels = () => {
+    if (trayLoaded) return;
+    trayLoaded = true;
+    cards.forEach((card, index) => {
+      const mv = card.querySelector('.trailx-map__card-mv');
+      if (!mv) return;
+      const poster = cardPoster(card);
+      if (poster && !mv.getAttribute('poster')) mv.setAttribute('poster', poster);
+      window.setTimeout(() => {
+        if (card.dataset.mapGlb && !mv.getAttribute('src')) {
+          mv.setAttribute('src', card.dataset.mapGlb);
+        }
+      }, index * 140); // stagger so 13 models don't stampede the connection
+    });
+  };
+
+  // Only start loading once the map act is the step being read.
+  if (root.getAttribute('data-step') === 's4-map') loadTrayModels();
+  const stepWatcher = new MutationObserver(() => {
+    if (root.getAttribute('data-step') === 's4-map') loadTrayModels();
+  });
+  stepWatcher.observe(root, { attributes: true, attributeFilter: ['data-step'] });
 
   // A small, static 3D model of the artifact — created only when placed, so
   // WebGL contexts ramp up with play rather than all at once. Static (no
@@ -2909,6 +2955,10 @@ function setupTraditionMap(el, options = {}) {
     }
     flyToMarker(card, marker);
     window.setTimeout(() => marker?.classList.add('is-lit'), prefersReducedMotion ? 0 : 250);
+    // Hand the 3D model over to the map: free the card's context, keep its
+    // flat poster showing in the dimmed tray slot.
+    card.querySelector('.trailx-map__card-mv')?.remove();
+    card.classList.add('is-flat');
     card.classList.add('is-placed');
     card.classList.remove('is-selected');
     card.disabled = true;
@@ -3092,9 +3142,13 @@ function setupTraditionMap(el, options = {}) {
     });
     cards.forEach((card) => {
       card.disabled = false;
-      card.classList.remove('is-placed', 'is-dragging', 'is-selected', 'is-wrong');
+      card.classList.remove('is-placed', 'is-dragging', 'is-selected', 'is-wrong', 'is-flat');
       card.style.removeProperty('--map-drag-x');
       card.style.removeProperty('--map-drag-y');
+      // give the card its 3D artifact back
+      if (!card.querySelector('.trailx-map__card-mv')) {
+        card.querySelector('.trailx-map__card-media')?.appendChild(makeCardModel(card));
+      }
     });
     board?.classList.remove('is-complete');
     updateProgress();
