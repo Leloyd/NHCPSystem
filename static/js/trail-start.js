@@ -2873,7 +2873,10 @@ function setupTraditionMap(el, options = {}) {
   const fitMap = () => {
     if (!lmap) return;
     lmap.invalidateSize(false);
-    lmap.fitBounds(MAP_BOUNDS, { animate: false, padding: [6, 6] });
+    lmap.setMinZoom(-8); // unlock so fitBounds can find the true fit
+    lmap.fitBounds(MAP_BOUNDS, { animate: false, padding: [10, 10] });
+    // Zooming out stops at the whole archipelago — never smaller.
+    lmap.setMinZoom(lmap.getZoom());
   };
 
   // Inline it reads as a picture; expanded it becomes a real map.
@@ -2934,15 +2937,25 @@ function setupTraditionMap(el, options = {}) {
     window.addEventListener('resize', () => { if (lmap) lmap.invalidateSize(false); });
   }
 
-  /* While the map is open, the wheel belongs to it: stop the page/story from
-     scrolling underneath. Leaflet still receives the event and zooms, since we
-     only prevent the default scroll (we never stop propagation). */
-  board?.addEventListener('wheel', (event) => {
-    if (expanded) event.preventDefault();
-  }, { passive: false });
-  // Touch scrolling over the open map is the map's too.
-  board?.addEventListener('touchmove', (event) => {
-    if (expanded) event.preventDefault();
+  /* While the map is open the wheel belongs to it. Captured on the way down so
+     nothing underneath can scroll, but never stopped — Leaflet still gets the
+     event and zooms. Over the artifact dock the wheel scrolls it sideways. */
+  mapStage?.addEventListener('wheel', (event) => {
+    if (!expanded) return;
+    const overTray = event.target.closest('[data-map-tray]');
+    if (overTray) {
+      const delta = Math.abs(event.deltaY) > Math.abs(event.deltaX) ? event.deltaY : event.deltaX;
+      if (delta) {
+        event.preventDefault();
+        overTray.scrollLeft += delta;
+      }
+      return;
+    }
+    event.preventDefault(); // the map zooms instead of the page scrolling
+  }, { passive: false, capture: true });
+
+  mapStage?.addEventListener('touchmove', (event) => {
+    if (expanded && !event.target.closest('[data-map-tray]')) event.preventDefault();
   }, { passive: false });
 
   const setExpanded = (value) => {

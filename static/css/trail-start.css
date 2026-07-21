@@ -3740,3 +3740,123 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 .trailx-map__board,
 .trailx-map.is-expanded .trailx-map__board { background: #071016; }
+
+/* ==========================================================================
+   Stop 4 · Expanded map — immersive pass
+   No panel behind the map: the archipelago floats on the night, framed by a
+   thin gold glow. Islands keep their names at every zoom, the artifact dock
+   breathes below, and everything reads as one lit, tactile surface.
+   ========================================================================== */
+
+/* --- The frame ---------------------------------------------------------- */
+.trailx-map.is-expanded {
+  padding: 0.75rem 0.75rem 0;
+  gap: 0.75rem;                        /* space between map and the dock */
+  background:
+    radial-gradient(120% 80% at 50% 0%, rgba(212, 175, 106, 0.09), transparent 60%),
+    rgba(4, 7, 9, 0.97);
+}
+.trailx-map.is-expanded .trailx-map__board {
+  background: transparent;             /* no panel — just the map */
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  border-radius: 0.7rem;
+  box-shadow:
+    0 0 22px rgba(212, 175, 106, 0.3),
+    0 0 60px rgba(212, 175, 106, 0.12),
+    inset 0 0 40px rgba(212, 175, 106, 0.05);
+}
+/* the map surface itself is see-through */
+.trailx-map.is-expanded .trailx-map__leaflet,
+.trailx-map.is-expanded .trailx-map__leaflet.leaflet-container,
+.trailx-map.is-expanded .trailx-map__board .leaflet-container {
+  background: transparent;
+  border-radius: 0.7rem;
+}
+
+/* --- Islands: always named, always findable ------------------------------ */
+.trailx-map.is-expanded .trailx-map__marker .trailx-map__pin {
+  width: 0.85rem;
+  height: 0.85rem;
+  border: 2px solid #f7d98f;
+  background: radial-gradient(circle at 35% 32%, #fff6da, #d4af6a 70%);
+  box-shadow: 0 0 0 4px rgba(212, 175, 106, 0.16), 0 0 14px rgba(247, 217, 143, 0.75);
+}
+/* unplaced islands breathe so you can spot the ones still waiting */
+.trailx-map.is-expanded .trailx-map__marker:not(.is-lit) .trailx-map__pin {
+  animation: trailx-map-waiting 2.6s ease-in-out infinite;
+}
+@keyframes trailx-map-waiting {
+  0%, 100% { box-shadow: 0 0 0 4px rgba(212, 175, 106, 0.14), 0 0 12px rgba(247, 217, 143, 0.55); }
+  50% { box-shadow: 0 0 0 8px rgba(212, 175, 106, 0.06), 0 0 20px rgba(247, 217, 143, 0.95); }
+}
+/* the name stays legible at every zoom level */
+.trailx-map.is-expanded .trailx-map__marker::after {
+  opacity: 1;
+  top: 100%;
+  margin-top: 0.05rem;
+  padding: 0.14rem 0.4rem;
+  border-radius: 0.3rem;
+  border: 1px solid rgba(212, 175, 106, 0.4);
+  background: rgba(6, 9, 12, 0.88);
+  color: #f7d98f;
+  font-size: 0.52rem;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+  -webkit-backdrop-filter: blur(4px);
+  backdrop-filter: blur(4px);
+}
+/* a placed island wears its artifact and a warm halo */
+.trailx-map.is-expanded .trailx-map__marker.is-lit::after {
+  border-color: rgba(247, 217, 143, 0.8);
+  color: #fff6da;
+  background: rgba(28, 18, 8, 0.92);
+}
+.trailx-map.is-expanded .trailx-map__marker.is-lit {
+  filter: drop-shadow(0 0 10px rgba(247, 217, 143, 0.55));
+}
+
+/* --- The artifact dock --------------------------------------------------- */
+.trailx-map.is-expanded .trailx-map__tray {
+  height: 7rem;
+  padding: 0.55rem 0.7rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid rgba(212, 175, 106, 0.35);
+  border-radius: 0.7rem 0.7rem 0 0;
+  background:
+    linear-gradient(180deg, rgba(212, 175, 106, 0.08), transparent 40%),
+    rgba(9, 7, 4, 0.97);
+  box-shadow: 0 -10px 30px rgba(0, 0, 0, 0.5);
+  scroll-snap-type: x proximity;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 106, 0.5) transparent;
+}
+.trailx-map.is-expanded .trailx-map__tray::-webkit-scrollbar { height: 5px; }
+.trailx-map.is-expanded .trailx-map__tray::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 106, 0.45);
+  border-radius: 999px;
+}
+.trailx-map.is-expanded .trailx-map__card { scroll-snap-align: center; }
+
+/* --- Overlays sit clear of the dock ------------------------------------- */
+.trailx-map.is-expanded .trailx-map__feedback,
+.trailx-map.is-expanded .trailx-map__reveal {
+  left: 0.9rem;
+  right: 0.9rem;
+  bottom: calc(8.4rem + env(safe-area-inset-bottom, 0px));
+}
+.trailx-map.is-expanded .trailx-map__feedback {
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.55);
+}
+.trailx-map.is-expanded .trailx-map__reveal {
+  border: 1px solid rgba(212, 175, 106, 0.4);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.6);
+}
+.trailx-map.is-expanded .trailx-map__zoom {
+  right: 1rem;
+  bottom: calc(8.6rem + env(safe-area-inset-bottom, 0px));
+}
+.trailx-map.is-expanded .trailx-map__expand { top: 1rem; right: 1rem; }
+
+@media (prefers-reduced-motion: reduce) {
+  .trailx-map.is-expanded .trailx-map__marker:not(.is-lit) .trailx-map__pin { animation: none; }
+}
