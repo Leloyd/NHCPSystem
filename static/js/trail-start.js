@@ -1663,6 +1663,22 @@ function initPanorama() {
     previewEl.hidden = false;
     window.requestAnimationFrame(() => previewEl.classList.add('is-open'));
   };
+
+  // Stop 7's Tapete chapter uses the same enlarged, zoomable photo viewer as
+  // the artifact hotspots. The framed photograph itself lives beside the
+  // chapter copy, like the Landing page's historical photographs.
+  const tapetePhoto = root.querySelector('[data-trail-tapete-photo]');
+  tapetePhoto?.addEventListener('click', () => {
+    const image = tapetePhoto.querySelector('img');
+    openPreview({
+      imageSrc: tapetePhoto.getAttribute('data-image-src') || image?.currentSrc || image?.src || '',
+      imageAlt: image?.alt || 'The Tapete',
+      title: {
+        en: tapetePhoto.getAttribute('data-title-en') || 'The Tapete',
+        tl: tapetePhoto.getAttribute('data-title-tl') || 'Ang Tapete',
+      },
+    }, 'image');
+  });
   window.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePreview(); });
 
   const closeFloatingImage = () => {
