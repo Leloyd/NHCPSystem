@@ -2745,12 +2745,26 @@ function setupTraditionMap(el, options = {}) {
   const placed = new Set();
   const markerByKey = {};
   let announced = false;
-  let doneTimer = 0;
   let selectedCard = null;
   let gateMessageAt = 0;
   let hintTimer = 0;
   let feedbackTimer = 0;
   let revealTimer = 0;
+
+  // The source markup follows the Philippines from north to south, which made
+  // the answers too easy to infer. Shuffle only the visible artifact tray;
+  // marker coordinates and the completed geographic thread stay untouched.
+  const shuffleTrayCards = () => {
+    if (!tray || cards.length < 2) return;
+    const shuffled = cards.slice();
+    for (let index = shuffled.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [shuffled[index], shuffled[swapIndex]] = [shuffled[swapIndex], shuffled[index]];
+    }
+    shuffled.forEach((card) => tray.appendChild(card));
+    tray.scrollLeft = 0;
+  };
+  shuffleTrayCards();
 
   const hideFeedbackNotice = () => {
     window.clearTimeout(feedbackTimer);
@@ -3292,10 +3306,6 @@ function setupTraditionMap(el, options = {}) {
       pulse([24, 55, 24, 55, 40]);
       drawThreads();
       charApi.playGesture?.('heart');
-      window.clearTimeout(doneTimer);
-      doneTimer = window.setTimeout(() => {
-        if (state.mode === 'stop4') options.onAllComplete?.();
-      }, prefersReducedMotion ? 300 : 1500);
     }
   };
 
@@ -3561,7 +3571,6 @@ function setupTraditionMap(el, options = {}) {
 
   const reset = () => {
     if (expanded) setExpanded(false);
-    window.clearTimeout(doneTimer);
     window.clearTimeout(hintTimer);
     hideFeedbackNotice();
     hideRevealNotice();
@@ -3587,6 +3596,7 @@ function setupTraditionMap(el, options = {}) {
         card.querySelector('.trailx-map__card-media')?.appendChild(makeCardModel(card));
       }
     });
+    shuffleTrayCards();
     board?.classList.remove('is-complete');
     updateProgress();
   };
@@ -3808,9 +3818,6 @@ function setupStory(el) {
     onCompletionChange: (complete) => {
       mapCompletionUnlocked = Boolean(complete);
       syncMapCompletionGate();
-    },
-    onAllComplete: () => {
-      if (mapCompleteIndex >= 0) scrollToStep(mapCompleteIndex);
     },
     onReset: () => {
       if (mapActivityIndex >= 0) scrollToStep(mapActivityIndex);
