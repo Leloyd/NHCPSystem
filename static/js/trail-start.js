@@ -2250,6 +2250,7 @@ function initPanorama() {
       // (so a zoomed-in look is never dragged back by the drift).
       if (!prefersReducedMotion) {
         const DRIFT_SPEED = 1.4; // degrees per second (intro sweep)
+        const STOP4_DRIFT_SPEED = 0.35; // one calm revolution about every 17 minutes
         const PITCH_EASE = 0.4;
         const IDLE_MS = 3000;
         let dir = 1; // start by panning right, toward yawMax
@@ -2275,6 +2276,13 @@ function initPanorama() {
                 viewer.setYaw(y, false);
                 const p = viewer.getPitch();
                 viewer.setPitch(p + (startPitch - p) * Math.min(1, dt * PITCH_EASE), false);
+              } else if (state.mode === 'stop4' && SCENE_BASE[currentScene] && !isImmersive()) {
+                // Stop 4 uses a true, continuous museum-background rotation.
+                // It resumes only after the visitor has been idle for a moment.
+                viewer.setYaw(viewer.getYaw() + STOP4_DRIFT_SPEED * dt, false);
+                const base = SCENE_BASE[currentScene];
+                const p = viewer.getPitch();
+                viewer.setPitch(p + (base.pitch - p) * Math.min(1, dt * PITCH_EASE), false);
               } else if (state.mode !== 'intro' && SCENE_BASE[currentScene] && !isImmersive()) {
                 const base = SCENE_BASE[currentScene];
                 const stopScene = STOP_CONF[state.mode] ? STOP_CONF[state.mode].scene : '';
@@ -2715,6 +2723,7 @@ function setupTraditionMap(el, options = {}) {
   if (!el || !el.hasAttribute('data-tradition-map')) return null;
 
   const mapStage = el.querySelector('[data-tradition-map-stage]');
+  const wholeHost = options.wholeHost || null;
   const mapStageHome = mapStage ? {
     parent: mapStage.parentNode,
     nextSibling: mapStage.nextSibling,
@@ -3145,14 +3154,75 @@ function setupTraditionMap(el, options = {}) {
       : 'Expand the map / Palakihin ang mapa');
     setMapInteractive(value);
     if (!value && mapStage && mapStageHome && mapStageHome.parent) {
-      const anchor = mapStageHome.nextSibling && mapStageHome.nextSibling.parentNode === mapStageHome.parent
-        ? mapStageHome.nextSibling
-        : null;
-      mapStageHome.parent.insertBefore(mapStage, anchor);
+      if (mapStage.classList.contains('is-in-whole') && wholeHost) {
+        wholeHost.appendChild(mapStage);
+      } else {
+        const anchor = mapStageHome.nextSibling && mapStageHome.nextSibling.parentNode === mapStageHome.parent
+          ? mapStageHome.nextSibling
+          : null;
+        mapStageHome.parent.insertBefore(mapStage, anchor);
+      }
     }
     // Re-measure once the new layout has been applied.
     window.requestAnimationFrame(fitMap);
     window.setTimeout(fitMap, 260);
+  };
+
+  /* The completion chapter keeps this exact Leaflet instance. A FLIP-style
+     move animates the existing board between chapters; no map, image, marker,
+     or placed GLB is cloned or loaded again. */
+  const captureMapRect = () => board?.getBoundingClientRect() || null;
+  const moveMapStage = (toWhole, firstRect) => {
+    if (!mapStage || !mapStageHome || !mapStageHome.parent) return;
+    if (toWhole && !wholeHost) return;
+
+    if (expanded) setExpanded(false);
+
+    const alreadyThere = toWhole
+      ? mapStage.parentNode === wholeHost
+      : mapStage.parentNode === mapStageHome.parent;
+    mapStage.classList.toggle('is-in-whole', toWhole);
+
+    if (!alreadyThere) {
+      if (toWhole) {
+        wholeHost.appendChild(mapStage);
+      } else {
+        const anchor = mapStageHome.nextSibling && mapStageHome.nextSibling.parentNode === mapStageHome.parent
+          ? mapStageHome.nextSibling
+          : null;
+        mapStageHome.parent.insertBefore(mapStage, anchor);
+      }
+    }
+
+    const lastRect = board?.getBoundingClientRect();
+    if (
+      !prefersReducedMotion &&
+      firstRect && lastRect &&
+      firstRect.width > 0 && lastRect.width > 0 &&
+      typeof board.animate === 'function'
+    ) {
+      const deltaX = firstRect.left - lastRect.left;
+      const deltaY = firstRect.top - lastRect.top;
+      const scale = firstRect.width / lastRect.width;
+      board.animate([
+        {
+          transformOrigin: 'top left',
+          transform: `translate(${deltaX}px, ${deltaY}px) scale(${scale})`,
+          opacity: 0.92,
+        },
+        {
+          transformOrigin: 'top left',
+          transform: 'translate(0, 0) scale(1)',
+          opacity: 1,
+        },
+      ], {
+        duration: 900,
+        easing: 'cubic-bezier(0.22, 1, 0.36, 1)',
+      });
+    }
+
+    window.requestAnimationFrame(fitMap);
+    window.setTimeout(fitMap, 920);
   };
 
   expandBtn?.addEventListener('click', (event) => {
@@ -3535,6 +3605,10 @@ function setupTraditionMap(el, options = {}) {
   return {
     reset,
     isComplete: () => placed.size === total && total > 0,
+    isInWhole: () => Boolean(mapStage?.classList.contains('is-in-whole')),
+    captureMapRect,
+    moveToWhole: (firstRect) => moveMapStage(true, firstRect),
+    moveToActivity: (firstRect) => moveMapStage(false, firstRect),
     showIncompleteGate,
   };
 }
@@ -3549,6 +3623,7 @@ function setupStory(el) {
   const trackEl = el.querySelector('[data-trail-track]');
   const dotsWrap = el.querySelector('[data-trail-dots]');
   const hintEl = el.querySelector('[data-trail-hint]');
+  const mapWholeHost = el.querySelector('[data-map-whole-host]');
   const panels = Array.from(el.querySelectorAll('.trailx__chapter'));
   const STEPS = panels.length;
   if (!STEPS) return null;
@@ -3627,6 +3702,16 @@ function setupStory(el) {
 
   const setStep = (index) => {
     if (index === step || index < 0 || index >= STEPS) return;
+    const mapShouldBeInWhole = Boolean(
+      traditionMapApi &&
+      mapCompletionUnlocked &&
+      mapCompleteIndex >= 0 &&
+      index >= mapCompleteIndex
+    );
+    const mapIsInWhole = traditionMapApi?.isInWhole?.() || false;
+    const mapMoveRect = mapShouldBeInWhole !== mapIsInWhole
+      ? traditionMapApi?.captureMapRect?.()
+      : null;
     step = index;
     panels.forEach((panel, i) => {
       panel.classList.toggle('is-active', i === index);
@@ -3636,6 +3721,10 @@ function setupStory(el) {
     });
     dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
     hintEl?.classList.toggle('is-hidden', index > 0);
+    if (mapShouldBeInWhole !== mapIsInWhole) {
+      if (mapShouldBeInWhole) traditionMapApi?.moveToWhole?.(mapMoveRect);
+      else traditionMapApi?.moveToActivity?.(mapMoveRect);
+    }
     // Ana stands opposite the text panel and glides across on step changes,
     // exactly like the landing's chapter engine. The side also drives the
     // tint's side veil so the text always has shade behind it.
@@ -3715,6 +3804,7 @@ function setupStory(el) {
   }, { passive: true });
 
   traditionMapApi = setupTraditionMap(el, {
+    wholeHost: mapWholeHost,
     onCompletionChange: (complete) => {
       mapCompletionUnlocked = Boolean(complete);
       syncMapCompletionGate();

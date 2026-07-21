@@ -4134,3 +4134,62 @@ body.trailx-map-modal-open {
     bottom: calc(5.2rem + env(safe-area-inset-bottom, 0px));
   }
 }
+
+/* Stop 4 completion — the finished live map glides above “Whole.” --------- */
+.trailx-map__whole-host {
+  display: flex;
+  justify-content: center;
+  width: min(28rem, 100%);
+  min-width: 0;
+  margin: 0 auto 0.9rem;
+  pointer-events: auto;
+}
+
+.trailx-map.is-in-whole:not(.is-expanded) {
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  margin: 0;
+}
+
+.trailx-map.is-in-whole:not(.is-expanded) .trailx-map__board {
+  width: auto;
+  height: clamp(9rem, 27vh, 13rem);
+  max-width: 100%;
+  margin: 0 auto;
+  aspect-ratio: 100 / 150;
+  border: 1px solid rgba(212, 175, 106, 0.62);
+  border-radius: 0.75rem;
+  background: #071016;
+  cursor: zoom-in;
+  box-shadow:
+    0 14px 38px rgba(0, 0, 0, 0.52),
+    0 0 24px rgba(212, 175, 106, 0.18);
+}
+
+/* The completed chapter needs only the living map. The artifact dock and
+   temporary activity messages stay with the exercise state but out of view. */
+.trailx-map.is-in-whole > .trailx-map__progress,
+.trailx-map.is-in-whole > .trailx-map__feedback,
+.trailx-map.is-in-whole > .trailx-map__reveal,
+.trailx-map.is-in-whole > .trailx-map__tray {
+  display: none !important;
+}
+
+@media (max-width: 820px) {
+  .trailx__chapter--map-done {
+    justify-content: center;
+    padding-top: max(4rem, env(safe-area-inset-top, 0px));
+  }
+  .trailx-map__whole-host {
+    width: min(18rem, 88vw);
+    margin-bottom: 0.65rem;
+  }
+  .trailx-map.is-in-whole:not(.is-expanded) .trailx-map__board {
+    height: clamp(7.5rem, 22dvh, 10.5rem);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trailx-map.is-in-whole .trailx-map__board { animation: none !important; }
+}
