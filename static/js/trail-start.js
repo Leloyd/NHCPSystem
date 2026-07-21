@@ -2738,6 +2738,7 @@ function setupTraditionMap(el, options = {}) {
   let announced = false;
   let doneTimer = 0;
   let selectedCard = null;
+  let gateMessageAt = 0;
 
   const pulse = (pattern = 16) => {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch { /* optional */ }
@@ -3164,6 +3165,7 @@ function setupTraditionMap(el, options = {}) {
       placed.size + ' of ' + total + ' traditions placed',
       placed.size + ' sa ' + total + ' tradisyon ang nailagay');
     const whole = placed.size === total && total > 0;
+    options.onCompletionChange?.(whole);
     board?.classList.toggle('is-complete', whole);
     if (finalWait) finalWait.hidden = whole;
     if (finalComplete) finalComplete.hidden = !whole;
@@ -3221,6 +3223,17 @@ function setupTraditionMap(el, options = {}) {
     if (tone) feedback.classList.add('is-' + tone);
     window.clearTimeout(feedbackTimer);
     feedbackTimer = window.setTimeout(() => { feedback.hidden = true; }, 4200);
+  };
+
+  const showIncompleteGate = () => {
+    const now = performance.now();
+    if (now - gateMessageAt < 1200) return;
+    gateMessageAt = now;
+    showFeedback(
+      'Place every artifact correctly to unlock “Whole.”',
+      'Ilagay nang tama ang lahat ng artifact upang mabuksan ang “Kabuuan.”',
+      'hint'
+    );
   };
 
   const clearSelection = () => {
@@ -3472,7 +3485,11 @@ function setupTraditionMap(el, options = {}) {
   memoryApi.setMuted = () => {};
   updateProgress();
 
-  return { reset };
+  return {
+    reset,
+    isComplete: () => placed.size === total && total > 0,
+    showIncompleteGate,
+  };
 }
 
 /* The landing page's chapter engine, instantiated once per stop: scroll
@@ -3488,6 +3505,10 @@ function setupStory(el) {
   const panels = Array.from(el.querySelectorAll('.trailx__chapter'));
   const STEPS = panels.length;
   if (!STEPS) return null;
+  const mapCompleteIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-complete');
+  const mapActivityIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-map');
+  let mapCompletionUnlocked = stopId !== 'stop4' || mapCompleteIndex < 0 || mapActivityIndex < 0;
+  let traditionMapApi = null;
   let step = -1;
   let memorySceneTimer = 0;
 
@@ -3506,6 +3527,10 @@ function setupStory(el) {
   window.addEventListener('resize', sizeTrack);
 
   function scrollToStep(index) {
+    if (!mapCompletionUnlocked && mapCompleteIndex >= 0 && index >= mapCompleteIndex) {
+      index = mapActivityIndex;
+      traditionMapApi?.showIncompleteGate?.();
+    }
     const total = el.scrollHeight - el.clientHeight;
     const target = Math.max(0, Math.min(total, (index / STEPS) * total + 2));
     if (window.gsap && !prefersReducedMotion) {
@@ -3535,6 +3560,23 @@ function setupStory(el) {
     dotsWrap.appendChild(dot);
     return dot;
   }) : [];
+
+  const syncMapCompletionGate = () => {
+    if (mapCompleteIndex < 0) return;
+    dots.forEach((dot, index) => {
+      const locked = !mapCompletionUnlocked && index >= mapCompleteIndex;
+      dot.disabled = locked;
+      dot.classList.toggle('is-locked', locked);
+      dot.setAttribute('aria-disabled', String(locked));
+      if (locked) {
+        dot.setAttribute('aria-label', 'Complete the Map of Traditions to unlock this chapter');
+      } else {
+        const label = panels[index]?.getAttribute('data-title') || `Section ${index + 1}`;
+        dot.setAttribute('aria-label', `Go to: ${label}`);
+      }
+    });
+  };
+  syncMapCompletionGate();
 
   const setStep = (index) => {
     if (index === step || index < 0 || index >= STEPS) return;
@@ -3599,6 +3641,18 @@ function setupStory(el) {
   // Scroll → progress → step. Also drives the progress rail + the 360 lean.
   el.addEventListener('scroll', () => {
     const total = el.scrollHeight - el.clientHeight;
+    if (!mapCompletionUnlocked && mapCompleteIndex >= 0 && total > 0) {
+      // Keep every input path—native touch scroll, momentum, wheel/GSAP and
+      // scrollbar dragging—inside the map chapter until all artifacts are
+      // correctly placed. A small pixel inset avoids rounding into “Whole”.
+      const lockedMax = Math.max(0, total * (mapCompleteIndex / STEPS) - 2);
+      if (el.scrollTop > lockedMax) {
+        if (window.gsap) window.gsap.killTweensOf(el);
+        scrollGoal = null;
+        el.scrollTop = lockedMax;
+        traditionMapApi?.showIncompleteGate?.();
+      }
+    }
     const progress = total > 0 ? Math.min(1, Math.max(0, el.scrollTop / total)) : 0;
     if (el === activeStoryEl) {
       if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
@@ -3613,9 +3667,11 @@ function setupStory(el) {
     scrollGoal = null;
   }, { passive: true });
 
-  const mapCompleteIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-complete');
-  const mapActivityIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-map');
-  setupTraditionMap(el, {
+  traditionMapApi = setupTraditionMap(el, {
+    onCompletionChange: (complete) => {
+      mapCompletionUnlocked = Boolean(complete);
+      syncMapCompletionGate();
+    },
     onAllComplete: () => {
       if (mapCompleteIndex >= 0) scrollToStep(mapCompleteIndex);
     },
