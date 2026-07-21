@@ -114,8 +114,8 @@ const SCRIPTS = {
     tl: "Dalhin mo ang mga paalam na iyon. Kapag handa ka na, sumama ka sa akin pabalik sa labas — mahaba ang kasaysayang ikukuwento ng bakuran. Pindutin ang Magpatuloy.",
   },
   's5-arrive': {
-    en: "Welcome back to the open grounds — our fifth stop. Here the cemetery's history stands in stone. Drag to look around, and follow the glowing rings through the courtyard, the face of the chapel, and the quiet rows of tombs. When you are ready, scroll down.",
-    tl: "Maligayang pagbabalik sa bukas na bakuran — ang ating ikalimang hinto. Dito nakatindig sa bato ang kasaysayan ng libingan. I-drag upang lumingon, at sundan ang mga kumikinang na singsing sa patyo, sa harap ng kapilya, at sa tahimik na mga hanay ng puntod. Kapag handa ka na, mag-scroll pababa.",
+    en: "Welcome to the front gate — our fifth stop. From this threshold, we begin the story of Nagcarlan and the Franciscan missionaries who helped shape the town's early history. Drag to look around, then follow the glowing rings through the entrance and into the courtyard. When you are ready, scroll down.",
+    tl: "Maligayang pagdating sa harap ng tarangkahan — ang ating ikalimang hinto. Mula sa bungad na ito, sisimulan natin ang kuwento ng Nagcarlan at ng mga Pransiskanong misyonerong humubog sa unang kasaysayan ng bayan. I-drag upang lumingon, pagkatapos ay sundan ang mga kumikinang na singsing papasok sa tarangkahan at patungo sa patyo. Kapag handa ka na, mag-scroll pababa.",
   },
   's5-history': {
     en: "Long before the tombs, the story began. The Spanish reached Nagcarlan in 1571 under Captain Juan de Salcedo. In 1578, the Franciscan missionaries Fray Juan de Plasencia and Fray Diego de Oropesa brought the Catholic faith. And in 1583, Nagcarlan became a pueblo under Fray Tomas de Miranda.",
@@ -126,8 +126,8 @@ const SCRIPTS = {
     tl: "Isa sa mga Pransiskanong misyonerong iyon ang nag-iwan ng mga salitang mahalaga pa rin hanggang ngayon. Isinulat ni Padre Juan de Plasencia ang Doctrina Cristiana — ang kauna-unahang aklat na inilimbag sa Pilipinas — at ang Relación de las costumbres de los tagalos, na nagtala at nag-ingat sa mga kaugalian ng ating mga ninuno. Pindutin ang Tingnan ang mga Dokumento upang makita ang mga unang pahina nito.",
   },
   's5-explore': {
-    en: "Now the grounds are yours. Step through the gate, cross to the chapel, and wander the rows of tombs on either side. The glowing rings carry you from one view to the next — take all the time you need.",
-    tl: "Ngayon, sa iyo na ang bakuran. Dumaan sa tarangkahan, tumawid sa kapilya, at libutin ang mga hanay ng puntod sa magkabilang gilid. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw patungo sa susunod — huwag magmadali.",
+    en: "Now the entrance grounds are yours. Begin at the front gate, step through its arch, and explore the open courtyard just beyond it. The glowing rings carry you from one entrance view to the next — take all the time you need. We will continue toward the chapel in Stop 6.",
+    tl: "Ngayon, sa iyo na ang bahaging pasukan ng bakuran. Magsimula sa harap ng tarangkahan, dumaan sa arko nito, at libutin ang bukas na patyo sa kabila. Ang mga kumikinang na singsing ang maghahatid sa iyo mula sa isang tanaw ng pasukan patungo sa susunod — huwag magmadali. Magpapatuloy tayo patungo sa kapilya sa Hinto 6.",
   },
   's5-next': {
     en: "That completes our fifth stop. When you are ready, come with me across the courtyard — the chapel and the tombs are just ahead. Tap Continue.",
@@ -698,6 +698,7 @@ const M3 = { yaw: 90, pitch: -5, hfov: 140 };
 // Where the idle view settles per scene while a stop is active.
 const SCENE_BASE = {
   frontGate: { yaw: FG.yaw, pitch: FG.pitch },
+  stop5FrontGate: { yaw: FG.yaw, pitch: FG.pitch },
   rightFrontGate: { yaw: 90, pitch: -20 },
   middleGMuseum: { yaw: M2.yaw, pitch: M2.pitch },
   frontMuseum: { yaw: 0, pitch: 0 },
@@ -733,6 +734,7 @@ const SCENE_BASE = {
 const SCENE_HFOV = {
   aerial: 100,
   frontGate: FG.hfov,
+  stop5FrontGate: FG.hfov,
   rightFrontGate: 100,
   middleGMuseum: 100,
   frontMuseum: 100,
@@ -771,8 +773,8 @@ const STOP_CONF = {
   // The checkpoint plays over the deepest museum hall — the artifacts the
   // games ask about are on the walls all around.
   stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100, hash: '#stop-4' },
-  // The grounds: enter just inside the front gate and cross into the courtyard.
-  stop5: { scene: 'insideFrontGate', pitch: 0, yaw: 0, hfov: 100, hash: '#stop-5' },
+  // The grounds: begin outside the front gate, then enter the courtyard.
+  stop5: { scene: 'stop5FrontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-5' },
   // Front of the chapel + the tomb rows on either side.
   stop6: { scene: 'frontChurch', pitch: 0, yaw: -10, hfov: 100, hash: '#stop-6' },
   // Inside the chapel.
@@ -789,6 +791,7 @@ const STOP_CONF = {
 // to face the way you'd walk — per scene, so it works from either viewpoint.
 const DEPART_VIEWS = {
   frontGate: { yaw: -91.9, pitch: 0.6 },
+  stop5FrontGate: { yaw: FG.yaw, pitch: FG.pitch },
   rightFrontGate: { yaw: -91.1, pitch: -0.8 },
   middleGMuseum: { yaw: -87.6, pitch: -5.7 },
   frontMuseum: { yaw: 32.0, pitch: -9.4 },
@@ -2090,10 +2093,8 @@ function initPanorama() {
         };
       }
 
-      // Stop 5 scenes — the cemetery grounds, chapel front, and tomb rows,
-      // straight from the virtual tour. Scene links keep only the paths that
-      // stay within this stop's set (the branches into the museum, the chapel
-      // interior, and the leftG middle nodes are dropped).
+      // Stop 5 begins at the front gate and stays within the entrance and
+      // courtyard. The chapel front and tomb rows belong to Stop 6.
       if (s5.insideFrontGate) {
         const link = (pitch, yaw, sceneId, tPitch, tYaw) => {
           const h = { pitch, yaw, type: 'scene', sceneId, cssClass: 'tour-ground-hotspot' };
@@ -2101,8 +2102,23 @@ function initPanorama() {
           return h;
         };
         const eq = (panorama, pitch, yaw, hotSpots) => ({ type: 'equirectangular', panorama, pitch, yaw, hfov: 100, hotSpots });
+        // Keep this separate from the shared frontGate scene used by Stops 1
+        // and 10 so its route into Stop 5 cannot appear in those stops.
+        if (gateSrc) {
+          scenes.stop5FrontGate = {
+            type: 'equirectangular',
+            panorama: gateSrc,
+            pitch: FG.pitch,
+            yaw: FG.yaw,
+            hfov: FG.hfov,
+            hotSpots: [
+              link(-17, -10.2, 'insideFrontGate', 0, 0),
+            ],
+          };
+        }
         scenes.insideFrontGate = eq(s5.insideFrontGate, 0, 0, [
           link(-18, 2, 'insideFrontGate1'),
+          ...(gateSrc ? [link(-16, 180, 'stop5FrontGate', -20, 170)] : []),
         ]);
         scenes.insideFrontGate1 = eq(s5.insideFrontGate1, 0, 0, [
           link(-5, -4, 'middleGInside'),
