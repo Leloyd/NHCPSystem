@@ -2723,6 +2723,7 @@ function setupTraditionMap(el, options = {}) {
   const revealMv = el.querySelector('[data-map-reveal-mv]');
   const revealRegion = el.querySelector('[data-map-reveal-region]');
   const revealStory = el.querySelector('[data-map-reveal-story]');
+  const feedback = el.querySelector('[data-map-feedback]');
   const expandBtn = el.querySelector('[data-map-expand]');
   const resetButton = el.querySelector('[data-map-reset]');
   const finalWait = el.querySelector('[data-map-final-wait]');
@@ -2733,6 +2734,7 @@ function setupTraditionMap(el, options = {}) {
   const markerByKey = {};
   let announced = false;
   let doneTimer = 0;
+  let selectedCard = null;
 
   const pulse = (pattern = 16) => {
     try { if (navigator.vibrate) navigator.vibrate(pattern); } catch { /* optional */ }
@@ -2809,10 +2811,17 @@ function setupTraditionMap(el, options = {}) {
     marker.style.left = x + '%';
     marker.style.top = y + '%';
     marker.setAttribute('aria-label', card.dataset.regionEn || key);
+    // Region names label the islands while you're placing, so the match is
+    // learnable rather than guesswork.
+    marker.dataset.regionEn = card.dataset.regionEn || '';
+    marker.dataset.regionTl = card.dataset.regionTl || card.dataset.regionEn || '';
     marker.innerHTML = '<span class="trailx-map__pin" aria-hidden="true"></span>';
     markersWrap?.appendChild(marker);
     markerByKey[key] = marker;
-    marker.addEventListener('click', () => { if (placed.has(key)) showReveal(card); });
+    marker.addEventListener('click', () => {
+      if (selectedCard) { attemptPlace(selectedCard, key); return; } // tap-to-place
+      if (placed.has(key)) showReveal(card);
+    });
   });
 
   // Expand the map to fill the screen so the clustered markers spread out.
@@ -2901,15 +2910,122 @@ function setupTraditionMap(el, options = {}) {
     flyToMarker(card, marker);
     window.setTimeout(() => marker?.classList.add('is-lit'), prefersReducedMotion ? 0 : 250);
     card.classList.add('is-placed');
+    card.classList.remove('is-selected');
     card.disabled = true;
     card.style.removeProperty('--map-drag-x');
     card.style.removeProperty('--map-drag-y');
+    if (feedback) feedback.hidden = true; // the story is the reward now
     pulse(16);
     showReveal(card);
     updateProgress();
   };
 
-  // Tap places; drag also places on release (never "wrong" — it reveals).
+  /* --- Getting it right (and wrong) --------------------------------------
+     You must drop a tradition on the island it actually came from. A wrong
+     island is never punished — the card simply returns, the map says which
+     island you hit, and after a few misses it quietly points the way. */
+  const wrongCounts = {};
+  let hintTimer = 0;
+  let feedbackTimer = 0;
+
+  const showFeedback = (en, tl, tone) => {
+    if (!feedback) return;
+    feedback.innerHTML = '<span data-lang-en>' + esc(en) + '</span><span data-lang-tl>' + esc(tl) + '</span>';
+    feedback.hidden = false;
+    feedback.classList.remove('is-wrong', 'is-hint', 'is-good');
+    if (tone) feedback.classList.add('is-' + tone);
+    window.clearTimeout(feedbackTimer);
+    feedbackTimer = window.setTimeout(() => { feedback.hidden = true; }, 4200);
+  };
+
+  const clearSelection = () => {
+    if (selectedCard) selectedCard.classList.remove('is-selected');
+    selectedCard = null;
+    mapStage?.classList.remove('is-placing');
+    Object.values(markerByKey).forEach((m) => m.classList.remove('is-target'));
+  };
+
+  const selectCard = (card) => {
+    if (!card || card.disabled) return;
+    if (selectedCard === card) { clearSelection(); return; }
+    clearSelection();
+    selectedCard = card;
+    card.classList.add('is-selected');
+    mapStage?.classList.add('is-placing'); // reveals the island names
+    const name = card.querySelector('span')?.textContent || '';
+    showFeedback(
+      'Now tap the island where ' + name + ' belongs.',
+      'Ngayon, pindutin ang pulong pinagmulan ng ' + name + '.');
+  };
+
+  const returnCard = (card) => {
+    card.style.removeProperty('--map-drag-x');
+    card.style.removeProperty('--map-drag-y');
+  };
+
+  // Which island did the card land on? Nearest marker within a forgiving reach.
+  const markerAtPoint = (clientX, clientY) => {
+    let bestKey = null;
+    let bestDist = Infinity;
+    Object.keys(markerByKey).forEach((key) => {
+      const r = markerByKey[key].getBoundingClientRect();
+      const dist = Math.hypot(clientX - (r.left + r.width / 2), clientY - (r.top + r.height / 2));
+      if (dist < bestDist) { bestDist = dist; bestKey = key; }
+    });
+    const boardWidth = board?.getBoundingClientRect().width || 300;
+    const reach = Math.max(44, boardWidth * 0.14);
+    return bestDist <= reach ? bestKey : null;
+  };
+
+  const hintFor = (key) => {
+    const marker = markerByKey[key];
+    if (!marker) return;
+    marker.classList.add('is-hint');
+    window.clearTimeout(hintTimer);
+    hintTimer = window.setTimeout(() => marker.classList.remove('is-hint'), 4000);
+  };
+
+  const attemptPlace = (card, targetKey) => {
+    const key = card.dataset.mapCard;
+    if (!targetKey) { // dropped on open sea
+      returnCard(card);
+      showFeedback('Drop it on an island.', 'Ihulog ito sa isang pulo.');
+      return;
+    }
+    if (targetKey === key) {
+      clearSelection();
+      placeCard(card);
+      return;
+    }
+    // Wrong island — say which one it was, and keep it gentle.
+    const wrongMarker = markerByKey[targetKey];
+    const regionEn = wrongMarker?.dataset.regionEn || 'that island';
+    const regionTl = wrongMarker?.dataset.regionTl || 'ang pulong iyon';
+    wrongCounts[key] = (wrongCounts[key] || 0) + 1;
+    card.classList.add('is-wrong');
+    wrongMarker?.classList.add('is-wrong');
+    window.setTimeout(() => {
+      card.classList.remove('is-wrong');
+      wrongMarker?.classList.remove('is-wrong');
+    }, 620);
+    pulse(28);
+    returnCard(card);
+    if (wrongCounts[key] >= 3) {
+      const right = markerByKey[key];
+      hintFor(key);
+      showFeedback(
+        'Hint: look to ' + (right?.dataset.regionEn || '') + '.',
+        'Pahiwatig: tingnan ang ' + (right?.dataset.regionTl || '') + '.',
+        'hint');
+    } else {
+      showFeedback(
+        'Not quite — that is ' + regionEn + '. Try another island.',
+        'Hindi tama — iyan ang ' + regionTl + '. Sumubok sa ibang pulo.',
+        'wrong');
+    }
+  };
+
+  // Tap selects (then tap an island); dragging drops onto an island directly.
   cards.forEach((card) => {
     let drag = null;
     let suppressClickUntil = 0;
@@ -2923,35 +3039,50 @@ function setupTraditionMap(el, options = {}) {
       if (!drag || event.pointerId !== drag.id) return;
       const dx = event.clientX - drag.x;
       const dy = event.clientY - drag.y;
-      if (Math.hypot(dx, dy) > 6) drag.moved = true;
+      if (Math.hypot(dx, dy) > 6 && !drag.moved) {
+        drag.moved = true;
+        mapStage?.classList.add('is-placing'); // show island names while dragging
+      }
       if (!drag.moved) return;
       event.preventDefault();
       card.style.setProperty('--map-drag-x', dx + 'px');
       card.style.setProperty('--map-drag-y', dy + 'px');
+      // Highlight the island currently under the card.
+      const over = markerAtPoint(event.clientX, event.clientY);
+      Object.keys(markerByKey).forEach((k) => {
+        markerByKey[k].classList.toggle('is-target', k === over);
+      });
     });
     const finish = (event, cancelled) => {
       if (!drag || event.pointerId !== drag.id) return;
+      const moved = drag.moved;
       drag = null;
       card.classList.remove('is-dragging');
-      suppressClickUntil = performance.now() + 350;
-      if (!cancelled) placeCard(card);
-      else {
-        card.style.removeProperty('--map-drag-x');
-        card.style.removeProperty('--map-drag-y');
+      Object.values(markerByKey).forEach((m) => m.classList.remove('is-target'));
+      if (cancelled) { returnCard(card); mapStage?.classList.remove('is-placing'); return; }
+      if (moved) {
+        suppressClickUntil = performance.now() + 350;
+        attemptPlace(card, markerAtPoint(event.clientX, event.clientY));
+        if (!selectedCard) mapStage?.classList.remove('is-placing');
       }
     };
     card.addEventListener('pointerup', (event) => finish(event, false));
     card.addEventListener('pointercancel', (event) => finish(event, true));
     card.addEventListener('click', () => {
       if (performance.now() < suppressClickUntil) return;
-      placeCard(card);
+      selectCard(card); // a tap only picks it up — you still choose the island
     });
   });
 
   const reset = () => {
     window.clearTimeout(doneTimer);
+    window.clearTimeout(hintTimer);
+    window.clearTimeout(feedbackTimer);
     announced = false;
     placed.clear();
+    Object.keys(wrongCounts).forEach((k) => { delete wrongCounts[k]; });
+    clearSelection();
+    if (feedback) feedback.hidden = true;
     if (threadsSvg) threadsSvg.innerHTML = '';
     if (reveal) reveal.hidden = true;
     if (revealMv) revealMv.removeAttribute('src'); // free the reveal's WebGL context
@@ -2961,7 +3092,7 @@ function setupTraditionMap(el, options = {}) {
     });
     cards.forEach((card) => {
       card.disabled = false;
-      card.classList.remove('is-placed', 'is-dragging');
+      card.classList.remove('is-placed', 'is-dragging', 'is-selected', 'is-wrong');
       card.style.removeProperty('--map-drag-x');
       card.style.removeProperty('--map-drag-y');
     });
