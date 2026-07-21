@@ -3846,7 +3846,13 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 /* --- The artifact dock --------------------------------------------------- */
 .trailx-map.is-expanded .trailx-map__tray {
   height: 7rem;
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  align-self: stretch;
   padding: 0.55rem 0.7rem calc(0.5rem + env(safe-area-inset-bottom, 0px));
+  overflow-x: auto;
+  overflow-y: hidden;
   border-top: 1px solid rgba(212, 175, 106, 0.35);
   border-radius: 0.7rem 0.7rem 0 0;
   background:
