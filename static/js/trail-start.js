@@ -2934,6 +2934,17 @@ function setupTraditionMap(el, options = {}) {
     window.addEventListener('resize', () => { if (lmap) lmap.invalidateSize(false); });
   }
 
+  /* While the map is open, the wheel belongs to it: stop the page/story from
+     scrolling underneath. Leaflet still receives the event and zooms, since we
+     only prevent the default scroll (we never stop propagation). */
+  board?.addEventListener('wheel', (event) => {
+    if (expanded) event.preventDefault();
+  }, { passive: false });
+  // Touch scrolling over the open map is the map's too.
+  board?.addEventListener('touchmove', (event) => {
+    if (expanded) event.preventDefault();
+  }, { passive: false });
+
   const setExpanded = (value) => {
     expanded = value;
     mapStage?.classList.toggle('is-expanded', value);

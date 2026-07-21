@@ -3730,3 +3730,13 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 /* Inline, panning/zooming is disabled in JS, so a tap opens the map — while
    marker taps still work for placing. */
 .trailx-map:not(.is-expanded) .trailx-map__board { cursor: zoom-in; }
+
+/* Leaflet ships a light default map background; ours must stay dark sea.
+   Higher specificity than plain `.leaflet-container` so load order can't bite. */
+.trailx-map .trailx-map__leaflet,
+.trailx-map .trailx-map__leaflet.leaflet-container,
+.trailx-map__board .leaflet-container {
+  background: #071016;
+}
+.trailx-map__board,
+.trailx-map.is-expanded .trailx-map__board { background: #071016; }
