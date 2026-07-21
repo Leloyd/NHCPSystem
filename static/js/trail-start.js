@@ -2757,8 +2757,32 @@ function setupTraditionMap(el, options = {}) {
   };
   const applyMapModelOrientation = (model, card) => {
     if (!model || !card) return;
-    if (card.dataset.mapCard === 'kabaong') model.removeAttribute('orientation');
-    else model.setAttribute('orientation', '0deg 0deg -90deg');
+    const orientation = card.dataset.mapCard === 'kabaong'
+      ? '0deg 0deg 0deg'
+      : '0deg 0deg -90deg';
+
+    // Keep the card reference current because the reveal model is reused for
+    // different artifacts. Some mobile browsers reconnect <model-viewer> when
+    // the map is moved into its expanded overlay, so enforce the transform on
+    // both the attribute and the live component property.
+    model._trailMapOrientationCard = card;
+    model.setAttribute('orientation', orientation);
+    if (window.customElements?.get('model-viewer')) {
+      model.orientation = orientation;
+    }
+
+    if (!model._trailMapOrientationBound) {
+      model._trailMapOrientationBound = true;
+      model.addEventListener('load', () => {
+        const activeCard = model._trailMapOrientationCard;
+        if (!activeCard) return;
+        applyMapModelOrientation(model, activeCard);
+      });
+    }
+
+    if (model.loaded && typeof model.updateFraming === 'function') {
+      window.requestAnimationFrame(() => model.updateFraming());
+    }
   };
 
   /* The tray holds real 3D artifacts you pick up and drag. To keep the WebGL
@@ -3045,6 +3069,14 @@ function setupTraditionMap(el, options = {}) {
     // Move the expanded map to the Trail root so it uses the full viewport.
     if (value && mapStage && mapStage.parentNode !== root) root.appendChild(mapStage);
     mapStage?.classList.toggle('is-expanded', value);
+
+    // Reassert each artifact's orientation after the mobile expanded map has
+    // been reparented. Kabaong remains at its original zero rotation.
+    cards.forEach((card) => {
+      applyMapModelOrientation(card.querySelector('.trailx-map__card-mv'), card);
+      const placedModel = markerEl(card.dataset.mapCard)?.querySelector('.trailx-map__marker-mv');
+      if (placedModel) applyMapModelOrientation(placedModel, card);
+    });
     root.classList.toggle('is-map-expanded', value);
     document.documentElement.classList.toggle('trailx-map-modal-open', value);
     document.body.classList.toggle('trailx-map-modal-open', value);
