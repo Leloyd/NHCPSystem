@@ -2916,9 +2916,17 @@ function setupTraditionMap(el, options = {}) {
   const MAP_W = Number(leafletEl && leafletEl.dataset.mapW) || 1024;
   const MAP_H = Number(leafletEl && leafletEl.dataset.mapH) || 1536;
   const MAP_BOUNDS = [[0, 0], [MAP_H, MAP_W]];
+  const mapDebugMode = (() => {
+    try {
+      return new URLSearchParams(window.location.search).get('traditionMapDebug') === '1';
+    } catch {
+      return false;
+    }
+  })();
   let lmap = null;
   let threadLine = null;
   let expanded = false;
+  let debugReadout = null;
 
   // A card's home, as a CRS.Simple point (x% from the left, y% from the top).
   const pointFor = (card) => {
@@ -2970,6 +2978,37 @@ function setupTraditionMap(el, options = {}) {
     fitMap();
     setMapInteractive(false);
 
+    const reportMapDebugPoint = (latlng) => {
+      if (!mapDebugMode || !debugReadout || !latlng) return;
+      const x = Math.max(0, Math.min(100, (latlng.lng / MAP_W) * 100));
+      const y = Math.max(0, Math.min(100, (1 - latlng.lat / MAP_H) * 100));
+      const selectedName = selectedCard
+        ? (selectedCard.lastElementChild?.textContent || selectedCard.dataset.mapCard)
+        : 'Region';
+      const result = `${selectedName} - data-map-x="${x.toFixed(2)}" data-map-y="${y.toFixed(2)}"`;
+
+      debugReadout.textContent = result;
+      console.info('[Trail map calibration]', result);
+
+      if (navigator.clipboard && typeof navigator.clipboard.writeText === 'function') {
+        navigator.clipboard.writeText(result).then(() => {
+          debugReadout.textContent = result + ' · Copied';
+        }).catch(() => {
+          // The visible value and console log remain available as fallbacks.
+        });
+      }
+    };
+
+    if (mapDebugMode && board) {
+      debugReadout = document.createElement('output');
+      debugReadout.className = 'trailx-map__debug';
+      debugReadout.setAttribute('aria-live', 'polite');
+      debugReadout.textContent = 'Calibration: select an artifact, expand the map, then tap its exact location.';
+      board.appendChild(debugReadout);
+
+      lmap.on('click', (event) => reportMapDebugPoint(event.latlng));
+    }
+
     cards.forEach((card) => {
       const key = card.dataset.mapCard;
       const marker = L.marker(pointFor(card), {
@@ -2984,7 +3023,8 @@ function setupTraditionMap(el, options = {}) {
       }).addTo(lmap);
       markerByKey[key] = marker;
 
-      marker.on('click', () => {
+      marker.on('click', (event) => {
+        if (mapDebugMode) { reportMapDebugPoint(event.latlng); return; }
         if (selectedCard) { attemptPlace(selectedCard, key); return; } // tap-to-place
         if (placed.has(key)) showReveal(card);
       });

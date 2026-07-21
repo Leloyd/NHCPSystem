@@ -2842,6 +2842,25 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   overflow: hidden;
   isolation: isolate;
 }
+.trailx-map__debug {
+  position: absolute;
+  top: 0.55rem;
+  left: 0.55rem;
+  right: 3rem;
+  z-index: 1000;
+  display: block;
+  min-height: 1.7rem;
+  padding: 0.4rem 0.55rem;
+  border: 1px solid rgba(212, 175, 106, 0.62);
+  border-radius: 0.45rem;
+  background: rgba(13, 10, 4, 0.92);
+  color: #f7d98f;
+  font: 600 0.58rem/1.35 "Inter", sans-serif;
+  letter-spacing: 0.03em;
+  overflow-wrap: anywhere;
+  pointer-events: none;
+  box-shadow: 0 5px 18px rgba(0, 0, 0, 0.5);
+}
 .trailx-map__svg,
 .trailx-map__threads {
   position: absolute;
