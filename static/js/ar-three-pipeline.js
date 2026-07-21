@@ -2439,24 +2439,82 @@
   }
 
   /* --- View in your space (Quick Look / Scene Viewer) ----------------------- */
+  /* The restored artifact opens in a real, on-screen model-viewer — the same
+     shape the Virtual Tour uses. A hidden, 2px viewer can't host WebXR and is
+     often not even finished loading when tapped, which is why AR used to fall
+     back to showing the object instead of launching. */
+  var AR_CUBE_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 19 6.2v8.1L12 17.75 5 14.3V6.2L12 2.75Zm0 7.05L5.4 6.55M12 9.8l6.6-3.25M12 9.8v7.6"/><path stroke-linecap="round" d="M8.25 20.5h7.5"/></svg>';
+
   function ensureQuickLookViewer(modelUrl) {
-    if (runtime.quickLookViewer) {
-      if (modelUrl && runtime.quickLookViewer.getAttribute("src") !== modelUrl) {
-        runtime.quickLookViewer.setAttribute("src", modelUrl);
-      }
-      return runtime.quickLookViewer;
+    var viewer = runtime.quickLookViewer || document.getElementById("arArtifactModel");
+    if (!viewer) {
+      return null;
     }
-    var viewer = document.createElement("model-viewer");
-    viewer.setAttribute("ar", "");
-    viewer.setAttribute("ar-modes", "webxr scene-viewer quick-look");
-    if (modelUrl) {
+    runtime.quickLookViewer = viewer;
+    // Preload the moment the artifact is restored, so AR is ready on the tap.
+    if (modelUrl && viewer.getAttribute("src") !== modelUrl) {
       viewer.setAttribute("src", modelUrl);
     }
-    // Kept offscreen but rendered — Quick Look needs a live element.
-    viewer.style.cssText = "position:fixed;left:-9999px;bottom:0;width:2px;height:2px;opacity:0.01;pointer-events:none;";
-    document.body.appendChild(viewer);
-    runtime.quickLookViewer = viewer;
+    if (!runtime.arStatusBound) {
+      runtime.arStatusBound = true;
+      viewer.addEventListener("ar-status", function (event) {
+        if (event && event.detail && event.detail.status === "failed") {
+          flashPuzzleHint("noAr", 3600);
+        }
+      });
+    }
     return viewer;
+  }
+
+  // A gold AR launcher sitting on the model, exactly like the Virtual Tour's.
+  function installArModelControl(viewer, container) {
+    if (!viewer || !container || container.querySelector(".ar-artifact-panel__ar")) {
+      return;
+    }
+    viewer.classList.add("ar-model--managed-ar");
+    var button = document.createElement("button");
+    button.type = "button";
+    button.className = "ar-artifact-panel__ar";
+    button.setAttribute("aria-label", "View artifact in your space / Tingnan ang artifact sa iyong paligid");
+    button.innerHTML = AR_CUBE_ICON;
+    container.appendChild(button);
+
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      try {
+        if (viewer.canActivateAR && typeof viewer.activateAR === "function") {
+          viewer.activateAR(); // called straight from the tap — no awaiting
+        } else {
+          flashPuzzleHint("noAr", 3600);
+        }
+      } catch (error) {
+        flashPuzzleHint("noAr", 3600);
+      }
+    });
+  }
+
+  function openArtifactViewer(entry) {
+    var overlay = document.getElementById("arArtifactOverlay");
+    var viewer = ensureQuickLookViewer(entry && entry.modelUrl);
+    if (!overlay || !viewer) {
+      return;
+    }
+    var title = document.getElementById("arArtifactTitle");
+    if (title) {
+      title.textContent = (entry && (entry.infoTitle || entry.key)) || "";
+    }
+    installArModelControl(viewer, document.getElementById("arArtifactMedia"));
+    overlay.hidden = false;
+    document.body.classList.add("ar-artifact-open");
+  }
+
+  function closeArtifactViewer() {
+    var overlay = document.getElementById("arArtifactOverlay");
+    if (overlay) {
+      overlay.hidden = true;
+    }
+    document.body.classList.remove("ar-artifact-open");
   }
 
   /* --- Touch-drag to rotate the on-screen artifact -------------------------
@@ -2563,22 +2621,19 @@
       if (!entry || !entry.modelUrl) {
         return;
       }
-      var viewer = ensureQuickLookViewer(entry.modelUrl);
-      var launch = function () {
-        try {
-          if (viewer.canActivateAR && typeof viewer.activateAR === "function") {
-            viewer.activateAR();
-          } else {
-            flashPuzzleHint("noAr", 3600);
-          }
-        } catch (error) {
-          flashPuzzleHint("noAr", 3600);
-        }
-      };
-      if (window.customElements && window.customElements.whenDefined) {
-        window.customElements.whenDefined("model-viewer").then(launch, launch);
-      } else {
-        launch();
+      openArtifactViewer(entry); // real viewer first; AR launches from its own tap
+    });
+
+    var overlay = document.getElementById("arArtifactOverlay");
+    document.getElementById("arArtifactClose")?.addEventListener("click", closeArtifactViewer);
+    overlay?.addEventListener("click", function (event) {
+      if (event.target === overlay) {
+        closeArtifactViewer();
+      }
+    });
+    window.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        closeArtifactViewer();
       }
     });
   }
@@ -2865,6 +2920,7 @@
         audioByLanguage: markerConfig.audioByLanguage || null,
         alternateAudioUrl: markerConfig.alternateAudioUrl || "",
         modelUrl: markerConfig.modelUrl || "",
+        infoTitle: markerConfig.infoTitle || "",
         puzzleEnabled: markerConfig.anamorphicPuzzle === true,
         puzzleSolved: false,
         puzzle: null,
