@@ -2758,7 +2758,7 @@ function setupTraditionMap(el, options = {}) {
   const applyMapModelOrientation = (model, card) => {
     if (!model || !card) return;
     if (card.dataset.mapCard === 'kabaong') model.removeAttribute('orientation');
-    else model.setAttribute('orientation', '-90deg 0deg 0deg');
+    else model.setAttribute('orientation', '0deg 0deg -90deg');
   };
 
   /* The tray holds real 3D artifacts you pick up and drag. To keep the WebGL
