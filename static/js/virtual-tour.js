@@ -76,6 +76,46 @@
     pransiskano: app ? app.dataset.insideChapelPransiskanoImageSrc : "",
     pagsaayos: app ? app.dataset.insideChapelPagsaayosImageSrc : "",
   };
+  const TABLE_AUDIO_BASE = "/audio/360VT/TableAudio/";
+  const tableAudio = function (tlFile, enFile) {
+    return {
+      tl: tlFile ? encodeURI(TABLE_AUDIO_BASE + tlFile) : "",
+      en: enFile ? encodeURI(TABLE_AUDIO_BASE + enFile) : "",
+    };
+  };
+  const TABLE_DETAIL_AUDIO = {
+    "art1-left-table-1": tableAudio("", "LimePuttyAndAdobePowderMixture.mp3"),
+    "art1-left-table-2": tableAudio("", "LimePuttyAndSandMixture.mp3"),
+    "art1-left-table-3": tableAudio("", "LimePuttyAndCoralPowderMixture.mp3"),
+    "art1-left-table-4": tableAudio("", "Limestone.mp3"),
+    "art1-left-table-5": tableAudio("", "Brick.mp3"),
+    "art1-left-table-6": tableAudio("", "Adobe(VolcanicTuff).mp3"),
+    "art1-left-table-7": tableAudio("", "CoralStone.mp3"),
+    "art2-left-table-1": tableAudio("", "Molave.mp3"),
+    "art2-left-table-2": tableAudio("", "Narra.mp3"),
+    "art2-left-table-3": tableAudio("", "Katong-Matsing.mp3"),
+    "art2-left-table-4": tableAudio("", "Kamagong.mp3"),
+    "art2-left-table-5": tableAudio("", "Yakal.mp3"),
+    "art2-left-table-6": tableAudio("", "Batikuling.mp3"),
+    "art2-left-table-7": tableAudio("", "HeadrestOfTheSantoEntierro.mp3"),
+    "art2-left-table-8": tableAudio("", "IronNail.mp3"),
+    "art1-right-table-1": tableAudio("", "_Azulejos_Tile.mp3"),
+    "art1-right-table-2": tableAudio("Right Window(T).mp3", "Right Window.mp3"),
+    "art1-right-table-3": tableAudio("Chapel Ceiling(T).mp3", "Chapel Ceiling.mp3"),
+    "art1-right-table-4": tableAudio("Pigment Above Niche(T).mp3", "Pigment Above Niche.mp3"),
+    "art1-right-table-5": tableAudio("Bas Relief Niche(T).mp3", "Bas Relief Niche.mp3"),
+    "art2-right-table-1": tableAudio("Interior Wall, Chapel(T).mp3", "Interior Wall, Chapel.mp3"),
+    "art2-right-table-2": tableAudio("Flooring, Crypt(T).mp3", "Flooring, Crypt.mp3"),
+    "art2-right-table-3": tableAudio("Pilaster (T).mp3", "Pilaster.mp3"),
+    "art2-right-table-4": tableAudio("Perimeter Wall(T).mp3", "Perimeter Wall.mp3"),
+    "art2-right-table-5": tableAudio("Mga Kulay Pigments.mp3", "Mga Kulay Pigments(E).mp3"),
+    "art2-right-table-6": tableAudio("Mga Kagamitan sa Pagdisenyo.mp3", "Mga Kagamitan sa Pagdisenyo(E).mp3"),
+    "art2-right-table-7": tableAudio("Pulbos na Koral.mp3", "Pulbos na Koral(E).mp3"),
+    "art2-right-table-8": tableAudio("Pulbos na Adobe.mp3", "Pulbos na Adobe(E).mp3"),
+    "art2-right-table-9": tableAudio("Pulbos na Ladrilyo.mp3", "Pulbos na Ladrilyo(E).mp3"),
+    "art2-right-table-10": tableAudio("Apog.mp3", "Apog(E).mp3"),
+    "art2-right-table-11": tableAudio("Buhangin.mp3", "Buhangin(E).mp3"),
+  };
   const insideMuseumImageAssets = {
     nagcarlanCemetery: {
       imageSrc: app ? app.dataset.insideMuseumNagcarlanCemeteryImageSrc : "",
@@ -642,7 +682,7 @@
                 title: String(hotspot && hotspot.title ? hotspot.title : ""),
                 audioByLanguage: hotspot && hotspot.audioByLanguage && typeof hotspot.audioByLanguage === "object"
                   ? { ...hotspot.audioByLanguage }
-                  : null,
+                  : (TABLE_DETAIL_AUDIO[hotspot && hotspot.id] ? { ...TABLE_DETAIL_AUDIO[hotspot.id] } : null),
                 subtitle: hotspot && hotspot.subtitle && typeof hotspot.subtitle === "object"
                   ? { ...hotspot.subtitle }
                   : null,
@@ -3499,7 +3539,8 @@
     floatingArtifactPreviewTitle = title;
   }
 
-  function hideFloatingArtifactImageDetail() {
+  function hideFloatingArtifactImageDetail(restoreNarration) {
+    const wasOpen = Boolean(floatingArtifactPreviewDetail && !floatingArtifactPreviewDetail.hidden);
     if (floatingArtifactPreviewDetailZoom) {
       floatingArtifactPreviewDetailZoom.reset();
     }
@@ -3512,6 +3553,22 @@
     }
     if (floatingArtifactPreviewDetailTitle) {
       floatingArtifactPreviewDetailTitle.textContent = "";
+    }
+
+    if (wasOpen && restoreNarration !== false) {
+      const parentArgs = floatingArtifactPreviewArgs || {};
+      const parentAudio = parentArgs.audioByLanguage && typeof parentArgs.audioByLanguage === "object"
+        ? parentArgs.audioByLanguage
+        : null;
+      setActiveSubtitle(subtitleForArtifact(parentArgs.imageAlt));
+      if (parentAudio && (parentAudio.tl || parentAudio.en)) {
+        playFloatingArtifactAudio(parentAudio, floatingArtifactAudioLanguage);
+      } else {
+        stopFloatingImageAudio();
+        activeFloatingArtifactAudioConfig = null;
+        updateHotspotVisibilityState();
+        syncNarrationControls();
+      }
     }
   }
 
@@ -3531,6 +3588,17 @@
     }
     floatingArtifactPreviewDetail.setAttribute("aria-label", title);
     floatingArtifactPreviewDetail.hidden = false;
+
+    const detailAudio = hotspot.audioByLanguage && typeof hotspot.audioByLanguage === "object"
+      ? hotspot.audioByLanguage
+      : null;
+    setActiveSubtitle(hotspot.subtitle || null);
+    if (detailAudio && (detailAudio.tl || detailAudio.en)) {
+      const language = floatingArtifactAudioLanguage === "tl" && !detailAudio.tl && detailAudio.en
+        ? "en"
+        : floatingArtifactAudioLanguage;
+      playFloatingArtifactAudio(detailAudio, language);
+    }
   }
 
   function renderFloatingArtifactImageHotspots(args, showImage) {
@@ -3593,7 +3661,7 @@
     const showGlb = nextView === "glb" && glbSources.length > 0;
 
     floatingArtifactPreviewArgs = args;
-    hideFloatingArtifactImageDetail();
+    hideFloatingArtifactImageDetail(false);
 
     setFloatingWindowTitle(floatingArtifactPreviewTitle, args);
     floatingArtifactPreviewImage.hidden = !showImage;

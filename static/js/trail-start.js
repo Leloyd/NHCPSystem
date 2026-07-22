@@ -1055,6 +1055,44 @@ function initPanorama() {
   // use only a thin outline when opened; the four table artifacts keep the
   // regular cream mount.
   const INFO_SUBTITLES = window.NHCP_ARTIFACT_SUBTITLES || {};
+  const TABLE_AUDIO_BASE = '/audio/360VT/TableAudio/';
+  const tableAudio = (tlFile, enFile) => ({
+    tl: tlFile ? encodeURI(TABLE_AUDIO_BASE + tlFile) : '',
+    en: enFile ? encodeURI(TABLE_AUDIO_BASE + enFile) : '',
+  });
+  const TABLE_DETAIL_AUDIO = {
+    'art1-left-table-1': tableAudio('', 'LimePuttyAndAdobePowderMixture.mp3'),
+    'art1-left-table-2': tableAudio('', 'LimePuttyAndSandMixture.mp3'),
+    'art1-left-table-3': tableAudio('', 'LimePuttyAndCoralPowderMixture.mp3'),
+    'art1-left-table-4': tableAudio('', 'Limestone.mp3'),
+    'art1-left-table-5': tableAudio('', 'Brick.mp3'),
+    'art1-left-table-6': tableAudio('', 'Adobe(VolcanicTuff).mp3'),
+    'art1-left-table-7': tableAudio('', 'CoralStone.mp3'),
+    'art2-left-table-1': tableAudio('', 'Molave.mp3'),
+    'art2-left-table-2': tableAudio('', 'Narra.mp3'),
+    'art2-left-table-3': tableAudio('', 'Katong-Matsing.mp3'),
+    'art2-left-table-4': tableAudio('', 'Kamagong.mp3'),
+    'art2-left-table-5': tableAudio('', 'Yakal.mp3'),
+    'art2-left-table-6': tableAudio('', 'Batikuling.mp3'),
+    'art2-left-table-7': tableAudio('', 'HeadrestOfTheSantoEntierro.mp3'),
+    'art2-left-table-8': tableAudio('', 'IronNail.mp3'),
+    'art1-right-table-1': tableAudio('', '_Azulejos_Tile.mp3'),
+    'art1-right-table-2': tableAudio('Right Window(T).mp3', 'Right Window.mp3'),
+    'art1-right-table-3': tableAudio('Chapel Ceiling(T).mp3', 'Chapel Ceiling.mp3'),
+    'art1-right-table-4': tableAudio('Pigment Above Niche(T).mp3', 'Pigment Above Niche.mp3'),
+    'art1-right-table-5': tableAudio('Bas Relief Niche(T).mp3', 'Bas Relief Niche.mp3'),
+    'art2-right-table-1': tableAudio('Interior Wall, Chapel(T).mp3', 'Interior Wall, Chapel.mp3'),
+    'art2-right-table-2': tableAudio('Flooring, Crypt(T).mp3', 'Flooring, Crypt.mp3'),
+    'art2-right-table-3': tableAudio('Pilaster (T).mp3', 'Pilaster.mp3'),
+    'art2-right-table-4': tableAudio('Perimeter Wall(T).mp3', 'Perimeter Wall.mp3'),
+    'art2-right-table-5': tableAudio('Mga Kulay Pigments.mp3', 'Mga Kulay Pigments(E).mp3'),
+    'art2-right-table-6': tableAudio('Mga Kagamitan sa Pagdisenyo.mp3', 'Mga Kagamitan sa Pagdisenyo(E).mp3'),
+    'art2-right-table-7': tableAudio('Pulbos na Koral.mp3', 'Pulbos na Koral(E).mp3'),
+    'art2-right-table-8': tableAudio('Pulbos na Adobe.mp3', 'Pulbos na Adobe(E).mp3'),
+    'art2-right-table-9': tableAudio('Pulbos na Ladrilyo.mp3', 'Pulbos na Ladrilyo(E).mp3'),
+    'art2-right-table-10': tableAudio('Apog.mp3', 'Apog(E).mp3'),
+    'art2-right-table-11': tableAudio('Buhangin.mp3', 'Buhangin(E).mp3'),
+  };
   const INFO = {
     inscription: {
       img: root.getAttribute('data-info-inscription-img') || '',
@@ -1533,8 +1571,11 @@ function initPanorama() {
   let previewEl = null;
   let previewMedia = null;
   let previewTitle = null;
+  let previewDetailCleanup = null;
   const closePreview = () => {
     if (!previewEl) return;
+    previewDetailCleanup?.();
+    previewDetailCleanup = null;
     previewEl.classList.remove('is-open');
     previewEl.hidden = true;
     if (previewMedia) previewMedia.innerHTML = '';
@@ -1685,6 +1726,8 @@ function initPanorama() {
   };
   const openPreview = (args, view) => {
     ensurePreview();
+    previewDetailCleanup?.();
+    previewDetailCleanup = null;
     previewEl.querySelectorAll('.trailx-preview-image-detail').forEach((node) => node.remove());
     previewMedia.innerHTML = '';
     if (view === 'model' && args.glbSrc) {
@@ -1753,12 +1796,20 @@ function initPanorama() {
         detailClose.setAttribute('aria-label', 'Close artifact detail');
         detailClose.textContent = '\u00d7';
 
+        const parentArtifact = activeArtifact;
+
         const hideDetail = () => {
+          const wasOpen = !detailOverlay.hidden;
           detailZoom?.reset();
           detailOverlay.hidden = true;
           detailImage.removeAttribute('src');
           detailImage.alt = '';
           detailTitle.textContent = '';
+          if (wasOpen) {
+            stopHotspotAudio();
+            activeArtifact = parentArtifact;
+            artApi.update?.();
+          }
         };
 
         const showDetail = (hotspot, number) => {
@@ -1770,7 +1821,15 @@ function initPanorama() {
           detailTitle.textContent = title;
           detailOverlay.setAttribute('aria-label', title);
           detailOverlay.hidden = false;
+          const detailAudio = hotspot.audioByLanguage || TABLE_DETAIL_AUDIO[hotspot.id] || null;
+          if (detailAudio && (detailAudio.tl || detailAudio.en)) {
+            pauseSpeaking();
+            activeArtifact = { audioByLanguage: detailAudio, subtitle: hotspot.subtitle || null };
+            playHotspotAudio(detailAudio[state.lang] || detailAudio.en || detailAudio.tl);
+            artApi.update?.();
+          }
         };
+        previewDetailCleanup = hideDetail;
 
         detailClose.addEventListener('click', (event) => {
           event.preventDefault();
@@ -2197,7 +2256,10 @@ function initPanorama() {
             imageAlt: alt,
             previewFrameStyle: asset.outline ? 'outline' : '',
             imageHotspots: Array.isArray(asset.imageHotspots)
-              ? asset.imageHotspots.map((hotspot) => ({ ...hotspot }))
+              ? asset.imageHotspots.map((hotspot) => ({
+                  ...hotspot,
+                  audioByLanguage: hotspot.audioByLanguage || TABLE_DETAIL_AUDIO[hotspot.id] || null,
+                }))
               : [],
             windowPitch: pitch,
             windowYaw: yaw,
