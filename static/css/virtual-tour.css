@@ -1022,15 +1022,6 @@ body {
   pointer-events: none;
 }
 
-.tour-artifact-image-hotspot::before {
-  content: "";
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 999px;
-  background: var(--tx-gold);
-  box-shadow: 0 0 0.75rem rgba(212, 175, 106, 0.95);
-}
-
 .tour-artifact-image-hotspot:hover,
 .tour-artifact-image-hotspot:focus-visible {
   background: var(--tx-gold);

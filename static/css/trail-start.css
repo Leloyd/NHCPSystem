@@ -1998,17 +1998,13 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   background: rgba(13, 10, 4, 0.86);
   color: var(--tx-cream);
   box-shadow: 0 0 0 4px rgba(13, 10, 4, 0.48), 0 0 1.25rem rgba(212, 175, 106, 0.78);
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
   transform: translate(-50%, -50%);
   pointer-events: auto;
   cursor: pointer;
-}
-.trailx-preview-image-hotspot::before {
-  content: "";
-  width: 0.42rem;
-  height: 0.42rem;
-  border-radius: 999px;
-  background: var(--tx-gold);
-  box-shadow: 0 0 0.75rem rgba(212, 175, 106, 0.95);
 }
 .trailx-preview-image-hotspot::after {
   content: "";

@@ -3456,6 +3456,7 @@
       pin.setAttribute("data-image-hotspot", hotspot.id || `image-hotspot-${number}`);
       pin.setAttribute("aria-label", `Image hotspot ${number}; details will be added later`);
       pin.title = `Hotspot ${number}`;
+      pin.textContent = String(number);
       pin.addEventListener("pointerdown", function (event) {
         event.stopPropagation();
       });
