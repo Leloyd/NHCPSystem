@@ -1080,7 +1080,7 @@
   padding-right: 0.8rem;
   border-right: 1px solid rgba(212, 175, 106, 0.28);
   color: var(--tx-gold, #d4af6a);
-  font: 700 calc(0.5rem * var(--tx-font-scale, 1))/1.25 "Inter", sans-serif;
+  font: 700 calc(0.58rem * var(--tx-font-scale, 1))/1.35 "Inter", sans-serif;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   white-space: nowrap;
@@ -1088,9 +1088,9 @@
 .trailx-pact__premise {
   padding: 0;
   color: rgba(250, 247, 242, 0.73);
-  font-size: calc(0.82rem * var(--tx-font-scale, 1));
+  font-size: calc(0.94rem * var(--tx-font-scale, 1));
   font-style: normal;
-  line-height: 1.25;
+  line-height: 1.4;
   text-align: left;
 }
 .trailx-pact__thread { margin: 0.45rem 1.2rem 0.72rem; }
@@ -1130,8 +1130,8 @@
 }
 .trailx-pact__stage {
   position: relative;
-  min-height: 12rem;
-  max-height: 16rem;
+  min-height: 13.25rem;
+  max-height: 18.5rem;
   margin: 0;
   border: 0;
   border-top: 1px solid rgba(212, 175, 106, 0.13);
@@ -1156,9 +1156,9 @@
   position: relative;
   z-index: 1;
   grid-template-columns: 5.25rem minmax(0, 1fr);
-  gap: 1.15rem;
-  min-height: 12rem;
-  padding: 1.05rem 1.35rem 1.05rem 1.15rem;
+  gap: 1.35rem;
+  min-height: 13.25rem;
+  padding: 1.25rem 1.55rem 1.3rem 1.25rem;
   overflow: hidden;
   animation: trailx-pact-forward 440ms cubic-bezier(0.22, 1, 0.36, 1) both;
 }
@@ -1201,26 +1201,27 @@
   animation: trailx-pact-orbit 22s linear infinite;
 }
 @keyframes trailx-pact-orbit { to { transform: rotate(360deg); } }
-.trailx-pact__date { margin-bottom: 0.3rem; font-size: calc(0.52rem * var(--tx-font-scale, 1)); }
+.trailx-pact__date { margin-bottom: 0.35rem; font-size: calc(0.62rem * var(--tx-font-scale, 1)); line-height: 1.35; }
 .trailx-pact__moment h4 {
-  margin-bottom: 0.4rem;
-  font-size: calc(1.2rem * var(--tx-font-scale, 1));
+  margin-bottom: 0.52rem;
+  font-size: calc(1.38rem * var(--tx-font-scale, 1));
+  line-height: 1.18;
   letter-spacing: -0.015em;
 }
 .trailx-pact__moment > p:not(.trailx-pact__bridge) {
   max-width: 28rem;
-  font-size: calc(0.9rem * var(--tx-font-scale, 1));
-  line-height: 1.34;
+  font-size: calc(1.02rem * var(--tx-font-scale, 1));
+  line-height: 1.48;
 }
 .trailx-pact__bridge {
   display: flex;
   align-items: flex-start;
   gap: 0.42rem;
-  margin-top: 0.58rem !important;
-  padding-top: 0.5rem;
+  margin-top: 0.72rem !important;
+  padding-top: 0.62rem;
   border-top: 1px solid rgba(212, 175, 106, 0.14);
   color: #d8b66e !important;
-  font: 600 calc(0.55rem * var(--tx-font-scale, 1))/1.35 "Inter", sans-serif !important;
+  font: 600 calc(0.65rem * var(--tx-font-scale, 1))/1.5 "Inter", sans-serif !important;
   letter-spacing: 0.025em;
 }
 .trailx-pact__bridge::before {
@@ -1234,13 +1235,14 @@
   background: rgba(212, 175, 106, 0.06);
 }
 .trailx-pact__memory {
-  margin-top: 0.6rem;
-  padding: 0.45rem 0.62rem;
+  margin-top: 0.72rem;
+  padding: 0.58rem 0.72rem;
   border: 1px solid rgba(212, 175, 106, 0.24);
   border-left: 2px solid #d4af6a;
   border-radius: 0 0.45rem 0.45rem 0;
   background: rgba(212, 175, 106, 0.06);
-  font-size: calc(0.8rem * var(--tx-font-scale, 1));
+  font-size: calc(0.94rem * var(--tx-font-scale, 1));
+  line-height: 1.45;
 }
 .trailx-pact__controls { padding: 0.62rem 0.9rem 0.18rem; }
 .trailx-pact__nav {
@@ -1248,6 +1250,7 @@
   border-color: transparent;
   background: transparent;
   color: rgba(250, 247, 242, 0.72);
+  font-size: calc(0.65rem * var(--tx-font-scale, 1));
 }
 .trailx-pact__nav:hover:not(:disabled),
 .trailx-pact__nav:focus-visible:not(:disabled) {
@@ -1255,18 +1258,23 @@
   background: rgba(212, 175, 106, 0.08);
 }
 .trailx-pact__counter { color: #d4af6a; letter-spacing: 0.12em; }
-.trailx-pact__swipe { padding-bottom: 0.5rem; }
+.trailx-pact__swipe { padding-bottom: 0.5rem; font-size: calc(0.58rem * var(--tx-font-scale, 1)); }
 .trailx-pact__full { border-top-color: rgba(212, 175, 106, 0.12); }
 .trailx-pact__full summary {
   position: relative;
   padding: 0.62rem 0.85rem;
   color: rgba(212, 175, 106, 0.82);
   letter-spacing: 0.1em;
+  font-size: calc(0.65rem * var(--tx-font-scale, 1));
   list-style: none;
 }
 .trailx-pact__full summary::-webkit-details-marker { display: none; }
 .trailx-pact__full summary::after { content: "+"; margin-left: 0.55rem; color: #f0d08a; }
 .trailx-pact__full[open] summary::after { content: "−"; }
+.trailx-pact__full .trailx__chapter-copy {
+  font-size: calc(1rem * var(--tx-font-scale, 1));
+  line-height: 1.62;
+}
 .trailx-pact.is-reading-full .trailx-pact__intro,
 .trailx-pact.is-reading-full .trailx-pact__premise { display: none; }
 
@@ -3031,27 +3039,28 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     padding-right: 0.4rem;
   }
   .trailx-pact { border-radius: 0.95rem; }
-  .trailx-pact__intro { grid-template-columns: auto minmax(0, 1fr); gap: 0.52rem; padding: 0.58rem 0.68rem 0.4rem; }
-  .trailx-pact__eyebrow { max-width: 7.4rem; padding-right: 0.52rem; font-size: calc(0.42rem * var(--tx-font-scale, 1)); white-space: normal; }
-  .trailx-pact__premise { padding: 0; font-size: calc(0.68rem * var(--tx-font-scale, 1)); line-height: 1.2; }
+  .trailx-pact__intro { grid-template-columns: auto minmax(0, 1fr); gap: 0.62rem; padding: 0.68rem 0.8rem 0.5rem; }
+  .trailx-pact__eyebrow { max-width: 7.8rem; padding-right: 0.62rem; font-size: calc(0.5rem * var(--tx-font-scale, 1)); line-height: 1.4; white-space: normal; }
+  .trailx-pact__premise { padding: 0; font-size: calc(0.8rem * var(--tx-font-scale, 1)); line-height: 1.38; }
   .trailx-pact__thread { margin: 0.35rem 0.85rem 0.52rem; }
-  .trailx-pact__jump { width: 1.35rem; height: 1.35rem; font-size: 0.5rem; }
-  .trailx-pact__stage { min-height: 9.5rem; max-height: 12rem; margin: 0; border-radius: 0; }
-  .trailx-pact__card { grid-template-columns: 3rem minmax(0, 1fr); gap: 0.65rem; min-height: 9.5rem; padding: 0.68rem 0.7rem; }
-  .trailx-pact__icon { width: 2.85rem; height: 2.85rem; }
+  .trailx-pact__jump { width: 1.45rem; height: 1.45rem; font-size: 0.56rem; }
+  .trailx-pact__stage { min-height: 11.75rem; max-height: 15rem; margin: 0; border-radius: 0; }
+  .trailx-pact__card { display: block; min-height: 11.75rem; padding: 0.9rem 1rem 1rem; }
+  .trailx-pact__icon { position: absolute; top: 0.9rem; right: 0.95rem; width: 2.65rem; height: 2.65rem; }
   .trailx-pact__icon::after { inset: -0.3rem; }
-  .trailx-pact__icon svg { width: 1.55rem; height: 1.55rem; }
-  .trailx-pact__date { margin-bottom: 0.16rem; font-size: calc(0.48rem * var(--tx-font-scale, 1)); }
-  .trailx-pact__moment h4 { margin-bottom: 0.2rem; font-size: calc(0.9rem * var(--tx-font-scale, 1)); }
-  .trailx-pact__moment > p:not(.trailx-pact__bridge) { font-size: calc(0.75rem * var(--tx-font-scale, 1)); line-height: 1.24; }
-  .trailx-pact__bridge { margin-top: 0.38rem !important; padding-top: 0.35rem; font-size: calc(0.46rem * var(--tx-font-scale, 1)) !important; }
-  .trailx-pact__memory { margin-top: 0.35rem; font-size: calc(0.7rem * var(--tx-font-scale, 1)); }
-  .trailx-pact__payments { margin-top: 0.35rem; }
-  .trailx-pact__payments span { padding: 0.13rem 0.3rem; font-size: 0.44rem; }
+  .trailx-pact__icon svg { width: 1.48rem; height: 1.48rem; }
+  .trailx-pact__date { max-width: calc(100% - 3.4rem); margin-bottom: 0.22rem; font-size: calc(0.55rem * var(--tx-font-scale, 1)); line-height: 1.4; }
+  .trailx-pact__moment h4 { max-width: calc(100% - 3.4rem); margin-bottom: 0.48rem; font-size: calc(1.08rem * var(--tx-font-scale, 1)); line-height: 1.2; }
+  .trailx-pact__moment > p:not(.trailx-pact__bridge) { max-width: none; font-size: calc(0.9rem * var(--tx-font-scale, 1)); line-height: 1.45; }
+  .trailx-pact__bridge { margin-top: 0.58rem !important; padding-top: 0.5rem; font-size: calc(0.58rem * var(--tx-font-scale, 1)) !important; line-height: 1.48 !important; }
+  .trailx-pact__memory { margin-top: 0.58rem; padding: 0.46rem 0.58rem; font-size: calc(0.82rem * var(--tx-font-scale, 1)); line-height: 1.42; }
+  .trailx-pact__payments { margin-top: 0.48rem; }
+  .trailx-pact__payments span { padding: 0.16rem 0.34rem; font-size: 0.5rem; }
   .trailx-pact__controls { gap: 0.35rem; padding: 0.45rem 0.58rem 0.12rem; }
-  .trailx-pact__nav { min-height: 1.75rem; padding: 0.28rem 0.48rem; font-size: calc(0.5rem * var(--tx-font-scale, 1)); }
-  .trailx-pact__swipe { padding-bottom: 0.42rem; font-size: calc(0.43rem * var(--tx-font-scale, 1)); }
-  .trailx-pact__full summary { padding: 0.52rem 0.62rem; font-size: calc(0.5rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__nav { min-height: 1.85rem; padding: 0.32rem 0.52rem; font-size: calc(0.58rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__swipe { padding: 0.2rem 0.6rem 0.48rem; font-size: calc(0.5rem * var(--tx-font-scale, 1)); line-height: 1.35; }
+  .trailx-pact__full summary { padding: 0.58rem 0.68rem; font-size: calc(0.58rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__full .trailx__chapter-copy { font-size: calc(0.9rem * var(--tx-font-scale, 1)); line-height: 1.58; }
   .trailx-pact__full .trailx__scrollbox { max-height: 30vh; max-height: 30svh; margin: 0.6rem 0.32rem 0.6rem 0.65rem; }
   .trailx__rule { padding: 0.45rem 0; }
   .trailx__rule p { font-size: calc(0.85rem * var(--tx-font-scale, 1)); line-height: 1.38; }
@@ -3126,6 +3135,28 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__dot::after { display: none; }
 }
 
+/* Short desktop and landscape browser windows keep the larger type without
+   letting the chronicle collide with the Trail controls. */
+@media (min-width: 769px) and (max-height: 700px) {
+  .trailx-pact__intro { padding-top: 0.58rem; padding-bottom: 0.38rem; }
+  .trailx-pact__eyebrow { font-size: calc(0.54rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__premise { font-size: calc(0.86rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__thread { margin-top: 0.32rem; margin-bottom: 0.52rem; }
+  .trailx-pact__stage,
+  .trailx-pact__card { min-height: 11.5rem; }
+  .trailx-pact__stage { max-height: 13.5rem; }
+  .trailx-pact__card { gap: 1.05rem; padding: 0.9rem 1.2rem; }
+  .trailx-pact__icon { width: 4.4rem; height: 4.4rem; }
+  .trailx-pact__moment h4 { font-size: calc(1.25rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__moment > p:not(.trailx-pact__bridge) {
+    font-size: calc(0.96rem * var(--tx-font-scale, 1));
+    line-height: 1.44;
+  }
+  .trailx-pact__bridge { font-size: calc(0.6rem * var(--tx-font-scale, 1)) !important; }
+  .trailx-pact__controls { padding-top: 0.45rem; }
+  .trailx-pact__swipe { padding-bottom: 0.35rem; }
+}
+
 /* Preserve the full Stop 8 interaction on short phone viewports. */
 @media (max-width: 768px) and (max-height: 700px) {
   .trailx__chapter[data-chapter="s8-biak"] .trailx__label { margin-bottom: 0.3rem; }
@@ -3137,8 +3168,10 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-pact__swipe { display: none; }
   .trailx-pact__thread { margin-top: 0.42rem; }
   .trailx-pact__stage,
-  .trailx-pact__card { min-height: 7.8rem; }
-  .trailx-pact__card { padding-top: 0.52rem; padding-bottom: 0.52rem; }
+  .trailx-pact__card { min-height: 10.5rem; }
+  .trailx-pact__stage { max-height: 13.5rem; }
+  .trailx-pact__card { padding-top: 0.72rem; padding-bottom: 0.82rem; }
+  .trailx-pact__icon { top: 0.78rem; }
 }
 
 /* Ultra-narrow phones: keep the single row by dropping only the Full View
