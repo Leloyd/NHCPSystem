@@ -971,6 +971,124 @@ body {
   cursor: grabbing;
 }
 
+/* Hotspots inside an expanded exhibit photograph. The image and this layer
+   share one zoomable stage, keeping percentage coordinates registered across
+   desktop and mobile sizes as well as pinch / wheel zoom. */
+.tour-artifact-image-stage {
+  position: relative;
+  width: 100%;
+  transform-origin: 0 0;
+  will-change: transform;
+}
+
+.tour-artifact-image-hotspots {
+  position: absolute;
+  z-index: 3;
+  inset: 0;
+  pointer-events: none;
+}
+
+.tour-artifact-image-hotspots[hidden] { display: none; }
+
+.tour-artifact-image-hotspot {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.8rem;
+  height: 1.8rem;
+  padding: 0;
+  border: 2px solid var(--tx-gold);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.86);
+  color: var(--tx-cream);
+  box-shadow: 0 0 0 4px rgba(13, 10, 4, 0.48), 0 0 1.25rem rgba(212, 175, 106, 0.78);
+  font-family: "Inter", sans-serif;
+  font-size: 0.62rem;
+  font-weight: 700;
+  line-height: 1;
+  transform: translate(-50%, -50%);
+  pointer-events: auto;
+  cursor: pointer;
+}
+
+.tour-artifact-image-hotspot::after {
+  content: "";
+  position: absolute;
+  inset: -0.45rem;
+  border: 1px solid rgba(212, 175, 106, 0.68);
+  border-radius: inherit;
+  animation: tour-artifact-image-pin-pulse 1.9s ease-out infinite;
+  pointer-events: none;
+}
+
+.tour-artifact-image-hotspot:hover,
+.tour-artifact-image-hotspot:focus-visible {
+  background: var(--tx-gold);
+  color: var(--tx-ink);
+}
+
+.tour-artifact-image-hotspot:focus-visible {
+  outline: 2px solid var(--tx-cream);
+  outline-offset: 3px;
+}
+
+@keyframes tour-artifact-image-pin-pulse {
+  0% { opacity: 0.85; transform: scale(0.72); }
+  75%, 100% { opacity: 0; transform: scale(1.38); }
+}
+
+.tour-artifact-image-hotspots__toggle {
+  position: absolute;
+  z-index: 8;
+  right: 1rem;
+  bottom: 1rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.7rem;
+  height: 2.7rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.72);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.9);
+  color: var(--tx-gold);
+  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.46);
+  cursor: pointer;
+}
+
+.tour-artifact-image-hotspots__toggle svg {
+  width: 1.3rem;
+  height: 1.3rem;
+}
+
+.tour-artifact-image-hotspots__toggle.is-off {
+  color: rgba(250, 247, 242, 0.5);
+}
+
+.tour-artifact-image-hotspots__toggle.is-off::after {
+  content: "";
+  position: absolute;
+  width: 1.55rem;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  transform: rotate(-45deg);
+}
+
+.tour-artifact-image-hotspots__toggle:hover,
+.tour-artifact-image-hotspots__toggle:focus-visible {
+  border-color: var(--tx-gold);
+  background: rgba(212, 175, 106, 0.24);
+}
+
+.tour-artifact-image-hotspots__toggle:focus-visible {
+  outline: 2px solid var(--tx-gold);
+  outline-offset: 3px;
+}
+
+.tour-artifact-image-hotspots__toggle[hidden] { display: none; }
+
 /* Artifact image coordinate calibration. Enabled only through
    ?artifactHotspotDebug=1 and only for explicitly opted-in images. */
 .tour-preview-zoomframe--hotspot-debug {
@@ -2086,6 +2204,7 @@ body {
 @media (prefers-reduced-motion: reduce) {
   .tour-ar-notice,
   .tour-model-ar-button { transition: none; }
+  .tour-artifact-image-hotspot::after { animation: none; }
 }
 
 @media (min-width: 769px) {

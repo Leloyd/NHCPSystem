@@ -284,6 +284,9 @@
   let floatingArtifactPreviewOverlay = null;
   let floatingArtifactPreviewImage = null;
   let floatingArtifactPreviewImageFrame = null;
+  let floatingArtifactPreviewImageStage = null;
+  let floatingArtifactPreviewHotspotLayer = null;
+  let floatingArtifactPreviewHotspotToggle = null;
   let floatingArtifactPreviewImageZoom = null;
   let floatingArtifactPreviewTitle = null;
   let floatingArtifactPreviewModel = null;
@@ -621,6 +624,17 @@
         alternateAudioSrc: options.alternateAudioSrc || "",
         previewFrameStyle: options.previewFrameStyle || "",
         hotspotDebugKey: options.hotspotDebugKey || "",
+        imageHotspots: Array.isArray(options.imageHotspots)
+          ? options.imageHotspots.map(function (hotspot, index) {
+              return {
+                id: hotspot && hotspot.id ? String(hotspot.id) : `image-hotspot-${index + 1}`,
+                x: Number(hotspot && hotspot.x),
+                y: Number(hotspot && hotspot.y),
+              };
+            }).filter(function (hotspot) {
+              return Number.isFinite(hotspot.x) && Number.isFinite(hotspot.y);
+            })
+          : [],
         windowPitch: options.pitch,
         windowYaw: options.yaw,
       },
@@ -827,6 +841,15 @@
       imageSrc: insideChapelImageAssets.art1LeftTable,
       imageAlt: "Art1-LeftTable",
       hotspotDebugKey: "Art1-LeftTable",
+      imageHotspots: [
+        { id: "art1-left-table-1", x: 14.40, y: 28.76 },
+        { id: "art1-left-table-2", x: 13.70, y: 50.00 },
+        { id: "art1-left-table-3", x: 13.28, y: 71.24 },
+        { id: "art1-left-table-4", x: 58.74, y: 39.13 },
+        { id: "art1-left-table-5", x: 58.46, y: 78.82 },
+        { id: "art1-left-table-6", x: 84.62, y: 78.06 },
+        { id: "art1-left-table-7", x: 83.79, y: 36.35 },
+      ],
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-art2-left-table-marker",
@@ -834,6 +857,7 @@
       yaw: -82.8,
       imageSrc: insideChapelImageAssets.art2LeftTable,
       imageAlt: "Art2-LeftTable",
+      hotspotDebugKey: "Art2-LeftTable",
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-art1-right-table-marker",
@@ -841,6 +865,7 @@
       yaw: 36.94,
       imageSrc: insideChapelImageAssets.art1RightTable,
       imageAlt: "Art1-RightTable",
+      hotspotDebugKey: "Art1-RightTable",
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-art2-right-table-marker",
@@ -848,6 +873,7 @@
       yaw: 46.29,
       imageSrc: insideChapelImageAssets.art2RightTable,
       imageAlt: "Art2-RightTable",
+      hotspotDebugKey: "Art2-RightTable",
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-pagkasira-marker",
@@ -3198,7 +3224,38 @@
     const image = document.createElement("img");
     image.className = "tour-floating-media-preview__image";
     image.alt = "";
-    imageFrame.appendChild(image);
+
+    // Keep the image and its internal pins in one transformed stage so the
+    // pins remain registered while the visitor zooms or pans the photograph.
+    const imageStage = document.createElement("div");
+    imageStage.className = "tour-artifact-image-stage";
+
+    const imageHotspotLayer = document.createElement("div");
+    imageHotspotLayer.className = "tour-artifact-image-hotspots";
+    imageHotspotLayer.hidden = true;
+
+    imageStage.appendChild(image);
+    imageStage.appendChild(imageHotspotLayer);
+    imageFrame.appendChild(imageStage);
+
+    const imageHotspotToggle = document.createElement("button");
+    imageHotspotToggle.className = "tour-artifact-image-hotspots__toggle";
+    imageHotspotToggle.type = "button";
+    imageHotspotToggle.hidden = true;
+    imageHotspotToggle.setAttribute("aria-label", "Hide image hotspots");
+    imageHotspotToggle.setAttribute("aria-pressed", "true");
+    imageHotspotToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.2" fill="currentColor"></circle><circle cx="12" cy="7" r="2.2" fill="currentColor"></circle><circle cx="18" cy="12" r="2.2" fill="currentColor"></circle><path d="M7.8 10.8 10.2 8.3M13.8 8.3l2.4 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>';
+    imageFrame.appendChild(imageHotspotToggle);
+
+    imageHotspotToggle.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      const willShow = imageHotspotLayer.hidden;
+      imageHotspotLayer.hidden = !willShow;
+      imageHotspotToggle.classList.toggle("is-off", !willShow);
+      imageHotspotToggle.setAttribute("aria-pressed", String(willShow));
+      imageHotspotToggle.setAttribute("aria-label", willShow ? "Hide image hotspots" : "Show image hotspots");
+    });
 
     if (artifactHotspotDebug) {
       const debugMarker = document.createElement("span");
@@ -3327,16 +3384,60 @@
     });
 
     blockOverlayPageZoom(overlay);
-    floatingArtifactPreviewImageZoom = createPreviewImageZoom(imageFrame, image);
+    floatingArtifactPreviewImageZoom = createPreviewImageZoom(imageFrame, imageStage);
 
     floatingArtifactPreviewOverlay = overlay;
     floatingArtifactPreviewImage = image;
     floatingArtifactPreviewImageFrame = imageFrame;
+    floatingArtifactPreviewImageStage = imageStage;
+    floatingArtifactPreviewHotspotLayer = imageHotspotLayer;
+    floatingArtifactPreviewHotspotToggle = imageHotspotToggle;
     floatingArtifactPreviewModel = model;
     floatingArtifactPreviewModelNav = modelNav;
     floatingArtifactPreviewModelPrev = prevButton;
     floatingArtifactPreviewModelNext = nextButton;
     floatingArtifactPreviewTitle = title;
+  }
+
+  function renderFloatingArtifactImageHotspots(args, showImage) {
+    if (!floatingArtifactPreviewHotspotLayer || !floatingArtifactPreviewHotspotToggle) {
+      return;
+    }
+
+    const imageHotspots = showImage && Array.isArray(args.imageHotspots)
+      ? args.imageHotspots.filter(function (hotspot) {
+          return hotspot && Number.isFinite(Number(hotspot.x)) && Number.isFinite(Number(hotspot.y));
+        })
+      : [];
+
+    floatingArtifactPreviewHotspotLayer.innerHTML = "";
+    imageHotspots.forEach(function (hotspot, index) {
+      const pin = document.createElement("button");
+      const number = index + 1;
+      pin.className = "tour-artifact-image-hotspot";
+      pin.type = "button";
+      pin.style.left = `${Math.min(100, Math.max(0, Number(hotspot.x)))}%`;
+      pin.style.top = `${Math.min(100, Math.max(0, Number(hotspot.y)))}%`;
+      pin.setAttribute("data-image-hotspot", hotspot.id || `image-hotspot-${number}`);
+      pin.setAttribute("aria-label", `Image hotspot ${number}; details will be added later`);
+      pin.title = `Hotspot ${number}`;
+      pin.textContent = String(number);
+      pin.addEventListener("pointerdown", function (event) {
+        event.stopPropagation();
+      });
+      pin.addEventListener("click", function (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      });
+      floatingArtifactPreviewHotspotLayer.appendChild(pin);
+    });
+
+    const hasHotspots = imageHotspots.length > 0;
+    floatingArtifactPreviewHotspotLayer.hidden = !hasHotspots;
+    floatingArtifactPreviewHotspotToggle.hidden = !hasHotspots;
+    floatingArtifactPreviewHotspotToggle.classList.remove("is-off");
+    floatingArtifactPreviewHotspotToggle.setAttribute("aria-pressed", "true");
+    floatingArtifactPreviewHotspotToggle.setAttribute("aria-label", "Hide image hotspots");
   }
 
   function showFloatingArtifactPreviewOverlay(args, view) {
@@ -3383,6 +3484,7 @@
     floatingArtifactPreviewModel.style.display = showGlb ? "block" : "none";
     floatingArtifactPreviewModel.style.pointerEvents = showGlb ? "auto" : "none";
     if (floatingArtifactPreviewImageZoom) { floatingArtifactPreviewImageZoom.reset(); } // fresh photo, no carried zoom
+    renderFloatingArtifactImageHotspots(args, showImage);
 
     if (showImage) {
       floatingArtifactPreviewImage.src = args.imageSrc;
@@ -3439,6 +3541,17 @@
       floatingArtifactPreviewImage.removeAttribute("src");
       floatingArtifactPreviewImage.alt = "";
       floatingArtifactPreviewImage.style.display = "none";
+    }
+
+    if (floatingArtifactPreviewHotspotLayer) {
+      floatingArtifactPreviewHotspotLayer.innerHTML = "";
+      floatingArtifactPreviewHotspotLayer.hidden = true;
+    }
+
+    if (floatingArtifactPreviewHotspotToggle) {
+      floatingArtifactPreviewHotspotToggle.hidden = true;
+      floatingArtifactPreviewHotspotToggle.classList.remove("is-off");
+      floatingArtifactPreviewHotspotToggle.setAttribute("aria-pressed", "true");
     }
 
     if (floatingArtifactPreviewModel) {
@@ -4090,6 +4203,9 @@
         alternateAudioSrc: artifactAlternateAudioSrc,
         previewFrameStyle: args.previewFrameStyle || "",
         hotspotDebugKey: args.hotspotDebugKey || "",
+        imageHotspots: Array.isArray(args.imageHotspots) ? args.imageHotspots.map(function (hotspot) {
+          return { ...hotspot };
+        }) : [],
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
         currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,
