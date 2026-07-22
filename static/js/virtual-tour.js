@@ -37,6 +37,7 @@
   const debugParams = new URLSearchParams(window.location.search);
   const hotspotDebugEnabled = debugParams.get("debugHotspots") === "1";
   const minimapDebug = debugParams.get("minimapDebug") === "1";
+  const artifactHotspotDebug = debugParams.get("artifactHotspotDebug") === "1";
   const userAgent = navigator.userAgent || "";
   const isIOSDevice = /iPad|iPhone|iPod/.test(userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const isIOSChrome = isIOSDevice && /CriOS/.test(userAgent);
@@ -291,6 +292,8 @@
   let floatingArtifactPreviewModelNext = null;
   let floatingArtifactPreviewArButton = null;
   let floatingArtifactPreviewArgs = null;
+  let floatingArtifactPreviewDebugMarker = null;
+  let floatingArtifactPreviewDebugReadout = null;
   const floatingImageHotspots = new Map();
   const floatingArtifactHotspots = new Map();
   let floatingArtifactAudioLanguage = "tl";
@@ -617,6 +620,7 @@
         audioByLanguage: options.audioByLanguage && typeof options.audioByLanguage === "object" ? { ...options.audioByLanguage } : null,
         alternateAudioSrc: options.alternateAudioSrc || "",
         previewFrameStyle: options.previewFrameStyle || "",
+        hotspotDebugKey: options.hotspotDebugKey || "",
         windowPitch: options.pitch,
         windowYaw: options.yaw,
       },
@@ -822,6 +826,7 @@
       yaw: -95.71,
       imageSrc: insideChapelImageAssets.art1LeftTable,
       imageAlt: "Art1-LeftTable",
+      hotspotDebugKey: "Art1-LeftTable",
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-art2-left-table-marker",
@@ -3195,6 +3200,53 @@
     image.alt = "";
     imageFrame.appendChild(image);
 
+    if (artifactHotspotDebug) {
+      const debugMarker = document.createElement("span");
+      debugMarker.className = "tour-artifact-hotspot-debug__marker";
+      debugMarker.hidden = true;
+      debugMarker.setAttribute("aria-hidden", "true");
+
+      const debugReadout = document.createElement("output");
+      debugReadout.className = "tour-artifact-hotspot-debug__readout";
+      debugReadout.hidden = true;
+      debugReadout.setAttribute("aria-live", "polite");
+
+      imageFrame.appendChild(debugMarker);
+      imageFrame.appendChild(debugReadout);
+      floatingArtifactPreviewDebugMarker = debugMarker;
+      floatingArtifactPreviewDebugReadout = debugReadout;
+
+      image.addEventListener("click", function (event) {
+        const debugKey = floatingArtifactPreviewArgs && floatingArtifactPreviewArgs.hotspotDebugKey;
+        if (!debugKey || image.hidden) {
+          return;
+        }
+
+        event.preventDefault();
+        event.stopPropagation();
+
+        // getBoundingClientRect includes the preview's current zoom / pan
+        // transform, so the result stays image-relative even after zooming.
+        const imageRect = image.getBoundingClientRect();
+        const frameRect = imageFrame.getBoundingClientRect();
+        if (!imageRect.width || !imageRect.height) {
+          return;
+        }
+
+        const x = Math.min(100, Math.max(0, ((event.clientX - imageRect.left) / imageRect.width) * 100));
+        const y = Math.min(100, Math.max(0, ((event.clientY - imageRect.top) / imageRect.height) * 100));
+        const xText = x.toFixed(2);
+        const yText = y.toFixed(2);
+        const coordinateLine = `${debugKey} - data-image-x="${xText}" data-image-y="${yText}"`;
+
+        debugMarker.style.left = `${event.clientX - frameRect.left}px`;
+        debugMarker.style.top = `${event.clientY - frameRect.top}px`;
+        debugMarker.hidden = false;
+        debugReadout.textContent = `${debugKey} · x=${xText} · y=${yText}`;
+        console.info(`[artifactHotspotDebug] ${coordinateLine}`);
+      });
+    }
+
     const model = document.createElement("model-viewer");
     model.className = "tour-floating-media-preview__model";
     model.setAttribute("camera-controls", "");
@@ -3315,6 +3367,17 @@
       floatingArtifactPreviewImageFrame.hidden = !showImage;
       floatingArtifactPreviewImageFrame.style.display = showImage ? "block" : "none";
       floatingArtifactPreviewImageFrame.classList.toggle("tour-preview-zoomframe--outline", args.previewFrameStyle === "outline");
+      const debugActive = artifactHotspotDebug && showImage && Boolean(args.hotspotDebugKey);
+      floatingArtifactPreviewImageFrame.classList.toggle("tour-preview-zoomframe--hotspot-debug", debugActive);
+      if (floatingArtifactPreviewDebugMarker) {
+        floatingArtifactPreviewDebugMarker.hidden = true;
+      }
+      if (floatingArtifactPreviewDebugReadout) {
+        floatingArtifactPreviewDebugReadout.hidden = !debugActive;
+        floatingArtifactPreviewDebugReadout.textContent = debugActive
+          ? `${args.hotspotDebugKey} · click the image to capture X / Y`
+          : "";
+      }
     }
     floatingArtifactPreviewImage.style.display = showImage ? "block" : "none";
     floatingArtifactPreviewModel.style.display = showGlb ? "block" : "none";
@@ -3359,6 +3422,16 @@
     if (floatingArtifactPreviewImageFrame) {
       floatingArtifactPreviewImageFrame.hidden = true;
       floatingArtifactPreviewImageFrame.style.display = "none";
+      floatingArtifactPreviewImageFrame.classList.remove("tour-preview-zoomframe--hotspot-debug");
+    }
+
+    if (floatingArtifactPreviewDebugMarker) {
+      floatingArtifactPreviewDebugMarker.hidden = true;
+    }
+
+    if (floatingArtifactPreviewDebugReadout) {
+      floatingArtifactPreviewDebugReadout.hidden = true;
+      floatingArtifactPreviewDebugReadout.textContent = "";
     }
 
     if (floatingArtifactPreviewImage) {
@@ -4016,6 +4089,7 @@
         audioByLanguage: artifactAudioByLanguage,
         alternateAudioSrc: artifactAlternateAudioSrc,
         previewFrameStyle: args.previewFrameStyle || "",
+        hotspotDebugKey: args.hotspotDebugKey || "",
         glbAlt: args.glbAlt || args.imageAlt || "Artifact 3D model",
         initialView: args.initialView || "image",
         currentGlbIndex: Number.isInteger(args.currentGlbIndex) ? args.currentGlbIndex : 0,

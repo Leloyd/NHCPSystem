@@ -971,6 +971,69 @@ body {
   cursor: grabbing;
 }
 
+/* Artifact image coordinate calibration. Enabled only through
+   ?artifactHotspotDebug=1 and only for explicitly opted-in images. */
+.tour-preview-zoomframe--hotspot-debug {
+  cursor: crosshair;
+}
+
+.tour-preview-zoomframe--hotspot-debug.is-zoomed,
+.tour-preview-zoomframe--hotspot-debug.is-panning {
+  cursor: crosshair;
+}
+
+.tour-artifact-hotspot-debug__marker {
+  position: absolute;
+  z-index: 5;
+  width: 1.15rem;
+  height: 1.15rem;
+  border: 2px solid var(--tx-gold);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.42);
+  box-shadow: 0 0 0 3px rgba(13, 10, 4, 0.62), 0 0 1.2rem rgba(212, 175, 106, 0.92);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.tour-artifact-hotspot-debug__marker::before,
+.tour-artifact-hotspot-debug__marker::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  background: var(--tx-gold);
+  transform: translate(-50%, -50%);
+}
+
+.tour-artifact-hotspot-debug__marker::before { width: 1.65rem; height: 1px; }
+.tour-artifact-hotspot-debug__marker::after { width: 1px; height: 1.65rem; }
+
+.tour-artifact-hotspot-debug__readout {
+  position: absolute;
+  z-index: 6;
+  top: 1rem;
+  left: 50%;
+  width: max-content;
+  max-width: calc(100% - 2rem);
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(212, 175, 106, 0.7);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.9);
+  color: var(--tx-cream);
+  box-shadow: 0 0.8rem 2rem rgba(0, 0, 0, 0.45);
+  font-family: "Inter", sans-serif;
+  font-size: 0.7rem;
+  line-height: 1.25;
+  text-align: center;
+  transform: translateX(-50%);
+  pointer-events: none;
+}
+
+.tour-artifact-hotspot-debug__marker[hidden],
+.tour-artifact-hotspot-debug__readout[hidden] {
+  display: none;
+}
+
 .tour-floating-image-preview__image,
 .tour-floating-media-preview__image {
   display: block;
