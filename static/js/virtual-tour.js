@@ -291,6 +291,9 @@
   let floatingArtifactPreviewImageStage = null;
   let floatingArtifactPreviewHotspotLayer = null;
   let floatingArtifactPreviewHotspotToggle = null;
+  let floatingArtifactPreviewDetail = null;
+  let floatingArtifactPreviewDetailImage = null;
+  let floatingArtifactPreviewDetailTitle = null;
   let floatingArtifactPreviewImageZoom = null;
   let floatingArtifactPreviewTitle = null;
   let floatingArtifactPreviewModel = null;
@@ -634,6 +637,14 @@
                 id: hotspot && hotspot.id ? String(hotspot.id) : `image-hotspot-${index + 1}`,
                 x: Number(hotspot && hotspot.x),
                 y: Number(hotspot && hotspot.y),
+                imageSrc: String(hotspot && hotspot.imageSrc ? hotspot.imageSrc : ""),
+                title: String(hotspot && hotspot.title ? hotspot.title : ""),
+                audioByLanguage: hotspot && hotspot.audioByLanguage && typeof hotspot.audioByLanguage === "object"
+                  ? { ...hotspot.audioByLanguage }
+                  : null,
+                subtitle: hotspot && hotspot.subtitle && typeof hotspot.subtitle === "object"
+                  ? { ...hotspot.subtitle }
+                  : null,
               };
             }).filter(function (hotspot) {
               return Number.isFinite(hotspot.x) && Number.isFinite(hotspot.y);
@@ -847,13 +858,13 @@
       imageAlt: "Art1-LeftTable",
       hotspotDebugKey: "Art1-LeftTable",
       imageHotspots: [
-        { id: "art1-left-table-1", x: 14.40, y: 28.76 },
-        { id: "art1-left-table-2", x: 13.70, y: 50.00 },
-        { id: "art1-left-table-3", x: 13.28, y: 71.24 },
-        { id: "art1-left-table-4", x: 58.74, y: 39.13 },
-        { id: "art1-left-table-5", x: 58.46, y: 78.82 },
-        { id: "art1-left-table-6", x: 84.62, y: 78.06 },
-        { id: "art1-left-table-7", x: 83.79, y: 36.35 },
+        { id: "art1-left-table-1", x: 14.40, y: 28.76, imageSrc: "/images/360InsideChapel/Artifact/ApogAdobe.png", title: "Lime Putty and Adobe Powder" },
+        { id: "art1-left-table-2", x: 13.70, y: 50.00, imageSrc: "/images/360InsideChapel/Artifact/LimeSand.png", title: "Lime Putty and Sand" },
+        { id: "art1-left-table-3", x: 13.28, y: 71.24, imageSrc: "/images/360InsideChapel/Artifact/LimeCoral.png", title: "Lime Putty and Coral Powder" },
+        { id: "art1-left-table-4", x: 58.74, y: 39.13, imageSrc: "/images/360InsideChapel/Artifact/Limestone.png", title: "Limestone" },
+        { id: "art1-left-table-5", x: 58.46, y: 78.82, imageSrc: "/images/360InsideChapel/Artifact/Brick.png", title: "Brick" },
+        { id: "art1-left-table-6", x: 84.62, y: 78.06, imageSrc: "/images/360InsideChapel/Artifact/Adobe.png", title: "Adobe" },
+        { id: "art1-left-table-7", x: 83.79, y: 36.35, imageSrc: "/images/360InsideChapel/Artifact/CoralStone.png", title: "Coral Stone" },
       ],
     }),
     buildFloatingArtifactHotspot({
@@ -864,14 +875,14 @@
       imageAlt: "Art2-LeftTable",
       hotspotDebugKey: "Art2-LeftTable",
       imageHotspots: [
-        { id: "art2-left-table-1", x: 23.77, y: 21.26 },
-        { id: "art2-left-table-2", x: 23.28, y: 48.22 },
-        { id: "art2-left-table-3", x: 23.42, y: 75.69 },
-        { id: "art2-left-table-4", x: 45.66, y: 32.45 },
-        { id: "art2-left-table-5", x: 45.80, y: 66.28 },
-        { id: "art2-left-table-6", x: 62.31, y: 55.60 },
-        { id: "art2-left-table-7", x: 74.76, y: 53.56 },
-        { id: "art2-left-table-8", x: 75.46, y: 87.14 },
+        { id: "art2-left-table-1", x: 23.77, y: 21.26, imageSrc: "/images/360InsideChapel/Artifact3/molave.png", title: "Molave" },
+        { id: "art2-left-table-2", x: 23.28, y: 48.22, imageSrc: "/images/360InsideChapel/Artifact3/Narra.png", title: "Narra" },
+        { id: "art2-left-table-3", x: 23.42, y: 75.69, imageSrc: "/images/360InsideChapel/Artifact3/KatongMatsing.png", title: "Katong Matsing" },
+        { id: "art2-left-table-4", x: 45.66, y: 32.45, imageSrc: "/images/360InsideChapel/Artifact3/Kamagong.png", title: "Kamagong" },
+        { id: "art2-left-table-5", x: 45.80, y: 66.28, imageSrc: "/images/360InsideChapel/Artifact3/Yakal.png", title: "Yakal" },
+        { id: "art2-left-table-6", x: 62.31, y: 55.60, imageSrc: "/images/360InsideChapel/Artifact3/BatikulingWHR.png", title: "Batikuling WHR" },
+        { id: "art2-left-table-7", x: 74.76, y: 53.56, imageSrc: "/images/360InsideChapel/Artifact3/Headrest.png", title: "Headrest" },
+        { id: "art2-left-table-8", x: 75.46, y: 87.14, imageSrc: "/images/360InsideChapel/Artifact3/IronNail.png", title: "Iron Nail" },
       ],
     }),
     buildFloatingArtifactHotspot({
@@ -882,11 +893,11 @@
       imageAlt: "Art1-RightTable",
       hotspotDebugKey: "Art1-RightTable",
       imageHotspots: [
-        { id: "art1-right-table-1", x: 27.20, y: 52.56 },
-        { id: "art1-right-table-2", x: 48.46, y: 29.74 },
-        { id: "art1-right-table-3", x: 47.90, y: 56.52 },
-        { id: "art1-right-table-4", x: 69.59, y: 30.90 },
-        { id: "art1-right-table-5", x: 69.45, y: 56.29 },
+        { id: "art1-right-table-1", x: 27.20, y: 52.56, imageSrc: "/images/360InsideChapel/Artifact2/AzulejosTile.png", title: "Azulejos Tile" },
+        { id: "art1-right-table-2", x: 48.46, y: 29.74, imageSrc: "/images/360InsideChapel/Artifact2/RightWindow.png", title: "Right Window" },
+        { id: "art1-right-table-3", x: 47.90, y: 56.52, imageSrc: "/images/360InsideChapel/Artifact2/ChapelCeiling.png", title: "Chapel Ceiling" },
+        { id: "art1-right-table-4", x: 69.59, y: 30.90, imageSrc: "/images/360InsideChapel/Artifact2/PigmentAboveNiche.png", title: "Pigment Above Niche" },
+        { id: "art1-right-table-5", x: 69.45, y: 56.29, imageSrc: "/images/360InsideChapel/Artifact2/BasReliefNiche.png", title: "Bas-Relief Niche" },
       ],
     }),
     buildFloatingArtifactHotspot({
@@ -897,17 +908,17 @@
       imageAlt: "Art2-RightTable",
       hotspotDebugKey: "Art2-RightTable",
       imageHotspots: [
-        { id: "art2-right-table-1", x: 29.44, y: 18.22 },
-        { id: "art2-right-table-2", x: 29.58, y: 38.40 },
-        { id: "art2-right-table-3", x: 29.58, y: 56.56 },
-        { id: "art2-right-table-4", x: 29.02, y: 73.96 },
-        { id: "art2-right-table-5", x: 40.49, y: 19.73 },
-        { id: "art2-right-table-6", x: 40.49, y: 73.21 },
-        { id: "art2-right-table-7", x: 70.56, y: 36.89 },
-        { id: "art2-right-table-8", x: 80.92, y: 37.64 },
-        { id: "art2-right-table-9", x: 91.55, y: 38.40 },
-        { id: "art2-right-table-10", x: 73.92, y: 70.43 },
-        { id: "art2-right-table-11", x: 85.53, y: 70.69 },
+        { id: "art2-right-table-1", x: 29.44, y: 18.22, imageSrc: "/images/360InsideChapel/Artifact1/InteriorWall.png", title: "Interior Wall" },
+        { id: "art2-right-table-2", x: 29.58, y: 38.40, imageSrc: "/images/360InsideChapel/Artifact1/Flooring.png", title: "Flooring" },
+        { id: "art2-right-table-3", x: 29.58, y: 56.56, imageSrc: "/images/360InsideChapel/Artifact1/Pilaster.png", title: "Pilaster" },
+        { id: "art2-right-table-4", x: 29.02, y: 73.96, imageSrc: "/images/360InsideChapel/Artifact1/PerimeterWall.png", title: "Perimeter Wall" },
+        { id: "art2-right-table-5", x: 40.49, y: 19.73, imageSrc: "/images/360InsideChapel/Artifact1/Pigments.png", title: "Pigments" },
+        { id: "art2-right-table-6", x: 40.49, y: 73.21, imageSrc: "/images/360InsideChapel/Artifact1/Artist_sMarterials.png", title: "Artist's Materials" },
+        { id: "art2-right-table-7", x: 70.56, y: 36.89, imageSrc: "/images/360InsideChapel/Artifact1/CoralPowder.png", title: "Coral Powder" },
+        { id: "art2-right-table-8", x: 80.92, y: 37.64, imageSrc: "/images/360InsideChapel/Artifact1/AdobePowder.png", title: "Adobe Powder" },
+        { id: "art2-right-table-9", x: 91.55, y: 38.40, imageSrc: "/images/360InsideChapel/Artifact1/BrickPowder.png", title: "Brick Powder" },
+        { id: "art2-right-table-10", x: 73.92, y: 70.43, imageSrc: "/images/360InsideChapel/Artifact1/Lime.png", title: "Lime" },
+        { id: "art2-right-table-11", x: 85.53, y: 70.69, imageSrc: "/images/360InsideChapel/Artifact1/Sand.png", title: "Sand" },
       ],
     }),
     buildFloatingArtifactHotspot({
@@ -3282,6 +3293,46 @@
     imageHotspotToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.2" fill="currentColor"></circle><circle cx="12" cy="7" r="2.2" fill="currentColor"></circle><circle cx="18" cy="12" r="2.2" fill="currentColor"></circle><path d="M7.8 10.8 10.2 8.3M13.8 8.3l2.4 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>';
     imageFrame.appendChild(imageHotspotToggle);
 
+    const detailOverlay = document.createElement("div");
+    detailOverlay.className = "tour-artifact-image-detail";
+    detailOverlay.hidden = true;
+    detailOverlay.setAttribute("role", "dialog");
+    detailOverlay.setAttribute("aria-modal", "false");
+    detailOverlay.setAttribute("aria-label", "Artifact detail image");
+
+    const detailImage = document.createElement("img");
+    detailImage.className = "tour-artifact-image-detail__image";
+    detailImage.alt = "";
+
+    const detailTitle = document.createElement("p");
+    detailTitle.className = "tour-artifact-image-detail__title";
+
+    const detailClose = document.createElement("button");
+    detailClose.className = "tour-artifact-image-detail__close";
+    detailClose.type = "button";
+    detailClose.setAttribute("aria-label", "Close artifact detail");
+    detailClose.textContent = "\u00d7";
+
+    detailOverlay.appendChild(detailImage);
+    detailOverlay.appendChild(detailTitle);
+    detailOverlay.appendChild(detailClose);
+    imageFrame.appendChild(detailOverlay);
+
+    detailClose.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      hideFloatingArtifactImageDetail();
+    });
+
+    detailOverlay.addEventListener("click", function (event) {
+      if (event.target === detailOverlay) {
+        hideFloatingArtifactImageDetail();
+      }
+    });
+    detailOverlay.addEventListener("pointerdown", function (event) {
+      event.stopPropagation();
+    });
+
     imageHotspotToggle.addEventListener("click", function (event) {
       event.preventDefault();
       event.stopPropagation();
@@ -3427,11 +3478,42 @@
     floatingArtifactPreviewImageStage = imageStage;
     floatingArtifactPreviewHotspotLayer = imageHotspotLayer;
     floatingArtifactPreviewHotspotToggle = imageHotspotToggle;
+    floatingArtifactPreviewDetail = detailOverlay;
+    floatingArtifactPreviewDetailImage = detailImage;
+    floatingArtifactPreviewDetailTitle = detailTitle;
     floatingArtifactPreviewModel = model;
     floatingArtifactPreviewModelNav = modelNav;
     floatingArtifactPreviewModelPrev = prevButton;
     floatingArtifactPreviewModelNext = nextButton;
     floatingArtifactPreviewTitle = title;
+  }
+
+  function hideFloatingArtifactImageDetail() {
+    if (floatingArtifactPreviewDetail) {
+      floatingArtifactPreviewDetail.hidden = true;
+    }
+    if (floatingArtifactPreviewDetailImage) {
+      floatingArtifactPreviewDetailImage.removeAttribute("src");
+      floatingArtifactPreviewDetailImage.alt = "";
+    }
+    if (floatingArtifactPreviewDetailTitle) {
+      floatingArtifactPreviewDetailTitle.textContent = "";
+    }
+  }
+
+  function showFloatingArtifactImageDetail(hotspot) {
+    if (!hotspot || !hotspot.imageSrc || !floatingArtifactPreviewDetail || !floatingArtifactPreviewDetailImage) {
+      return;
+    }
+
+    const title = hotspot.title || "Artifact detail";
+    floatingArtifactPreviewDetailImage.src = hotspot.imageSrc;
+    floatingArtifactPreviewDetailImage.alt = title;
+    if (floatingArtifactPreviewDetailTitle) {
+      floatingArtifactPreviewDetailTitle.textContent = title;
+    }
+    floatingArtifactPreviewDetail.setAttribute("aria-label", title);
+    floatingArtifactPreviewDetail.hidden = false;
   }
 
   function renderFloatingArtifactImageHotspots(args, showImage) {
@@ -3454,8 +3536,9 @@
       pin.style.left = `${Math.min(100, Math.max(0, Number(hotspot.x)))}%`;
       pin.style.top = `${Math.min(100, Math.max(0, Number(hotspot.y)))}%`;
       pin.setAttribute("data-image-hotspot", hotspot.id || `image-hotspot-${number}`);
-      pin.setAttribute("aria-label", `Image hotspot ${number}; details will be added later`);
-      pin.title = `Hotspot ${number}`;
+      const detailTitle = hotspot.title || `Artifact detail ${number}`;
+      pin.setAttribute("aria-label", `Open ${detailTitle}`);
+      pin.title = detailTitle;
       pin.textContent = String(number);
       pin.addEventListener("pointerdown", function (event) {
         event.stopPropagation();
@@ -3463,6 +3546,7 @@
       pin.addEventListener("click", function (event) {
         event.preventDefault();
         event.stopPropagation();
+        showFloatingArtifactImageDetail(hotspot);
       });
       floatingArtifactPreviewHotspotLayer.appendChild(pin);
     });
@@ -3492,6 +3576,7 @@
     const showGlb = nextView === "glb" && glbSources.length > 0;
 
     floatingArtifactPreviewArgs = args;
+    hideFloatingArtifactImageDetail();
 
     setFloatingWindowTitle(floatingArtifactPreviewTitle, args);
     floatingArtifactPreviewImage.hidden = !showImage;
@@ -3550,6 +3635,7 @@
   }
 
   function hideFloatingArtifactPreviewOverlay() {
+    hideFloatingArtifactImageDetail();
     if (floatingArtifactPreviewOverlay) {
       floatingArtifactPreviewOverlay.hidden = true;
     }

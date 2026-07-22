@@ -1103,55 +1103,55 @@ function initPanorama() {
       img: root.getAttribute('data-info-art1-left-table-img') || '',
       title: { en: 'Art1-LeftTable', tl: 'Art1-LeftTable' },
       imageHotspots: [
-        { id: 'art1-left-table-1', x: 14.40, y: 28.76 },
-        { id: 'art1-left-table-2', x: 13.70, y: 50.00 },
-        { id: 'art1-left-table-3', x: 13.28, y: 71.24 },
-        { id: 'art1-left-table-4', x: 58.74, y: 39.13 },
-        { id: 'art1-left-table-5', x: 58.46, y: 78.82 },
-        { id: 'art1-left-table-6', x: 84.62, y: 78.06 },
-        { id: 'art1-left-table-7', x: 83.79, y: 36.35 },
+        { id: 'art1-left-table-1', x: 14.40, y: 28.76, imageSrc: '/images/360InsideChapel/Artifact/ApogAdobe.png', title: 'Lime Putty and Adobe Powder' },
+        { id: 'art1-left-table-2', x: 13.70, y: 50.00, imageSrc: '/images/360InsideChapel/Artifact/LimeSand.png', title: 'Lime Putty and Sand' },
+        { id: 'art1-left-table-3', x: 13.28, y: 71.24, imageSrc: '/images/360InsideChapel/Artifact/LimeCoral.png', title: 'Lime Putty and Coral Powder' },
+        { id: 'art1-left-table-4', x: 58.74, y: 39.13, imageSrc: '/images/360InsideChapel/Artifact/Limestone.png', title: 'Limestone' },
+        { id: 'art1-left-table-5', x: 58.46, y: 78.82, imageSrc: '/images/360InsideChapel/Artifact/Brick.png', title: 'Brick' },
+        { id: 'art1-left-table-6', x: 84.62, y: 78.06, imageSrc: '/images/360InsideChapel/Artifact/Adobe.png', title: 'Adobe' },
+        { id: 'art1-left-table-7', x: 83.79, y: 36.35, imageSrc: '/images/360InsideChapel/Artifact/CoralStone.png', title: 'Coral Stone' },
       ],
     },
     art2LeftTable: {
       img: root.getAttribute('data-info-art2-left-table-img') || '',
       title: { en: 'Art2-LeftTable', tl: 'Art2-LeftTable' },
       imageHotspots: [
-        { id: 'art2-left-table-1', x: 23.77, y: 21.26 },
-        { id: 'art2-left-table-2', x: 23.28, y: 48.22 },
-        { id: 'art2-left-table-3', x: 23.42, y: 75.69 },
-        { id: 'art2-left-table-4', x: 45.66, y: 32.45 },
-        { id: 'art2-left-table-5', x: 45.80, y: 66.28 },
-        { id: 'art2-left-table-6', x: 62.31, y: 55.60 },
-        { id: 'art2-left-table-7', x: 74.76, y: 53.56 },
-        { id: 'art2-left-table-8', x: 75.46, y: 87.14 },
+        { id: 'art2-left-table-1', x: 23.77, y: 21.26, imageSrc: '/images/360InsideChapel/Artifact3/molave.png', title: 'Molave' },
+        { id: 'art2-left-table-2', x: 23.28, y: 48.22, imageSrc: '/images/360InsideChapel/Artifact3/Narra.png', title: 'Narra' },
+        { id: 'art2-left-table-3', x: 23.42, y: 75.69, imageSrc: '/images/360InsideChapel/Artifact3/KatongMatsing.png', title: 'Katong Matsing' },
+        { id: 'art2-left-table-4', x: 45.66, y: 32.45, imageSrc: '/images/360InsideChapel/Artifact3/Kamagong.png', title: 'Kamagong' },
+        { id: 'art2-left-table-5', x: 45.80, y: 66.28, imageSrc: '/images/360InsideChapel/Artifact3/Yakal.png', title: 'Yakal' },
+        { id: 'art2-left-table-6', x: 62.31, y: 55.60, imageSrc: '/images/360InsideChapel/Artifact3/BatikulingWHR.png', title: 'Batikuling WHR' },
+        { id: 'art2-left-table-7', x: 74.76, y: 53.56, imageSrc: '/images/360InsideChapel/Artifact3/Headrest.png', title: 'Headrest' },
+        { id: 'art2-left-table-8', x: 75.46, y: 87.14, imageSrc: '/images/360InsideChapel/Artifact3/IronNail.png', title: 'Iron Nail' },
       ],
     },
     art1RightTable: {
       img: root.getAttribute('data-info-art1-right-table-img') || '',
       title: { en: 'Art1-RightTable', tl: 'Art1-RightTable' },
       imageHotspots: [
-        { id: 'art1-right-table-1', x: 27.20, y: 52.56 },
-        { id: 'art1-right-table-2', x: 48.46, y: 29.74 },
-        { id: 'art1-right-table-3', x: 47.90, y: 56.52 },
-        { id: 'art1-right-table-4', x: 69.59, y: 30.90 },
-        { id: 'art1-right-table-5', x: 69.45, y: 56.29 },
+        { id: 'art1-right-table-1', x: 27.20, y: 52.56, imageSrc: '/images/360InsideChapel/Artifact2/AzulejosTile.png', title: 'Azulejos Tile' },
+        { id: 'art1-right-table-2', x: 48.46, y: 29.74, imageSrc: '/images/360InsideChapel/Artifact2/RightWindow.png', title: 'Right Window' },
+        { id: 'art1-right-table-3', x: 47.90, y: 56.52, imageSrc: '/images/360InsideChapel/Artifact2/ChapelCeiling.png', title: 'Chapel Ceiling' },
+        { id: 'art1-right-table-4', x: 69.59, y: 30.90, imageSrc: '/images/360InsideChapel/Artifact2/PigmentAboveNiche.png', title: 'Pigment Above Niche' },
+        { id: 'art1-right-table-5', x: 69.45, y: 56.29, imageSrc: '/images/360InsideChapel/Artifact2/BasReliefNiche.png', title: 'Bas-Relief Niche' },
       ],
     },
     art2RightTable: {
       img: root.getAttribute('data-info-art2-right-table-img') || '',
       title: { en: 'Art2-RightTable', tl: 'Art2-RightTable' },
       imageHotspots: [
-        { id: 'art2-right-table-1', x: 29.44, y: 18.22 },
-        { id: 'art2-right-table-2', x: 29.58, y: 38.40 },
-        { id: 'art2-right-table-3', x: 29.58, y: 56.56 },
-        { id: 'art2-right-table-4', x: 29.02, y: 73.96 },
-        { id: 'art2-right-table-5', x: 40.49, y: 19.73 },
-        { id: 'art2-right-table-6', x: 40.49, y: 73.21 },
-        { id: 'art2-right-table-7', x: 70.56, y: 36.89 },
-        { id: 'art2-right-table-8', x: 80.92, y: 37.64 },
-        { id: 'art2-right-table-9', x: 91.55, y: 38.40 },
-        { id: 'art2-right-table-10', x: 73.92, y: 70.43 },
-        { id: 'art2-right-table-11', x: 85.53, y: 70.69 },
+        { id: 'art2-right-table-1', x: 29.44, y: 18.22, imageSrc: '/images/360InsideChapel/Artifact1/InteriorWall.png', title: 'Interior Wall' },
+        { id: 'art2-right-table-2', x: 29.58, y: 38.40, imageSrc: '/images/360InsideChapel/Artifact1/Flooring.png', title: 'Flooring' },
+        { id: 'art2-right-table-3', x: 29.58, y: 56.56, imageSrc: '/images/360InsideChapel/Artifact1/Pilaster.png', title: 'Pilaster' },
+        { id: 'art2-right-table-4', x: 29.02, y: 73.96, imageSrc: '/images/360InsideChapel/Artifact1/PerimeterWall.png', title: 'Perimeter Wall' },
+        { id: 'art2-right-table-5', x: 40.49, y: 19.73, imageSrc: '/images/360InsideChapel/Artifact1/Pigments.png', title: 'Pigments' },
+        { id: 'art2-right-table-6', x: 40.49, y: 73.21, imageSrc: '/images/360InsideChapel/Artifact1/Artist_sMarterials.png', title: 'Artist\u2019s Materials' },
+        { id: 'art2-right-table-7', x: 70.56, y: 36.89, imageSrc: '/images/360InsideChapel/Artifact1/CoralPowder.png', title: 'Coral Powder' },
+        { id: 'art2-right-table-8', x: 80.92, y: 37.64, imageSrc: '/images/360InsideChapel/Artifact1/AdobePowder.png', title: 'Adobe Powder' },
+        { id: 'art2-right-table-9', x: 91.55, y: 38.40, imageSrc: '/images/360InsideChapel/Artifact1/BrickPowder.png', title: 'Brick Powder' },
+        { id: 'art2-right-table-10', x: 73.92, y: 70.43, imageSrc: '/images/360InsideChapel/Artifact1/Lime.png', title: 'Lime' },
+        { id: 'art2-right-table-11', x: 85.53, y: 70.69, imageSrc: '/images/360InsideChapel/Artifact1/Sand.png', title: 'Sand' },
       ],
     },
     pagkasira: {
@@ -1715,6 +1715,56 @@ function initPanorama() {
         const hotspotLayer = document.createElement('div');
         hotspotLayer.className = 'trailx-preview-image-hotspots';
 
+        const detailOverlay = document.createElement('div');
+        detailOverlay.className = 'trailx-preview-image-detail';
+        detailOverlay.hidden = true;
+        detailOverlay.setAttribute('role', 'dialog');
+        detailOverlay.setAttribute('aria-modal', 'false');
+        detailOverlay.setAttribute('aria-label', 'Artifact detail image');
+
+        const detailImage = document.createElement('img');
+        detailImage.className = 'trailx-preview-image-detail__image';
+        detailImage.alt = '';
+
+        const detailTitle = document.createElement('p');
+        detailTitle.className = 'trailx-preview-image-detail__title';
+
+        const detailClose = document.createElement('button');
+        detailClose.className = 'trailx-xclose trailx-preview-image-detail__close';
+        detailClose.type = 'button';
+        detailClose.setAttribute('aria-label', 'Close artifact detail');
+        detailClose.textContent = '\u00d7';
+
+        const hideDetail = () => {
+          detailOverlay.hidden = true;
+          detailImage.removeAttribute('src');
+          detailImage.alt = '';
+          detailTitle.textContent = '';
+        };
+
+        const showDetail = (hotspot, number) => {
+          if (!hotspot?.imageSrc) return;
+          const title = hotspot.title || `Artifact detail ${number}`;
+          detailImage.src = hotspot.imageSrc;
+          detailImage.alt = title;
+          detailTitle.textContent = title;
+          detailOverlay.setAttribute('aria-label', title);
+          detailOverlay.hidden = false;
+        };
+
+        detailClose.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          hideDetail();
+        });
+        detailOverlay.addEventListener('click', (event) => {
+          if (event.target === detailOverlay) hideDetail();
+        });
+        detailOverlay.addEventListener('pointerdown', (event) => event.stopPropagation());
+        detailOverlay.appendChild(detailImage);
+        detailOverlay.appendChild(detailTitle);
+        detailOverlay.appendChild(detailClose);
+
         imageHotspots.forEach((hotspot, index) => {
           const pin = document.createElement('button');
           const number = index + 1;
@@ -1723,13 +1773,15 @@ function initPanorama() {
           pin.style.left = `${Math.min(100, Math.max(0, Number(hotspot.x)))}%`;
           pin.style.top = `${Math.min(100, Math.max(0, Number(hotspot.y)))}%`;
           pin.setAttribute('data-image-hotspot', hotspot.id || `image-hotspot-${number}`);
-          pin.setAttribute('aria-label', `Image hotspot ${number}; details will be added later`);
-          pin.title = `Hotspot ${number}`;
+          const detailName = hotspot.title || `Artifact detail ${number}`;
+          pin.setAttribute('aria-label', `Open ${detailName}`);
+          pin.title = detailName;
           pin.textContent = String(number);
           pin.addEventListener('pointerdown', (event) => event.stopPropagation());
           pin.addEventListener('click', (event) => {
             event.preventDefault();
             event.stopPropagation();
+            showDetail(hotspot, number);
           });
           hotspotLayer.appendChild(pin);
         });
@@ -1754,6 +1806,7 @@ function initPanorama() {
         imageStage.appendChild(hotspotLayer);
         frame.appendChild(imageStage);
         frame.appendChild(hotspotToggle);
+        frame.appendChild(detailOverlay);
         zoomTarget = imageStage;
       } else {
         frame.appendChild(big);
