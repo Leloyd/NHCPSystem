@@ -182,8 +182,8 @@ const SCRIPTS = {
     tl: "Ang tahimik na mga silid na ito ay minsang nag-ingat ng mga lihim. Noong rebolusyon laban sa Espanya, nagpulong dito ang mga Katipunero. Noong 1897, nagtipon sina Pedro Paterno at Heneral Severino Taiño upang talakayin ang mga usaping humantong sa Kasunduan sa Biak-na-Bato.",
   },
   's8-biak': {
-    en: "Imagine the year 1897. This cemetery was quiet, but whispers of revolution moved beneath the ground. From Nagcarlan, the discussions reached the caves of Biak-na-Bato, where Emilio Aguinaldo established a stronghold and a revolutionary government. Then came an offer: money in exchange for surrendered arms and the leaders' exile to Hong Kong. The agreement was signed in December. By Christmas, Aguinaldo had departed. But remember this: the fighting may have paused, but the struggle for freedom did not end.",
-    tl: "Isipin mong 1897. Tahimik ang libingang ito, ngunit may mga bulong ng himagsikan sa ilalim ng lupa. Mula Nagcarlan, umabot ang mga usapan sa mga yungib ng Biak-na-Bato, kung saan nagtayo si Emilio Aguinaldo ng kuta at pamahalaan. Dumating ang isang alok: salapi kapalit ng pagsuko ng mga armas at pag-alis ng mga pinuno patungong Hong Kong. Nilagdaan ang kasunduan noong Disyembre. Pagsapit ng Pasko, umalis si Aguinaldo. Ngunit tandaan ito: maaaring pansamantalang tumigil ang labanan, ngunit hindi natapos ang pakikibaka para sa kalayaan.",
+    en: "Follow the thread with me. In 1897, Pedro Paterno and General Severino Taiño met secretly in this cemetery. Their discussions became part of the road to Biak-na-Bato. By June, Emilio Aguinaldo's group had reached its caves and made the area their stronghold. In November, that refuge became the seat of a revolutionary government. Then negotiations followed. Ratified in December, the pact linked promised payments to Aguinaldo's exile, the surrender of arms, and a general amnesty. On Christmas Day, Aguinaldo sailed away. The fighting paused, but the Filipino struggle for independence continued.",
+    tl: "Sundan natin ang hibla. Noong 1897, lihim na nagpulong sa libingang ito sina Pedro Paterno at Heneral Severino Taiño. Naging bahagi ang kanilang mga usapan ng landas patungong Biak-na-Bato. Pagsapit ng Hunyo, narating ng pangkat ni Emilio Aguinaldo ang mga yungib nito at ginawang kuta ang lugar. Noong Nobyembre, ang kanlungang iyon ay naging luklukan ng isang pamahalaang rebolusyonaryo. Sumunod ang negosasyon. Pinagtibay noong Disyembre, iniugnay ng kasunduan ang mga ipinangakong bayad sa pagkatapon ni Aguinaldo, pagsuko ng mga armas, at pangkalahatang amnestiya. Noong araw ng Pasko, naglayag si Aguinaldo. Pansamantalang tumigil ang labanan, ngunit nagpatuloy ang pakikibaka ng mga Pilipino para sa kalayaan.",
   },
   's8-wwii': {
     en: "The cemetery kept sheltering the brave. During the Japanese occupation, it became a stronghold for Filipino guerrillas, led by Colonel Guillermo Aynaga, until his capture and death in 1944. His remains now rest at the Libingan ng mga Bayani.",
@@ -4127,7 +4127,14 @@ function setupStory(el) {
 
     const showMoment = (requested) => {
       if (!cards.length) return;
-      current = Math.min(cards.length - 1, Math.max(0, Number(requested) || 0));
+      const target = Math.min(cards.length - 1, Math.max(0, Number(requested) || 0));
+      story.dataset.pactDirection = target < current ? 'back' : 'forward';
+      current = target;
+      story.dataset.pactActive = String(current);
+      const progress = cards.length > 1 ? (current / (cards.length - 1)) * 100 : 100;
+      const glowPosition = cards.length > 1 ? -38 + (current / (cards.length - 1)) * 76 : 0;
+      story.style.setProperty('--pact-progress', `${progress}%`);
+      story.style.setProperty('--pact-glow-x', `${glowPosition}%`);
       cards.forEach((card, index) => {
         const active = index === current;
         card.hidden = !active;
@@ -4137,6 +4144,7 @@ function setupStory(el) {
       jumps.forEach((jump, index) => {
         const active = index === current;
         jump.classList.toggle('is-active', active);
+        jump.classList.toggle('is-visited', index <= current);
         jump.setAttribute('aria-current', active ? 'step' : 'false');
       });
       if (previous) previous.disabled = current === 0;
