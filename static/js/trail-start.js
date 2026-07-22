@@ -4100,7 +4100,7 @@ function setupKeeperArchive(storyEl, api = {}) {
     button.type = 'button';
     button.className = 'trailx-archive__sealed-record';
     button.dataset.archiveDiscovery = card.id;
-    button.setAttribute('aria-label', `Hidden archive record. Illuminate and hold to recover ${card.title?.en || card.id}.`);
+    button.setAttribute('aria-label', `Hidden archive record. Illuminate it, then tap to recover ${card.title?.en || card.id}.`);
     const number = document.createElement('span');
     number.textContent = 'ARCHIVE';
     const image = document.createElement('img');
@@ -4112,7 +4112,7 @@ function setupKeeperArchive(storyEl, api = {}) {
     seal.setAttribute('aria-hidden', 'true');
     seal.textContent = '✦';
     const holdLabel = document.createElement('em');
-    holdLabel.append(bilingual('Hold to recover', 'Pindutin nang matagal'));
+    holdLabel.append(bilingual('Tap to recover', 'Pindutin upang kunin'));
     button.append(image, number, seal, holdLabel);
     discoveryEls.set(card.id, button);
     return button;
@@ -4548,30 +4548,19 @@ function setupKeeperArchive(storyEl, api = {}) {
     }
   };
 
+  // One tap on a lit record recovers it — no holding.
   discoveryEls.forEach((element, id) => {
-    element.addEventListener('click', (event) => event.preventDefault());
-    element.addEventListener('pointerdown', (event) => {
+    const collect = (event) => {
       if (discovered.has(id)) return;
-      if (!event.target.closest('.trailx-archive__record-seal')) return;
-      if (armedDiscoveryId !== id) return;
+      if (armedDiscoveryId !== id) return; // only while the lantern lights it
       event.preventDefault();
       event.stopPropagation();
-      element.setPointerCapture?.(event.pointerId);
-      startCollectHold(id, element, event.pointerId);
-    });
-    const cancelPointerHold = (event) => {
-      if (collectHold?.id === id && (collectHold.pointerId === null || collectHold.pointerId === event.pointerId)) cancelCollectHold();
+      revealCard(id);
     };
-    element.addEventListener('pointerup', cancelPointerHold);
-    element.addEventListener('pointercancel', cancelPointerHold);
-    element.addEventListener('lostpointercapture', cancelPointerHold);
+    element.addEventListener('click', collect);
     element.addEventListener('keydown', (event) => {
       if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      if (!collectHold) startCollectHold(id, element, null);
-    });
-    element.addEventListener('keyup', (event) => {
-      if ((event.key === 'Enter' || event.key === ' ') && collectHold?.id === id) cancelCollectHold();
+      collect(event);
     });
   });
 
@@ -4619,8 +4608,8 @@ function setupKeeperArchive(storyEl, api = {}) {
     render();
     if (archiveScroll) archiveScroll.scrollTop = 0;
     showFeedback(
-      discovered.size ? 'Continue searching, or move to the filing room at any time.' : 'Move the lantern through the room. Hold a gold seal when a true record glints.',
-      discovered.size ? 'Ipagpatuloy ang paghahanap, o pumunta sa silid ng pag-uuri anumang oras.' : 'Ilibot ang ilawan sa silid. Pindutin nang matagal ang gintong selyo kapag kumislap ang tunay na tala.',
+      discovered.size ? 'Continue searching, or move to the filing room at any time.' : 'Move the lantern through the room. Tap a record the moment it glints gold.',
+      discovered.size ? 'Ipagpatuloy ang paghahanap, o pumunta sa silid ng pag-uuri anumang oras.' : 'Ilibot ang ilawan sa silid. Pindutin ang tala sa sandaling kumislap ito nang ginto.',
       'hint'
     );
     overlay.querySelector('[data-archive-close]')?.focus?.({ preventScroll: true });

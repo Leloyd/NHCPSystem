@@ -6840,3 +6840,151 @@ body.trail-archive-open {
   .trailx-archive__section-head { gap: 0.55rem; }
   .trailx-archive__section-head button { width: 100%; }
 }
+
+/* ==========================================================================
+   Stop 9 · Keeper's Archive — finish pass
+   Softer surfaces, one consistent radius language, quieter borders and real
+   type hierarchy, so the workspace reads as a crafted desk rather than a
+   stack of boxes.
+   ========================================================================== */
+
+/* ---- The panel itself --------------------------------------------------- */
+.trailx-archive {
+  border: 1px solid rgba(212, 175, 106, 0.22);
+  box-shadow:
+    0 40px 120px rgba(0, 0, 0, 0.7),
+    0 0 0 1px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+  overflow: hidden;
+}
+.trailx-archive__header {
+  align-items: center;
+  border-bottom: 1px solid rgba(212, 175, 106, 0.16);
+  background: linear-gradient(180deg, rgba(26, 19, 9, 0.98), rgba(12, 9, 4, 0.97));
+}
+.trailx-archive__eyebrow {
+  color: rgba(212, 175, 106, 0.85);
+  letter-spacing: 0.2em;
+}
+.trailx-archive__header h3 {
+  margin: 0.12rem 0 0;
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+}
+.trailx-archive__header-actions { gap: 0.7rem; }
+.trailx-archive__count {
+  padding: 0.32rem 0.7rem;
+  border: 1px solid rgba(212, 175, 106, 0.22);
+  border-radius: 999px;
+  background: rgba(212, 175, 106, 0.06);
+  text-align: center;
+}
+.trailx-archive__header [data-archive-close] {
+  width: 2.5rem;
+  height: 2.5rem;
+  border: 1px solid rgba(212, 175, 106, 0.3);
+  border-radius: 50%;
+  background: rgba(212, 175, 106, 0.07);
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.trailx-archive__header [data-archive-close]:hover {
+  background: rgba(212, 175, 106, 0.2);
+  border-color: var(--tx-gold);
+}
+
+/* ---- Rooms -------------------------------------------------------------- */
+.trailx-archive__phase + .trailx-archive__phase {
+  border-top: 1px solid rgba(212, 175, 106, 0.16);
+  box-shadow: none; /* the heavy inner shadow read as a seam */
+}
+.trailx-archive__section-head h4 {
+  font-family: "Playfair Display", Georgia, serif;
+  font-weight: 500;
+}
+.trailx-archive__section-head button {
+  border: 1px solid rgba(212, 175, 106, 0.32);
+  background: rgba(212, 175, 106, 0.07);
+  color: #f7d98f;
+  transition: background 0.2s ease, border-color 0.2s ease;
+}
+.trailx-archive__section-head button:hover {
+  background: rgba(212, 175, 106, 0.18);
+  border-color: var(--tx-gold);
+}
+
+/* ---- Recovered record cards --------------------------------------------- */
+.trailx-archive__card {
+  grid-template-rows: auto auto;
+  min-height: 0;
+  border: 1px solid rgba(212, 175, 106, 0.2);
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, rgba(32, 23, 11, 0.96), rgba(15, 11, 5, 0.96));
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.42);
+}
+.trailx-archive__card > span:not(.trailx-archive__card-actions) { padding-bottom: 0.6rem; }
+.trailx-archive__card small {
+  color: rgba(212, 175, 106, 0.6);
+  letter-spacing: 0.14em;
+}
+/* The info button belongs in the top-right corner of the card. */
+.trailx-archive__inspect {
+  position: absolute;
+  top: 0.4rem;
+  right: 0.4rem;
+  z-index: 2;
+  display: grid;
+  place-items: center;
+  width: 1.7rem;
+  height: 1.7rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.55);
+  border-radius: 50%;
+  color: #1c1208;
+  background: rgba(212, 175, 106, 0.94);
+  font: 700 0.72rem/1 Georgia, serif;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.5);
+  transition: transform 0.18s ease, background 0.18s ease;
+}
+.trailx-archive__inspect:hover { transform: scale(1.08); background: #f7d98f; }
+
+/* ---- Chapter zones ------------------------------------------------------ */
+.trailx-archive__zone {
+  border: 1px solid rgba(212, 175, 106, 0.2);
+  border-radius: 0.75rem;
+  background: linear-gradient(180deg, rgba(28, 20, 10, 0.9), rgba(12, 9, 4, 0.9));
+  transition: border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
+}
+.trailx-archive__zone:hover,
+.trailx-archive__zone.is-over {
+  border-color: var(--tx-gold);
+  background: linear-gradient(180deg, rgba(212, 175, 106, 0.16), rgba(14, 10, 5, 0.92));
+  transform: translateY(-2px);
+}
+.trailx-archive__zone b { font-family: "Playfair Display", Georgia, serif; font-weight: 500; }
+
+/* ---- Tray + footer ------------------------------------------------------ */
+.trailx-archive__tray-shell {
+  border: 1px solid rgba(212, 175, 106, 0.16);
+  border-radius: 0.85rem;
+  background: linear-gradient(180deg, rgba(212, 175, 106, 0.04), rgba(7, 5, 2, 0.45));
+}
+.trailx-archive__footer {
+  border-top: 1px solid rgba(212, 175, 106, 0.16);
+  background: linear-gradient(0deg, rgba(20, 15, 7, 0.98), rgba(11, 8, 4, 0.95));
+}
+.trailx-archive__footer button {
+  border-radius: 999px;
+  padding: 0.6rem 1.1rem;
+  transition: background 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+}
+.trailx-archive__feedback {
+  border-radius: 0.7rem;
+  border: 1px solid rgba(212, 175, 106, 0.18);
+  background: rgba(14, 10, 5, 0.92);
+}
+
+@media (max-width: 820px) {
+  .trailx-archive__inspect { width: 1.6rem; height: 1.6rem; font-size: 0.66rem; }
+  .trailx-archive__count { min-width: 0; }
+}
