@@ -190,8 +190,20 @@ const SCRIPTS = {
     tl: "Patuloy na nagkupkop ng matatapang ang libingan. Noong pananakop ng mga Hapon, naging kuta ito ng mga gerilyang Pilipino, sa pamumuno ni Koronel Guillermo Aynaga, hanggang sa kanyang pagkadakip at pagkamatay noong 1944. Ang kanyang labi ay nakahimlay na ngayon sa Libingan ng mga Bayani.",
   },
   's8-guerrillas': {
-    en: "They did not fight alone. The Nagcarlan guerrillas — the FAIT, the FAAC, and President Quezon's Own Guerrillas — fought in the mountains, sabotaged the enemy, and fed intelligence to the Allies, standing firm for Philippine freedom until the war's end.",
-    tl: "Hindi sila nag-isa. Ang mga gerilya ng Nagcarlan — ang FAIT, ang FAAC, at ang President Quezon's Own Guerrillas — ay nakipaglaban sa kabundukan, nanira sa kaaway, at nagbigay ng impormasyon sa mga Allied, na matatag para sa kalayaan ng Pilipinas hanggang sa katapusan ng digmaan.",
+    en: "They did not fight alone. The Nagcarlan guerrillas played a crucial role in resisting the Japanese occupation during the Second World War.",
+    tl: "Hindi sila nag-isa. Mahalaga ang naging papel ng mga gerilya ng Nagcarlan sa paglaban sa pananakop ng Hapon noong Ikalawang Digmaang Pandaigdig.",
+  },
+  's8-guerrilla-forces': {
+    en: "Their ranks included the FAIT, the FAAC, and President Quezon's Own Guerrillas. They fought in the mountains, sabotaged enemy operations, and carried vital intelligence to the Allied forces.",
+    tl: "Kabilang sa kanilang hanay ang FAIT, FAAC, at President Quezon's Own Guerrillas. Nakipaglaban sila sa kabundukan, nagsagawa ng pagsabotahe sa mga operasyon ng kaaway, at naghatid ng mahalagang impormasyon sa mga Allied.",
+  },
+  's8-guerrilla-legacy': {
+    en: "Their actions disrupted Japanese military operations and supported returning soldiers. Despite limited resources and constant danger, the guerrilla units stood firm for Philippine freedom until the war's end.",
+    tl: "Napigil ng kanilang mga pagkilos ang mga operasyong militar ng Hapon at nasuportahan ang mga nagbabalik na sundalo. Sa kabila ng kakaunting kagamitan at walang humpay na panganib, nanatiling matatag ang mga gerilya para sa kalayaan ng Pilipinas hanggang sa pagtatapos ng digmaan.",
+  },
+  's8-guerrilla-records': {
+    en: "Their courage also survives in the records preserved by the Philippine Veterans Affairs Office. Tap View Documents to examine the pages connected to the Guerrillas of Nagcarlan.",
+    tl: "Nananatili rin ang kanilang katapangan sa mga talaang iningatan ng Philippine Veterans Affairs Office. Pindutin ang Tingnan ang mga Dokumento upang suriin ang mga pahinang kaugnay ng mga Gerilya ng Nagcarlan.",
   },
   's8-next': {
     en: "That completes our eighth stop. When you are ready, one last challenge waits before we return to the light. Tap Continue.",
@@ -4184,7 +4196,12 @@ function setupStory(el) {
     const next = story.querySelector('[data-pact-next]');
     const counter = story.querySelector('[data-pact-count]');
     const fullAccount = story.querySelector('.trailx-pact__full');
+    const fullPages = Array.from(story.querySelectorAll('[data-pact-full-page]'));
+    const fullPrevious = story.querySelector('[data-pact-full-prev]');
+    const fullNext = story.querySelector('[data-pact-full-next]');
+    const fullCounter = story.querySelector('[data-pact-full-count]');
     let current = 0;
+    let currentFullPage = 0;
     let swipe = null;
 
     const showMoment = (requested) => {
@@ -4242,11 +4259,32 @@ function setupStory(el) {
     }, { passive: true });
     stage?.addEventListener('pointercancel', () => { swipe = null; }, { passive: true });
 
+    const showFullPage = (requested) => {
+      if (!fullPages.length) return;
+      currentFullPage = Math.min(fullPages.length - 1, Math.max(0, Number(requested) || 0));
+      fullPages.forEach((page, index) => {
+        const active = index === currentFullPage;
+        page.hidden = !active;
+        page.setAttribute('aria-hidden', String(!active));
+      });
+      if (fullPrevious) fullPrevious.disabled = currentFullPage === 0;
+      if (fullNext) fullNext.disabled = currentFullPage === fullPages.length - 1;
+      if (fullCounter) {
+        fullCounter.textContent = `${currentFullPage + 1} / ${fullPages.length}`;
+        fullCounter.setAttribute('aria-label', `Full account page ${currentFullPage + 1} of ${fullPages.length}`);
+      }
+    };
+
+    fullPrevious?.addEventListener('click', () => showFullPage(currentFullPage - 1));
+    fullNext?.addEventListener('click', () => showFullPage(currentFullPage + 1));
+
     fullAccount?.addEventListener('toggle', () => {
       story.classList.toggle('is-reading-full', fullAccount.open);
+      if (fullAccount.open) showFullPage(0);
     });
 
     showMoment(0);
+    showFullPage(0);
   });
 
   // Mind games (Stop 4) — unscored, retry forever.
