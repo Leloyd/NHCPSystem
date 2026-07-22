@@ -206,28 +206,32 @@ const SCRIPTS = {
     tl: "Nananatili rin ang kanilang katapangan sa mga talaang iningatan ng Philippine Veterans Affairs Office. Pindutin ang Tingnan ang mga Dokumento upang suriin ang mga pahinang kaugnay ng mga Gerilya ng Nagcarlan.",
   },
   's8-next': {
-    en: "That completes our eighth stop. When you are ready, one last challenge waits before we return to the light. Tap Continue.",
-    tl: "Tapos na ang ating ikawalong hinto. Kapag handa ka na, may naghihintay na huling hamon bago tayo bumalik sa liwanag. Pindutin ang Magpatuloy.",
+    en: "That completes our eighth stop. One passage remains before we return to the light: the Memory Tunnel, where four memories from Stops Five through Eight must be restored. Tap Continue.",
+    tl: "Tapos na ang ating ikawalong hinto. Isang lagusan na lamang ang tatahakin bago tayo bumalik sa liwanag: ang Lagusan ng Alaala, kung saan bubuuin ang apat na alaala mula Hinto Lima hanggang Walo. Pindutin ang Magpatuloy.",
   },
   's9-arrive': {
-    en: "One last challenge — our ninth stop. No scores, no grades: just a few games drawn from everything you have seen, from the gates to these crypts. Scroll down and let us play.",
-    tl: "Isang huling hamon — ang ating ikasiyam na hinto. Walang puntos, walang grado: ilang laro lamang mula sa lahat ng iyong nakita, mula sa tarangkahan hanggang sa mga kriptang ito. Mag-scroll pababa at maglaro tayo.",
+    en: "We have reached the Memory Tunnel. Four sealed doors hold memories from Stops Five through Eight. Restore every memory through touch, movement, and observation, and the passage back to the light will open.",
+    tl: "Narating na natin ang Lagusan ng Alaala. Apat na nakasarang pinto ang nag-iingat ng mga alaala mula Hinto Lima hanggang Walo. Buoin ang bawat alaala sa pamamagitan ng paghawak, pagkilos, at pagmamasid upang mabuksan ang daan pabalik sa liwanag.",
   },
-  's9-riddle': {
-    en: "First, a riddle from the crypts. Katipuneros met in secret at Nagcarlan in 1897 — and those talks led, months later, to a famous agreement with Spain. Which one? Choose below.",
-    tl: "Una, isang bugtong mula sa mga kripta. Lihim na nagpulong ang mga Katipunero sa Nagcarlan noong 1897 — at ang mga usapang iyon ay humantong sa isang tanyag na kasunduan sa Espanya. Alin? Pumili sa ibaba.",
+  's9-door5': {
+    en: "The first door remembers Fray Juan de Plasencia. Reassemble the scattered page from top to bottom, and recover the written record of early Tagalog customs.",
+    tl: "Inaalala ng unang pinto si Padre Juan de Plasencia. Buoin ang nagkalat na pahina mula itaas pababa upang maibalik ang nakasulat na tala ng mga sinaunang kaugaliang Tagalog.",
   },
-  's9-order': {
-    en: "Now the whole story. Tap the four moments in the order they happened — from the friars who built this place to the day it became a national landmark.",
-    tl: "Ngayon, ang buong kuwento. Pindutin ang apat na pangyayari ayon sa pagkakasunod — mula sa mga prayleng nagtayo nito hanggang sa araw na naging pambansang palatandaan ito.",
+  's9-door6': {
+    en: "The second door holds the chapel through time. Draw the golden handle from its deteriorated state in 1911 toward the careful restoration carried out generations later.",
+    tl: "Taglay ng ikalawang pinto ang kapilya sa paglipas ng panahon. Hilahin ang gintong hawakan mula sa kalagayan nito noong 1911 tungo sa maingat na pagsasaayos ng mga sumunod na salinlahi.",
   },
-  's9-tf': {
-    en: "Last — four quick claims from across the whole trail. Tell me: true, or false? Take your best guess.",
-    tl: "Panghuli — apat na mabilisang pahayag mula sa buong landas. Sabihin mo: totoo, o hindi? Manghula lang.",
+  's9-door7': {
+    en: "The third door is dark. Move the lantern across the Tapete and reveal the black cloth, the cross of Christ, and the reminder of mortality woven into this memorial tradition.",
+    tl: "Madilim ang ikatlong pinto. Ilipat ang ilawan sa Tapete at tuklasin ang itim na tela, ang krus ni Kristo, at ang paalala ng kamatayan na taglay ng tradisyong ito ng paggunita.",
+  },
+  's9-door8': {
+    en: "The final door connects events preserved below ground. Carry the golden thread from the secret meeting of 1897, through the Pact of Biak-na-Bato and the guerrilla resistance, to the records that preserve their service today.",
+    tl: "Pinagdurugtong ng huling pinto ang mga pangyayaring iningatan sa ilalim ng lupa. Dalhin ang gintong hibla mula sa lihim na pagpupulong noong 1897, sa Kasunduan sa Biak-na-Bato at paglaban ng mga gerilya, hanggang sa mga talaang nag-iingat sa kanilang paglilingkod ngayon.",
   },
   's9-next': {
-    en: "Well played — that was our final challenge. Let us climb back up into the light, and stand once more at the gates where we began. Tap Continue.",
-    tl: "Mahusay — iyon ang ating huling hamon. Umakyat tayong muli sa liwanag, at tumayo pang muli sa tarangkahang pinagsimulan natin. Pindutin ang Magpatuloy.",
+    en: "When all four memories shine, the passage to the light will open. Restore any door still sealed, then continue to the final stop.",
+    tl: "Kapag nagliwanag ang apat na alaala, mabubuksan ang daan tungo sa liwanag. Buoin ang anumang pintong nakasara pa, pagkatapos ay magpatuloy sa huling hinto.",
   },
   's10-arrive': {
     en: "And here we are again — the front gates, where our journey began. Take one last look around the place you now know so well.",
@@ -800,7 +804,7 @@ const STOP_CONF = {
   stop7: { scene: 'insideChurch', pitch: 0, yaw: -24, hfov: 100, hash: '#stop-7' },
   // The underground crypts.
   stop8: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-8' },
-  // The final assessment plays over the same crypts as Stop 8.
+  // The Memory Tunnel plays over the same crypts as Stop 8.
   stop9: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-9' },
   // Back at the front gate, where the trail began.
   stop10: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-10' },
@@ -3974,6 +3978,317 @@ function setupTraditionMap(el, options = {}) {
   };
 }
 
+/* Stop 9 · The Memory Tunnel -----------------------------------------------
+   Four tactile recalls replace the former quiz. Every door uses a different
+   gesture and contributes to one shared, persistent passage state. */
+function setupMemoryTunnel(storyEl, api = {}) {
+  const tunnelRoot = storyEl?.matches?.('[data-memory-tunnel]')
+    ? storyEl
+    : storyEl?.querySelector?.('[data-memory-tunnel]');
+  if (!tunnelRoot) return null;
+
+  const STORAGE_KEY = 'trailMemoryTunnel:v1';
+  const doorKeys = ['stop5', 'stop6', 'stop7', 'stop8'];
+  const doors = new Map(doorKeys.map((key) => [key, tunnelRoot.querySelector(`[data-memory-door="${key}"]`)]));
+  const exit = tunnelRoot.querySelector('[data-tunnel-exit]');
+  const exitButton = tunnelRoot.querySelector('[data-tunnel-exit-button]');
+  const returnButton = tunnelRoot.querySelector('[data-tunnel-return]');
+  const exitCopy = tunnelRoot.querySelector('[data-tunnel-exit-copy]');
+  const count = tunnelRoot.querySelector('[data-tunnel-count]');
+  const completed = new Set();
+
+  try {
+    const saved = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || '[]');
+    if (Array.isArray(saved)) saved.forEach((key) => {
+      if (doorKeys.includes(key)) completed.add(key);
+    });
+  } catch { /* session storage may be unavailable in private browsing */ }
+
+  const bilingual = (en, tl) => `<span data-lang-en>${en}</span><span data-lang-tl>${tl}</span>`;
+
+  const save = () => {
+    try { window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify(Array.from(completed))); }
+    catch { /* progress remains available for the current page */ }
+  };
+
+  const renderProgress = () => {
+    doorKeys.forEach((key) => {
+      const restored = completed.has(key);
+      tunnelRoot.querySelectorAll(`[data-tunnel-progress-door="${key}"]`).forEach((marker) => {
+        marker.classList.toggle('is-lit', restored);
+        marker.setAttribute('aria-label', `${key.replace('stop', 'Stop ')} memory ${restored ? 'restored' : 'sealed'}`);
+      });
+      const door = doors.get(key);
+      door?.classList.toggle('is-complete', restored);
+      const completeMessage = door?.querySelector('[data-door-complete]');
+      if (completeMessage) completeMessage.hidden = !restored;
+      if (restored) {
+        const state = door?.querySelector('[data-door-state]');
+        if (state) state.innerHTML = bilingual('Memory restored', 'Naibalik ang alaala');
+      }
+    });
+
+    const total = completed.size;
+    const unlocked = total === doorKeys.length;
+    exit?.classList.toggle('is-unlocked', unlocked);
+    if (exitButton) {
+      exitButton.disabled = !unlocked;
+      exitButton.setAttribute('aria-disabled', String(!unlocked));
+    }
+    if (returnButton) returnButton.hidden = unlocked;
+    if (count) {
+      count.innerHTML = bilingual(
+        `${total} of 4 memories restored`,
+        `${total} sa 4 na alaala ang naibalik`
+      );
+    }
+    if (exitCopy) {
+      exitCopy.innerHTML = unlocked
+        ? bilingual(
+            'The four memories are whole. The passage is open—return with their stories.',
+            'Buo na ang apat na alaala. Bukas na ang lagusan—dalhin ang kanilang mga kuwento.'
+          )
+        : bilingual(
+            'Restore all four memories to illuminate the path back to the gates.',
+            'Buoin ang apat na alaala upang liwanagan ang daan pabalik sa tarangkahan.'
+          );
+    }
+  };
+
+  const completeDoor = (key) => {
+    if (!doorKeys.includes(key) || completed.has(key)) return;
+    completed.add(key);
+    save();
+    renderProgress();
+  };
+
+  returnButton?.addEventListener('click', () => {
+    const firstIncomplete = doorKeys.find((key) => !completed.has(key));
+    const chapter = firstIncomplete ? doors.get(firstIncomplete)?.closest('.trailx__chapter') : null;
+    const index = chapter && Array.isArray(api.panels) ? api.panels.indexOf(chapter) : -1;
+    if (index >= 0) api.scrollToStep?.(index);
+  });
+
+  // Door I: reconstruct the Plasencia document. Touch and mouse users may
+  // drag; tapping a fragment and then its slot is the accessible alternative.
+  const documentDoor = doors.get('stop5');
+  if (documentDoor) {
+    const piecesWrap = documentDoor.querySelector('[data-memory-doc-pieces]');
+    const pieces = Array.from(documentDoor.querySelectorAll('[data-memory-doc-piece]'));
+    const slots = Array.from(documentDoor.querySelectorAll('[data-memory-doc-slot]'));
+    const feedback = documentDoor.querySelector('[data-door-feedback]');
+    let selected = null;
+    let drag = null;
+    let suppressClick = false;
+
+    const fragmentPosition = (index) => `${index * (100 / 3)}%`;
+    const selectPiece = (piece) => {
+      if (!piece || piece.hidden) return;
+      selected = piece;
+      pieces.forEach((item) => {
+        const active = item === piece;
+        item.classList.toggle('is-selected', active);
+        item.setAttribute('aria-pressed', String(active));
+      });
+      if (feedback) feedback.innerHTML = bilingual(
+        'Fragment selected. Choose its place in the page.',
+        'Napili ang piraso. Piliin ang puwesto nito sa pahina.'
+      );
+    };
+
+    const placePiece = (piece, slot) => {
+      if (!piece || !slot || piece.hidden || slot.classList.contains('is-filled')) return false;
+      const pieceIndex = piece.getAttribute('data-memory-doc-piece');
+      const slotIndex = slot.getAttribute('data-memory-doc-slot');
+      if (pieceIndex !== slotIndex) {
+        slot.classList.remove('is-wrong');
+        void slot.offsetWidth;
+        slot.classList.add('is-wrong');
+        window.setTimeout(() => slot.classList.remove('is-wrong'), 520);
+        if (feedback) feedback.innerHTML = bilingual(
+          'The lines do not continue there. Try another place.',
+          'Hindi nagpapatuloy roon ang mga linya. Subukan ang ibang puwesto.'
+        );
+        return false;
+      }
+
+      slot.style.setProperty('--fragment-y', fragmentPosition(Number(pieceIndex)));
+      slot.classList.add('is-filled');
+      slot.disabled = true;
+      piece.hidden = true;
+      piece.classList.remove('is-selected');
+      piece.setAttribute('aria-pressed', 'false');
+      selected = null;
+      const placed = slots.filter((item) => item.classList.contains('is-filled')).length;
+      if (feedback) feedback.innerHTML = bilingual(
+        `${placed} of 4 fragments restored`,
+        `${placed} sa 4 na piraso ang naibalik`
+      );
+      if (placed === slots.length) completeDoor('stop5');
+      return true;
+    };
+
+    if (!completed.has('stop5') && piecesWrap) {
+      pieces
+        .map((piece) => ({ piece, order: Math.random() }))
+        .sort((a, b) => a.order - b.order)
+        .forEach(({ piece }) => piecesWrap.appendChild(piece));
+    }
+
+    pieces.forEach((piece) => {
+      piece.setAttribute('aria-pressed', 'false');
+      piece.addEventListener('click', () => {
+        if (suppressClick) { suppressClick = false; return; }
+        selectPiece(piece);
+      });
+      piece.addEventListener('pointerdown', (event) => {
+        if (event.button > 0 || piece.hidden) return;
+        drag = { piece, id: event.pointerId, x: event.clientX, y: event.clientY, moved: false };
+        piece.setPointerCapture?.(event.pointerId);
+      });
+      piece.addEventListener('pointermove', (event) => {
+        if (!drag || drag.id !== event.pointerId || drag.piece !== piece) return;
+        const dx = event.clientX - drag.x;
+        const dy = event.clientY - drag.y;
+        if (!drag.moved && Math.hypot(dx, dy) < 7) return;
+        drag.moved = true;
+        piece.classList.add('is-dragging');
+        piece.style.setProperty('--drag-x', `${dx}px`);
+        piece.style.setProperty('--drag-y', `${dy}px`);
+      });
+      const finishDrag = (event) => {
+        if (!drag || drag.id !== event.pointerId || drag.piece !== piece) return;
+        const moved = drag.moved;
+        piece.style.visibility = 'hidden';
+        const target = moved ? document.elementFromPoint(event.clientX, event.clientY) : null;
+        piece.style.visibility = '';
+        piece.classList.remove('is-dragging');
+        piece.style.removeProperty('--drag-x');
+        piece.style.removeProperty('--drag-y');
+        drag = null;
+        if (moved) {
+          suppressClick = true;
+          const slot = target?.closest?.('[data-memory-doc-slot]');
+          if (slot) placePiece(piece, slot);
+          else selectPiece(piece);
+        }
+      };
+      piece.addEventListener('pointerup', finishDrag);
+      piece.addEventListener('pointercancel', finishDrag);
+    });
+    slots.forEach((slot) => slot.addEventListener('click', () => placePiece(selected, slot)));
+
+    if (completed.has('stop5')) {
+      slots.forEach((slot, index) => {
+        slot.style.setProperty('--fragment-y', fragmentPosition(index));
+        slot.classList.add('is-filled');
+        slot.disabled = true;
+      });
+      pieces.forEach((piece) => { piece.hidden = true; });
+    }
+  }
+
+  // Door II: scrub from deterioration to restoration.
+  const restorationDoor = doors.get('stop6');
+  if (restorationDoor) {
+    const comparison = restorationDoor.querySelector('[data-memory-restoration]');
+    const range = restorationDoor.querySelector('[data-memory-restore-range]');
+    const update = () => {
+      const value = Math.max(0, Math.min(100, Number(range?.value) || 0));
+      comparison?.style.setProperty('--restore-progress', `${value}%`);
+      if (value >= 98) completeDoor('stop6');
+    };
+    if (completed.has('stop6') && range) range.value = '100';
+    range?.addEventListener('input', update);
+    range?.addEventListener('change', update);
+    update();
+  }
+
+  // Door III: reveal the Tapete by moving a lantern over three meanings.
+  const revealDoor = doors.get('stop7');
+  if (revealDoor) {
+    const reveal = revealDoor.querySelector('[data-memory-reveal]');
+    const symbols = Array.from(revealDoor.querySelectorAll('[data-memory-symbol]'));
+    const found = new Set();
+    let touching = false;
+
+    const renderDiscoveries = () => {
+      symbols.forEach((symbol) => {
+        const key = symbol.getAttribute('data-memory-symbol');
+        const isFound = found.has(key);
+        symbol.classList.toggle('is-found', isFound);
+        revealDoor.querySelector(`[data-memory-discovery="${key}"]`)?.classList.toggle('is-found', isFound);
+      });
+      const state = revealDoor.querySelector('[data-door-state]');
+      if (state && !completed.has('stop7')) state.innerHTML = bilingual(
+        `${found.size} of 3 symbols`,
+        `${found.size} sa 3 sagisag`
+      );
+      if (found.size === symbols.length) completeDoor('stop7');
+    };
+
+    const scan = (clientX, clientY) => {
+      if (!reveal) return;
+      const rect = reveal.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
+      const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
+      reveal.style.setProperty('--beam-x', `${x}%`);
+      reveal.style.setProperty('--beam-y', `${y}%`);
+      const radius = Math.max(32, Math.min(rect.width, rect.height) * 0.15);
+      symbols.forEach((symbol) => {
+        const sx = (Number(symbol.dataset.x) / 100) * rect.width;
+        const sy = (Number(symbol.dataset.y) / 100) * rect.height;
+        const px = (x / 100) * rect.width;
+        const py = (y / 100) * rect.height;
+        if (Math.hypot(px - sx, py - sy) <= radius) found.add(symbol.dataset.memorySymbol);
+      });
+      renderDiscoveries();
+    };
+
+    reveal?.addEventListener('pointerdown', (event) => {
+      touching = true;
+      reveal.setPointerCapture?.(event.pointerId);
+      scan(event.clientX, event.clientY);
+    });
+    reveal?.addEventListener('pointermove', (event) => {
+      if (event.pointerType === 'mouse' || touching) scan(event.clientX, event.clientY);
+    });
+    reveal?.addEventListener('pointerup', () => { touching = false; });
+    reveal?.addEventListener('pointercancel', () => { touching = false; });
+    reveal?.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      const next = symbols.find((symbol) => !found.has(symbol.dataset.memorySymbol));
+      if (next) found.add(next.dataset.memorySymbol);
+      renderDiscoveries();
+    });
+    if (completed.has('stop7')) symbols.forEach((symbol) => found.add(symbol.dataset.memorySymbol));
+    renderDiscoveries();
+  }
+
+  // Door IV: draw one chronological thread through the underground history.
+  const threadDoor = doors.get('stop8');
+  if (threadDoor) {
+    const thread = threadDoor.querySelector('[data-memory-thread]');
+    const range = threadDoor.querySelector('[data-memory-thread-range]');
+    const nodes = Array.from(threadDoor.querySelectorAll('[data-thread-node]'));
+    const update = () => {
+      const value = Math.max(0, Math.min(100, Number(range?.value) || 0));
+      thread?.style.setProperty('--thread-progress', `${value}%`);
+      nodes.forEach((node) => node.classList.toggle('is-reached', value >= Number(node.dataset.threadNode)));
+      if (value >= 98) completeDoor('stop8');
+    };
+    if (completed.has('stop8') && range) range.value = '100';
+    range?.addEventListener('input', update);
+    range?.addEventListener('change', update);
+    update();
+  }
+
+  renderProgress();
+  return { isComplete: () => completed.size === doorKeys.length };
+}
+
 /* The landing page's chapter engine, instantiated once per stop: scroll
    progress picks the active step; the leaving panel slides up and out, the
    next rises in from below, and the active panel's children stagger in — all
@@ -4338,6 +4653,8 @@ function setupStory(el) {
     });
   });
 
+  setupMemoryTunnel(el, { scrollToStep, panels });
+
   // "Continue" tease for a stop that isn't built yet.
   const nextBtn = el.querySelector('[data-trail-next]');
   const nextNote = el.querySelector('[data-trail-next-note]');
@@ -4378,7 +4695,7 @@ function initStories() {
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
     // Inner scroll areas (rules box), the artifact viewer, and 3D models keep
     // their own native wheel behaviour.
-    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, model-viewer')) return;
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-tunnel__range, .trailx-tunnel__reveal, .trailx-tunnel__doc-pieces, .trailx-tunnel__doc-slots, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, model-viewer')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
@@ -4391,7 +4708,7 @@ function initStories() {
   // both platforms: a vertical drag scrolls the active story (with a momentum
   // fling); a horizontal drag falls through so "drag to look around" still
   // rotates the 360.
-  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, model-viewer'));
+  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-tunnel__range, .trailx-tunnel__reveal, .trailx-tunnel__doc-pieces, .trailx-tunnel__doc-slots, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, model-viewer'));
   let tStartY = 0;
   let tStartX = 0;
   let tLastY = 0;
