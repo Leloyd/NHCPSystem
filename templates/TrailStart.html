@@ -1687,221 +1687,72 @@
       </div>
       <!-- ================== End Stop 8 · The Underground Crypts ================== -->
 
-      <!-- ============ Stop 9 · The Memory Tunnel ============
-           Four gesture-led doors recall Stops 5–8. Restoring every memory
-           illuminates the passage back to the gates. -->
-      <div class="trailx__story trailx__story--tunnel" data-trail-story="stop9" data-memory-tunnel aria-label="Stop 9 — The Memory Tunnel" hidden>
+      <!-- ============ Stop 9 · The Keeper's Archive ============
+           Reveal eight records with a lantern, inspect their bilingual clues,
+           and return each memory to the chapter where it belongs. -->
+      <div class="trailx__story trailx__story--archive" data-trail-story="stop9" data-keeper-archive aria-label="Stop 9 — The Keeper's Archive" hidden>
         <div class="trailx__stage" data-trail-stage>
           <header class="trailx__chapter trailx__chapter--hero" data-chapter="s9-arrive" data-side="left" data-title="Arrive">
             <p class="trailx__s1-kicker"><span data-lang-en>Stop 9 of 10 · Heritage Trail</span><span data-lang-tl>Hinto 9 ng 10 · Landas ng Pamana</span></p>
             <h2 class="trailx__chapter-title trailx__chapter-title--hero">
-              <span data-lang-en>The Memory <em>Tunnel</em></span>
-              <span data-lang-tl>Ang Lagusan ng <em>Alaala</em></span>
+              <span data-lang-en>The Keeper's <em>Archive</em></span>
+              <span data-lang-tl>Ang Sinupan ng <em>Tagapag-ingat</em></span>
             </h2>
             <p class="trailx__s1-tip">
-              <span data-lang-en>Four sealed memories stand between the crypts and the light · Restore each one to open the passage</span>
-              <span data-lang-tl>Apat na nakasarang alaala ang nasa pagitan ng mga kripta at liwanag · Buoin ang bawat isa upang mabuksan ang lagusan</span>
+              <span data-lang-en>Eight memories lie scattered in darkness · Recover them and reconnect the story of Stops 5–8</span>
+              <span data-lang-tl>Walong alaala ang nagkalat sa dilim · Tuklasin ang mga ito at muling pag-ugnayin ang kuwento ng Hinto 5–8</span>
             </p>
-            <div class="trailx-tunnel__threshold" aria-hidden="true">
-              <div class="trailx-tunnel__portal"><span></span><span></span><span></span></div>
-              <div class="trailx-tunnel__progress trailx-tunnel__progress--hero">
-                <i data-tunnel-progress-door="stop5">V</i><i data-tunnel-progress-door="stop6">VI</i><i data-tunnel-progress-door="stop7">VII</i><i data-tunnel-progress-door="stop8">VIII</i>
-              </div>
-            </div>
+            <div class="trailx-archive-seal" aria-hidden="true"><span>V</span><span>VI</span><span>VII</span><span>VIII</span></div>
           </header>
 
-          <!-- Door I · Stop 5: reconstruct the Plasencia record -->
-          <article class="trailx__chapter trailx__chapter--tunnel" data-chapter="s9-door5" data-side="left" data-title="The Record">
+          <article class="trailx__chapter trailx__chapter--archive" data-chapter="s9-archive" data-side="left" data-title="The Archive">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory Door · I · Stop 5</span><span data-lang-tl>Pinto ng Alaala · I · Hinto 5</span></span>
+              <span class="trailx__label-text"><span data-lang-en>Keeper's Archive · Stops 5–8</span><span data-lang-tl>Sinupan ng Tagapag-ingat · Hinto 5–8</span></span>
             </div>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>Recover the<br /><em>Record</em></span>
-              <span data-lang-tl>Buoin ang<br /><em>Tala</em></span>
+              <span data-lang-en>Restore the<br /><em>Collection</em></span>
+              <span data-lang-tl>Buoin ang<br /><em>Kalipunan</em></span>
             </h3>
             <p class="trailx__chapter-copy" data-lang-en>
-              Fray Juan de Plasencia preserved early Tagalog customs in writing. Reassemble the scattered page from top to bottom. Drag a strip into its place, or tap a strip and then a slot.
+              Sweep the lantern across the dark desk. Inspect each recovered memory, then file it under the stop where its story belongs. There is no score—only a collection waiting to become whole.
             </p>
             <p class="trailx__chapter-copy" data-lang-tl>
-              Itinala ni Padre Juan de Plasencia ang mga sinaunang kaugalian ng mga Tagalog. Buoin ang nagkalat na pahina mula itaas pababa. I-drag ang piraso sa puwesto, o pindutin ang piraso at pagkatapos ang kahon.
+              Ilibot ang ilawan sa madilim na mesa. Suriin ang bawat natuklasang alaala, pagkatapos ay ilagay ito sa hinto kung saan nabibilang ang kuwento. Walang puntos—may kalipunan lamang na naghihintay mabuo.
             </p>
-            <section class="trailx-tunnel" data-memory-door="stop5" data-door-task="document" aria-label="Reconstruct the Plasencia document">
-              <header class="trailx-tunnel__doorhead">
-                <span class="trailx-tunnel__door-number">I</span>
-                <span class="trailx-tunnel__door-state" data-door-state><span data-lang-en>Memory sealed</span><span data-lang-tl>Nakasara ang alaala</span></span>
-              </header>
-              <div class="trailx-tunnel__document" data-memory-document>
-                <div class="trailx-tunnel__doc-slots" aria-label="Document reconstruction slots">
-                  <button type="button" data-memory-doc-slot="0" aria-label="Top document slot"></button>
-                  <button type="button" data-memory-doc-slot="1" aria-label="Upper-middle document slot"></button>
-                  <button type="button" data-memory-doc-slot="2" aria-label="Lower-middle document slot"></button>
-                  <button type="button" data-memory-doc-slot="3" aria-label="Bottom document slot"></button>
-                </div>
-                <div class="trailx-tunnel__doc-pieces" data-memory-doc-pieces aria-label="Scattered document strips">
-                  <button type="button" data-memory-doc-piece="0" style="--fragment-y: 0%" aria-label="Document fragment one"><span></span></button>
-                  <button type="button" data-memory-doc-piece="1" style="--fragment-y: 33.333%" aria-label="Document fragment two"><span></span></button>
-                  <button type="button" data-memory-doc-piece="2" style="--fragment-y: 66.666%" aria-label="Document fragment three"><span></span></button>
-                  <button type="button" data-memory-doc-piece="3" style="--fragment-y: 100%" aria-label="Document fragment four"><span></span></button>
-                </div>
-              </div>
-              <p class="trailx-tunnel__feedback" data-door-feedback aria-live="polite">
-                <span data-lang-en>Select a fragment, then find where its text continues.</span>
-                <span data-lang-tl>Pumili ng piraso, pagkatapos ay hanapin kung saan nagpapatuloy ang teksto.</span>
-              </p>
-              <p class="trailx-tunnel__complete" data-door-complete hidden>
-                <span data-lang-en>The record is whole. Plasencia’s written account carries the memory of early Tagalog customs.</span>
-                <span data-lang-tl>Buo na ang tala. Dala ng akda ni Plasencia ang alaala ng mga sinaunang kaugalian ng mga Tagalog.</span>
-              </p>
-            </section>
-          </article>
-
-          <!-- Door II · Stop 6 -->
-          <article class="trailx__chapter trailx__chapter--tunnel" data-chapter="s9-door6" data-side="right" data-title="The Chapel">
-            <div class="trailx__label">
-              <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory Door · II · Stop 6</span><span data-lang-tl>Pinto ng Alaala · II · Hinto 6</span></span>
-            </div>
-            <h3 class="trailx__chapter-title">
-              <span data-lang-en>Move Through<br /><em>Time</em></span>
-              <span data-lang-tl>Lakbayin ang<br /><em>Panahon</em></span>
-            </h3>
-            <p class="trailx__chapter-copy" data-lang-en>
-              The chapel endured deterioration, then generations of careful restoration. Pull the gold handle from 1911 toward the restored chapel to carry its memory forward.
-            </p>
-            <p class="trailx__chapter-copy" data-lang-tl>
-              Dumanas ng pagkasira ang kapilya bago ito maingat na maisaayos sa iba’t ibang panahon. Hilahin ang gintong hawakan mula 1911 patungo sa naisaayos na kapilya upang dalhin pasulong ang alaala nito.
-            </p>
-            <section class="trailx-tunnel" data-memory-door="stop6" data-door-task="restoration" aria-label="Restore the chapel through time">
-              <header class="trailx-tunnel__doorhead">
-                <span class="trailx-tunnel__door-number">II</span>
-                <span class="trailx-tunnel__door-state" data-door-state><span data-lang-en>Memory sealed</span><span data-lang-tl>Nakasara ang alaala</span></span>
-              </header>
-              <div class="trailx-tunnel__before-after" data-memory-restoration style="--restore-progress: 0%">
-                <img class="trailx-tunnel__before" src="/images/heritage-albums/1911_2.png" alt="The chapel façade in 1911" loading="lazy" />
-                <div class="trailx-tunnel__after">
-                  <img src="/images/heritage-albums/PebOk-2015-2016_2.png" alt="The restored chapel façade during the 2015–2016 period" loading="lazy" />
-                </div>
-                <span class="trailx-tunnel__time-divider" aria-hidden="true"></span>
-                <span class="trailx-tunnel__year trailx-tunnel__year--past">1911</span>
-                <span class="trailx-tunnel__year trailx-tunnel__year--present">2015–2016</span>
-              </div>
-              <label class="trailx-tunnel__range-label" for="memoryRestore">
-                <span data-lang-en>Drag through the restoration</span><span data-lang-tl>I-drag tungo sa pagsasaayos</span>
-              </label>
-              <input class="trailx-tunnel__range" id="memoryRestore" data-memory-restore-range type="range" min="0" max="100" value="0" aria-label="Move from the deteriorated chapel to the restored chapel" />
-              <p class="trailx-tunnel__complete" data-door-complete hidden>
-                <span data-lang-en>The chapel stands renewed—not by erasing age, but by caring for what survived.</span>
-                <span data-lang-tl>Muling matatag ang kapilya—hindi sa pagbura ng tanda ng panahon, kundi sa pag-iingat sa nanatili.</span>
-              </p>
-            </section>
-          </article>
-
-          <!-- Door III · Stop 7: reveal the Tapete -->
-          <article class="trailx__chapter trailx__chapter--tunnel" data-chapter="s9-door7" data-side="left" data-title="The Tapete">
-            <div class="trailx__label">
-              <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory Door · III · Stop 7</span><span data-lang-tl>Pinto ng Alaala · III · Hinto 7</span></span>
-            </div>
-            <h3 class="trailx__chapter-title">
-              <span data-lang-en>Light the<br /><em>Memorial</em></span>
-              <span data-lang-tl>Liwanagan ang<br /><em>Paggunita</em></span>
-            </h3>
-            <p class="trailx__chapter-copy" data-lang-en>
-              Move the lantern across the darkness and uncover three meanings carried by the Tapete. On a keyboard, focus the image and press Enter to reveal the next symbol.
-            </p>
-            <p class="trailx__chapter-copy" data-lang-tl>
-              Ilipat ang ilawan sa dilim at tuklasin ang tatlong kahulugang taglay ng Tapete. Sa keyboard, ituon ang larawan at pindutin ang Enter upang ihayag ang susunod na sagisag.
-            </p>
-            <section class="trailx-tunnel" data-memory-door="stop7" data-door-task="reveal" aria-label="Reveal the symbols of the Tapete">
-              <header class="trailx-tunnel__doorhead">
-                <span class="trailx-tunnel__door-number">III</span>
-                <span class="trailx-tunnel__door-state" data-door-state><span data-lang-en>0 of 3 symbols</span><span data-lang-tl>0 sa 3 sagisag</span></span>
-              </header>
-              <div class="trailx-tunnel__reveal" data-memory-reveal tabindex="0" role="application" aria-label="Move a lantern over the Tapete to reveal three symbols" style="--beam-x: 50%; --beam-y: 50%">
-                <img src="/images/360InsideChapel/Tela.jpg" alt="The black Tapete bearing a cross, skull, and crossed bones" loading="lazy" draggable="false" />
-                <div class="trailx-tunnel__darkness" aria-hidden="true"></div>
-                <i data-memory-symbol="cloth" data-x="22" data-y="48"></i>
-                <i data-memory-symbol="cross" data-x="65" data-y="27"></i>
-                <i data-memory-symbol="mortality" data-x="65" data-y="69"></i>
-              </div>
-              <div class="trailx-tunnel__discoveries" aria-live="polite">
-                <span data-memory-discovery="cloth"><b data-lang-en>Black cloth</b><b data-lang-tl>Itim na tela</b></span>
-                <span data-memory-discovery="cross"><b data-lang-en>Cross of Christ</b><b data-lang-tl>Krus ni Kristo</b></span>
-                <span data-memory-discovery="mortality"><b data-lang-en>Mortality remembered</b><b data-lang-tl>Pag-alaala sa kamatayan</b></span>
-              </div>
-              <p class="trailx-tunnel__complete" data-door-complete hidden>
-                <span data-lang-en>The Tapete gathers faith, death, and remembrance into one solemn memorial.</span>
-                <span data-lang-tl>Pinagbubuklod ng Tapete ang pananampalataya, kamatayan, at paggunita sa isang taimtim na alaala.</span>
-              </p>
-            </section>
-          </article>
-
-          <!-- Door IV · Stop 8: trace the historical thread -->
-          <article class="trailx__chapter trailx__chapter--tunnel" data-chapter="s9-door8" data-side="right" data-title="The Thread">
-            <div class="trailx__label">
-              <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Memory Door · IV · Stop 8</span><span data-lang-tl>Pinto ng Alaala · IV · Hinto 8</span></span>
-            </div>
-            <h3 class="trailx__chapter-title">
-              <span data-lang-en>Trace the<br /><em>Living Thread</em></span>
-              <span data-lang-tl>Sundan ang<br /><em>Buháy na Hibla</em></span>
-            </h3>
-            <p class="trailx__chapter-copy" data-lang-en>
-              Draw the gold thread across the events held by the underground chambers—from a secret meeting to records that still preserve the guerrillas’ service.
-            </p>
-            <p class="trailx__chapter-copy" data-lang-tl>
-              Iguhit ang gintong hibla sa mga pangyayaring iningatan ng mga silid sa ilalim ng lupa—mula sa lihim na pagpupulong hanggang sa mga talaang nag-iingat sa paglilingkod ng mga gerilya.
-            </p>
-            <section class="trailx-tunnel" data-memory-door="stop8" data-door-task="thread" aria-label="Trace the historical thread of Stop 8">
-              <header class="trailx-tunnel__doorhead">
-                <span class="trailx-tunnel__door-number">IV</span>
-                <span class="trailx-tunnel__door-state" data-door-state><span data-lang-en>Memory sealed</span><span data-lang-tl>Nakasara ang alaala</span></span>
-              </header>
-              <div class="trailx-tunnel__thread" data-memory-thread style="--thread-progress: 0%">
-                <span class="trailx-tunnel__thread-line" aria-hidden="true"></span>
-                <ol>
-                  <li data-thread-node="8"><b>1897</b><span data-lang-en>Secret meeting in Nagcarlan</span><span data-lang-tl>Lihim na pagpupulong sa Nagcarlan</span></li>
-                  <li data-thread-node="34"><b>1897</b><span data-lang-en>Pact of Biak-na-Bato</span><span data-lang-tl>Kasunduan sa Biak-na-Bato</span></li>
-                  <li data-thread-node="67"><b>1940s</b><span data-lang-en>Guerrilla stronghold</span><span data-lang-tl>Kuta ng mga gerilya</span></li>
-                  <li data-thread-node="98"><b data-lang-en>Today</b><b data-lang-tl>Ngayon</b><span data-lang-en>Service preserved in records</span><span data-lang-tl>Paglilingkod na iningatan sa mga tala</span></li>
-                </ol>
-              </div>
-              <label class="trailx-tunnel__range-label" for="memoryThread">
-                <span data-lang-en>Carry the thread toward today</span><span data-lang-tl>Dalhin ang hibla patungo sa kasalukuyan</span>
-              </label>
-              <input class="trailx-tunnel__range" id="memoryThread" data-memory-thread-range type="range" min="0" max="100" value="0" aria-label="Trace the historical thread from 1897 to today" />
-              <p class="trailx-tunnel__complete" data-door-complete hidden>
-                <span data-lang-en>The chambers held more than the dead—they preserved meetings, resistance, courage, and testimony.</span>
-                <span data-lang-tl>Higit sa mga yumao ang iningatan ng mga silid—pinanatili nila ang pagpupulong, paglaban, tapang, at patotoo.</span>
-              </p>
-            </section>
-          </article>
-
-          <!-- The illuminated exit opens only after all four memories are restored. -->
-          <footer class="trailx__chapter trailx__chapter--next trailx__chapter--tunnel-exit" data-chapter="s9-next" data-title="The Exit" data-tunnel-exit>
-            <p class="trailx__s1-kicker"><span data-lang-en>Memory Tunnel · Passage to Light</span><span data-lang-tl>Lagusan ng Alaala · Daan Tungo sa Liwanag</span></p>
-            <h3 class="trailx__chapter-title">
-              <span data-lang-en>Open the<br /><em>Passage</em></span>
-              <span data-lang-tl>Buksan ang<br /><em>Lagusan</em></span>
-            </h3>
-            <p class="trailx__chapter-copy" data-tunnel-exit-copy>
-              <span data-lang-en>Restore all four memories to illuminate the path back to the gates.</span>
-              <span data-lang-tl>Buoin ang apat na alaala upang liwanagan ang daan pabalik sa tarangkahan.</span>
-            </p>
-            <div class="trailx-tunnel__progress trailx-tunnel__progress--exit" role="status" aria-label="Memory doors restored">
-              <i data-tunnel-progress-door="stop5">V</i><i data-tunnel-progress-door="stop6">VI</i><i data-tunnel-progress-door="stop7">VII</i><i data-tunnel-progress-door="stop8">VIII</i>
-            </div>
-            <p class="trailx-tunnel__exit-count" data-tunnel-count aria-live="polite">
-              <span data-lang-en>0 of 4 memories restored</span><span data-lang-tl>0 sa 4 na alaala ang naibalik</span>
-            </p>
-            <div class="trailx__actions trailx-tunnel__exit-actions">
-              <button class="trailx__cancel trailx-tunnel__return" type="button" data-tunnel-return>
-                <span data-lang-en>Review first sealed door</span><span data-lang-tl>Balikan ang unang nakasarang pinto</span>
+            <div class="trailx__actions">
+              <button class="trailx__begin trailx-archive__open" type="button" data-archive-open>
+                <span data-lang-en>Enter the Archive</span><span data-lang-tl>Pumasok sa Sinupan</span>
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M4 19V7l8-4 8 4v12M8 19v-6h8v6M3 19h18"></path></svg>
               </button>
-              <button class="trailx__begin" data-trail-goto="stop10" data-tunnel-exit-button type="button" disabled aria-disabled="true">
-                <span data-lang-en>Continue to Stop 10</span>
-                <span data-lang-tl>Magpatuloy sa Hinto 10</span>
+            </div>
+            <p class="trailx-archive__chapter-status" data-archive-chapter-status aria-live="polite">
+              <span data-lang-en>0 of 8 memories filed</span><span data-lang-tl>0 sa 8 alaala ang naihanay</span>
+            </p>
+          </article>
+
+          <footer class="trailx__chapter trailx__chapter--next trailx__chapter--archive-next" data-chapter="s9-next" data-side="right" data-title="Living Memory">
+            <p class="trailx__s1-kicker"><span data-lang-en>Keeper's Archive · A Connected History</span><span data-lang-tl>Sinupan ng Tagapag-ingat · Magkakaugnay na Kasaysayan</span></p>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Carry the Story<br /><em>Forward</em></span>
+              <span data-lang-tl>Dalhin ang Kuwento<br /><em>Pasulong</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-archive-exit-copy>
+              <span data-lang-en>The archive is still incomplete. Recover and file all eight memories before continuing.</span>
+              <span data-lang-tl>Hindi pa buo ang sinupan. Tuklasin at ihanay ang walong alaala bago magpatuloy.</span>
+            </p>
+            <div class="trailx-archive__timeline trailx-archive__timeline--chapter" data-archive-timeline aria-label="Stops 5 to 8 archive timeline">
+              <span data-archive-timeline-stop="stop5"><b>5</b><small><span data-lang-en>Origins</span><span data-lang-tl>Pinagmulan</span></small></span>
+              <span data-archive-timeline-stop="stop6"><b>6</b><small><span data-lang-en>Preservation</span><span data-lang-tl>Pangangalaga</span></small></span>
+              <span data-archive-timeline-stop="stop7"><b>7</b><small><span data-lang-en>Chapel</span><span data-lang-tl>Kapilya</span></small></span>
+              <span data-archive-timeline-stop="stop8"><b>8</b><small><span data-lang-en>Witness</span><span data-lang-tl>Patotoo</span></small></span>
+            </div>
+            <div class="trailx__actions">
+              <button class="trailx__cancel" type="button" data-archive-review>
+                <span data-lang-en>Return to the Archive</span><span data-lang-tl>Bumalik sa Sinupan</span>
+              </button>
+              <button class="trailx__begin" data-trail-goto="stop10" data-archive-exit-button type="button" disabled aria-disabled="true">
+                <span data-lang-en>Continue to Stop 10</span><span data-lang-tl>Magpatuloy sa Hinto 10</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
               </button>
             </div>
@@ -1911,8 +1762,104 @@
           <div class="trailx__hint-scroll" data-trail-hint aria-hidden="true"><span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span></div>
         </div>
         <div class="trailx__track" data-trail-track aria-hidden="true"></div>
+
+        <section class="trailx-archive-overlay" data-archive-overlay hidden aria-label="Keeper's Archive activity" aria-modal="true" role="dialog">
+          <div class="trailx-archive-overlay__scrim" aria-hidden="true"></div>
+          <div class="trailx-archive" data-archive-workspace>
+            <header class="trailx-archive__header">
+              <div>
+                <span class="trailx-archive__eyebrow"><span data-lang-en>Stop 9 · Keeper's Archive</span><span data-lang-tl>Hinto 9 · Sinupan ng Tagapag-ingat</span></span>
+                <h3><span data-lang-en>Restore the Collection</span><span data-lang-tl>Buoin ang Kalipunan</span></h3>
+              </div>
+              <div class="trailx-archive__header-actions">
+                <span class="trailx-archive__count" data-archive-count>0 / 8</span>
+                <button type="button" data-archive-close aria-label="Close the Keeper's Archive">×</button>
+              </div>
+            </header>
+
+            <div class="trailx-archive__body">
+              <section class="trailx-archive__discovery" aria-labelledby="archiveLanternTitle">
+                <div class="trailx-archive__section-head">
+                  <div><span>01</span><h4 id="archiveLanternTitle"><span data-lang-en>Search the Dark Desk</span><span data-lang-tl>Hanapin sa Madilim na Mesa</span></h4></div>
+                  <button type="button" data-archive-reveal-next><span data-lang-en>Reveal one</span><span data-lang-tl>Maghanap ng isa</span></button>
+                </div>
+                <p><span data-lang-en>Move or drag the lantern over the sealed records.</span><span data-lang-tl>Ilipat o i-drag ang ilawan sa mga nakasarang tala.</span></p>
+                <div class="trailx-archive__lantern" data-archive-lantern tabindex="0" role="application" aria-label="Move the lantern to reveal hidden archive records" style="--beam-x:50%;--beam-y:50%">
+                  <div class="trailx-archive__discovery-grid" data-archive-discovery-grid></div>
+                  <span class="trailx-archive__darkness" aria-hidden="true"></span>
+                  <span class="trailx-archive__beam" aria-hidden="true"></span>
+                </div>
+              </section>
+
+              <section class="trailx-archive__filing" aria-labelledby="archiveFilingTitle">
+                <div class="trailx-archive__section-head">
+                  <div><span>02</span><h4 id="archiveFilingTitle"><span data-lang-en>File Each Memory</span><span data-lang-tl>Ihanay ang Bawat Alaala</span></h4></div>
+                </div>
+                <p><span data-lang-en>Drag a card to a chapter, or tap the card and then its destination.</span><span data-lang-tl>I-drag ang kard sa kabanata, o pindutin ang kard at saka ang destinasyon.</span></p>
+                <div class="trailx-archive__zones" data-archive-zones>
+                  <button class="trailx-archive__zone" type="button" data-archive-zone="stop5"><span class="trailx-archive__zone-no">5</span><span><b data-lang-en>Origins &amp; Records</b><b data-lang-tl>Pinagmulan at mga Tala</b><small data-lang-en>Franciscan missions · Plasencia</small><small data-lang-tl>Mga misyon · Plasencia</small></span><i data-archive-zone-count>0 / 2</i><span class="trailx-archive__filed" data-archive-filed></span></button>
+                  <button class="trailx-archive__zone" type="button" data-archive-zone="stop6"><span class="trailx-archive__zone-no">6</span><span><b data-lang-en>Time &amp; Preservation</b><b data-lang-tl>Panahon at Pangangalaga</b><small data-lang-en>Deterioration · Restoration</small><small data-lang-tl>Pagkasira · Pagsasaayos</small></span><i data-archive-zone-count>0 / 2</i><span class="trailx-archive__filed" data-archive-filed></span></button>
+                  <button class="trailx-archive__zone" type="button" data-archive-zone="stop7"><span class="trailx-archive__zone-no">7</span><span><b data-lang-en>Inside the Chapel</b><b data-lang-tl>Sa Loob ng Kapilya</b><small data-lang-en>Materials · Tapete</small><small data-lang-tl>Mga materyales · Tapete</small></span><i data-archive-zone-count>0 / 2</i><span class="trailx-archive__filed" data-archive-filed></span></button>
+                  <button class="trailx-archive__zone" type="button" data-archive-zone="stop8"><span class="trailx-archive__zone-no">8</span><span><b data-lang-en>History Below Ground</b><b data-lang-tl>Kasaysayan sa Ilalim ng Lupa</b><small data-lang-en>Revolution · Guerrillas</small><small data-lang-tl>Rebolusyon · Mga gerilya</small></span><i data-archive-zone-count>0 / 2</i><span class="trailx-archive__filed" data-archive-filed></span></button>
+                </div>
+              </section>
+
+              <section class="trailx-archive__tray-shell" aria-labelledby="archiveTrayTitle">
+                <div class="trailx-archive__section-head">
+                  <div><span>03</span><h4 id="archiveTrayTitle"><span data-lang-en>Recovered Memories</span><span data-lang-tl>Mga Natuklasang Alaala</span></h4></div>
+                </div>
+                <div class="trailx-archive__tray" data-archive-tray tabindex="0"></div>
+                <p class="trailx-archive__empty" data-archive-empty><span data-lang-en>Use the lantern to reveal the first record.</span><span data-lang-tl>Gamitin ang ilawan upang tuklasin ang unang tala.</span></p>
+              </section>
+
+              <div class="trailx-archive__feedback" data-archive-feedback aria-live="polite">
+                <b>Ana Kalang</b><span data-lang-en>The archive is waiting. Begin with the lantern.</span><span data-lang-tl>Naghihintay ang sinupan. Magsimula sa ilawan.</span>
+              </div>
+
+              <section class="trailx-archive__completion" data-archive-completion hidden>
+                <span class="trailx-archive__completion-glow" aria-hidden="true"></span>
+                <p><span data-lang-en>The collection is whole</span><span data-lang-tl>Buo na ang kalipunan</span></p>
+                <h4><span data-lang-en>The Living Memory of Nagcarlan</span><span data-lang-tl>Ang Buháy na Alaala ng Nagcarlan</span></h4>
+                <div class="trailx-archive__timeline" data-archive-timeline aria-label="Completed archive timeline">
+                  <span data-archive-timeline-stop="stop5"><b>5</b><small><span data-lang-en>Origins</span><span data-lang-tl>Pinagmulan</span></small></span>
+                  <span data-archive-timeline-stop="stop6"><b>6</b><small><span data-lang-en>Preservation</span><span data-lang-tl>Pangangalaga</span></small></span>
+                  <span data-archive-timeline-stop="stop7"><b>7</b><small><span data-lang-en>Chapel</span><span data-lang-tl>Kapilya</span></small></span>
+                  <span data-archive-timeline-stop="stop8"><b>8</b><small><span data-lang-en>Witness</span><span data-lang-tl>Patotoo</span></small></span>
+                </div>
+              </section>
+            </div>
+
+            <footer class="trailx-archive__footer">
+              <button type="button" data-archive-reset><span data-lang-en>Restart archive</span><span data-lang-tl>Ulitin ang sinupan</span></button>
+              <button type="button" class="trailx-archive__done" data-archive-done disabled><span data-lang-en>Archive incomplete</span><span data-lang-tl>Hindi pa buo</span></button>
+            </footer>
+          </div>
+
+          <div class="trailx-archive-modal" data-archive-modal hidden>
+            <button class="trailx-archive-modal__backdrop" type="button" data-archive-modal-close aria-label="Close record details"></button>
+            <article class="trailx-archive-modal__dialog" role="document">
+              <img data-archive-modal-image src="" alt="" />
+              <div><span class="trailx-archive-modal__stop" data-archive-modal-stop></span><h4 data-archive-modal-title></h4><p data-archive-modal-clue></p></div>
+              <button class="trailx-archive-modal__close" type="button" data-archive-modal-close aria-label="Close record details">×</button>
+            </article>
+          </div>
+        </section>
+
+        <script type="application/json" data-archive-config>
+          {"cards":[
+            {"id":"missions","target":"stop5","image":"/images/360InsideChapel/Nagcarlan_And_The_Franciscan_Missions.png","title":{"en":"Franciscan Missions","tl":"Mga Misyong Pransiskano"},"clue":{"en":"In 1578, Fray Juan de Plasencia and Fray Diego de Oropesa introduced the Catholic faith in Nagcarlan.","tl":"Noong 1578, ipinakilala nina Padre Juan de Plasencia at Padre Diego de Oropesa ang Katolisismo sa Nagcarlan."}},
+            {"id":"plasencia","target":"stop5","image":"/images/landing/Juan1.png","title":{"en":"Plasencia's Written Record","tl":"Nakasulat na Tala ni Plasencia"},"clue":{"en":"His 1589 account recorded and helped preserve early Tagalog customs.","tl":"Itinala at tinulungang mapanatili ng kanyang akda noong 1589 ang mga sinaunang kaugaliang Tagalog."}},
+            {"id":"deterioration","target":"stop6","image":"/images/heritage-albums/1911_2.png","title":{"en":"Deterioration, 1911","tl":"Pagkasira, 1911"},"clue":{"en":"Natural forces damaged the cemetery's structure through the twentieth century.","tl":"Sinira ng mga puwersa ng kalikasan ang estruktura ng libingan sa paglipas ng ika-20 siglo."}},
+            {"id":"restoration","target":"stop6","image":"/images/heritage-albums/PebOk-2015-2016_2.png","title":{"en":"Restoration, 2015–2016","tl":"Pagsasaayos, 2015–2016"},"clue":{"en":"Careful restoration preserved the historic fabric that survived.","tl":"Iningatan ng maingat na pagsasaayos ang mga makasaysayang bahaging nanatili."}},
+            {"id":"materials","target":"stop7","image":"/images/360InsideChapel/Art1-LeftTable.png","title":{"en":"Materials of the Chapel","tl":"Mga Materyales ng Kapilya"},"clue":{"en":"Stone, lime, sand, coral, adobe, and brick helped build and finish the chapel.","tl":"Bato, apog, buhangin, koral, adobe, at ladrilyo ang tumulong sa pagtatayo at pagtatapos ng kapilya."}},
+            {"id":"tapete","target":"stop7","image":"/images/360InsideChapel/Tela.jpg","title":{"en":"The Tapete","tl":"Ang Tapete"},"clue":{"en":"Black cloth, the cross, skull, and crossed bones unite faith, death, and remembrance.","tl":"Pinagbubuklod ng itim na tela, krus, bungo, at magkakrus na buto ang pananampalataya, kamatayan, at pag-alaala."}},
+            {"id":"pact","target":"stop8","image":"/images/360InsideChapel/Pact.png","title":{"en":"Pact of Biak-na-Bato","tl":"Kasunduan sa Biak-na-Bato"},"clue":{"en":"A secret 1897 meeting in the cemetery became part of the path toward the pact.","tl":"Naging bahagi ng landas tungo sa kasunduan ang lihim na pagpupulong sa libingan noong 1897."}},
+            {"id":"guerrillas","target":"stop8","image":"/images/landing/B.jpg","title":{"en":"Nagcarlan Guerrillas, 1945","tl":"Mga Gerilya ng Nagcarlan, 1945"},"clue":{"en":"The cemetery served as a guerrilla stronghold during the Japanese occupation.","tl":"Nagsilbing kuta ng mga gerilya ang libingan noong pananakop ng mga Hapon."}}
+          ]}
+        </script>
       </div>
-      <!-- ================== End Stop 9 · The Memory Tunnel ================== -->
+      <!-- ================== End Stop 9 · The Keeper's Archive ================== -->
+
 
       <!-- ============ Stop 10 · Return to the Gates (Thank You) ============
            Back at the front gate, like Stop 1. A farewell + calls to keep
