@@ -1958,25 +1958,27 @@ function initPanorama() {
       previewMedia.appendChild(frame);
       createPreviewImageZoom(frame, zoomTarget);
     }
+    if (previewTitle) previewTitle.classList.toggle('trailx-preview__title--long', Boolean(args.longTitle));
     setTitleHtml(previewTitle, args.title, args.imageAlt || '');
     previewEl.hidden = false;
     window.requestAnimationFrame(() => previewEl.classList.add('is-open'));
   };
 
-  // Stop 7's Tapete chapter uses the same enlarged, zoomable photo viewer as
-  // the artifact hotspots. The framed photograph itself lives beside the
-  // chapter copy, like the Landing page's historical photographs.
-  const tapetePhoto = root.querySelector('[data-trail-tapete-photo]');
-  tapetePhoto?.addEventListener('click', () => {
-    const image = tapetePhoto.querySelector('img');
-    openPreview({
-      imageSrc: tapetePhoto.getAttribute('data-image-src') || image?.currentSrc || image?.src || '',
-      imageAlt: image?.alt || 'The Tapete',
-      title: {
-        en: tapetePhoto.getAttribute('data-title-en') || 'The Tapete',
-        tl: tapetePhoto.getAttribute('data-title-tl') || 'Ang Tapete',
-      },
-    }, 'image');
+  // Framed chapter photographs (Tapete and the Biak-na-Bato commissioners)
+  // share the Trail's enlarged, zoomable historical-photo viewer.
+  root.querySelectorAll('[data-trail-chapter-photo]').forEach((photo) => {
+    photo.addEventListener('click', () => {
+      const image = photo.querySelector('img');
+      openPreview({
+        imageSrc: photo.getAttribute('data-image-src') || image?.currentSrc || image?.src || '',
+        imageAlt: image?.alt || 'Historical photograph',
+        title: {
+          en: photo.getAttribute('data-title-en') || image?.alt || 'Historical photograph',
+          tl: photo.getAttribute('data-title-tl') || image?.alt || 'Makasaysayang larawan',
+        },
+        longTitle: photo.getAttribute('data-title-long') === 'true',
+      }, 'image');
+    });
   });
   window.addEventListener('keydown', (event) => { if (event.key === 'Escape') closePreview(); });
 

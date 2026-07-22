@@ -1351,10 +1351,9 @@
   color: var(--tx-gold);
 }
 
-/* Stop 7 · Tapete photograph. It sits outside the text column like the
-   Landing page's framed historical photos, without adding height to the
-   chapter. Tapping it opens the shared full-size Trail photo viewer. */
-.trailx__chapter > .trailx__tapete-photo {
+/* Framed chapter photographs sit outside the text column like the Landing
+   page's historical photos, without adding height to the chapter. */
+.trailx__chapter > .trailx__chapter-photo {
   position: absolute;
   top: 50%;
   left: calc(100% + clamp(1.25rem, 4vw, 4rem));
@@ -1373,34 +1372,42 @@
               box-shadow 0.25s ease,
               border-color 0.25s ease;
 }
-.trailx__chapter.is-active > .trailx__tapete-photo {
+.trailx__chapter.is-active > .trailx__chapter-photo {
   transform: translateY(-50%) rotate(2deg);
 }
-.trailx__tapete-photo:hover {
+.trailx__chapter[data-side="right"] > .trailx__chapter-photo {
+  right: calc(100% + clamp(1.25rem, 4vw, 4rem));
+  left: auto;
+  transform: translateY(calc(-50% + 22px)) rotate(-2deg);
+}
+.trailx__chapter[data-side="right"].is-active > .trailx__chapter-photo {
+  transform: translateY(-50%) rotate(-2deg);
+}
+.trailx__chapter-photo:hover {
   border-color: var(--tx-gold);
   box-shadow: 0 1.5rem 3.75rem rgba(0, 0, 0, 0.58), 0 0 0 2px rgba(212, 175, 106, 0.42);
 }
-.trailx__tapete-photo:focus-visible {
+.trailx__chapter-photo:focus-visible {
   outline: 2px solid var(--tx-gold);
   outline-offset: 4px;
 }
-.trailx__tapete-photo img {
+.trailx__chapter-photo img {
   display: block;
   width: 100%;
   height: auto;
   border: 1px solid rgba(184, 146, 58, 0.28);
 }
-.trailx__tapete-caption,
-.trailx__tapete-enlarge {
+.trailx__chapter-photo-caption,
+.trailx__chapter-photo-enlarge {
   display: block;
   text-align: center;
 }
-.trailx__tapete-caption {
+.trailx__chapter-photo-caption {
   margin-top: 0.42rem;
   font-family: "Playfair Display", Georgia, serif;
   font-size: calc(0.8rem * var(--tx-font-scale, 1));
 }
-.trailx__tapete-enlarge {
+.trailx__chapter-photo-enlarge {
   margin-top: 0.16rem;
   color: rgba(28, 18, 8, 0.62);
   font-family: "Inter", sans-serif;
@@ -2735,6 +2742,17 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   font-family: "Playfair Display", serif;
   font-size: calc(1.05rem * var(--tx-font-scale, 1));
 }
+.trailx-preview__title--long {
+  max-width: min(58rem, 92vw);
+  font-size: calc(0.9rem * var(--tx-font-scale, 1));
+  line-height: 1.45;
+}
+.trailx-preview__title--long em {
+  color: var(--tx-gold);
+  font-family: "Inter", sans-serif;
+  font-size: 0.82em;
+  letter-spacing: 0.03em;
+}
 .trailx-preview__title[hidden] { display: none; }
 .trailx-preview__close {
   margin-top: 1.3rem;
@@ -3041,7 +3059,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__chapter-copy--fine { font-size: calc(0.7rem * var(--tx-font-scale, 1)); margin-top: 0.8rem; }
   /* Keep the portrait visible above the bottom-sheet copy without allowing it
      to crowd the chapter on narrow or short phones. */
-  .trailx__chapter > .trailx__tapete-photo {
+  .trailx__chapter > .trailx__chapter-photo,
+  .trailx__chapter[data-side="right"] > .trailx__chapter-photo {
     top: calc(4.2rem + env(safe-area-inset-top, 0px));
     right: 0.35rem;
     left: auto;
@@ -3049,11 +3068,12 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     padding: 0.28rem 0.28rem 0.38rem;
     transform: translateY(22px) rotate(2deg);
   }
-  .trailx__chapter.is-active > .trailx__tapete-photo {
+  .trailx__chapter.is-active > .trailx__chapter-photo,
+  .trailx__chapter[data-side="right"].is-active > .trailx__chapter-photo {
     transform: translateY(0) rotate(2deg);
   }
-  .trailx__tapete-caption { margin-top: 0.28rem; font-size: calc(0.62rem * var(--tx-font-scale, 1)); }
-  .trailx__tapete-enlarge { font-size: calc(0.4rem * var(--tx-font-scale, 1)); letter-spacing: 0.05em; }
+  .trailx__chapter-photo-caption { margin-top: 0.28rem; font-size: calc(0.62rem * var(--tx-font-scale, 1)); }
+  .trailx__chapter-photo-enlarge { font-size: calc(0.4rem * var(--tx-font-scale, 1)); letter-spacing: 0.05em; }
   /* Rules box on phones: like the landing (max-height 33svh, scrolls inside) */
   .trailx__scrollbox {
     max-height: 33vh;
@@ -3145,6 +3165,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-preview__frame--outline img { max-height: calc(58vh - 2px); }
   .trailx-preview__model { height: 52vh; }
   .trailx-preview__title { font-size: calc(0.92rem * var(--tx-font-scale, 1)); }
+  .trailx-preview__title--long { max-width: 94vw; font-size: calc(0.78rem * var(--tx-font-scale, 1)); line-height: 1.4; }
   .trailx-preview__close { margin-top: 1rem; }
   .trailx-doc { padding: 1rem; row-gap: 0.8rem; }
   .trailx-doc__deck { width: min(420px, 88vw); }
