@@ -6679,3 +6679,68 @@ body.trail-archive-open {
   .trailx-archive__body,
   .trailx-living-memory__rail { scroll-behavior: auto !important; }
 }
+
+/* ==========================================================================
+   Stop 9 · Keeper's Archive — cleaner record cards
+   The card is now the control: tap to select, press and hold to drag. Only the
+   small "i" remains a button, so the face of the card is just the record.
+   ========================================================================== */
+.trailx-archive__card {
+  grid-template-rows: 5.4rem auto;
+  flex-basis: clamp(8.5rem, 16vw, 10.5rem);
+  border-radius: 0.7rem;
+  /* a horizontal swipe still scrolls the tray; the hold is what lifts a card */
+  touch-action: pan-x;
+  -webkit-tap-highlight-color: transparent;
+}
+.trailx-archive__card > img { height: 5.4rem; }
+/* Roomier, evenly-padded label */
+.trailx-archive__card > span {
+  padding: 0.6rem 0.65rem 0.68rem;
+}
+.trailx-archive__card b {
+  font: 600 calc(0.63rem * var(--tx-font-scale, 1))/1.35 Inter, sans-serif;
+  letter-spacing: 0.01em;
+}
+.trailx-archive__card:focus-visible {
+  outline: 2px solid var(--tx-gold);
+  outline-offset: 2px;
+}
+/* Picked up and ready to move. */
+.trailx-archive__card.is-holding {
+  transform: scale(1.04);
+  border-color: var(--tx-gold);
+  box-shadow: 0 14px 32px rgba(0, 0, 0, 0.5), 0 0 0 3px rgba(212, 175, 106, 0.28);
+  cursor: grabbing;
+}
+.trailx-archive__inspect {
+  top: 0.4rem;
+  right: 0.4rem;
+  width: 1.85rem;
+  height: 1.85rem;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.45);
+}
+
+/* Breathing room for the instruction copy in each phase. */
+.trailx-archive__phase > p,
+.trailx-archive__filing > p {
+  margin: 0.5rem 0 0.7rem;
+  padding-right: 0.25rem;
+  line-height: 1.5;
+}
+.trailx-archive__phase > p b { color: var(--tx-gold); font-weight: 700; }
+
+@media (max-width: 820px) {
+  .trailx-archive__card {
+    flex-basis: clamp(7.6rem, 38vw, 9rem);
+    grid-template-rows: 4.7rem auto;
+  }
+  .trailx-archive__card > img { height: 4.7rem; }
+  .trailx-archive__card > span { padding: 0.5rem 0.55rem 0.58rem; }
+  .trailx-archive__inspect { width: 1.7rem; height: 1.7rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trailx-archive__card,
+  .trailx-archive__card.is-holding { transition: none; transform: none; }
+}

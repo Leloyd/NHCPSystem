@@ -4132,28 +4132,20 @@ function setupKeeperArchive(storyEl, api = {}) {
     const stop = document.createElement('small');
     setBilingual(stop, 'Recovered record', 'Natuklasang tala');
     copy.append(title, stop);
+    // The card itself is the control: a tap selects it, a press-and-hold picks
+    // it up. Only the small "i" stays as a separate button.
+    const label = card.title?.en || card.id;
+    item.tabIndex = 0;
+    item.setAttribute('role', 'button');
+    item.setAttribute('aria-pressed', 'false');
+    item.setAttribute('aria-label', `${label} — tap to select, press and hold to drag`);
     const inspect = document.createElement('button');
     inspect.type = 'button';
     inspect.className = 'trailx-archive__inspect';
     inspect.dataset.archiveInspect = card.id;
     inspect.textContent = 'i';
-    inspect.setAttribute('aria-label', `Inspect ${card.title?.en || card.id}`);
-    const select = document.createElement('button');
-    select.type = 'button';
-    select.className = 'trailx-archive__select';
-    select.dataset.archiveSelect = card.id;
-    select.append(bilingual('Select', 'Piliin'));
-    select.setAttribute('aria-pressed', 'false');
-    const handle = document.createElement('button');
-    handle.type = 'button';
-    handle.className = 'trailx-archive__drag-handle';
-    handle.dataset.archiveDragHandle = card.id;
-    handle.innerHTML = '<span aria-hidden="true">⠿</span>';
-    handle.setAttribute('aria-label', `Drag ${card.title?.en || card.id} to a chapter`);
-    const actions = document.createElement('span');
-    actions.className = 'trailx-archive__card-actions';
-    actions.append(select, inspect, handle);
-    item.append(image, copy, actions);
+    inspect.setAttribute('aria-label', `Inspect ${label}`);
+    item.append(image, copy, inspect);
     cardEls.set(card.id, item);
     return item;
   };
@@ -4238,7 +4230,7 @@ function setupKeeperArchive(storyEl, api = {}) {
       element.hidden = !available;
       const selected = selectedId === id && available;
       element.classList.toggle('is-selected', selected);
-      element.querySelector('[data-archive-select]')?.setAttribute('aria-pressed', String(selected));
+      element.setAttribute('aria-pressed', String(selected));
     });
 
     stopKeys.forEach((key) => {
@@ -4429,30 +4421,61 @@ function setupKeeperArchive(storyEl, api = {}) {
     if (moved && target) placeCard(id, target.dataset.archiveZone);
   };
 
-  const beginCardDrag = (event, element, id, fromHandle) => {
-    if (event.button > 0 || placed.has(id)) return;
-    if (event.pointerType === 'touch' && !fromHandle) return;
-    if (!fromHandle && event.target.closest('[data-archive-inspect], [data-archive-select]')) return;
-    removeDragGhost();
-    drag = { id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false };
-    element.setPointerCapture?.(event.pointerId);
-    if (fromHandle) event.preventDefault();
-  };
+  /* One card, two gestures: a tap selects it (then tap a chapter to file), and
+     a press-and-hold picks it up to drag. A mouse can drag straight away; on
+     touch the hold is what distinguishes "pick this up" from "scroll the tray",
+     so a swipe still scrolls normally. */
+  const HOLD_TO_DRAG_MS = 240;
 
   cardEls.forEach((element, id) => {
-    element.querySelector('[data-archive-select]')?.addEventListener('click', () => selectCard(id));
+    let press = null;
+
+    const endHold = () => {
+      if (press?.timer) window.clearTimeout(press.timer);
+      press = null;
+      element.classList.remove('is-holding');
+    };
+
     element.querySelector('[data-archive-inspect]')?.addEventListener('click', (event) => {
       event.stopPropagation();
       openModal(id, event.currentTarget);
     });
+
     element.addEventListener('pointerdown', (event) => {
-      beginCardDrag(event, element, id, Boolean(event.target.closest('[data-archive-drag-handle]')));
+      if (event.button > 0 || placed.has(id)) return;
+      if (event.target.closest('[data-archive-inspect]')) return;
+      removeDragGhost();
+      press = {
+        pointerId: event.pointerId,
+        x: event.clientX,
+        y: event.clientY,
+        ready: event.pointerType === 'mouse', // a mouse needs no hold
+        timer: 0,
+      };
+      if (!press.ready) {
+        press.timer = window.setTimeout(() => {
+          if (!press) return;
+          press.ready = true;
+          element.classList.add('is-holding');
+          try { if (navigator.vibrate) navigator.vibrate(12); } catch { /* optional */ }
+        }, HOLD_TO_DRAG_MS);
+      }
+      element.setPointerCapture?.(event.pointerId);
     });
+
     element.addEventListener('pointermove', (event) => {
-      if (!drag || drag.id !== id || drag.pointerId !== event.pointerId) return;
-      if (!drag.moved && Math.hypot(event.clientX - drag.startX, event.clientY - drag.startY) < 7) return;
-      if (!drag.moved) {
-        drag.moved = true;
+      if (!press || press.pointerId !== event.pointerId) return;
+      const distance = Math.hypot(event.clientX - press.x, event.clientY - press.y);
+
+      if (!press.ready) {
+        if (distance > 10) endHold(); // they're scrolling the tray, not lifting
+        return;
+      }
+
+      if (!drag) {
+        if (distance < 7) return;
+        drag = { id, pointerId: event.pointerId, startX: press.x, startY: press.y, moved: true };
+        element.classList.remove('is-holding');
         element.classList.add('is-dragging');
         workspace?.classList.add('is-drag-active');
         dragGhost = element.cloneNode(true);
@@ -4460,6 +4483,8 @@ function setupKeeperArchive(storyEl, api = {}) {
         dragGhost.removeAttribute('tabindex');
         document.body.appendChild(dragGhost);
       }
+
+      event.preventDefault();
       if (dragGhost) dragGhost.style.transform = `translate3d(${event.clientX + 12}px, ${event.clientY + 12}px, 0)`;
       archiveRoot.querySelectorAll('.is-over').forEach((zone) => zone.classList.remove('is-over'));
       document.elementFromPoint(event.clientX, event.clientY)?.closest?.('[data-archive-zone]')?.classList.add('is-over');
@@ -4469,14 +4494,30 @@ function setupKeeperArchive(storyEl, api = {}) {
         if (event.clientY < scrollRect.top + edge) archiveScroll.scrollTop -= 16;
         else if (event.clientY > scrollRect.bottom - edge) archiveScroll.scrollTop += 16;
       }
-    });
-    element.addEventListener('pointerup', finishDrag);
-    element.addEventListener('pointercancel', finishDrag);
+    }, { passive: false });
+
+    const releaseCard = (event) => {
+      if (press && press.pointerId === event.pointerId) {
+        const wasDragging = Boolean(drag && drag.id === id);
+        const distance = Math.hypot(event.clientX - press.x, event.clientY - press.y);
+        endHold();
+        // A clean tap (no drag, barely moved) simply selects the record.
+        if (!wasDragging && event.type === 'pointerup' && distance < 10) selectCard(id);
+      }
+      finishDrag(event);
+    };
+    element.addEventListener('pointerup', releaseCard);
+    element.addEventListener('pointercancel', releaseCard);
     element.addEventListener('lostpointercapture', (event) => {
       if (!drag || drag.id !== id || drag.pointerId !== event.pointerId) return;
       element.classList.remove('is-dragging');
       drag = null;
       removeDragGhost();
+    });
+    element.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      selectCard(id);
     });
   });
 
