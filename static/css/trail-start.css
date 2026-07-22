@@ -1415,6 +1415,70 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
+/* Stop 8's wartime photographs form one layered archival cluster. Keeping the
+   cluster outside the text column preserves the chapter's reading space. */
+.trailx__chapter > .trailx__chapter-photo-group {
+  position: absolute;
+  top: 50%;
+  right: calc(100% + clamp(1rem, 3vw, 3rem));
+  width: clamp(17rem, 27vw, 25rem);
+  height: clamp(16rem, 49vh, 23rem);
+  pointer-events: none;
+  transform: translateY(calc(-50% + 22px));
+}
+.trailx__chapter.is-active > .trailx__chapter-photo-group {
+  transform: translateY(-50%);
+}
+.trailx__chapter-photo--cluster {
+  position: absolute;
+  width: clamp(8rem, 12vw, 11rem);
+  margin: 0;
+  padding: 0.35rem 0.35rem 0.48rem;
+  border: 1px solid rgba(184, 146, 58, 0.58);
+  border-radius: 0;
+  background: var(--tx-cream);
+  color: var(--tx-ink);
+  box-shadow: 0 1.25rem 3rem rgba(0, 0, 0, 0.58);
+  cursor: zoom-in;
+  pointer-events: auto;
+  transition: transform 0.28s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.trailx__chapter-photo--cluster:hover,
+.trailx__chapter-photo--cluster:focus-visible {
+  z-index: 4;
+}
+.trailx__chapter-photo--aynaga {
+  top: 0;
+  left: 3%;
+  transform: rotate(-3deg);
+}
+.trailx__chapter-photo--vistal {
+  top: 7%;
+  right: 0;
+  transform: rotate(3deg);
+}
+.trailx__chapter-photo--guerrillas {
+  bottom: 0;
+  left: 22%;
+  width: clamp(10rem, 15vw, 13.5rem);
+  transform: rotate(-1deg);
+}
+.trailx__chapter-photo--cluster:hover {
+  transform: rotate(0) translateY(-0.3rem);
+}
+.trailx__chapter-photo--cluster .trailx__chapter-photo-caption {
+  font-size: calc(0.62rem * var(--tx-font-scale, 1));
+  line-height: 1.25;
+}
+.trailx__chapter-photo-caption small,
+.trailx-preview__title small {
+  display: block;
+  margin-top: 0.16rem;
+  font-family: "Inter", sans-serif;
+  font-size: 0.68em;
+  letter-spacing: 0.04em;
+  line-height: 1.35;
+}
 .trailx__game-fb {
   margin: 0.7rem 0 0;
   max-width: 32rem;
@@ -3074,6 +3138,31 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   }
   .trailx__chapter-photo-caption { margin-top: 0.28rem; font-size: calc(0.62rem * var(--tx-font-scale, 1)); }
   .trailx__chapter-photo-enlarge { font-size: calc(0.4rem * var(--tx-font-scale, 1)); letter-spacing: 0.05em; }
+  .trailx__chapter > .trailx__chapter-photo-group,
+  .trailx__chapter.is-active > .trailx__chapter-photo-group {
+    top: calc(3.75rem + env(safe-area-inset-top, 0px));
+    right: 0.25rem;
+    width: clamp(9rem, 45vw, 12rem);
+    height: clamp(8.5rem, 29vw, 10.5rem);
+    transform: translateY(0);
+  }
+  .trailx__chapter-photo--cluster {
+    width: clamp(4rem, 18vw, 5.2rem);
+    padding: 0.2rem 0.2rem 0.27rem;
+    box-shadow: 0 0.65rem 1.5rem rgba(0, 0, 0, 0.55);
+  }
+  .trailx__chapter-photo--guerrillas {
+    left: 20%;
+    width: clamp(5rem, 23vw, 6.6rem);
+  }
+  .trailx__chapter-photo--cluster .trailx__chapter-photo-caption {
+    margin-top: 0.16rem;
+    font-size: calc(0.4rem * var(--tx-font-scale, 1));
+    line-height: 1.18;
+  }
+  .trailx__chapter-photo--cluster .trailx__chapter-photo-caption small {
+    display: none;
+  }
   /* Rules box on phones: like the landing (max-height 33svh, scrolls inside) */
   .trailx__scrollbox {
     max-height: 33vh;

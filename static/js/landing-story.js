@@ -100,7 +100,7 @@ function parsePlaylist(attr) {
 const aboutPlaylist = parsePlaylist('data-about-videos');
 const about2Playlist = parsePlaylist('data-about2-videos');
 const about3Playlist = parsePlaylist('data-about3-videos');
-const guerrillaEls = ['a', 'b', 'c']
+const guerrillaEls = ['a']
   .map((k) => story?.querySelector(`[data-story-guerrilla-${k}]`))
   .filter(Boolean);
 const playBtn = story?.querySelector('[data-story-play]');
@@ -659,8 +659,7 @@ function resetAboutScene(key) {
     sceneTimer(() => startVideos(about2Playlist), 6000);
   }
   if (aboutScene.key === 'about3') {
-    // Polaroid collage: the three photos cascade in together and STAY,
-    // with the crypt video tour rolling in behind them.
+    // The Colonel's portrait enters before the crypt video tour begins.
     guerrillaEls.forEach((el, i) => {
       sceneTimer(() => showScenePhoto(el), 2000 + i * 450);
     });

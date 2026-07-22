@@ -418,30 +418,13 @@ body {
   right: calc(var(--story-inset, 6vw) + 1vw);
   z-index: 2;
 }
-/* About·III photos — behind Ana (canvas is z-index 2), still clickable.
-   The Colonel takes the Padre's spot; the other two sit in a row below the
-   information, the right one column-aligned with the Colonel. */
-.story__viewport .story__father[data-story-guerrilla-a],
-.story__viewport .story__father[data-story-guerrilla-b],
-.story__viewport .story__father[data-story-guerrilla-c] {
-  width: min(200px, 16vw);
-  z-index: 1;
-}
+/* About·III portrait — behind Ana (canvas is z-index 2), still clickable. */
 .story__viewport .story__father[data-story-guerrilla-a] {
   --tilt: -3deg;
   top: 19vh;
   left: calc(var(--ana-x, 72%) - 22vw);
   width: min(230px, 22vw); /* same framing as the Padre portrait */
-}
-.story__viewport .story__father[data-story-guerrilla-b] {
-  --tilt: 3deg;
-  top: 63.5vh;
-  left: calc(var(--ana-x, 72%) - 29vw); /* corner tucks under the 1945 print */
-}
-.story__viewport .story__father[data-story-guerrilla-c] {
-  --tilt: -2deg;
-  top: 66vh;
-  left: calc(var(--ana-x, 72%) - 19vw);
+  z-index: 1;
 }
 .story__father img {
   display: block;
@@ -481,18 +464,13 @@ body {
     top: 16vh;
     width: min(190px, 44vw);
   }
-  /* Collage on phones: same diagonal, overlapping arrangement as desktop —
-     larger frames zigzagging down the upper half, behind the text sheet.
-     (Selectors match the desktop rules' specificity so these actually win.) */
-  .story__viewport .story__father[data-story-guerrilla-a],
-  .story__viewport .story__father[data-story-guerrilla-b],
-  .story__viewport .story__father[data-story-guerrilla-c] {
+  /* Keep the Colonel's portrait above the text sheet on phones. */
+  .story__viewport .story__father[data-story-guerrilla-a] {
+    top: 6vh;
+    left: 7vw !important;
     width: min(175px, 43vw);
     margin-left: 0;
   }
-  .story__viewport .story__father[data-story-guerrilla-a] { top: 6vh; left: 7vw !important; }
-  .story__viewport .story__father[data-story-guerrilla-b] { top: 17vh; left: auto !important; right: 7vw; }
-  .story__viewport .story__father[data-story-guerrilla-c] { top: 29vh; left: 16vw !important; }
 }
 
 @media (prefers-reduced-motion: reduce) {
