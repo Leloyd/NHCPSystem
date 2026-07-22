@@ -1097,18 +1097,57 @@ function initPanorama() {
     art1LeftTable: {
       img: root.getAttribute('data-info-art1-left-table-img') || '',
       title: { en: 'Art1-LeftTable', tl: 'Art1-LeftTable' },
+      imageHotspots: [
+        { id: 'art1-left-table-1', x: 14.40, y: 28.76 },
+        { id: 'art1-left-table-2', x: 13.70, y: 50.00 },
+        { id: 'art1-left-table-3', x: 13.28, y: 71.24 },
+        { id: 'art1-left-table-4', x: 58.74, y: 39.13 },
+        { id: 'art1-left-table-5', x: 58.46, y: 78.82 },
+        { id: 'art1-left-table-6', x: 84.62, y: 78.06 },
+        { id: 'art1-left-table-7', x: 83.79, y: 36.35 },
+      ],
     },
     art2LeftTable: {
       img: root.getAttribute('data-info-art2-left-table-img') || '',
       title: { en: 'Art2-LeftTable', tl: 'Art2-LeftTable' },
+      imageHotspots: [
+        { id: 'art2-left-table-1', x: 23.77, y: 21.26 },
+        { id: 'art2-left-table-2', x: 23.28, y: 48.22 },
+        { id: 'art2-left-table-3', x: 23.42, y: 75.69 },
+        { id: 'art2-left-table-4', x: 45.66, y: 32.45 },
+        { id: 'art2-left-table-5', x: 45.80, y: 66.28 },
+        { id: 'art2-left-table-6', x: 62.31, y: 55.60 },
+        { id: 'art2-left-table-7', x: 74.76, y: 53.56 },
+        { id: 'art2-left-table-8', x: 75.46, y: 87.14 },
+      ],
     },
     art1RightTable: {
       img: root.getAttribute('data-info-art1-right-table-img') || '',
       title: { en: 'Art1-RightTable', tl: 'Art1-RightTable' },
+      imageHotspots: [
+        { id: 'art1-right-table-1', x: 27.20, y: 52.56 },
+        { id: 'art1-right-table-2', x: 48.46, y: 29.74 },
+        { id: 'art1-right-table-3', x: 47.90, y: 56.52 },
+        { id: 'art1-right-table-4', x: 69.59, y: 30.90 },
+        { id: 'art1-right-table-5', x: 69.45, y: 56.29 },
+      ],
     },
     art2RightTable: {
       img: root.getAttribute('data-info-art2-right-table-img') || '',
       title: { en: 'Art2-RightTable', tl: 'Art2-RightTable' },
+      imageHotspots: [
+        { id: 'art2-right-table-1', x: 29.44, y: 18.22 },
+        { id: 'art2-right-table-2', x: 29.58, y: 38.40 },
+        { id: 'art2-right-table-3', x: 29.58, y: 56.56 },
+        { id: 'art2-right-table-4', x: 29.02, y: 73.96 },
+        { id: 'art2-right-table-5', x: 40.49, y: 19.73 },
+        { id: 'art2-right-table-6', x: 40.49, y: 73.21 },
+        { id: 'art2-right-table-7', x: 70.56, y: 36.89 },
+        { id: 'art2-right-table-8', x: 80.92, y: 37.64 },
+        { id: 'art2-right-table-9', x: 91.55, y: 38.40 },
+        { id: 'art2-right-table-10', x: 73.92, y: 70.43 },
+        { id: 'art2-right-table-11', x: 85.53, y: 70.69 },
+      ],
     },
     pagkasira: {
       img: root.getAttribute('data-info-pagkasira-img') || '',
@@ -1655,9 +1694,66 @@ function initPanorama() {
       const big = document.createElement('img');
       big.src = args.imageSrc;
       big.alt = args.imageAlt || 'Artifact image';
-      frame.appendChild(big);
+      const imageHotspots = Array.isArray(args.imageHotspots)
+        ? args.imageHotspots.filter((hotspot) => (
+            hotspot && Number.isFinite(Number(hotspot.x)) && Number.isFinite(Number(hotspot.y))
+          ))
+        : [];
+
+      let zoomTarget = big;
+      if (imageHotspots.length) {
+        // Transform the picture and its percentage-positioned pins together so
+        // they stay aligned through responsive sizing, pinch, drag and wheel zoom.
+        const imageStage = document.createElement('div');
+        imageStage.className = 'trailx-preview-image-stage';
+
+        const hotspotLayer = document.createElement('div');
+        hotspotLayer.className = 'trailx-preview-image-hotspots';
+
+        imageHotspots.forEach((hotspot, index) => {
+          const pin = document.createElement('button');
+          const number = index + 1;
+          pin.className = 'trailx-preview-image-hotspot';
+          pin.type = 'button';
+          pin.style.left = `${Math.min(100, Math.max(0, Number(hotspot.x)))}%`;
+          pin.style.top = `${Math.min(100, Math.max(0, Number(hotspot.y)))}%`;
+          pin.setAttribute('data-image-hotspot', hotspot.id || `image-hotspot-${number}`);
+          pin.setAttribute('aria-label', `Image hotspot ${number}; details will be added later`);
+          pin.title = `Hotspot ${number}`;
+          pin.addEventListener('pointerdown', (event) => event.stopPropagation());
+          pin.addEventListener('click', (event) => {
+            event.preventDefault();
+            event.stopPropagation();
+          });
+          hotspotLayer.appendChild(pin);
+        });
+
+        const hotspotToggle = document.createElement('button');
+        hotspotToggle.className = 'trailx-preview-image-hotspots__toggle';
+        hotspotToggle.type = 'button';
+        hotspotToggle.setAttribute('aria-label', 'Hide image hotspots');
+        hotspotToggle.setAttribute('aria-pressed', 'true');
+        hotspotToggle.innerHTML = '<svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="12" r="2.2" fill="currentColor"></circle><circle cx="12" cy="7" r="2.2" fill="currentColor"></circle><circle cx="18" cy="12" r="2.2" fill="currentColor"></circle><path d="M7.8 10.8 10.2 8.3M13.8 8.3l2.4 2.5" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round"></path></svg>';
+        hotspotToggle.addEventListener('click', (event) => {
+          event.preventDefault();
+          event.stopPropagation();
+          const willShow = hotspotLayer.hidden;
+          hotspotLayer.hidden = !willShow;
+          hotspotToggle.classList.toggle('is-off', !willShow);
+          hotspotToggle.setAttribute('aria-pressed', String(willShow));
+          hotspotToggle.setAttribute('aria-label', willShow ? 'Hide image hotspots' : 'Show image hotspots');
+        });
+
+        imageStage.appendChild(big);
+        imageStage.appendChild(hotspotLayer);
+        frame.appendChild(imageStage);
+        frame.appendChild(hotspotToggle);
+        zoomTarget = imageStage;
+      } else {
+        frame.appendChild(big);
+      }
       previewMedia.appendChild(frame);
-      createPreviewImageZoom(frame, big);
+      createPreviewImageZoom(frame, zoomTarget);
     }
     setTitleHtml(previewTitle, args.title, args.imageAlt || '');
     previewEl.hidden = false;
@@ -2020,6 +2116,9 @@ function initPanorama() {
             audioByLanguage: asset.audioByLanguage || null,
             imageAlt: alt,
             previewFrameStyle: asset.outline ? 'outline' : '',
+            imageHotspots: Array.isArray(asset.imageHotspots)
+              ? asset.imageHotspots.map((hotspot) => ({ ...hotspot }))
+              : [],
             windowPitch: pitch,
             windowYaw: yaw,
           },

@@ -858,6 +858,16 @@
       imageSrc: insideChapelImageAssets.art2LeftTable,
       imageAlt: "Art2-LeftTable",
       hotspotDebugKey: "Art2-LeftTable",
+      imageHotspots: [
+        { id: "art2-left-table-1", x: 23.77, y: 21.26 },
+        { id: "art2-left-table-2", x: 23.28, y: 48.22 },
+        { id: "art2-left-table-3", x: 23.42, y: 75.69 },
+        { id: "art2-left-table-4", x: 45.66, y: 32.45 },
+        { id: "art2-left-table-5", x: 45.80, y: 66.28 },
+        { id: "art2-left-table-6", x: 62.31, y: 55.60 },
+        { id: "art2-left-table-7", x: 74.76, y: 53.56 },
+        { id: "art2-left-table-8", x: 75.46, y: 87.14 },
+      ],
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-art1-right-table-marker",
@@ -866,6 +876,13 @@
       imageSrc: insideChapelImageAssets.art1RightTable,
       imageAlt: "Art1-RightTable",
       hotspotDebugKey: "Art1-RightTable",
+      imageHotspots: [
+        { id: "art1-right-table-1", x: 27.20, y: 52.56 },
+        { id: "art1-right-table-2", x: 48.46, y: 29.74 },
+        { id: "art1-right-table-3", x: 47.90, y: 56.52 },
+        { id: "art1-right-table-4", x: 69.59, y: 30.90 },
+        { id: "art1-right-table-5", x: 69.45, y: 56.29 },
+      ],
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-art2-right-table-marker",
@@ -874,6 +891,19 @@
       imageSrc: insideChapelImageAssets.art2RightTable,
       imageAlt: "Art2-RightTable",
       hotspotDebugKey: "Art2-RightTable",
+      imageHotspots: [
+        { id: "art2-right-table-1", x: 29.44, y: 18.22 },
+        { id: "art2-right-table-2", x: 29.58, y: 38.40 },
+        { id: "art2-right-table-3", x: 29.58, y: 56.56 },
+        { id: "art2-right-table-4", x: 29.02, y: 73.96 },
+        { id: "art2-right-table-5", x: 40.49, y: 19.73 },
+        { id: "art2-right-table-6", x: 40.49, y: 73.21 },
+        { id: "art2-right-table-7", x: 70.56, y: 36.89 },
+        { id: "art2-right-table-8", x: 80.92, y: 37.64 },
+        { id: "art2-right-table-9", x: 91.55, y: 38.40 },
+        { id: "art2-right-table-10", x: 73.92, y: 70.43 },
+        { id: "art2-right-table-11", x: 85.53, y: 70.69 },
+      ],
     }),
     buildFloatingArtifactHotspot({
       id: "inside-chapel-pagkasira-marker",
@@ -3421,7 +3451,6 @@
       pin.setAttribute("data-image-hotspot", hotspot.id || `image-hotspot-${number}`);
       pin.setAttribute("aria-label", `Image hotspot ${number}; details will be added later`);
       pin.title = `Hotspot ${number}`;
-      pin.textContent = String(number);
       pin.addEventListener("pointerdown", function (event) {
         event.stopPropagation();
       });
