@@ -182,8 +182,8 @@ const SCRIPTS = {
     tl: "Ang tahimik na mga silid na ito ay minsang nag-ingat ng mga lihim. Noong rebolusyon laban sa Espanya, nagpulong dito ang mga Katipunero. Noong 1897, nagtipon sina Pedro Paterno at Heneral Severino Taiño upang talakayin ang mga usaping humantong sa Kasunduan sa Biak-na-Bato.",
   },
   's8-biak': {
-    en: "The story of that pact reaches far beyond Nagcarlan — to the caves of Biak-na-Bato, where Aguinaldo made his stronghold, to a signed agreement in December 1897, and to an exile in Hong Kong. Read the full story here; take your time.",
-    tl: "Ang kuwento ng kasunduang iyon ay umaabot nang higit pa sa Nagcarlan — sa mga yungib ng Biak-na-Bato, kung saan itinatag ni Aguinaldo ang kanyang kuta, sa isang nilagdaang kasunduan noong Disyembre 1897, at sa pagkatapon sa Hong Kong. Basahin ang buong kuwento rito; huwag magmadali.",
+    en: "Imagine the year 1897. This cemetery was quiet, but whispers of revolution moved beneath the ground. From Nagcarlan, the discussions reached the caves of Biak-na-Bato, where Emilio Aguinaldo established a stronghold and a revolutionary government. Then came an offer: money in exchange for surrendered arms and the leaders' exile to Hong Kong. The agreement was signed in December. By Christmas, Aguinaldo had departed. But remember this: the fighting may have paused, but the struggle for freedom did not end.",
+    tl: "Isipin mong 1897. Tahimik ang libingang ito, ngunit may mga bulong ng himagsikan sa ilalim ng lupa. Mula Nagcarlan, umabot ang mga usapan sa mga yungib ng Biak-na-Bato, kung saan nagtayo si Emilio Aguinaldo ng kuta at pamahalaan. Dumating ang isang alok: salapi kapalit ng pagsuko ng mga armas at pag-alis ng mga pinuno patungong Hong Kong. Nilagdaan ang kasunduan noong Disyembre. Pagsapit ng Pasko, umalis si Aguinaldo. Ngunit tandaan ito: maaaring pansamantalang tumigil ang labanan, ngunit hindi natapos ang pakikibaka para sa kalayaan.",
   },
   's8-wwii': {
     en: "The cemetery kept sheltering the brave. During the Japanese occupation, it became a stronghold for Filipino guerrillas, led by Colonel Guillermo Aynaga, until his capture and death in 1944. His remains now rest at the Libingan ng mga Bayani.",
@@ -4110,6 +4110,73 @@ function setupStory(el) {
       chips.forEach((b) => b.setAttribute('aria-pressed', String(b === chip)));
       detailPanes.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
     });
+  });
+
+  // Stop 8 · Biak-na-Bato: reveal the history as five short memory moments.
+  // The complete account remains available in the disclosure below the cards.
+  el.querySelectorAll('[data-pact-story]').forEach((story) => {
+    const cards = Array.from(story.querySelectorAll('[data-pact-card]'));
+    const jumps = Array.from(story.querySelectorAll('[data-pact-jump]'));
+    const stage = story.querySelector('[data-pact-stage]');
+    const previous = story.querySelector('[data-pact-prev]');
+    const next = story.querySelector('[data-pact-next]');
+    const counter = story.querySelector('[data-pact-count]');
+    const fullAccount = story.querySelector('.trailx-pact__full');
+    let current = 0;
+    let swipe = null;
+
+    const showMoment = (requested) => {
+      if (!cards.length) return;
+      current = Math.min(cards.length - 1, Math.max(0, Number(requested) || 0));
+      cards.forEach((card, index) => {
+        const active = index === current;
+        card.hidden = !active;
+        card.classList.toggle('is-active', active);
+        card.setAttribute('aria-hidden', String(!active));
+      });
+      jumps.forEach((jump, index) => {
+        const active = index === current;
+        jump.classList.toggle('is-active', active);
+        jump.setAttribute('aria-current', active ? 'step' : 'false');
+      });
+      if (previous) previous.disabled = current === 0;
+      if (next) next.disabled = current === cards.length - 1;
+      if (counter) {
+        counter.textContent = `${current + 1} / ${cards.length}`;
+        counter.setAttribute('aria-label', `Moment ${current + 1} of ${cards.length}`);
+      }
+    };
+
+    jumps.forEach((jump) => {
+      jump.addEventListener('click', () => showMoment(jump.getAttribute('data-pact-jump')));
+    });
+    previous?.addEventListener('click', () => showMoment(current - 1));
+    next?.addEventListener('click', () => showMoment(current + 1));
+
+    stage?.addEventListener('keydown', (event) => {
+      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+      event.preventDefault();
+      showMoment(current + (event.key === 'ArrowRight' ? 1 : -1));
+    });
+    stage?.addEventListener('pointerdown', (event) => {
+      if (event.button > 0) return;
+      swipe = { id: event.pointerId, x: event.clientX, y: event.clientY };
+    }, { passive: true });
+    stage?.addEventListener('pointerup', (event) => {
+      if (!swipe || swipe.id !== event.pointerId) return;
+      const dx = event.clientX - swipe.x;
+      const dy = event.clientY - swipe.y;
+      swipe = null;
+      if (Math.abs(dx) < 42 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
+      showMoment(current + (dx < 0 ? 1 : -1));
+    }, { passive: true });
+    stage?.addEventListener('pointercancel', () => { swipe = null; }, { passive: true });
+
+    fullAccount?.addEventListener('toggle', () => {
+      story.classList.toggle('is-reading-full', fullAccount.open);
+    });
+
+    showMoment(0);
   });
 
   // Mind games (Stop 4) — unscored, retry forever.

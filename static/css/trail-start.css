@@ -825,6 +825,221 @@
 }
 .trailx__scrollbox::-webkit-scrollbar { width: 5px; }
 .trailx__scrollbox::-webkit-scrollbar-thumb { background: rgba(212, 175, 106, 0.35); border-radius: 999px; }
+
+/* Stop 8 · Biak-na-Bato — five memorable beats instead of a required essay. */
+.trailx-pact {
+  width: min(34rem, 100%);
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 106, 0.42);
+  border-radius: 1.1rem;
+  background:
+    radial-gradient(circle at 86% 8%, rgba(212, 175, 106, 0.12), transparent 32%),
+    linear-gradient(145deg, rgba(28, 18, 8, 0.96), rgba(13, 10, 4, 0.92));
+  box-shadow: 0 18px 52px rgba(0, 0, 0, 0.38), inset 0 1px rgba(255, 255, 255, 0.04);
+  color: var(--tx-cream, #faf7f2);
+}
+.trailx-pact__premise {
+  margin: 0;
+  padding: 0.72rem 1rem 0.25rem;
+  color: rgba(250, 247, 242, 0.78);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: calc(0.9rem * var(--tx-font-scale, 1));
+  font-style: italic;
+  line-height: 1.25;
+  text-align: center;
+}
+.trailx-pact__thread {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.42rem 1.3rem 0.68rem;
+}
+.trailx-pact__thread-line {
+  position: absolute;
+  z-index: -1;
+  left: 0.65rem;
+  right: 0.65rem;
+  top: 50%;
+  height: 1px;
+  background: linear-gradient(90deg, rgba(212, 175, 106, 0.18), rgba(212, 175, 106, 0.78), rgba(212, 175, 106, 0.18));
+}
+.trailx-pact__jump {
+  display: grid;
+  place-items: center;
+  width: 1.55rem;
+  height: 1.55rem;
+  padding: 0;
+  border: 1px solid rgba(212, 175, 106, 0.58);
+  border-radius: 50%;
+  background: #1c1208;
+  color: rgba(250, 247, 242, 0.72);
+  font-family: "Inter", sans-serif;
+  font-size: 0.56rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: color 180ms ease, background 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+.trailx-pact__jump:hover,
+.trailx-pact__jump:focus-visible { color: #fff; transform: scale(1.08); outline: none; }
+.trailx-pact__jump.is-active {
+  border-color: var(--tx-gold, #d4af6a);
+  background: var(--tx-gold, #d4af6a);
+  color: #1c1208;
+  box-shadow: 0 0 0 4px rgba(212, 175, 106, 0.13), 0 0 18px rgba(212, 175, 106, 0.32);
+}
+.trailx-pact__stage {
+  position: relative;
+  margin: 0 0.68rem;
+  min-height: 10.4rem;
+  max-height: 14rem;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(212, 175, 106, 0.18);
+  border-radius: 0.85rem;
+  background: rgba(5, 4, 2, 0.32);
+  outline: none;
+  touch-action: pan-y;
+}
+.trailx-pact__stage:focus-visible { box-shadow: 0 0 0 2px rgba(212, 175, 106, 0.62); }
+.trailx-pact__card {
+  display: grid;
+  grid-template-columns: 4.25rem minmax(0, 1fr);
+  gap: 0.95rem;
+  align-items: center;
+  min-height: 10.4rem;
+  padding: 1rem 1.1rem;
+  animation: trailx-pact-arrive 320ms ease both;
+}
+.trailx-pact__card[hidden] { display: none; }
+@keyframes trailx-pact-arrive {
+  from { opacity: 0; transform: translateX(0.7rem); }
+  to { opacity: 1; transform: translateX(0); }
+}
+.trailx-pact__icon {
+  display: grid;
+  place-items: center;
+  width: 4rem;
+  height: 4rem;
+  border: 1px solid rgba(212, 175, 106, 0.58);
+  border-radius: 50%;
+  color: var(--tx-gold, #d4af6a);
+  background: radial-gradient(circle, rgba(212, 175, 106, 0.16), rgba(13, 10, 4, 0.2) 67%);
+  box-shadow: inset 0 0 0 5px rgba(212, 175, 106, 0.04);
+}
+.trailx-pact__icon svg {
+  width: 2.15rem;
+  height: 2.15rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.trailx-pact__card--final .trailx-pact__icon svg { fill: currentColor; stroke-width: 0; }
+.trailx-pact__date {
+  display: block;
+  margin-bottom: 0.25rem;
+  color: var(--tx-gold, #d4af6a);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.57rem * var(--tx-font-scale, 1));
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+.trailx-pact__moment h4 {
+  margin: 0 0 0.35rem;
+  color: #fff9ed;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: calc(1.1rem * var(--tx-font-scale, 1));
+  font-weight: 600;
+}
+.trailx-pact__moment p {
+  margin: 0;
+  color: rgba(250, 247, 242, 0.86);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: calc(0.92rem * var(--tx-font-scale, 1));
+  line-height: 1.38;
+}
+.trailx-pact__payments { display: flex; gap: 0.35rem; margin-top: 0.55rem; }
+.trailx-pact__payments span {
+  padding: 0.18rem 0.42rem;
+  border: 1px solid rgba(212, 175, 106, 0.32);
+  border-radius: 999px;
+  color: var(--tx-gold, #d4af6a);
+  font: 700 0.52rem/1.2 "Inter", sans-serif;
+}
+.trailx-pact__memory {
+  display: block;
+  margin-top: 0.55rem;
+  padding-left: 0.62rem;
+  border-left: 2px solid var(--tx-gold, #d4af6a);
+  color: #f2d89f;
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: calc(0.83rem * var(--tx-font-scale, 1));
+  line-height: 1.3;
+}
+.trailx-pact__controls {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 0.78rem 0.2rem;
+}
+.trailx-pact__nav {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  min-height: 2rem;
+  padding: 0.35rem 0.62rem;
+  border: 1px solid rgba(212, 175, 106, 0.32);
+  border-radius: 999px;
+  background: rgba(212, 175, 106, 0.07);
+  color: #f7e9c9;
+  font: 600 calc(0.58rem * var(--tx-font-scale, 1))/1 "Inter", sans-serif;
+  cursor: pointer;
+}
+.trailx-pact__nav:first-child { justify-self: start; }
+.trailx-pact__nav:last-child { justify-self: end; }
+.trailx-pact__nav:hover:not(:disabled),
+.trailx-pact__nav:focus-visible:not(:disabled) { border-color: var(--tx-gold, #d4af6a); background: rgba(212, 175, 106, 0.15); outline: none; }
+.trailx-pact__nav:disabled { opacity: 0.34; cursor: default; }
+.trailx-pact__counter { color: rgba(250, 247, 242, 0.62); font: 600 0.57rem/1 "Inter", sans-serif; }
+.trailx-pact__swipe {
+  margin: 0;
+  padding: 0.15rem 0.75rem 0.62rem;
+  color: rgba(250, 247, 242, 0.45);
+  font: 500 calc(0.5rem * var(--tx-font-scale, 1))/1.2 "Inter", sans-serif;
+  letter-spacing: 0.04em;
+  text-align: center;
+}
+.trailx-pact__full { border-top: 1px solid rgba(212, 175, 106, 0.18); }
+.trailx-pact__full summary {
+  padding: 0.65rem 0.85rem;
+  color: var(--tx-gold, #d4af6a);
+  font: 650 calc(0.58rem * var(--tx-font-scale, 1))/1.25 "Inter", sans-serif;
+  letter-spacing: 0.08em;
+  text-align: center;
+  text-transform: uppercase;
+  cursor: pointer;
+  list-style-position: inside;
+}
+.trailx-pact__full[open] summary { border-bottom: 1px solid rgba(212, 175, 106, 0.15); }
+.trailx-pact__full .trailx__scrollbox {
+  width: auto;
+  max-width: none;
+  max-height: 30vh;
+  max-height: 30svh;
+  margin: 0.8rem 0.45rem 0.8rem 0.85rem;
+}
+.trailx-pact.is-reading-full .trailx-pact__premise,
+.trailx-pact.is-reading-full .trailx-pact__thread,
+.trailx-pact.is-reading-full .trailx-pact__stage,
+.trailx-pact.is-reading-full .trailx-pact__controls,
+.trailx-pact.is-reading-full .trailx-pact__swipe { display: none; }
+
 .trailx__rule {
   padding: 0.6rem 0;
   border-bottom: 1px solid rgba(212, 175, 106, 0.16);
@@ -2585,6 +2800,25 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
     max-height: 33svh;
     padding-right: 0.4rem;
   }
+  .trailx-pact { border-radius: 0.9rem; }
+  .trailx-pact__premise { padding: 0.52rem 0.65rem 0.14rem; font-size: calc(0.76rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__thread { margin: 0.34rem 0.9rem 0.45rem; }
+  .trailx-pact__jump { width: 1.35rem; height: 1.35rem; font-size: 0.5rem; }
+  .trailx-pact__stage { min-height: 8.65rem; max-height: 10.5rem; margin: 0 0.48rem; border-radius: 0.7rem; }
+  .trailx-pact__card { grid-template-columns: 3rem minmax(0, 1fr); gap: 0.65rem; min-height: 8.65rem; padding: 0.68rem 0.7rem; }
+  .trailx-pact__icon { width: 2.85rem; height: 2.85rem; }
+  .trailx-pact__icon svg { width: 1.55rem; height: 1.55rem; }
+  .trailx-pact__date { margin-bottom: 0.16rem; font-size: calc(0.48rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__moment h4 { margin-bottom: 0.2rem; font-size: calc(0.9rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__moment p { font-size: calc(0.78rem * var(--tx-font-scale, 1)); line-height: 1.25; }
+  .trailx-pact__memory { margin-top: 0.35rem; font-size: calc(0.7rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__payments { margin-top: 0.35rem; }
+  .trailx-pact__payments span { padding: 0.13rem 0.3rem; font-size: 0.44rem; }
+  .trailx-pact__controls { gap: 0.35rem; padding: 0.45rem 0.58rem 0.12rem; }
+  .trailx-pact__nav { min-height: 1.75rem; padding: 0.28rem 0.48rem; font-size: calc(0.5rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__swipe { padding-bottom: 0.42rem; font-size: calc(0.43rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__full summary { padding: 0.52rem 0.62rem; font-size: calc(0.5rem * var(--tx-font-scale, 1)); }
+  .trailx-pact__full .trailx__scrollbox { max-height: 30vh; max-height: 30svh; margin: 0.6rem 0.32rem 0.6rem 0.65rem; }
   .trailx__rule { padding: 0.45rem 0; }
   .trailx__rule p { font-size: calc(0.85rem * var(--tx-font-scale, 1)); line-height: 1.38; }
   .trailx__pano .tour-ground-hotspot--compact { width: 1.9rem; height: 1.9rem; }
@@ -2658,6 +2892,21 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__dot::after { display: none; }
 }
 
+/* Preserve the full Stop 8 interaction on short phone viewports. */
+@media (max-width: 768px) and (max-height: 700px) {
+  .trailx__chapter[data-chapter="s8-biak"] .trailx__label { margin-bottom: 0.3rem; }
+  .trailx__chapter[data-chapter="s8-biak"] .trailx__chapter-title {
+    margin-bottom: 0.4rem;
+    font-size: calc(clamp(1.25rem, 6vw, 1.65rem) * var(--tx-font-scale, 1));
+  }
+  .trailx-pact__premise,
+  .trailx-pact__swipe { display: none; }
+  .trailx-pact__thread { margin-top: 0.42rem; }
+  .trailx-pact__stage,
+  .trailx-pact__card { min-height: 7.8rem; }
+  .trailx-pact__card { padding-top: 0.52rem; padding-bottom: 0.52rem; }
+}
+
 /* Ultra-narrow phones: keep the single row by dropping only the Full View
    label (Listen keeps its word; the aria-label still describes the toggle). */
 @media (max-width: 359px) {
@@ -2671,6 +2920,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx-memory__current,
   .trailx-memory__swipe,
   .trailx-memory__seal.is-awake .trailx-memory__seal-orbit { animation: none !important; }
+  .trailx-pact__card { animation: none !important; }
+  .trailx-pact__jump { transition: none; }
   .trailx-preview-image-hotspot::after { animation: none; }
   .trailx__panel,
   .trailx__panel > *,
