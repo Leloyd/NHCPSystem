@@ -3163,6 +3163,15 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   .trailx__chapter-photo--cluster .trailx__chapter-photo-caption small {
     display: none;
   }
+  /* Stop 8's archival photographs sit slightly lower than the other chapter
+     photos so they remain comfortably inside narrow mobile camera views. */
+  .trailx__chapter[data-chapter="s8-revolution"] > .trailx__chapter-photo {
+    top: calc(7.25rem + env(safe-area-inset-top, 0px));
+  }
+  .trailx__chapter[data-chapter="s8-wwii"] > .trailx__chapter-photo-group,
+  .trailx__chapter[data-chapter="s8-wwii"].is-active > .trailx__chapter-photo-group {
+    top: calc(7rem + env(safe-area-inset-top, 0px));
+  }
   /* Rules box on phones: like the landing (max-height 33svh, scrolls inside) */
   .trailx__scrollbox {
     max-height: 33vh;
