@@ -4662,10 +4662,10 @@ function initCharacter() {
   }
 }
 
-/* --- Stacked document viewer (Stop 5 · Plasencia) ---------------------------
+/* --- Stacked document viewer (Stops 5 and 8) --------------------------------
    "View Documents" opens the source pages as a deck: the front page shows on
    top; tapping it tosses it to the back and brings the next forward, cycling
-   through all four. Close with the ✕ below (landing lightbox pattern) or the
+   through every supplied page. Close with the ✕ below (landing lightbox pattern) or the
    backdrop / Esc. */
 function initDocViewer() {
   const triggers = Array.from(root.querySelectorAll('[data-trail-docs]'));

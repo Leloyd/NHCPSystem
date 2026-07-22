@@ -2828,7 +2828,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 /* Trail's-end calls to action (Stop 10) — allow the two links to wrap. */
 .trailx__actions--end { flex-wrap: wrap; align-items: center; gap: 1rem 1.4rem; }
 
-/* "View Documents" button (Stop 5 · Plasencia) */
+/* "View Documents" buttons (Stops 5 and 8) */
 .trailx__docbtn {
   display: inline-flex;
   align-items: center;
@@ -2847,6 +2847,30 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 .trailx__docbtn:hover { background: rgba(212, 175, 106, 0.2); border-color: var(--tx-gold); }
 .trailx__docbtn:active { transform: scale(0.97); }
 .trailx__docbtn svg { width: 15px; height: 15px; }
+
+/* Archival source note below Stop 8's guerrilla document deck button. */
+.trailx__document-credit {
+  max-width: 32rem;
+  margin-top: 0.75rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid rgba(212, 175, 106, 0.62);
+}
+.trailx__document-credit-copy {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.88);
+  font-family: "Cormorant Garamond", Georgia, serif;
+  font-size: calc(0.92rem * var(--tx-font-scale, 1));
+  line-height: 1.4;
+}
+.trailx__document-credit-source {
+  margin: 0.3rem 0 0;
+  color: var(--tx-gold);
+  font-family: "Inter", sans-serif;
+  font-size: calc(0.58rem * var(--tx-font-scale, 1));
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  line-height: 1.45;
+}
 
 /* Stacked document viewer — the source pages as a deck (landing lightbox
    backdrop + centered ✕ below); tap the front page to send it to the back. */
