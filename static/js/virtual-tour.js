@@ -99,8 +99,7 @@
     "art2-left-table-6": tableAudio("Batikuling-T.mp3", "Batikuling-E.mp3"),
     "art2-left-table-7": tableAudio("Headrest-T.mp3", "Headrest-E.mp3"),
     "art2-left-table-8": tableAudio("IronNail-T.mp3", "IronNail-E.mp3"),
-    // No Azulejos Tile TL/EN files are present in TableAudio yet.
-    "art1-right-table-1": tableAudio("", ""),
+    "art1-right-table-1": tableAudio("Azulejos-T.mp3", "Azulejos-E.mp3"),
     "art1-right-table-2": tableAudio("Right Window(T).mp3", "Right Window.mp3"),
     "art1-right-table-3": tableAudio("Chapel Ceiling(T).mp3", "Chapel Ceiling.mp3"),
     "art1-right-table-4": tableAudio("Pigment Above Niche(T).mp3", "Pigment Above Niche.mp3"),
