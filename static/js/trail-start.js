@@ -218,8 +218,8 @@ const SCRIPTS = {
     tl: "Walong alaala ang naghihintay sa loob ng sinupan. Ilibot ang ilawan sa madilim na mesa upang makita ang mga ito. Buksan ang natuklasang kard para sa bilingguwal na pahiwatig, pagkatapos ay i-drag ito sa Hinto Lima, Anim, Pito, o Walo. Sa telepono o keyboard, pindutin ang kard at saka ang destinasyon nito.",
   },
   's9-next': {
-    en: "The archive now tells one connected story: records preserve what people knew, restoration protects what time endangered, materials and memorial traditions reveal how the chapel was made and remembered, and testimony keeps courage alive. When every memory is in place, continue to our final stop.",
-    tl: "Iisang magkakaugnay na kuwento na ngayon ang sinupan: iniingatan ng mga tala ang kaalaman ng mga tao, pinangangalagaan ng pagsasaayos ang nalagay sa panganib ng panahon, ipinakikita ng mga materyales at tradisyon ng paggunita kung paano itinayo at inalala ang kapilya, at pinananatiling buhay ng mga patotoo ang katapangan. Kapag nasa tamang lugar na ang bawat alaala, magpatuloy sa ating huling hinto.",
+    en: "Nagcarlan's living memory begins with Franciscan roots in 1578 and the cemetery's construction in 1845. It witnessed secret revolutionary meetings in 1896 and 1897, deterioration recorded from 1911, and the Second World War, when it became a guerrilla stronghold. The site was protected by law in 1973, amended in 1978, marked in 1981, and restored through several campaigns from 1982 to 2024. Today, it remains a living landmark under the care of the National Historical Commission of the Philippines.",
+    tl: "Nagsisimula ang buhay na alaala ng Nagcarlan sa mga ugat na Pransiskano noong 1578 at sa pagtatayo ng libingan noong 1845. Naging saksi ito sa mga lihim na pagpupulong ng himagsikan noong 1896 at 1897, sa pagkasirang naitala mula 1911, at sa Ikalawang Digmaang Pandaigdig, nang magsilbi itong kuta ng mga gerilya. Pinangalagaan ng batas ang pook noong 1973, sinugan noong 1978, nilagyan ng pananda noong 1981, at isinailalim sa mga yugto ng pagsasaayos mula 1982 hanggang 2024. Ngayon, nananatili itong buhay na palatandaan sa pangangalaga ng Pambansang Komisyong Pangkasaysayan ng Pilipinas.",
   },
   's10-arrive': {
     en: "And here we are again — the front gates, where our journey began. Take one last look around the place you now know so well.",
@@ -3987,21 +3987,25 @@ function setupKeeperArchive(storyEl, api = {}) {
   }
   if (!cards.length) return null;
 
-  const STORAGE_KEY = 'trailKeeperArchive:v1';
+  const STORAGE_KEY = 'trailKeeperArchive:v2';
+  const LEGACY_STORAGE_KEY = 'trailKeeperArchive:v1';
   const stopKeys = ['stop5', 'stop6', 'stop7', 'stop8'];
   const cardById = new Map(cards.map((card) => [String(card.id), card]));
   const overlay = archiveRoot.querySelector('[data-archive-overlay]');
   const workspace = archiveRoot.querySelector('[data-archive-workspace]');
+  const archiveScroll = archiveRoot.querySelector('[data-archive-scroll]');
   const lantern = archiveRoot.querySelector('[data-archive-lantern]');
   const discoveryGrid = archiveRoot.querySelector('[data-archive-discovery-grid]');
   const tray = archiveRoot.querySelector('[data-archive-tray]');
   const empty = archiveRoot.querySelector('[data-archive-empty]');
   const feedback = archiveRoot.querySelector('[data-archive-feedback]');
   const count = archiveRoot.querySelector('[data-archive-count]');
+  const searchProgress = archiveRoot.querySelector('[data-archive-search-progress]');
   const chapterStatus = archiveRoot.querySelector('[data-archive-chapter-status]');
   const completion = archiveRoot.querySelector('[data-archive-completion]');
   const exitCopy = archiveRoot.querySelector('[data-archive-exit-copy]');
   const exitButton = archiveRoot.querySelector('[data-archive-exit-button]');
+  const livingStatus = archiveRoot.querySelector('[data-archive-living-status]');
   const doneButton = archiveRoot.querySelector('[data-archive-done]');
   const modal = archiveRoot.querySelector('[data-archive-modal]');
   const modalImage = archiveRoot.querySelector('[data-archive-modal-image]');
@@ -4017,6 +4021,9 @@ function setupKeeperArchive(storyEl, api = {}) {
   let feedbackTimer = 0;
   let drag = null;
   let dragGhost = null;
+  let collectHold = null;
+  let armedDiscoveryId = '';
+  let layoutSeed = Date.now() % 2147483647;
   let overlayFocus = null;
   let modalFocus = null;
 
@@ -4041,9 +4048,12 @@ function setupKeeperArchive(storyEl, api = {}) {
 
   const readSavedState = () => {
     try {
-      const saved = JSON.parse(window.sessionStorage.getItem(STORAGE_KEY) || '{}');
-      if (Array.isArray(saved.discovered)) {
-        saved.discovered.forEach((id) => { if (cardById.has(String(id))) discovered.add(String(id)); });
+      const current = window.sessionStorage.getItem(STORAGE_KEY);
+      const legacy = window.sessionStorage.getItem(LEGACY_STORAGE_KEY);
+      const saved = JSON.parse(current || legacy || '{}');
+      const collectedIds = Array.isArray(saved.collected) ? saved.collected : saved.discovered;
+      if (Array.isArray(collectedIds)) {
+        collectedIds.forEach((id) => { if (cardById.has(String(id))) discovered.add(String(id)); });
       }
       if (saved.placed && typeof saved.placed === 'object') {
         Object.entries(saved.placed).forEach(([id, target]) => {
@@ -4054,14 +4064,16 @@ function setupKeeperArchive(storyEl, api = {}) {
           }
         });
       }
+      if (Number.isFinite(Number(saved.layoutSeed))) layoutSeed = Number(saved.layoutSeed);
     } catch { /* session storage may be unavailable */ }
   };
 
   const save = () => {
     try {
       window.sessionStorage.setItem(STORAGE_KEY, JSON.stringify({
-        discovered: Array.from(discovered),
+        collected: Array.from(discovered),
         placed: Object.fromEntries(placed),
+        layoutSeed,
       }));
     } catch { /* current-page progress still works */ }
   };
@@ -4088,14 +4100,20 @@ function setupKeeperArchive(storyEl, api = {}) {
     button.type = 'button';
     button.className = 'trailx-archive__sealed-record';
     button.dataset.archiveDiscovery = card.id;
-    button.setAttribute('aria-label', `Hidden archive record: ${card.title?.en || card.id}`);
+    button.setAttribute('aria-label', `Hidden archive record. Illuminate and hold to recover ${card.title?.en || card.id}.`);
     const number = document.createElement('span');
-    number.textContent = 'NHCP';
+    number.textContent = 'ARCHIVE';
     const image = document.createElement('img');
     image.src = card.image;
     image.alt = '';
     image.draggable = false;
-    button.append(image, number);
+    const seal = document.createElement('i');
+    seal.className = 'trailx-archive__record-seal';
+    seal.setAttribute('aria-hidden', 'true');
+    seal.textContent = '✦';
+    const holdLabel = document.createElement('em');
+    holdLabel.append(bilingual('Hold to recover', 'Pindutin nang matagal'));
+    button.append(image, number, seal, holdLabel);
     discoveryEls.set(card.id, button);
     return button;
   };
@@ -4104,10 +4122,6 @@ function setupKeeperArchive(storyEl, api = {}) {
     const item = document.createElement('article');
     item.className = 'trailx-archive__card';
     item.dataset.archiveCard = card.id;
-    item.tabIndex = 0;
-    item.setAttribute('role', 'button');
-    item.setAttribute('aria-pressed', 'false');
-    item.setAttribute('aria-label', `Select ${card.title?.en || card.id}`);
     const image = document.createElement('img');
     image.src = card.image;
     image.alt = '';
@@ -4124,14 +4138,65 @@ function setupKeeperArchive(storyEl, api = {}) {
     inspect.dataset.archiveInspect = card.id;
     inspect.textContent = 'i';
     inspect.setAttribute('aria-label', `Inspect ${card.title?.en || card.id}`);
-    item.append(image, copy, inspect);
+    const select = document.createElement('button');
+    select.type = 'button';
+    select.className = 'trailx-archive__select';
+    select.dataset.archiveSelect = card.id;
+    select.append(bilingual('Select', 'Piliin'));
+    select.setAttribute('aria-pressed', 'false');
+    const handle = document.createElement('button');
+    handle.type = 'button';
+    handle.className = 'trailx-archive__drag-handle';
+    handle.dataset.archiveDragHandle = card.id;
+    handle.innerHTML = '<span aria-hidden="true">⠿</span>';
+    handle.setAttribute('aria-label', `Drag ${card.title?.en || card.id} to a chapter`);
+    const actions = document.createElement('span');
+    actions.className = 'trailx-archive__card-actions';
+    actions.append(select, inspect, handle);
+    item.append(image, copy, actions);
     cardEls.set(card.id, item);
     return item;
   };
 
-  shuffled(cards).forEach((card) => discoveryGrid?.appendChild(createDiscovery(card)));
-  shuffled(cards).forEach((card) => tray?.appendChild(createCard(card)));
   readSavedState();
+  let layoutRandomState = layoutSeed || 1;
+  const layoutRandom = () => {
+    layoutRandomState = (layoutRandomState * 48271) % 2147483647;
+    return (layoutRandomState - 1) / 2147483646;
+  };
+  const searchSlots = [
+    [7, 9], [27, 7], [49, 11], [72, 8], [88, 14],
+    [15, 27], [38, 24], [61, 29], [82, 31],
+    [7, 47], [29, 44], [52, 49], [73, 45], [91, 51],
+    [16, 67], [38, 64], [61, 70], [82, 66],
+    [8, 86], [29, 83], [52, 88], [74, 84], [91, 82],
+  ];
+  const shuffledSlots = searchSlots
+    .map((slot) => ({ slot, value: layoutRandom() }))
+    .sort((a, b) => a.value - b.value)
+    .map(({ slot }) => slot);
+  cards.forEach((card, index) => {
+    const element = createDiscovery(card);
+    const slot = shuffledSlots[index];
+    element.style.setProperty('--record-x', `${slot[0]}%`);
+    element.style.setProperty('--record-y', `${slot[1]}%`);
+    element.style.setProperty('--record-r', `${Math.round(layoutRandom() * 20 - 10)}deg`);
+    discoveryGrid?.appendChild(element);
+  });
+  const decoyTypes = ['key', 'seal', 'letter', 'ribbon', 'coin', 'leaf', 'stamp', 'quill'];
+  shuffledSlots.slice(cards.length).forEach((slot, index) => {
+    const decoy = document.createElement('button');
+    decoy.type = 'button';
+    decoy.className = `trailx-archive__decoy trailx-archive__decoy--${decoyTypes[index % decoyTypes.length]}`;
+    decoy.dataset.archiveDecoy = decoyTypes[index % decoyTypes.length];
+    decoy.style.setProperty('--record-x', `${slot[0]}%`);
+    decoy.style.setProperty('--record-y', `${slot[1]}%`);
+    decoy.style.setProperty('--record-r', `${Math.round(layoutRandom() * 28 - 14)}deg`);
+    decoy.setAttribute('aria-label', 'Archive decoy');
+    decoy.innerHTML = '<span aria-hidden="true"></span>';
+    discoveryGrid?.appendChild(decoy);
+  });
+  shuffled(cards).forEach((card) => tray?.appendChild(createCard(card)));
 
   const closeModal = () => {
     if (!modal || modal.hidden) return;
@@ -4162,7 +4227,8 @@ function setupKeeperArchive(storyEl, api = {}) {
 
     discoveryEls.forEach((element, id) => {
       const isRevealed = discovered.has(id);
-      element.classList.toggle('is-revealed', isRevealed);
+      element.classList.toggle('is-collected', isRevealed);
+      element.classList.toggle('is-armed', armedDiscoveryId === id && !isRevealed);
       element.disabled = isRevealed;
       element.setAttribute('aria-hidden', String(isRevealed));
     });
@@ -4172,17 +4238,18 @@ function setupKeeperArchive(storyEl, api = {}) {
       element.hidden = !available;
       const selected = selectedId === id && available;
       element.classList.toggle('is-selected', selected);
-      element.setAttribute('aria-pressed', String(selected));
+      element.querySelector('[data-archive-select]')?.setAttribute('aria-pressed', String(selected));
     });
 
     stopKeys.forEach((key) => {
       const zone = zones.get(key);
       if (!zone) return;
       const ids = cards.filter((card) => card.target === key && placed.get(card.id) === key).map((card) => card.id);
-      zone.classList.toggle('is-complete', ids.length === 2);
+      const required = cards.filter((card) => card.target === key).length;
+      zone.classList.toggle('is-complete', ids.length === required);
       zone.classList.toggle('is-available', Boolean(selectedId));
       const zoneCount = zone.querySelector('[data-archive-zone-count]');
-      if (zoneCount) zoneCount.textContent = `${ids.length} / 2`;
+      if (zoneCount) zoneCount.textContent = `${ids.length} / ${required}`;
       const filed = zone.querySelector('[data-archive-filed]');
       if (filed) {
         filed.replaceChildren();
@@ -4195,14 +4262,17 @@ function setupKeeperArchive(storyEl, api = {}) {
         });
       }
       archiveRoot.querySelectorAll(`[data-archive-timeline-stop="${key}"]`).forEach((node) => {
-        node.classList.toggle('is-complete', ids.length === 2);
+        node.classList.toggle('is-complete', ids.length === required);
       });
     });
 
     if (empty) empty.hidden = complete || cards.some((card) => discovered.has(card.id) && !placed.has(card.id));
-    if (count) count.textContent = `${totalPlaced} / ${cards.length}`;
-    setBilingual(chapterStatus, `${totalPlaced} of ${cards.length} memories filed`, `${totalPlaced} sa ${cards.length} alaala ang naihanay`);
+    setBilingual(count, `${discovered.size} collected · ${totalPlaced} filed`, `${discovered.size} nakuha · ${totalPlaced} naihanay`);
+    setBilingual(searchProgress, `${discovered.size} of ${cards.length} records recovered`, `${discovered.size} sa ${cards.length} tala ang nakuha`);
+    setBilingual(chapterStatus, `${discovered.size} recovered · ${totalPlaced} filed`, `${discovered.size} nakuha · ${totalPlaced} naihanay`);
     if (completion) completion.hidden = !complete;
+    archiveRoot.classList.toggle('has-collected-records', discovered.size > 0);
+    archiveRoot.classList.toggle('is-search-complete', discovered.size === cards.length);
     archiveRoot.classList.toggle('is-archive-complete', complete);
     if (exitButton) {
       exitButton.disabled = !complete;
@@ -4210,16 +4280,21 @@ function setupKeeperArchive(storyEl, api = {}) {
     }
     if (doneButton) {
       doneButton.disabled = !complete;
-      setBilingual(doneButton, complete ? 'Close completed archive' : 'Archive incomplete', complete ? 'Isara ang buong sinupan' : 'Hindi pa buo');
+      setBilingual(doneButton, complete ? 'Close & view Living Memory' : 'Archive incomplete', complete ? 'Isara at tingnan ang Buháy na Alaala' : 'Hindi pa buo');
     }
+    setBilingual(
+      livingStatus,
+      complete ? 'Archive complete · The final stop is open' : `Archive incomplete · ${cards.length - totalPlaced} records still need filing`,
+      complete ? 'Buo na ang sinupan · Bukas na ang huling hinto' : `Hindi pa buo ang sinupan · ${cards.length - totalPlaced} tala pa ang kailangang ihanay`
+    );
     setBilingual(
       exitCopy,
       complete
-        ? 'The eight memories now form one connected history. The archive is whole—carry its story to the final stop.'
-        : `The archive is still incomplete. ${cards.length - totalPlaced} ${cards.length - totalPlaced === 1 ? 'memory remains' : 'memories remain'} to be filed.`,
+        ? 'The eight records now form one connected history. The archive is whole—carry its living memory to the final stop.'
+        : 'Explore the full story now. Complete the archive when you are ready to carry every recovered memory to the final stop.',
       complete
-        ? 'Iisang magkakaugnay na kasaysayan na ang walong alaala. Buo na ang sinupan—dalhin ang kuwento nito sa huling hinto.'
-        : `Hindi pa buo ang sinupan. ${cards.length - totalPlaced} ${cards.length - totalPlaced === 1 ? 'alaala pa' : 'alaala pa'} ang kailangang ihanay.`
+        ? 'Iisang magkakaugnay na kasaysayan na ang walong tala. Buo na ang sinupan—dalhin ang buháy nitong alaala sa huling hinto.'
+        : 'Tuklasin na ngayon ang buong kuwento. Buoin ang sinupan kapag handa ka nang dalhin ang bawat natuklasang alaala sa huling hinto.'
     );
   };
 
@@ -4227,14 +4302,14 @@ function setupKeeperArchive(storyEl, api = {}) {
     const card = cardById.get(id);
     if (!card || discovered.has(id)) return false;
     discovered.add(id);
+    armedDiscoveryId = '';
     save();
     render();
     showFeedback(
-      `${card.title?.en} recovered. Inspect its clue, then file it in the right chapter.`,
-      `Natuklasan ang ${card.title?.tl}. Suriin ang pahiwatig at ihanay ito sa tamang kabanata.`,
-      'hint'
+      `${card.title?.en} recovered. It is now waiting in the filing room.`,
+      `Nakuha ang ${card.title?.tl}. Naghihintay na ito sa silid ng pag-uuri.`,
+      'correct'
     );
-    cardEls.get(id)?.scrollIntoView?.({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'nearest' });
     return true;
   };
 
@@ -4244,7 +4319,43 @@ function setupKeeperArchive(storyEl, api = {}) {
       showFeedback('Every record has been recovered. File the remaining memories.', 'Natuklasan na ang lahat ng tala. Ihanay ang mga natitirang alaala.', 'hint');
       return;
     }
-    revealCard(hiddenCards[Math.floor(Math.random() * hiddenCards.length)].id);
+    const card = hiddenCards[Math.floor(Math.random() * hiddenCards.length)];
+    const element = discoveryEls.get(card.id);
+    if (!element) return;
+    const x = element.style.getPropertyValue('--record-x') || '50%';
+    const y = element.style.getPropertyValue('--record-y') || '50%';
+    lantern?.style.setProperty('--beam-x', x);
+    lantern?.style.setProperty('--beam-y', y);
+    element.classList.add('is-hinting');
+    window.setTimeout(() => element.classList.remove('is-hinting'), 1800);
+    showFeedback('The lantern senses a record in the glowing area. Search that part of the room.', 'May nararamdamang tala ang ilawan sa nagliliwanag na bahagi. Hanapin ang bahaging iyon ng silid.', 'hint');
+  };
+
+  const cancelCollectHold = () => {
+    if (!collectHold) return;
+    window.clearTimeout(collectHold.timer);
+    collectHold.element.classList.remove('is-holding');
+    collectHold.element.style.removeProperty('--hold-progress');
+    collectHold = null;
+  };
+
+  const startCollectHold = (id, element, pointerId = null) => {
+    if (!element || discovered.has(id)) return;
+    cancelCollectHold();
+    armedDiscoveryId = id;
+    element.classList.add('is-armed', 'is-holding');
+    element.style.setProperty('--hold-progress', '1');
+    const duration = prefersReducedMotion ? 360 : 760;
+    collectHold = {
+      id,
+      element,
+      pointerId,
+      timer: window.setTimeout(() => {
+        const recoveredId = collectHold?.id;
+        cancelCollectHold();
+        if (recoveredId) revealCard(recoveredId);
+      }, duration),
+    };
   };
 
   const selectCard = (id) => {
@@ -4303,6 +4414,7 @@ function setupKeeperArchive(storyEl, api = {}) {
   const removeDragGhost = () => {
     dragGhost?.remove();
     dragGhost = null;
+    workspace?.classList.remove('is-drag-active');
     archiveRoot.querySelectorAll('.is-over').forEach((zone) => zone.classList.remove('is-over'));
   };
 
@@ -4317,24 +4429,24 @@ function setupKeeperArchive(storyEl, api = {}) {
     if (moved && target) placeCard(id, target.dataset.archiveZone);
   };
 
+  const beginCardDrag = (event, element, id, fromHandle) => {
+    if (event.button > 0 || placed.has(id)) return;
+    if (event.pointerType === 'touch' && !fromHandle) return;
+    if (!fromHandle && event.target.closest('[data-archive-inspect], [data-archive-select]')) return;
+    removeDragGhost();
+    drag = { id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false };
+    element.setPointerCapture?.(event.pointerId);
+    if (fromHandle) event.preventDefault();
+  };
+
   cardEls.forEach((element, id) => {
-    element.addEventListener('click', (event) => {
-      if (event.target.closest('[data-archive-inspect]') || element.classList.contains('is-dragging')) return;
-      selectCard(id);
-    });
-    element.addEventListener('keydown', (event) => {
-      if (event.key !== 'Enter' && event.key !== ' ') return;
-      event.preventDefault();
-      selectCard(id);
-    });
+    element.querySelector('[data-archive-select]')?.addEventListener('click', () => selectCard(id));
     element.querySelector('[data-archive-inspect]')?.addEventListener('click', (event) => {
       event.stopPropagation();
       openModal(id, event.currentTarget);
     });
     element.addEventListener('pointerdown', (event) => {
-      if (event.pointerType === 'touch' || event.button > 0 || event.target.closest('[data-archive-inspect]')) return;
-      drag = { id, pointerId: event.pointerId, startX: event.clientX, startY: event.clientY, moved: false };
-      element.setPointerCapture?.(event.pointerId);
+      beginCardDrag(event, element, id, Boolean(event.target.closest('[data-archive-drag-handle]')));
     });
     element.addEventListener('pointermove', (event) => {
       if (!drag || drag.id !== id || drag.pointerId !== event.pointerId) return;
@@ -4342,6 +4454,7 @@ function setupKeeperArchive(storyEl, api = {}) {
       if (!drag.moved) {
         drag.moved = true;
         element.classList.add('is-dragging');
+        workspace?.classList.add('is-drag-active');
         dragGhost = element.cloneNode(true);
         dragGhost.className = 'trailx-archive__drag-ghost';
         dragGhost.removeAttribute('tabindex');
@@ -4350,9 +4463,21 @@ function setupKeeperArchive(storyEl, api = {}) {
       if (dragGhost) dragGhost.style.transform = `translate3d(${event.clientX + 12}px, ${event.clientY + 12}px, 0)`;
       archiveRoot.querySelectorAll('.is-over').forEach((zone) => zone.classList.remove('is-over'));
       document.elementFromPoint(event.clientX, event.clientY)?.closest?.('[data-archive-zone]')?.classList.add('is-over');
+      if (archiveScroll) {
+        const scrollRect = archiveScroll.getBoundingClientRect();
+        const edge = Math.min(76, scrollRect.height * 0.16);
+        if (event.clientY < scrollRect.top + edge) archiveScroll.scrollTop -= 16;
+        else if (event.clientY > scrollRect.bottom - edge) archiveScroll.scrollTop += 16;
+      }
     });
     element.addEventListener('pointerup', finishDrag);
     element.addEventListener('pointercancel', finishDrag);
+    element.addEventListener('lostpointercapture', (event) => {
+      if (!drag || drag.id !== id || drag.pointerId !== event.pointerId) return;
+      element.classList.remove('is-dragging');
+      drag = null;
+      removeDragGhost();
+    });
   });
 
   zones.forEach((zone, key) => zone?.addEventListener('click', () => {
@@ -4363,8 +4488,6 @@ function setupKeeperArchive(storyEl, api = {}) {
     placeCard(selectedId, key);
   }));
 
-  discoveryEls.forEach((element, id) => element.addEventListener('click', () => revealCard(id)));
-
   const scanLantern = (clientX, clientY) => {
     if (!lantern) return;
     const rect = lantern.getBoundingClientRect();
@@ -4374,11 +4497,56 @@ function setupKeeperArchive(storyEl, api = {}) {
     lantern.style.setProperty('--beam-x', `${x}%`);
     lantern.style.setProperty('--beam-y', `${y}%`);
     const hit = document.elementFromPoint(clientX, clientY)?.closest?.('[data-archive-discovery]');
-    if (hit && lantern.contains(hit)) revealCard(hit.dataset.archiveDiscovery);
+    const nextArmedId = hit && lantern.contains(hit) && !discovered.has(hit.dataset.archiveDiscovery)
+      ? hit.dataset.archiveDiscovery
+      : '';
+    if (nextArmedId !== armedDiscoveryId) {
+      if (armedDiscoveryId) discoveryEls.get(armedDiscoveryId)?.classList.remove('is-armed');
+      armedDiscoveryId = nextArmedId;
+      if (armedDiscoveryId) discoveryEls.get(armedDiscoveryId)?.classList.add('is-armed');
+    }
   };
+
+  discoveryEls.forEach((element, id) => {
+    element.addEventListener('click', (event) => event.preventDefault());
+    element.addEventListener('pointerdown', (event) => {
+      if (discovered.has(id)) return;
+      if (!event.target.closest('.trailx-archive__record-seal')) return;
+      if (armedDiscoveryId !== id) return;
+      event.preventDefault();
+      event.stopPropagation();
+      element.setPointerCapture?.(event.pointerId);
+      startCollectHold(id, element, event.pointerId);
+    });
+    const cancelPointerHold = (event) => {
+      if (collectHold?.id === id && (collectHold.pointerId === null || collectHold.pointerId === event.pointerId)) cancelCollectHold();
+    };
+    element.addEventListener('pointerup', cancelPointerHold);
+    element.addEventListener('pointercancel', cancelPointerHold);
+    element.addEventListener('lostpointercapture', cancelPointerHold);
+    element.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      if (!collectHold) startCollectHold(id, element, null);
+    });
+    element.addEventListener('keyup', (event) => {
+      if ((event.key === 'Enter' || event.key === ' ') && collectHold?.id === id) cancelCollectHold();
+    });
+  });
+
+  archiveRoot.querySelectorAll('[data-archive-decoy]').forEach((decoy) => {
+    decoy.addEventListener('click', () => {
+      decoy.classList.remove('is-disturbed');
+      void decoy.offsetWidth;
+      decoy.classList.add('is-disturbed');
+      window.setTimeout(() => decoy.classList.remove('is-disturbed'), 650);
+      showFeedback('Only a shadow of the archive—not one of the memories we need.', 'Anino lamang ito ng sinupan—hindi isa sa mga alaalang kailangan natin.', 'hint');
+    });
+  });
 
   let lanternPointer = null;
   lantern?.addEventListener('pointerdown', (event) => {
+    if (event.target.closest('[data-archive-discovery], [data-archive-decoy]')) return;
     lanternPointer = event.pointerId;
     lantern.setPointerCapture?.(event.pointerId);
     scanLantern(event.clientX, event.clientY);
@@ -4388,17 +4556,15 @@ function setupKeeperArchive(storyEl, api = {}) {
   });
   lantern?.addEventListener('pointerup', () => { lanternPointer = null; });
   lantern?.addEventListener('pointercancel', () => { lanternPointer = null; });
-  lantern?.addEventListener('keydown', (event) => {
-    if (event.key !== 'Enter' && event.key !== ' ') return;
-    event.preventDefault();
-    revealNext();
-  });
 
   const closeOverlay = () => {
     closeModal();
+    cancelCollectHold();
     removeDragGhost();
+    drag = null;
     overlay.hidden = true;
     archiveRoot.classList.remove('is-archive-open');
+    document.documentElement.classList.remove('trail-archive-open');
     document.body.classList.remove('trail-archive-open');
     overlayFocus?.focus?.({ preventScroll: true });
   };
@@ -4407,9 +4573,22 @@ function setupKeeperArchive(storyEl, api = {}) {
     overlayFocus = trigger || document.activeElement;
     overlay.hidden = false;
     archiveRoot.classList.add('is-archive-open');
+    document.documentElement.classList.add('trail-archive-open');
     document.body.classList.add('trail-archive-open');
     render();
+    if (archiveScroll) archiveScroll.scrollTop = 0;
+    showFeedback(
+      discovered.size ? 'Continue searching, or move to the filing room at any time.' : 'Move the lantern through the room. Hold a gold seal when a true record glints.',
+      discovered.size ? 'Ipagpatuloy ang paghahanap, o pumunta sa silid ng pag-uuri anumang oras.' : 'Ilibot ang ilawan sa silid. Pindutin nang matagal ang gintong selyo kapag kumislap ang tunay na tala.',
+      'hint'
+    );
     overlay.querySelector('[data-archive-close]')?.focus?.({ preventScroll: true });
+  };
+
+  const scrollToArchivePhase = (name) => {
+    const phase = archiveRoot.querySelector(`[data-archive-phase="${name}"]`);
+    phase?.scrollIntoView?.({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'start' });
+    window.setTimeout(() => phase?.querySelector('button, [tabindex="0"]')?.focus?.({ preventScroll: true }), prefersReducedMotion ? 0 : 420);
   };
 
   archiveRoot.querySelectorAll('[data-archive-open]').forEach((button) => button.addEventListener('click', () => openOverlay(button)));
@@ -4421,6 +4600,8 @@ function setupKeeperArchive(storyEl, api = {}) {
   });
   archiveRoot.querySelector('[data-archive-close]')?.addEventListener('click', closeOverlay);
   archiveRoot.querySelector('[data-archive-reveal-next]')?.addEventListener('click', revealNext);
+  archiveRoot.querySelector('[data-archive-go-filing]')?.addEventListener('click', () => scrollToArchivePhase('filing'));
+  archiveRoot.querySelector('[data-archive-go-search]')?.addEventListener('click', () => scrollToArchivePhase('search'));
   archiveRoot.querySelectorAll('[data-archive-modal-close]').forEach((button) => button.addEventListener('click', closeModal));
   doneButton?.addEventListener('click', () => {
     if (placed.size !== cards.length) return;
@@ -4430,11 +4611,16 @@ function setupKeeperArchive(storyEl, api = {}) {
     if (index >= 0) api.scrollToStep?.(index);
   });
   archiveRoot.querySelector('[data-archive-reset]')?.addEventListener('click', () => {
+    cancelCollectHold();
+    removeDragGhost();
+    drag = null;
     discovered.clear();
     placed.clear();
     selectedId = '';
-    try { window.sessionStorage.removeItem(STORAGE_KEY); } catch { /* no-op */ }
-    shuffled(Array.from(discoveryGrid?.children || [])).forEach((element) => discoveryGrid?.appendChild(element));
+    try {
+      window.sessionStorage.removeItem(STORAGE_KEY);
+      window.sessionStorage.removeItem(LEGACY_STORAGE_KEY);
+    } catch { /* no-op */ }
     shuffled(Array.from(tray?.children || [])).forEach((element) => tray?.appendChild(element));
     render();
     showFeedback('The archive has been reset. Begin again with the lantern.', 'Naulit ang sinupan. Magsimulang muli sa ilawan.', 'hint');
@@ -4455,11 +4641,21 @@ function setupKeeperArchive(storyEl, api = {}) {
     if (tray.scrollLeft !== before) event.preventDefault();
   }, { passive: false });
 
+  archiveRoot.querySelector('[data-living-memory-rail]')?.addEventListener('wheel', (event) => {
+    const rail = event.currentTarget;
+    const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
+    if (!delta || rail.scrollWidth <= rail.clientWidth) return;
+    const before = rail.scrollLeft;
+    rail.scrollLeft += delta;
+    if (rail.scrollLeft !== before) event.preventDefault();
+  }, { passive: false });
+
   render();
   return {
     isComplete: () => placed.size === cards.length,
     resume: () => {
       selectedId = '';
+      cancelCollectHold();
       removeDragGhost();
       closeOverlay();
       render();
@@ -4875,7 +5071,7 @@ function initStories() {
     if (state.mode === 'intro' || !activeStoryEl || activeStoryEl.hidden) return;
     // Inner scroll areas (rules box), the artifact viewer, and 3D models keep
     // their own native wheel behaviour.
-    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, .trailx-archive-overlay, model-viewer')) return;
+    if (e.target && e.target.closest && e.target.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, .trailx-archive-overlay, .trailx-living-memory, model-viewer')) return;
     e.preventDefault();
     e.stopPropagation(); // keep Pannellum's mouseZoom out of reading mode
     // ×1.5 so each wheel notch travels further — chapters arrive sooner.
@@ -4888,7 +5084,7 @@ function initStories() {
   // both platforms: a vertical drag scrolls the active story (with a momentum
   // fling); a horizontal drag falls through so "drag to look around" still
   // rotates the 360.
-  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, .trailx-archive-overlay, model-viewer'));
+  const inExcluded = (t) => !!(t && t.closest && t.closest('.trailx__scrollbox, .trailx-memory, .trailx-preview, .trailx-doc, .trailx-map.is-expanded, .trailx-archive-overlay, .trailx-living-memory, model-viewer'));
   let tStartY = 0;
   let tStartX = 0;
   let tLastY = 0;
