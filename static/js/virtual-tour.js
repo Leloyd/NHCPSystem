@@ -294,6 +294,7 @@
   let floatingArtifactPreviewDetail = null;
   let floatingArtifactPreviewDetailImage = null;
   let floatingArtifactPreviewDetailTitle = null;
+  let floatingArtifactPreviewDetailZoom = null;
   let floatingArtifactPreviewImageZoom = null;
   let floatingArtifactPreviewTitle = null;
   let floatingArtifactPreviewModel = null;
@@ -3304,6 +3305,10 @@
     detailImage.className = "tour-artifact-image-detail__image";
     detailImage.alt = "";
 
+    const detailZoomFrame = document.createElement("div");
+    detailZoomFrame.className = "tour-artifact-image-detail__zoomframe";
+    detailZoomFrame.appendChild(detailImage);
+
     const detailTitle = document.createElement("p");
     detailTitle.className = "tour-artifact-image-detail__title";
 
@@ -3313,7 +3318,7 @@
     detailClose.setAttribute("aria-label", "Close artifact detail");
     detailClose.textContent = "\u00d7";
 
-    detailOverlay.appendChild(detailImage);
+    detailOverlay.appendChild(detailZoomFrame);
     detailOverlay.appendChild(detailTitle);
     detailOverlay.appendChild(detailClose);
     imageFrame.appendChild(detailOverlay);
@@ -3341,6 +3346,9 @@
       imageHotspotToggle.classList.toggle("is-off", !willShow);
       imageHotspotToggle.setAttribute("aria-pressed", String(willShow));
       imageHotspotToggle.setAttribute("aria-label", willShow ? "Hide image hotspots" : "Show image hotspots");
+    });
+    imageHotspotToggle.addEventListener("pointerdown", function (event) {
+      event.stopPropagation();
     });
 
     if (artifactHotspotDebug) {
@@ -3471,6 +3479,9 @@
 
     blockOverlayPageZoom(overlay);
     floatingArtifactPreviewImageZoom = createPreviewImageZoom(imageFrame, imageStage);
+    floatingArtifactPreviewDetailZoom = createPreviewImageZoom(detailZoomFrame, detailImage);
+    detailZoomFrame.addEventListener("wheel", function (event) { event.stopPropagation(); });
+    detailZoomFrame.addEventListener("dblclick", function (event) { event.stopPropagation(); });
 
     floatingArtifactPreviewOverlay = overlay;
     floatingArtifactPreviewImage = image;
@@ -3489,6 +3500,9 @@
   }
 
   function hideFloatingArtifactImageDetail() {
+    if (floatingArtifactPreviewDetailZoom) {
+      floatingArtifactPreviewDetailZoom.reset();
+    }
     if (floatingArtifactPreviewDetail) {
       floatingArtifactPreviewDetail.hidden = true;
     }
@@ -3507,6 +3521,9 @@
     }
 
     const title = hotspot.title || "Artifact detail";
+    if (floatingArtifactPreviewDetailZoom) {
+      floatingArtifactPreviewDetailZoom.reset();
+    }
     floatingArtifactPreviewDetailImage.src = hotspot.imageSrc;
     floatingArtifactPreviewDetailImage.alt = title;
     if (floatingArtifactPreviewDetailTitle) {
@@ -3539,7 +3556,7 @@
       const detailTitle = hotspot.title || `Artifact detail ${number}`;
       pin.setAttribute("aria-label", `Open ${detailTitle}`);
       pin.title = detailTitle;
-      pin.textContent = String(number);
+      pin.textContent = "";
       pin.addEventListener("pointerdown", function (event) {
         event.stopPropagation();
       });

@@ -1569,6 +1569,16 @@ function initPanorama() {
       img.style.transform = `translate(${st.tx}px, ${st.ty}px) scale(${st.scale})`;
       frame.classList.toggle('is-zoomed', st.scale > 1.01);
     };
+    const reset = () => {
+      st.scale = 1;
+      st.tx = 0;
+      st.ty = 0;
+      st.pointers.clear();
+      st.panning = false;
+      st.pinch = 0;
+      frame.classList.remove('is-panning');
+      apply();
+    };
     const clamp = () => {
       const fw = frame.clientWidth;
       const fh = frame.clientHeight;
@@ -1643,9 +1653,9 @@ function initPanorama() {
     });
     frame.addEventListener('dblclick', (e) => {
       e.preventDefault();
-      st.scale = 1; st.tx = 0; st.ty = 0;
-      apply();
+      reset();
     });
+    return { reset };
   };
 
   const ensurePreview = () => {
@@ -1726,6 +1736,13 @@ function initPanorama() {
         detailImage.className = 'trailx-preview-image-detail__image';
         detailImage.alt = '';
 
+        const detailZoomFrame = document.createElement('div');
+        detailZoomFrame.className = 'trailx-preview-image-detail__zoomframe';
+        detailZoomFrame.appendChild(detailImage);
+        const detailZoom = createPreviewImageZoom(detailZoomFrame, detailImage);
+        detailZoomFrame.addEventListener('wheel', (event) => event.stopPropagation());
+        detailZoomFrame.addEventListener('dblclick', (event) => event.stopPropagation());
+
         const detailTitle = document.createElement('p');
         detailTitle.className = 'trailx-preview-image-detail__title';
 
@@ -1736,6 +1753,7 @@ function initPanorama() {
         detailClose.textContent = '\u00d7';
 
         const hideDetail = () => {
+          detailZoom?.reset();
           detailOverlay.hidden = true;
           detailImage.removeAttribute('src');
           detailImage.alt = '';
@@ -1744,6 +1762,7 @@ function initPanorama() {
 
         const showDetail = (hotspot, number) => {
           if (!hotspot?.imageSrc) return;
+          detailZoom?.reset();
           const title = hotspot.title || `Artifact detail ${number}`;
           detailImage.src = hotspot.imageSrc;
           detailImage.alt = title;
@@ -1761,7 +1780,7 @@ function initPanorama() {
           if (event.target === detailOverlay) hideDetail();
         });
         detailOverlay.addEventListener('pointerdown', (event) => event.stopPropagation());
-        detailOverlay.appendChild(detailImage);
+        detailOverlay.appendChild(detailZoomFrame);
         detailOverlay.appendChild(detailTitle);
         detailOverlay.appendChild(detailClose);
 
@@ -1776,7 +1795,7 @@ function initPanorama() {
           const detailName = hotspot.title || `Artifact detail ${number}`;
           pin.setAttribute('aria-label', `Open ${detailName}`);
           pin.title = detailName;
-          pin.textContent = String(number);
+          pin.textContent = '';
           pin.addEventListener('pointerdown', (event) => event.stopPropagation());
           pin.addEventListener('click', (event) => {
             event.preventDefault();
@@ -1801,6 +1820,7 @@ function initPanorama() {
           hotspotToggle.setAttribute('aria-pressed', String(willShow));
           hotspotToggle.setAttribute('aria-label', willShow ? 'Hide image hotspots' : 'Show image hotspots');
         });
+        hotspotToggle.addEventListener('pointerdown', (event) => event.stopPropagation());
 
         imageStage.appendChild(big);
         imageStage.appendChild(hotspotLayer);

@@ -2082,19 +2082,34 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   cursor: default;
 }
 .trailx-preview-image-detail[hidden] { display: none; }
-.trailx-preview-image-detail__image {
-  display: block;
-  width: auto !important;
-  max-width: min(92%, 36rem) !important;
-  max-height: calc(100% - 5.5rem) !important;
-  padding: clamp(0.25rem, 1vw, 0.55rem);
-  box-sizing: border-box;
-  object-fit: contain;
+.trailx-preview-image-detail__zoomframe {
+  position: relative;
+  width: fit-content;
+  max-width: min(92%, 36rem);
+  max-height: calc(100% - 5.5rem);
+  overflow: hidden;
   background: var(--tx-cream);
   border: 1px solid rgba(212, 175, 106, 0.78);
   border-radius: 0.3rem;
   box-shadow: 0 1.2rem 3.5rem rgba(0, 0, 0, 0.62);
-  transform: none !important;
+  touch-action: none;
+  cursor: zoom-in;
+}
+.trailx-preview-image-detail__zoomframe.is-zoomed { cursor: zoom-out; }
+.trailx-preview-image-detail__zoomframe.is-panning { cursor: grabbing; }
+.trailx-preview-image-detail__image {
+  display: block;
+  width: auto !important;
+  max-width: 100% !important;
+  max-height: calc(72vh - 6rem) !important;
+  padding: clamp(0.25rem, 1vw, 0.55rem);
+  box-sizing: border-box;
+  object-fit: contain;
+  transform-origin: 0 0;
+  will-change: transform;
+  user-select: none;
+  -webkit-user-select: none;
+  -webkit-user-drag: none;
 }
 .trailx-preview-image-detail__title {
   max-width: 90%;
