@@ -6744,3 +6744,96 @@ body.trail-archive-open {
   .trailx-archive__card,
   .trailx-archive__card.is-holding { transition: none; transform: none; }
 }
+
+/* ==========================================================================
+   Stop 9 · Keeper's Archive — layout clean-up
+   The workspace now reads as one clear column on every screen: no empty second
+   column, no forced dead height, and each phase header keeps its eyebrow,
+   title and action tidy instead of wrapping into a squeezed circle.
+   ========================================================================== */
+.trailx-archive__body {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(1rem, 2vw, 1.5rem);
+  padding: clamp(0.9rem, 2.2vw, 1.5rem);
+}
+.trailx-archive__discovery,
+.trailx-archive__filing,
+.trailx-archive__completion {
+  width: 100%;
+  min-width: 0;
+}
+
+/* Phases stack their own content — and never reserve empty height. */
+.trailx-archive__phase--search,
+.trailx-archive__phase--filing {
+  display: flex;
+  flex-direction: column;
+  gap: 0.85rem;
+  min-height: 0;
+}
+.trailx-archive__phase > p,
+.trailx-archive__filing > p {
+  margin: 0;
+  max-width: 54rem;
+  padding-right: 0;
+}
+
+/* Section header: eyebrow above the title, action pinned to the right. */
+.trailx-archive__section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.9rem;
+  flex-wrap: wrap;
+  margin: 0;
+}
+.trailx-archive__section-head > div {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.15rem;
+  min-width: 0;
+}
+.trailx-archive__section-head > div > span {
+  white-space: nowrap;
+  font: 600 calc(0.55rem * var(--tx-font-scale, 1)) / 1.2 Inter, sans-serif;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+.trailx-archive__section-head h4 {
+  margin: 0;
+  font-size: calc(clamp(1.05rem, 1.9vw, 1.45rem) * var(--tx-font-scale, 1));
+  line-height: 1.18;
+}
+/* Phase actions are pills — never a tiny circle with text wrapped inside. */
+.trailx-archive__section-head button {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: auto;
+  min-width: 0;
+  height: auto;
+  min-height: 2.4rem;
+  padding: 0.5rem 0.95rem;
+  border-radius: 999px;
+  white-space: nowrap;
+  line-height: 1.1;
+  font-size: calc(0.6rem * var(--tx-font-scale, 1));
+}
+
+/* Records tray, then the chapters they are filed into. */
+.trailx-archive__tray-shell { margin: 0; }
+.trailx-archive__zones {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.6rem;
+  margin: 0;
+}
+
+@media (max-width: 560px) {
+  .trailx-archive__zones { grid-template-columns: minmax(0, 1fr); }
+  .trailx-archive__section-head { gap: 0.55rem; }
+  .trailx-archive__section-head button { width: 100%; }
+}
