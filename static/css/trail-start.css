@@ -418,6 +418,13 @@
 .trailx-btn:hover { background: rgba(212, 175, 106, 0.22); border-color: var(--tx-gold); }
 .trailx-btn:active { transform: scale(0.95); }
 .trailx-btn:focus-visible { outline: 2px solid var(--tx-gold); outline-offset: 2px; }
+.trailx-btn:disabled {
+  opacity: 0.3 !important;
+  filter: saturate(0.35);
+  cursor: not-allowed;
+  transform: none;
+}
+.trailx-btn:disabled:hover { background: rgba(20, 13, 6, 0.78); border-color: rgba(212, 175, 106, 0.45); }
 .trailx-btn svg { width: 15px; height: 15px; }
 .trailx-btn--primary {
   background: var(--tx-gold);
@@ -460,12 +467,27 @@
   opacity: 0;
   pointer-events: none;
 }
-/* Museum stops in Full View: the controls stay up and drive the tapped
-   artifact's audio, so keep them (and the artifact subtitle) on screen. */
+/* Artifact stops in Full View: the controls stay up and drive the tapped
+   artifact's audio, including the material tables inside the chapel. */
 .trailx[data-immersive="true"][data-artifact-controls="true"] .trailx__controls > *:not([data-trail-immersive]) {
   transform: none;
   opacity: 1;
   pointer-events: auto;
+}
+/* Stop 7's table details open inside the full-screen image viewer. Keep the
+   artifact dock above it and reserve clear space for the one-row controls. */
+.trailx[data-mode="stop7"][data-immersive="true"][data-artifact-controls="true"] .trailx__controls {
+  z-index: 60;
+}
+.trailx[data-mode="stop7"][data-immersive="true"][data-artifact-controls="true"] .trailx-preview {
+  padding-bottom: calc(5.4rem + env(safe-area-inset-bottom, 0px));
+}
+.trailx[data-mode="stop7"][data-immersive="true"][data-artifact-controls="true"] .trailx-preview-image-detail {
+  padding-bottom: calc(5.4rem + env(safe-area-inset-bottom, 0px));
+}
+.trailx[data-mode="stop7"][data-immersive="true"][data-artifact-controls="true"] .trailx-preview-image-detail__zoomframe {
+  max-height: calc(100% - 9.5rem);
+  max-height: min(64dvh, calc(100% - 9.5rem));
 }
 
 /* Full-View artifact subtitle — cream panel above the controls (CC toggles it,
@@ -4914,7 +4936,6 @@ body.trailx-map-modal-open {
   margin: 0 auto 0.9rem;
   pointer-events: auto;
 }
-
 .trailx-map.is-in-whole:not(.is-expanded) {
   display: block;
   width: 100%;

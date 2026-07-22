@@ -294,7 +294,7 @@ let activeStoryEl = null;
 const charApi = {};
 
 /* Full-View artifact-controls handle (populated by initPanorama). In Full View
-   on the museum stops the guide controls drive the tapped artifact's audio. */
+   on Stops 3, 4 and 7 the guide controls drive the tapped artifact's audio. */
 const artApi = {};
 
 /* Stop 4's Fragments of Memory controls. Populated when its story is set up
@@ -623,7 +623,10 @@ langBtn?.addEventListener('click', () => {
   if (artApi.isMode?.()) { artApi.setLang(next); return; }
   setLang(next);
 });
-subsBtn?.addEventListener('click', () => { setSubtitles(!state.subtitles); artApi.renderSubtitle?.(); });
+subsBtn?.addEventListener('click', () => {
+  if (artApi.isMode?.()) { artApi.toggleSubtitles?.(); return; }
+  setSubtitles(!state.subtitles);
+});
 textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
 // On mobile the bubble is a collapsed 2-line chip above the controls; tapping
 // it expands the full narration (pointer-events are off on desktop → inert).
@@ -820,7 +823,7 @@ immersiveBtn?.addEventListener('click', () => {
   if (!on) {
     root.setAttribute('data-immersive', 'true');
     immersiveBtn.setAttribute('aria-pressed', 'true');
-    artApi.update?.(); // Full View → controls act on the artifact (museum stops)
+    artApi.update?.(); // Full View → controls act on the artifact at supported stops
     return;
   }
   immersiveBtn.setAttribute('aria-pressed', 'false');
@@ -1475,11 +1478,13 @@ function initPanorama() {
 
   let floatingWindow = null; // { hotspotId, sceneId }
   let hotspotAudio = null;
-  // Full View (Stop 3/4): the guide controls drive the tapped artifact's audio.
+  // Full View (Stops 3, 4 and 7): the guide controls drive the tapped artifact's audio.
   let activeArtifact = null; // { audioByLanguage, subtitle } of the open marker
   let artMuted = false;
-  const isMuseumStop = () => state.mode === 'stop3' || state.mode === 'stop4';
-  const isArtMode = () => isImmersive() && isMuseumStop();
+  const isArtifactControlStop = () => (
+    state.mode === 'stop3' || state.mode === 'stop4' || state.mode === 'stop7'
+  );
+  const isArtMode = () => isImmersive() && isArtifactControlStop();
   const stopHotspotAudio = () => {
     if (!hotspotAudio) return;
     hotspotAudio.pause();
@@ -1501,7 +1506,8 @@ function initPanorama() {
   };
 
   /* --- Full-View artifact controls -------------------------------------------
-     In Full View on the museum stops, the Listen / mute / translation / CC
+     In Full View on the museum and chapel-table stops, Listen / mute /
+     translation / CC
      buttons act on the artifact whose marker was tapped (its audio + subtitle),
      instead of Ana. The panel view keeps them on Ana (the guide character). */
   const artsubEl = root.querySelector('[data-trail-artsub]');
@@ -1514,23 +1520,52 @@ function initPanorama() {
   const renderArtSubtitle = () => {
     if (!artsubEl || !artsubTextEl) return;
     const sub = activeArtifact && activeArtifact.subtitle;
-    const text = sub ? (state.lang === 'tl' ? sub.tl : sub.en) : '';
+    const text = sub ? (sub[state.lang] || sub.en || sub.tl || '') : '';
     artsubTextEl.textContent = text || '';
     const show = isArtMode() && state.subtitles && Boolean(text);
     artsubEl.classList.toggle('is-on', show);
     if (show) artsubEl.scrollTop = 0;
   };
+  const setArtControlAvailable = (button, available) => {
+    if (!button) return;
+    button.disabled = !available;
+    button.setAttribute('aria-disabled', String(!available));
+  };
   const syncArtControls = () => {
+    const audio = activeArtifact && activeArtifact.audioByLanguage;
+    const hasAudio = Boolean(audio && (audio.tl || audio.en));
+    const hasBothLanguages = Boolean(audio && audio.tl && audio.en);
+    const subtitle = activeArtifact && activeArtifact.subtitle;
+    const hasSubtitle = Boolean(subtitle && (subtitle.tl || subtitle.en));
     const playing = Boolean(hotspotAudio && !hotspotAudio.paused && !hotspotAudio.ended);
     root.setAttribute('data-playing', String(playing));
     root.setAttribute('data-muted', String(artMuted));
+    setArtControlAvailable(playBtn, hasAudio);
+    setArtControlAvailable(muteBtn, hasAudio);
+    setArtControlAvailable(langBtn, hasBothLanguages);
+    setArtControlAvailable(subsBtn, hasSubtitle);
     if (playBtn) {
       playBtn.setAttribute('aria-pressed', String(playing));
-      playBtn.setAttribute('aria-label', playing ? 'Pause narration' : 'Play narration');
+      playBtn.setAttribute('aria-label', hasAudio
+        ? (playing ? 'Pause artifact narration' : 'Play artifact narration')
+        : 'Artifact narration unavailable until an audio hotspot is opened');
     }
     if (muteBtn) {
       muteBtn.setAttribute('aria-pressed', String(artMuted));
-      muteBtn.setAttribute('aria-label', artMuted ? 'Unmute narration' : 'Mute narration');
+      muteBtn.setAttribute('aria-label', hasAudio
+        ? (artMuted ? 'Unmute artifact narration' : 'Mute artifact narration')
+        : 'Artifact audio unavailable');
+    }
+    if (langBtn) {
+      langBtn.setAttribute('aria-label', hasBothLanguages
+        ? `Switch artifact narration to ${state.lang === 'tl' ? 'English' : 'Tagalog'}`
+        : 'Artifact translation unavailable');
+    }
+    if (subsBtn) {
+      subsBtn.setAttribute('aria-pressed', String(hasSubtitle && state.subtitles));
+      subsBtn.setAttribute('aria-label', hasSubtitle
+        ? (state.subtitles ? 'Hide artifact subtitles' : 'Show artifact subtitles')
+        : 'Subtitles unavailable for this artifact');
     }
   };
   // Expose to the module-level control handlers (defined before initPanorama).
@@ -1545,6 +1580,13 @@ function initPanorama() {
   artApi.toggleMute = () => {
     artMuted = !artMuted;
     if (hotspotAudio) hotspotAudio.muted = artMuted;
+    syncArtControls();
+  };
+  artApi.toggleSubtitles = () => {
+    const subtitle = activeArtifact && activeArtifact.subtitle;
+    if (!subtitle || (!subtitle.tl && !subtitle.en)) { syncArtControls(); return; }
+    setSubtitles(!state.subtitles);
+    renderArtSubtitle();
     syncArtControls();
   };
   artApi.setLang = (lang) => {
@@ -1566,6 +1608,24 @@ function initPanorama() {
       renderArtSubtitle();
     } else {
       if (artsubEl) artsubEl.classList.remove('is-on');
+      [playBtn, muteBtn, langBtn, subsBtn].forEach((button) => {
+        if (!button) return;
+        button.disabled = false;
+        button.setAttribute('aria-disabled', 'false');
+      });
+      if (playBtn) {
+        playBtn.setAttribute('aria-pressed', String(state.playing));
+        playBtn.setAttribute('aria-label', state.playing ? 'Pause narration' : 'Play narration');
+      }
+      if (muteBtn) {
+        muteBtn.setAttribute('aria-pressed', String(state.muted));
+        muteBtn.setAttribute('aria-label', state.muted ? 'Unmute narration' : 'Mute narration');
+      }
+      if (langBtn) langBtn.setAttribute('aria-label', 'Switch narration language');
+      if (subsBtn) {
+        subsBtn.setAttribute('aria-pressed', String(state.subtitles));
+        subsBtn.setAttribute('aria-label', state.subtitles ? 'Hide subtitles' : 'Show subtitles');
+      }
       root.setAttribute('data-playing', String(state.playing));
       root.setAttribute('data-muted', String(state.muted));
     }
