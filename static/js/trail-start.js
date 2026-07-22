@@ -1069,6 +1069,11 @@ function initPanorama() {
     map: {
       img: root.getAttribute('data-info-map-img') || '',
       title: { en: 'Map', tl: 'Mapa' },
+      audioByLanguage: {
+        tl: root.getAttribute('data-info-map-tl') || '',
+        en: root.getAttribute('data-info-map-en') || '',
+      },
+      subtitle: INFO_SUBTITLES.map || null,
       outline: true,
     },
     hulingTaludtod: {

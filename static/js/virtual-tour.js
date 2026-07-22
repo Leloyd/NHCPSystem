@@ -110,6 +110,10 @@
     },
     map: {
       imageSrc: app ? app.dataset.museum3MapImageSrc : "",
+      audioByLanguage: {
+        tl: app ? app.dataset.museum3MapTagalogAudioSrc : "",
+        en: app ? app.dataset.museum3MapEnglishAudioSrc : "",
+      },
     },
     kagamitan: {
       imageSrc: app ? app.dataset.kagamitanImageSrc : "",
@@ -658,6 +662,7 @@
       yaw: -72.4,
       imageSrc: museum3ArtifactAssets.map.imageSrc,
       imageAlt: "Map",
+      audioByLanguage: museum3ArtifactAssets.map.audioByLanguage,
       previewFrameStyle: "outline",
     }),
     buildFloatingArtifactHotspot({
