@@ -1685,6 +1685,7 @@ function initPanorama() {
   };
   const openPreview = (args, view) => {
     ensurePreview();
+    previewEl.querySelectorAll('.trailx-preview-image-detail').forEach((node) => node.remove());
     previewMedia.innerHTML = '';
     if (view === 'model' && args.glbSrc) {
       const big = document.createElement('model-viewer');
@@ -1826,7 +1827,7 @@ function initPanorama() {
         imageStage.appendChild(hotspotLayer);
         frame.appendChild(imageStage);
         frame.appendChild(hotspotToggle);
-        frame.appendChild(detailOverlay);
+        previewEl.appendChild(detailOverlay);
         zoomTarget = imageStage;
       } else {
         frame.appendChild(big);

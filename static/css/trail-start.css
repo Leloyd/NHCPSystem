@@ -2068,25 +2068,32 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 .trailx-preview-image-detail {
   position: absolute;
-  z-index: 20;
+  z-index: 40;
   inset: 0;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 0.7rem;
-  padding: clamp(0.8rem, 3vw, 1.6rem);
+  padding:
+    calc(env(safe-area-inset-top, 0px) + clamp(0.7rem, 2.5vw, 1.4rem))
+    calc(env(safe-area-inset-right, 0px) + clamp(0.7rem, 2.5vw, 1.4rem))
+    calc(env(safe-area-inset-bottom, 0px) + clamp(0.7rem, 2.5vw, 1.4rem))
+    calc(env(safe-area-inset-left, 0px) + clamp(0.7rem, 2.5vw, 1.4rem));
   box-sizing: border-box;
   background: rgba(13, 10, 4, 0.9);
   backdrop-filter: blur(8px);
   cursor: default;
+  overflow: hidden;
+  overscroll-behavior: contain;
 }
 .trailx-preview-image-detail[hidden] { display: none; }
 .trailx-preview-image-detail__zoomframe {
   position: relative;
   width: fit-content;
-  max-width: min(92%, 36rem);
+  max-width: min(100%, 36rem);
   max-height: calc(100% - 5.5rem);
+  max-height: min(72dvh, calc(100% - 5.5rem));
   overflow: hidden;
   background: var(--tx-cream);
   border: 1px solid rgba(212, 175, 106, 0.78);
@@ -2101,7 +2108,8 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   display: block;
   width: auto !important;
   max-width: 100% !important;
-  max-height: calc(72vh - 6rem) !important;
+  max-height: calc(100vh - 8rem) !important;
+  max-height: min(72dvh, calc(100dvh - 8rem)) !important;
   padding: clamp(0.25rem, 1vw, 0.55rem);
   box-sizing: border-box;
   object-fit: contain;

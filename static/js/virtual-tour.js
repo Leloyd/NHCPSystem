@@ -3321,7 +3321,6 @@
     detailOverlay.appendChild(detailZoomFrame);
     detailOverlay.appendChild(detailTitle);
     detailOverlay.appendChild(detailClose);
-    imageFrame.appendChild(detailOverlay);
 
     detailClose.addEventListener("click", function (event) {
       event.preventDefault();
@@ -3445,6 +3444,7 @@
     panel.appendChild(title);
     panel.appendChild(closeButton);
     overlay.appendChild(panel);
+    overlay.appendChild(detailOverlay);
     app.appendChild(overlay);
 
     closeButton.addEventListener("click", function () {
