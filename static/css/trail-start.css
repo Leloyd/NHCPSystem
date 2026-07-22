@@ -6751,11 +6751,12 @@ body.trail-archive-open {
    column, no forced dead height, and each phase header keeps its eyebrow,
    title and action tidy instead of wrapping into a squeezed circle.
    ========================================================================== */
+/* The two rooms stay two rooms: each phase fills the workspace and snaps, so
+   the search room can never bleed into the filing room. */
 .trailx-archive__body {
-  display: flex;
-  flex-direction: column;
-  gap: clamp(1rem, 2vw, 1.5rem);
-  padding: clamp(0.9rem, 2.2vw, 1.5rem);
+  display: block;
+  gap: 0;
+  padding: 0;
 }
 .trailx-archive__discovery,
 .trailx-archive__filing,
@@ -6764,14 +6765,16 @@ body.trail-archive-open {
   min-width: 0;
 }
 
-/* Phases stack their own content — and never reserve empty height. */
+/* Each room lays its own content out in a column — exactly one screen tall,
+   with no extra reserved height beneath it. */
 .trailx-archive__phase--search,
 .trailx-archive__phase--filing {
   display: flex;
   flex-direction: column;
   gap: 0.85rem;
-  min-height: 0;
+  min-height: calc(100% - 1px);
 }
+.trailx-archive__phase--filing { justify-content: flex-start; }
 .trailx-archive__phase > p,
 .trailx-archive__filing > p {
   margin: 0;

@@ -4722,6 +4722,13 @@ function setupStory(el) {
   const mapCompleteIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-complete');
   const mapActivityIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-map');
   let mapCompletionUnlocked = stopId !== 'stop4' || mapCompleteIndex < 0 || mapActivityIndex < 0;
+  // Stop 9 keeps its Living Memory closed until every record is filed.
+  const archiveFinalIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's9-next');
+  let keeperArchiveApi = null;
+  const archiveLocked = () => stopId === 'stop9'
+    && archiveFinalIndex >= 0
+    && Boolean(keeperArchiveApi)
+    && keeperArchiveApi.isComplete?.() !== true;
   let traditionMapApi = null;
   let step = -1;
   let memorySceneTimer = 0;
@@ -4744,6 +4751,10 @@ function setupStory(el) {
     if (!mapCompletionUnlocked && mapCompleteIndex >= 0 && index >= mapCompleteIndex) {
       index = mapActivityIndex;
       traditionMapApi?.showIncompleteGate?.();
+    }
+    // Chapter dots and other jumps can't reach the Living Memory either.
+    if (archiveLocked() && index >= archiveFinalIndex) {
+      index = Math.max(0, archiveFinalIndex - 1);
     }
     const total = el.scrollHeight - el.clientHeight;
     const target = Math.max(0, Math.min(total, (index / STEPS) * total + 2));
@@ -4869,6 +4880,16 @@ function setupStory(el) {
   // Scroll → progress → step. Also drives the progress rail + the 360 lean.
   el.addEventListener('scroll', () => {
     const total = el.scrollHeight - el.clientHeight;
+    if (archiveLocked() && total > 0) {
+      // The Living Memory stays sealed until the archive is whole — block every
+      // route into it: touch momentum, wheel, GSAP glides and scrollbar drags.
+      const sealedMax = Math.max(0, total * (archiveFinalIndex / STEPS) - 2);
+      if (el.scrollTop > sealedMax) {
+        if (window.gsap) window.gsap.killTweensOf(el);
+        scrollGoal = null;
+        el.scrollTop = sealedMax;
+      }
+    }
     if (!mapCompletionUnlocked && mapCompleteIndex >= 0 && total > 0) {
       // Keep every input path—native touch scroll, momentum, wheel/GSAP and
       // scrollbar dragging—inside the map chapter until all artifacts are
@@ -5069,7 +5090,7 @@ function setupStory(el) {
     });
   });
 
-  const keeperArchiveApi = setupKeeperArchive(el, { scrollToStep, panels });
+  keeperArchiveApi = setupKeeperArchive(el, { scrollToStep, panels });
 
   // "Continue" tease for a stop that isn't built yet.
   const nextBtn = el.querySelector('[data-trail-next]');
