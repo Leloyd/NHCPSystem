@@ -153,6 +153,10 @@ const SCRIPTS = {
     en: "We are inside the chapel now — our seventh stop. Take it in: drag to look around the nave, up at the ceiling, and toward the altar. When you are ready, scroll down.",
     tl: "Nasa loob na tayo ng kapilya — ang ating ikapitong hinto. Damhin ito: i-drag upang lumingon sa nave, sa kisame, at patungo sa altar. Kapag handa ka na, mag-scroll pababa.",
   },
+  's7-materials': {
+    en: "Before we move on, look closely at the chapel's interior walls. Find the pulsing markers on the four exhibit tables, open each table, and tap its gold hotspots. There you can examine the stone and wood; lime and sand; coral, adobe, and brick powders; mortar mixtures; pigments and paint; tiles, nails, and the other materials that helped build and finish this chapel.",
+    tl: "Bago tayo magpatuloy, tingnang mabuti ang mga pader sa loob ng kapilya. Hanapin ang mga kumikislap na marker sa apat na mesang pang-eksibit, buksan ang bawat mesa, at pindutin ang mga gintong hotspot nito. Makikita roon ang bato at kahoy; apog at buhangin; pulbos na koral, adobe, at ladrilyo; mga halo ng argamasa; pigment at pintura; baldosa, pako, at iba pang materyales na ginamit sa pagtatayo at pagtatapos ng kapilyang ito.",
+  },
   's7-tapestry': {
     en: "Let me show you one of the chapel's most meaningful objects — the tapete. Embroidered with a skull and crossbones beside the cross of Christ, this black cloth is a Catholic symbol of death and remembrance, laid amid candles and flowers as the focus of prayers for the departed.",
     tl: "Ipakita ko sa iyo ang isa sa pinakamakabuluhang bagay sa kapilya — ang tapete. Binurdahan ng bungo at magkakrus na buto katabi ng krus ni Kristo, ang itim na telang ito ay simbolong Katoliko ng kamatayan at pag-alaala, inilalatag kasama ng kandila at bulaklak bilang sentro ng dasal para sa mga yumao.",
