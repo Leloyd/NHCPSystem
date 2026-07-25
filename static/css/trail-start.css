@@ -7279,3 +7279,21 @@ body.trail-archive-open {
     padding-bottom: 4.6rem;
   }
 }
+
+/* ==========================================================================
+   Stop 9 — mobile tweaks: one-row archive label + timeline breathing room
+   ========================================================================== */
+@media (max-width: 820px) {
+  /* "Keeper's Archive · Stops 5–8" stays on a single line. */
+  .trailx__chapter--archive .trailx__label { gap: 0.5rem; flex-wrap: nowrap; }
+  .trailx__chapter--archive .trailx__label-line { flex: 0 0 auto; width: 1.4rem; }
+  .trailx__chapter--archive .trailx__label-text {
+    min-width: 0;
+    white-space: nowrap;
+    font-size: calc(0.55rem * var(--tx-font-scale, 1));
+    letter-spacing: 0.14em;
+  }
+
+  /* Space between the timeline years and the "Continue to Stop 10" button. */
+  .trailx-living-memory__timeline { margin-bottom: 1.4rem; }
+}
