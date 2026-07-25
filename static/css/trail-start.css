@@ -246,6 +246,19 @@
   box-shadow: 0 22px 52px rgba(212, 175, 106, 0.36);
 }
 .trailx__begin:hover svg { transform: translateX(5px); }
+/* Outline variant — a secondary CTA that stays lighter than the solid gold
+   primary but reads as more of an invitation than the plain text link. */
+.trailx__begin--ghost {
+  background: transparent;
+  color: var(--tx-gold);
+  border-color: rgba(212, 175, 106, 0.5);
+  box-shadow: none;
+}
+.trailx__begin--ghost:hover {
+  background: rgba(212, 175, 106, 0.12);
+  color: #f0d79a;
+  box-shadow: 0 16px 40px rgba(212, 175, 106, 0.16);
+}
 .trailx__cancel {
   color: rgba(255, 255, 255, 0.62);
   font-size: 0.78rem;
