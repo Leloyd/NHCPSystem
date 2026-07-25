@@ -6789,7 +6789,9 @@ body.trail-archive-open {
 }
 
 @media (max-width: 420px) {
-  .trailx-living-memory__actions { gap: 0.65rem; }
+  /* Narrow phones (Brave/Chrome on Android are often ≤420px): keep the gap to
+     the timeline explicit here too, so no cascade quirk can remove it. */
+  .trailx-living-memory__actions { gap: 0.65rem; margin-top: 0; padding-top: 1.9rem; }
 }
 
 @media (max-height: 610px) and (orientation: landscape) {
