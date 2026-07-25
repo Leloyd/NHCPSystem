@@ -25,6 +25,7 @@ from public_users_repository import (
     update_public_user,
 )
 from supabase_client import is_supabase_configured
+from supabase_storage import delete_public_image, upload_public_image
 from user_bookmarks_repository import create_user_bookmark, delete_user_bookmark, get_user_bookmark
 
 from .emailer import (
@@ -60,6 +61,16 @@ ONBOARDING_ROLE_OPTIONS = (
 )
 EMAIL_VERIFICATION_LIFETIME = timedelta(hours=24)
 PASSWORD_RESET_LIFETIME = timedelta(hours=1)
+
+AVATAR_UPLOAD_FOLDER = "avatars"
+DELETE_ACCOUNT_CONFIRM_PHRASE = "confirm delete"
+VALID_THEME_PREFERENCES = {"light", "dark"}
+VALID_LANGUAGE_PREFERENCES = {"en", "tl"}
+
+
+def _avatar_slugify(text: Any, fallback: str = "avatar") -> str:
+    slug = re.sub(r"[^a-z0-9]+", "-", str(text or "").strip().lower()).strip("-")
+    return slug or fallback
 GOOGLE_OAUTH_AUTHORIZE_URL = "https://accounts.google.com/o/oauth2/v2/auth"
 GOOGLE_OAUTH_TOKEN_URL = "https://oauth2.googleapis.com/token"
 GOOGLE_OAUTH_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
@@ -190,6 +201,9 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
         raise ValueError("Please use a Google account with a verified email address.")
 
     full_name = str(profile.get("name") or "").strip() or _build_placeholder_full_name(email)
+    picture_url = str(profile.get("picture") or "").strip()
+    if not picture_url.startswith(("http://", "https://")):
+        picture_url = ""
     now = _utcnow().isoformat()
     existing_user = get_public_user_auth_by_email(email)
     if existing_user:
@@ -200,6 +214,10 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
             "last_login_at": now,
             "updated_at": now,
         }
+        # First Google sign-in populates the avatar from the Gmail photo, but we
+        # never overwrite a picture the user has since set themselves.
+        if picture_url and not str(existing_user.get("profile_picture") or "").strip():
+            payload["profile_picture"] = picture_url[:600]
         if not _user_is_verified(existing_user):
             payload.update(
                 {
@@ -234,6 +252,7 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
             "province_text": "",
             "city_text": "",
             "auth_provider": "google",
+            "profile_picture": picture_url[:600] if picture_url else None,
             "password_reset_token_hash": None,
             "password_reset_expires_at": None,
             "updated_at": now,
@@ -852,6 +871,181 @@ def register_user_account_routes(
             "AccountProfile.html",
             account_dashboard=dashboard,
         )
+
+    @app.route("/account/settings", methods=["GET", "POST"])
+    def account_settings():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login"))
+        if not _user_completed_onboarding(current_user):
+            return redirect(url_for("public_account_setup", next=url_for("account_settings")))
+
+        error_message = None
+        status_message = None
+
+        if request.method == "POST":
+            if not is_public_csrf_valid(request.form.get("csrf_token")):
+                error_message = "Invalid request. Please try again."
+            else:
+                try:
+                    full_name = str(request.form.get("full_name") or "").strip()
+                    if len(full_name) < 3 or len(full_name) > 160:
+                        raise ValueError("Please enter your full name (3–160 characters).")
+                    role_values = _normalize_role_values(request.form.getlist("profile_roles"))
+                    if not role_values:
+                        raise ValueError("Please select at least one role.")
+                    theme = str(request.form.get("theme_preference") or "light").strip().lower()
+                    if theme not in VALID_THEME_PREFERENCES:
+                        theme = "light"
+                    language = str(request.form.get("language_preference") or "en").strip().lower()
+                    if language not in VALID_LANGUAGE_PREFERENCES:
+                        language = "en"
+                    update_public_user(
+                        int(current_user.get("id")),
+                        {
+                            "full_name": full_name[:160],
+                            "profile_roles": _serialize_role_values(role_values),
+                            "theme_preference": theme,
+                            "language_preference": language,
+                            "updated_at": _utcnow().isoformat(),
+                        },
+                    )
+                    return redirect(url_for("account_settings", status="saved"))
+                except ValueError as exc:
+                    error_message = str(exc)
+                except Exception as exc:  # noqa: BLE001
+                    app.logger.exception("Failed to update settings for user %s: %s", current_user.get("id"), exc)
+                    error_message = "Could not save your settings right now."
+
+            current_user = get_current_public_user() or current_user
+
+        status_key = str(request.args.get("status") or "").strip()
+        success_by_status = {
+            "saved": "Your settings were saved.",
+            "photo": "Your profile picture was updated.",
+            "photo-removed": "Your profile picture was removed.",
+        }
+        error_by_status = {
+            "photo-error": "That image couldn't be uploaded. Please use a JPG or PNG image.",
+            "photo-config": "Photo uploads are not available right now.",
+            "delete-mismatch": "The confirmation text didn't match. Type “confirm delete” exactly.",
+            "delete-error": "We couldn't process that request. Please try again.",
+        }
+        if not error_message:
+            if status_key in success_by_status:
+                status_message = success_by_status[status_key]
+            elif status_key in error_by_status:
+                error_message = error_by_status[status_key]
+
+        dashboard = load_user_account_dashboard(int(current_user.get("id")))
+        return render_template(
+            "AccountSettings.html",
+            role_options=ONBOARDING_ROLE_OPTIONS,
+            selected_roles=_normalize_role_values(current_user.get("profile_roles")),
+            account_dashboard=dashboard,
+            csrf_token=ensure_public_csrf_token(),
+            error_message=error_message,
+            status_message=status_message,
+        )
+
+    @app.route("/account/settings/avatar", methods=["POST"])
+    def account_settings_avatar():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login"))
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("account_settings"))
+
+        action = str(request.form.get("avatar_action") or "upload").strip().lower()
+        old_picture = str(current_user.get("profile_picture") or "").strip()
+        is_stored_object = bool(old_picture) and not old_picture.startswith(("http://", "https://"))
+
+        try:
+            if action == "remove":
+                update_public_user(int(current_user.get("id")), {"profile_picture": None, "updated_at": _utcnow().isoformat()})
+                if is_stored_object:
+                    try:
+                        delete_public_image(old_picture, folder_prefix=AVATAR_UPLOAD_FOLDER)
+                    except Exception:  # noqa: BLE001
+                        pass
+                return redirect(url_for("account_settings", status="photo-removed"))
+
+            file_storage = request.files.get("avatar")
+            if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
+                return redirect(url_for("account_settings"))
+            if not is_supabase_configured():
+                return redirect(url_for("account_settings", status="photo-config"))
+
+            object_path = upload_public_image(
+                file_storage,
+                title=f"{current_user.get('username') or 'user'}-avatar",
+                folder_prefix=AVATAR_UPLOAD_FOLDER,
+                slugify_text=_avatar_slugify,
+            )
+            if not object_path:
+                return redirect(url_for("account_settings"))
+            update_public_user(int(current_user.get("id")), {"profile_picture": object_path, "updated_at": _utcnow().isoformat()})
+            if is_stored_object:
+                try:
+                    delete_public_image(old_picture, folder_prefix=AVATAR_UPLOAD_FOLDER)
+                except Exception:  # noqa: BLE001
+                    pass
+            return redirect(url_for("account_settings", status="photo"))
+        except ValueError:
+            return redirect(url_for("account_settings", status="photo-error"))
+        except Exception as exc:  # noqa: BLE001
+            app.logger.exception("Failed to update avatar for user %s: %s", current_user.get("id"), exc)
+            return redirect(url_for("account_settings", status="photo-error"))
+
+    @app.route("/api/account/preferences", methods=["POST"])
+    def account_update_preferences():
+        current_user = get_current_public_user()
+        if not current_user:
+            return jsonify({"ok": False}), 401
+        if not is_public_csrf_valid(request.headers.get("X-CSRF-Token") or request.form.get("csrf_token")):
+            return jsonify({"ok": False, "error": "Invalid request."}), 400
+
+        payload: dict[str, Any] = {}
+        theme = str(request.form.get("theme_preference") or "").strip().lower()
+        if theme in VALID_THEME_PREFERENCES:
+            payload["theme_preference"] = theme
+        language = str(request.form.get("language_preference") or "").strip().lower()
+        if language in VALID_LANGUAGE_PREFERENCES:
+            payload["language_preference"] = language
+        if not payload:
+            return jsonify({"ok": False, "error": "Nothing to update."}), 400
+
+        payload["updated_at"] = _utcnow().isoformat()
+        try:
+            update_public_user(int(current_user.get("id")), payload)
+        except Exception as exc:  # noqa: BLE001
+            app.logger.exception("Failed to update preferences for user %s: %s", current_user.get("id"), exc)
+            return jsonify({"ok": False}), 500
+        return jsonify({"ok": True})
+
+    @app.route("/account/settings/delete", methods=["POST"])
+    def account_delete():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login"))
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("account_settings"))
+
+        confirmation = str(request.form.get("confirmation") or "").strip().lower()
+        if confirmation != DELETE_ACCOUNT_CONFIRM_PHRASE:
+            return redirect(url_for("account_settings", status="delete-mismatch"))
+
+        try:
+            update_public_user(
+                int(current_user.get("id")),
+                {"is_active": False, "updated_at": _utcnow().isoformat()},
+            )
+        except Exception as exc:  # noqa: BLE001
+            app.logger.exception("Failed to deactivate account for user %s: %s", current_user.get("id"), exc)
+            return redirect(url_for("account_settings", status="delete-error"))
+
+        clear_public_user_session()
+        return redirect(url_for("index"))
 
     @app.route("/api/account/bookmarks/online-gallery/<int:item_id>", methods=["POST", "DELETE"])
     def online_gallery_bookmark_toggle(item_id):

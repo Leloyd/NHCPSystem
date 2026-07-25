@@ -27,7 +27,11 @@
         {% set user_label = current_public_user.full_name or current_public_user.username or current_public_user.email %}
         <div class="relative" id="publicAccountDropdownRoot">
          <button type="button" id="publicAccountDropdownToggle" class="public-account-trigger inline-flex {% if public_active_page == 'home' %}is-home-top{% endif %}" aria-expanded="false" aria-haspopup="true">
+           {% if current_public_user_avatar %}
+           <span class="public-account-avatar"><img src="{{ current_public_user_avatar }}" alt="" referrerpolicy="no-referrer" style="width:100%;height:100%;border-radius:inherit;object-fit:cover;display:block;" /></span>
+           {% else %}
            <span class="public-account-avatar">{{ user_label[:1]|upper }}</span>
+           {% endif %}
             <span class="hidden lg:inline">Hi, {{ user_label.split(' ')[0] }}</span>
             <svg class="public-account-menu-icon lg:hidden" id="publicAccountMenuIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
             <svg class="public-account-menu-icon hidden lg:hidden" id="publicAccountCloseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"></path></svg>
@@ -39,6 +43,7 @@
               <p class="public-account-menu-email">{{ current_public_user.email }}</p>
             </div>
             <a href="{{ url_for('account_profile') }}" class="public-account-menu-link" role="menuitem">Profile</a>
+            <a href="{{ url_for('account_settings') }}" class="public-account-menu-link" role="menuitem">Settings</a>
             <div class="public-account-menu-divider"></div>
             <form method="post" action="{{ url_for('public_logout') }}">
               <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
@@ -71,6 +76,7 @@
         <div class="space-y-2">
           <p class="text-amber-800 font-semibold">My Account</p>
           <a href="{{ url_for('account_profile') }}" class="block pl-4 text-gray-700 hover:text-amber-800">Profile</a>
+          <a href="{{ url_for('account_settings') }}" class="block pl-4 text-gray-700 hover:text-amber-800">Settings</a>
         </div>
         <form method="post" action="{{ url_for('public_logout') }}">
           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />

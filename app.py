@@ -25,7 +25,7 @@ from online_gallery_content import (
 from online_gallery_content.service import load_admin_online_gallery_items
 from participation_submissions_content import load_admin_participation_submissions, register_participation_submission_routes
 from public_users_repository import get_public_user_profile_by_id
-from supabase_storage import delete_public_image, upload_public_file, upload_public_image
+from supabase_storage import delete_public_image, resolve_public_image_url, upload_public_file, upload_public_image
 from supabase_client import is_supabase_configured
 from tour_bookings_content import load_admin_tour_bookings, load_public_tour_bookings, register_tour_booking_routes
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
@@ -951,6 +951,21 @@ def admin_logout():
     return redirect(url_for("admin_login"))
 
 
+def _resolve_public_user_avatar(user):
+    """Turn a stored profile_picture (Google URL or Supabase path) into a usable
+    <img> src, or None so templates fall back to initials."""
+    if not user:
+        return None
+    raw = str(user.get("profile_picture") or "").strip()
+    if not raw:
+        return None
+    try:
+        return resolve_public_image_url(raw)
+    except Exception:  # noqa: BLE001
+        app.logger.warning("Could not resolve avatar for a public user.")
+        return raw if raw.startswith(("http://", "https://")) else None
+
+
 @app.context_processor
 def inject_public_auth_context():
     current_public_user = _get_current_public_user()
@@ -958,6 +973,9 @@ def inject_public_auth_context():
         "current_public_user": current_public_user,
         "public_user_authenticated": bool(current_public_user),
         "public_csrf_token": _ensure_public_csrf_token(),
+        "current_public_user_avatar": _resolve_public_user_avatar(current_public_user),
+        "public_theme_preference": (current_public_user or {}).get("theme_preference") or "light",
+        "public_language_preference": (current_public_user or {}).get("language_preference") or "en",
         "public_auth_google_enabled": bool(
             str(os.getenv("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
             and str(os.getenv("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()

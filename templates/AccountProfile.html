@@ -33,7 +33,11 @@
         <section class="relative overflow-hidden rounded-3xl px-6 py-7 sm:px-9 sm:py-9 text-white shadow-lg" style="background: linear-gradient(135deg, #2c1a0e 0%, #1a1008 55%, #3d2b1f 100%);">
           <div class="absolute -top-16 -right-10 h-52 w-52 rounded-full opacity-20 blur-3xl" style="background:#c9a84c;"></div>
           <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+            {% if current_public_user_avatar %}
+            <img src="{{ current_public_user_avatar }}" alt="Your profile picture" referrerpolicy="no-referrer" class="h-16 w-16 sm:h-20 sm:w-20 flex-none rounded-2xl object-cover shadow-lg ring-2 ring-white/20" />
+            {% else %}
             <div class="flex h-16 w-16 sm:h-20 sm:w-20 flex-none items-center justify-center rounded-2xl text-2xl sm:text-3xl font-semibold text-stone-950 shadow-lg" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
+            {% endif %}
             <div class="min-w-0">
               <p class="text-[11px] uppercase tracking-[0.28em] text-amber-200/80">Welcome back</p>
               <h1 class="mt-2 text-2xl sm:text-4xl font-serif leading-tight truncate">{{ _name }}</h1>
@@ -49,7 +53,11 @@
             <!-- Profile card -->
             <div class="rounded-3xl border border-amber-200/70 bg-white p-6 shadow-sm">
               <div class="flex items-center gap-3">
+                {% if current_public_user_avatar %}
+                <img src="{{ current_public_user_avatar }}" alt="Your profile picture" referrerpolicy="no-referrer" class="h-12 w-12 flex-none rounded-2xl object-cover" />
+                {% else %}
                 <div class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl text-lg font-semibold text-stone-950" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
+                {% endif %}
                 <div class="min-w-0">
                   <p class="truncate font-semibold text-stone-900">{{ _name }}</p>
                   <p class="truncate text-sm text-stone-500">@{{ current_public_user.username }}</p>
@@ -100,6 +108,9 @@
             <div class="rounded-3xl border border-amber-200/70 bg-white p-4 shadow-sm">
               <p class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Quick actions</p>
               <nav class="grid gap-1">
+                <a href="{{ url_for('account_settings') }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="settings" class="h-4 w-4 text-amber-700"></i> Account Settings
+                </a>
                 <a href="/online-gallery" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
                   <i data-lucide="images" class="h-4 w-4 text-amber-700"></i> Browse Online Gallery
                 </a>

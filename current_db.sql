@@ -33,6 +33,9 @@ CREATE TABLE public.public_users (
   auth_provider text NOT NULL DEFAULT 'password'::text,
   password_reset_token_hash text,
   password_reset_expires_at timestamp with time zone,
+  profile_picture text,
+  theme_preference text NOT NULL DEFAULT 'light'::text CHECK (theme_preference = ANY (ARRAY['light'::text, 'dark'::text])),
+  language_preference text NOT NULL DEFAULT 'en'::text CHECK (language_preference = ANY (ARRAY['en'::text, 'tl'::text])),
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT public_users_pkey PRIMARY KEY (id)

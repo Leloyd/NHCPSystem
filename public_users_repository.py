@@ -6,7 +6,8 @@ from supabase_client import get_supabase_client
 PUBLIC_USERS_TABLE = "public_users"
 PUBLIC_USER_PROFILE_FIELDS = (
     "id, email, username, full_name, phone_number, organization, is_active, last_login_at, "
-    "email_verified_at, onboarding_completed_at, website_use_case, profile_roles, location_text, country_text, province_text, city_text, auth_provider, created_at, updated_at"
+    "email_verified_at, onboarding_completed_at, website_use_case, profile_roles, location_text, country_text, province_text, city_text, auth_provider, "
+    "profile_picture, theme_preference, language_preference, created_at, updated_at"
 )
 PUBLIC_USER_AUTH_FIELDS = (
     f"{PUBLIC_USER_PROFILE_FIELDS}, password_hash, email_verification_token_hash, email_verification_expires_at, "
