@@ -419,3 +419,58 @@ html[data-contrast="on"] .event-dot {
   border-color: #facc15 !important;
 }
 html[data-contrast="on"] .calendar-nav-btn { background: #000 !important; color: #facc15 !important; border: 1px solid #facc15 !important; }
+
+/* ==========================================================================
+   HIGH CONTRAST — completeness pass. A low-specificity white-text catch-all
+   guarantees no text is left invisible on black; the specific token, gallery,
+   nav, accent and control rules below all outrank it.
+   ========================================================================== */
+
+/* 1) Catch-all: white text everywhere a contrast page renders. Specificity is
+   deliberately low (0,1,2) so token/gallery/nav/accent rules win over it. */
+html[data-contrast="on"] body * { color: #fff !important; }
+
+/* 2) Card category badges (Tailwind pastel chips) -> black chip / yellow text */
+html[data-contrast="on"] .dx-card .bg-amber-100,
+html[data-contrast="on"] .dx-card .bg-stone-100,
+html[data-contrast="on"] .dx-card .bg-green-100,
+html[data-contrast="on"] .ix-card .bg-amber-100,
+html[data-contrast="on"] .ix-card .bg-stone-100,
+html[data-contrast="on"] .ix-card .bg-green-100 {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 1px solid #facc15 !important;
+}
+
+/* 3) Yellow accents (links + eyebrows) */
+html[data-contrast="on"] .dx-card-link,
+html[data-contrast="on"] .ix-card-link,
+html[data-contrast="on"] .support-policy-link,
+html[data-contrast="on"] .support-contact-label,
+html[data-contrast="on"] .support-visit-eyebrow,
+html[data-contrast="on"] .participation-card-purpose,
+html[data-contrast="on"] .community-section-kicker,
+html[data-contrast="on"] .ap-page .text-amber-700,
+html[data-contrast="on"] .ap-page .text-amber-800 { color: #facc15 !important; }
+
+/* 4) Yellow controls need black text */
+html[data-contrast="on"] .dx-btn-primary,
+html[data-contrast="on"] .ix-btn-primary,
+html[data-contrast="on"] .s-btn-primary,
+html[data-contrast="on"] .s-seg-btn.is-active,
+html[data-contrast="on"] .s-chip-input:checked + .s-chip,
+html[data-contrast="on"] .participation-card-btn,
+html[data-contrast="on"] .community-btn-secondary,
+html[data-contrast="on"] .form-submit-btn,
+html[data-contrast="on"] .support-visit-link { color: #000 !important; }
+html[data-contrast="on"] .participation-card-icon,
+html[data-contrast="on"] .participation-card-icon * { color: #000 !important; }
+
+/* 5) Floating accessibility panel — keep it readable in light + contrast */
+html[data-contrast="on"] .site-a11y-panel { background: #000 !important; color: #fff !important; border-color: #facc15 !important; }
+html[data-contrast="on"] .site-a11y-seg,
+html[data-contrast="on"] .site-a11y-switch { background: #000 !important; border-color: #facc15 !important; }
+html[data-contrast="on"] .site-a11y-seg-btn.is-active { background: #facc15 !important; color: #000 !important; }
+html[data-contrast="on"] .site-a11y-fab,
+html[data-contrast="on"] .site-a11y-fab * { background: #facc15 !important; color: #000 !important; }
+html[data-contrast="on"] .site-a11y-fab { border: 2px solid #000 !important; }
