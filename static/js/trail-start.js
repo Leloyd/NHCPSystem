@@ -4005,7 +4005,6 @@ function setupKeeperArchive(storyEl, api = {}) {
   const completion = archiveRoot.querySelector('[data-archive-completion]');
   const exitCopy = archiveRoot.querySelector('[data-archive-exit-copy]');
   const exitButton = archiveRoot.querySelector('[data-archive-exit-button]');
-  const livingStatus = archiveRoot.querySelector('[data-archive-living-status]');
   const livingConfigEl = archiveRoot.querySelector('[data-living-memory-config]');
   const livingStory = archiveRoot.querySelector('[data-living-memory] .trailx-living-memory__story');
   const livingYear = archiveRoot.querySelector('[data-living-memory-year]');
@@ -4326,11 +4325,6 @@ function setupKeeperArchive(storyEl, api = {}) {
       doneButton.disabled = !complete;
       setBilingual(doneButton, complete ? 'Close & view Living Memory' : 'Archive incomplete', complete ? 'Isara at tingnan ang Buháy na Alaala' : 'Hindi pa buo');
     }
-    setBilingual(
-      livingStatus,
-      complete ? 'Archive complete · The final stop is open' : `Archive incomplete · ${cards.length - totalPlaced} records still need filing`,
-      complete ? 'Buo na ang sinupan · Bukas na ang huling hinto' : `Hindi pa buo ang sinupan · ${cards.length - totalPlaced} tala pa ang kailangang ihanay`
-    );
     setBilingual(
       exitCopy,
       complete
