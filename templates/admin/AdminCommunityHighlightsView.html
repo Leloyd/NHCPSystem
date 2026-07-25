@@ -48,7 +48,16 @@
                 </a>
 
                 {% if highlight_item.status == 'active' %}
-                <form method="post" action="{{ url_for('admin_community_highlight_feature', highlight_id=highlight_item.id) }}">
+                <form
+                  method="post"
+                  action="{{ url_for('admin_community_highlight_feature', highlight_id=highlight_item.id) }}"
+                  data-confirm-submit
+                  data-confirm-eyebrow="Featured placement"
+                  data-confirm-title="{% if highlight_item.is_featured %}Remove featured placement?{% else %}Feature this highlight?{% endif %}"
+                  data-confirm-message="{% if highlight_item.is_featured %}Remove {{ highlight_item.title }} from the featured position? The card will remain active on the public site.{% else %}Feature {{ highlight_item.title }}? This will replace any card that currently holds the featured position.{% endif %}"
+                  data-confirm-label="{% if highlight_item.is_featured %}Remove featured{% else %}Set featured{% endif %}"
+                  data-confirm-variant="{% if highlight_item.is_featured %}disable{% else %}enable{% endif %}"
+                >
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                   <input type="hidden" name="return_to" value="view" />
                   <input type="hidden" name="feature_action" value="{% if highlight_item.is_featured %}remove{% else %}set{% endif %}" />
@@ -60,7 +69,16 @@
                 {% endif %}
 
                 {% if highlight_item.status != 'archived' %}
-                <form method="post" action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}">
+                <form
+                  method="post"
+                  action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}"
+                  data-confirm-submit
+                  data-confirm-eyebrow="Content status"
+                  data-confirm-title="Archive this highlight?"
+                  data-confirm-message="Archive {{ highlight_item.title }}? It will be hidden from the public site but kept in the admin archive for future restoration."
+                  data-confirm-label="Archive highlight"
+                  data-confirm-variant="disable"
+                >
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                   <input type="hidden" name="return_to" value="view" />
                   <button type="submit" class="admin-highlight-view-action is-archive">

@@ -5,9 +5,6 @@
 {% set admin_active_page = 'community-highlights' %}
 {% set admin_topbar_title = 'Community Highlights' %}
 {% set admin_topbar_subtitle = 'Manage featured programs, public advisories, and community stories shown on the Community & Events page.' %}
-{% set admin_topbar_tool_href = url_for('admin_community_highlight_new') %}
-{% set admin_topbar_tool_label = 'Create Highlight Card' %}
-{% set admin_topbar_tool_class = 'admin-primary-action' %}
 
 {% block admin_content %}
           {% if status_message %}
@@ -124,7 +121,16 @@
                   </div>
                   <div>
                     {% if highlight_item.status == 'active' %}
-                    <form method="post" action="{{ url_for('admin_community_highlight_feature', highlight_id=highlight_item.id) }}">
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_community_highlight_feature', highlight_id=highlight_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Featured placement"
+                      data-confirm-title="{% if highlight_item.is_featured %}Remove featured placement?{% else %}Feature this highlight?{% endif %}"
+                      data-confirm-message="{% if highlight_item.is_featured %}Remove {{ highlight_item.title }} from the featured position? The card will remain active on the public site.{% else %}Feature {{ highlight_item.title }}? This will replace any card that currently holds the featured position.{% endif %}"
+                      data-confirm-label="{% if highlight_item.is_featured %}Remove featured{% else %}Set featured{% endif %}"
+                      data-confirm-variant="{% if highlight_item.is_featured %}disable{% else %}enable{% endif %}"
+                    >
                       <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                       <input type="hidden" name="feature_action" value="{% if highlight_item.is_featured %}remove{% else %}set{% endif %}" />
                       <button type="submit" class="admin-highlight-action is-feature">
@@ -134,7 +140,16 @@
                     </form>
                     {% endif %}
                     {% if highlight_item.status != 'archived' %}
-                    <form method="post" action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}">
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Content status"
+                      data-confirm-title="Archive this highlight?"
+                      data-confirm-message="Archive {{ highlight_item.title }}? It will be hidden from the public site but kept in the admin archive for future restoration."
+                      data-confirm-label="Archive highlight"
+                      data-confirm-variant="disable"
+                    >
                       <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                       <button type="submit" class="admin-highlight-action is-archive">
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>

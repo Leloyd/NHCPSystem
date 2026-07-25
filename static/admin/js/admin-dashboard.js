@@ -18,6 +18,7 @@
     var modal = document.querySelector("[data-admin-confirm-modal]");
     var title = modal && modal.querySelector("[data-admin-confirm-title]");
     var message = modal && modal.querySelector("[data-admin-confirm-message]");
+    var eyebrow = modal && modal.querySelector("[data-admin-confirm-eyebrow]");
     var cancelButton = modal && modal.querySelector("[data-admin-confirm-cancel]");
     var approveButton = modal && modal.querySelector("[data-admin-confirm-approve]");
     var pendingForm = null;
@@ -57,6 +58,7 @@
       var nextTitle = String(form.getAttribute("data-confirm-title") || "Confirm action").trim();
       var nextMessage = String(form.getAttribute("data-confirm-message") || "").trim();
       var nextLabel = String(form.getAttribute("data-confirm-label") || "Confirm").trim();
+      var nextEyebrow = String(form.getAttribute("data-confirm-eyebrow") || "Account access").trim();
 
       if (!modal || !title || !message || !approveButton || !cancelButton) {
         return window.confirm(nextMessage || nextTitle);
@@ -72,6 +74,9 @@
       previousFocus = document.activeElement;
       title.textContent = nextTitle;
       message.textContent = nextMessage;
+      if (eyebrow) {
+        eyebrow.textContent = nextEyebrow;
+      }
       approveButton.textContent = nextLabel;
       modal.classList.toggle("is-enable", variant === "enable");
       modal.classList.toggle("is-disable", variant !== "enable");
