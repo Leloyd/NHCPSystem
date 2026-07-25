@@ -231,14 +231,22 @@ const SCRIPTS = {
   },
 };
 
-/* Recorded Ana Kalang narration currently covers the Starting Point through
-   Stop 3. File names deliberately mirror the SCRIPTS keys; later stops fall
-   back to browser TTS until their recordings are added. */
+/* Recorded Ana Kalang narration now covers the whole trail — the Starting
+   Point through Stop 10. File names deliberately mirror the SCRIPTS keys; any
+   key left off this list falls back to browser TTS. */
 const TRAIL_VOICE_KEYS = [
   'intro',
   's1-arrive', 's1-threshold', 's1-1845', 's1-landmark', 's1-details', 's1-next',
   's2-arrive', 's2-registration', 's2-hours', 's2-rules', 's2-service', 's2-next',
   's3-arrive', 's3-explore', 's3-collection', 's3-ar', 's3-next',
+  's4-arrive', 's4-map', 's4-complete', 's4-next',
+  's5-arrive', 's5-history', 's5-plasencia', 's5-explore', 's5-next',
+  's6-arrive', 's6-renovations', 's6-deterioration', 's6-next',
+  's7-arrive', 's7-materials', 's7-tapestry', 's7-explore', 's7-next',
+  's8-arrive', 's8-acronyms', 's8-revolution', 's8-biak', 's8-wwii',
+  's8-guerrillas', 's8-guerrilla-forces', 's8-guerrilla-legacy', 's8-guerrilla-records', 's8-next',
+  's9-arrive', 's9-archive', 's9-next',
+  's10-arrive', 's10-farewell',
 ];
 const rawTrailVoiceBase = root.dataset.voiceBase || '/audio/trail/';
 const TRAIL_VOICE_BASE = rawTrailVoiceBase.endsWith('/') ? rawTrailVoiceBase : `${rawTrailVoiceBase}/`;
