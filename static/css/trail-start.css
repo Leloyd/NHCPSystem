@@ -7230,6 +7230,15 @@ body.trail-archive-open {
     padding-bottom: max(6.5rem, calc(5rem + env(safe-area-inset-bottom)));
   }
 
+  /* Subtitles hidden → hand their reserved space back so the story, timeline
+     and buttons settle to the bottom, exactly like every other stop. Without
+     this, Living Memory's fixed padding-bottom above ignored the toggle and
+     the content stayed parked high with a dead gap underneath. */
+  .trailx[data-subtitles="off"] .trailx__story--archive .trailx__chapter--living-memory,
+  .trailx[data-subtitles="off"] .trailx__story--archive .trailx__chapter--living-memory[data-side="right"] {
+    padding-bottom: max(5rem, calc(3.4rem + env(safe-area-inset-bottom)));
+  }
+
   /* Stay inside the content column — centered, two tidy rows — instead of the
      old full-viewport breakout that could cut off on the left. */
   .trailx-living-memory__timeline {
