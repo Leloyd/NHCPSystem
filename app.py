@@ -7,6 +7,7 @@ import time
 from datetime import datetime, timedelta
 from functools import wraps
 from pathlib import Path
+from urllib.parse import urlparse
 
 from flask import Flask, g, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash
@@ -54,7 +55,21 @@ def _bool_env(name, default):
     return raw.strip().lower() in {"1", "true", "yes", "on"}
 
 
+def _configured_admin_image_sources():
+    sources = ["'self'", "data:"]
+    configured_url = (os.getenv("SUPABASE_URL") or "").strip()
+    if not configured_url:
+        return " ".join(sources)
+
+    parsed = urlparse(configured_url)
+    hostname = str(parsed.hostname or "").strip().lower()
+    if parsed.scheme == "https" and hostname and re.fullmatch(r"[a-z0-9.-]+", hostname):
+        sources.append(f"https://{hostname}")
+    return " ".join(sources)
+
+
 app = Flask(__name__)
+ADMIN_IMAGE_SOURCES = _configured_admin_image_sources()
 
 IS_PRODUCTION = os.getenv("FLASK_ENV", "development").strip().lower() in {"prod", "production"}
 _secret_key = os.getenv("FLASK_SECRET_KEY", "").strip()
@@ -869,7 +884,7 @@ def _set_security_headers(response):
         response.headers["X-Robots-Tag"] = "noindex, nofollow, noarchive"
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
-            "img-src 'self' data:; "
+            f"img-src {ADMIN_IMAGE_SOURCES}; "
             "script-src 'self' https://cdnjs.cloudflare.com; "
             "style-src 'self'; "
             "connect-src 'self'; "

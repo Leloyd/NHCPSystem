@@ -248,50 +248,121 @@
   }
 
   function initHighlightSwitcher() {
-    var switchers = document.querySelectorAll("[data-highlight-switcher]");
+    var switchers = Array.prototype.slice.call(
+      document.querySelectorAll("[data-highlight-switcher]")
+    );
 
     switchers.forEach(function (switcher) {
       var tabs = Array.prototype.slice.call(
         switcher.querySelectorAll("[data-highlight-tab]")
       );
-      var panels = Array.prototype.slice.call(
-        switcher.querySelectorAll("[data-highlight-panel]")
+      var cards = Array.prototype.slice.call(
+        switcher.querySelectorAll("[data-highlight-card]")
       );
+      var description = switcher.querySelector("[data-highlight-filter-description]");
+      var emptyState = switcher.querySelector("[data-highlight-empty]");
+      var emptyTitle = switcher.querySelector("[data-highlight-empty-title]");
+      var emptyCopy = switcher.querySelector("[data-highlight-empty-copy]");
+      var allowedFilters = ["all", "active", "draft", "archived"];
+      var currentFilter = String(
+        switcher.getAttribute("data-current-highlight-filter") || "all"
+      ).trim().toLowerCase();
 
-      if (!tabs.length || !panels.length) {
+      if (!tabs.length) {
         return;
       }
 
-      function setActivePanel(panelName) {
-        var resolvedPanelName = String(panelName || "").trim().toLowerCase() || "active";
-        var hasMatch = panels.some(function (panel) {
-          return String(panel.getAttribute("data-highlight-panel") || "").trim().toLowerCase() === resolvedPanelName;
-        });
-
-        if (!hasMatch) {
-          resolvedPanelName = "active";
+      function normalizeFilter(filterName) {
+        var normalized = String(filterName || "").trim().toLowerCase();
+        if (allowedFilters.indexOf(normalized) === -1) {
+          return "all";
         }
+        return normalized;
+      }
+
+      function updateAddress(mode) {
+        if (!window.history || typeof window.history.replaceState !== "function") {
+          return;
+        }
+        var url = new URL(window.location.href);
+        url.searchParams.set("filter", currentFilter);
+        var method = mode === "push" ? "pushState" : "replaceState";
+        window.history[method](
+          { highlightFilter: currentFilter },
+          "",
+          url.pathname + url.search + url.hash
+        );
+      }
+
+      function setActiveFilter(filterName, options) {
+        currentFilter = normalizeFilter(filterName);
+        var visibleCount = 0;
+
+        cards.forEach(function (card) {
+          var cardStatus = String(
+            card.getAttribute("data-highlight-status") || ""
+          ).trim().toLowerCase();
+          var isVisible = currentFilter === "all" || cardStatus === currentFilter;
+          card.hidden = !isVisible;
+          if (isVisible) {
+            visibleCount += 1;
+          }
+        });
 
         tabs.forEach(function (tab) {
-          var isActive = String(tab.getAttribute("data-highlight-tab") || "").trim().toLowerCase() === resolvedPanelName;
+          var isActive = normalizeFilter(tab.getAttribute("data-highlight-tab")) === currentFilter;
           tab.classList.toggle("is-active", isActive);
-          tab.setAttribute("aria-selected", isActive ? "true" : "false");
+          if (isActive) {
+            tab.setAttribute("aria-current", "page");
+          } else {
+            tab.removeAttribute("aria-current");
+          }
         });
 
-        panels.forEach(function (panel) {
-          var isActive = String(panel.getAttribute("data-highlight-panel") || "").trim().toLowerCase() === resolvedPanelName;
-          panel.classList.toggle("is-active", isActive);
-          panel.hidden = !isActive;
-        });
+        var descriptions = {
+          all: "Showing every community highlight card.",
+          active: "Cards currently visible on the public Community Highlights section.",
+          draft: "Unpublished cards still being prepared.",
+          archived: "Retained cards hidden from the public site.",
+        };
+        if (description) {
+          description.textContent = descriptions[currentFilter];
+        }
+
+        if (emptyState) {
+          emptyState.hidden = visibleCount > 0;
+        }
+        if (emptyTitle) {
+          emptyTitle.textContent = cards.length
+            ? "No " + currentFilter + " highlights"
+            : "No community highlights yet";
+        }
+        if (emptyCopy) {
+          emptyCopy.textContent = cards.length
+            ? "There are currently no cards in this status."
+            : "Create the first card for the public Community Highlights collection.";
+        }
+
+        if (!options || options.updateUrl !== false) {
+          updateAddress(options && options.historyMode);
+        }
       }
 
       tabs.forEach(function (tab) {
-        tab.addEventListener("click", function () {
-          setActivePanel(tab.getAttribute("data-highlight-tab"));
+        tab.addEventListener("click", function (event) {
+          event.preventDefault();
+          setActiveFilter(tab.getAttribute("data-highlight-tab"), {
+            historyMode: "push",
+          });
         });
       });
 
-      setActivePanel("active");
+      window.addEventListener("popstate", function () {
+        var params = new URLSearchParams(window.location.search);
+        setActiveFilter(params.get("filter"), { updateUrl: false });
+      });
+
+      setActiveFilter(currentFilter, { updateUrl: false });
     });
   }
 

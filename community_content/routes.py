@@ -29,6 +29,8 @@ from .service import (
     render_admin_event_form,
 )
 
+VALID_COMMUNITY_HIGHLIGHT_FILTERS = {"all", "active", "draft", "archived"}
+
 
 def _build_unique_slug(title: str, *, fallback: str, current_id: int | None, list_items: Callable[[], list[dict[str, Any]]], slugify_text: Callable[[str, str], str]) -> str:
     base_slug = slugify_text(title, fallback=fallback)
@@ -179,10 +181,20 @@ def register_community_content_routes(
     def admin_community_highlights():
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
+        status_filter = str(request.args.get("filter") or "all").strip().lower()
+        if status_filter not in VALID_COMMUNITY_HIGHLIGHT_FILTERS:
+            status_filter = "all"
+
         highlights_items = load_admin_community_highlights()
         active_highlights_items = [item for item in highlights_items if item.get("status") == "active"]
         draft_highlights_items = [item for item in highlights_items if item.get("status") == "draft"]
         archived_highlights_items = [item for item in highlights_items if item.get("status") == "archived"]
+        visible_highlight_ids = {
+            int(item.get("id"))
+            for item in highlights_items
+            if item.get("id") is not None
+            and (status_filter == "all" or item.get("status") == status_filter)
+        }
         status_message = get_community_highlights_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase community highlights integration is not configured."
         return render_template(
@@ -193,6 +205,8 @@ def register_community_content_routes(
             active_highlights_items=active_highlights_items,
             draft_highlights_items=draft_highlights_items,
             archived_highlights_items=archived_highlights_items,
+            visible_highlight_ids=visible_highlight_ids,
+            status_filter=status_filter,
             status_message=status_message,
             config_error=config_error,
         )

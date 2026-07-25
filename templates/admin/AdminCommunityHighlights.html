@@ -24,175 +24,170 @@
           </section>
           {% endif %}
 
-          {% if highlights_items %}
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          <section
+            class="admin-panel admin-panel-wide admin-highlight-manager"
+            data-highlight-switcher
+            data-current-highlight-filter="{{ status_filter }}"
+          >
+            <header class="admin-highlight-manager-head">
               <div>
-                <h3>Community Highlight Cards</h3>
-                <p>Manage the cards shown in the redesigned Community Highlights section and switch between Active, Draft, and Archived views.</p>
+                <p class="admin-highlight-manager-eyebrow">Content library</p>
+                <h2>Community Highlight Cards</h2>
+                <p>Organize published stories, prepare drafts, and retain archived cards from one workspace.</p>
               </div>
-              <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-text-link">Add New</a>
+              <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-highlight-create-action">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7Z"></path></svg>
+                Add highlight
+              </a>
+            </header>
+
+            <div class="admin-highlight-summary" aria-label="Community highlight summary">
+              <div>
+                <span class="admin-highlight-summary-icon is-all" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm2 2h5v5H6Zm7 0h5v2h-5Zm0 3h5v2h-5ZM6 14h12v2H6Z"></path></svg>
+                </span>
+                <span><small>All cards</small><strong>{{ highlights_items|length }}</strong></span>
+              </div>
+              <div>
+                <span class="admin-highlight-summary-icon is-active" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg>
+                </span>
+                <span><small>Active</small><strong>{{ active_highlights_items|length }}</strong></span>
+              </div>
+              <div>
+                <span class="admin-highlight-summary-icon is-draft" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z"></path></svg>
+                </span>
+                <span><small>Draft</small><strong>{{ draft_highlights_items|length }}</strong></span>
+              </div>
+              <div>
+                <span class="admin-highlight-summary-icon is-archived" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                </span>
+                <span><small>Archived</small><strong>{{ archived_highlights_items|length }}</strong></span>
+              </div>
             </div>
 
-            <div class="admin-highlight-switcher" data-highlight-switcher>
-              <div class="admin-highlight-tabs" role="tablist" aria-label="Community highlight status views">
-                <button type="button" class="admin-highlight-tab is-active" data-highlight-tab="active" aria-selected="true">
-                  <span>Community Highlight Cards</span>
-                  <span class="admin-chip is-dark">{{ active_highlights_items|length }}</span>
-                </button>
-                <button type="button" class="admin-highlight-tab" data-highlight-tab="draft" aria-selected="false">
-                  <span>Draft Cards</span>
-                  <span class="admin-chip is-dark">{{ draft_highlights_items|length }}</span>
-                </button>
-                <button type="button" class="admin-highlight-tab" data-highlight-tab="archived" aria-selected="false">
-                  <span>Archived Cards</span>
-                  <span class="admin-chip is-dark">{{ archived_highlights_items|length }}</span>
-                </button>
-              </div>
+            <div class="admin-highlight-toolbar">
+              <nav class="admin-highlight-filters" aria-label="Filter community highlights by status">
+                <a href="{{ url_for('admin_community_highlights', filter='all') }}" class="admin-highlight-filter{% if status_filter == 'all' %} is-active{% endif %}" data-highlight-tab="all"{% if status_filter == 'all' %} aria-current="page"{% endif %}>
+                  All <span>{{ highlights_items|length }}</span>
+                </a>
+                <a href="{{ url_for('admin_community_highlights', filter='active') }}" class="admin-highlight-filter{% if status_filter == 'active' %} is-active{% endif %}" data-highlight-tab="active"{% if status_filter == 'active' %} aria-current="page"{% endif %}>
+                  Active <span>{{ active_highlights_items|length }}</span>
+                </a>
+                <a href="{{ url_for('admin_community_highlights', filter='draft') }}" class="admin-highlight-filter{% if status_filter == 'draft' %} is-active{% endif %}" data-highlight-tab="draft"{% if status_filter == 'draft' %} aria-current="page"{% endif %}>
+                  Draft <span>{{ draft_highlights_items|length }}</span>
+                </a>
+                <a href="{{ url_for('admin_community_highlights', filter='archived') }}" class="admin-highlight-filter{% if status_filter == 'archived' %} is-active{% endif %}" data-highlight-tab="archived"{% if status_filter == 'archived' %} aria-current="page"{% endif %}>
+                  Archived <span>{{ archived_highlights_items|length }}</span>
+                </a>
+              </nav>
+              <p class="admin-highlight-filter-description" data-highlight-filter-description aria-live="polite">
+                {% if status_filter == 'active' %}
+                Cards currently visible on the public Community Highlights section.
+                {% elif status_filter == 'draft' %}
+                Unpublished cards still being prepared.
+                {% elif status_filter == 'archived' %}
+                Retained cards hidden from the public site.
+                {% else %}
+                Showing every community highlight card.
+                {% endif %}
+              </p>
+            </div>
 
-              <section class="admin-highlight-panel is-active" data-highlight-panel="active">
-                <div class="admin-highlight-panel-head">
-                  <div>
-                    <h4>Community Highlight Cards</h4>
-                    <p>Cards that are currently visible on the public Community Highlights section.</p>
+            <div class="admin-highlight-library" data-highlight-library>
+              {% for highlight_item in highlights_items %}
+              <article
+                class="admin-highlight-library-card"
+                data-highlight-card
+                data-highlight-status="{{ highlight_item.status }}"
+                {% if highlight_item.id|int not in visible_highlight_ids %}hidden{% endif %}
+              >
+                <div class="admin-highlight-card-media">
+                  {% if highlight_item.image_url %}
+                  <img src="{{ highlight_item.image_url }}" alt="" loading="lazy" />
+                  {% else %}
+                  <span class="admin-highlight-card-placeholder" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm2 11 4-4 3 3 2-2 3 3v1H6Zm9-8a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"></path></svg>
+                  </span>
+                  {% endif %}
+                  <div class="admin-highlight-card-badges">
+                    <span class="admin-status-badge {% if highlight_item.status == 'active' %}is-published{% elif highlight_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">
+                      {{ highlight_item.status|title }}
+                    </span>
+                    {% if highlight_item.is_featured %}
+                    <span class="admin-highlight-featured-badge">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg>
+                      Featured
+                    </span>
+                    {% endif %}
                   </div>
                 </div>
 
-                {% if active_highlights_items %}
-                <div class="admin-highlight-card-list">
-                  {% for highlight_item in active_highlights_items %}
-                  <article class="admin-highlight-card">
-                    <div class="admin-highlight-card-head">
-                      <span class="admin-status-badge is-published">Active</span>
-                      <span class="admin-status-badge {% if highlight_item.is_featured %}is-published{% else %}is-draft{% endif %}">
-                        {% if highlight_item.is_featured %}Featured{% else %}Standard{% endif %}
-                      </span>
-                    </div>
-                    <div class="admin-resource-main">
-                      <strong>{{ highlight_item.title }}</strong>
-                      <span>{{ highlight_item.short_description }}</span>
-                      <span>{{ highlight_item.long_description|truncate(120) }}</span>
-                    </div>
-                    <div class="admin-highlight-meta">
-                      <span>{{ highlight_item.category }}</span>
-                      <span>{{ highlight_item.display_date }}</span>
-                      <span>{{ highlight_item.image_filename or 'No image' }}</span>
-                    </div>
-                    <div class="admin-resource-actions admin-highlight-actions">
-                      <a href="{{ url_for('community_highlight_detail', slug=highlight_item.slug) }}" class="admin-inline-link">View</a>
-                      <a href="{{ url_for('admin_community_highlight_edit', highlight_id=highlight_item.id) }}" class="admin-inline-link">Edit</a>
-                      <form method="post" action="{{ url_for('admin_community_highlight_feature', highlight_id=highlight_item.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                        <input type="hidden" name="feature_action" value="{% if highlight_item.is_featured %}remove{% else %}set{% endif %}" />
-                        <button type="submit" class="admin-inline-link">{% if highlight_item.is_featured %}Remove Featured{% else %}Set Featured{% endif %}</button>
-                      </form>
-                      <form method="post" action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                        <button type="submit" class="admin-inline-link admin-inline-link-danger">Archive</button>
-                      </form>
-                    </div>
-                  </article>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div class="admin-highlight-column-empty">
-                  <h3>No active cards</h3>
-                  <p>Change a draft to Active to show it in the public Community Highlights section.</p>
-                </div>
-                {% endif %}
-              </section>
-
-              <section class="admin-highlight-panel" data-highlight-panel="draft" hidden>
-                <div class="admin-highlight-panel-head">
-                  <div>
-                    <h4>Draft Cards</h4>
-                    <p>Saved cards that stay hidden from the public page until you mark them active.</p>
+                <div class="admin-highlight-card-body">
+                  <div class="admin-highlight-card-category-row">
+                    <span class="admin-highlight-category">{{ highlight_item.category }}</span>
+                    <span>{{ highlight_item.display_date }}</span>
+                  </div>
+                  <h3>{{ highlight_item.title }}</h3>
+                  <p>{{ highlight_item.short_description }}</p>
+                  <div class="admin-highlight-card-details">
+                    <span>{{ highlight_item.estimated_read_label }}</span>
+                    <span>{% if highlight_item.image_filename %}Image attached{% else %}No image{% endif %}</span>
                   </div>
                 </div>
 
-                {% if draft_highlights_items %}
-                <div class="admin-highlight-card-list">
-                  {% for highlight_item in draft_highlights_items %}
-                  <article class="admin-highlight-card">
-                    <div class="admin-highlight-card-head">
-                      <span class="admin-status-badge is-draft">Draft</span>
-                    </div>
-                    <div class="admin-resource-main">
-                      <strong>{{ highlight_item.title }}</strong>
-                      <span>{{ highlight_item.short_description }}</span>
-                      <span>{{ highlight_item.long_description|truncate(120) }}</span>
-                    </div>
-                    <div class="admin-highlight-meta">
-                      <span>{{ highlight_item.category }}</span>
-                      <span>{{ highlight_item.display_date }}</span>
-                      <span>{{ highlight_item.image_filename or 'No image' }}</span>
-                    </div>
-                    <div class="admin-resource-actions admin-highlight-actions">
-                      <a href="{{ url_for('admin_community_highlight_edit', highlight_id=highlight_item.id) }}" class="admin-inline-link">Edit</a>
-                      <form method="post" action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}">
-                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                        <button type="submit" class="admin-inline-link admin-inline-link-danger">Archive</button>
-                      </form>
-                    </div>
-                  </article>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div class="admin-highlight-column-empty">
-                  <h3>No draft cards</h3>
-                  <p>Create a new card or save one as draft while you are still preparing the content.</p>
-                </div>
-                {% endif %}
-              </section>
-
-              <section class="admin-highlight-panel" data-highlight-panel="archived" hidden>
-                <div class="admin-highlight-panel-head">
+                <footer class="admin-highlight-card-actions">
                   <div>
-                    <h4>Archived Cards</h4>
-                    <p>Archived cards remain available for editing and can be restored from the edit form.</p>
+                    {% if highlight_item.status == 'active' %}
+                    <a href="{{ url_for('community_highlight_detail', slug=highlight_item.slug) }}" class="admin-highlight-action is-secondary">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                      View
+                    </a>
+                    {% endif %}
+                    <a href="{{ url_for('admin_community_highlight_edit', highlight_id=highlight_item.id) }}" class="admin-highlight-action is-primary">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
+                      Edit
+                    </a>
                   </div>
-                </div>
+                  <div>
+                    {% if highlight_item.status == 'active' %}
+                    <form method="post" action="{{ url_for('admin_community_highlight_feature', highlight_id=highlight_item.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <input type="hidden" name="feature_action" value="{% if highlight_item.is_featured %}remove{% else %}set{% endif %}" />
+                      <button type="submit" class="admin-highlight-action is-feature">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg>
+                        {% if highlight_item.is_featured %}Unfeature{% else %}Feature{% endif %}
+                      </button>
+                    </form>
+                    {% endif %}
+                    {% if highlight_item.status != 'archived' %}
+                    <form method="post" action="{{ url_for('admin_community_highlight_delete', highlight_id=highlight_item.id) }}">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <button type="submit" class="admin-highlight-action is-archive">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                        Archive
+                      </button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </footer>
+              </article>
+              {% endfor %}
+            </div>
 
-                {% if archived_highlights_items %}
-                <div class="admin-highlight-card-list">
-                  {% for highlight_item in archived_highlights_items %}
-                  <article class="admin-highlight-card">
-                    <div class="admin-highlight-card-head">
-                      <span class="admin-status-badge is-cancelled">Archived</span>
-                    </div>
-                    <div class="admin-resource-main">
-                      <strong>{{ highlight_item.title }}</strong>
-                      <span>{{ highlight_item.short_description }}</span>
-                      <span>{{ highlight_item.long_description|truncate(120) }}</span>
-                    </div>
-                    <div class="admin-highlight-meta">
-                      <span>{{ highlight_item.category }}</span>
-                      <span>{{ highlight_item.display_date }}</span>
-                      <span>{{ highlight_item.image_filename or 'No image' }}</span>
-                    </div>
-                    <div class="admin-resource-actions admin-highlight-actions">
-                      <a href="{{ url_for('admin_community_highlight_edit', highlight_id=highlight_item.id) }}" class="admin-inline-link">Edit</a>
-                    </div>
-                  </article>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div class="admin-highlight-column-empty">
-                  <h3>No archived cards</h3>
-                  <p>Archived community highlight cards will appear here for reference and later restoration.</p>
-                </div>
-                {% endif %}
-              </section>
+            <div class="admin-highlight-empty" data-highlight-empty {% if visible_highlight_ids %}hidden{% endif %}>
+              <span class="admin-highlight-empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm3 3h10v2H7Zm0 4h7v2H7Z"></path></svg>
+              </span>
+              <h3 data-highlight-empty-title>
+                {% if status_filter == 'all' %}No community highlights yet{% else %}No {{ status_filter }} highlights{% endif %}
+              </h3>
+              <p data-highlight-empty-copy>
+                {% if status_filter == 'all' %}Create the first card for the public Community Highlights collection.{% else %}There are currently no cards in this status.{% endif %}
+              </p>
+              <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-highlight-create-action">Create highlight</a>
             </div>
           </section>
-          {% else %}
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-empty-state">
-              <div class="admin-empty-state-icon">+</div>
-              <h3>No community highlights yet</h3>
-              <p>Create your first Community Highlight card to show it in the redesigned public highlights section.</p>
-              <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-primary-action">Create First Highlight</a>
-            </div>
-          </section>
-          {% endif %}
 {% endblock %}
