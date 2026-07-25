@@ -1263,6 +1263,7 @@
         return;
       }
       event.preventDefault();
+      event.stopImmediatePropagation();
       var invalidField = editor.elements[invalid.name];
       setLanguage(invalid.language);
       if (invalidField) {
@@ -1270,7 +1271,7 @@
         invalidField.focus();
         invalidField.reportValidity();
       }
-    });
+    }, { capture: true });
 
     window.addEventListener("beforeunload", function () {
       if (previewObjectUrl) {

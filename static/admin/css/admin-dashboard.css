@@ -3842,14 +3842,43 @@ body.admin-confirm-open {
 }
 
 .admin-highlight-editor-status-field select {
-  min-height: 2.35rem;
-  border: 1px solid #dce2de;
-  border-radius: 0.7rem;
-  background: #fff;
-  padding: 0.45rem 2rem 0.45rem 0.65rem;
+  min-width: 10.5rem;
+  min-height: 2.65rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #dbc98f;
+  border-radius: 0.78rem;
+  outline: none;
+  background-color: #fffaf0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23a07830' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.72rem center;
+  background-size: 1rem;
+  padding: 0.55rem 2.45rem 0.55rem 0.78rem;
   color: var(--dashboard-green-900);
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   font-weight: 800;
+  line-height: 1.2;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(13, 43, 31, 0.055);
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-highlight-editor-status-field select:hover {
+  border-color: var(--dashboard-gold-600);
+  background-color: #fff6df;
+}
+
+.admin-highlight-editor-status-field select:focus-visible {
+  border-color: var(--dashboard-gold-600);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2), 0 5px 14px rgba(13, 43, 31, 0.07);
+}
+
+.admin-highlight-editor-status-field select option,
+.admin-highlight-editor-meta select option {
+  background: #fff;
+  color: var(--dashboard-green-900);
+  font-weight: 650;
 }
 
 .admin-highlight-editor-media img[hidden],
@@ -3957,10 +3986,24 @@ body.admin-confirm-open {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.25rem 0.38rem 0.25rem 0.52rem;
+  min-height: 2.6rem;
+  padding: 0.34rem 0.42rem 0.34rem 0.62rem;
   border: 1px solid #e0e5e1;
-  border-radius: 999px;
+  border-radius: 0.78rem;
   background: #fff;
+  box-shadow: 0 3px 10px rgba(13, 43, 31, 0.04);
+  transition: border-color 160ms ease, background-color 160ms ease, box-shadow 160ms ease;
+}
+
+.admin-highlight-editor-meta label:hover {
+  border-color: #d7c58c;
+  background: #fffdf8;
+}
+
+.admin-highlight-editor-meta label:focus-within {
+  border-color: var(--dashboard-gold-600);
+  background: #fffaf0;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.17);
 }
 
 .admin-highlight-editor-meta label > span {
@@ -3986,7 +4029,17 @@ body.admin-confirm-open {
 }
 
 .admin-highlight-editor-meta select {
-  max-width: 11rem;
+  width: 11.5rem;
+  max-width: 100%;
+  min-height: 1.9rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23a07830' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.42rem center;
+  background-size: 0.9rem;
+  padding: 0.28rem 1.85rem 0.28rem 0.45rem;
+  cursor: pointer;
 }
 
 .admin-highlight-editor-meta input[type="date"] {
@@ -4258,6 +4311,10 @@ body.admin-confirm-open {
     width: 100%;
   }
 
+  .admin-highlight-editor-status-field select {
+    width: 100%;
+  }
+
   .admin-highlight-editor-actions > * {
     flex: 1 1 auto;
   }
@@ -4300,7 +4357,7 @@ body.admin-confirm-open {
 
   .admin-highlight-editor-meta select,
   .admin-highlight-editor-meta input[type="date"] {
-    width: auto;
+    width: min(65%, 15rem);
     max-width: 65%;
   }
 

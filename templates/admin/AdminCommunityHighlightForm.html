@@ -23,6 +23,12 @@
             enctype="multipart/form-data"
             class="admin-highlight-view admin-highlight-editor"
             data-highlight-editor
+            data-confirm-submit
+            data-confirm-eyebrow="Community highlight"
+            data-confirm-title="{% if submit_label == 'Create Highlight' %}Create this community highlight?{% else %}Save changes to this community highlight?{% endif %}"
+            data-confirm-message="{% if submit_label == 'Create Highlight' %}Create this highlight using the image, publication status, and bilingual descriptions shown in the preview?{% else %}Save the image, publication status, and bilingual description changes shown in the preview?{% endif %}"
+            data-confirm-label="{{ submit_label }}"
+            data-confirm-variant="enable"
           >
             <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
             <div class="admin-highlight-view-accent" aria-hidden="true"></div>
@@ -118,7 +124,7 @@
                 />
 
                 <div class="admin-highlight-view-meta admin-highlight-editor-meta">
-                  <label>
+                  <label class="admin-highlight-editor-meta-control is-category">
                     <span>Category</span>
                     <select id="highlightCategory" name="category" required data-highlight-editor-category>
                       {% for category_option in category_options %}
@@ -126,7 +132,7 @@
                       {% endfor %}
                     </select>
                   </label>
-                  <label>
+                  <label class="admin-highlight-editor-meta-control is-date">
                     <span>Event date</span>
                     <input id="highlightDate" name="event_date" type="date" required value="{{ highlight_form.event_date }}" data-highlight-editor-date />
                   </label>
