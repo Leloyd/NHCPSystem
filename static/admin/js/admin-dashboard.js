@@ -13,6 +13,19 @@
     });
   }
 
+  function initConfirmedSubmissions() {
+    var forms = document.querySelectorAll("[data-confirm-submit]");
+
+    forms.forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        var message = String(form.getAttribute("data-confirm-message") || "").trim();
+        if (message && !window.confirm(message)) {
+          event.preventDefault();
+        }
+      });
+    });
+  }
+
   function setSidebarState(isOpen) {
     document.body.classList.toggle("sidebar-open", Boolean(isOpen));
   }
@@ -404,6 +417,7 @@
     initHighlightSwitcher();
     initAdminBookingCalendar();
     initDashboardSearch();
+    initConfirmedSubmissions();
     initAutoDismissAlerts();
   }
 

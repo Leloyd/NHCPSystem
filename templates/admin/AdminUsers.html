@@ -92,7 +92,12 @@
                           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
                           <span>View</span>
                         </a>
-                        <form method="post" action="{{ url_for('admin_user_detail', user_id=user.id) }}">
+                        <form
+                          method="post"
+                          action="{{ url_for('admin_user_detail', user_id=user.id) }}"
+                          data-confirm-submit
+                          data-confirm-message="{% if user.is_active %}Disable {{ user.display_name }}? This account will immediately lose access to the public site.{% else %}Enable {{ user.display_name }}? This account will be allowed to sign in to the public site again.{% endif %}"
+                        >
                           <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                           <input type="hidden" name="return_filter" value="{{ status_filter }}" />
                           <input type="hidden" name="return_q" value="{{ search_query }}" />
