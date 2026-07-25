@@ -149,7 +149,16 @@
                     <span>01</span>
                     <h2>Overview</h2>
                   </header>
-                  <p>{{ highlight_item.short_description }}</p>
+                  <div class="admin-highlight-view-copy-grid">
+                    <div>
+                      <span>English</span>
+                      <p>{{ highlight_item.short_description }}</p>
+                    </div>
+                    <div>
+                      <span>Tagalog</span>
+                      <p>{{ highlight_item.short_description_tl or 'No Tagalog translation has been added yet.' }}</p>
+                    </div>
+                  </div>
                 </section>
 
                 <section class="admin-highlight-view-section">
@@ -157,7 +166,16 @@
                     <span>02</span>
                     <h2>Full Description</h2>
                   </header>
-                  <p>{{ highlight_item.long_description }}</p>
+                  <div class="admin-highlight-view-copy-grid">
+                    <div>
+                      <span>English</span>
+                      <p>{{ highlight_item.long_description }}</p>
+                    </div>
+                    <div>
+                      <span>Tagalog</span>
+                      <p>{{ highlight_item.long_description_tl or 'No Tagalog translation has been added yet.' }}</p>
+                    </div>
+                  </div>
                 </section>
 
                 <section class="admin-highlight-view-facts">

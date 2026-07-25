@@ -79,6 +79,8 @@ def _build_community_highlight_form_payload(form, files, *, current_item, normal
     status = str(form.get("status") or "draft").strip().lower()
     short_description = str(form.get("short_description") or "").strip()
     long_description = str(form.get("long_description") or "").strip()
+    short_description_tl = str(form.get("short_description_tl") or "").strip()
+    long_description_tl = str(form.get("long_description_tl") or "").strip()
 
     if len(title) < 3:
         raise ValueError("Title must be at least 3 characters.")
@@ -90,6 +92,10 @@ def _build_community_highlight_form_payload(form, files, *, current_item, normal
         raise ValueError("Short description must be at least 12 characters.")
     if len(long_description) < 24:
         raise ValueError("More information must be at least 24 characters.")
+    if len(short_description_tl) < 12:
+        raise ValueError("Tagalog short description must be at least 12 characters.")
+    if len(long_description_tl) < 24:
+        raise ValueError("Tagalog full description must be at least 24 characters.")
 
     payload = {
         "title": title,
@@ -103,6 +109,8 @@ def _build_community_highlight_form_payload(form, files, *, current_item, normal
         "event_date": validate_event_date(form.get("event_date")),
         "short_description": short_description,
         "long_description": long_description,
+        "short_description_tl": short_description_tl,
+        "long_description_tl": long_description_tl,
         "is_published": status == "active",
         "is_featured": bool(current_item and current_item.get("is_featured") and status == "active"),
     }

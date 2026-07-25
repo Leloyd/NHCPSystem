@@ -135,6 +135,8 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
     prepared["category_color"] = category_style["color"]
     prepared["category_bg"] = category_style["bg"]
     prepared["status"] = status
+    prepared["short_description_tl"] = str(prepared.get("short_description_tl") or "").strip()
+    prepared["long_description_tl"] = str(prepared.get("long_description_tl") or "").strip()
     prepared["is_featured"] = bool(prepared.get("is_featured")) and status == "active"
     prepared["estimated_read_minutes"] = estimated_read_minutes
     prepared["estimated_read_label"] = f"{estimated_read_minutes} min read"
@@ -307,6 +309,8 @@ def build_community_highlight_form_state(source: dict[str, Any] | None = None) -
         "event_date": str(source.get("event_date") or "").strip(),
         "short_description": str(source.get("short_description") or "").strip(),
         "long_description": str(source.get("long_description") or "").strip(),
+        "short_description_tl": str(source.get("short_description_tl") or "").strip(),
+        "long_description_tl": str(source.get("long_description_tl") or "").strip(),
         "is_published": bool(source.get("is_published")),
         "is_featured": bool(source.get("is_featured")),
         "image_filename": str(source.get("image_filename") or "").strip(),

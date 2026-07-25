@@ -3756,6 +3756,30 @@ body.admin-confirm-open {
   line-height: 1.72;
 }
 
+.admin-highlight-view-copy-grid {
+  display: grid;
+  gap: 0.9rem;
+}
+
+.admin-highlight-view-copy-grid > div {
+  min-width: 0;
+}
+
+.admin-highlight-view-copy-grid > div + div {
+  padding-top: 0.9rem;
+  border-top: 1px solid #e8ece9;
+}
+
+.admin-highlight-view-copy-grid > div > span {
+  display: block;
+  margin-bottom: 0.32rem;
+  color: #8a7450;
+  font-size: 0.6rem;
+  font-weight: 850;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
 .admin-highlight-view-facts {
   margin-top: 1.3rem;
   padding-top: 1.15rem;
@@ -3793,6 +3817,309 @@ body.admin-confirm-open {
   font-size: 0.75rem;
   font-weight: 650;
   line-height: 1.45;
+}
+
+/* Editable community highlight preview --------------------------------- */
+
+.admin-highlight-editor-management {
+  align-items: center;
+}
+
+.admin-highlight-editor-status-field,
+.admin-highlight-editor-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-highlight-editor-status-field > label {
+  color: #757e78;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-highlight-editor-status-field select {
+  min-height: 2.35rem;
+  border: 1px solid #dce2de;
+  border-radius: 0.7rem;
+  background: #fff;
+  padding: 0.45rem 2rem 0.45rem 0.65rem;
+  color: var(--dashboard-green-900);
+  font-size: 0.72rem;
+  font-weight: 800;
+}
+
+.admin-highlight-editor-media img[hidden],
+.admin-highlight-editor-media [data-highlight-editor-image-fallback][hidden] {
+  display: none;
+}
+
+.admin-highlight-editor-upload {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.8rem;
+  border: 1px dashed rgba(160, 120, 48, 0.45);
+  border-radius: 0.9rem;
+  background: #fffaf0;
+  color: var(--dashboard-green-900);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.admin-highlight-editor-upload:hover,
+.admin-highlight-editor-upload:focus-within {
+  border-color: var(--dashboard-gold-600);
+  background: #fff7e4;
+}
+
+.admin-highlight-editor-upload-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.25rem;
+  border-radius: 0.7rem;
+  background: #f4e4b6;
+  color: var(--dashboard-gold-600);
+}
+
+.admin-highlight-editor-upload-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: currentColor;
+}
+
+.admin-highlight-editor-upload strong,
+.admin-highlight-editor-upload small {
+  display: block;
+}
+
+.admin-highlight-editor-upload strong {
+  font-size: 0.75rem;
+}
+
+.admin-highlight-editor-upload small {
+  margin-top: 0.12rem;
+  color: #7b847e;
+  font-size: 0.64rem;
+}
+
+.admin-highlight-editor-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.admin-highlight-editor-title-label,
+.admin-highlight-editor-sr-label {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.admin-highlight-editor-title {
+  width: 100%;
+  border: 0;
+  border-bottom: 1px solid transparent;
+  outline: none;
+  background: transparent;
+  padding: 0 0 0.25rem;
+  color: var(--dashboard-green-900);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.8rem, 4vw, 2.65rem);
+  font-weight: 700;
+  line-height: 1.12;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.admin-highlight-editor-title::placeholder {
+  color: #9ba49e;
+}
+
+.admin-highlight-editor-title:hover,
+.admin-highlight-editor-title:focus {
+  border-color: rgba(160, 120, 48, 0.55);
+  background: linear-gradient(180deg, transparent, rgba(255, 250, 235, 0.75));
+}
+
+.admin-highlight-editor-meta label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.38rem 0.25rem 0.52rem;
+  border: 1px solid #e0e5e1;
+  border-radius: 999px;
+  background: #fff;
+}
+
+.admin-highlight-editor-meta label > span {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #7a837d;
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.admin-highlight-editor-meta select,
+.admin-highlight-editor-meta input {
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background: transparent;
+  color: var(--dashboard-green-800);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.admin-highlight-editor-meta select {
+  max-width: 11rem;
+}
+
+.admin-highlight-editor-meta input[type="date"] {
+  width: 8.3rem;
+}
+
+.admin-highlight-editor-language {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #e1e6e2;
+  border-radius: 0.82rem;
+  background: #f4f7f4;
+}
+
+.admin-highlight-editor-language > span {
+  color: #758079;
+  font-size: 0.63rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.admin-highlight-editor-language > div {
+  display: inline-flex;
+  gap: 0.22rem;
+}
+
+.admin-highlight-editor-language button {
+  min-height: 2rem;
+  border: 0;
+  border-radius: 0.58rem;
+  background: transparent;
+  padding: 0.4rem 0.65rem;
+  color: #69736c;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-highlight-editor-language button.is-active {
+  background: #fff;
+  color: var(--dashboard-green-900);
+  box-shadow: 0 3px 10px rgba(13, 43, 31, 0.09);
+}
+
+.admin-highlight-editor-section header {
+  align-items: flex-start;
+}
+
+.admin-highlight-editor-section header div {
+  min-width: 0;
+}
+
+.admin-highlight-editor-section header small {
+  display: block;
+  margin-top: 0.12rem;
+  color: #818a84;
+  font-size: 0.62rem;
+}
+
+.admin-highlight-editor-section [data-highlight-editor-lang-panel][hidden] {
+  display: none;
+}
+
+.admin-highlight-editor-section textarea {
+  width: 100%;
+  min-height: 7rem;
+  max-height: 26rem;
+  resize: vertical;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0.15rem 0;
+  color: #5f6962;
+  font-size: 0.82rem;
+  line-height: 1.72;
+}
+
+.admin-highlight-editor-section textarea[data-highlight-editor-copy="long"] {
+  min-height: 14rem;
+}
+
+.admin-highlight-editor-section textarea::placeholder {
+  color: #9aa39d;
+}
+
+.admin-highlight-editor-section:focus-within {
+  border-color: rgba(160, 120, 48, 0.45);
+  box-shadow: 0 7px 22px rgba(160, 120, 48, 0.08);
+}
+
+.admin-highlight-editor-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid #dfd4ae;
+  border-radius: 0.85rem;
+  background: #fff9e7;
+  color: #71603c;
+}
+
+.admin-highlight-editor-note svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  margin-top: 0.08rem;
+  fill: var(--dashboard-gold-600);
+}
+
+.admin-highlight-editor-note p {
+  margin: 0;
+  font-size: 0.69rem;
+  line-height: 1.55;
+}
+
+.admin-highlight-editor-note strong {
+  display: block;
+  margin-top: 0.25rem;
+}
+
+.admin-highlight-editor-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.55rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid #dfe4e0;
 }
 
 @media (max-width: 1050px) {
@@ -3926,6 +4253,15 @@ body.admin-confirm-open {
     flex-direction: column;
   }
 
+  .admin-highlight-editor-status-field,
+  .admin-highlight-editor-actions {
+    width: 100%;
+  }
+
+  .admin-highlight-editor-actions > * {
+    flex: 1 1 auto;
+  }
+
   .admin-highlight-view-actions {
     width: 100%;
   }
@@ -3949,6 +4285,23 @@ body.admin-confirm-open {
 
   .admin-highlight-view-facts dl {
     grid-template-columns: 1fr;
+  }
+
+  .admin-highlight-editor-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-highlight-editor-meta label {
+    width: 100%;
+    justify-content: space-between;
+    border-radius: 0.72rem;
+  }
+
+  .admin-highlight-editor-meta select,
+  .admin-highlight-editor-meta input[type="date"] {
+    width: auto;
+    max-width: 65%;
   }
 
   .admin-highlight-create-action {
@@ -4027,6 +4380,8 @@ body.admin-confirm-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .admin-highlight-editor-upload,
+  .admin-highlight-editor-title,
   .admin-highlight-view-action,
   .admin-highlight-create-action,
   .admin-highlight-library-card,

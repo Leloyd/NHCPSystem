@@ -4,9 +4,9 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'community-highlights' %}
 {% set admin_topbar_title = form_title %}
-{% set admin_topbar_subtitle = 'Create or update Community Highlight cards shown in the Community Participation page.' %}
+{% set admin_topbar_subtitle = 'Compose the card directly inside a preview of its final detail layout.' %}
 {% set admin_topbar_tool_href = url_for('admin_community_highlights') %}
-{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_label = 'Back to highlights' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
 {% block admin_content %}
@@ -17,74 +17,211 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <form
+            method="post"
+            action="{{ form_action }}"
+            enctype="multipart/form-data"
+            class="admin-highlight-view admin-highlight-editor"
+            data-highlight-editor
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <div class="admin-highlight-view-accent" aria-hidden="true"></div>
 
-              <div class="admin-form-grid">
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="highlightTitle">Title</label>
-                  <input id="highlightTitle" name="title" type="text" maxlength="180" required value="{{ highlight_form.title }}" />
+            <header class="admin-highlight-view-management admin-highlight-editor-management">
+              <div class="admin-highlight-editor-status-field">
+                <label for="highlightStatus">Publication status</label>
+                <select id="highlightStatus" name="status" required data-highlight-editor-status>
+                  {% for status_option in status_options %}
+                  <option value="{{ status_option }}" {% if highlight_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
+                  {% endfor %}
+                </select>
+                {% if highlight_form.is_featured %}
+                <span class="admin-highlight-featured-badge">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg>
+                  Featured
+                </span>
+                {% endif %}
+              </div>
+
+              <div class="admin-highlight-editor-actions">
+                <a href="{{ url_for('admin_community_highlights') }}" class="admin-highlight-view-action is-secondary">Cancel</a>
+                <button type="submit" class="admin-highlight-view-action is-primary">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l2 2v16H5Zm2 2v14h10V6.8L15.2 5H15v5H9V5Zm4 0v3h2V5Zm1 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"></path></svg>
+                  {{ submit_label }}
+                </button>
+              </div>
+            </header>
+
+            <div class="admin-highlight-view-layout admin-highlight-editor-layout">
+              <div class="admin-highlight-view-media-column">
+                <figure class="admin-highlight-view-media admin-highlight-editor-media">
+                  <img
+                    src="{{ highlight_form.image_url or '' }}"
+                    alt=""
+                    data-highlight-editor-image-preview
+                    {% if not highlight_form.image_url %}hidden{% endif %}
+                  />
+                  <div
+                    class="admin-highlight-view-media-fallback"
+                    data-highlight-editor-image-fallback
+                    {% if highlight_form.image_url %}hidden{% endif %}
+                  >
+                    <span data-highlight-editor-fallback-letter>{{ (highlight_form.title or 'C')[:1]|upper }}</span>
+                    <small>Image preview</small>
+                  </div>
+                  <figcaption>
+                    <span data-highlight-editor-output="category">{{ highlight_form.category }}</span>
+                    <span data-highlight-editor-output="date">{{ highlight_form.event_date or 'Select a date' }}</span>
+                  </figcaption>
+                </figure>
+
+                <label class="admin-highlight-editor-upload" for="highlightImage">
+                  <span class="admin-highlight-editor-upload-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                  </span>
+                  <span>
+                    <strong>{% if highlight_form.image_filename %}Replace image{% else %}Upload card image{% endif %}</strong>
+                    <small>JPG or PNG, up to 50 MB</small>
+                  </span>
+                  <input id="highlightImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-highlight-editor-image-input />
+                </label>
+
+                <section
+                  class="admin-highlight-view-visibility {% if highlight_form.status == 'active' %}is-active{% elif highlight_form.status == 'archived' %}is-archived{% else %}is-draft{% endif %}"
+                  data-highlight-editor-visibility
+                >
+                  <span class="admin-highlight-view-visibility-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path data-highlight-editor-visibility-icon d="M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z"></path></svg>
+                  </span>
+                  <span>
+                    <small>Public visibility</small>
+                    <strong data-highlight-editor-visibility-text>
+                      {% if highlight_form.status == 'active' %}Visible on the public site{% elif highlight_form.status == 'archived' %}Archived and hidden{% else %}Draft and hidden{% endif %}
+                    </strong>
+                  </span>
+                </section>
+              </div>
+
+              <div class="admin-highlight-view-content admin-highlight-editor-content">
+                <p class="admin-highlight-manager-eyebrow">Editable highlight preview</p>
+                <label class="admin-highlight-editor-title-label" for="highlightTitle">Highlight title</label>
+                <input
+                  id="highlightTitle"
+                  class="admin-highlight-editor-title"
+                  name="title"
+                  type="text"
+                  maxlength="180"
+                  required
+                  value="{{ highlight_form.title }}"
+                  placeholder="Enter the community highlight title"
+                  data-highlight-editor-title
+                />
+
+                <div class="admin-highlight-view-meta admin-highlight-editor-meta">
+                  <label>
+                    <span>Category</span>
+                    <select id="highlightCategory" name="category" required data-highlight-editor-category>
+                      {% for category_option in category_options %}
+                      <option value="{{ category_option }}" {% if highlight_form.category == category_option %}selected{% endif %}>{{ category_option }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <label>
+                    <span>Event date</span>
+                    <input id="highlightDate" name="event_date" type="date" required value="{{ highlight_form.event_date }}" data-highlight-editor-date />
+                  </label>
+                  <span data-highlight-editor-read-time>1 min read</span>
                 </div>
 
-                <div class="admin-form-field">
-                  <label for="highlightCategory">Category</label>
-                  <select id="highlightCategory" name="category" required>
-                    {% for category_option in category_options %}
-                    <option value="{{ category_option }}" {% if highlight_form.category == category_option %}selected{% endif %}>{{ category_option }}</option>
-                    {% endfor %}
-                  </select>
+                <div class="admin-highlight-editor-language" role="group" aria-label="Description language">
+                  <span>Editing language</span>
+                  <div>
+                    <button type="button" class="is-active" data-highlight-editor-lang="en" aria-pressed="true">English</button>
+                    <button type="button" data-highlight-editor-lang="tl" aria-pressed="false">Tagalog</button>
+                  </div>
                 </div>
 
-                <div class="admin-form-field">
-                  <label for="highlightDate">Date</label>
-                  <input id="highlightDate" name="event_date" type="date" required value="{{ highlight_form.event_date }}" />
-                </div>
+                <section class="admin-highlight-view-section admin-highlight-editor-section">
+                  <header>
+                    <span>01</span>
+                    <div>
+                      <h2>Overview</h2>
+                      <small data-highlight-editor-language-label>English short description</small>
+                    </div>
+                  </header>
+                  <div data-highlight-editor-lang-panel="en">
+                    <label class="admin-highlight-editor-sr-label" for="highlightShortDescription">English short description</label>
+                    <textarea
+                      id="highlightShortDescription"
+                      name="short_description"
+                      rows="4"
+                      minlength="12"
+                      aria-required="true"
+                      placeholder="Write the short English summary shown on the card."
+                      data-highlight-editor-copy="short"
+                    >{{ highlight_form.short_description }}</textarea>
+                  </div>
+                  <div data-highlight-editor-lang-panel="tl" hidden>
+                    <label class="admin-highlight-editor-sr-label" for="highlightShortDescriptionTl">Tagalog short description</label>
+                    <textarea
+                      id="highlightShortDescriptionTl"
+                      name="short_description_tl"
+                      rows="4"
+                      minlength="12"
+                      aria-required="true"
+                      placeholder="Isulat ang maikling paglalarawan sa Tagalog."
+                      data-highlight-editor-copy="short"
+                    >{{ highlight_form.short_description_tl }}</textarea>
+                  </div>
+                </section>
 
-                <div class="admin-form-field">
-                  <label for="highlightStatus">Status</label>
-                  <select id="highlightStatus" name="status" required>
-                    {% for status_option in status_options %}
-                    <option value="{{ status_option }}" {% if highlight_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
+                <section class="admin-highlight-view-section admin-highlight-editor-section">
+                  <header>
+                    <span>02</span>
+                    <div>
+                      <h2>Full Description</h2>
+                      <small data-highlight-editor-language-label>English full description</small>
+                    </div>
+                  </header>
+                  <div data-highlight-editor-lang-panel="en">
+                    <label class="admin-highlight-editor-sr-label" for="highlightLongDescription">English full description</label>
+                    <textarea
+                      id="highlightLongDescription"
+                      name="long_description"
+                      rows="10"
+                      minlength="24"
+                      aria-required="true"
+                      placeholder="Write the complete English story or announcement."
+                      data-highlight-editor-copy="long"
+                    >{{ highlight_form.long_description }}</textarea>
+                  </div>
+                  <div data-highlight-editor-lang-panel="tl" hidden>
+                    <label class="admin-highlight-editor-sr-label" for="highlightLongDescriptionTl">Tagalog full description</label>
+                    <textarea
+                      id="highlightLongDescriptionTl"
+                      name="long_description_tl"
+                      rows="10"
+                      minlength="24"
+                      aria-required="true"
+                      placeholder="Isulat ang buong kuwento o anunsyo sa Tagalog."
+                      data-highlight-editor-copy="long"
+                    >{{ highlight_form.long_description_tl }}</textarea>
+                  </div>
+                </section>
 
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="highlightShortDescription">Short Description</label>
-                  <textarea id="highlightShortDescription" name="short_description" rows="4" required>{{ highlight_form.short_description }}</textarea>
-                  <p class="admin-field-hint">This appears on the Community Highlights card preview.</p>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="highlightLongDescription">Full Description</label>
-                  <textarea id="highlightLongDescription" name="long_description" rows="10" required>{{ highlight_form.long_description }}</textarea>
-                  <p class="admin-field-hint">This appears on the public read more page for the selected highlight.</p>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="highlightImage">Card Image (JPG or PNG)</label>
-                  <input id="highlightImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                  {% if highlight_form.image_filename %}
-                  <p class="admin-field-hint">Current image: <strong>{{ highlight_form.image_filename }}</strong></p>
-                  {% else %}
-                  <p class="admin-field-hint">Upload an image for the highlight card and detail page. Upload 50MB size.</p>
-                  {% endif %}
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label>Featured placement</label>
-                  <p class="admin-field-hint">
-                    Featured highlights are managed from the Active Cards section in the list view. Only one active card can be featured at a time.
-                    {% if highlight_form.is_featured %}<strong>This card is currently featured.</strong>{% endif %}
+                <aside class="admin-highlight-editor-note">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 10h2v7h-2Zm0-4h2v2h-2Zm1-4a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"></path></svg>
+                  <p>
+                    English and Tagalog descriptions are both required before saving. If an older published card has no Tagalog translation yet, the public page continues showing its English copy until you update it here.
+                    {% if highlight_form.is_featured %}<strong>This card currently holds the featured position.</strong>{% endif %}
                   </p>
+                </aside>
+
+                <div class="admin-highlight-editor-footer">
+                  <a href="{{ url_for('admin_community_highlights') }}" class="admin-highlight-view-action is-secondary">Cancel</a>
+                  <button type="submit" class="admin-highlight-view-action is-primary">{{ submit_label }}</button>
                 </div>
               </div>
-
-              <div class="admin-form-actions">
-                <a href="{{ url_for('admin_community_highlights') }}" class="admin-secondary-action">Cancel</a>
-                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
-              </div>
-            </form>
-          </section>
+            </div>
+          </form>
 {% endblock %}

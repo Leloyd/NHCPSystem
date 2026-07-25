@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'community-participation' %}
@@ -68,12 +69,18 @@
 
               <section class="ogd-detail-section-card">
                 <h2 class="ogd-detail-section-card__title">Overview</h2>
-                <p class="ogd-detail-description">{{ highlight_item.short_description }}</p>
+                <p class="ogd-detail-description">
+                  <span data-lang-en>{{ highlight_item.short_description }}</span>
+                  <span data-lang-tl>{{ highlight_item.short_description_tl or highlight_item.short_description }}</span>
+                </p>
               </section>
 
               <section class="ogd-detail-section-card">
                 <h2 class="ogd-detail-section-card__title">Full Description</h2>
-                <p class="ogd-detail-description">{{ highlight_item.long_description }}</p>
+                <p class="ogd-detail-description">
+                  <span data-lang-en>{{ highlight_item.long_description }}</span>
+                  <span data-lang-tl>{{ highlight_item.long_description_tl or highlight_item.long_description }}</span>
+                </p>
               </section>
 
               <section class="ogd-detail-facts">
@@ -151,7 +158,10 @@
 
                 <div class="ogd-artifact-card__body">
                   <h3 class="ogd-artifact-card__title font-serif">{{ related_item.title }}</h3>
-                  <p class="ogd-artifact-card__summary">{{ related_item.short_description }}</p>
+                  <p class="ogd-artifact-card__summary">
+                    <span data-lang-en>{{ related_item.short_description }}</span>
+                    <span data-lang-tl>{{ related_item.short_description_tl or related_item.short_description }}</span>
+                  </p>
 
                   <div class="ogd-artifact-card__meta">
                     <i data-lucide="calendar-days" aria-hidden="true"></i>
@@ -174,44 +184,11 @@
       </section>
     </main>
 
-    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
-      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Accessibility controls">
-        <div class="ogd-accessibility-panel__header">
-          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Accessibility Controls</h2>
-          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Close accessibility panel">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-
-        <div class="ogd-accessibility-panel__group">
-          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Text Size</p>
-          <div class="ogd-accessibility-segmented" role="group" aria-label="Text size options">
-            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Small</button>
-            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Medium</button>
-            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Large</button>
-          </div>
-        </div>
-
-        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
-          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">High Contrast</span>
-          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
-        </button>
-
-        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Switch language">
-          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Language</span>
-          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">EN</span>
-        </button>
-      </div>
-
-      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Open accessibility panel" aria-expanded="false" aria-haspopup="dialog">
-        <i data-lucide="accessibility" aria-hidden="true"></i>
-      </button>
-    </div>
-
+    {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/community-detail.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
+    {% include 'partials/_site_prefs_foot.html' %}
   </body>
 </html>

@@ -111,6 +111,8 @@ CREATE TABLE public.community_highlights (
   event_date date NOT NULL,
   short_description text NOT NULL,
   long_description text NOT NULL,
+  short_description_tl text NOT NULL DEFAULT ''::text,
+  long_description_tl text NOT NULL DEFAULT ''::text,
   image_filename text,
   status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),
   is_featured boolean NOT NULL DEFAULT false,

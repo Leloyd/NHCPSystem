@@ -1045,6 +1045,246 @@
     applyFilters({ updateUrl: false });
   }
 
+  function initAdminHighlightEditor() {
+    var editor = document.querySelector("[data-highlight-editor]");
+    if (!editor) {
+      return;
+    }
+
+    var languageButtons = Array.prototype.slice.call(
+      editor.querySelectorAll("[data-highlight-editor-lang]")
+    );
+    var languagePanels = Array.prototype.slice.call(
+      editor.querySelectorAll("[data-highlight-editor-lang-panel]")
+    );
+    var languageLabels = Array.prototype.slice.call(
+      editor.querySelectorAll("[data-highlight-editor-language-label]")
+    );
+    var statusSelect = editor.querySelector("[data-highlight-editor-status]");
+    var visibility = editor.querySelector("[data-highlight-editor-visibility]");
+    var visibilityText = editor.querySelector("[data-highlight-editor-visibility-text]");
+    var visibilityPath = editor.querySelector("[data-highlight-editor-visibility-icon]");
+    var titleInput = editor.querySelector("[data-highlight-editor-title]");
+    var fallbackLetter = editor.querySelector("[data-highlight-editor-fallback-letter]");
+    var categoryInput = editor.querySelector("[data-highlight-editor-category]");
+    var dateInput = editor.querySelector("[data-highlight-editor-date]");
+    var imageInput = editor.querySelector("[data-highlight-editor-image-input]");
+    var imagePreview = editor.querySelector("[data-highlight-editor-image-preview]");
+    var imageFallback = editor.querySelector("[data-highlight-editor-image-fallback]");
+    var readTime = editor.querySelector("[data-highlight-editor-read-time]");
+    var copyFields = Array.prototype.slice.call(
+      editor.querySelectorAll("[data-highlight-editor-copy]")
+    );
+    var activeLanguage = "en";
+    var previewObjectUrl = "";
+
+    var visibilityStates = {
+      active: {
+        className: "is-active",
+        text: "Visible on the public site",
+        path: "M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z",
+      },
+      draft: {
+        className: "is-draft",
+        text: "Draft and hidden",
+        path: "M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z",
+      },
+      archived: {
+        className: "is-archived",
+        text: "Archived and hidden",
+        path: "M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z",
+      },
+    };
+
+    function setLanguage(language) {
+      activeLanguage = language === "tl" ? "tl" : "en";
+      languageButtons.forEach(function (button) {
+        var isActive = button.getAttribute("data-highlight-editor-lang") === activeLanguage;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+      languagePanels.forEach(function (panel) {
+        var isActive = panel.getAttribute("data-highlight-editor-lang-panel") === activeLanguage;
+        panel.hidden = !isActive;
+        if (isActive) {
+          Array.prototype.slice.call(
+            panel.querySelectorAll("[data-highlight-editor-copy]")
+          ).forEach(resizeCopyField);
+        }
+      });
+      languageLabels.forEach(function (label) {
+        var section = label.closest(".admin-highlight-editor-section");
+        var isShort = Boolean(section && section.querySelector('[data-highlight-editor-copy="short"]'));
+        label.textContent =
+          (activeLanguage === "tl" ? "Tagalog " : "English ") +
+          (isShort ? "short description" : "full description");
+      });
+      updateReadTime();
+    }
+
+    function updateVisibility() {
+      if (!statusSelect || !visibility) {
+        return;
+      }
+      var state = visibilityStates[statusSelect.value] || visibilityStates.draft;
+      visibility.classList.remove("is-active", "is-draft", "is-archived");
+      visibility.classList.add(state.className);
+      if (visibilityText) {
+        visibilityText.textContent = state.text;
+      }
+      if (visibilityPath) {
+        visibilityPath.setAttribute("d", state.path);
+      }
+    }
+
+    function updateFallbackLetter() {
+      if (!fallbackLetter || !titleInput) {
+        return;
+      }
+      var title = String(titleInput.value || "").trim();
+      fallbackLetter.textContent = (title.charAt(0) || "C").toUpperCase();
+    }
+
+    function updateCategory() {
+      if (!categoryInput) {
+        return;
+      }
+      Array.prototype.slice.call(
+        editor.querySelectorAll('[data-highlight-editor-output="category"]')
+      ).forEach(function (output) {
+        output.textContent = categoryInput.value;
+      });
+    }
+
+    function updateDate() {
+      var value = dateInput && dateInput.value;
+      var label = "Select a date";
+      if (value) {
+        var parsed = new Date(value + "T00:00:00");
+        if (!Number.isNaN(parsed.getTime())) {
+          label = parsed.toLocaleDateString("en-US", {
+            month: "long",
+            day: "numeric",
+            year: "numeric",
+          });
+        }
+      }
+      Array.prototype.slice.call(
+        editor.querySelectorAll('[data-highlight-editor-output="date"]')
+      ).forEach(function (output) {
+        output.textContent = label;
+      });
+    }
+
+    function updateReadTime() {
+      if (!readTime) {
+        return;
+      }
+      var activeLong = editor.querySelector(
+        '[data-highlight-editor-lang-panel="' + activeLanguage + '"] [data-highlight-editor-copy="long"]'
+      );
+      var words = String((activeLong && activeLong.value) || "")
+        .trim()
+        .split(/\s+/)
+        .filter(Boolean).length;
+      var minutes = Math.max(1, Math.round(words / 180));
+      readTime.textContent = minutes + " min read";
+    }
+
+    function resizeCopyField(field) {
+      if (!field) {
+        return;
+      }
+      field.style.height = "auto";
+      field.style.height = Math.min(Math.max(field.scrollHeight, 112), 416) + "px";
+    }
+
+    function updateImagePreview() {
+      if (!imageInput || !imagePreview || !imageFallback) {
+        return;
+      }
+      var file = imageInput.files && imageInput.files[0];
+      if (!file || !String(file.type || "").startsWith("image/")) {
+        return;
+      }
+      if (previewObjectUrl) {
+        window.URL.revokeObjectURL(previewObjectUrl);
+      }
+      previewObjectUrl = window.URL.createObjectURL(file);
+      imagePreview.src = previewObjectUrl;
+      imagePreview.hidden = false;
+      imageFallback.hidden = true;
+    }
+
+    languageButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        setLanguage(button.getAttribute("data-highlight-editor-lang"));
+      });
+    });
+    if (statusSelect) {
+      statusSelect.addEventListener("change", updateVisibility);
+    }
+    if (titleInput) {
+      titleInput.addEventListener("input", updateFallbackLetter);
+    }
+    if (categoryInput) {
+      categoryInput.addEventListener("change", updateCategory);
+    }
+    if (dateInput) {
+      dateInput.addEventListener("change", updateDate);
+      dateInput.addEventListener("input", updateDate);
+    }
+    if (imageInput) {
+      imageInput.addEventListener("change", updateImagePreview);
+    }
+    copyFields.forEach(function (field) {
+      field.addEventListener("input", function () {
+        field.setCustomValidity("");
+        resizeCopyField(field);
+        if (field.getAttribute("data-highlight-editor-copy") === "long") {
+          updateReadTime();
+        }
+      });
+      resizeCopyField(field);
+    });
+
+    editor.addEventListener("submit", function (event) {
+      var requirements = [
+        { name: "short_description", min: 12, language: "en", message: "Enter at least 12 characters for the English short description." },
+        { name: "long_description", min: 24, language: "en", message: "Enter at least 24 characters for the English full description." },
+        { name: "short_description_tl", min: 12, language: "tl", message: "Enter at least 12 characters for the Tagalog short description." },
+        { name: "long_description_tl", min: 24, language: "tl", message: "Enter at least 24 characters for the Tagalog full description." },
+      ];
+      var invalid = requirements.find(function (requirement) {
+        var field = editor.elements[requirement.name];
+        return !field || String(field.value || "").trim().length < requirement.min;
+      });
+      if (!invalid) {
+        return;
+      }
+      event.preventDefault();
+      var invalidField = editor.elements[invalid.name];
+      setLanguage(invalid.language);
+      if (invalidField) {
+        invalidField.setCustomValidity(invalid.message);
+        invalidField.focus();
+        invalidField.reportValidity();
+      }
+    });
+
+    window.addEventListener("beforeunload", function () {
+      if (previewObjectUrl) {
+        window.URL.revokeObjectURL(previewObjectUrl);
+      }
+    });
+
+    setLanguage("en");
+    updateVisibility();
+    updateFallbackLetter();
+    updateCategory();
+    updateDate();
+  }
+
   function initDashboardUi() {
     var toggle = document.querySelector("[data-sidebar-toggle]");
     var overlay = document.querySelector("[data-sidebar-overlay]");
@@ -1084,6 +1324,7 @@
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();
+    initAdminHighlightEditor();
     initAutoDismissAlerts();
   }
 

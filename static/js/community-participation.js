@@ -29,6 +29,22 @@ let currentYear = now.getFullYear();
 let selectedDate = null;
 let selectedEvent = null;
 
+function escapeCommunityHtml(value) {
+  return String(value == null ? "" : value).replace(/[&<>"']/g, character => ({
+    "&": "&amp;",
+    "<": "&lt;",
+    ">": "&gt;",
+    '"': "&quot;",
+    "'": "&#39;",
+  })[character]);
+}
+
+function bilingualCommunityCopy(english, tagalog) {
+  const safeEnglish = escapeCommunityHtml(english);
+  const safeTagalog = escapeCommunityHtml(tagalog || english);
+  return `<span data-lang-en>${safeEnglish}</span><span data-lang-tl>${safeTagalog}</span>`;
+}
+
 const categoryConfig = {
   "Confirmed Booking": {
     label: "Confirmed Booking",
@@ -112,7 +128,7 @@ function renderHighlights() {
                 ${featured.category}
               </span>
               <h3 class="highlight-card-title" style="font-size: 1.4rem; margin-bottom: 0.75rem;">${featured.title}</h3>
-              <p class="highlight-card-excerpt">${featured.short_description}</p>
+              <p class="highlight-card-excerpt">${bilingualCommunityCopy(featured.short_description, featured.short_description_tl)}</p>
             </div>
             <div class="highlight-card-footer">
               <div class="highlight-card-meta">
@@ -155,7 +171,7 @@ function renderHighlights() {
           ${item.category}
         </span>
         <h3 class="highlight-card-title">${item.title}</h3>
-        <p class="highlight-card-excerpt">${item.short_description}</p>
+        <p class="highlight-card-excerpt">${bilingualCommunityCopy(item.short_description, item.short_description_tl)}</p>
         <div class="highlight-card-footer">
           <span class="highlight-card-meta">
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
