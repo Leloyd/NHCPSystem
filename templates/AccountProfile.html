@@ -7,141 +7,269 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-100 text-stone-900">
+  <body class="min-h-screen bg-[#f7f1e4] text-stone-900">
     {% set public_active_page = '' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="pt-28 pb-16 px-4">
-      <div class="max-w-7xl mx-auto space-y-8">
-        <section class="rounded-3xl bg-gradient-to-r from-stone-900 to-amber-900 text-white px-8 py-8 shadow-xl">
-          <p class="text-xs uppercase tracking-[0.3em] text-amber-200">User Dashboard</p>
-          <h1 class="mt-3 text-4xl font-serif">{{ current_public_user.full_name or current_public_user.username }}</h1>
-          <p class="mt-3 text-stone-200 max-w-3xl">Track your bookmarks, booking requests, participation submissions, and visitor feedback from one secure session-based account.</p>
-        </section>
+    {% set _name = current_public_user.full_name or current_public_user.username or 'Member' %}
+    {% set _parts = _name.split() %}
+    {% set _initials = ((_parts[0][:1] if _parts else 'M') ~ (_parts[1][:1] if _parts|length > 1 else '')) | upper %}
+    {% set _roles_clean = (current_public_user.profile_roles or '') | replace('[',' ') | replace(']',' ') | replace('"',' ') | replace("'", ' ') %}
+    {% set _roles = _roles_clean.split(',') | map('trim') | select | list %}
+    {% set _location = [current_public_user.city_text, current_public_user.province_text, current_public_user.country_text] | select | join(', ') %}
 
-        <section class="grid grid-cols-1 md:grid-cols-4 gap-5">
-          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
-            <p class="text-sm text-stone-500">Bookmarked Artifacts</p>
-            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.bookmarked_items|length }}</p>
-          </article>
-          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
-            <p class="text-sm text-stone-500">Tour Bookings</p>
-            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.tour_bookings|length }}</p>
-          </article>
-          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
-            <p class="text-sm text-stone-500">Participation Submissions</p>
-            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.participation_submissions|length }}</p>
-          </article>
-          <article class="rounded-3xl bg-white border border-stone-200 px-6 py-5 shadow-sm">
-            <p class="text-sm text-stone-500">Visitor Feedback</p>
-            <p class="mt-2 text-3xl font-semibold text-amber-800">{{ account_dashboard.visitor_feedback|length }}</p>
-          </article>
-        </section>
+    <main class="pt-24 sm:pt-28 pb-14 px-4">
+      <div class="max-w-7xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="flex justify-end mb-4">
+          <nav class="flex items-center gap-2 text-xs text-[#9a8060]">
+            <a href="/" class="hover:text-[#b8963e] transition-colors">Home</a>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+            <span class="text-[#b8963e]">My Account</span>
+          </nav>
+        </div>
 
-        <section class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-stone-200">
-              <h2 class="text-2xl font-serif text-stone-900">My Bookmarks</h2>
+        <!-- Hero -->
+        <section class="relative overflow-hidden rounded-3xl px-6 py-7 sm:px-9 sm:py-9 text-white shadow-lg" style="background: linear-gradient(135deg, #2c1a0e 0%, #1a1008 55%, #3d2b1f 100%);">
+          <div class="absolute -top-16 -right-10 h-52 w-52 rounded-full opacity-20 blur-3xl" style="background:#c9a84c;"></div>
+          <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+            <div class="flex h-16 w-16 sm:h-20 sm:w-20 flex-none items-center justify-center rounded-2xl text-2xl sm:text-3xl font-semibold text-stone-950 shadow-lg" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
+            <div class="min-w-0">
+              <p class="text-[11px] uppercase tracking-[0.28em] text-amber-200/80">Welcome back</p>
+              <h1 class="mt-2 text-2xl sm:text-4xl font-serif leading-tight truncate">{{ _name }}</h1>
+              <p class="mt-2 max-w-2xl text-sm sm:text-base leading-relaxed text-stone-300">Your bookmarks, bookings, submissions, and feedback — all in one place.</p>
             </div>
-            <div class="p-6 space-y-4">
-              {% if account_dashboard.bookmarked_items %}
-                {% for item in account_dashboard.bookmarked_items %}
-                <a href="/online-gallery/details?item={{ item.id }}" class="block rounded-2xl border border-stone-200 p-4 hover:border-amber-400 hover:bg-amber-50/40 transition-colors">
-                  <p class="text-xs uppercase tracking-[0.2em] text-amber-700">{{ item.category_tl or item.category }}</p>
-                  <h3 class="mt-2 text-lg font-semibold text-stone-900">{{ item.title_tl or item.title }}</h3>
-                  <p class="mt-2 text-sm text-stone-600">{{ item.short_caption_tl or item.short_caption }}</p>
+          </div>
+        </section>
+
+        <!-- Sidebar + content -->
+        <div class="mt-6 grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+          <!-- ============ Sidebar ============ -->
+          <aside class="space-y-4 self-start lg:sticky lg:top-24">
+            <!-- Profile card -->
+            <div class="rounded-3xl border border-amber-200/70 bg-white p-6 shadow-sm">
+              <div class="flex items-center gap-3">
+                <div class="flex h-12 w-12 flex-none items-center justify-center rounded-2xl text-lg font-semibold text-stone-950" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
+                <div class="min-w-0">
+                  <p class="truncate font-semibold text-stone-900">{{ _name }}</p>
+                  <p class="truncate text-sm text-stone-500">@{{ current_public_user.username }}</p>
+                </div>
+              </div>
+
+              <div class="mt-5 space-y-3 text-sm">
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="mail" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="min-w-0 break-words text-stone-600">{{ current_public_user.email }}</span>
+                  {% if current_public_user.email_verified_at %}
+                  <span class="ml-auto inline-flex flex-none items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">Verified</span>
+                  {% endif %}
+                </div>
+                {% if _location %}
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="map-pin" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="text-stone-600">{{ _location }}</span>
+                </div>
+                {% endif %}
+                {% if current_public_user.organization %}
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="building-2" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="text-stone-600">{{ current_public_user.organization }}</span>
+                </div>
+                {% endif %}
+                {% if current_public_user.created_at %}
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="calendar" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="text-stone-600">Joined {{ current_public_user.created_at[:10] }}</span>
+                </div>
+                {% endif %}
+              </div>
+
+              {% if _roles %}
+              <div class="mt-5 border-t border-stone-100 pt-4">
+                <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Roles</p>
+                <div class="flex flex-wrap gap-1.5">
+                  {% for role in _roles %}
+                  <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{{ role }}</span>
+                  {% endfor %}
+                </div>
+              </div>
+              {% endif %}
+            </div>
+
+            <!-- Quick actions -->
+            <div class="rounded-3xl border border-amber-200/70 bg-white p-4 shadow-sm">
+              <p class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Quick actions</p>
+              <nav class="grid gap-1">
+                <a href="/online-gallery" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="images" class="h-4 w-4 text-amber-700"></i> Browse Online Gallery
                 </a>
-                {% endfor %}
-              {% else %}
-                <p class="text-sm text-stone-500">You have not bookmarked any artifacts yet.</p>
-              {% endif %}
+                <a href="/virtual-tour" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="compass" class="h-4 w-4 text-amber-700"></i> Start the Virtual Tour
+                </a>
+                <a href="/community-participation" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="users" class="h-4 w-4 text-amber-700"></i> Community &amp; Bookings
+                </a>
+                <a href="/support" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="life-buoy" class="h-4 w-4 text-amber-700"></i> Support &amp; Governance
+                </a>
+              </nav>
             </div>
-          </article>
+          </aside>
 
-          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-stone-200">
-              <h2 class="text-2xl font-serif text-stone-900">My Tour Bookings</h2>
-            </div>
-            <div class="p-6 space-y-4">
-              {% if account_dashboard.tour_bookings %}
-                {% for booking in account_dashboard.tour_bookings %}
-                <div class="rounded-2xl border border-stone-200 p-4">
-                  <div class="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 class="text-lg font-semibold text-stone-900">{{ booking.display_title }}</h3>
-                      <p class="mt-1 text-sm text-stone-600">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p>
-                      <p class="mt-2 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} visitors</p>
-                      {% if booking.rescheduled_display_date %}
-                      <p class="mt-2 text-sm text-stone-600">Rescheduled date: {{ booking.rescheduled_display_date }}</p>
-                      {% endif %}
-                      {% if booking.decision_reason %}
-                      <p class="mt-2 text-sm text-stone-600">Reason: {{ booking.decision_reason }}</p>
-                      {% endif %}
-                    </div>
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'confirmed' %}bg-green-100 text-green-800{% elif booking.status == 'cancelled' %}bg-red-100 text-red-700{% elif booking.status == 'rescheduled' %}bg-blue-100 text-blue-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
-                  </div>
+          <!-- ============ Main content ============ -->
+          <div class="space-y-6">
+            <!-- Stats -->
+            <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {% set _stats = [
+                {'label': 'Bookmarks', 'value': account_dashboard.bookmarked_items|length, 'icon': 'bookmark'},
+                {'label': 'Tour Bookings', 'value': account_dashboard.tour_bookings|length, 'icon': 'calendar-check'},
+                {'label': 'Submissions', 'value': account_dashboard.participation_submissions|length, 'icon': 'file-text'},
+                {'label': 'Feedback', 'value': account_dashboard.visitor_feedback|length, 'icon': 'star'}
+              ] %}
+              {% for stat in _stats %}
+              <article class="rounded-2xl border border-amber-200/70 bg-white px-4 py-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><i data-lucide="{{ stat.icon }}" class="h-4 w-4"></i></span>
+                  <span class="text-2xl font-bold text-stone-900">{{ stat.value }}</span>
                 </div>
-                {% endfor %}
-              {% else %}
-                <p class="text-sm text-stone-500">No booking requests yet.</p>
-              {% endif %}
-            </div>
-          </article>
-        </section>
+                <p class="mt-2 text-xs font-medium text-stone-500">{{ stat.label }}</p>
+              </article>
+              {% endfor %}
+            </section>
 
-        <section class="grid grid-cols-1 xl:grid-cols-2 gap-8">
-          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-stone-200">
-              <h2 class="text-2xl font-serif text-stone-900">Participation History</h2>
-            </div>
-            <div class="p-6 space-y-4">
-              {% if account_dashboard.participation_submissions %}
-                {% for submission in account_dashboard.participation_submissions %}
-                <div class="rounded-2xl border border-stone-200 p-4">
-                  <div class="flex items-start justify-between gap-4">
-                    <div>
-                      <p class="text-xs uppercase tracking-[0.2em] text-amber-700">{{ submission.submission_type|replace('_', ' ') }}</p>
-                      <h3 class="mt-2 text-lg font-semibold text-stone-900">{{ submission.title }}</h3>
-                      <p class="mt-2 text-sm text-stone-600">{{ submission.description or submission.story_content }}</p>
-                    </div>
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-stone-100 text-stone-700">{{ submission.status|replace('_', ' ') }}</span>
-                  </div>
+            <!-- Content grid -->
+            <section class="grid gap-6 xl:grid-cols-2">
+              <!-- Bookmarks -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="bookmark" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900">My Bookmarks</h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.bookmarked_items|length }}</span>
                 </div>
-                {% endfor %}
-              {% else %}
-                <p class="text-sm text-stone-500">No participation submissions yet.</p>
-              {% endif %}
-            </div>
-          </article>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.bookmarked_items %}
+                    {% for item in account_dashboard.bookmarked_items %}
+                    <a href="/online-gallery/details?item={{ item.id }}" class="block rounded-2xl border border-stone-200 p-4 transition-colors hover:border-amber-400 hover:bg-amber-50/50">
+                      <p class="text-[11px] uppercase tracking-[0.16em] text-amber-700">{{ item.category_tl or item.category }}</p>
+                      <h3 class="mt-1.5 font-semibold text-stone-900">{{ item.title_tl or item.title }}</h3>
+                      <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-2">{{ item.short_caption_tl or item.short_caption }}</p>
+                    </a>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="bookmark" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500">You have not bookmarked any artifacts yet.</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
 
-          <article class="rounded-3xl bg-white border border-stone-200 shadow-sm overflow-hidden">
-            <div class="px-6 py-5 border-b border-stone-200">
-              <h2 class="text-2xl font-serif text-stone-900">Visitor Feedback History</h2>
-            </div>
-            <div class="p-6 space-y-4">
-              {% if account_dashboard.visitor_feedback %}
-                {% for feedback in account_dashboard.visitor_feedback %}
-                <div class="rounded-2xl border border-stone-200 p-4">
-                  <div class="flex items-start justify-between gap-4">
-                    <div>
-                      <h3 class="text-lg font-semibold text-stone-900">{{ feedback.visit_type|replace('-', ' ')|title }} · {{ feedback.rating }}/5</h3>
-                      <p class="mt-2 text-sm text-stone-600">{{ feedback.comments }}</p>
-                    </div>
-                    <span class="inline-flex rounded-full px-3 py-1 text-xs font-semibold bg-stone-100 text-stone-700">{{ feedback.status|title }}</span>
-                  </div>
+              <!-- Tour Bookings -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="calendar-check" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900">My Tour Bookings</h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.tour_bookings|length }}</span>
                 </div>
-                {% endfor %}
-              {% else %}
-                <p class="text-sm text-stone-500">No visitor feedback submitted yet.</p>
-              {% endif %}
-            </div>
-          </article>
-        </section>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.tour_bookings %}
+                    {% for booking in account_dashboard.tour_bookings %}
+                    <div class="rounded-2xl border border-stone-200 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <h3 class="font-semibold text-stone-900">{{ booking.display_title }}</h3>
+                          <p class="mt-1 text-sm text-stone-600">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p>
+                          <p class="mt-1 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} visitors</p>
+                          {% if booking.rescheduled_display_date %}
+                          <p class="mt-1 text-sm text-stone-600">Rescheduled: {{ booking.rescheduled_display_date }}</p>
+                          {% endif %}
+                          {% if booking.decision_reason %}
+                          <p class="mt-1 text-sm text-stone-500">Reason: {{ booking.decision_reason }}</p>
+                          {% endif %}
+                        </div>
+                        <span class="inline-flex flex-none rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'confirmed' %}bg-green-100 text-green-800{% elif booking.status == 'cancelled' %}bg-red-100 text-red-700{% elif booking.status == 'rescheduled' %}bg-blue-100 text-blue-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="calendar-x" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500">No booking requests yet.</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
+
+              <!-- Participation -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="file-text" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900">Participation History</h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.participation_submissions|length }}</span>
+                </div>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.participation_submissions %}
+                    {% for submission in account_dashboard.participation_submissions %}
+                    <div class="rounded-2xl border border-stone-200 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <p class="text-[11px] uppercase tracking-[0.16em] text-amber-700">{{ submission.submission_type|replace('_', ' ') }}</p>
+                          <h3 class="mt-1.5 font-semibold text-stone-900">{{ submission.title }}</h3>
+                          <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-2">{{ submission.description or submission.story_content }}</p>
+                        </div>
+                        <span class="inline-flex flex-none rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700">{{ submission.status|replace('_', ' ') }}</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="file-text" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500">No participation submissions yet.</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
+
+              <!-- Feedback -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="star" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900">Visitor Feedback</h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.visitor_feedback|length }}</span>
+                </div>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.visitor_feedback %}
+                    {% for feedback in account_dashboard.visitor_feedback %}
+                    <div class="rounded-2xl border border-stone-200 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <h3 class="font-semibold text-stone-900">{{ feedback.visit_type|replace('-', ' ')|title }} · {{ feedback.rating }}/5</h3>
+                          <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-3">{{ feedback.comments }}</p>
+                        </div>
+                        <span class="inline-flex flex-none rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700">{{ feedback.status|title }}</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="star" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500">No visitor feedback submitted yet.</p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
+            </section>
+          </div>
+        </div>
       </div>
     </main>
 
-    {% include 'partials/_public_footer.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    </script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>
