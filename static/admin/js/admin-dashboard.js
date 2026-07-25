@@ -871,6 +871,141 @@
     updateDecisionUi();
   }
 
+  function initAdminGalleryManagement() {
+    var root = document.querySelector("[data-admin-gallery-manager]");
+    if (!root) {
+      return;
+    }
+
+    var cards = Array.prototype.slice.call(root.querySelectorAll("[data-gallery-card]"));
+    var filterButtons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-gallery-filter-button]")
+    );
+    var searchInput = root.querySelector("#adminGallerySearch");
+    var clearButton = root.querySelector("[data-gallery-search-clear]");
+    var visibleCount = root.querySelector("[data-gallery-visible-count]");
+    var libraryTitle = root.querySelector("[data-gallery-library-title]");
+    var libraryDescription = root.querySelector("[data-gallery-library-description]");
+    var emptyState = root.querySelector("[data-gallery-empty]");
+    var emptyTitle = root.querySelector("[data-gallery-empty-title]");
+    var emptyCopy = root.querySelector("[data-gallery-empty-copy]");
+    var currentFilter = String(
+      root.getAttribute("data-gallery-filter") || "all"
+    ).toLowerCase();
+
+    var filterCopy = {
+      all: {
+        title: "Complete collection",
+        description: "Every published and draft gallery card",
+      },
+      published: {
+        title: "Public collection",
+        description: "Cards currently visible in the Online Gallery",
+      },
+      draft: {
+        title: "Draft workspace",
+        description: "Unpublished cards still being prepared",
+      },
+    };
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function applyGalleryView() {
+      var query = normalize(searchInput && searchInput.value);
+      var shown = 0;
+
+      cards.forEach(function (card) {
+        var statusMatches =
+          currentFilter === "all" ||
+          card.getAttribute("data-gallery-status") === currentFilter;
+        var searchMatches =
+          !query ||
+          normalize(card.getAttribute("data-gallery-search")).indexOf(query) !== -1;
+        var shouldShow = statusMatches && searchMatches;
+
+        card.hidden = !shouldShow;
+        if (shouldShow) {
+          shown += 1;
+        }
+      });
+
+      filterButtons.forEach(function (button) {
+        var isActive =
+          button.getAttribute("data-gallery-filter-button") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      var copy = filterCopy[currentFilter] || filterCopy.all;
+      if (libraryTitle) {
+        libraryTitle.textContent = copy.title;
+      }
+      if (libraryDescription) {
+        libraryDescription.textContent = copy.description;
+      }
+      if (visibleCount) {
+        visibleCount.textContent = shown + " card" + (shown === 1 ? "" : "s");
+      }
+      if (clearButton) {
+        clearButton.hidden = !query;
+      }
+      if (emptyState) {
+        emptyState.hidden = shown > 0;
+      }
+
+      if (shown === 0 && emptyTitle && emptyCopy) {
+        if (query) {
+          emptyTitle.textContent = "No matching gallery cards";
+          emptyCopy.textContent =
+            "Try another title, category, location, or year.";
+        } else if (currentFilter === "published") {
+          emptyTitle.textContent = "No published gallery cards";
+          emptyCopy.textContent =
+            "Publish a card to make it available in the public Online Gallery.";
+        } else if (currentFilter === "draft") {
+          emptyTitle.textContent = "No draft gallery cards";
+          emptyCopy.textContent =
+            "Every gallery card is currently published.";
+        } else {
+          emptyTitle.textContent = "No gallery cards yet";
+          emptyCopy.textContent =
+            "Create the first visual record for the public Online Gallery.";
+        }
+      }
+    }
+
+    filterButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var nextFilter = button.getAttribute("data-gallery-filter-button");
+        currentFilter = filterCopy[nextFilter] ? nextFilter : "all";
+        root.setAttribute("data-gallery-filter", currentFilter);
+        applyGalleryView();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applyGalleryView);
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && searchInput.value) {
+          searchInput.value = "";
+          applyGalleryView();
+        }
+      });
+    }
+
+    if (clearButton && searchInput) {
+      clearButton.addEventListener("click", function () {
+        searchInput.value = "";
+        applyGalleryView();
+        searchInput.focus();
+      });
+    }
+
+    applyGalleryView();
+  }
+
   function initAdminUserManagement() {
     var root = document.querySelector("[data-admin-users]");
     if (!root) {
@@ -2070,6 +2205,7 @@
     initAdminBookingCalendar();
     initAdminBookingManagement();
     initAdminBookingReview();
+    initAdminGalleryManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();

@@ -4,10 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'online-gallery' %}
 {% set admin_topbar_title = 'Online Gallery' %}
-{% set admin_topbar_subtitle = 'Manage public gallery cards, uploaded images, and category-linked archive details.' %}
-{% set admin_topbar_tool_href = url_for('admin_online_gallery_new') %}
-{% set admin_topbar_tool_label = 'Create Gallery Card' %}
-{% set admin_topbar_tool_class = 'admin-primary-action' %}
+{% set admin_topbar_subtitle = 'Curate the images, stories, and 3D objects presented in the public heritage archive.' %}
 
 {% block admin_content %}
           {% if status_message %}
@@ -24,67 +21,153 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          {% set published_count = gallery_items|selectattr('is_published')|list|length %}
+          {% set draft_count = (gallery_items|length) - published_count %}
+
+          <section class="admin-gallery-manager" data-admin-gallery-manager data-gallery-filter="all">
+            <header class="admin-gallery-manager-head">
               <div>
-                <h3>Published and Draft Gallery Cards</h3>
-                <p>These entries feed the public Online Gallery list, details page, and category filtering.</p>
+                <p class="admin-gallery-manager-eyebrow">Digital collection</p>
+                <h2>Gallery Card Library</h2>
+                <p>Review the visual collection, prepare unpublished records, and manage what visitors see in the Online Gallery.</p>
               </div>
-              <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-text-link">Add New</a>
+              <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-gallery-create-action">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 4h2v7h7v2h-7v7h-2v-7H4v-2h7Z"></path></svg>
+                Add gallery card
+              </a>
+            </header>
+
+            <div class="admin-gallery-toolbar">
+              <nav class="admin-gallery-filters" aria-label="Filter gallery cards by publication status">
+                <button type="button" class="admin-gallery-filter is-active" data-gallery-filter-button="all" aria-pressed="true">
+                  All cards <span>{{ gallery_items|length }}</span>
+                </button>
+                <button type="button" class="admin-gallery-filter" data-gallery-filter-button="published" aria-pressed="false">
+                  Published <span>{{ published_count }}</span>
+                </button>
+                <button type="button" class="admin-gallery-filter" data-gallery-filter-button="draft" aria-pressed="false">
+                  Draft <span>{{ draft_count }}</span>
+                </button>
+              </nav>
+
+              <label class="admin-gallery-search" for="adminGallerySearch">
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
+                </span>
+                <input id="adminGallerySearch" type="search" placeholder="Search title, category, location, or year…" maxlength="160" autocomplete="off" />
+                <button type="button" data-gallery-search-clear aria-label="Clear gallery search" hidden>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.4 6 4.6 4.6L16.6 6 18 7.4 13.4 12l4.6 4.6-1.4 1.4-4.6-4.6L7.4 18 6 16.6l4.6-4.6L6 7.4Z"></path></svg>
+                </button>
+              </label>
             </div>
 
-            {% if gallery_items %}
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Card</th>
-                    <th>Category</th>
-                    <th>Period / Year</th>
-                    <th>Status</th>
-                    <th>Image</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for gallery_item in gallery_items %}
-                  <tr>
-                    <td>
-                      <div class="admin-resource-main">
-                        <strong>{{ gallery_item.title }}</strong>
-                        <span>{{ gallery_item.short_caption }}</span>
-                      </div>
-                    </td>
-                    <td>{{ gallery_item.category or 'Uncategorized' }}</td>
-                    <td>{{ gallery_item.period }} / {{ gallery_item.year }}</td>
-                    <td>
-                      <span class="admin-status-badge {% if gallery_item.is_published %}is-published{% else %}is-draft{% endif %}">
-                        {% if gallery_item.is_published %}Published{% else %}Draft{% endif %}
-                      </span>
-                    </td>
-                    <td>{{ gallery_item.image_filename or 'No image' }}</td>
-                    <td>
-                      <div class="admin-resource-actions">
-                        <a href="{{ url_for('online_gallery_details', item=gallery_item.id) }}" class="admin-inline-link">View</a>
-                        <a href="{{ url_for('admin_online_gallery_edit', item_id=gallery_item.id) }}" class="admin-inline-link">Edit</a>
-                        <form method="post" action="{{ url_for('admin_online_gallery_delete', item_id=gallery_item.id) }}">
-                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                          <button type="submit" class="admin-inline-link admin-inline-link-danger">Delete</button>
-                        </form>
-                      </div>
-                    </td>
-                  </tr>
-                  {% endfor %}
-                </tbody>
-              </table>
+            <div class="admin-gallery-library-head">
+              <div>
+                <span class="admin-gallery-library-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm2 11 4-4 3 3 2-2 3 3v1H6Zm9-8a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"></path></svg>
+                </span>
+                <span>
+                  <strong data-gallery-library-title>Complete collection</strong>
+                  <small data-gallery-library-description>Every published and draft gallery card</small>
+                </span>
+              </div>
+              <span class="admin-gallery-visible-count" data-gallery-visible-count>{{ gallery_items|length }} cards</span>
             </div>
-            {% else %}
-            <div class="admin-empty-state">
-              <div class="admin-empty-state-icon">+</div>
-              <h3>No online gallery cards yet</h3>
-              <p>Create your first Online Gallery information card to publish it on the public archive.</p>
-              <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-primary-action">Create First Card</a>
+
+            <div class="admin-gallery-library" data-gallery-library>
+              {% for gallery_item in gallery_items %}
+              <article
+                class="admin-gallery-card{% if not gallery_item.is_published %} is-draft{% endif %}"
+                data-gallery-card
+                data-gallery-status="{% if gallery_item.is_published %}published{% else %}draft{% endif %}"
+                data-gallery-search="{{ (gallery_item.title ~ ' ' ~ gallery_item.title_en ~ ' ' ~ gallery_item.title_tl ~ ' ' ~ gallery_item.short_caption ~ ' ' ~ gallery_item.short_caption_en ~ ' ' ~ gallery_item.short_caption_tl ~ ' ' ~ gallery_item.category ~ ' ' ~ gallery_item.category_en ~ ' ' ~ gallery_item.category_tl ~ ' ' ~ gallery_item.year ~ ' ' ~ gallery_item.location_en ~ ' ' ~ gallery_item.location_tl)|lower }}"
+              >
+                <figure class="admin-gallery-card-media">
+                  {% if gallery_item.image_url %}
+                  <img src="{{ gallery_item.image_url }}" alt="{{ gallery_item.title }}" loading="lazy" />
+                  {% else %}
+                  <span class="admin-gallery-card-placeholder" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm2 11 4-4 3 3 2-2 3 3v1H6Zm9-8a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"></path></svg>
+                    <small>No image available</small>
+                  </span>
+                  {% endif %}
+
+                  <div class="admin-gallery-card-badges">
+                    <span class="admin-status-badge {% if gallery_item.is_published %}is-published{% else %}is-draft{% endif %}">
+                      {% if gallery_item.is_published %}Published{% else %}Draft{% endif %}
+                    </span>
+                    {% if gallery_item.model_url or gallery_item.model_filename %}
+                    <span class="admin-gallery-model-badge">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>
+                      3D object
+                    </span>
+                    {% endif %}
+                  </div>
+                </figure>
+
+                <div class="admin-gallery-card-body">
+                  <div class="admin-gallery-card-meta">
+                    <span>{{ gallery_item.category or 'Uncategorized' }}</span>
+                    {% if gallery_item.year %}
+                    <span>{{ gallery_item.year }}</span>
+                    {% endif %}
+                    {% if gallery_item.location_tl or gallery_item.location_en %}
+                    <span>{{ gallery_item.location_tl or gallery_item.location_en }}</span>
+                    {% endif %}
+                  </div>
+
+                  <h3>{{ gallery_item.title }}</h3>
+                  <p>{{ gallery_item.short_caption }}</p>
+
+                  <div class="admin-gallery-card-assets">
+                    <span>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Z"></path></svg>
+                      {% if gallery_item.image_filename %}Image attached{% else %}Image missing{% endif %}
+                    </span>
+                    <span>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>
+                      {% if gallery_item.model_filename %}3D available{% else %}Image only{% endif %}
+                    </span>
+                  </div>
+                </div>
+
+                <footer class="admin-gallery-card-actions">
+                  <a href="{{ url_for('online_gallery_details', item=gallery_item.id) }}" class="admin-gallery-action is-view">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                    View
+                  </a>
+                  <a href="{{ url_for('admin_online_gallery_edit', item_id=gallery_item.id) }}" class="admin-gallery-action is-edit">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
+                    Edit
+                  </a>
+                  <form
+                    method="post"
+                    action="{{ url_for('admin_online_gallery_delete', item_id=gallery_item.id) }}"
+                    data-confirm-submit
+                    data-confirm-eyebrow="Gallery record"
+                    data-confirm-title="Delete this gallery card?"
+                    data-confirm-message="Permanently delete {{ gallery_item.title }} and its uploaded image{% if gallery_item.model_filename %} and 3D object{% endif %}? This action cannot be undone."
+                    data-confirm-label="Delete gallery card"
+                    data-confirm-variant="disable"
+                  >
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                    <button type="submit" class="admin-gallery-action is-delete">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l1 2h4v2H3V5h4Zm-2 6h12l-1 12H7Zm3 2v8h2v-8Zm4 0v8h2v-8Z"></path></svg>
+                      Delete
+                    </button>
+                  </form>
+                </footer>
+              </article>
+              {% endfor %}
             </div>
-            {% endif %}
+
+            <div class="admin-gallery-empty" data-gallery-empty {% if gallery_items %}hidden{% endif %}>
+              <span class="admin-gallery-empty-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm2 11 4-4 3 3 2-2 3 3v1H6Zm9-8a2 2 0 1 1 0 4 2 2 0 0 1 0-4Z"></path></svg>
+              </span>
+              <h3 data-gallery-empty-title>No gallery cards yet</h3>
+              <p data-gallery-empty-copy>Create the first visual record for the public Online Gallery.</p>
+              <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-gallery-create-action">Create gallery card</a>
+            </div>
           </section>
 {% endblock %}
