@@ -994,6 +994,14 @@ a.admin-text-link {
   background: #1e3a5f;
 }
 
+.admin-booking-calendar-legend.is-admin-calendar .calendar-event-dot.is-confirmed {
+  background: #19815c;
+}
+
+.admin-booking-calendar-legend.is-admin-calendar .calendar-event-dot.is-pending {
+  background: #d98a18;
+}
+
 .calendar-container {
   background: #ffffff;
   border-radius: 1rem;
@@ -5079,6 +5087,22 @@ body.admin-confirm-open {
 
 .admin-booking-calendar-panel .calendar-event-dot {
   background: var(--dashboard-gold-500);
+}
+
+.admin-booking-calendar-panel .calendar-event-dot.is-confirmed {
+  background: #19815c;
+}
+
+.admin-booking-calendar-panel .calendar-event-dot.is-pending {
+  background: #d98a18;
+}
+
+.admin-booking-calendar-panel .calendar-day.selected .calendar-event-dot.is-confirmed {
+  background: #8ce0bb !important;
+}
+
+.admin-booking-calendar-panel .calendar-day.selected .calendar-event-dot.is-pending {
+  background: #ffd27d !important;
 }
 
 .admin-booking-calendar-details {

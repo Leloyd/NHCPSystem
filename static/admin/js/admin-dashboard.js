@@ -397,8 +397,11 @@
         console.error("Failed to parse admin booking calendar data.", error);
       }
 
-      var publicCalendarBookings = bookings.filter(function (booking) {
-        return booking && booking.status === "confirmed";
+      var calendarBookings = bookings.filter(function (booking) {
+        return booking && (
+          booking.status === "confirmed" ||
+          booking.status === "pending"
+        );
       });
       var monthNames = [
         "January", "February", "March", "April", "May", "June",
@@ -431,8 +434,8 @@
         return booking.date || "";
       }
 
-      function getPublicCalendarBookingsForDate(dateText) {
-        return publicCalendarBookings.filter(function (booking) {
+      function getCalendarBookingsForDate(dateText) {
+        return calendarBookings.filter(function (booking) {
           return booking.date === dateText;
         });
       }
@@ -480,7 +483,7 @@
 
       function renderDetails() {
         if (!selectedDate) {
-          details.innerHTML = '<div class="admin-booking-calendar-empty">Select a date on the public calendar to see the full staff booking details for that day.</div>';
+          details.innerHTML = '<div class="admin-booking-calendar-empty">Select a date on the staff calendar to see the full booking details for that day.</div>';
           return;
         }
 
@@ -544,16 +547,38 @@
             String(currentMonth + 1).padStart(2, '0'),
             String(day).padStart(2, '0')
           ].join('-');
-          var dayBookings = getPublicCalendarBookingsForDate(dateText);
+          var dayBookings = getCalendarBookingsForDate(dateText);
+          var pendingCount = dayBookings.filter(function (booking) {
+            return booking.status === "pending";
+          }).length;
+          var confirmedCount = dayBookings.filter(function (booking) {
+            return booking.status === "confirmed";
+          }).length;
           var isToday = dateText === todayKey;
           var isSelected = selectedDate === dateText;
+          var bookingLabelParts = [];
+          if (confirmedCount) {
+            bookingLabelParts.push(
+              confirmedCount + " confirmed booking" + (confirmedCount === 1 ? "" : "s")
+            );
+          }
+          if (pendingCount) {
+            bookingLabelParts.push(
+              pendingCount + " pending booking" + (pendingCount === 1 ? "" : "s")
+            );
+          }
+          var dayAriaLabel = formatDateDisplay(dateText) +
+            (bookingLabelParts.length ? ": " + bookingLabelParts.join(", ") : ": no bookings");
 
           html += [
-            '<button type="button" class="calendar-day ' + (isToday ? 'today ' : '') + (isSelected ? 'selected' : '') + '" data-date="' + dateText + '">',
+            '<button type="button" class="calendar-day ' + (isToday ? 'today ' : '') + (isSelected ? 'selected' : '') + '" data-date="' + dateText + '" aria-label="' + escapeHtml(dayAriaLabel) + '">',
             '<span class="calendar-day-number">' + day + '</span>',
-            dayBookings.length ? '<div class="calendar-day-dots">' + dayBookings.slice(0, 3).map(function () {
-              return '<span class="calendar-event-dot"></span>';
-            }).join('') + '</div>' : '',
+            dayBookings.length
+              ? '<div class="calendar-day-dots" aria-hidden="true">' +
+                (confirmedCount ? '<span class="calendar-event-dot is-confirmed"></span>' : '') +
+                (pendingCount ? '<span class="calendar-event-dot is-pending"></span>' : '') +
+                '</div>'
+              : '',
             '</button>'
           ].join('');
         }

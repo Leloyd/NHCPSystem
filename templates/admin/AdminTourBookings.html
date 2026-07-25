@@ -45,8 +45,9 @@
                     <p>Confirmed dates mirror the public calendar. Select any date to inspect its complete staff record.</p>
                   </div>
                 </div>
-                <div class="admin-booking-calendar-legend is-public-calendar">
-                  <span><span class="calendar-event-dot"></span>Confirmed visit</span>
+                <div class="admin-booking-calendar-legend is-admin-calendar">
+                  <span><span class="calendar-event-dot is-confirmed"></span>Confirmed visit</span>
+                  <span><span class="calendar-event-dot is-pending"></span>Pending review</span>
                   <span><span class="admin-booking-today-key"></span>Today</span>
                 </div>
               </header>
@@ -59,7 +60,7 @@
                         <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
                       </button>
                       <div class="admin-booking-calendar-month">
-                        <small>Confirmed visit schedule</small>
+                        <small>Staff booking schedule</small>
                         <h4 id="adminBookingMonthLabel" class="calendar-month-title"></h4>
                       </div>
                       <button type="button" id="adminBookingNextMonth" class="calendar-nav-btn" aria-label="Next month">
