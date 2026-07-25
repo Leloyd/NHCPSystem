@@ -72,10 +72,22 @@ def create_tour_booking(payload: dict[str, Any]) -> dict[str, Any]:
     return rows[0]
 
 
-def update_tour_booking(booking_id: int, payload: dict[str, Any]) -> dict[str, Any]:
+def update_tour_booking(
+    booking_id: int,
+    payload: dict[str, Any],
+    *,
+    expected_status: str | None = None,
+) -> dict[str, Any]:
     client = get_supabase_client()
-    response = client.table(TOUR_BOOKINGS_TABLE).update(payload).eq("id", int(booking_id)).execute()
+    query = client.table(TOUR_BOOKINGS_TABLE).update(payload).eq("id", int(booking_id))
+    if expected_status:
+        query = query.eq("status", str(expected_status).strip().lower())
+    response = query.execute()
     rows = list(response.data or [])
     if not rows:
+        if expected_status:
+            raise RuntimeError(
+                "The booking is no longer in the expected status and was not updated."
+            )
         raise RuntimeError("Supabase did not return the updated booking row.")
     return rows[0]

@@ -188,6 +188,18 @@ def register_tour_booking_routes(
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
             return redirect(url_for("admin_tour_bookings"))
 
+        if booking_item.get("status") != "pending":
+            return (
+                render_admin_tour_booking_review(
+                    ensure_admin_csrf_token=ensure_admin_csrf_token,
+                    admin_session_user_key=admin_session_user_key,
+                    admin_username=admin_username,
+                    booking_item=booking_item,
+                    error_message="This booking already has a final staff decision and can no longer be changed.",
+                ),
+                409,
+            )
+
         moderation_action = str(request.form.get("moderation_action") or "").strip().lower()
         if moderation_action not in {"confirm", "cancel", "reschedule"}:
             return render_admin_tour_booking_review(
@@ -242,10 +254,26 @@ def register_tour_booking_routes(
             update_payload["rescheduled_visit_date"] = rescheduled_visit_date
 
         try:
-            update_tour_booking(booking_id, update_payload)
+            update_tour_booking(
+                booking_id,
+                update_payload,
+                expected_status="pending",
+            )
             updated_booking = load_admin_tour_booking(booking_id)
             user_profile = get_public_user_profile_by_id(int(booking_item.get("user_id") or 0)) if booking_item.get("user_id") else None
         except Exception as exc:
+            current_booking = load_admin_tour_booking(booking_id)
+            if current_booking and current_booking.get("status") != "pending":
+                return (
+                    render_admin_tour_booking_review(
+                        ensure_admin_csrf_token=ensure_admin_csrf_token,
+                        admin_session_user_key=admin_session_user_key,
+                        admin_username=admin_username,
+                        booking_item=current_booking,
+                        error_message="Another administrator already finalized this booking. The saved decision is shown below.",
+                    ),
+                    409,
+                )
             app.logger.exception("Failed to moderate booking %s: %s", booking_id, exc)
             return render_admin_tour_booking_review(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
