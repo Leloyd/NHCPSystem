@@ -66,6 +66,10 @@ AVATAR_UPLOAD_FOLDER = "avatars"
 DELETE_ACCOUNT_CONFIRM_PHRASE = "confirm delete"
 VALID_THEME_PREFERENCES = {"light", "dark"}
 VALID_LANGUAGE_PREFERENCES = {"en", "tl"}
+DISABLED_ACCOUNT_MESSAGE = (
+    "This account is disabled and cannot sign in. "
+    "Please contact museum support if you need access restored."
+)
 
 
 def _avatar_slugify(text: Any, fallback: str = "avatar") -> str:
@@ -208,7 +212,7 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
     existing_user = get_public_user_auth_by_email(email)
     if existing_user:
         if not bool(existing_user.get("is_active")):
-            raise ValueError("This account is unavailable.")
+            raise ValueError(DISABLED_ACCOUNT_MESSAGE)
 
         payload = {
             "last_login_at": now,
@@ -589,14 +593,28 @@ def register_user_account_routes(
             user = get_public_user_auth_by_identifier(identifier)
         except Exception:
             user = None
-        if not user or not bool(user.get("is_active")):
+        if not user:
             record_public_auth_failure("login", client_ip)
             return jsonify({"ok": False, "error": "Invalid credentials."}), 401
 
         stored_hash = str(user.get("password_hash") or "")
-        if not stored_hash or not check_password_hash(stored_hash, password):
+        try:
+            password_is_valid = bool(stored_hash) and check_password_hash(stored_hash, password)
+        except (TypeError, ValueError):
+            password_is_valid = False
+        if not password_is_valid:
             record_public_auth_failure("login", client_ip)
             return jsonify({"ok": False, "error": "Invalid credentials."}), 401
+
+        if not bool(user.get("is_active")):
+            record_public_auth_failure("login", client_ip)
+            return jsonify(
+                {
+                    "ok": False,
+                    "error": DISABLED_ACCOUNT_MESSAGE,
+                    "account_disabled": True,
+                }
+            ), 403
 
         if not _user_is_verified(user):
             record_public_auth_failure("login", client_ip)
