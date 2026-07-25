@@ -4166,15 +4166,6 @@ body.admin-confirm-open {
   margin-top: 0.25rem;
 }
 
-.admin-highlight-editor-footer {
-  display: flex;
-  justify-content: flex-end;
-  gap: 0.55rem;
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px solid #dfe4e0;
-}
-
 @media (max-width: 1050px) {
   .admin-highlight-view-layout {
     grid-template-columns: 1fr;
