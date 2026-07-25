@@ -599,6 +599,151 @@
     });
   }
 
+  function initAdminBookingManagement() {
+    var root = document.querySelector("[data-admin-bookings]");
+    if (!root) {
+      return;
+    }
+
+    var cards = Array.prototype.slice.call(root.querySelectorAll("[data-booking-card]"));
+    var filterButtons = Array.prototype.slice.call(root.querySelectorAll("[data-booking-filter]"));
+    var summaryButtons = Array.prototype.slice.call(root.querySelectorAll("[data-booking-summary-filter]"));
+    var searchInput = root.querySelector("#adminBookingSearch");
+    var clearButton = root.querySelector("[data-booking-search-clear]");
+    var visibleCount = root.querySelector("[data-booking-visible-count]");
+    var emptyState = root.querySelector("[data-booking-empty]");
+    var emptyTitle = root.querySelector("[data-booking-empty-title]");
+    var emptyCopy = root.querySelector("[data-booking-empty-copy]");
+    var queueSection = root.querySelector(".admin-booking-queue-section");
+    var currentFilter = String(
+      root.getAttribute("data-current-booking-filter") || "all"
+    ).toLowerCase();
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function getSearchQuery() {
+      return normalize(searchInput && searchInput.value);
+    }
+
+    function updateControls() {
+      filterButtons.forEach(function (button) {
+        var isActive = button.getAttribute("data-booking-filter") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      summaryButtons.forEach(function (button) {
+        var isActive = button.getAttribute("data-booking-summary-filter") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+    }
+
+    function applyBookingView() {
+      var query = getSearchQuery();
+      var shown = 0;
+
+      cards.forEach(function (card) {
+        var statusMatches =
+          currentFilter === "all" ||
+          card.getAttribute("data-booking-status") === currentFilter;
+        var searchMatches =
+          !query ||
+          normalize(card.getAttribute("data-booking-search")).indexOf(query) !== -1;
+        var shouldShow = statusMatches && searchMatches;
+
+        card.hidden = !shouldShow;
+        if (shouldShow) {
+          shown += 1;
+        }
+      });
+
+      if (visibleCount) {
+        visibleCount.textContent =
+          shown + " booking" + (shown === 1 ? "" : "s");
+      }
+
+      if (clearButton) {
+        clearButton.hidden = !query;
+      }
+
+      if (emptyState) {
+        emptyState.hidden = shown > 0;
+      }
+
+      if (shown === 0 && emptyTitle && emptyCopy) {
+        if (query) {
+          emptyTitle.textContent = "No matching bookings";
+          emptyCopy.textContent = "Try another institution, contact name, agency, or date.";
+        } else if (currentFilter !== "all") {
+          emptyTitle.textContent =
+            "No " + currentFilter + " bookings";
+          emptyCopy.textContent =
+            "There are currently no booking records with this status.";
+        } else {
+          emptyTitle.textContent = "No booking requests yet";
+          emptyCopy.textContent = "New visitor booking requests will appear here.";
+        }
+      }
+
+      updateControls();
+    }
+
+    function selectFilter(filter, shouldFocusQueue) {
+      var allowed = ["all", "pending", "confirmed", "rescheduled", "cancelled"];
+      currentFilter = allowed.indexOf(filter) !== -1 ? filter : "all";
+      root.setAttribute("data-current-booking-filter", currentFilter);
+      applyBookingView();
+
+      if (
+        shouldFocusQueue &&
+        queueSection &&
+        typeof queueSection.scrollIntoView === "function"
+      ) {
+        queueSection.scrollIntoView({
+          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+            ? "auto"
+            : "smooth",
+          block: "start",
+        });
+      }
+    }
+
+    filterButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        selectFilter(button.getAttribute("data-booking-filter"), false);
+      });
+    });
+
+    summaryButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        selectFilter(button.getAttribute("data-booking-summary-filter"), true);
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applyBookingView);
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && searchInput.value) {
+          searchInput.value = "";
+          applyBookingView();
+        }
+      });
+    }
+
+    if (clearButton && searchInput) {
+      clearButton.addEventListener("click", function () {
+        searchInput.value = "";
+        applyBookingView();
+        searchInput.focus();
+      });
+    }
+
+    applyBookingView();
+  }
+
   function initAdminUserManagement() {
     var root = document.querySelector("[data-admin-users]");
     if (!root) {
@@ -1796,6 +1941,7 @@
     initDashboardVisuals();
     initHighlightSwitcher();
     initAdminBookingCalendar();
+    initAdminBookingManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();

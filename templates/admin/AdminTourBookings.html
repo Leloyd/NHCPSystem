@@ -3,8 +3,8 @@
 {% set admin_document_title = 'Manage Booking Calendar | NHCP Admin' %}
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'bookings' %}
-{% set admin_topbar_title = 'Booking Calendar' %}
-{% set admin_topbar_subtitle = 'Review booking requests, manage booking schedules, and track confirmed visits on the staff calendar.' %}
+{% set admin_topbar_title = 'Tour Bookings' %}
+{% set admin_topbar_subtitle = 'Review visitor requests, coordinate schedules, and monitor confirmed museum visits.' %}
 
 {% block admin_content %}
           {% if status_message %}
@@ -21,212 +21,201 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          <section class="admin-booking-workspace" data-admin-bookings data-current-booking-filter="all">
+            <header class="admin-booking-workspace-head">
               <div>
-                <h3>Booking Management Calendar</h3>
-                <p>Use the calendar to see every booking request by date. Selecting a date shows complete booking details for museum staff only.</p>
+                <p class="admin-booking-eyebrow">Visitor coordination</p>
+                <h2>Booking Operations</h2>
+                <p>Keep every request, approved visit, and schedule change organized in one workspace.</p>
               </div>
-            </div>
-            <div class="admin-booking-calendar-shell" data-admin-booking-calendar data-booking-review-base-url="{{ url_for('admin_tour_bookings') }}">
-              <div class="admin-booking-calendar-panel">
-                <div class="admin-booking-calendar-panel-head">
-                  <h4 class="admin-booking-calendar-title">Public Community Calendar</h4>
-                  <p>This calendar mirrors the confirmed booking calendar shown on the public Community Participation page.</p>
-                </div>
+              <div class="admin-booking-head-note">
+                <span class="admin-booking-head-note-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2Zm12 8H5v10h14ZM5 8h14V6H5Zm2 4h4v4H7Z"></path></svg>
+                </span>
+                <span><strong>{{ confirmed_items|length }} confirmed</strong> visits are currently shown on the public calendar.</span>
+              </div>
+            </header>
 
+            <div class="admin-booking-overview" aria-label="Booking status summary">
+              <button type="button" class="admin-booking-overview-card is-all is-active" data-booking-summary-filter="all" aria-pressed="true">
+                <span class="admin-booking-overview-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 5h14V5H5Zm3 3h3v3H8Zm5 0h3v3h-3Zm-5 5h3v3H8Zm5 0h3v3h-3Z"></path></svg>
+                </span>
+                <span><small>All bookings</small><strong>{{ booking_items|length }}</strong></span>
+              </button>
+              <button type="button" class="admin-booking-overview-card is-pending" data-booking-summary-filter="pending" aria-pressed="false">
+                <span class="admin-booking-overview-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 18a8 8 0 1 1 8-8 8 8 0 0 1-8 8Zm1-13h-2v6l5 3 1-1.7-4-2.3Z"></path></svg>
+                </span>
+                <span><small>Needs review</small><strong>{{ pending_items|length }}</strong></span>
+              </button>
+              <button type="button" class="admin-booking-overview-card is-confirmed" data-booking-summary-filter="confirmed" aria-pressed="false">
+                <span class="admin-booking-overview-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M9.2 16.6 5.1 12.5l1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg>
+                </span>
+                <span><small>Confirmed</small><strong>{{ confirmed_items|length }}</strong></span>
+              </button>
+              <button type="button" class="admin-booking-overview-card is-rescheduled" data-booking-summary-filter="rescheduled" aria-pressed="false">
+                <span class="admin-booking-overview-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6ZM11 8h2v5H8v-2h3Z"></path></svg>
+                </span>
+                <span><small>Rescheduled</small><strong>{{ rescheduled_items|length }}</strong></span>
+              </button>
+              <button type="button" class="admin-booking-overview-card is-cancelled" data-booking-summary-filter="cancelled" aria-pressed="false">
+                <span class="admin-booking-overview-icon" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="m7.4 6 4.6 4.6L16.6 6 18 7.4 13.4 12l4.6 4.6-1.4 1.4-4.6-4.6L7.4 18 6 16.6l4.6-4.6L6 7.4Z"></path></svg>
+                </span>
+                <span><small>Cancelled</small><strong>{{ cancelled_items|length }}</strong></span>
+              </button>
+            </div>
+
+            <section class="admin-booking-calendar-section">
+              <header class="admin-booking-section-head">
+                <div>
+                  <span class="admin-booking-section-number">01</span>
+                  <div>
+                    <h3>Visit Calendar</h3>
+                    <p>Confirmed dates mirror the public calendar. Select any date to inspect its complete staff record.</p>
+                  </div>
+                </div>
                 <div class="admin-booking-calendar-legend is-public-calendar">
-                  <span><span class="calendar-event-dot"></span>Confirmed Booking</span>
+                  <span><span class="calendar-event-dot"></span>Confirmed visit</span>
+                  <span><span class="admin-booking-today-key"></span>Today</span>
                 </div>
+              </header>
 
-                <div class="calendar-container">
-                  <div class="calendar-header">
-                    <button type="button" id="adminBookingPrevMonth" class="calendar-nav-btn" aria-label="Previous month">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 19l-7-7 7-7"></path>
-                      </svg>
-                    </button>
-                    <h4 id="adminBookingMonthLabel" class="calendar-month-title"></h4>
-                    <button type="button" id="adminBookingNextMonth" class="calendar-nav-btn" aria-label="Next month">
-                      <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
-                      </svg>
-                    </button>
-                  </div>
-
-                  <div class="calendar-days-header">
-                    <div class="calendar-day-label">Sun</div>
-                    <div class="calendar-day-label">Mon</div>
-                    <div class="calendar-day-label">Tue</div>
-                    <div class="calendar-day-label">Wed</div>
-                    <div class="calendar-day-label">Thu</div>
-                    <div class="calendar-day-label">Fri</div>
-                    <div class="calendar-day-label">Sat</div>
-                  </div>
-
-                  <div id="adminBookingCalendarGrid" class="calendar-grid"></div>
-                </div>
-              </div>
-              <div id="adminBookingCalendarDetails" class="admin-booking-calendar-details"></div>
-            </div>
-          </section>
-
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
-              <div>
-                <h3>Pending Requests</h3>
-                <p>Review new booking requests submitted by logged-in users.</p>
-              </div>
-            </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Booking</th>
-                    <th>Contact</th>
-                    <th>Schedule</th>
-                    <th>Visitors</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for booking_item in pending_items %}
-                  <tr>
-                    <td>
-                      <div class="admin-resource-main">
-                        <strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong>
-                        <span>{{ booking_item.institution_name }}</span>
-                        <span>{{ booking_item.tour_agency or 'No tour agency specified' }}</span>
+              <div class="admin-booking-calendar-shell" data-admin-booking-calendar data-booking-review-base-url="{{ url_for('admin_tour_bookings') }}">
+                <div class="admin-booking-calendar-panel">
+                  <div class="calendar-container">
+                    <div class="calendar-header">
+                      <button type="button" id="adminBookingPrevMonth" class="calendar-nav-btn" aria-label="Previous month">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+                      </button>
+                      <div class="admin-booking-calendar-month">
+                        <small>Confirmed visit schedule</small>
+                        <h4 id="adminBookingMonthLabel" class="calendar-month-title"></h4>
                       </div>
-                    </td>
-                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
-                    <td>{{ booking_item.display_date }}</td>
-                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
-                    <td><span class="admin-status-badge is-draft">Pending</span></td>
-                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">Review</a></td>
-                  </tr>
-                  {% endfor %}
-                  {% if not pending_items %}
-                  <tr><td colspan="6">No pending booking requests.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
-            </div>
+                      <button type="button" id="adminBookingNextMonth" class="calendar-nav-btn" aria-label="Next month">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+                      </button>
+                    </div>
+
+                    <div class="calendar-days-header">
+                      <div class="calendar-day-label"><span class="is-wide">Sun</span><span class="is-short">S</span></div>
+                      <div class="calendar-day-label"><span class="is-wide">Mon</span><span class="is-short">M</span></div>
+                      <div class="calendar-day-label"><span class="is-wide">Tue</span><span class="is-short">T</span></div>
+                      <div class="calendar-day-label"><span class="is-wide">Wed</span><span class="is-short">W</span></div>
+                      <div class="calendar-day-label"><span class="is-wide">Thu</span><span class="is-short">T</span></div>
+                      <div class="calendar-day-label"><span class="is-wide">Fri</span><span class="is-short">F</span></div>
+                      <div class="calendar-day-label"><span class="is-wide">Sat</span><span class="is-short">S</span></div>
+                    </div>
+
+                    <div id="adminBookingCalendarGrid" class="calendar-grid"></div>
+                  </div>
+                </div>
+                <aside id="adminBookingCalendarDetails" class="admin-booking-calendar-details" aria-live="polite"></aside>
+              </div>
+            </section>
+
+            <section class="admin-booking-queue-section">
+              <header class="admin-booking-section-head">
+                <div>
+                  <span class="admin-booking-section-number">02</span>
+                  <div>
+                    <h3>Booking Queue</h3>
+                    <p>Search and review the complete booking history without leaving this page.</p>
+                  </div>
+                </div>
+                <span class="admin-booking-visible-count" data-booking-visible-count>{{ booking_items|length }} bookings</span>
+              </header>
+
+              <div class="admin-booking-toolbar">
+                <nav class="admin-booking-filters" aria-label="Filter bookings by status">
+                  <button type="button" class="admin-booking-filter is-active" data-booking-filter="all" aria-pressed="true">All <span>{{ booking_items|length }}</span></button>
+                  <button type="button" class="admin-booking-filter" data-booking-filter="pending" aria-pressed="false">Pending <span>{{ pending_items|length }}</span></button>
+                  <button type="button" class="admin-booking-filter" data-booking-filter="confirmed" aria-pressed="false">Confirmed <span>{{ confirmed_items|length }}</span></button>
+                  <button type="button" class="admin-booking-filter" data-booking-filter="rescheduled" aria-pressed="false">Rescheduled <span>{{ rescheduled_items|length }}</span></button>
+                  <button type="button" class="admin-booking-filter" data-booking-filter="cancelled" aria-pressed="false">Cancelled <span>{{ cancelled_items|length }}</span></button>
+                </nav>
+
+                <label class="admin-booking-search" for="adminBookingSearch">
+                  <span aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
+                  </span>
+                  <input id="adminBookingSearch" type="search" placeholder="Search institution, contact, agency, or date…" maxlength="160" autocomplete="off" />
+                  <button type="button" data-booking-search-clear aria-label="Clear booking search" hidden>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.4 6 4.6 4.6L16.6 6 18 7.4 13.4 12l4.6 4.6-1.4 1.4-4.6-4.6L7.4 18 6 16.6l4.6-4.6L6 7.4Z"></path></svg>
+                  </button>
+                </label>
+              </div>
+
+              <div class="admin-booking-list" data-booking-list>
+                {% for booking_item in booking_items %}
+                <article
+                  class="admin-booking-list-card is-{{ booking_item.status }}"
+                  data-booking-card
+                  data-booking-status="{{ booking_item.status }}"
+                  data-booking-search="{{ (booking_item.scheduled_tour ~ ' ' ~ booking_item.display_title ~ ' ' ~ booking_item.institution_name ~ ' ' ~ booking_item.contact_person ~ ' ' ~ booking_item.contact_number ~ ' ' ~ booking_item.tour_agency ~ ' ' ~ booking_item.display_date ~ ' ' ~ booking_item.rescheduled_display_date ~ ' ' ~ booking_item.booking_type_label)|lower }}"
+                >
+                  <div class="admin-booking-list-accent" aria-hidden="true"></div>
+                  <div class="admin-booking-list-icon" aria-hidden="true">
+                    {% if booking_item.status == 'confirmed' %}
+                    <svg viewBox="0 0 24 24"><path d="M9.2 16.6 5.1 12.5l1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg>
+                    {% elif booking_item.status == 'rescheduled' %}
+                    <svg viewBox="0 0 24 24"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6ZM11 8h2v5H8v-2h3Z"></path></svg>
+                    {% elif booking_item.status == 'cancelled' %}
+                    <svg viewBox="0 0 24 24"><path d="m7.4 6 4.6 4.6L16.6 6 18 7.4 13.4 12l4.6 4.6-1.4 1.4-4.6-4.6L7.4 18 6 16.6l4.6-4.6L6 7.4Z"></path></svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm1 5h-2v6l5 3 1-1.7-4-2.3Z"></path></svg>
+                    {% endif %}
+                  </div>
+
+                  <div class="admin-booking-list-main">
+                    <div class="admin-booking-list-title-row">
+                      <div>
+                        <span class="admin-booking-type">{{ booking_item.booking_type_label }}</span>
+                        <h4>{{ booking_item.institution_name or booking_item.display_title or 'Museum Tour Booking' }}</h4>
+                      </div>
+                      <span class="admin-status-badge {% if booking_item.status == 'confirmed' %}is-published{% elif booking_item.status == 'rescheduled' %}is-rescheduled{% elif booking_item.status == 'cancelled' %}is-cancelled{% else %}is-draft{% endif %}">{{ booking_item.status_label }}</span>
+                    </div>
+
+                    <div class="admin-booking-list-meta">
+                      <span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2Zm12 8H5v10h14ZM5 8h14V6H5Z"></path></svg>
+                        <span><small>{% if booking_item.rescheduled_display_date %}Requested / new schedule{% else %}Requested schedule{% endif %}</small><strong>{{ booking_item.display_date }}{% if booking_item.rescheduled_display_date %} → {{ booking_item.rescheduled_display_date }}{% endif %}</strong></span>
+                      </span>
+                      <span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5Zm0-8a3 3 0 1 1-3 3 3 3 0 0 1 3-3ZM4 22v-2a7 7 0 0 1 14 0v2h-2v-2a5 5 0 0 0-10 0v2Z"></path></svg>
+                        <span><small>Contact person</small><strong>{{ booking_item.contact_person or 'Not provided' }}</strong></span>
+                      </span>
+                      <span>
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 12a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 1a6 6 0 0 0-6 6v2h12v-2a6 6 0 0 0-6-6ZM8 14a5 5 0 0 0-5 5v2h5v-2a8 8 0 0 1 1.8-5Z"></path></svg>
+                        <span><small>Visitors</small><strong>{{ booking_item.total_visitors }} total · {{ booking_item.pwd_visitors }} PWD</strong></span>
+                      </span>
+                    </div>
+
+                    {% if booking_item.decision_reason %}
+                    <p class="admin-booking-list-note"><strong>Staff note:</strong> {{ booking_item.decision_reason }}</p>
+                    {% endif %}
+                  </div>
+
+                  <a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-booking-open-action">
+                    <span>{% if booking_item.status == 'pending' %}Review request{% else %}View booking{% endif %}</span>
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+                  </a>
+                </article>
+                {% endfor %}
+              </div>
+
+              <div class="admin-booking-empty" data-booking-empty {% if booking_items %}hidden{% endif %}>
+                <span aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2Zm12 8H5v10h14ZM5 8h14V6H5Z"></path></svg>
+                </span>
+                <h3 data-booking-empty-title>No booking requests yet</h3>
+                <p data-booking-empty-copy>New visitor booking requests will appear here.</p>
+              </div>
+            </section>
           </section>
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
-              <div>
-                <h3>Confirmed Bookings</h3>
-                <p>These confirmed entries are the ones reflected in the public booking calendar.</p>
-              </div>
-            </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Booking</th>
-                    <th>Contact</th>
-                    <th>Schedule</th>
-                    <th>Visitors</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for booking_item in confirmed_items %}
-                  <tr>
-                    <td><div class="admin-resource-main"><strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong><span>{{ booking_item.institution_name }}</span></div></td>
-                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
-                    <td>{{ booking_item.display_date }}</td>
-                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
-                    <td><span class="admin-status-badge is-published">Confirmed</span></td>
-                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
-                  </tr>
-                  {% endfor %}
-                  {% if not confirmed_items %}
-                  <tr><td colspan="6">No confirmed bookings yet.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
-              <div>
-                <h3>Rescheduled Bookings</h3>
-                <p>Bookings that need a new schedule remain here until they are confirmed again.</p>
-              </div>
-            </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Booking</th>
-                    <th>Contact</th>
-                    <th>Schedule</th>
-                    <th>Visitors</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for booking_item in rescheduled_items %}
-                  <tr>
-                    <td><div class="admin-resource-main"><strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong><span>{{ booking_item.institution_name }}</span><span>{{ booking_item.decision_reason or 'Waiting for updated confirmation' }}</span></div></td>
-                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
-                    <td>{{ booking_item.display_date }}{% if booking_item.rescheduled_display_date %}<br /><span>New date: {{ booking_item.rescheduled_display_date }}</span>{% endif %}</td>
-                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
-                    <td><span class="admin-status-badge is-rescheduled">{{ booking_item.status_label }}</span></td>
-                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
-                  </tr>
-                  {% endfor %}
-                  {% if not rescheduled_items %}
-                  <tr><td colspan="6">No rescheduled bookings yet.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
-            </div>
-          </section>
-
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
-              <div>
-                <h3>Cancelled Bookings</h3>
-                <p>Cancelled requests remain here for history and reporting.</p>
-              </div>
-            </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Booking</th>
-                    <th>Contact</th>
-                    <th>Schedule</th>
-                    <th>Visitors</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for booking_item in cancelled_items %}
-                  <tr>
-                    <td><div class="admin-resource-main"><strong>{{ booking_item.scheduled_tour or booking_item.display_title }}</strong><span>{{ booking_item.institution_name }}</span><span>{{ booking_item.decision_reason or 'Cancelled by admin' }}</span></div></td>
-                    <td>{{ booking_item.contact_person }}<br /><span>{{ booking_item.contact_number }}</span></td>
-                    <td>{{ booking_item.display_date }}</td>
-                    <td>{{ booking_item.total_visitors }} total<br /><span>{{ booking_item.pwd_visitors }} PWD</span></td>
-                    <td><span class="admin-status-badge is-cancelled">{{ booking_item.status_label }}</span></td>
-                    <td><a href="{{ url_for('admin_tour_booking_review', booking_id=booking_item.id) }}" class="admin-inline-link">View</a></td>
-                  </tr>
-                  {% endfor %}
-                  {% if not cancelled_items %}
-                  <tr><td colspan="6">No cancelled bookings yet.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
-            </div>
-          </section>
           <script id="adminBookingCalendarData" type="application/json">{{ booking_items|tojson }}</script>
 {% endblock %}
