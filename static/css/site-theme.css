@@ -474,3 +474,95 @@ html[data-contrast="on"] .site-a11y-seg-btn.is-active { background: #facc15 !imp
 html[data-contrast="on"] .site-a11y-fab,
 html[data-contrast="on"] .site-a11y-fab * { background: #facc15 !important; color: #000 !important; }
 html[data-contrast="on"] .site-a11y-fab { border: 2px solid #000 !important; }
+
+/* ==========================================================================
+   FOLLOW-UP PASS — card internals + specific boxes that the earlier passes
+   missed: Community highlight cards + privacy notice, Account Profile status
+   badges, and the Account Settings delete (danger) box.
+   ========================================================================== */
+
+/* --------------------------------------------------------------------------
+   1) COMMUNITY PARTICIPATION — DARK MODE
+   .highlight-card / .featured-highlight hardcode `background: white`, and the
+   card text uses --color-text-* tokens that were never remapped for dark.
+   -------------------------------------------------------------------------- */
+html[data-theme="dark"] #community-highlights,
+html[data-theme="dark"] #events-calendar,
+html[data-theme="dark"] #e-participation {
+  --color-text-primary: #f3ece0;
+  --color-text-secondary: #c4b494;
+  --color-text-muted: #a08a68;
+  --color-primary: #e6cf8a;
+  --color-primary-light: #e6cf8a;
+  --color-border: rgba(201, 168, 76, 0.18);
+  --color-border-light: rgba(201, 168, 76, 0.12);
+}
+html[data-theme="dark"] .highlight-card,
+html[data-theme="dark"] .featured-highlight {
+  background: #211a10 !important;
+  border-color: rgba(201, 168, 76, 0.18) !important;
+}
+html[data-theme="dark"] .upcoming-event-item:hover { background: rgba(201, 168, 76, 0.08) !important; }
+html[data-theme="dark"] .filter-tab { background: #211a10; color: #c4b494; border-color: rgba(201, 168, 76, 0.2); }
+
+/* Privacy notice box (Tailwind blue) */
+html[data-theme="dark"] #e-participation .bg-blue-50 { background: rgba(30, 58, 95, 0.22) !important; border-color: rgba(96, 165, 250, 0.3) !important; }
+html[data-theme="dark"] #e-participation .text-blue-900 { color: #dbeafe !important; }
+html[data-theme="dark"] #e-participation .text-gray-600 { color: #c4b494 !important; }
+
+/* --------------------------------------------------------------------------
+   2) COMMUNITY PARTICIPATION — HIGH CONTRAST
+   White catch-all already whitens the text; give the still-light card + badge
+   surfaces a black background with yellow accents so nothing is invisible.
+   -------------------------------------------------------------------------- */
+html[data-contrast="on"] .highlight-card,
+html[data-contrast="on"] .featured-highlight,
+html[data-contrast="on"] #e-participation .bg-blue-50 {
+  background: #000 !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .highlight-category-badge,
+html[data-contrast="on"] .highlight-category-badge *,
+html[data-contrast="on"] .upcoming-event-date-box,
+html[data-contrast="on"] .upcoming-event-month,
+html[data-contrast="on"] .upcoming-event-day,
+html[data-contrast="on"] .highlight-card-action {
+  color: #facc15 !important;
+}
+html[data-contrast="on"] .highlight-category-badge,
+html[data-contrast="on"] .upcoming-event-date-box {
+  background: #000 !important;
+  border: 1px solid #facc15 !important;
+}
+html[data-contrast="on"] .filter-tab { background: #000 !important; color: #fff !important; border: 1px solid #facc15 !important; }
+html[data-contrast="on"] .filter-tab.active { background: #facc15 !important; color: #000 !important; }
+
+/* --------------------------------------------------------------------------
+   3) ACCOUNT PROFILE — HIGH CONTRAST
+   Status / Verified badges (green / red / blue pastels) were left un-remapped,
+   so the white catch-all text landed on a light chip = invisible.
+   -------------------------------------------------------------------------- */
+html[data-contrast="on"] .ap-page .bg-green-100,
+html[data-contrast="on"] .ap-page .bg-red-100,
+html[data-contrast="on"] .ap-page .bg-blue-100 {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 1px solid #facc15 !important;
+}
+html[data-contrast="on"] .ap-page .bg-green-100 *,
+html[data-contrast="on"] .ap-page .bg-red-100 *,
+html[data-contrast="on"] .ap-page .bg-blue-100 * { color: #facc15 !important; }
+
+/* --------------------------------------------------------------------------
+   4) ACCOUNT SETTINGS — HIGH CONTRAST danger (delete) box
+   The delete card + buttons + alerts read from --s-danger* / --s-ok* vars that
+   the contrast pass never overrode, leaving a light-pink card under white text.
+   Remap the tokens (covers card, buttons, hover, alerts) to black/yellow.
+   -------------------------------------------------------------------------- */
+html[data-contrast="on"],
+html[data-theme="dark"][data-contrast="on"] {
+  --s-danger: #facc15; --s-danger-bg: #000; --s-danger-line: #facc15;
+  --s-ok: #facc15; --s-ok-bg: #000; --s-ok-line: #facc15;
+}
+/* Solid delete button becomes a yellow control -> needs black text */
+html[data-contrast="on"] .s-btn-danger-solid { color: #000 !important; }
