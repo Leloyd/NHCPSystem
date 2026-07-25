@@ -7,17 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public-collection-pages.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
+  <body class="collection-page collection-page--resources min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="ogd-page-header" aria-labelledby="resourcePageHeading">
-        <div class="container mx-auto px-4">
+      <section class="collection-hero ogd-page-header" aria-labelledby="resourcePageHeading">
+        <div class="collection-shell collection-hero__inner">
+          <nav class="collection-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ url_for('index') }}">Home</a>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+            <a href="{{ url_for('digital_exhibits') }}">Digital Exhibits</a>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+            <span aria-current="page">Educational Resources</span>
+          </nav>
+
           <div class="ogd-page-header__inner">
-            <span id="resourceHeaderKicker" class="ogd-page-header__kicker">Mga Materyal sa Pagkatuto</span>
-            <h1 id="resourcePageHeading" class="ogd-page-header__title font-serif">Edu Resources</h1>
+            <div class="collection-pill">
+              <i data-lucide="book-open" aria-hidden="true"></i>
+              <span id="resourceHeaderKicker" class="ogd-page-header__kicker">Mga Materyal sa Pagkatuto</span>
+            </div>
+            <h1 id="resourcePageHeading" class="ogd-page-header__title font-serif">Educational <span>Resources</span></h1>
             <p id="resourceHeaderCopy" class="ogd-page-header__copy">
               Tuklasin ang mga handang-gamitin na lesson guide, worksheet, at prompt na maaaring iayon sa Virtual Tour, Site Map, AR, WebXR, at Online Gallery ng museo.
             </p>
@@ -37,7 +53,7 @@
       </section>
 
       <section class="ogd-toolbar-section" aria-label="Resource filters and view controls">
-        <div class="container mx-auto px-4">
+        <div class="collection-shell">
           <div class="ogd-toolbar">
             <div id="resourceTypeTabs" class="ogd-category-tabs" role="tablist" aria-label="I-filter ang mga resource ayon sa uri">
               <button type="button" class="ogd-category-tabs__button is-active" data-resource-type-filter="all" data-label-en="All Resources" data-label-tl="Lahat ng Resource" aria-pressed="true" aria-selected="true">Lahat ng Resource</button>
@@ -89,7 +105,7 @@
       </section>
 
       <section id="edu-resources" class="ogd-results-section">
-        <div class="container mx-auto px-4">
+        <div class="collection-shell">
           <div class="ogd-results-header">
             <p id="resourceCount" class="ogd-results-count" role="status" aria-live="polite">0 resource ang nakita</p>
             <button id="resourceClearFilters" class="ogd-clear-filters" type="button" hidden aria-label="I-clear ang mga filter">

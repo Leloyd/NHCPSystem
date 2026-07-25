@@ -7,17 +7,33 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public-collection-pages.css') }}" />
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
+  <body class="collection-page collection-page--gallery min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="ogd-page-header" aria-labelledby="galleryHeading">
-        <div class="container mx-auto px-4">
+      <section class="collection-hero ogd-page-header" aria-labelledby="galleryHeading">
+        <div class="collection-shell collection-hero__inner">
+          <nav class="collection-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ url_for('index') }}">Home</a>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+            <a href="{{ url_for('digital_exhibits') }}">Digital Exhibits</a>
+            <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+              <path d="m9 18 6-6-6-6"></path>
+            </svg>
+            <span aria-current="page">Online Gallery</span>
+          </nav>
+
           <div class="ogd-page-header__inner">
-            <span id="galleryHeaderKicker" class="ogd-page-header__kicker">Koleksiyon</span>
-            <h1 id="galleryHeading" class="ogd-page-header__title font-serif">Online Gallery</h1>
+            <div class="collection-pill">
+              <i data-lucide="images" aria-hidden="true"></i>
+              <span id="galleryHeaderKicker" class="ogd-page-header__kicker">Koleksiyon</span>
+            </div>
+            <h1 id="galleryHeading" class="ogd-page-header__title font-serif">Online <span>Gallery</span></h1>
             <p id="galleryHeaderCopy" class="ogd-page-header__copy">
               Tuklasin ang aming piling koleksiyon ng makasaysayang materyales at unawain ang kanilang kontekstong pangkultura sa isang mas pinong digital archive na karanasan.
             </p>
@@ -37,7 +53,7 @@
       </section>
 
       <section class="ogd-toolbar-section" aria-label="Filter and view controls">
-        <div class="container mx-auto px-4">
+        <div class="collection-shell">
           <div class="ogd-toolbar">
             <div id="categoryFilter" class="ogd-category-tabs" role="tablist" aria-label="Filter gallery by category">
               <button type="button" class="ogd-category-tabs__button is-active" data-category-filter="all" data-category-label-en="All Items" data-category-label-tl="Lahat ng Artifact" aria-pressed="true" aria-selected="true">Lahat ng Artifact</button>
@@ -72,7 +88,7 @@
       </section>
 
       <section id="online-gallery" class="ogd-results-section">
-        <div class="container mx-auto px-4">
+        <div class="collection-shell">
           <div class="ogd-results-header">
             <p id="galleryCount" class="ogd-results-count" role="status" aria-live="polite">0 artifact ang nakita</p>
             <button id="galleryClearFilters" class="ogd-clear-filters" type="button" hidden aria-label="I-clear ang mga filter">
