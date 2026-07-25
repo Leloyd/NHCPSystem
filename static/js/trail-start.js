@@ -4006,6 +4006,13 @@ function setupKeeperArchive(storyEl, api = {}) {
   const exitCopy = archiveRoot.querySelector('[data-archive-exit-copy]');
   const exitButton = archiveRoot.querySelector('[data-archive-exit-button]');
   const livingStatus = archiveRoot.querySelector('[data-archive-living-status]');
+  const livingConfigEl = archiveRoot.querySelector('[data-living-memory-config]');
+  const livingStory = archiveRoot.querySelector('[data-living-memory] .trailx-living-memory__story');
+  const livingYear = archiveRoot.querySelector('[data-living-memory-year]');
+  const livingTitle = archiveRoot.querySelector('[data-living-memory-title]');
+  const livingCopy = archiveRoot.querySelector('[data-living-memory-copy]');
+  const livingTimeline = archiveRoot.querySelector('[data-living-memory-timeline]');
+  const livingButtons = Array.from(archiveRoot.querySelectorAll('[data-living-memory-jump]'));
   const doneButton = archiveRoot.querySelector('[data-archive-done]');
   const modal = archiveRoot.querySelector('[data-archive-modal]');
   const modalImage = archiveRoot.querySelector('[data-archive-modal-image]');
@@ -4026,6 +4033,17 @@ function setupKeeperArchive(storyEl, api = {}) {
   let layoutSeed = Date.now() % 2147483647;
   let overlayFocus = null;
   let modalFocus = null;
+  let livingEvents = [];
+  let activeLivingKey = '1578';
+
+  try {
+    const parsed = JSON.parse(livingConfigEl?.textContent || '{}');
+    livingEvents = Array.isArray(parsed.events)
+      ? parsed.events.filter((event) => event?.key && event?.title && event?.copy)
+      : [];
+  } catch (error) {
+    console.error('[Trail] Invalid Living Memory configuration.', error);
+  }
 
   const bilingual = (en, tl) => {
     const fragment = document.createDocumentFragment();
@@ -4042,6 +4060,40 @@ function setupKeeperArchive(storyEl, api = {}) {
   const setBilingual = (element, en, tl) => {
     if (!element) return;
     element.replaceChildren(bilingual(en, tl));
+  };
+
+  const showLivingMemory = (key, options = {}) => {
+    const event = livingEvents.find((item) => String(item.key) === String(key));
+    if (!event) return;
+    activeLivingKey = String(event.key);
+
+    if (typeof event.year === 'object') {
+      setBilingual(livingYear, event.year.en, event.year.tl);
+    } else if (livingYear) {
+      livingYear.textContent = String(event.year || event.key);
+    }
+    setBilingual(livingTitle, event.title.en, event.title.tl);
+    setBilingual(livingCopy, event.copy.en, event.copy.tl);
+
+    livingButtons.forEach((button) => {
+      const active = button.dataset.livingMemoryJump === activeLivingKey;
+      button.classList.toggle('is-active', active);
+      button.setAttribute('aria-selected', String(active));
+      button.setAttribute('aria-controls', 'livingMemoryStory');
+      button.tabIndex = active ? 0 : -1;
+    });
+
+    if (livingStory && !prefersReducedMotion) {
+      livingStory.classList.remove('is-changing');
+      void livingStory.offsetWidth;
+      livingStory.classList.add('is-changing');
+    }
+
+    if (options.focus) {
+      const activeButton = livingButtons.find((button) => button.dataset.livingMemoryJump === activeLivingKey);
+      activeButton?.focus({ preventScroll: true });
+      activeButton?.scrollIntoView({ behavior: prefersReducedMotion ? 'auto' : 'smooth', block: 'nearest', inline: 'center' });
+    }
   };
 
   const currentLanguage = () => root.getAttribute('data-lang') === 'en' ? 'en' : 'tl';
@@ -4671,7 +4723,21 @@ function setupKeeperArchive(storyEl, api = {}) {
     if (tray.scrollLeft !== before) event.preventDefault();
   }, { passive: false });
 
-  archiveRoot.querySelector('[data-living-memory-rail]')?.addEventListener('wheel', (event) => {
+  livingButtons.forEach((button, index) => {
+    button.addEventListener('click', () => showLivingMemory(button.dataset.livingMemoryJump));
+    button.addEventListener('keydown', (event) => {
+      let nextIndex = -1;
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') nextIndex = (index + 1) % livingButtons.length;
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') nextIndex = (index - 1 + livingButtons.length) % livingButtons.length;
+      if (event.key === 'Home') nextIndex = 0;
+      if (event.key === 'End') nextIndex = livingButtons.length - 1;
+      if (nextIndex < 0) return;
+      event.preventDefault();
+      showLivingMemory(livingButtons[nextIndex].dataset.livingMemoryJump, { focus: true });
+    });
+  });
+
+  livingTimeline?.addEventListener('wheel', (event) => {
     const rail = event.currentTarget;
     const delta = Math.abs(event.deltaX) > Math.abs(event.deltaY) ? event.deltaX : event.deltaY;
     if (!delta || rail.scrollWidth <= rail.clientWidth) return;
@@ -4680,6 +4746,7 @@ function setupKeeperArchive(storyEl, api = {}) {
     if (rail.scrollLeft !== before) event.preventDefault();
   }, { passive: false });
 
+  showLivingMemory(activeLivingKey);
   render();
   return {
     isComplete: () => placed.size === cards.length,
