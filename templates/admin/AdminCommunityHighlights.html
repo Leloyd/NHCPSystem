@@ -41,33 +41,6 @@
               </a>
             </header>
 
-            <div class="admin-highlight-summary" aria-label="Community highlight summary">
-              <div>
-                <span class="admin-highlight-summary-icon is-all" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M4 3h16a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v14h16V5Zm2 2h5v5H6Zm7 0h5v2h-5Zm0 3h5v2h-5ZM6 14h12v2H6Z"></path></svg>
-                </span>
-                <span><small>All cards</small><strong>{{ highlights_items|length }}</strong></span>
-              </div>
-              <div>
-                <span class="admin-highlight-summary-icon is-active" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg>
-                </span>
-                <span><small>Active</small><strong>{{ active_highlights_items|length }}</strong></span>
-              </div>
-              <div>
-                <span class="admin-highlight-summary-icon is-draft" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z"></path></svg>
-                </span>
-                <span><small>Draft</small><strong>{{ draft_highlights_items|length }}</strong></span>
-              </div>
-              <div>
-                <span class="admin-highlight-summary-icon is-archived" aria-hidden="true">
-                  <svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
-                </span>
-                <span><small>Archived</small><strong>{{ archived_highlights_items|length }}</strong></span>
-              </div>
-            </div>
-
             <div class="admin-highlight-toolbar">
               <nav class="admin-highlight-filters" aria-label="Filter community highlights by status">
                 <a href="{{ url_for('admin_community_highlights', filter='all') }}" class="admin-highlight-filter{% if status_filter == 'all' %} is-active{% endif %}" data-highlight-tab="all"{% if status_filter == 'all' %} aria-current="page"{% endif %}>
@@ -140,12 +113,10 @@
 
                 <footer class="admin-highlight-card-actions">
                   <div>
-                    {% if highlight_item.status == 'active' %}
-                    <a href="{{ url_for('community_highlight_detail', slug=highlight_item.slug) }}" class="admin-highlight-action is-secondary">
+                    <a href="{{ url_for('admin_community_highlight_view', highlight_id=highlight_item.id) }}" class="admin-highlight-action is-secondary">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
                       View
                     </a>
-                    {% endif %}
                     <a href="{{ url_for('admin_community_highlight_edit', highlight_id=highlight_item.id) }}" class="admin-highlight-action is-primary">
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
                       Edit

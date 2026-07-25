@@ -211,6 +211,21 @@ def register_community_content_routes(
             config_error=config_error,
         )
 
+    @app.route(f"{admin_route_prefix}/community-highlights/<int:highlight_id>")
+    @admin_required
+    def admin_community_highlight_view(highlight_id):
+        highlight_item = load_admin_community_highlight(highlight_id)
+        if highlight_item is None:
+            return redirect(url_for("admin_community_highlights"))
+
+        return render_template(
+            "admin/AdminCommunityHighlightsView.html",
+            csrf_token=ensure_admin_csrf_token(),
+            admin_username=session.get(admin_session_user_key, admin_username),
+            highlight_item=highlight_item,
+            status_message=get_community_highlights_status_message(request.args.get("status")),
+        )
+
     @app.route(f"{admin_route_prefix}/community-highlights/new", methods=["GET", "POST"])
     @admin_required
     def admin_community_highlight_new():
@@ -366,6 +381,8 @@ def register_community_content_routes(
         try:
             if feature_action == "remove":
                 update_community_highlight(highlight_id, {"is_featured": False})
+                if request.form.get("return_to") == "view":
+                    return redirect(url_for("admin_community_highlight_view", highlight_id=highlight_id, status="unfeatured"))
                 return redirect(url_for("admin_community_highlights", status="unfeatured"))
 
             clear_featured_community_highlights(exclude_id=highlight_id)
@@ -374,6 +391,8 @@ def register_community_content_routes(
             app.logger.exception("Failed to update featured community highlight %s: %s", highlight_id, exc)
             return redirect(url_for("admin_community_highlights"))
 
+        if request.form.get("return_to") == "view":
+            return redirect(url_for("admin_community_highlight_view", highlight_id=highlight_id, status="featured"))
         return redirect(url_for("admin_community_highlights", status="featured"))
 
     @app.route(f"{admin_route_prefix}/community-highlights/<int:highlight_id>/delete", methods=["POST"])
@@ -392,6 +411,8 @@ def register_community_content_routes(
             app.logger.exception("Failed to archive community highlight %s: %s", highlight_id, exc)
             return redirect(url_for("admin_community_highlights"))
 
+        if request.form.get("return_to") == "view":
+            return redirect(url_for("admin_community_highlight_view", highlight_id=highlight_id, status="archived"))
         return redirect(url_for("admin_community_highlights", status="archived"))
 
     @app.route("/community-highlights/<slug>")
