@@ -170,3 +170,136 @@ html[data-theme="dark"] { --a11y-surface: #211a10; --a11y-ink: #f3ece0; --a11y-m
 @media (max-width: 640px) {
   .site-a11y-panel { width: min(17rem, calc(100vw - 2rem)); }
 }
+
+/* ==========================================================================
+   FIX PASS — dark mode where page-level vars shadowed the html-level ones,
+   nav account button/menu, real high-contrast for content, + Account profile.
+   ========================================================================== */
+
+/* ---- Collection pages (Online Gallery / Edu Resources) ------------------
+   These define --collection-* ON the body (.collection-page), which shadows a
+   redefinition on <html>. Scope the override to .collection-page so it wins. */
+html[data-theme="dark"] .collection-page {
+  --collection-bg: #141009;
+  --collection-surface: #211a10;
+  --collection-surface-soft: #1a140c;
+  --collection-ink: #f3ece0;
+  --collection-muted: #c4b494;
+  --collection-muted-soft: #a08a68;
+  --collection-gold: #e6cf8a;
+  --collection-gold-deep: #e6cf8a;
+  --collection-gold-border: rgba(201, 168, 76, 0.24);
+  background: #141009;
+  color: #f3ece0;
+}
+html[data-theme="dark"] .collection-page .ogd-toolbar,
+html[data-theme="dark"] .collection-page .ogd-search-field,
+html[data-theme="dark"] .collection-page .ogd-sort-control,
+html[data-theme="dark"] .collection-page .ogd-sort-control__select,
+html[data-theme="dark"] .collection-page .ogd-search-field__input,
+html[data-theme="dark"] .collection-page .ogd-view-toggle,
+html[data-theme="dark"] .collection-page .ogd-category-tabs__button,
+html[data-theme="dark"] .collection-page .ogd-artifact-card,
+html[data-theme="dark"] .collection-page .ogd-artifact-card__media {
+  background: #211a10 !important;
+  color: #f3ece0 !important;
+  border-color: rgba(201, 168, 76, 0.2) !important;
+}
+html[data-theme="dark"] .collection-page .ogd-artifact-card__title { color: #f3ece0 !important; }
+html[data-theme="dark"] .collection-page .ogd-artifact-card__summary,
+html[data-theme="dark"] .collection-page .ogd-results-count,
+html[data-theme="dark"] .collection-page .ogd-artifact-card__meta { color: #c4b494 !important; }
+html[data-theme="dark"] .collection-page .ogd-artifact-card__meta-pill { background: #2a2114 !important; color: #d8c9a6 !important; border-color: rgba(201, 168, 76, 0.2) !important; }
+html[data-theme="dark"] .collection-page .ogd-search-field__input::placeholder { color: #9a8a6d !important; }
+html[data-theme="dark"] .collection-page .ogd-search-field__icon,
+html[data-theme="dark"] .collection-page .ogd-sort-control__icon,
+html[data-theme="dark"] .collection-page .ogd-view-toggle__button i { color: #c4b494 !important; }
+html[data-theme="dark"] .collection-page .ogd-category-tabs__button.is-active,
+html[data-theme="dark"] .collection-page .ogd-view-toggle__button.is-active { background: linear-gradient(135deg, #b8963e, #c9a84c) !important; color: #1a1208 !important; }
+
+/* ---- Community: keep text readable in dark ------------------------------- */
+html[data-theme="dark"] body.min-h-screen.bg-white { background: #141009 !important; color: #f3ece0; }
+html[data-theme="dark"] .community-section-title,
+html[data-theme="dark"] .participation-card-title,
+html[data-theme="dark"] .upcoming-events-title,
+html[data-theme="dark"] .calendar-month-title { color: #f3ece0 !important; }
+html[data-theme="dark"] .calendar-day,
+html[data-theme="dark"] .calendar-day-label,
+html[data-theme="dark"] .calendar-day-number { color: #d8c9a6 !important; }
+html[data-theme="dark"] .calendar-nav-btn { background: #2a2114 !important; color: #e6cf8a !important; }
+
+/* ---- Top navigation: signed-in account button + dropdown ----------------- */
+html[data-theme="dark"] .public-account-trigger {
+  background: rgba(255, 255, 255, 0.06);
+  color: #e7ddc9;
+  border-color: rgba(201, 168, 76, 0.25);
+}
+html[data-theme="dark"] .public-account-trigger:hover,
+html[data-theme="dark"] .public-account-trigger:focus-visible { background: rgba(201, 168, 76, 0.16); color: #f7ecd2; }
+html[data-theme="dark"] .public-account-menu { background: #211a10; border-color: rgba(201, 168, 76, 0.2); box-shadow: 0 22px 54px rgba(0, 0, 0, 0.55); }
+html[data-theme="dark"] .public-account-menu-header { background: rgba(255, 255, 255, 0.03); border-color: rgba(201, 168, 76, 0.16); }
+html[data-theme="dark"] .public-account-menu-name { color: #f3ece0; }
+html[data-theme="dark"] .public-account-menu-email { color: #b6a684; }
+html[data-theme="dark"] .public-account-menu-link { color: #d8ccb4; }
+html[data-theme="dark"] .public-account-menu-link:hover,
+html[data-theme="dark"] .public-account-menu-link:focus-visible { background: rgba(201, 168, 76, 0.14); color: #f7ecd2; }
+html[data-theme="dark"] .public-account-menu-divider { background: rgba(201, 168, 76, 0.16); }
+html[data-theme="dark"] .public-account-chevron,
+html[data-theme="dark"] .public-account-menu-icon { color: #cdbf9f; }
+
+/* ==========================================================================
+   HIGH CONTRAST — restyle the page content, not just the nav.
+   ========================================================================== */
+html[data-contrast="on"]:not([data-theme="dark"]) {
+  --dx-muted: #241c0e; --dx-muted-2: #241c0e; --dx-ink: #000;
+  --ix-muted: #241c0e; --ix-muted-2: #241c0e; --ix-ink: #000;
+  --support-muted: #241c0e; --support-muted-2: #241c0e; --support-ink: #000;
+  --collection-muted: #241c0e; --collection-muted-soft: #241c0e; --collection-ink: #000;
+  --s-muted: #241c0e;
+  --color-primary: #0a1a2e; --color-primary-light: #0a1a2e; --color-text-secondary: #111; --color-text-muted: #111;
+}
+html[data-theme="dark"][data-contrast="on"] {
+  --dx-muted: #fff6e6; --dx-muted-2: #fff6e6; --dx-ink: #fff;
+  --ix-muted: #fff6e6; --ix-muted-2: #fff6e6; --ix-ink: #fff;
+  --support-muted: #fff6e6; --support-muted-2: #fff6e6; --support-ink: #fff;
+  --collection-muted: #fff6e6; --collection-muted-soft: #fff6e6; --collection-ink: #fff;
+  --s-muted: #fff6e6;
+}
+html[data-contrast="on"] .dx-card,
+html[data-contrast="on"] .ix-card,
+html[data-contrast="on"] .support-policy-card,
+html[data-contrast="on"] .support-results-card,
+html[data-contrast="on"] .s-card,
+html[data-contrast="on"] .participation-card,
+html[data-contrast="on"] .calendar-container,
+html[data-contrast="on"] .upcoming-events-sidebar,
+html[data-contrast="on"] .ogd-artifact-card,
+html[data-contrast="on"] .ogd-toolbar { border-width: 2px !important; }
+html[data-contrast="on"]:not([data-theme="dark"]) .community-section-description,
+html[data-contrast="on"]:not([data-theme="dark"]) .participation-card-description,
+html[data-contrast="on"]:not([data-theme="dark"]) .ap-page .text-stone-600,
+html[data-contrast="on"]:not([data-theme="dark"]) .ap-page .text-stone-500 { color: #111 !important; }
+html[data-theme="dark"][data-contrast="on"] .community-section-description,
+html[data-theme="dark"][data-contrast="on"] .participation-card-description,
+html[data-theme="dark"][data-contrast="on"] .ap-page .text-stone-600,
+html[data-theme="dark"][data-contrast="on"] .ap-page .text-stone-500 { color: #fff !important; }
+
+/* ==========================================================================
+   ACCOUNT PROFILE (Tailwind-utility page) — dark mode
+   ========================================================================== */
+html[data-theme="dark"] .ap-page { background: #141009 !important; color: #f3ece0; }
+html[data-theme="dark"] .ap-page .bg-white { background: #211a10 !important; }
+html[data-theme="dark"] .ap-page .text-stone-900 { color: #f3ece0 !important; }
+html[data-theme="dark"] .ap-page .text-stone-600 { color: #c4b494 !important; }
+html[data-theme="dark"] .ap-page .text-stone-500 { color: #a08a68 !important; }
+html[data-theme="dark"] .ap-page .text-stone-400 { color: #8a7a5c !important; }
+html[data-theme="dark"] .ap-page .border-amber-200\/70 { border-color: rgba(201, 168, 76, 0.2) !important; }
+html[data-theme="dark"] .ap-page .border-stone-100,
+html[data-theme="dark"] .ap-page .border-stone-200 { border-color: rgba(201, 168, 76, 0.14) !important; }
+html[data-theme="dark"] .ap-page .bg-stone-100 { background: #2a2114 !important; color: #d8c9a6 !important; }
+html[data-theme="dark"] .ap-page .bg-amber-50 { background: rgba(201, 168, 76, 0.12) !important; }
+html[data-theme="dark"] .ap-page .bg-amber-100 { background: rgba(201, 168, 76, 0.18) !important; }
+html[data-theme="dark"] .ap-page .text-amber-700,
+html[data-theme="dark"] .ap-page .text-amber-800 { color: #e6cf8a !important; }
+html[data-theme="dark"] .ap-page .hover\:bg-amber-50:hover { background: rgba(201, 168, 76, 0.12) !important; }
+html[data-theme="dark"] .ap-page .hover\:text-amber-800:hover { color: #e6cf8a !important; }

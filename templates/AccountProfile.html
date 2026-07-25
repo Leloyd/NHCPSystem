@@ -6,8 +6,9 @@
     <title>My Account | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
-  <body class="min-h-screen bg-[#f7f1e4] text-stone-900">
+  <body class="ap-page min-h-screen bg-[#f7f1e4] text-stone-900">
     {% set public_active_page = '' %}
     {% include 'partials/_public_top_nav.html' %}
 
@@ -275,12 +276,14 @@
       </div>
     </main>
 
+    {% include 'partials/_site_accessibility_fab.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
       if (window.lucide) {
         lucide.createIcons();
       }
     </script>
+    {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>
