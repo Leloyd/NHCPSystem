@@ -2,12 +2,181 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <title>Complete Your Profile | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <style>
+      :root {
+        --as-cream: #f7f1e4;
+        --as-ink: #1a1008;
+        --as-ink-2: #2c1a0e;
+        --as-gold: #c9a84c;
+        --as-gold-2: #b8963e;
+        --as-line: rgba(184, 150, 62, 0.28);
+        --as-muted: #6b5a40;
+        --as-nav: 5rem;
+      }
+
+      /* The JS toggles the `hidden` class to switch steps; make sure it always
+         wins regardless of when Tailwind's CDN injects its own rules. */
+      .as-page .hidden { display: none !important; }
+
+      .as-page { background: var(--as-cream); color: var(--as-ink); }
+
+      .as-main { padding-top: var(--as-nav); }
+      .as-shell { display: flex; flex-direction: column; }
+
+      /* ---- Brand panel (desktop only) ------------------------------------- */
+      .as-brand { display: none; }
+      .as-brand-mark {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 3rem; height: 3rem; border-radius: 1rem; font-size: 1.35rem;
+        background: linear-gradient(135deg, var(--as-gold-2), var(--as-gold));
+      }
+      .as-brand-eyebrow { font-size: 0.7rem; letter-spacing: 0.28em; text-transform: uppercase; color: rgba(201, 168, 76, 0.85); }
+      .as-brand-title { font-family: Georgia, "Times New Roman", serif; font-size: clamp(2rem, 3vw, 2.9rem); line-height: 1.08; }
+      .as-brand-copy { color: #d7cbb6; font-size: 0.95rem; line-height: 1.75; max-width: 30rem; }
+      .as-brand-chip {
+        display: inline-flex; align-items: center; gap: 0.5rem; border-radius: 9999px;
+        border: 1px solid rgba(255, 255, 255, 0.12); background: rgba(255, 255, 255, 0.05);
+        padding: 0.5rem 0.9rem; font-size: 0.82rem; color: #e7ddc9;
+      }
+      .as-brand-feature {
+        display: flex; gap: 0.85rem; border-radius: 1rem;
+        border: 1px solid rgba(255, 255, 255, 0.1); background: rgba(255, 255, 255, 0.04);
+        padding: 0.9rem 1rem;
+      }
+      .as-brand-feature svg { width: 1.15rem; height: 1.15rem; color: var(--as-gold); flex: 0 0 auto; margin-top: 0.1rem; }
+      .as-brand-feature b { color: #fff; font-weight: 600; font-size: 0.92rem; }
+      .as-brand-feature p { color: #cabfa9; font-size: 0.82rem; line-height: 1.55; margin-top: 0.15rem; }
+
+      /* ---- Form column ---------------------------------------------------- */
+      .as-form { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+
+      .as-head { flex: 0 0 auto; }
+      .as-head-top { display: flex; align-items: center; justify-content: space-between; gap: 0.75rem; }
+      .as-eyebrow-row { display: flex; align-items: center; gap: 0.6rem; }
+      .as-mark {
+        display: inline-flex; align-items: center; justify-content: center;
+        width: 1.9rem; height: 1.9rem; border-radius: 0.6rem; font-size: 0.9rem;
+        background: linear-gradient(135deg, var(--as-gold-2), var(--as-gold));
+      }
+      .as-eyebrow { font-size: 0.68rem; letter-spacing: 0.22em; text-transform: uppercase; color: var(--as-gold-2); font-weight: 600; }
+      .as-progress-num { font-size: 1.05rem; font-weight: 700; color: var(--as-ink); }
+
+      .as-progress-track { margin-top: 0.75rem; height: 0.4rem; width: 100%; border-radius: 9999px; background: rgba(184, 150, 62, 0.18); overflow: hidden; }
+      .as-progress-bar { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, var(--as-gold-2), var(--as-gold)); transition: width 0.35s ease; }
+
+      .as-title { margin-top: 0.9rem; font-family: Georgia, "Times New Roman", serif; font-size: clamp(1.4rem, 5.5vw, 1.85rem); line-height: 1.12; color: var(--as-ink); }
+      .as-desc { margin-top: 0.5rem; color: var(--as-muted); font-size: 0.9rem; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+      .as-alert { margin-top: 0.85rem; border-radius: 0.85rem; border: 1px solid #fecaca; background: #fef2f2; color: #b91c1c; padding: 0.7rem 0.9rem; font-size: 0.82rem; line-height: 1.4; }
+
+      /* ---- Step body ------------------------------------------------------ */
+      .as-body { flex: 1; min-height: 0; display: flex; align-items: center; overflow: hidden; padding: 1rem 0; }
+      .as-body-inner { width: 100%; }
+      .as-step { animation: as-fade 0.3s ease; }
+      @keyframes as-fade { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+      /* Field atoms */
+      .as-field-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--as-ink); margin-bottom: 0.5rem; }
+      .as-req { color: #dc2626; }
+      .as-input-text, .as-select {
+        width: 100%; border-radius: 0.9rem; border: 1px solid var(--as-line); background: #fff;
+        padding: 0.85rem 1rem; font-size: 0.95rem; color: var(--as-ink); box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        transition: border-color 0.18s ease, box-shadow 0.18s ease;
+      }
+      .as-input-text:focus, .as-select:focus { outline: none; border-color: var(--as-gold); box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.18); }
+      .as-input-text:disabled, .as-select:disabled { background: #f3ede1; color: #9a8a6d; cursor: not-allowed; }
+      .as-hint { margin-top: 0.6rem; font-size: 0.8rem; line-height: 1.5; color: var(--as-muted); }
+
+      /* Option cards (use case) */
+      .as-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+      .as-input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+      .as-option-face {
+        display: flex; align-items: center; min-height: 3.1rem; height: 100%;
+        border-radius: 0.9rem; border: 1px solid var(--as-line); background: #fff;
+        padding: 0.7rem 0.85rem; font-size: 0.85rem; font-weight: 500; line-height: 1.3; color: #4a3d29;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: transform 0.15s ease, border-color 0.15s ease, background 0.2s ease, color 0.2s ease; cursor: pointer;
+      }
+      .as-option:hover .as-option-face { transform: translateY(-1px); border-color: rgba(184,150,62,0.5); }
+      .as-input:checked + .as-option-face {
+        border-color: transparent; color: #f7f1e4;
+        background: linear-gradient(135deg, var(--as-ink-2), var(--as-ink));
+        box-shadow: 0 10px 24px rgba(26,16,8,0.22);
+      }
+      .as-input:focus-visible + .as-option-face { box-shadow: 0 0 0 3px rgba(201,168,76,0.35); }
+
+      /* Chips (roles) */
+      .as-chips { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+      .as-chip-face {
+        display: inline-flex; align-items: center; border-radius: 9999px; border: 1px solid var(--as-line);
+        background: #fff; padding: 0.5rem 0.95rem; font-size: 0.82rem; font-weight: 500; color: #4a3d29;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.03); transition: border-color 0.15s ease, background 0.2s ease, color 0.2s ease; cursor: pointer;
+      }
+      .as-chip:hover .as-chip-face { border-color: rgba(184,150,62,0.5); }
+      .as-input:checked + .as-chip-face { border-color: transparent; color: #f7f1e4; background: linear-gradient(135deg, var(--as-ink-2), var(--as-ink)); }
+      .as-input:focus-visible + .as-chip-face { box-shadow: 0 0 0 3px rgba(201,168,76,0.35); }
+
+      .as-loc-grid { display: grid; grid-template-columns: 1fr; gap: 0.75rem; }
+
+      /* ---- Footer --------------------------------------------------------- */
+      .as-foot { flex: 0 0 auto; display: flex; align-items: center; gap: 0.75rem; padding-top: 0.9rem; border-top: 1px solid var(--as-line); }
+      .as-btn { display: inline-flex; align-items: center; justify-content: center; border-radius: 9999px; font-size: 0.88rem; font-weight: 600; padding: 0.8rem 1.5rem; cursor: pointer; transition: transform 0.15s ease, opacity 0.15s ease, background 0.2s ease; }
+      .as-btn-ghost { border: 1px solid #d6c9ad; background: transparent; color: #5a4a30; }
+      .as-btn-ghost:hover { background: #fff; }
+      .as-btn-primary { border: 1px solid transparent; color: #1a1008; background: linear-gradient(135deg, var(--as-gold-2), var(--as-gold)); margin-left: auto; }
+      .as-btn-primary:hover { transform: translateY(-1px); }
+
+      /* ====================================================================
+         MOBILE  (< 1024px): fixed full-screen wizard, no page scrolling
+         ==================================================================== */
+      @media (max-width: 1023px) {
+        html, body.as-page { height: 100%; overflow: hidden; }
+        .as-main { height: 100dvh; }
+        .as-shell { height: 100%; }
+        .as-form {
+          height: 100%;
+          padding: 1rem 1.15rem calc(1rem + env(safe-area-inset-bottom));
+        }
+        .as-options { gap: 0.5rem; }
+        .as-option-face { min-height: 2.9rem; font-size: 0.82rem; }
+      }
+
+      /* Very short viewports — tighten so it still never scrolls */
+      @media (max-width: 1023px) and (max-height: 680px) {
+        .as-title { font-size: 1.3rem; margin-top: 0.6rem; }
+        .as-desc { -webkit-line-clamp: 1; margin-top: 0.35rem; }
+        .as-body { padding: 0.5rem 0; }
+        .as-option-face { min-height: 2.6rem; }
+        .as-chip-face { padding: 0.4rem 0.8rem; }
+      }
+
+      /* ====================================================================
+         DESKTOP (>= 1024px): two-column split, scrolling allowed
+         ==================================================================== */
+      @media (min-width: 1024px) {
+        body.as-page { overflow: auto; }
+        .as-main { min-height: 100dvh; }
+        .as-shell { flex-direction: row; min-height: calc(100dvh - var(--as-nav)); }
+        .as-brand {
+          display: flex; flex-direction: column; width: 40%; max-width: 34rem;
+          padding: 3.5rem 3rem; color: #f2e9d8;
+          background: linear-gradient(160deg, #2c1a0e 0%, #1a1008 100%);
+        }
+        .as-form { padding: 3.5rem clamp(2rem, 4vw, 4rem); }
+        .as-body { align-items: center; overflow: visible; padding: 2rem 0; }
+        .as-body-inner { max-width: 40rem; }
+        .as-title { font-size: clamp(1.9rem, 2.4vw, 2.4rem); }
+        .as-desc { -webkit-line-clamp: unset; font-size: 0.95rem; }
+        .as-options { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.75rem; }
+        .as-option-face { min-height: 3.4rem; font-size: 0.9rem; }
+        .as-loc-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1rem; }
+      }
+    </style>
   </head>
-  <body class="min-h-screen bg-[#F7F1E4] text-stone-900">
+  <body class="as-page min-h-screen">
     {% set public_active_page = '' %}
     {% set selected_use_case = request.form.get('website_use_case', current_public_user.website_use_case or '') %}
     {% set selected_country = request.form.get('country_text', current_public_user.country_text or 'Philippines') %}
@@ -15,148 +184,137 @@
     {% set selected_city = request.form.get('city_text', current_public_user.city_text or '') %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="pt-20 min-h-screen">
-      <form id="accountSetupForm" method="post" class="min-h-[calc(100vh-5rem)] flex flex-col lg:flex-row">
+    <main class="as-main">
+      <form id="accountSetupForm" method="post" class="as-shell">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
         <input type="hidden" name="next" value="{{ next_url }}" />
         <input type="hidden" id="setupCountryHidden" name="country_text" value="{{ selected_country }}" />
         <input type="hidden" id="setupProvinceHidden" name="province_text" value="{{ selected_province }}" />
         <input type="hidden" id="setupCityHidden" name="city_text" value="{{ selected_city }}" />
 
-        <section class="w-full lg:w-[40%] xl:w-[36%] px-5 sm:px-8 lg:px-12 py-8 lg:py-12 text-stone-100" style="background: linear-gradient(160deg, #2C1A0E 0%, #1A1008 100%);">
-          <div class="h-full flex flex-col">
-            <div>
-              <div class="inline-flex items-center justify-center w-12 h-12 rounded-2xl text-xl mb-8" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">🏛️</div>
-              <p class="text-[11px] tracking-[0.28em] uppercase text-amber-200/80">Profile Setup</p>
-              <h1 class="mt-4 text-4xl md:text-5xl font-serif leading-tight">Let’s set up your museum profile</h1>
-              <p class="mt-5 max-w-xl text-sm md:text-base leading-7 text-stone-300">Answer a few quick questions so we can personalize your digital heritage experience, recommend the right resources, and make your account feel more useful from the start.</p>
-              <div class="mt-8 inline-flex items-center rounded-full border border-white/10 bg-white/5 px-4 py-2 text-sm text-stone-200">
-                Signed up as <strong class="ml-2 text-white">{{ current_public_user.email }}</strong>
-              </div>
+        <!-- Brand panel (desktop) -->
+        <section class="as-brand">
+          <div>
+            <div class="as-brand-mark">🏛️</div>
+            <p class="as-brand-eyebrow" style="margin-top:1.75rem;">Profile Setup</p>
+            <h1 class="as-brand-title" style="margin-top:0.9rem;">Let’s set up your<br />museum profile</h1>
+            <p class="as-brand-copy" style="margin-top:1.1rem;">Answer a few quick questions so we can personalize your digital heritage experience and recommend the right resources from the start.</p>
+            <div class="as-brand-chip" style="margin-top:1.5rem;">Signed up as <strong style="color:#fff;margin-left:0.35rem;">{{ current_public_user.email }}</strong></div>
+          </div>
+          <div style="margin-top:auto; display:flex; flex-direction:column; gap:0.75rem; padding-top:2rem;">
+            <div class="as-brand-feature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m3 17 2 2 4-4"/><path d="m3 7 2 2 4-4"/><path d="M13 6h8M13 12h8M13 18h8"/></svg>
+              <div><b>One step at a time</b><p>Move through name, purpose, roles, and location with a clear progress line.</p></div>
             </div>
-
-            <div class="mt-10 lg:mt-auto space-y-4">
-              <div class="flex items-start gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4">
-                <div class="w-11 h-11 rounded-2xl bg-amber-500/15 flex items-center justify-center text-lg">�</div>
-                <div>
-                  <p class="font-semibold text-white">One step at a time</p>
-                  <p class="mt-1 text-sm leading-6 text-stone-300">You’ll move through name, purpose, roles, and location with a clear progress line.</p>
-                </div>
-              </div>
-              <div class="flex items-start gap-4 rounded-3xl border border-white/10 bg-white/5 px-4 py-4">
-                <div class="w-11 h-11 rounded-2xl bg-amber-500/15 flex items-center justify-center text-lg">�</div>
-                <div>
-                  <p class="font-semibold text-white">Structured location</p>
-                  <p class="mt-1 text-sm leading-6 text-stone-300">Country comes from a global list, while Philippine province and city choices use your local dataset.</p>
-                </div>
-              </div>
+            <div class="as-brand-feature">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
+              <div><b>Structured location</b><p>Country comes from a global list; Philippine province and city use your local dataset.</p></div>
             </div>
           </div>
         </section>
 
-        <section class="flex-1 px-5 sm:px-8 lg:px-12 py-8 lg:py-12 bg-[#F7F1E4] flex flex-col">
-          <div class="w-full max-w-4xl mx-auto flex-1 flex flex-col">
-            <div class="flex flex-col gap-5 sm:flex-row sm:items-end sm:justify-between">
-              <div>
-                <p id="accountSetupStepLabel" class="text-[11px] tracking-[0.24em] uppercase text-amber-700">Step 1 of 4</p>
-                <h2 id="accountSetupStepTitle" class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">What should we call you?</h2>
-                <p id="accountSetupStepDescription" class="mt-3 max-w-2xl text-sm md:text-base leading-7 text-stone-600">Start with your name so your profile feels personal from the first screen.</p>
+        <!-- Form column -->
+        <section class="as-form">
+          <div class="as-head">
+            <div class="as-head-top">
+              <div class="as-eyebrow-row">
+                <span class="as-mark" aria-hidden="true">🏛️</span>
+                <p id="accountSetupStepLabel" class="as-eyebrow">Step 1 of 4</p>
               </div>
-              <div class="sm:text-right">
-                <p class="text-sm font-medium text-stone-500">Progress</p>
-                <p id="accountSetupProgressText" class="mt-1 text-lg font-semibold text-stone-900">25%</p>
-              </div>
+              <p class="as-progress-num"><span id="accountSetupProgressText">25%</span></p>
             </div>
 
-            <div class="mt-6 h-1.5 w-full rounded-full bg-amber-100 overflow-hidden">
-              <div id="accountSetupProgressBar" class="h-full rounded-full transition-all duration-300" style="width: 25%; background: linear-gradient(90deg, #B8963E, #C9A84C);"></div>
+            <div class="as-progress-track">
+              <div id="accountSetupProgressBar" class="as-progress-bar" style="width: 25%;"></div>
             </div>
+
+            <h2 id="accountSetupStepTitle" class="as-title">What should we call you?</h2>
+            <p id="accountSetupStepDescription" class="as-desc">Start with your name so your profile feels personal from the first screen.</p>
 
             {% if error_message %}
-            <div id="accountSetupServerError" class="mt-6 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700">{{ error_message }}</div>
+            <div id="accountSetupServerError" class="as-alert">{{ error_message }}</div>
             {% else %}
-            <div id="accountSetupServerError" class="hidden mt-6 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"></div>
+            <div id="accountSetupServerError" class="as-alert hidden"></div>
             {% endif %}
-            <div id="accountSetupClientError" class="hidden mt-4 rounded-3xl border border-red-200 bg-red-50 px-5 py-4 text-sm text-red-700"></div>
+            <div id="accountSetupClientError" class="as-alert hidden"></div>
+          </div>
 
-            <div class="flex-1 flex items-center py-10 lg:py-14">
-              <div class="w-full">
-                <section data-setup-step="0" data-step-title="What should we call you?" data-step-description="Start with your name so your profile feels personal from the first screen." class="space-y-6">
-                  <div class="max-w-2xl">
-                    <label for="setupFullName" class="block text-sm font-semibold text-stone-900 mb-3">Full Name <span class="text-red-600">*</span></label>
-                    <input id="setupFullName" name="full_name" type="text" required maxlength="160" value="{{ request.form.get('full_name', current_public_user.full_name or '') }}" class="w-full rounded-[1.75rem] border border-amber-200 bg-white px-5 py-5 text-lg text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter your full name" />
-                    <p class="mt-4 text-sm leading-7 text-stone-500">Use the name you want to see on your NHCP account.</p>
-                  </div>
-                </section>
+          <div class="as-body">
+            <div class="as-body-inner">
+              <!-- Step 0 · Name -->
+              <section data-setup-step="0" data-step-title="What should we call you?" data-step-description="Start with your name so your profile feels personal from the first screen." class="as-step">
+                <label for="setupFullName" class="as-field-label">Full Name <span class="as-req">*</span></label>
+                <input id="setupFullName" name="full_name" type="text" required maxlength="160" value="{{ request.form.get('full_name', current_public_user.full_name or '') }}" class="as-input-text" placeholder="Enter your full name" />
+                <p class="as-hint">Use the name you want to see on your NHCP account.</p>
+              </section>
 
-                <section data-setup-step="1" data-step-title="How do you plan to use the website?" data-step-description="Tell us your main purpose so we can shape the experience around what you need most." class="hidden space-y-4">
-                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-4xl">
-                    {% for option in use_case_options %}
-                    <label class="group cursor-pointer">
-                      <input type="radio" name="website_use_case" value="{{ option }}" class="sr-only peer" {% if selected_use_case == option %}checked{% endif %} />
-                      <span class="flex min-h-[120px] items-end rounded-[1.75rem] border border-amber-200 bg-white px-5 py-5 text-base font-medium leading-7 text-stone-700 shadow-sm transition peer-checked:border-transparent peer-checked:bg-gradient-to-br peer-checked:from-stone-900 peer-checked:to-stone-800 peer-checked:text-stone-100 group-hover:-translate-y-0.5">{{ option }}</span>
-                    </label>
-                    {% endfor %}
-                  </div>
-                </section>
+              <!-- Step 1 · Use case -->
+              <section data-setup-step="1" data-step-title="How do you plan to use the website?" data-step-description="Tell us your main purpose so we can shape the experience around what you need most." class="as-step hidden">
+                <div class="as-options">
+                  {% for option in use_case_options %}
+                  <label class="as-option">
+                    <input type="radio" name="website_use_case" value="{{ option }}" class="as-input" {% if selected_use_case == option %}checked{% endif %} />
+                    <span class="as-option-face">{{ option }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </section>
 
-                <section data-setup-step="2" data-step-title="Which roles best describe you?" data-step-description="Choose all roles that match you. This helps us tailor your resources and recommendations." class="hidden space-y-6">
-                  <div class="flex flex-wrap gap-3 max-w-4xl">
-                    {% for role in role_options %}
-                    <label class="cursor-pointer">
-                      <input type="checkbox" name="profile_roles" value="{{ role }}" class="sr-only peer" {% if role in selected_roles %}checked{% endif %} />
-                      <span class="inline-flex min-h-[54px] items-center rounded-full border border-amber-200 bg-white px-5 py-3 text-sm sm:text-base font-medium text-stone-700 shadow-sm transition peer-checked:border-transparent peer-checked:bg-gradient-to-br peer-checked:from-stone-900 peer-checked:to-stone-800 peer-checked:text-stone-100">{{ role }}</span>
-                    </label>
-                    {% endfor %}
-                  </div>
-                </section>
+              <!-- Step 2 · Roles -->
+              <section data-setup-step="2" data-step-title="Which roles best describe you?" data-step-description="Choose all roles that match you. This helps us tailor your resources and recommendations." class="as-step hidden">
+                <div class="as-chips">
+                  {% for role in role_options %}
+                  <label class="as-chip">
+                    <input type="checkbox" name="profile_roles" value="{{ role }}" class="as-input" {% if role in selected_roles %}checked{% endif %} />
+                    <span class="as-chip-face">{{ role }}</span>
+                  </label>
+                  {% endfor %}
+                </div>
+              </section>
 
-                <section data-setup-step="3" data-step-title="Where are you from?" data-step-description="Select your location to help us understand your local context and audience better." class="hidden space-y-6">
-                  <div class="grid grid-cols-1 lg:grid-cols-3 gap-5 max-w-5xl">
-                    <div>
-                      <label for="setupCountrySelect" class="block text-sm font-semibold text-stone-900 mb-3">Country <span class="text-red-600">*</span></label>
-                      <select id="setupCountrySelect" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30">
-                        <option value="">Select country</option>
-                      </select>
-                    </div>
-
-                    <div id="setupProvinceSelectWrap">
-                      <label for="setupProvinceSelect" class="block text-sm font-semibold text-stone-900 mb-3">Province <span class="text-red-600">*</span></label>
-                      <select id="setupProvinceSelect" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" disabled>
-                        <option value="">Select province</option>
-                      </select>
-                    </div>
-
-                    <div id="setupCitySelectWrap">
-                      <label for="setupCitySelect" class="block text-sm font-semibold text-stone-900 mb-3">City <span class="text-red-600">*</span></label>
-                      <select id="setupCitySelect" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" disabled>
-                        <option value="">Select city</option>
-                      </select>
-                    </div>
-
-                    <div id="setupProvinceManualWrap" class="hidden lg:col-span-1">
-                      <label for="setupProvinceManual" class="block text-sm font-semibold text-stone-900 mb-3">Province / State <span class="text-red-600">*</span></label>
-                      <input id="setupProvinceManual" type="text" maxlength="120" value="{{ selected_province if selected_country != 'Philippines' else '' }}" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter province or state" />
-                    </div>
-
-                    <div id="setupCityManualWrap" class="hidden lg:col-span-1">
-                      <label for="setupCityManual" class="block text-sm font-semibold text-stone-900 mb-3">City <span class="text-red-600">*</span></label>
-                      <input id="setupCityManual" type="text" maxlength="120" value="{{ selected_city if selected_country != 'Philippines' else '' }}" class="w-full rounded-[1.5rem] border border-amber-200 bg-white px-5 py-4 text-base text-stone-900 shadow-sm focus:outline-none focus:ring-2 focus:ring-amber-600/30" placeholder="Enter city" />
-                    </div>
+              <!-- Step 3 · Location -->
+              <section data-setup-step="3" data-step-title="Where are you from?" data-step-description="Select your location to help us understand your local context and audience better." class="as-step hidden">
+                <div class="as-loc-grid">
+                  <div>
+                    <label for="setupCountrySelect" class="as-field-label">Country <span class="as-req">*</span></label>
+                    <select id="setupCountrySelect" class="as-select">
+                      <option value="">Select country</option>
+                    </select>
                   </div>
 
-                  <p id="setupLocationHelper" class="text-sm leading-7 text-stone-500 max-w-3xl">Choose a country first. Philippine province and city selections use your local dataset. For other countries, you can type your province/state and city manually.</p>
-                </section>
-              </div>
+                  <div id="setupProvinceSelectWrap">
+                    <label for="setupProvinceSelect" class="as-field-label">Province <span class="as-req">*</span></label>
+                    <select id="setupProvinceSelect" class="as-select" disabled>
+                      <option value="">Select province</option>
+                    </select>
+                  </div>
+
+                  <div id="setupCitySelectWrap">
+                    <label for="setupCitySelect" class="as-field-label">City <span class="as-req">*</span></label>
+                    <select id="setupCitySelect" class="as-select" disabled>
+                      <option value="">Select city</option>
+                    </select>
+                  </div>
+
+                  <div id="setupProvinceManualWrap" class="hidden">
+                    <label for="setupProvinceManual" class="as-field-label">Province / State <span class="as-req">*</span></label>
+                    <input id="setupProvinceManual" type="text" maxlength="120" value="{{ selected_province if selected_country != 'Philippines' else '' }}" class="as-input-text" placeholder="Enter province or state" />
+                  </div>
+
+                  <div id="setupCityManualWrap" class="hidden">
+                    <label for="setupCityManual" class="as-field-label">City <span class="as-req">*</span></label>
+                    <input id="setupCityManual" type="text" maxlength="120" value="{{ selected_city if selected_country != 'Philippines' else '' }}" class="as-input-text" placeholder="Enter city" />
+                  </div>
+                </div>
+
+                <p id="setupLocationHelper" class="as-hint">Choose a country first. Philippine province and city selections use your local dataset. For other countries, you can type your province/state and city manually.</p>
+              </section>
             </div>
+          </div>
 
-            <div class="pt-4 border-t border-amber-200 flex flex-col-reverse gap-3 sm:flex-row sm:items-center sm:justify-between">
-              <button type="button" id="accountSetupPrevButton" class="hidden sm:inline-flex items-center justify-center rounded-full border border-stone-300 px-6 py-3 text-sm font-semibold text-stone-700 transition hover:bg-white">Back</button>
-              <div class="flex w-full sm:w-auto gap-3 sm:ml-auto">
-                <button type="button" id="accountSetupPrevButtonMobile" class="hidden sm:hidden rounded-full border border-stone-300 px-5 py-3 text-sm font-semibold text-stone-700 transition hover:bg-white">Back</button>
-                <button type="button" id="accountSetupNextButton" class="w-full sm:w-auto inline-flex items-center justify-center rounded-full px-7 py-3.5 text-sm font-semibold text-stone-950 transition hover:opacity-95" style="background: linear-gradient(135deg, #B8963E, #C9A84C);">Next</button>
-              </div>
-            </div>
+          <div class="as-foot">
+            <button type="button" id="accountSetupPrevButton" class="as-btn as-btn-ghost hidden">Back</button>
+            <button type="button" id="accountSetupNextButton" class="as-btn as-btn-primary">Next</button>
           </div>
         </section>
       </form>
