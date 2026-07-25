@@ -6,128 +6,458 @@
     <title>Digital Exhibits | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <style>
+      :root {
+        --dx-bg: #f9f5ef;
+        --dx-surface: #ffffff;
+        --dx-surface-alt: #faf7f2;
+        --dx-ink: #1a1208;
+        --dx-muted: #6b5a40;
+        --dx-muted-2: #9a8060;
+        --dx-gold: #c9a550;
+        --dx-gold-soft: rgba(201, 165, 80, 0.12);
+        --dx-gold-border: rgba(201, 165, 80, 0.22);
+        --dx-dark: #1a1208;
+      }
+
+      .dx-page {
+        background: var(--dx-bg);
+      }
+
+      .dx-shell {
+        margin: 0 auto;
+        max-width: 80rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
+      }
+
+      /* ---- Hero ------------------------------------------------------------ */
+      .dx-hero {
+        border-bottom: 1px solid rgba(201, 165, 80, 0.18);
+        background: var(--dx-bg);
+      }
+
+      .dx-hero-top {
+        display: flex;
+        justify-content: flex-end;
+        margin-bottom: 1.75rem;
+      }
+
+      .dx-breadcrumb {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.75rem;
+        color: var(--dx-muted-2);
+      }
+
+      .dx-breadcrumb a {
+        color: inherit;
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .dx-breadcrumb a:hover {
+        color: var(--dx-gold);
+      }
+
+      .dx-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        border: 1px solid rgba(201, 165, 80, 0.3);
+        border-radius: 9999px;
+        background: rgba(201, 165, 80, 0.15);
+        color: var(--dx-gold);
+        font-size: 0.75rem;
+        letter-spacing: 0.18em;
+        padding: 0.45rem 0.9rem;
+        text-transform: uppercase;
+      }
+
+      .dx-hero-title {
+        color: var(--dx-ink);
+        font-size: clamp(2rem, 4.2vw, 3.4rem);
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.05;
+      }
+
+      .dx-hero-title span {
+        color: var(--dx-gold);
+      }
+
+      .dx-hero-copy {
+        max-width: 42rem;
+        color: var(--dx-muted);
+        font-size: 0.97rem;
+        line-height: 1.8;
+      }
+
+      .dx-hero-actions {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.75rem;
+        margin-top: 1.75rem;
+      }
+
+      .dx-btn-primary {
+        align-items: center;
+        background: var(--dx-dark);
+        border: 1px solid rgba(201, 165, 80, 0.3);
+        border-radius: 9999px;
+        color: var(--dx-gold);
+        display: inline-flex;
+        font-size: 0.9rem;
+        font-weight: 600;
+        gap: 0.5rem;
+        padding: 0.8rem 1.4rem;
+        text-decoration: none;
+        transition: opacity 0.2s ease;
+      }
+
+      .dx-btn-primary:hover {
+        opacity: 0.92;
+      }
+
+      .dx-btn-secondary {
+        align-items: center;
+        background: #fff;
+        border: 1.5px solid rgba(201, 165, 80, 0.3);
+        border-radius: 9999px;
+        color: var(--dx-ink);
+        display: inline-flex;
+        font-size: 0.9rem;
+        font-weight: 600;
+        gap: 0.5rem;
+        padding: 0.8rem 1.4rem;
+        text-decoration: none;
+        transition: border-color 0.2s ease, color 0.2s ease;
+      }
+
+      .dx-btn-secondary:hover {
+        border-color: rgba(201, 165, 80, 0.6);
+        color: var(--dx-gold);
+      }
+
+      /* ---- Sections -------------------------------------------------------- */
+      .dx-section {
+        padding: 4rem 0;
+      }
+
+      .dx-section-alt {
+        background: var(--dx-bg);
+      }
+
+      .dx-section-white {
+        background: var(--dx-surface);
+      }
+
+      .dx-section-head {
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        margin-bottom: 2.5rem;
+      }
+
+      .dx-section-heading {
+        color: var(--dx-ink);
+        font-size: clamp(1.7rem, 3vw, 2.3rem);
+        font-weight: 700;
+        letter-spacing: -0.01em;
+        line-height: 1.15;
+      }
+
+      .dx-section-copy {
+        color: var(--dx-muted);
+        font-size: 0.95rem;
+        line-height: 1.7;
+        max-width: 42rem;
+      }
+
+      /* ---- Experience cards ----------------------------------------------- */
+      .dx-grid {
+        display: grid;
+        gap: 1.25rem;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+      }
+
+      .dx-card {
+        background: var(--dx-surface-alt);
+        border: 1.5px solid rgba(201, 165, 80, 0.15);
+        border-radius: 1.2rem;
+        display: flex;
+        flex-direction: column;
+        gap: 1rem;
+        min-height: 100%;
+        padding: 1.6rem;
+        transition: box-shadow 0.2s ease, transform 0.2s ease, border-color 0.2s ease;
+      }
+
+      .dx-card:hover {
+        border-color: rgba(201, 165, 80, 0.35);
+        box-shadow: 0 14px 34px rgba(0, 0, 0, 0.07);
+        transform: translateY(-2px);
+      }
+
+      .dx-card-top {
+        align-items: flex-start;
+        display: flex;
+        gap: 0.75rem;
+        justify-content: space-between;
+      }
+
+      .dx-card-icon {
+        align-items: center;
+        background: rgba(201, 165, 80, 0.12);
+        border: 1px solid rgba(201, 165, 80, 0.25);
+        border-radius: 0.85rem;
+        color: var(--dx-gold);
+        display: inline-flex;
+        height: 2.75rem;
+        justify-content: center;
+        width: 2.75rem;
+      }
+
+      .dx-card-subtitle {
+        color: var(--dx-gold);
+        font-size: 0.72rem;
+        font-weight: 600;
+        letter-spacing: 0.16em;
+        margin-bottom: 0.35rem;
+        text-transform: uppercase;
+      }
+
+      .dx-card-title {
+        color: var(--dx-ink);
+        font-size: 1.15rem;
+        font-weight: 700;
+        line-height: 1.3;
+        margin-bottom: 0.6rem;
+      }
+
+      .dx-card-copy {
+        color: var(--dx-muted);
+        font-size: 0.86rem;
+        line-height: 1.7;
+      }
+
+      .dx-card-tags {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.4rem;
+      }
+
+      .dx-chip {
+        align-items: center;
+        background: #fff;
+        border: 1px solid rgba(201, 165, 80, 0.18);
+        border-radius: 9999px;
+        color: var(--dx-muted);
+        display: inline-flex;
+        font-size: 0.74rem;
+        padding: 0.35rem 0.7rem;
+      }
+
+      .dx-card-footer {
+        border-top: 1px solid rgba(201, 165, 80, 0.12);
+        display: flex;
+        margin-top: auto;
+        padding-top: 0.9rem;
+      }
+
+      .dx-card-link {
+        align-items: center;
+        color: #8b6914;
+        display: inline-flex;
+        font-size: 0.85rem;
+        font-weight: 600;
+        gap: 0.4rem;
+        text-decoration: none;
+        transition: color 0.2s ease, gap 0.2s ease;
+      }
+
+      .dx-card-link:hover {
+        color: #b8891e;
+        gap: 0.6rem;
+      }
+
+      @media (min-width: 768px) {
+        .dx-shell {
+          padding-left: 1.5rem;
+          padding-right: 1.5rem;
+        }
+      }
+
+      @media (max-width: 1023px) {
+        .dx-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      @media (max-width: 767px) {
+        .dx-shell {
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+
+        .dx-section {
+          padding: 3rem 0;
+        }
+
+        .dx-hero-top {
+          justify-content: flex-start;
+        }
+      }
+    </style>
   </head>
-  <body class="min-h-screen bg-stone-50 text-gray-900">
+  <body class="dx-page min-h-screen text-gray-900">
     {% set public_active_page = 'digital-exhibits' %}
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="pt-20">
-      <section class="relative overflow-hidden bg-gradient-to-br from-stone-950 via-amber-950 to-amber-800 text-white">
-        <div class="absolute inset-0 opacity-20">
-          <div class="absolute -top-24 right-0 h-72 w-72 rounded-full bg-amber-300 blur-3xl"></div>
-          <div class="absolute bottom-0 left-0 h-72 w-72 rounded-full bg-orange-400 blur-3xl"></div>
+      <!-- Hero -->
+      <section class="dx-hero">
+        <div class="dx-shell py-16 sm:py-20">
+          <div class="dx-hero-top">
+            <div class="dx-breadcrumb">
+              <a href="/">Home</a>
+              <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+                <path d="m9 18 6-6-6-6"></path>
+              </svg>
+              <span class="text-[#c9a550]">Digital Exhibits</span>
+            </div>
+          </div>
+          <div class="dx-pill mb-4">
+            <i data-lucide="sparkles" class="h-4 w-4"></i>
+            <span>Digital Heritage Portal</span>
+          </div>
+          <h1 class="dx-hero-title mb-4">Digital Exhibits &amp; <span>Resources</span></h1>
+          <p class="dx-hero-copy">
+            Explore the museum through curated visual collections, interactive AR features, and learning
+            materials designed to help visitors discover the site in a clear and engaging way.
+          </p>
+          <div class="dx-hero-actions">
+            <a href="#explore-digital-experiences" class="dx-btn-primary">
+              <i data-lucide="compass" class="h-4 w-4"></i>
+              <span>Explore experiences</span>
+            </a>
+            <a href="/online-gallery" class="dx-btn-secondary">
+              <i data-lucide="images" class="h-4 w-4"></i>
+              <span>Open online gallery</span>
+            </a>
+          </div>
         </div>
-        <div class="container relative mx-auto px-4 py-20 md:py-24">
-          <div class="max-w-6xl mx-auto flex justify-center">
-            <div class="max-w-3xl text-center">
-              <h1 class="mt-6 text-5xl md:text-6xl font-serif leading-tight">Digital Exhibits &amp; Resources</h1>
-              <p class="mt-6 text-lg md:text-xl text-amber-50/90 leading-relaxed">
-                Explore the museum through curated visual collections, interactive AR features, and learning materials designed to help visitors discover the site in a clear and engaging way.
-              </p>
-              <div class="mt-8 flex flex-wrap justify-center gap-4">
-                <a href="#explore-digital-experiences" class="inline-flex items-center rounded-full bg-white px-6 py-3 text-sm font-semibold text-amber-900 transition hover:bg-amber-50">Explore experiences</a>
-                <a href="/online-gallery" class="inline-flex items-center rounded-full border border-white/25 bg-white/10 px-6 py-3 text-sm font-semibold text-white transition hover:bg-white/20">Open online gallery</a>
+      </section>
+
+      <!-- Experiences -->
+      <section id="explore-digital-experiences" class="dx-section dx-section-alt">
+        <div class="dx-shell">
+          <div class="dx-section-head">
+            <div>
+              <div class="dx-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
+                <i data-lucide="layout-grid" class="h-4 w-4"></i>
+                <span>Explore Digital Experiences</span>
               </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-
-
-      <section id="explore-digital-experiences" class="bg-white py-16 md:py-20">
-        <div class="container mx-auto px-4">
-          <div class="max-w-6xl mx-auto">
-            <div class="text-center max-w-3xl mx-auto mb-12">
-              <p class="text-sm font-semibold uppercase tracking-[0.3em] text-amber-700">Explore digital experiences</p>
-              <h2 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Start with the experience that fits your visit</h2>
-              <p class="mt-4 text-gray-600 leading-relaxed">
-                Each feature offers a different way to understand the museum, from visual archives and immersive tours to interactive AR and learning support.
+              <h2 class="dx-section-heading mb-2">Start with the experience that fits your visit</h2>
+              <p class="dx-section-copy">
+                Each feature offers a different way to understand the museum, from visual archives and
+                immersive tours to interactive AR and learning support.
               </p>
             </div>
+          </div>
 
-            <div class="space-y-8">
-              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-amber-50 via-white to-white shadow-sm">
-                <div class="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-                  <div class="flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-100 p-10 md:p-12">
-                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/80 text-amber-700 shadow-lg shadow-amber-200/60">
-                      <i data-lucide="images" class="h-14 w-14"></i>
-                    </div>
-                  </div>
-                  <div class="p-8 md:p-10 lg:p-12">
-                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Online Gallery</p>
-                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Curated Photo Archive</h3>
-                    <p class="mt-5 text-gray-600 leading-relaxed">
-                      Browse selected photographs and exhibit images presented with short descriptions, historical context, and clearer detail viewing for visitors who want a calm, visual-first experience.
-                    </p>
-                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
-                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Focused image browsing</div>
-                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Short exhibit context</div>
-                    </div>
-                    <div class="mt-8">
-                      <a href="/online-gallery" class="inline-flex items-center rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-800">Open Gallery →</a>
-                    </div>
-                  </div>
-                </div>
-              </section>
+          <div class="dx-grid">
+            <!-- Online Gallery -->
+            <article class="dx-card">
+              <div class="dx-card-top">
+                <div class="dx-card-icon"><i data-lucide="images" class="h-5 w-5"></i></div>
+                <span class="rounded-full px-2.5 py-1 text-xs bg-amber-100 text-amber-800">Gallery</span>
+              </div>
+              <div>
+                <p class="dx-card-subtitle">Online Gallery</p>
+                <h3 class="dx-card-title">Curated Photo Archive</h3>
+                <p class="dx-card-copy">
+                  Browse selected photographs and exhibit images presented with short descriptions,
+                  historical context, and clearer detail viewing for a calm, visual-first experience.
+                </p>
+              </div>
+              <div class="dx-card-tags">
+                <span class="dx-chip">Focused image browsing</span>
+                <span class="dx-chip">Short exhibit context</span>
+              </div>
+              <div class="dx-card-footer">
+                <a class="dx-card-link" href="/online-gallery">
+                  <span>Open Gallery</span>
+                  <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+                </a>
+              </div>
+            </article>
 
-              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-white via-white to-stone-50 shadow-sm">
-                <div class="grid gap-0 lg:grid-cols-[1.1fr_0.9fr]">
-                  <div class="order-2 p-8 md:p-10 lg:order-1 lg:p-12">
-                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">Edu Resources</p>
-                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Teacher Learning Pack</h3>
-                    <p class="mt-5 text-gray-600 leading-relaxed">
-                      Access learning materials that support guided discussion, classroom activities, and structured engagement with the museum’s history, spaces, and cultural meaning.
-                    </p>
-                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
-                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Classroom-ready references</div>
-                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Guides for deeper discussion</div>
-                    </div>
-                    <div class="mt-8">
-                      <a href="/edu-resources" class="inline-flex items-center rounded-full bg-stone-900 px-6 py-3 text-sm font-semibold text-white transition hover:bg-stone-800">Open Resources →</a>
-                    </div>
-                  </div>
-                  <div class="order-1 flex items-center justify-center bg-gradient-to-br from-stone-100 to-amber-100 p-10 md:p-12 lg:order-2">
-                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/85 text-amber-700 shadow-lg shadow-stone-200/60">
-                      <i data-lucide="book-open" class="h-14 w-14"></i>
-                    </div>
-                  </div>
-                </div>
-              </section>
+            <!-- Edu Resources -->
+            <article class="dx-card">
+              <div class="dx-card-top">
+                <div class="dx-card-icon"><i data-lucide="book-open" class="h-5 w-5"></i></div>
+                <span class="rounded-full px-2.5 py-1 text-xs bg-stone-100 text-stone-700">Learning</span>
+              </div>
+              <div>
+                <p class="dx-card-subtitle">Edu Resources</p>
+                <h3 class="dx-card-title">Teacher Learning Pack</h3>
+                <p class="dx-card-copy">
+                  Access learning materials that support guided discussion, classroom activities, and
+                  structured engagement with the museum's history, spaces, and cultural meaning.
+                </p>
+              </div>
+              <div class="dx-card-tags">
+                <span class="dx-chip">Classroom-ready references</span>
+                <span class="dx-chip">Guides for deeper discussion</span>
+              </div>
+              <div class="dx-card-footer">
+                <a class="dx-card-link" href="/edu-resources">
+                  <span>Open Resources</span>
+                  <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+                </a>
+              </div>
+            </article>
 
-              <section class="overflow-hidden rounded-[2rem] border border-stone-200 bg-gradient-to-r from-amber-50 via-white to-white shadow-sm">
-                <div class="grid gap-0 lg:grid-cols-[0.9fr_1.1fr]">
-                  <div class="flex items-center justify-center bg-gradient-to-br from-amber-100 to-yellow-100 p-10 md:p-12">
-                    <div class="flex h-28 w-28 items-center justify-center rounded-[2rem] bg-white/80 text-amber-700 shadow-lg shadow-amber-200/60">
-                      <i data-lucide="scan" class="h-14 w-14"></i>
-                    </div>
-                  </div>
-                  <div class="p-8 md:p-10 lg:p-12">
-                    <p class="text-sm font-semibold uppercase tracking-[0.25em] text-amber-700">AR Content</p>
-                    <h3 class="mt-3 text-3xl md:text-4xl font-serif text-stone-900">Marker-Based AR Views</h3>
-                    <p class="mt-5 text-gray-600 leading-relaxed">
-                      Use your device camera to activate digital overlays linked to heritage markers and selected artifacts, giving visitors a more interactive way to experience museum content beyond static images.
-                    </p>
-                    <div class="mt-6 grid gap-3 sm:grid-cols-2 text-sm text-gray-600">
-                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Interactive artifact viewing</div>
-                      <div class="rounded-2xl bg-stone-50 px-4 py-3">Camera-based marker detection</div>
-                    </div>
-                    <div class="mt-8">
-                      <a href="/ar-content-detection" class="inline-flex items-center rounded-full bg-amber-700 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-800">Open AR Camera →</a>
-                    </div>
-                  </div>
-                </div>
-              </section>
-            </div>
+            <!-- AR Content -->
+            <article class="dx-card">
+              <div class="dx-card-top">
+                <div class="dx-card-icon"><i data-lucide="scan" class="h-5 w-5"></i></div>
+                <span class="rounded-full px-2.5 py-1 text-xs bg-green-100 text-green-800">AR</span>
+              </div>
+              <div>
+                <p class="dx-card-subtitle">AR Content</p>
+                <h3 class="dx-card-title">Marker-Based AR Views</h3>
+                <p class="dx-card-copy">
+                  Use your device camera to activate digital overlays linked to heritage markers and
+                  selected artifacts, for a more interactive way to experience museum content.
+                </p>
+              </div>
+              <div class="dx-card-tags">
+                <span class="dx-chip">Interactive artifact viewing</span>
+                <span class="dx-chip">Camera-based marker detection</span>
+              </div>
+              <div class="dx-card-footer">
+                <a class="dx-card-link" href="/ar-content-detection">
+                  <span>Open AR Camera</span>
+                  <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
+                </a>
+              </div>
+            </article>
           </div>
         </div>
       </section>
-
     </main>
 
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script>
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    </script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>
