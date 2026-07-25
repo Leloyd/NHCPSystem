@@ -21,37 +21,43 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          <section class="admin-panel admin-panel-wide admin-resource-panel admin-users-panel">
+            <div class="admin-panel-head admin-users-panel-head">
               <div>
                 <h3>Registered Accounts</h3>
-                <p>{{ total_count }} total · {{ active_count }} active · {{ deactivated_count }} deactivated</p>
+                <p>Review visitor information and manage access to public-site accounts.</p>
+              </div>
+              <div class="admin-users-summary" aria-label="Account summary">
+                <span><strong>{{ total_count }}</strong> Total</span>
+                <span class="is-active"><strong>{{ active_count }}</strong> Active</span>
+                <span class="is-disabled"><strong>{{ deactivated_count }}</strong> Deactivated</span>
               </div>
             </div>
 
-            <div class="admin-media-toolbar" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;justify-content:space-between;margin-bottom:1rem;">
-              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
-                <a href="{{ url_for('admin_users', filter='all', q=search_query) }}" class="{{ 'admin-primary-action' if status_filter == 'all' else 'admin-secondary-action' }}">All ({{ total_count }})</a>
-                <a href="{{ url_for('admin_users', filter='active', q=search_query) }}" class="{{ 'admin-primary-action' if status_filter == 'active' else 'admin-secondary-action' }}">Active ({{ active_count }})</a>
-                <a href="{{ url_for('admin_users', filter='deactivated', q=search_query) }}" class="{{ 'admin-primary-action' if status_filter == 'deactivated' else 'admin-secondary-action' }}">Deactivated ({{ deactivated_count }})</a>
-              </div>
-              <form method="get" action="{{ url_for('admin_users') }}" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+            <div class="admin-users-toolbar">
+              <nav class="admin-users-filters" aria-label="Filter accounts by status">
+                <a href="{{ url_for('admin_users', filter='all', q=search_query) }}" class="admin-users-filter{% if status_filter == 'all' %} is-active{% endif %}"{% if status_filter == 'all' %} aria-current="page"{% endif %}>All <span>{{ total_count }}</span></a>
+                <a href="{{ url_for('admin_users', filter='active', q=search_query) }}" class="admin-users-filter{% if status_filter == 'active' %} is-active{% endif %}"{% if status_filter == 'active' %} aria-current="page"{% endif %}>Active <span>{{ active_count }}</span></a>
+                <a href="{{ url_for('admin_users', filter='deactivated', q=search_query) }}" class="admin-users-filter{% if status_filter == 'deactivated' %} is-active{% endif %}"{% if status_filter == 'deactivated' %} aria-current="page"{% endif %}>Deactivated <span>{{ deactivated_count }}</span></a>
+              </nav>
+
+              <form method="get" action="{{ url_for('admin_users') }}" class="admin-users-search-form" role="search">
                 <input type="hidden" name="filter" value="{{ status_filter }}" />
-                <label class="admin-search" aria-label="Search accounts">
-                  <span class="admin-search-icon" aria-hidden="true">
+                <label class="admin-users-search" for="adminUsersSearch">
+                  <span class="admin-users-search-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
                   </span>
-                  <input type="search" name="q" value="{{ search_query }}" placeholder="Search name, email, username…" />
+                  <input id="adminUsersSearch" type="search" name="q" value="{{ search_query }}" placeholder="Search name, email, or username…" maxlength="128" />
                 </label>
-                <button type="submit" class="admin-primary-action">Search</button>
+                <button type="submit" class="admin-users-search-button">Search</button>
                 {% if search_query %}
-                <a href="{{ url_for('admin_users', filter=status_filter) }}" class="admin-text-link">Clear</a>
+                <a href="{{ url_for('admin_users', filter=status_filter) }}" class="admin-users-clear-search">Clear</a>
                 {% endif %}
               </form>
             </div>
 
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
+            <div class="admin-resource-table-wrap admin-users-table-wrap">
+              <table class="admin-resource-table admin-users-table">
                 <thead>
                   <tr>
                     <th>User</th>
@@ -67,17 +73,43 @@
                   {% for user in users %}
                   <tr>
                     <td>
-                      <div class="admin-resource-main">
-                        <strong>{{ user.display_name }}</strong>
-                        <span>@{{ user.username }}</span>
+                      <div class="admin-user-identity">
+                        <span class="admin-user-avatar" aria-hidden="true">{{ (user.display_name or 'U')[:1]|upper }}</span>
+                        <div class="admin-resource-main">
+                          <strong>{{ user.display_name }}</strong>
+                          <span>@{{ user.username }}</span>
+                        </div>
                       </div>
                     </td>
-                    <td>{{ user.email }}</td>
-                    <td>{{ user.organization_display }}</td>
+                    <td><span class="admin-user-email">{{ user.email }}</span></td>
+                    <td><span class="admin-user-muted">{{ user.organization_display }}</span></td>
                     <td><span class="admin-status-badge {% if user.is_verified %}is-published{% else %}is-draft{% endif %}">{{ user.verified_label }}</span></td>
                     <td><span class="admin-status-badge {% if user.is_active %}is-published{% else %}is-cancelled{% endif %}">{{ user.status_label }}</span></td>
-                    <td>{{ user.display_created }}</td>
-                    <td><a href="{{ url_for('admin_user_detail', user_id=user.id) }}" class="admin-inline-link">Manage</a></td>
+                    <td><span class="admin-user-muted">{{ user.display_created }}</span></td>
+                    <td>
+                      <div class="admin-user-row-actions">
+                        <a href="{{ url_for('admin_user_detail', user_id=user.id) }}" class="admin-user-action is-view" aria-label="View {{ user.display_name }}">
+                          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                          <span>View</span>
+                        </a>
+                        <form method="post" action="{{ url_for('admin_user_detail', user_id=user.id) }}">
+                          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                          <input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                          <input type="hidden" name="return_q" value="{{ search_query }}" />
+                          {% if user.is_active %}
+                          <button type="submit" name="account_action" value="deactivate" class="admin-user-action is-disable" aria-label="Disable {{ user.display_name }}">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 2a8 8 0 0 1 5.2 14.08L5.92 6.8A7.94 7.94 0 0 1 12 4Zm-8 8a7.94 7.94 0 0 1 .8-3.48L15.48 19.2A8 8 0 0 1 4 12Z"></path></svg>
+                            <span>Disable</span>
+                          </button>
+                          {% else %}
+                          <button type="submit" name="account_action" value="activate" class="admin-user-action is-enable" aria-label="Enable {{ user.display_name }}">
+                            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg>
+                            <span>Enable</span>
+                          </button>
+                          {% endif %}
+                        </form>
+                      </div>
+                    </td>
                   </tr>
                   {% endfor %}
                   {% if not users %}

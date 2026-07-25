@@ -50,7 +50,7 @@ def register_user_management_routes(
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
 
-        search_query = str(request.args.get("q") or "").strip()
+        search_query = str(request.args.get("q") or "").strip()[:128]
         status_filter = str(request.args.get("filter") or "all").strip().lower()
         if status_filter not in VALID_STATUS_FILTERS:
             status_filter = "all"
@@ -112,4 +112,16 @@ def register_user_management_routes(
             app.logger.exception("Failed to update account status for user %s: %s", user_id, exc)
             return _render_user_detail(user, error_message="Could not update this account right now.")
 
-        return redirect(url_for("admin_users", status="activated" if next_active else "deactivated"))
+        return_filter = str(request.form.get("return_filter") or "all").strip().lower()
+        if return_filter not in VALID_STATUS_FILTERS:
+            return_filter = "all"
+        return_query = str(request.form.get("return_q") or "").strip()[:128]
+
+        return redirect(
+            url_for(
+                "admin_users",
+                status="activated" if next_active else "deactivated",
+                filter=return_filter,
+                q=return_query,
+            )
+        )
