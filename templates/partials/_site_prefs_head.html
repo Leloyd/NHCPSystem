@@ -1,0 +1,24 @@
+{# Shared accessibility/theme preferences — include inside <head> of every
+   public page (as late as possible so it can override page-specific styles).
+   Applies saved preferences before first paint to avoid a flash, seeding from
+   the signed-in account's stored theme/language when localStorage is empty. #}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site-theme.css') }}" />
+<script>
+  (function () {
+    try {
+      var d = document.documentElement;
+      var ls = window.localStorage;
+      var theme = ls.getItem("nhcp-theme") || "{{ public_theme_preference|default('light') }}";
+      var lang = ls.getItem("nhcp-lang") || "{{ public_language_preference|default('en') }}";
+      var contrast = ls.getItem("nhcp-contrast") || "off";
+      var size = ls.getItem("nhcp-textsize");
+      if (["small", "medium", "large"].indexOf(size) < 0) size = "medium";
+      d.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+      d.setAttribute("data-lang", lang === "tl" ? "tl" : "en");
+      d.setAttribute("lang", lang === "tl" ? "tl" : "en");
+      d.setAttribute("data-contrast", contrast === "on" ? "on" : "off");
+      d.setAttribute("data-textsize", size);
+      if (contrast === "on") d.classList.add("ogd-high-contrast");
+    } catch (e) {}
+  })();
+</script>

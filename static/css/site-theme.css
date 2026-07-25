@@ -1,0 +1,172 @@
+/* ==========================================================================
+   Shared site theming — dark mode, high contrast, and text size, applied via
+   [data-theme] / [data-contrast] / [data-textsize] on <html>. Also styles the
+   floating accessibility launcher (.site-a11y). Loaded late in <head> so its
+   dark variable overrides win over each page's own :root defaults.
+   ========================================================================== */
+
+/* ---- Bilingual: show one language at a time (site-wide) ----------------- */
+:root[data-lang="tl"] [data-lang-en] { display: none !important; }
+:root:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
+/* A language wrapper that must not pick up an ancestor "span { color }" accent
+   rule (used on hero titles where only a nested bare <span> should be gold). */
+.lx { color: inherit !important; }
+
+/* ---- Text size (scales rem across the site) ----------------------------- */
+html[data-textsize="small"]  { font-size: 15px; }
+html[data-textsize="medium"] { font-size: 16px; }
+html[data-textsize="large"]  { font-size: 18.5px; }
+
+/* ==========================================================================
+   DARK MODE
+   ========================================================================== */
+
+/* Per-page design tokens: redefining the variables covers most surfaces on the
+   pages that are variable-based (Digital Exhibits, Interactive, Support,
+   Online Gallery, Edu Resources, Community Participation). */
+html[data-theme="dark"] {
+  /* Digital Exhibits */
+  --dx-bg: #141009; --dx-surface: #211a10; --dx-surface-alt: #1a140c;
+  --dx-ink: #f3ece0; --dx-muted: #b6a684; --dx-muted-2: #9a8060;
+  --dx-gold: #e6cf8a; --dx-dark: #0e0a05;
+  /* Interactive */
+  --ix-bg: #141009; --ix-surface: #211a10; --ix-surface-alt: #1a140c;
+  --ix-ink: #f3ece0; --ix-muted: #b6a684; --ix-muted-2: #9a8060;
+  --ix-gold: #e6cf8a; --ix-dark: #0e0a05;
+  /* Support */
+  --support-bg: #141009; --support-surface: #211a10; --support-surface-alt: #1a140c;
+  --support-ink: #f3ece0; --support-muted: #c4b494; --support-muted-2: #9a8060;
+  --support-gold: #e6cf8a; --support-dark: #0e0a05;
+  /* Collection pages (Online Gallery / Edu Resources) */
+  --collection-bg: #141009; --collection-surface: #211a10; --collection-gold: #e6cf8a;
+  /* Community participation */
+  --color-bg-light: #141009;
+}
+
+/* Body backgrounds for each page shell */
+html[data-theme="dark"] .dx-page,
+html[data-theme="dark"] .ix-page,
+html[data-theme="dark"] .support-page,
+html[data-theme="dark"] body.collection-page,
+html[data-theme="dark"] body.min-h-screen { background: #141009; color: #f3ece0; }
+
+/* Hardcoded light surfaces that variables don't reach */
+html[data-theme="dark"] .dx-btn-secondary,
+html[data-theme="dark"] .dx-chip,
+html[data-theme="dark"] .ix-btn-secondary,
+html[data-theme="dark"] .ix-chip { background: #2a2114; color: #e9dcc0; }
+
+html[data-theme="dark"] .support-search-input,
+html[data-theme="dark"] .support-faq-tab,
+html[data-theme="dark"] .support-results-card { background: #211a10; color: #f3ece0; border-color: rgba(201, 168, 76, 0.24); }
+html[data-theme="dark"] .support-faq-answer { color: #c4b494; }
+html[data-theme="dark"] .support-faq-item { border-color: rgba(201, 168, 76, 0.16); }
+
+/* Community participation white cards */
+html[data-theme="dark"] .participation-card,
+html[data-theme="dark"] .calendar-container,
+html[data-theme="dark"] .upcoming-events-sidebar,
+html[data-theme="dark"] .community-modal,
+html[data-theme="dark"] .participation-modal-shell,
+html[data-theme="dark"] .modal-container {
+  background: #211a10 !important;
+  color: #f3ece0;
+  border-color: rgba(201, 168, 76, 0.18);
+}
+html[data-theme="dark"] #community-highlights,
+html[data-theme="dark"] #e-participation { background: #141009 !important; }
+html[data-theme="dark"] #events-calendar { background: #191308 !important; }
+html[data-theme="dark"] .community-section-title { color: #f3ece0; }
+html[data-theme="dark"] .community-section-description,
+html[data-theme="dark"] .participation-card-description { color: #c4b494; }
+html[data-theme="dark"] .form-input,
+html[data-theme="dark"] .form-textarea { background: #2a2114; color: #f3ece0; border-color: rgba(201, 168, 76, 0.2); }
+
+/* Collection / gallery surfaces (hardcoded whites in the gallery card CSS) */
+html[data-theme="dark"] .ogd-gallery-card,
+html[data-theme="dark"] .ogd-toolbar,
+html[data-theme="dark"] .ogd-category-tabs__button,
+html[data-theme="dark"] .ogd-sort-control,
+html[data-theme="dark"] .ogd-view-toggle,
+html[data-theme="dark"] .ogd-search-field {
+  background: #211a10 !important;
+  color: #f3ece0;
+  border-color: rgba(201, 168, 76, 0.18);
+}
+html[data-theme="dark"] .ogd-gallery-card *,
+html[data-theme="dark"] .ogd-resource-card * { color: inherit; }
+
+/* Shared: top navigation (solid mode) */
+html[data-theme="dark"] #publicNavHeader[data-nav-mode="solid"] {
+  background: rgba(18, 13, 6, 0.96) !important;
+  box-shadow: 0 1px 0 rgba(201, 168, 76, 0.14);
+}
+html[data-theme="dark"] #publicNavHeader[data-nav-mode="solid"] [data-nav-link] { color: #cdbf9f !important; }
+html[data-theme="dark"] #publicNavHeader[data-nav-mode="solid"] [data-nav-link]:hover { color: #e6cf8a !important; }
+html[data-theme="dark"] #publicNavHeader[data-nav-mode="solid"] #navTitle { color: #e6cf8a !important; }
+html[data-theme="dark"] #mobileMenu { background: rgba(18, 13, 6, 0.98) !important; border-color: rgba(201, 168, 76, 0.16) !important; }
+html[data-theme="dark"] #mobileMenu a { color: #cdbf9f !important; }
+
+/* ==========================================================================
+   HIGH CONTRAST (works alongside the existing .ogd-high-contrast-page rules)
+   ========================================================================== */
+html[data-contrast="on"] .dx-muted, html[data-contrast="on"] .dx-card-copy,
+html[data-contrast="on"] .ix-card-copy, html[data-contrast="on"] .support-section-copy,
+html[data-contrast="on"] .s-muted { color: var(--dx-ink, #1a1208); }
+html[data-theme="dark"][data-contrast="on"] .dx-card-copy,
+html[data-theme="dark"][data-contrast="on"] .ix-card-copy,
+html[data-theme="dark"][data-contrast="on"] .support-section-copy { color: #fff8ea; }
+html[data-contrast="on"] .dx-card, html[data-contrast="on"] .ix-card,
+html[data-contrast="on"] .support-policy-card, html[data-contrast="on"] .s-card {
+  border-width: 2px;
+}
+
+/* ==========================================================================
+   FLOATING ACCESSIBILITY LAUNCHER
+   ========================================================================== */
+:root { --a11y-surface: #ffffff; --a11y-ink: #1a1208; --a11y-muted: #6b5a40; --a11y-line: rgba(184, 150, 62, 0.28); --a11y-soft: #faf6ef; }
+html[data-theme="dark"] { --a11y-surface: #211a10; --a11y-ink: #f3ece0; --a11y-muted: #b6a684; --a11y-line: rgba(201, 168, 76, 0.22); --a11y-soft: #1a140c; }
+
+.site-a11y { position: fixed; right: 1rem; bottom: 1rem; z-index: 95; }
+.site-a11y-fab {
+  width: 3rem; height: 3rem; border: 0; border-radius: 9999px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  color: #1a1208; background: linear-gradient(135deg, #b8963e, #c9a84c);
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.28);
+}
+.site-a11y-fab svg { width: 1.45rem; height: 1.45rem; }
+.site-a11y-panel {
+  position: absolute; right: 0; bottom: 3.75rem; width: 17rem;
+  background: var(--a11y-surface); color: var(--a11y-ink);
+  border: 1px solid var(--a11y-line); border-radius: 1rem; padding: 1rem;
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.3); display: none;
+}
+.site-a11y.is-open .site-a11y-panel { display: block; }
+.site-a11y-head { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.85rem; }
+.site-a11y-title { font-size: 0.95rem; font-weight: 700; color: var(--a11y-ink); }
+.site-a11y-close { border: 0; background: transparent; color: var(--a11y-muted); cursor: pointer; width: 1.75rem; height: 1.75rem; border-radius: 9999px; display: inline-flex; align-items: center; justify-content: center; }
+.site-a11y-close:hover { background: var(--a11y-soft); }
+.site-a11y-label { font-size: 0.68rem; letter-spacing: 0.14em; text-transform: uppercase; font-weight: 600; color: var(--a11y-muted); margin: 0.85rem 0 0.4rem; }
+.site-a11y-label:first-of-type { margin-top: 0; }
+.site-a11y-seg { display: flex; gap: 0.3rem; padding: 0.25rem; border: 1px solid var(--a11y-line); border-radius: 9999px; background: var(--a11y-soft); }
+.site-a11y-seg-btn {
+  flex: 1; border: 0; cursor: pointer; border-radius: 9999px; padding: 0.45rem 0.5rem;
+  font-size: 0.8rem; font-weight: 600; color: var(--a11y-muted); background: transparent;
+  display: inline-flex; align-items: center; justify-content: center; gap: 0.3rem;
+}
+.site-a11y-seg-btn.is-active { color: #1a1208; background: linear-gradient(135deg, #b8963e, #c9a84c); }
+.site-a11y-seg-btn svg { width: 0.9rem; height: 0.9rem; }
+.site-a11y-switch {
+  width: 100%; margin-top: 0.85rem; border: 1px solid var(--a11y-line); border-radius: 0.75rem;
+  background: var(--a11y-soft); color: var(--a11y-ink); cursor: pointer;
+  display: flex; align-items: center; justify-content: space-between; gap: 0.5rem;
+  padding: 0.6rem 0.8rem; font-size: 0.85rem; font-weight: 600;
+}
+.site-a11y-switch-track { width: 2.2rem; height: 1.2rem; border-radius: 9999px; background: rgba(120, 100, 70, 0.4); position: relative; flex: 0 0 auto; transition: background 0.2s ease; }
+.site-a11y-switch-track::after { content: ""; position: absolute; top: 0.15rem; left: 0.15rem; width: 0.9rem; height: 0.9rem; border-radius: 9999px; background: #fff; transition: transform 0.2s ease; }
+.site-a11y-switch.is-active .site-a11y-switch-track { background: linear-gradient(135deg, #b8963e, #c9a84c); }
+.site-a11y-switch.is-active .site-a11y-switch-track::after { transform: translateX(1rem); }
+
+@media (max-width: 640px) {
+  .site-a11y-panel { width: min(17rem, calc(100vw - 2rem)); }
+}

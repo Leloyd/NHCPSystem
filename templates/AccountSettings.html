@@ -99,6 +99,7 @@
       .s-modal-backdrop { position: absolute; inset: 0; background: rgba(0,0,0,0.6); backdrop-filter: blur(4px); }
       .s-modal-card { position: relative; z-index: 1; width: min(100%, 30rem); max-height: calc(100dvh - 1.5rem); overflow-y: auto; background: var(--s-surface); border: 1px solid var(--s-line); border-radius: 1.25rem; padding: 1.5rem; box-shadow: 0 30px 60px rgba(0,0,0,0.35); }
     </style>
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="s-page min-h-screen">
     {% set public_active_page = '' %}
@@ -164,8 +165,6 @@
               <!-- Name + roles (main form) -->
               <form method="post" action="{{ url_for('account_settings') }}" id="profileForm" class="space-y-5">
                 <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                <input type="hidden" name="theme_preference" id="themeField" value="{{ public_theme_preference }}" />
-                <input type="hidden" name="language_preference" id="langField" value="{{ public_language_preference }}" />
 
                 <div>
                   <label class="s-label" for="settingsFullName"><span data-lang-en>Full name</span><span data-lang-tl>Buong pangalan</span></label>
@@ -191,32 +190,46 @@
             </div>
           </section>
 
-          <!-- ===== Appearance + Language ===== -->
-          <div class="grid gap-6 md:grid-cols-2">
-            <section class="s-card p-6">
-              <h2 class="s-card-title text-lg"><span data-lang-en>Appearance</span><span data-lang-tl>Anyo</span></h2>
-              <p class="s-muted text-sm mt-1 mb-4"><span data-lang-en>Choose a light or dark theme.</span><span data-lang-tl>Pumili ng maliwanag o madilim na tema.</span></p>
-              <div class="s-seg" role="group" aria-label="Theme">
-                <button type="button" class="s-seg-btn" data-theme-option="light">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
-                  <span data-lang-en>Light</span><span data-lang-tl>Maliwanag</span>
-                </button>
-                <button type="button" class="s-seg-btn" data-theme-option="dark">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
-                  <span data-lang-en>Dark</span><span data-lang-tl>Madilim</span>
-                </button>
-              </div>
-            </section>
+          <!-- ===== Accessibility ===== -->
+          <section class="s-card p-6">
+            <h2 class="s-card-title text-lg"><span data-lang-en>Accessibility</span><span data-lang-tl>Aksesibilidad</span></h2>
+            <p class="s-muted text-sm mt-1 mb-5"><span data-lang-en>Theme, contrast, language, and text size. These apply across the whole site and are saved to your account.</span><span data-lang-tl>Tema, kontrast, wika, at laki ng teksto. Nalalapat ito sa buong site at nakasave sa iyong account.</span></p>
 
-            <section class="s-card p-6">
-              <h2 class="s-card-title text-lg"><span data-lang-en>Language</span><span data-lang-tl>Wika</span></h2>
-              <p class="s-muted text-sm mt-1 mb-4"><span data-lang-en>Switch between English and Tagalog.</span><span data-lang-tl>Lumipat sa Ingles o Tagalog.</span></p>
-              <div class="s-seg" role="group" aria-label="Language">
-                <button type="button" class="s-seg-btn" data-lang-option="en">English</button>
-                <button type="button" class="s-seg-btn" data-lang-option="tl">Tagalog</button>
+            <div class="grid gap-6 md:grid-cols-2">
+              <div>
+                <p class="s-label"><span data-lang-en>Theme</span><span data-lang-tl>Tema</span></p>
+                <div class="s-seg" role="group" aria-label="Theme">
+                  <button type="button" class="s-seg-btn" data-set-theme="light">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M6.34 17.66l-1.41 1.41M19.07 4.93l-1.41 1.41"/></svg>
+                    <span data-lang-en>Light</span><span data-lang-tl>Maliwanag</span>
+                  </button>
+                  <button type="button" class="s-seg-btn" data-set-theme="dark">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79Z"/></svg>
+                    <span data-lang-en>Dark</span><span data-lang-tl>Madilim</span>
+                  </button>
+                </div>
+                <button type="button" class="s-seg-btn" data-toggle-contrast role="switch" aria-checked="false" style="margin-top:0.85rem;width:100%;justify-content:space-between;border:1px solid var(--s-line);border-radius:0.85rem;background:var(--s-surface-2);padding:0.65rem 0.95rem;">
+                  <span><span data-lang-en>High contrast</span><span data-lang-tl>Mataas na kontrast</span></span>
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:1rem;height:1rem;"><circle cx="12" cy="12" r="9"/><path d="M12 3v18" fill="currentColor"/></svg>
+                </button>
               </div>
-            </section>
-          </div>
+
+              <div>
+                <p class="s-label"><span data-lang-en>Text size</span><span data-lang-tl>Laki ng teksto</span></p>
+                <div class="s-seg" role="group" aria-label="Text size">
+                  <button type="button" class="s-seg-btn" data-set-textsize="small" style="font-size:0.78rem;">A</button>
+                  <button type="button" class="s-seg-btn" data-set-textsize="medium" style="font-size:0.98rem;">A</button>
+                  <button type="button" class="s-seg-btn" data-set-textsize="large" style="font-size:1.18rem;">A</button>
+                </div>
+
+                <p class="s-label" style="margin-top:1.25rem;"><span data-lang-en>Language</span><span data-lang-tl>Wika</span></p>
+                <div class="s-seg" role="group" aria-label="Language">
+                  <button type="button" class="s-seg-btn" data-set-lang="en">English</button>
+                  <button type="button" class="s-seg-btn" data-set-lang="tl">Tagalog</button>
+                </div>
+              </div>
+            </div>
+          </section>
 
           <!-- ===== Danger zone ===== -->
           <section class="s-card s-danger-card p-6">
@@ -260,14 +273,9 @@
       </div>
     </div>
 
-    <script id="accountSettingsConfig" type="application/json">{{ {
-      'preferencesEndpoint': url_for('account_update_preferences'),
-      'csrfToken': csrf_token,
-      'theme': public_theme_preference,
-      'language': public_language_preference
-    }|tojson }}</script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/account-settings.js') }}"></script>
+    {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
 </html>

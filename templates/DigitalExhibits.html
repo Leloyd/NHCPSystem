@@ -310,6 +310,7 @@
         }
       }
     </style>
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="dx-page min-h-screen text-gray-900">
     {% set public_active_page = 'digital-exhibits' %}
@@ -325,26 +326,26 @@
               <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m9 18 6-6-6-6"></path>
               </svg>
-              <span class="text-[#c9a550]">Digital Exhibits</span>
+              <span class="text-[#c9a550]"><span data-lang-en>Digital Exhibits</span><span data-lang-tl>Mga Digital na Eksibit</span></span>
             </div>
           </div>
           <div class="dx-pill mb-4">
             <i data-lucide="sparkles" class="h-4 w-4"></i>
-            <span>Digital Heritage Portal</span>
+            <span><span data-lang-en>Digital Heritage Portal</span><span data-lang-tl>Portal ng Digital na Pamana</span></span>
           </div>
-          <h1 class="dx-hero-title mb-4">Digital Exhibits &amp; <span>Resources</span></h1>
+          <h1 class="dx-hero-title mb-4"><span class="lx" data-lang-en>Digital Exhibits &amp; <span>Resources</span></span><span class="lx" data-lang-tl>Mga Digital na Eksibit at <span>Yaman</span></span></h1>
           <p class="dx-hero-copy">
-            Explore the museum through curated visual collections, interactive AR features, and learning
-            materials designed to help visitors discover the site in a clear and engaging way.
+            <span data-lang-en>Explore the museum through curated visual collections, interactive AR features, and learning materials designed to help visitors discover the site in a clear and engaging way.</span>
+            <span data-lang-tl>Tuklasin ang museo sa pamamagitan ng piling koleksyon ng larawan, interaktibong AR, at mga materyales sa pagkatuto na idinisenyo upang matuklasan ang pook nang malinaw at kaakit-akit.</span>
           </p>
           <div class="dx-hero-actions">
             <a href="#explore-digital-experiences" class="dx-btn-primary">
               <i data-lucide="compass" class="h-4 w-4"></i>
-              <span>Explore experiences</span>
+              <span><span data-lang-en>Explore experiences</span><span data-lang-tl>Tuklasin ang mga karanasan</span></span>
             </a>
             <a href="/online-gallery" class="dx-btn-secondary">
               <i data-lucide="images" class="h-4 w-4"></i>
-              <span>Open online gallery</span>
+              <span><span data-lang-en>Open online gallery</span><span data-lang-tl>Buksan ang online gallery</span></span>
             </a>
           </div>
         </div>
@@ -357,12 +358,12 @@
             <div>
               <div class="dx-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
                 <i data-lucide="layout-grid" class="h-4 w-4"></i>
-                <span>Explore Digital Experiences</span>
+                <span><span data-lang-en>Explore Digital Experiences</span><span data-lang-tl>Tuklasin ang mga Digital na Karanasan</span></span>
               </div>
-              <h2 class="dx-section-heading mb-2">Start with the experience that fits your visit</h2>
+              <h2 class="dx-section-heading mb-2"><span data-lang-en>Start with the experience that fits your visit</span><span data-lang-tl>Magsimula sa karanasang bagay sa iyong pagbisita</span></h2>
               <p class="dx-section-copy">
-                Each feature offers a different way to understand the museum, from visual archives and
-                immersive tours to interactive AR and learning support.
+                <span data-lang-en>Each feature offers a different way to understand the museum, from visual archives and immersive tours to interactive AR and learning support.</span>
+                <span data-lang-tl>May kani-kaniyang paraan ang bawat bahagi upang maunawaan ang museo — mula sa mga koleksyon ng larawan at malalim na tour hanggang sa interaktibong AR at suporta sa pagkatuto.</span>
               </p>
             </div>
           </div>
@@ -375,20 +376,20 @@
                 <span class="rounded-full px-2.5 py-1 text-xs bg-amber-100 text-amber-800">Gallery</span>
               </div>
               <div>
-                <p class="dx-card-subtitle">Online Gallery</p>
-                <h3 class="dx-card-title">Curated Photo Archive</h3>
+                <p class="dx-card-subtitle"><span data-lang-en>Online Gallery</span><span data-lang-tl>Online na Galerya</span></p>
+                <h3 class="dx-card-title"><span data-lang-en>Curated Photo Archive</span><span data-lang-tl>Piling Koleksyon ng Larawan</span></h3>
                 <p class="dx-card-copy">
-                  Browse selected photographs and exhibit images presented with short descriptions,
-                  historical context, and clearer detail viewing for a calm, visual-first experience.
+                  <span data-lang-en>Browse selected photographs and exhibit images presented with short descriptions, historical context, and clearer detail viewing for a calm, visual-first experience.</span>
+                  <span data-lang-tl>Tingnan ang mga piling litrato at larawan ng eksibit na may maikling paglalarawan, konteksto ng kasaysayan, at mas malinaw na pagtingin para sa panatag at visual na karanasan.</span>
                 </p>
               </div>
               <div class="dx-card-tags">
-                <span class="dx-chip">Focused image browsing</span>
-                <span class="dx-chip">Short exhibit context</span>
+                <span class="dx-chip"><span data-lang-en>Focused image browsing</span><span data-lang-tl>Nakapokus na pagtingin</span></span>
+                <span class="dx-chip"><span data-lang-en>Short exhibit context</span><span data-lang-tl>Maikling konteksto</span></span>
               </div>
               <div class="dx-card-footer">
                 <a class="dx-card-link" href="/online-gallery">
-                  <span>Open Gallery</span>
+                  <span><span data-lang-en>Open Gallery</span><span data-lang-tl>Buksan ang Galerya</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -401,20 +402,20 @@
                 <span class="rounded-full px-2.5 py-1 text-xs bg-stone-100 text-stone-700">Learning</span>
               </div>
               <div>
-                <p class="dx-card-subtitle">Edu Resources</p>
-                <h3 class="dx-card-title">Teacher Learning Pack</h3>
+                <p class="dx-card-subtitle"><span data-lang-en>Edu Resources</span><span data-lang-tl>Mga Yamang Pang-edukasyon</span></p>
+                <h3 class="dx-card-title"><span data-lang-en>Teacher Learning Pack</span><span data-lang-tl>Pakete sa Pagkatuto ng Guro</span></h3>
                 <p class="dx-card-copy">
-                  Access learning materials that support guided discussion, classroom activities, and
-                  structured engagement with the museum's history, spaces, and cultural meaning.
+                  <span data-lang-en>Access learning materials that support guided discussion, classroom activities, and structured engagement with the museum's history, spaces, and cultural meaning.</span>
+                  <span data-lang-tl>I-access ang mga materyales sa pagkatuto na sumusuporta sa gabay na talakayan, gawain sa silid-aralan, at mas malalim na pakikilahok sa kasaysayan, mga espasyo, at kultura ng museo.</span>
                 </p>
               </div>
               <div class="dx-card-tags">
-                <span class="dx-chip">Classroom-ready references</span>
-                <span class="dx-chip">Guides for deeper discussion</span>
+                <span class="dx-chip"><span data-lang-en>Classroom-ready references</span><span data-lang-tl>Handa sa silid-aralan</span></span>
+                <span class="dx-chip"><span data-lang-en>Guides for deeper discussion</span><span data-lang-tl>Gabay sa talakayan</span></span>
               </div>
               <div class="dx-card-footer">
                 <a class="dx-card-link" href="/edu-resources">
-                  <span>Open Resources</span>
+                  <span><span data-lang-en>Open Resources</span><span data-lang-tl>Buksan ang mga Yaman</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -427,20 +428,20 @@
                 <span class="rounded-full px-2.5 py-1 text-xs bg-green-100 text-green-800">AR</span>
               </div>
               <div>
-                <p class="dx-card-subtitle">AR Content</p>
-                <h3 class="dx-card-title">Marker-Based AR Views</h3>
+                <p class="dx-card-subtitle"><span data-lang-en>AR Content</span><span data-lang-tl>Nilalamang AR</span></p>
+                <h3 class="dx-card-title"><span data-lang-en>Marker-Based AR Views</span><span data-lang-tl>AR na Batay sa Marka</span></h3>
                 <p class="dx-card-copy">
-                  Use your device camera to activate digital overlays linked to heritage markers and
-                  selected artifacts, for a more interactive way to experience museum content.
+                  <span data-lang-en>Use your device camera to activate digital overlays linked to heritage markers and selected artifacts, for a more interactive way to experience museum content.</span>
+                  <span data-lang-tl>Gamitin ang camera ng iyong device upang buhayin ang mga digital na overlay na nakaugnay sa mga marka ng pamana at piling artefakto, para sa mas interaktibong karanasan.</span>
                 </p>
               </div>
               <div class="dx-card-tags">
-                <span class="dx-chip">Interactive artifact viewing</span>
-                <span class="dx-chip">Camera-based marker detection</span>
+                <span class="dx-chip"><span data-lang-en>Interactive artifact viewing</span><span data-lang-tl>Interaktibong pagtingin</span></span>
+                <span class="dx-chip"><span data-lang-en>Camera-based marker detection</span><span data-lang-tl>Pagtukoy ng marka sa camera</span></span>
               </div>
               <div class="dx-card-footer">
                 <a class="dx-card-link" href="/ar-content-detection">
-                  <span>Open AR Camera</span>
+                  <span><span data-lang-en>Open AR Camera</span><span data-lang-tl>Buksan ang AR Camera</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -450,8 +451,10 @@
       </section>
     </main>
 
+    {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_public_footer.html' %}
 
+    {% include 'partials/_site_prefs_foot.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
       if (window.lucide) {

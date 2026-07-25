@@ -1,0 +1,10 @@
+{# Shared preferences runtime — include once, just before </body>, on every
+   page that uses the accessibility controls (public pages + account settings). #}
+<script id="sitePrefsConfig" type="application/json">{{ {
+  'authenticated': (public_user_authenticated if public_user_authenticated is defined else false),
+  'preferencesEndpoint': url_for('account_update_preferences'),
+  'csrfToken': public_csrf_token,
+  'theme': public_theme_preference|default('light'),
+  'language': public_language_preference|default('en')
+}|tojson }}</script>
+<script src="{{ url_for('static', filename='js/site-prefs.js') }}"></script>

@@ -310,6 +310,7 @@
         }
       }
     </style>
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="ix-page min-h-screen text-gray-900">
     {% set public_active_page = 'interactive' %}
@@ -325,26 +326,26 @@
               <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
                 <path d="m9 18 6-6-6-6"></path>
               </svg>
-              <span class="text-[#c9a550]">Interactive</span>
+              <span class="text-[#c9a550]"><span data-lang-en>Interactive</span><span data-lang-tl>Interaktibo</span></span>
             </div>
           </div>
           <div class="ix-pill mb-4">
             <i data-lucide="orbit" class="h-4 w-4"></i>
-            <span>Immersive Experience Portal</span>
+            <span><span data-lang-en>Immersive Experience Portal</span><span data-lang-tl>Portal ng Malalim na Karanasan</span></span>
           </div>
-          <h1 class="ix-hero-title mb-4">Interactive &amp; <span>Immersive</span></h1>
+          <h1 class="ix-hero-title mb-4"><span class="lx" data-lang-en>Interactive &amp; <span>Immersive</span></span><span class="lx" data-lang-tl>Interaktibo at <span>Malalim</span></span></h1>
           <p class="ix-hero-copy">
-            Explore the museum through interactive tools that help visitors navigate spaces, enter virtual
-            environments, follow heritage routes, and engage with learning activities in a more hands-on way.
+            <span data-lang-en>Explore the museum through interactive tools that help visitors navigate spaces, enter virtual environments, follow heritage routes, and engage with learning activities in a more hands-on way.</span>
+            <span data-lang-tl>Tuklasin ang museo sa pamamagitan ng mga interaktibong kasangkapan na tumutulong sa mga bisita na mag-navigate, pumasok sa mga virtual na kapaligiran, sundan ang mga landas ng pamana, at makilahok sa mga gawaing pampagkatuto.</span>
           </p>
           <div class="ix-hero-actions">
             <a href="#interactive-experiences" class="ix-btn-primary">
               <i data-lucide="compass" class="h-4 w-4"></i>
-              <span>Explore interactive features</span>
+              <span><span data-lang-en>Explore interactive features</span><span data-lang-tl>Tuklasin ang mga interaktibong bahagi</span></span>
             </a>
             <a href="{{ url_for('virtual_tour') }}" class="ix-btn-secondary">
               <i data-lucide="video" class="h-4 w-4"></i>
-              <span>Start virtual tour</span>
+              <span><span data-lang-en>Start virtual tour</span><span data-lang-tl>Simulan ang virtual tour</span></span>
             </a>
           </div>
         </div>
@@ -357,12 +358,12 @@
             <div>
               <div class="ix-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
                 <i data-lucide="layout-grid" class="h-4 w-4"></i>
-                <span>Interactive Experiences</span>
+                <span><span data-lang-en>Interactive Experiences</span><span data-lang-tl>Mga Interaktibong Karanasan</span></span>
               </div>
-              <h2 class="ix-section-heading mb-2">Choose how you want to explore and interact</h2>
+              <h2 class="ix-section-heading mb-2"><span data-lang-en>Choose how you want to explore and interact</span><span data-lang-tl>Piliin kung paano mo nais tuklasin at makipag-ugnayan</span></h2>
               <p class="ix-section-copy">
-                These features offer different ways to experience the museum, from practical orientation
-                tools to immersive spaces and activity-based learning.
+                <span data-lang-en>These features offer different ways to experience the museum, from practical orientation tools to immersive spaces and activity-based learning.</span>
+                <span data-lang-tl>May iba't ibang paraan ang mga bahaging ito upang maranasan ang museo — mula sa mga praktikal na kasangkapan sa oryentasyon hanggang sa malalim na espasyo at pagkatutong batay sa gawain.</span>
               </p>
             </div>
           </div>
@@ -375,20 +376,20 @@
                 <span class="rounded-full px-2.5 py-1 text-xs bg-amber-100 text-amber-800">Tour</span>
               </div>
               <div>
-                <p class="ix-card-subtitle">Virtual Tour</p>
-                <h3 class="ix-card-title">Explore at Your Own Pace</h3>
+                <p class="ix-card-subtitle"><span data-lang-en>Virtual Tour</span><span data-lang-tl>Virtual na Tour</span></p>
+                <h3 class="ix-card-title"><span data-lang-en>Explore at Your Own Pace</span><span data-lang-tl>Tuklasin sa Sarili Mong Bilis</span></h3>
                 <p class="ix-card-copy">
-                  Move freely through the museum and cemetery in an interactive 360° experience.
-                  Choose where to go, open artifact hotspots, and use the live map as you explore.
+                  <span data-lang-en>Move freely through the museum and cemetery in an interactive 360° experience. Choose where to go, open artifact hotspots, and use the live map as you explore.</span>
+                  <span data-lang-tl>Malayang maglibot sa museo at libingan sa isang interaktibong 360° na karanasan. Piliin kung saan pupunta, buksan ang mga hotspot ng artefakto, at gamitin ang live na mapa habang naglilibot.</span>
                 </p>
               </div>
               <div class="ix-card-tags">
-                <span class="ix-chip">Immersive 360° views</span>
-                <span class="ix-chip">Free-roam site exploration</span>
+                <span class="ix-chip"><span data-lang-en>Immersive 360° views</span><span data-lang-tl>Malalim na 360° na tanaw</span></span>
+                <span class="ix-chip"><span data-lang-en>Free-roam site exploration</span><span data-lang-tl>Malayang paglilibot</span></span>
               </div>
               <div class="ix-card-footer">
                 <a class="ix-card-link" href="{{ url_for('virtual_tour') }}">
-                  <span>Start Tour</span>
+                  <span><span data-lang-en>Start Tour</span><span data-lang-tl>Simulan ang Tour</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -401,20 +402,20 @@
                 <span class="rounded-full px-2.5 py-1 text-xs bg-stone-100 text-stone-700">Wayfinding</span>
               </div>
               <div>
-                <p class="ix-card-subtitle">Site Map</p>
-                <h3 class="ix-card-title">Quick Museum Orientation</h3>
+                <p class="ix-card-subtitle"><span data-lang-en>Site Map</span><span data-lang-tl>Mapa ng Pook</span></p>
+                <h3 class="ix-card-title"><span data-lang-en>Quick Museum Orientation</span><span data-lang-tl>Mabilis na Oryentasyon sa Museo</span></h3>
                 <p class="ix-card-copy">
-                  View a simplified map of the cemetery and museum grounds with key locations, entry
-                  points, and notable heritage areas to help you orient before exploring further.
+                  <span data-lang-en>View a simplified map of the cemetery and museum grounds with key locations, entry points, and notable heritage areas to help you orient before exploring further.</span>
+                  <span data-lang-tl>Tingnan ang pinasimpleng mapa ng libingan at bakuran ng museo na may mga pangunahing lokasyon, pasukan, at mahahalagang lugar ng pamana upang makapag-oryenta bago maglibot.</span>
                 </p>
               </div>
               <div class="ix-card-tags">
-                <span class="ix-chip">Clear location overview</span>
-                <span class="ix-chip">Helpful wayfinding support</span>
+                <span class="ix-chip"><span data-lang-en>Clear location overview</span><span data-lang-tl>Malinaw na tanaw ng lokasyon</span></span>
+                <span class="ix-chip"><span data-lang-en>Helpful wayfinding support</span><span data-lang-tl>Tulong sa paghahanap ng daan</span></span>
               </div>
               <div class="ix-card-footer">
                 <a class="ix-card-link" href="{{ url_for('site_map') }}">
-                  <span>Open Site Map</span>
+                  <span><span data-lang-en>Open Site Map</span><span data-lang-tl>Buksan ang Mapa</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -427,20 +428,20 @@
                 <span class="rounded-full px-2.5 py-1 text-xs bg-green-100 text-green-800">WebXR</span>
               </div>
               <div>
-                <p class="ix-card-subtitle">3D Environment</p>
-                <h3 class="ix-card-title">Immersive WebXR Exploration</h3>
+                <p class="ix-card-subtitle"><span data-lang-en>3D Environment</span><span data-lang-tl>3D na Kapaligiran</span></p>
+                <h3 class="ix-card-title"><span data-lang-en>Immersive WebXR Exploration</span><span data-lang-tl>Malalim na WebXR na Paglilibot</span></h3>
                 <p class="ix-card-copy">
-                  Enter an interactive 3D environment that lets visitors move through connected heritage
-                  spaces with a more immersive sense of place, scale, and atmosphere.
+                  <span data-lang-en>Enter an interactive 3D environment that lets visitors move through connected heritage spaces with a more immersive sense of place, scale, and atmosphere.</span>
+                  <span data-lang-tl>Pumasok sa isang interaktibong 3D na kapaligiran na nagbibigay-daan sa mga bisita na maglibot sa magkakaugnay na espasyo ng pamana nang may mas malalim na pakiramdam ng lugar, sukat, at himpapawid.</span>
                 </p>
               </div>
               <div class="ix-card-tags">
-                <span class="ix-chip">First-person digital exploration</span>
-                <span class="ix-chip">Immersive heritage spaces</span>
+                <span class="ix-chip"><span data-lang-en>First-person digital exploration</span><span data-lang-tl>Paglilibot sa unang-tao</span></span>
+                <span class="ix-chip"><span data-lang-en>Immersive heritage spaces</span><span data-lang-tl>Malalim na espasyo ng pamana</span></span>
               </div>
               <div class="ix-card-footer">
                 <a class="ix-card-link" href="{{ url_for('three_d_environment') }}">
-                  <span>Launch 3D Environment</span>
+                  <span><span data-lang-en>Launch 3D Environment</span><span data-lang-tl>Ilunsad ang 3D</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -450,8 +451,10 @@
       </section>
     </main>
 
+    {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_public_footer.html' %}
 
+    {% include 'partials/_site_prefs_foot.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
       if (window.lucide) {

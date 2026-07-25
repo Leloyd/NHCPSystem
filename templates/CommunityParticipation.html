@@ -10,6 +10,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/community-participation.css') }}" />
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="min-h-screen bg-white text-gray-900">
     {% set public_active_page = 'community-participation' %}
@@ -20,20 +21,20 @@
       <section id="community-highlights" class="py-20 lg:py-28 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center max-w-2xl mx-auto mb-10">
-            <span class="community-section-kicker">Community Highlights</span>
-            <h2 class="community-section-title">Spotlight on Our Community</h2>
+            <span class="community-section-kicker"><span data-lang-en>Community Highlights</span><span data-lang-tl>Mga Tampok ng Komunidad</span></span>
+            <h2 class="community-section-title"><span data-lang-en>Spotlight on Our Community</span><span data-lang-tl>Tampok sa Aming Komunidad</span></h2>
             <p class="community-section-description">
-              Discover museum-led programs, community activities, and public advisories that connect
-              our heritage site with teachers, students, and local visitors.
+              <span data-lang-en>Discover museum-led programs, community activities, and public advisories that connect our heritage site with teachers, students, and local visitors.</span>
+              <span data-lang-tl>Tuklasin ang mga programa ng museo, gawain ng komunidad, at abisong publiko na nag-uugnay sa aming pook ng pamana sa mga guro, mag-aaral, at lokal na bisita.</span>
             </p>
           </div>
 
           <div class="flex flex-wrap justify-center gap-2 mb-10" id="highlightFilters">
-            <button class="filter-tab active" data-filter="all">All</button>
-            <button class="filter-tab" data-filter="Museum Programs">Museum Programs</button>
-            <button class="filter-tab" data-filter="School Engagement">School Engagement</button>
-            <button class="filter-tab" data-filter="Public Activity">Public Activity</button>
-            <button class="filter-tab" data-filter="Public Advisory">Public Advisory</button>
+            <button class="filter-tab active" data-filter="all"><span data-lang-en>All</span><span data-lang-tl>Lahat</span></button>
+            <button class="filter-tab" data-filter="Museum Programs"><span data-lang-en>Museum Programs</span><span data-lang-tl>Programa ng Museo</span></button>
+            <button class="filter-tab" data-filter="School Engagement"><span data-lang-en>School Engagement</span><span data-lang-tl>Pakikipag-ugnayan sa Paaralan</span></button>
+            <button class="filter-tab" data-filter="Public Activity"><span data-lang-en>Public Activity</span><span data-lang-tl>Gawaing Publiko</span></button>
+            <button class="filter-tab" data-filter="Public Advisory"><span data-lang-en>Public Advisory</span><span data-lang-tl>Abisong Publiko</span></button>
           </div>
 
           <div id="highlightsContainer">
@@ -43,7 +44,7 @@
 
           <div class="text-center mt-10">
             <button id="viewAllHighlightsBtn" class="community-btn-secondary hidden" type="button">
-              View All Highlights
+              <span data-lang-en>View All Highlights</span><span data-lang-tl>Tingnan Lahat</span>
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7l5 5m0 0l-5 5m5-5H6"></path>
               </svg>
@@ -56,17 +57,18 @@
       <section id="events-calendar" class="py-20 lg:py-28 bg-stone-50">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center max-w-2xl mx-auto mb-14">
-            <span class="community-section-kicker">Booking Calendar</span>
-            <h2 class="community-section-title">Confirmed Tour Visits</h2>
+            <span class="community-section-kicker"><span data-lang-en>Booking Calendar</span><span data-lang-tl>Kalendaryo ng Booking</span></span>
+            <h2 class="community-section-title"><span data-lang-en>Confirmed Tour Visits</span><span data-lang-tl>Nakumpirmang Pagbisita</span></h2>
             <p class="community-section-description">
-              View confirmed tour schedules and send your own booking request through your user account.
+              <span data-lang-en>View confirmed tour schedules and send your own booking request through your user account.</span>
+              <span data-lang-tl>Tingnan ang mga nakumpirmang iskedyul ng tour at magpadala ng sarili mong booking sa pamamagitan ng iyong account.</span>
             </p>
           </div>
 
           <div class="flex flex-wrap justify-center gap-3 mb-10">
             <div class="event-legend-item">
               <span class="event-dot" style="background: #1E3A5F;"></span>
-              Confirmed Booking
+              <span data-lang-en>Confirmed Booking</span><span data-lang-tl>Nakumpirmang Booking</span>
             </div>
           </div>
 
@@ -106,12 +108,12 @@
             <div>
               <div class="upcoming-events-sidebar">
                 <div class="upcoming-events-header">
-                  <h3 class="upcoming-events-title">Upcoming Bookings</h3>
+                  <h3 class="upcoming-events-title"><span data-lang-en>Upcoming Bookings</span><span data-lang-tl>Mga Paparating na Booking</span></h3>
                 </div>
                 <div id="upcomingEventsList" class="upcoming-events-list"></div>
                 <div class="upcoming-events-footer">
                   <button type="button" class="upcoming-events-view-all" data-open-modal="booking-request">
-                    Request a Booking
+                    <span data-lang-en>Request a Booking</span><span data-lang-tl>Humiling ng Booking</span>
                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                       <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path>
                     </svg>
@@ -127,10 +129,11 @@
       <section id="e-participation" class="py-20 lg:py-28 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div class="text-center max-w-2xl mx-auto mb-14">
-            <span class="community-section-kicker">E-Participation</span>
-            <h2 class="community-section-title">Engage with Your Heritage Museum</h2>
+            <span class="community-section-kicker"><span data-lang-en>E-Participation</span><span data-lang-tl>E-Partisipasyon</span></span>
+            <h2 class="community-section-title"><span data-lang-en>Engage with Your Heritage Museum</span><span data-lang-tl>Makilahok sa Iyong Museo ng Pamana</span></h2>
             <p class="community-section-description">
-              Your voice, knowledge, and stories are the heartbeat of our community. Choose how you'd like to contribute to our growing digital archive.
+              <span data-lang-en>Your voice, knowledge, and stories are the heartbeat of our community. Choose how you'd like to contribute to our growing digital archive.</span>
+              <span data-lang-tl>Ang iyong tinig, kaalaman, at mga kuwento ang puso ng aming komunidad. Piliin kung paano ka nais makibahagi sa aming lumalaking digital archive.</span>
             </p>
           </div>
 
@@ -141,11 +144,11 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"></path>
                 </svg>
               </div>
-              <h3 class="participation-card-title">Visitor Feedback</h3>
-              <p class="participation-card-description">Share your experience with us! Rate your visit and leave comments that help us improve the quality and usability of our museum services.</p>
-              <p class="participation-card-purpose">Quality Improvement</p>
+              <h3 class="participation-card-title"><span data-lang-en>Visitor Feedback</span><span data-lang-tl>Feedback ng Bisita</span></h3>
+              <p class="participation-card-description"><span data-lang-en>Share your experience with us! Rate your visit and leave comments that help us improve the quality and usability of our museum services.</span><span data-lang-tl>Ibahagi ang iyong karanasan! I-rate ang iyong pagbisita at mag-iwan ng puna upang mapabuti ang kalidad at silbi ng aming mga serbisyo.</span></p>
+              <p class="participation-card-purpose"><span data-lang-en>Quality Improvement</span><span data-lang-tl>Pagpapabuti ng Kalidad</span></p>
               <button type="button" class="participation-card-btn" data-open-modal="visitor-feedback">
-                Leave a Review →
+                <span data-lang-en>Leave a Review →</span><span data-lang-tl>Mag-iwan ng Puna →</span>
               </button>
             </article>
 
@@ -155,11 +158,11 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
                 </svg>
               </div>
-              <h3 class="participation-card-title">Teacher Corner</h3>
-              <p class="participation-card-description">Educators are invited to submit classroom-ready learning materials in PDF, DOCX, and slide formats to build our curated educational resource library.</p>
-              <p class="participation-card-purpose">Learning Materials</p>
+              <h3 class="participation-card-title"><span data-lang-en>Teacher Corner</span><span data-lang-tl>Sulok ng Guro</span></h3>
+              <p class="participation-card-description"><span data-lang-en>Educators are invited to submit classroom-ready learning materials in PDF, DOCX, and slide formats to build our curated educational resource library.</span><span data-lang-tl>Inaanyayahan ang mga guro na magsumite ng mga materyales sa pagkatuto na handa sa silid-aralan sa PDF, DOCX, at slide upang mapalago ang aming silid-aklatan ng mga yamang pang-edukasyon.</span></p>
+              <p class="participation-card-purpose"><span data-lang-en>Learning Materials</span><span data-lang-tl>Materyales sa Pagkatuto</span></p>
               <button type="button" class="participation-card-btn" data-open-modal="teacher-corner">
-                Submit Materials →
+                <span data-lang-en>Submit Materials →</span><span data-lang-tl>Magsumite →</span>
               </button>
             </article>
 
@@ -169,11 +172,11 @@
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path>
                 </svg>
               </div>
-              <h3 class="participation-card-title">Stories Submit</h3>
-              <p class="participation-card-description">Community members are welcome to share experiences, memories, and personal stories with optional photos to help preserve public and family narratives.</p>
-              <p class="participation-card-purpose">Preserve Narratives</p>
+              <h3 class="participation-card-title"><span data-lang-en>Stories Submit</span><span data-lang-tl>Magbahagi ng Kuwento</span></h3>
+              <p class="participation-card-description"><span data-lang-en>Community members are welcome to share experiences, memories, and personal stories with optional photos to help preserve public and family narratives.</span><span data-lang-tl>Malugod na tinatanggap ang mga miyembro ng komunidad na magbahagi ng karanasan, alaala, at personal na kuwento na may opsyonal na larawan upang mapanatili ang mga kuwento ng publiko at pamilya.</span></p>
+              <p class="participation-card-purpose"><span data-lang-en>Preserve Narratives</span><span data-lang-tl>Pangalagaan ang mga Kuwento</span></p>
               <button type="button" class="participation-card-btn" data-open-modal="stories-submit">
-                Share My Story →
+                <span data-lang-en>Share My Story →</span><span data-lang-tl>Ibahagi →</span>
               </button>
             </article>
           </div>
@@ -187,10 +190,10 @@
             </div>
             <div>
               <p class="text-blue-900 text-sm font-medium" style="font-family: 'Inter', sans-serif;">
-                All submissions are reviewed by our curatorial team before being published.
+                <span data-lang-en>All submissions are reviewed by our curatorial team before being published.</span><span data-lang-tl>Sinusuri ng aming curatorial team ang lahat ng isinumite bago ito mailathala.</span>
               </p>
               <p class="text-gray-600 text-xs mt-0.5" style="font-family: 'Inter', sans-serif;">
-                Your privacy is important to us. Personal information will only be used for museum communication purposes.
+                <span data-lang-en>Your privacy is important to us. Personal information will only be used for museum communication purposes.</span><span data-lang-tl>Mahalaga sa amin ang iyong privacy. Gagamitin lamang ang personal na impormasyon para sa komunikasyon ng museo.</span>
               </p>
             </div>
           </div>
@@ -198,6 +201,7 @@
       </section>
     </main>
 
+    {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_public_footer.html' %}
 
     <!-- Event Detail Modal -->
@@ -591,5 +595,6 @@
       lucide.createIcons();
     </script>
     <script src="{{ url_for('static', filename='js/community-participation.js') }}"></script>
+    {% include 'partials/_site_prefs_foot.html' %}
   </body>
 </html>

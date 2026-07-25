@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/public-collection-pages.css') }}" />
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="collection-page collection-page--resources min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
     {% set public_active_page = 'digital-exhibits' %}
@@ -119,46 +120,14 @@
       </section>
     </main>
 
-    <div id="ogdAccessibilityRoot" class="ogd-accessibility-root">
-      <div id="ogdAccessibilityPanel" class="ogd-accessibility-panel" hidden role="dialog" aria-modal="false" aria-label="Mga kontrol sa aksesibilidad">
-        <div class="ogd-accessibility-panel__header">
-          <h2 id="ogdAccessibilityTitle" class="ogd-accessibility-panel__title">Mga Kontrol sa Aksesibilidad</h2>
-          <button id="ogdAccessibilityClose" class="ogd-accessibility-panel__close" type="button" aria-label="Isara ang panel ng aksesibilidad">
-            <i data-lucide="x" aria-hidden="true"></i>
-          </button>
-        </div>
-
-        <div class="ogd-accessibility-panel__group">
-          <p id="ogdTextSizeLabel" class="ogd-accessibility-panel__label">Laki ng Teksto</p>
-          <div class="ogd-accessibility-segmented" role="group" aria-label="Mga pagpipilian sa laki ng teksto">
-            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="small">Maliit</button>
-            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="medium">Katamtaman</button>
-            <button class="ogd-accessibility-segmented__button" type="button" data-ogd-text-size="large">Malaki</button>
-          </div>
-        </div>
-
-        <button id="ogdContrastToggle" class="ogd-accessibility-toggle" type="button" role="switch" aria-checked="false">
-          <span id="ogdContrastLabel" class="ogd-accessibility-toggle__text">Mataas na Kontrasto</span>
-          <span class="ogd-accessibility-toggle__switch" aria-hidden="true"><span></span></span>
-        </button>
-
-        <button id="ogdLanguageToggle" class="ogd-accessibility-toggle" type="button" aria-label="Palitan ang wika">
-          <span id="ogdLanguageLabel" class="ogd-accessibility-toggle__text">Wika</span>
-          <span id="ogdLanguageBadge" class="ogd-accessibility-toggle__badge">FIL</span>
-        </button>
-      </div>
-
-      <button id="ogdAccessibilityToggle" class="ogd-accessibility-fab" type="button" aria-label="Buksan ang panel ng aksesibilidad" aria-expanded="false" aria-haspopup="dialog">
-        <i data-lucide="accessibility" aria-hidden="true"></i>
-      </button>
-    </div>
+    {% include 'partials/_site_accessibility_fab.html' %}
 
     {% include 'partials/_public_footer.html' %}
 
     <script id="eduResourcesData" type="application/json">{{ edu_resources_items|tojson }}</script>
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/online-gallery-accessibility.js') }}"></script>
     <script src="{{ url_for('static', filename='js/edu-resources-live.js') }}"></script>
+    {% include 'partials/_site_prefs_foot.html' %}
   </body>
 </html>

@@ -894,19 +894,14 @@ def register_user_account_routes(
                     role_values = _normalize_role_values(request.form.getlist("profile_roles"))
                     if not role_values:
                         raise ValueError("Please select at least one role.")
-                    theme = str(request.form.get("theme_preference") or "light").strip().lower()
-                    if theme not in VALID_THEME_PREFERENCES:
-                        theme = "light"
-                    language = str(request.form.get("language_preference") or "en").strip().lower()
-                    if language not in VALID_LANGUAGE_PREFERENCES:
-                        language = "en"
+                    # Theme + language are managed live by the shared accessibility
+                    # controls (/api/account/preferences), so this form only saves
+                    # the name and roles.
                     update_public_user(
                         int(current_user.get("id")),
                         {
                             "full_name": full_name[:160],
                             "profile_roles": _serialize_role_values(role_values),
-                            "theme_preference": theme,
-                            "language_preference": language,
                             "updated_at": _utcnow().isoformat(),
                         },
                     )

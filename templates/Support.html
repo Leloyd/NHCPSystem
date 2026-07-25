@@ -549,6 +549,7 @@
         }
       }
     </style>
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="support-page min-h-screen text-gray-900">
     {% set public_active_page = 'support' %}
@@ -562,14 +563,14 @@
             <svg aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
               <path d="m9 18 6-6-6-6"></path>
             </svg>
-            <span class="text-[#c9a550]">Support &amp; Governance</span>
+            <span class="text-[#c9a550]"><span data-lang-en>Support &amp; Governance</span><span data-lang-tl>Suporta at Pamamahala</span></span>
           </div>
           <div class="support-pill mb-4">
             <i data-lucide="help-circle" class="h-4 w-4"></i>
-            <span>Visitor Support Portal</span>
+            <span><span data-lang-en>Visitor Support Portal</span><span data-lang-tl>Portal ng Suporta sa Bisita</span></span>
           </div>
-          <h1 class="support-hero-title mb-4">Support &amp; <span>Governance</span></h1>
-          <p class="support-hero-copy">Your resource center for visiting the Nagcarlan Underground Cemetery — a National Cultural Treasure. Find answers to frequently asked questions, review applicable heritage policies.</p>
+          <h1 class="support-hero-title mb-4"><span class="lx" data-lang-en>Support &amp; <span>Governance</span></span><span class="lx" data-lang-tl>Suporta at <span>Pamamahala</span></span></h1>
+          <p class="support-hero-copy"><span data-lang-en>Your resource center for visiting the Nagcarlan Underground Cemetery — a National Cultural Treasure. Find answers to frequently asked questions, review applicable heritage policies.</span><span data-lang-tl>Ang iyong sentro ng tulong sa pagbisita sa Libingan sa Ilalim ng Lupa ng Nagcarlan — isang Pambansang Yamang Pangkultura. Maghanap ng sagot sa mga madalas itanong at suriin ang mga patakaran sa pamana.</span></p>
         </div>
       </section>
 
@@ -579,10 +580,10 @@
             <div>
               <div class="support-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
                 <i data-lucide="help-circle" class="h-4 w-4"></i>
-                <span>Frequently Asked Questions</span>
+                <span><span data-lang-en>Frequently Asked Questions</span><span data-lang-tl>Mga Madalas Itanong</span></span>
               </div>
-              <h2 class="support-section-heading mb-2">How can we help you?</h2>
-              <p class="support-section-copy">Browse by category or search for specific topics.</p>
+              <h2 class="support-section-heading mb-2"><span data-lang-en>How can we help you?</span><span data-lang-tl>Paano ka namin matutulungan?</span></h2>
+              <p class="support-section-copy"><span data-lang-en>Browse by category or search for specific topics.</span><span data-lang-tl>Mag-browse ayon sa kategorya o maghanap ng partikular na paksa.</span></p>
             </div>
             <div class="support-search-wrap">
               <i data-lucide="search" class="support-search-icon h-4 w-4"></i>
@@ -594,36 +595,36 @@
             <div id="supportFaqResults" class="support-results-card"></div>
             <div class="flex flex-col gap-4">
               <div class="support-side-card support-contact-card">
-                <h3 class="support-contact-title">Still have questions?</h3>
-                <p class="support-contact-copy">Our heritage officers are available to assist you with specific inquiries about the site.</p>
+                <h3 class="support-contact-title"><span data-lang-en>Still have questions?</span><span data-lang-tl>May tanong pa?</span></h3>
+                <p class="support-contact-copy"><span data-lang-en>Our heritage officers are available to assist you with specific inquiries about the site.</span><span data-lang-tl>Handa ang aming mga opisyal ng pamana na tumulong sa iyong mga katanungan tungkol sa pook.</span></p>
                 <a class="support-contact-link" href="mailto:info@nhcp.gov.ph">
                   <i data-lucide="mail" class="h-4 w-4 text-[#c9a550]"></i>
                   <div>
-                    <p class="support-contact-label">Email Us</p>
+                    <p class="support-contact-label"><span data-lang-en>Email Us</span><span data-lang-tl>Mag-email</span></p>
                     <p class="support-contact-value">info@nhcp.gov.ph</p>
                   </div>
                 </a>
                 <a class="support-contact-link" href="tel:0285273225">
                   <i data-lucide="phone" class="h-4 w-4 text-[#c9a550]"></i>
                   <div>
-                    <p class="support-contact-label">Call Us</p>
+                    <p class="support-contact-label"><span data-lang-en>Call Us</span><span data-lang-tl>Tumawag</span></p>
                     <p class="support-contact-value">(02) 8527-3225</p>
                   </div>
                 </a>
                 <div class="support-contact-static">
                   <i data-lucide="clock-3" class="h-4 w-4 text-[#c9a550]"></i>
                   <div>
-                    <p class="support-contact-label">Office Hours</p>
-                    <p class="support-contact-value">Mon–Fri, 8AM–5PM</p>
+                    <p class="support-contact-label"><span data-lang-en>Office Hours</span><span data-lang-tl>Oras ng Opisina</span></p>
+                    <p class="support-contact-value"><span data-lang-en>Mon–Fri, 8AM–5PM</span><span data-lang-tl>Lun–Biy, 8AM–5PM</span></p>
                   </div>
                 </div>
               </div>
               <div class="support-side-card support-visit-card">
-                <p class="support-visit-eyebrow">Plan Your Visit</p>
+                <p class="support-visit-eyebrow"><span data-lang-en>Plan Your Visit</span><span data-lang-tl>Balakin ang Pagbisita</span></p>
                 <h4 class="support-visit-title">Nagcarlan, Laguna</h4>
-                <p class="support-visit-copy">Tue–Sun · 8:00 AM – 5:00 PM. Prepare your visit and explore the site before you arrive.</p>
+                <p class="support-visit-copy"><span data-lang-en>Tue–Sun · 8:00 AM – 5:00 PM. Prepare your visit and explore the site before you arrive.</span><span data-lang-tl>Mar–Lin · 8:00 AM – 5:00 PM. Ihanda ang iyong pagbisita at tuklasin ang pook bago dumating.</span></p>
                 <a class="support-visit-link" href="https://maps.google.com/?q=Nagcarlan+Underground+Cemetery" target="_blank" rel="noopener noreferrer">
-                  Get Directions
+                  <span data-lang-en>Get Directions</span><span data-lang-tl>Kunin ang Direksyon</span>
                   <i data-lucide="external-link" class="h-3.5 w-3.5"></i>
                 </a>
               </div>
@@ -638,110 +639,144 @@
             <div>
               <div class="support-pill mb-3" style="background: rgba(201, 165, 80, 0.1); border-color: rgba(201, 165, 80, 0.25); color: #8b6914;">
                 <i data-lucide="shield-check" class="h-4 w-4"></i>
-                <span>Policy References</span>
+                <span><span data-lang-en>Policy References</span><span data-lang-tl>Mga Sanggunian sa Patakaran</span></span>
               </div>
-              <h2 class="support-section-heading mb-2">Governance &amp; Legal Framework</h2>
-              <p class="support-section-copy max-w-2xl">The Nagcarlan Underground Cemetery is protected under national and international heritage laws. Review the applicable policies and regulations below.</p>
+              <h2 class="support-section-heading mb-2"><span data-lang-en>Governance &amp; Legal Framework</span><span data-lang-tl>Pamamahala at Legal na Balangkas</span></h2>
+              <p class="support-section-copy max-w-2xl"><span data-lang-en>The Nagcarlan Underground Cemetery is protected under national and international heritage laws. Review the applicable policies and regulations below.</span><span data-lang-tl>Ang Libingan sa Ilalim ng Lupa ng Nagcarlan ay pinangangalagaan ng pambansa at pandaigdigang batas sa pamana. Suriin ang mga naaangkop na patakaran sa ibaba.</span></p>
             </div>
             <div class="support-policy-actions">
               <a class="support-policy-download" href="#supportPolicyGrid">
                 <i data-lucide="download" class="h-4 w-4"></i>
-                <span>Download All Policies</span>
+                <span><span data-lang-en>Download All Policies</span><span data-lang-tl>I-download Lahat</span></span>
               </a>
             </div>
           </div>
           <div id="supportPolicyGrid" class="support-policy-grid"></div>
           <div class="support-disclaimer">
             <i data-lucide="alert-circle" class="mt-0.5 h-5 w-5 flex-shrink-0 text-[#c9a550]"></i>
-            <p><strong>Legal Disclaimer:</strong> The policy documents provided here are for reference purposes only. For the official and most current versions, please visit the Official Gazette of the Republic of the Philippines at <a href="https://www.officialgazette.gov.ph" target="_blank" rel="noopener noreferrer">www.officialgazette.gov.ph</a> or the NHCP official website at <a href="https://nhcp.gov.ph" target="_blank" rel="noopener noreferrer">nhcp.gov.ph</a>.</p>
+            <p><span data-lang-en><strong>Legal Disclaimer:</strong> The policy documents provided here are for reference purposes only. For the official and most current versions, please visit the Official Gazette of the Republic of the Philippines at <a href="https://www.officialgazette.gov.ph" target="_blank" rel="noopener noreferrer">www.officialgazette.gov.ph</a> or the NHCP official website at <a href="https://nhcp.gov.ph" target="_blank" rel="noopener noreferrer">nhcp.gov.ph</a>.</span><span data-lang-tl><strong>Legal na Paunawa:</strong> Ang mga dokumento ng patakaran dito ay para sa sanggunian lamang. Para sa opisyal at pinakabagong bersyon, bisitahin ang Official Gazette ng Republika ng Pilipinas sa <a href="https://www.officialgazette.gov.ph" target="_blank" rel="noopener noreferrer">www.officialgazette.gov.ph</a> o ang opisyal na website ng NHCP sa <a href="https://nhcp.gov.ph" target="_blank" rel="noopener noreferrer">nhcp.gov.ph</a>.</span></p>
           </div>
         </div>
       </section>
     </main>
 
+    {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_public_footer.html' %}
 
+    {% include 'partials/_site_prefs_foot.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>
       document.addEventListener("DOMContentLoaded", function () {
         const faqCategories = [
-          { id: "visit", label: "Visiting & Access", icon: "map-pin" },
-          { id: "heritage", label: "Heritage & History", icon: "landmark" },
-          { id: "policy", label: "Policies & Rules", icon: "shield-check" },
-          { id: "digital", label: "Digital Services", icon: "globe" },
+          { id: "visit", label: "Visiting & Access", label_tl: "Pagbisita at Akses", icon: "map-pin" },
+          { id: "heritage", label: "Heritage & History", label_tl: "Pamana at Kasaysayan", icon: "landmark" },
+          { id: "policy", label: "Policies & Rules", label_tl: "Patakaran at Tuntunin", icon: "shield-check" },
+          { id: "digital", label: "Digital Services", label_tl: "Serbisyong Digital", icon: "globe" },
         ];
 
         const faqs = {
           visit: [
             {
               q: "What are the visiting hours of the Nagcarlan Underground Cemetery?",
+              q_tl: "Ano ang oras ng bisita sa Libingan sa Ilalim ng Lupa ng Nagcarlan?",
               a: "The Nagcarlan Underground Cemetery is open to the public from Tuesday to Sunday, 8:00 AM to 5:00 PM. It is closed every Monday and on major public holidays. Guided tours are available throughout operating hours.",
+              a_tl: "Bukas ang Libingan sa Ilalim ng Lupa ng Nagcarlan mula Martes hanggang Linggo, 8:00 AM hanggang 5:00 PM. Sarado tuwing Lunes at sa mga malalaking pista opisyal. May gabay na tour sa buong oras ng operasyon.",
             },
             {
               q: "Is there an entrance fee to visit the cemetery?",
+              q_tl: "May bayad ba sa pagpasok sa libingan?",
               a: "Filipino nationals are charged ₱30.00, while foreign nationals are charged ₱100.00. Senior citizens and persons with disabilities (PWDs) with valid IDs are entitled to a 20% discount as prescribed by law.",
+              a_tl: "Ang mga Pilipino ay sinisingil ng ₱30.00, habang ang mga dayuhan ay ₱100.00. May 20% na diskwento ang mga senior citizen at PWD na may wastong ID ayon sa batas.",
             },
             {
               q: "How do I get to the Nagcarlan Underground Cemetery?",
+              q_tl: "Paano makakarating sa Libingan sa Ilalim ng Lupa ng Nagcarlan?",
               a: "The cemetery is located in Nagcarlan, Laguna. From Manila, take the South Luzon Expressway (SLEX) to Santa Cruz exit, then proceed to Nagcarlan. By bus, take Tritran or JAC Liner buses bound for Nagcarlan from Buendia or Cubao terminal.",
+              a_tl: "Matatagpuan ang libingan sa Nagcarlan, Laguna. Mula Maynila, dumaan sa South Luzon Expressway (SLEX) hanggang Santa Cruz exit, pagkatapos ay tumuloy sa Nagcarlan. Sa bus, sumakay ng Tritran o JAC Liner na papuntang Nagcarlan mula Buendia o Cubao.",
             },
             {
               q: "Are there accessibility provisions for visitors with disabilities?",
+              q_tl: "May mga probisyon ba sa aksesibilidad para sa mga bisitang may kapansanan?",
               a: "The NHCP provides reasonable accommodations for visitors with disabilities. Wheelchair ramps are available at the main entrance. Please contact us in advance so we can best assist you during your visit.",
+              a_tl: "Nagbibigay ang NHCP ng makatwirang akomodasyon para sa mga bisitang may kapansanan. May wheelchair ramp sa pangunahing pasukan. Mangyaring makipag-ugnayan nang maaga upang lubos kang matulungan sa iyong pagbisita.",
             },
           ],
           heritage: [
             {
               q: "What is the historical significance of the Nagcarlan Underground Cemetery?",
+              q_tl: "Ano ang kahalagahang pangkasaysayan ng Libingan sa Ilalim ng Lupa ng Nagcarlan?",
               a: "The Nagcarlan Underground Cemetery (Libingan sa Ilalim ng Lupa) was built in 1845 under the supervision of Fray Isidoro Salcedo, an Augustinian Recollect priest. It served as the burial site for Spanish-era priests and prominent townspeople. It is one of the few remaining underground cemeteries in the Philippines and is declared a National Cultural Treasure.",
+              a_tl: "Itinayo ang Libingan sa Ilalim ng Lupa ng Nagcarlan noong 1845 sa pamamahala ni Fray Isidoro Salcedo, isang paring Augustinian Recollect. Nagsilbi itong himlayan ng mga pari noong panahon ng Espanyol at mga kilalang mamamayan. Isa ito sa iilang natitirang underground na libingan sa Pilipinas at idineklarang Pambansang Yamang Pangkultura.",
             },
             {
               q: "Why is it called an 'underground cemetery'?",
+              q_tl: "Bakit tinatawag itong 'libingan sa ilalim ng lupa'?",
               a: "The cemetery features a circular underground ossuary (crypt) beneath a central chapel. The subterranean chamber contains niches along its walls where the remains of early Spanish friars and prominent citizens were interred, which is why it is referred to as an 'underground' cemetery.",
+              a_tl: "May pabilog na underground na ossuary (kripta) ang libingan sa ilalim ng isang gitnang kapilya. Ang silid sa ilalim ay may mga nitso sa mga dingding kung saan inilibing ang mga unang prayleng Espanyol at kilalang mamamayan — kaya ito tinatawag na libingan sa ilalim ng lupa.",
             },
             {
               q: "Is the Nagcarlan Underground Cemetery a National Cultural Treasure?",
+              q_tl: "Isa bang Pambansang Yamang Pangkultura ang Libingan ng Nagcarlan?",
               a: "Yes. The Nagcarlan Underground Cemetery has been declared a National Cultural Treasure by the National Historical Commission of the Philippines (NHCP) under Republic Act No. 10066, also known as the National Cultural Heritage Act of 2009.",
+              a_tl: "Oo. Idineklara ng National Historical Commission of the Philippines (NHCP) ang Libingan sa Ilalim ng Lupa ng Nagcarlan bilang Pambansang Yamang Pangkultura sa ilalim ng Republic Act No. 10066, o National Cultural Heritage Act of 2009.",
             },
             {
               q: "Did the cemetery play a role in the Philippine Revolution?",
+              q_tl: "May papel ba ang libingan sa Himagsikang Pilipino?",
               a: "Yes. Historical accounts indicate that Katipunan members used the underground crypt as a secret meeting place during the Philippine Revolution against Spanish colonialism in the late 19th century, adding another layer of patriotic significance to the site.",
+              a_tl: "Oo. Ayon sa mga tala ng kasaysayan, ginamit ng mga Katipunero ang kripta sa ilalim bilang lihim na tagpuan noong Himagsikang Pilipino laban sa kolonyalismong Espanyol sa huling bahagi ng ika-19 na siglo, na nagdagdag ng makabayang kahalagahan sa pook.",
             },
           ],
           policy: [
             {
               q: "What are the prohibited activities within the cemetery grounds?",
+              q_tl: "Ano-ano ang mga ipinagbabawal na gawain sa loob ng libingan?",
               a: "Visitors are prohibited from littering or defacing the structures, using flash photography inside the crypt, bringing food and drinks within the heritage zone, smoking or vaping on the premises, removing or damaging any artifacts or natural materials, and conducting commercial activities without prior NHCP authorization.",
+              a_tl: "Ipinagbabawal sa mga bisita ang pagkakalat o pagsira sa mga istruktura, paggamit ng flash sa loob ng kripta, pagdadala ng pagkain at inumin sa heritage zone, paninigarilyo o vaping, pag-alis o pagsira ng anumang artefakto o natural na materyales, at pagsasagawa ng komersyal na gawain nang walang paunang pahintulot ng NHCP.",
             },
             {
               q: "Can I conduct academic research or documentation inside the cemetery?",
+              q_tl: "Maaari ba akong magsagawa ng pananaliksik o dokumentasyon sa loob ng libingan?",
               a: "Academic researchers and documentarians must secure a formal Research and Documentation Permit from the NHCP Central Office. Submit a letter of intent, research proposal, institutional endorsement, and valid government ID. The permit process typically takes 10–15 working days.",
+              a_tl: "Kailangang kumuha ng pormal na Research and Documentation Permit mula sa NHCP Central Office ang mga mananaliksik at dokumentarista. Magsumite ng liham ng layunin, panukala sa pananaliksik, endorso ng institusyon, at wastong government ID. Karaniwang tumatagal ng 10–15 araw ng trabaho ang proseso.",
             },
             {
               q: "Are drones or aerial photography allowed at the site?",
+              q_tl: "Pinapayagan ba ang drone o aerial photography sa pook?",
               a: "Drone operations and aerial photography require a special permit from the NHCP and must comply with CAAP regulations. Commercial drone use is strictly regulated. Submit a written request at least 30 days before your intended date of operation.",
+              a_tl: "Kailangan ng espesyal na permit mula sa NHCP ang paggamit ng drone at aerial photography, at dapat sumunod sa mga regulasyon ng CAAP. Mahigpit na kinokontrol ang komersyal na paggamit ng drone. Magsumite ng nakasulat na kahilingan nang hindi bababa sa 30 araw bago ang nais na petsa.",
             },
             {
               q: "What is the NHCP's policy on souvenir or merchandise selling?",
+              q_tl: "Ano ang patakaran ng NHCP sa pagtitinda ng souvenir o paninda?",
               a: "Only NHCP-accredited vendors are permitted to sell souvenirs within the designated commercial areas. Unauthorized vending is strictly prohibited. Accreditation applications can be submitted to the Site Administrator.",
+              a_tl: "Tanging mga NHCP-accredited na vendor lamang ang pinapayagang magtinda ng souvenir sa mga itinakdang komersyal na lugar. Mahigpit na ipinagbabawal ang hindi awtorisadong pagtitinda. Maaaring isumite ang aplikasyon sa Site Administrator.",
             },
           ],
           digital: [
             {
               q: "What digital services does the NHCP provide for this heritage site?",
+              q_tl: "Anong mga serbisyong digital ang ibinibigay ng NHCP para sa pook na ito?",
               a: "The NHCP provides virtual tours, a digital archive, an online permit application portal, an educational resource library, and this interactive Heritage Portal. The digital services aim to expand access to the cultural significance of the site to audiences worldwide.",
+              a_tl: "Nagbibigay ang NHCP ng virtual tour, digital archive, online na portal ng aplikasyon ng permit, silid-aklatan ng mga yamang pang-edukasyon, at ang interaktibong Heritage Portal na ito. Layon ng mga serbisyong ito na palawakin ang akses sa kultural na kahalagahan ng pook sa buong mundo.",
             },
             {
               q: "How do I apply for a permit online?",
+              q_tl: "Paano mag-apply ng permit online?",
               a: "Visit the NHCP Permit Portal at permits.nhcp.gov.ph to apply for research, documentation, filming, or commercial permits online. Create an account, complete the application form, upload required documents, and pay the applicable fees through the online payment gateway.",
+              a_tl: "Bisitahin ang NHCP Permit Portal sa permits.nhcp.gov.ph upang mag-apply ng permit para sa pananaliksik, dokumentasyon, filming, o komersyo online. Gumawa ng account, sagutan ang application form, i-upload ang mga kinakailangang dokumento, at bayaran ang mga bayarin sa online payment gateway.",
             },
             {
               q: "Is the virtual tour of the cemetery available for free?",
+              q_tl: "Libre ba ang virtual tour ng libingan?",
               a: "Yes. The virtual 360° tour of the Nagcarlan Underground Cemetery is freely accessible through this Heritage Portal. Educational institutions may request premium access with narration and supplementary learning materials at no cost by submitting an institutional request.",
+              a_tl: "Oo. Malayang maa-access ang virtual 360° na tour ng Libingan sa Ilalim ng Lupa ng Nagcarlan sa pamamagitan ng Heritage Portal na ito. Maaaring humiling ang mga institusyong pang-edukasyon ng premium access na may salaysay at karagdagang materyales nang walang bayad sa pamamagitan ng institutional request.",
             },
             {
               q: "How can I report a technical issue with the Heritage Portal?",
+              q_tl: "Paano magrereport ng teknikal na problema sa Heritage Portal?",
               a: "Report technical issues through the Support Ticket form available on this page, or email digital@nhcp.gov.ph with a description of the issue, your device/browser information, and screenshots if possible. Our technical team responds within 2 business days.",
+              a_tl: "Magreport ng teknikal na problema sa pamamagitan ng Support Ticket form sa pahinang ito, o mag-email sa digital@nhcp.gov.ph kasama ang paglalarawan ng problema, impormasyon ng device/browser, at mga screenshot kung maaari. Tumutugon ang aming teknikal na koponan sa loob ng 2 araw ng negosyo.",
             },
           ],
         };
@@ -751,8 +786,11 @@
             icon: "shield-check",
             title: "Republic Act No. 10066",
             subtitle: "National Cultural Heritage Act of 2009",
+            subtitle_tl: "Batas sa Pambansang Pamanang Pangkultura ng 2009",
             description: "The primary legislation governing the protection, preservation, and promotion of the cultural heritage of the Philippines. Declares penalties for destroying or damaging cultural properties.",
+            description_tl: "Ang pangunahing batas na namamahala sa pangangalaga, pagpapanatili, at pagtataguyod ng pamanang pangkultura ng Pilipinas. Nagtatakda ng parusa sa pagsira o pagpinsala sa mga ari-ariang pangkultura.",
             tag: "National Law",
+            tag_tl: "Pambansang Batas",
             tagClass: "bg-amber-100 text-amber-800",
             link: "https://www.officialgazette.gov.ph/2010/03/26/republic-act-no-10066/",
           },
@@ -760,8 +798,11 @@
             icon: "file-text",
             title: "NHCP Administrative Order No. 1",
             subtitle: "Guidelines on the Administration of National Shrines",
+            subtitle_tl: "Patnubay sa Pangangasiwa ng mga Pambansang Dambana",
             description: "Outlines the operational, preservation, and visitor management standards for all National Shrines and Cultural Treasures under NHCP administration.",
+            description_tl: "Naglalahad ng mga pamantayan sa operasyon, pangangalaga, at pamamahala ng bisita para sa lahat ng Pambansang Dambana at Yamang Pangkultura sa ilalim ng NHCP.",
             tag: "Administrative Order",
+            tag_tl: "Kautusang Administratibo",
             tagClass: "bg-stone-100 text-stone-700",
             link: "https://nhcp.gov.ph/",
           },
@@ -769,8 +810,11 @@
             icon: "book-open",
             title: "NHCP Memorandum Circular No. 2023-04",
             subtitle: "Digital Heritage Access and Use Policy",
+            subtitle_tl: "Patakaran sa Akses at Paggamit ng Digital na Pamana",
             description: "Governs the use, reproduction, and distribution of digital content derived from NHCP-managed heritage sites, including virtual tours, archives, and digital publications.",
+            description_tl: "Namamahala sa paggamit, pagpaparami, at pamamahagi ng digital na nilalaman mula sa mga pook na pinangangasiwaan ng NHCP, kasama ang virtual tour, archive, at digital na publikasyon.",
             tag: "Digital Policy",
+            tag_tl: "Patakarang Digital",
             tagClass: "bg-green-100 text-green-800",
             link: "https://nhcp.gov.ph/",
           },
@@ -778,8 +822,11 @@
             icon: "alert-circle",
             title: "Executive Order No. 374",
             subtitle: "Declaring All Historical Landmarks as Protected Zones",
+            subtitle_tl: "Pagdedeklara sa Lahat ng Makasaysayang Palatandaan bilang Protektadong Sona",
             description: "Executive order establishing buffer zones and protection boundaries around declared National Cultural Treasures, prohibiting incompatible land use.",
+            description_tl: "Kautusang nagtatatag ng buffer zone at hangganan ng proteksyon sa paligid ng mga Pambansang Yamang Pangkultura, na nagbabawal sa hindi angkop na paggamit ng lupa.",
             tag: "Executive Order",
+            tag_tl: "Kautusang Tagapagpaganap",
             tagClass: "bg-blue-100 text-blue-800",
             link: "https://www.officialgazette.gov.ph/",
           },
@@ -787,8 +834,11 @@
             icon: "globe",
             title: "UNESCO World Heritage Convention",
             subtitle: "Convention Concerning the Protection of World Cultural Heritage",
+            subtitle_tl: "Kombensiyon Hinggil sa Pangangalaga ng Pamanang Pangkultura ng Daigdig",
             description: "International treaty to which the Philippines is a State Party, committing to identify, protect, and preserve cultural and natural heritage of outstanding universal value.",
+            description_tl: "Kasunduang pandaigdig kung saan kabilang ang Pilipinas bilang State Party, na nangangakong tukuyin, pangalagaan, at panatilihin ang pamanang kultural at natural na may natatanging pandaigdigang halaga.",
             tag: "International Treaty",
+            tag_tl: "Kasunduang Pandaigdig",
             tagClass: "bg-purple-100 text-purple-800",
             link: "https://whc.unesco.org/en/conventiontext/",
           },
@@ -796,8 +846,11 @@
             icon: "download",
             title: "Site Visitor Regulations",
             subtitle: "Nagcarlan Underground Cemetery Site Rules (2024 Edition)",
+            subtitle_tl: "Mga Tuntunin sa Pook ng Libingan ng Nagcarlan (Edisyon 2024)",
             description: "Complete rules and regulations for visitors, researchers, media, and commercial entities accessing the Nagcarlan Underground Cemetery premises.",
+            description_tl: "Kumpletong mga tuntunin at regulasyon para sa mga bisita, mananaliksik, media, at komersyal na entidad na papasok sa Libingan sa Ilalim ng Lupa ng Nagcarlan.",
             tag: "Site Regulation",
+            tag_tl: "Regulasyon ng Pook",
             tagClass: "bg-red-100 text-red-700",
             link: "https://nhcp.gov.ph/",
             downloadable: true,
@@ -810,6 +863,10 @@
         const policyGrid = document.getElementById("supportPolicyGrid");
 
         let activeCategory = "visit";
+
+        function L(en, tl) {
+          return (document.documentElement.lang || "en").toLowerCase().indexOf("tl") === 0 ? (tl || en) : en;
+        }
 
         function iconMarkup(name, extraClass) {
           return '<i data-lucide="' + name + '" class="' + extraClass + '"></i>';
@@ -827,7 +884,7 @@
           faqTabs.innerHTML = faqCategories
             .map(function (category) {
               const activeClass = category.id === activeCategory ? " is-active" : "";
-              return '<button class="support-faq-tab' + activeClass + '" type="button" data-category="' + category.id + '">' + iconMarkup(category.icon, 'h-4 w-4') + '<span>' + category.label + '</span></button>';
+              return '<button class="support-faq-tab' + activeClass + '" type="button" data-category="' + category.id + '">' + iconMarkup(category.icon, 'h-4 w-4') + '<span>' + L(category.label, category.label_tl) + '</span></button>';
             })
             .join("");
 
@@ -857,7 +914,7 @@
           }
 
           if (!items.length) {
-            faqResults.innerHTML = '<div class="support-empty-state">' + iconMarkup('help-circle', 'mx-auto mb-3 h-10 w-10 text-[#c9a550]') + '<p>No results found for <strong>' + (faqSearch ? faqSearch.value : '') + '</strong>. Try a different keyword or browse by category.</p></div>';
+            faqResults.innerHTML = '<div class="support-empty-state">' + iconMarkup('help-circle', 'mx-auto mb-3 h-10 w-10 text-[#c9a550]') + '<p>' + L('No results found for ', 'Walang nahanap para sa ') + '<strong>' + (faqSearch ? faqSearch.value : '') + '</strong>. ' + L('Try a different keyword or browse by category.', 'Sumubok ng ibang salita o mag-browse ayon sa kategorya.') + '</p></div>';
             if (window.lucide) {
               window.lucide.createIcons();
             }
@@ -870,11 +927,11 @@
                 '<button type="button" class="support-faq-question" aria-expanded="false">' +
                   '<span class="support-faq-question-text">' +
                     '<span class="support-faq-index">' + (index + 1) + '</span>' +
-                    '<span>' + item.q + '</span>' +
+                    '<span>' + L(item.q, item.q_tl) + '</span>' +
                   '</span>' +
                   '<span class="support-faq-chevron">' + iconMarkup('chevron-down', 'h-4 w-4') + '</span>' +
                 '</button>' +
-                '<div class="support-faq-answer">' + item.a + '</div>' +
+                '<div class="support-faq-answer">' + L(item.a, item.a_tl) + '</div>' +
               '</article>';
             })
             .join("");
@@ -912,21 +969,21 @@
           policyGrid.innerHTML = policies
             .map(function (policy) {
               const downloadLink = policy.downloadable
-                ? '<a class="support-policy-link" href="' + policy.link + '" target="_blank" rel="noopener noreferrer">' + iconMarkup('download', 'h-3.5 w-3.5') + '<span>Download PDF</span></a>'
+                ? '<a class="support-policy-link" href="' + policy.link + '" target="_blank" rel="noopener noreferrer">' + iconMarkup('download', 'h-3.5 w-3.5') + '<span>' + L('Download PDF', 'I-download ang PDF') + '</span></a>'
                 : '';
 
               return '<article class="support-policy-card">' +
                 '<div class="support-policy-top">' +
                   '<div class="support-policy-icon">' + iconMarkup(policy.icon, 'h-5 w-5') + '</div>' +
-                  '<span class="rounded-full px-2.5 py-1 text-xs ' + policy.tagClass + '">' + policy.tag + '</span>' +
+                  '<span class="rounded-full px-2.5 py-1 text-xs ' + policy.tagClass + '">' + L(policy.tag, policy.tag_tl) + '</span>' +
                 '</div>' +
                 '<div>' +
                   '<h3 class="support-policy-title">' + policy.title + '</h3>' +
-                  '<p class="support-policy-subtitle">' + policy.subtitle + '</p>' +
-                  '<p class="support-policy-copy">' + policy.description + '</p>' +
+                  '<p class="support-policy-subtitle">' + L(policy.subtitle, policy.subtitle_tl) + '</p>' +
+                  '<p class="support-policy-copy">' + L(policy.description, policy.description_tl) + '</p>' +
                 '</div>' +
                 '<div class="support-policy-footer">' +
-                  '<a class="support-policy-link" href="' + policy.link + '" target="_blank" rel="noopener noreferrer">' + iconMarkup('external-link', 'h-3.5 w-3.5') + '<span>View Full Text</span></a>' +
+                  '<a class="support-policy-link" href="' + policy.link + '" target="_blank" rel="noopener noreferrer">' + iconMarkup('external-link', 'h-3.5 w-3.5') + '<span>' + L('View Full Text', 'Basahin ang Buo') + '</span></a>' +
                   downloadLink +
                 '</div>' +
               '</article>';
