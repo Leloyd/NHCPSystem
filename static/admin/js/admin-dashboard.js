@@ -718,6 +718,134 @@
     applyBookingView();
   }
 
+  function initAdminBookingReview() {
+    var form = document.querySelector("[data-admin-booking-review]");
+    if (!form) {
+      return;
+    }
+
+    var actionInputs = Array.prototype.slice.call(
+      form.querySelectorAll('input[name="moderation_action"]')
+    );
+    var options = Array.prototype.slice.call(
+      form.querySelectorAll(".admin-booking-decision-option")
+    );
+    var reasonField = form.querySelector("[data-booking-reason-field]");
+    var reasonInput = form.querySelector("#decisionReason");
+    var rescheduleField = form.querySelector("[data-booking-reschedule-field]");
+    var rescheduleInput = form.querySelector("#rescheduledVisitDate");
+    var help = form.querySelector("[data-booking-decision-help]");
+    var submitButton = form.querySelector("[data-booking-decision-submit]");
+    var submitLabel = submitButton && submitButton.querySelector("span");
+
+    var actionSettings = {
+      confirm: {
+        help: "Confirming publishes this date on the public booking calendar and notifies the visitor.",
+        submit: "Confirm booking",
+        title: "Confirm this booking?",
+        message: "Save this booking as confirmed? The visitor will be notified and the visit will appear on the public calendar.",
+        confirmLabel: "Confirm booking",
+        variant: "enable",
+      },
+      reschedule: {
+        help: "Choose a new proposed date and explain why the original schedule needs to change.",
+        submit: "Send new schedule",
+        title: "Reschedule this booking?",
+        message: "Save the proposed date and reason? The visitor will be notified that this booking needs a new schedule.",
+        confirmLabel: "Reschedule booking",
+        variant: "enable",
+      },
+      cancel: {
+        help: "Explain the cancellation clearly. The visitor will receive the updated booking status.",
+        submit: "Cancel booking",
+        title: "Cancel this booking?",
+        message: "Cancel this booking request? The visitor will be notified and the visit will not appear on the public calendar.",
+        confirmLabel: "Cancel booking",
+        variant: "disable",
+      },
+    };
+
+    function getSelectedAction() {
+      var selected = actionInputs.find(function (input) {
+        return input.checked;
+      });
+      return selected ? selected.value : "confirm";
+    }
+
+    function setFieldState(field, input, isVisible, isRequired) {
+      if (field) {
+        field.hidden = !isVisible;
+      }
+      if (input) {
+        input.disabled = !isVisible;
+        input.required = Boolean(isVisible && isRequired);
+      }
+    }
+
+    function updateDecisionUi() {
+      var action = getSelectedAction();
+      var settings = actionSettings[action] || actionSettings.confirm;
+
+      options.forEach(function (option) {
+        var input = option.querySelector('input[name="moderation_action"]');
+        option.classList.toggle("is-selected", Boolean(input && input.checked));
+      });
+
+      setFieldState(reasonField, reasonInput, action !== "confirm", true);
+      setFieldState(
+        rescheduleField,
+        rescheduleInput,
+        action === "reschedule",
+        true
+      );
+
+      if (help) {
+        help.textContent = settings.help;
+      }
+      if (submitLabel) {
+        submitLabel.textContent = settings.submit;
+      }
+      if (submitButton) {
+        submitButton.classList.toggle("is-reschedule", action === "reschedule");
+        submitButton.classList.toggle("is-cancel", action === "cancel");
+      }
+
+      form.setAttribute("data-confirm-title", settings.title);
+      form.setAttribute("data-confirm-message", settings.message);
+      form.setAttribute("data-confirm-label", settings.confirmLabel);
+      form.setAttribute("data-confirm-variant", settings.variant);
+    }
+
+    if (rescheduleInput && !rescheduleInput.min) {
+      var tomorrow = new Date();
+      tomorrow.setHours(12, 0, 0, 0);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      rescheduleInput.min = [
+        tomorrow.getFullYear(),
+        String(tomorrow.getMonth() + 1).padStart(2, "0"),
+        String(tomorrow.getDate()).padStart(2, "0"),
+      ].join("-");
+    }
+
+    actionInputs.forEach(function (input) {
+      input.addEventListener("change", updateDecisionUi);
+      input.addEventListener("focus", function () {
+        var option = input.closest(".admin-booking-decision-option");
+        if (option) {
+          option.classList.add("is-focused");
+        }
+      });
+      input.addEventListener("blur", function () {
+        var option = input.closest(".admin-booking-decision-option");
+        if (option) {
+          option.classList.remove("is-focused");
+        }
+      });
+    });
+
+    updateDecisionUi();
+  }
+
   function initAdminUserManagement() {
     var root = document.querySelector("[data-admin-users]");
     if (!root) {
@@ -1916,6 +2044,7 @@
     initHighlightSwitcher();
     initAdminBookingCalendar();
     initAdminBookingManagement();
+    initAdminBookingReview();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();
