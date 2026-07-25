@@ -607,14 +607,12 @@
 
     var cards = Array.prototype.slice.call(root.querySelectorAll("[data-booking-card]"));
     var filterButtons = Array.prototype.slice.call(root.querySelectorAll("[data-booking-filter]"));
-    var summaryButtons = Array.prototype.slice.call(root.querySelectorAll("[data-booking-summary-filter]"));
     var searchInput = root.querySelector("#adminBookingSearch");
     var clearButton = root.querySelector("[data-booking-search-clear]");
     var visibleCount = root.querySelector("[data-booking-visible-count]");
     var emptyState = root.querySelector("[data-booking-empty]");
     var emptyTitle = root.querySelector("[data-booking-empty-title]");
     var emptyCopy = root.querySelector("[data-booking-empty-copy]");
-    var queueSection = root.querySelector(".admin-booking-queue-section");
     var currentFilter = String(
       root.getAttribute("data-current-booking-filter") || "all"
     ).toLowerCase();
@@ -634,11 +632,6 @@
         button.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
 
-      summaryButtons.forEach(function (button) {
-        var isActive = button.getAttribute("data-booking-summary-filter") === currentFilter;
-        button.classList.toggle("is-active", isActive);
-        button.setAttribute("aria-pressed", isActive ? "true" : "false");
-      });
     }
 
     function applyBookingView() {
@@ -691,35 +684,16 @@
       updateControls();
     }
 
-    function selectFilter(filter, shouldFocusQueue) {
+    function selectFilter(filter) {
       var allowed = ["all", "pending", "confirmed", "rescheduled", "cancelled"];
       currentFilter = allowed.indexOf(filter) !== -1 ? filter : "all";
       root.setAttribute("data-current-booking-filter", currentFilter);
       applyBookingView();
-
-      if (
-        shouldFocusQueue &&
-        queueSection &&
-        typeof queueSection.scrollIntoView === "function"
-      ) {
-        queueSection.scrollIntoView({
-          behavior: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-            ? "auto"
-            : "smooth",
-          block: "start",
-        });
-      }
     }
 
     filterButtons.forEach(function (button) {
       button.addEventListener("click", function () {
-        selectFilter(button.getAttribute("data-booking-filter"), false);
-      });
-    });
-
-    summaryButtons.forEach(function (button) {
-      button.addEventListener("click", function () {
-        selectFilter(button.getAttribute("data-booking-summary-filter"), true);
+        selectFilter(button.getAttribute("data-booking-filter"));
       });
     });
 

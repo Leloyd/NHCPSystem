@@ -4887,7 +4887,6 @@ body.admin-confirm-open {
 }
 
 .admin-booking-head-note-icon svg,
-.admin-booking-overview-icon svg,
 .admin-booking-list-icon svg,
 .admin-booking-list-meta svg,
 .admin-booking-open-action svg,
@@ -4897,97 +4896,6 @@ body.admin-confirm-open {
   height: 1rem;
   display: block;
   fill: currentColor;
-}
-
-.admin-booking-overview {
-  display: grid;
-  grid-template-columns: repeat(5, minmax(0, 1fr));
-  gap: 0.7rem;
-  padding: 1rem clamp(1.25rem, 3vw, 1.8rem);
-  border-bottom: 1px solid #e8ebe8;
-  background: rgba(247, 248, 245, 0.68);
-}
-
-.admin-booking-overview-card {
-  min-width: 0;
-  display: flex;
-  align-items: center;
-  gap: 0.68rem;
-  padding: 0.75rem;
-  border: 1px solid #e0e5e1;
-  border-radius: 0.95rem;
-  background: rgba(255, 255, 255, 0.9);
-  color: #6c766f;
-  text-align: left;
-  cursor: pointer;
-  transition: transform 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
-}
-
-.admin-booking-overview-card:hover,
-.admin-booking-overview-card:focus-visible {
-  border-color: #c9d4cc;
-  outline: none;
-  transform: translateY(-1px);
-  box-shadow: 0 8px 18px rgba(13, 43, 31, 0.07);
-}
-
-.admin-booking-overview-card.is-active {
-  border-color: rgba(201, 168, 76, 0.58);
-  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.09);
-}
-
-.admin-booking-overview-icon {
-  width: 2.25rem;
-  height: 2.25rem;
-  display: grid;
-  place-items: center;
-  flex: 0 0 2.25rem;
-  border-radius: 0.72rem;
-  background: #eff3f0;
-  color: var(--dashboard-green-800);
-}
-
-.admin-booking-overview-card.is-pending .admin-booking-overview-icon {
-  background: #fff4dd;
-  color: #a66d10;
-}
-
-.admin-booking-overview-card.is-confirmed .admin-booking-overview-icon {
-  background: #e7f7ef;
-  color: #147452;
-}
-
-.admin-booking-overview-card.is-rescheduled .admin-booking-overview-icon {
-  background: #eaf2ff;
-  color: #2f66ae;
-}
-
-.admin-booking-overview-card.is-cancelled .admin-booking-overview-icon {
-  background: #fff0f0;
-  color: #b23c3c;
-}
-
-.admin-booking-overview-card small,
-.admin-booking-overview-card strong {
-  display: block;
-}
-
-.admin-booking-overview-card small {
-  overflow: hidden;
-  color: #7b847e;
-  font-size: 0.66rem;
-  font-weight: 700;
-  line-height: 1.2;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.admin-booking-overview-card strong {
-  margin-top: 0.08rem;
-  color: var(--dashboard-green-900);
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 1.25rem;
-  line-height: 1;
 }
 
 .admin-booking-calendar-section,
@@ -5636,12 +5544,6 @@ body.admin-confirm-open {
 }
 
 @media (max-width: 1180px) {
-  .admin-booking-overview {
-    grid-template-columns: repeat(5, minmax(8.5rem, 1fr));
-    overflow-x: auto;
-    overscroll-behavior-x: contain;
-  }
-
   .admin-booking-calendar-shell {
     grid-template-columns: minmax(25rem, 1.1fr) minmax(17rem, 0.9fr);
   }
@@ -5712,16 +5614,6 @@ body.admin-confirm-open {
   .admin-booking-calendar-section,
   .admin-booking-queue-section {
     padding: 1rem;
-  }
-
-  .admin-booking-overview {
-    grid-template-columns: repeat(5, 8.8rem);
-    padding: 0.85rem 1rem;
-    scrollbar-width: none;
-  }
-
-  .admin-booking-overview::-webkit-scrollbar {
-    display: none;
   }
 
   .admin-booking-section-head {
@@ -5801,7 +5693,6 @@ body.admin-confirm-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .admin-booking-overview-card,
   .admin-booking-list-card,
   .admin-booking-search {
     transition: none;
