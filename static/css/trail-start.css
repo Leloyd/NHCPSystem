@@ -6775,7 +6775,7 @@ body.trail-archive-open {
   .trailx-living-memory__actions {
     flex-wrap: wrap;
     gap: 0.75rem;
-    margin-top: 0.35rem;
+    margin-top: 1.75rem; /* clear space between the timeline and the buttons */
   }
 
   .trailx-living-memory__actions .trailx__begin {
@@ -7294,6 +7294,4 @@ body.trail-archive-open {
     letter-spacing: 0.14em;
   }
 
-  /* Space between the timeline years and the "Continue to Stop 10" button. */
-  .trailx-living-memory__timeline { margin-bottom: 1.4rem; }
 }
