@@ -521,7 +521,8 @@ body.ogd-high-contrast-page .public-account-menu-header {
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 1rem;
+  padding: max(0.75rem, env(safe-area-inset-top)) max(0.75rem, env(safe-area-inset-right))
+    max(0.75rem, env(safe-area-inset-bottom)) max(0.75rem, env(safe-area-inset-left));
 }
 
 .public-auth-backdrop {
@@ -536,7 +537,8 @@ body.ogd-high-contrast-page .public-account-menu-header {
 .public-auth-dialog {
   position: relative;
   z-index: 1;
-  width: min(100% - 2rem, 32rem);
+  width: min(100%, 32rem);
+  max-height: 100%;
   margin: 0;
   opacity: 0;
   transform: translateY(20px) scale(0.98);
@@ -555,7 +557,13 @@ body.ogd-high-contrast-page .public-account-menu-header {
 
 .public-auth-card {
   position: relative;
+  display: flex;
+  flex-direction: column;
   overflow: hidden;
+  /* Never exceed the viewport — the active panel scrolls inside instead, so the
+     dialog always fits on any device (short phones, landscape, notches). */
+  max-height: calc(100vh - 1.5rem);
+  max-height: calc(100dvh - 1.5rem);
   border-radius: 1.5rem;
   border: 1px solid rgba(184, 150, 62, 0.2);
   background: #faf6ef;
@@ -588,6 +596,10 @@ body.ogd-high-contrast-page .public-account-menu-header {
 }
 
 .public-auth-panel {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
   padding: 2rem;
 }
 
@@ -834,17 +846,64 @@ body.ogd-high-contrast-page .public-account-menu-header {
 }
 
 @media (max-width: 640px) {
-  .public-auth-panel {
-    padding: 1.35rem;
+  .public-auth-dialog {
+    width: min(100% - 0.5rem, 32rem);
   }
 
-  .public-auth-dialog {
-    width: min(100% - 1rem, 32rem);
-    margin-top: 2vh;
+  .public-auth-panel {
+    padding: 1.4rem 1.25rem;
+  }
+
+  .public-auth-heading {
+    margin-bottom: 1rem;
+  }
+
+  .public-auth-heading-icon,
+  .public-auth-status-icon,
+  .public-auth-status-icon-success {
+    width: 2.5rem;
+    height: 2.5rem;
+    margin-bottom: 0.6rem;
+    font-size: 1.15rem;
   }
 
   .public-auth-title {
-    font-size: 1.45rem;
+    font-size: 1.4rem;
+  }
+
+  .public-auth-subtitle {
+    font-size: 0.88rem;
+  }
+
+  .public-auth-form {
+    gap: 0.6rem;
+  }
+
+  .public-auth-divider {
+    margin: 0.85rem 0;
+  }
+
+  /* 16px inputs stop iOS Safari from auto-zooming on focus — that zoom is what
+     makes the modal jump and feel like it no longer fits the screen. */
+  .public-auth-input {
+    font-size: 16px;
+    padding-block: 0.85rem;
+  }
+
+  .public-auth-social,
+  .public-auth-submit,
+  .public-auth-secondary {
+    padding: 0.82rem 1rem;
+    font-size: 0.92rem;
+  }
+
+  .public-auth-footer-text {
+    margin-top: 1rem;
+  }
+
+  .public-auth-close {
+    top: 0.85rem;
+    right: 0.85rem;
   }
 
   .public-auth-entry-button {
@@ -853,5 +912,33 @@ body.ogd-high-contrast-page .public-account-menu-header {
 
   .public-account-menu {
     width: 13rem;
+  }
+}
+
+/* Short phones (and landscape): tighten further so the tallest panel still
+   fits, and if it can't, the panel scrolls inside the capped card. */
+@media (max-width: 640px) and (max-height: 720px) {
+  .public-auth-heading {
+    margin-bottom: 0.7rem;
+  }
+
+  .public-auth-heading-icon {
+    margin-bottom: 0.45rem;
+  }
+
+  .public-auth-panel {
+    padding: 1.15rem;
+  }
+
+  .public-auth-divider {
+    margin: 0.65rem 0;
+  }
+
+  .public-auth-form {
+    gap: 0.5rem;
+  }
+
+  .public-auth-subtitle {
+    margin-top: 0.2rem;
   }
 }
