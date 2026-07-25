@@ -7222,6 +7222,13 @@ body.trail-archive-open {
     padding-top: max(4.4rem, calc(3.8rem + env(safe-area-inset-top)));
     padding-bottom: max(6.5rem, calc(5rem + env(safe-area-inset-bottom)));
   }
+  /* The chapter is shifted right to clear Ana, but its readability scrim must
+     still reach the left edge — otherwise a shaded band starts partway across
+     with a visible seam. The gradient is vertical, so over-extending left just
+     makes the shade continuous. */
+  .trailx__story--archive .trailx__chapter--living-memory::before {
+    left: -60vw;
+  }
 
   /* Stay inside the content column — centered, two tidy rows — instead of the
      old full-viewport breakout that could cut off on the left. */
