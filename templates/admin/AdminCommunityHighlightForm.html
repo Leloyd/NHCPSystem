@@ -23,6 +23,7 @@
             enctype="multipart/form-data"
             class="admin-highlight-view admin-highlight-editor"
             data-highlight-editor
+            data-highlight-editor-submit-label="{{ submit_label }}"
             data-confirm-submit
             data-confirm-eyebrow="Community highlight"
             data-confirm-title="{% if submit_label == 'Create Highlight' %}Create this community highlight?{% else %}Save changes to this community highlight?{% endif %}"
@@ -104,6 +105,7 @@
                   class="admin-highlight-editor-library"
                   data-highlight-editor-image-library
                   data-highlight-editor-max-images="{{ max_images }}"
+                  data-highlight-editor-max-upload-bytes="{{ max_upload_bytes }}"
                 >
                   <header>
                     <span>
@@ -112,6 +114,26 @@
                     </span>
                     <b data-highlight-editor-image-count>{{ highlight_form.image_count }} / {{ max_images }}</b>
                   </header>
+                  <div class="admin-highlight-editor-upload-budget">
+                    <div>
+                      <span>New upload size</span>
+                      <strong data-highlight-editor-upload-size>0.00 MB / {{ '%.1f'|format(max_upload_mb) }} MB</strong>
+                    </div>
+                    <div
+                      class="admin-highlight-editor-upload-meter"
+                      role="progressbar"
+                      aria-label="Combined size of newly selected images"
+                      aria-valuemin="0"
+                      aria-valuemax="{{ max_upload_bytes }}"
+                      aria-valuenow="0"
+                      data-highlight-editor-upload-meter
+                    >
+                      <i data-highlight-editor-upload-meter-bar></i>
+                    </div>
+                    <small>
+                      Newly selected images must total {{ '%.1f'|format(max_upload_mb) }} MB or less per save to remain below Vercel’s 4.5 MB request limit.
+                    </small>
+                  </div>
                   <div class="admin-highlight-editor-library-grid" data-highlight-editor-image-grid>
                     {% for image in highlight_form.gallery_images %}
                     <article
@@ -283,4 +305,18 @@
               </div>
             </div>
           </form>
+
+          <div
+            class="admin-highlight-save-notice"
+            data-highlight-editor-save-notice
+            role="status"
+            aria-live="assertive"
+            hidden
+          >
+            <span class="admin-highlight-save-spinner" aria-hidden="true"></span>
+            <span>
+              <strong data-highlight-editor-save-title>{{ submit_label }} in progress…</strong>
+              <small data-highlight-editor-save-detail>Please keep this page open.</small>
+            </span>
+          </div>
 {% endblock %}

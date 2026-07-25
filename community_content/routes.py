@@ -12,6 +12,7 @@ from .service import (
     COMMUNITY_EVENT_CATEGORIES,
     COMMUNITY_EVENT_STATUS_OPTIONS,
     COMMUNITY_HIGHLIGHT_MAX_IMAGES,
+    COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES,
     COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
     COMMUNITY_HIGHLIGHT_CATEGORIES,
     COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
@@ -32,6 +33,25 @@ from .service import (
 )
 
 VALID_COMMUNITY_HIGHLIGHT_FILTERS = {"all", "active", "draft", "archived"}
+
+
+def _get_uploaded_file_size(file_storage) -> int:
+    if file_storage is None:
+        return 0
+
+    stream = getattr(file_storage, "stream", None)
+    if stream is None:
+        raise ValueError("The selected image size could not be verified.")
+
+    try:
+        original_position = stream.tell()
+        stream.seek(0, 2)
+        file_size = int(stream.tell())
+        stream.seek(original_position)
+    except (AttributeError, OSError, TypeError, ValueError) as exc:
+        raise ValueError("The selected image size could not be verified.") from exc
+
+    return max(0, file_size)
 
 
 def _build_unique_slug(title: str, *, fallback: str, current_id: int | None, list_items: Callable[[], list[dict[str, Any]]], slugify_text: Callable[[str, str], str]) -> str:
@@ -156,6 +176,15 @@ def _build_community_highlight_form_payload(
     if len(retained_image_filenames) + len(uploaded_files) > COMMUNITY_HIGHLIGHT_MAX_IMAGES:
         raise ValueError(
             f"A community highlight can contain up to {COMMUNITY_HIGHLIGHT_MAX_IMAGES} images."
+        )
+
+    upload_size_bytes = sum(_get_uploaded_file_size(file_storage) for file_storage in uploaded_files)
+    if upload_size_bytes > COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES:
+        upload_size_mb = upload_size_bytes / (1024 * 1024)
+        max_upload_mb = COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES / (1024 * 1024)
+        raise ValueError(
+            f"The newly selected images total {upload_size_mb:.2f} MB. "
+            f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
         )
 
     new_image_filenames: list[str] = []

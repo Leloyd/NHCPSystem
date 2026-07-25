@@ -28,6 +28,9 @@ COMMUNITY_EVENTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "events").r
 COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX = "community-highlights"
 COMMUNITY_EVENTS_STORAGE_PREFIX = "events"
 COMMUNITY_HIGHLIGHT_MAX_IMAGES = 12
+# Vercel Functions reject request bodies above 4.5 MB. Keep image data at
+# 4 MiB combined so multipart boundaries and the remaining form fields fit.
+COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
     "Museum Programs",
     "School Engagement",
@@ -456,6 +459,8 @@ def render_admin_community_highlight_form(
         category_options=COMMUNITY_HIGHLIGHT_CATEGORIES,
         status_options=COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
         max_images=COMMUNITY_HIGHLIGHT_MAX_IMAGES,
+        max_upload_bytes=COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES,
+        max_upload_mb=COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES / (1024 * 1024),
         error_message=error_message,
     )
 

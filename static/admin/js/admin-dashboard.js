@@ -1077,6 +1077,12 @@
     var imageEmpty = editor.querySelector("[data-highlight-editor-image-empty]");
     var imageFeedback = editor.querySelector("[data-highlight-editor-image-feedback]");
     var removalInputs = editor.querySelector("[data-highlight-editor-removal-inputs]");
+    var uploadSizeLabel = editor.querySelector("[data-highlight-editor-upload-size]");
+    var uploadMeter = editor.querySelector("[data-highlight-editor-upload-meter]");
+    var uploadMeterBar = editor.querySelector("[data-highlight-editor-upload-meter-bar]");
+    var saveNotice = document.querySelector("[data-highlight-editor-save-notice]");
+    var saveNoticeTitle = saveNotice && saveNotice.querySelector("[data-highlight-editor-save-title]");
+    var saveNoticeDetail = saveNotice && saveNotice.querySelector("[data-highlight-editor-save-detail]");
     var readTime = editor.querySelector("[data-highlight-editor-read-time]");
     var copyFields = Array.prototype.slice.call(
       editor.querySelectorAll("[data-highlight-editor-copy]")
@@ -1087,6 +1093,10 @@
     var maxImages = Math.max(
       1,
       parseInt((imageLibrary && imageLibrary.getAttribute("data-highlight-editor-max-images")) || "12", 10) || 12
+    );
+    var maxUploadBytes = Math.max(
+      1,
+      parseInt((imageLibrary && imageLibrary.getAttribute("data-highlight-editor-max-upload-bytes")) || "4194304", 10) || 4194304
     );
 
     var visibilityStates = {
@@ -1231,6 +1241,36 @@
       imageFeedback.hidden = !message;
     }
 
+    function formatMegabytes(byteCount) {
+      return (Math.max(0, Number(byteCount) || 0) / (1024 * 1024)).toFixed(2) + " MB";
+    }
+
+    function getSelectedUploadBytes() {
+      return selectedImageFiles.reduce(function (total, record) {
+        return total + Math.max(0, Number(record.file && record.file.size) || 0);
+      }, 0);
+    }
+
+    function updateUploadBudget() {
+      var selectedBytes = getSelectedUploadBytes();
+      var percentage = Math.min(100, (selectedBytes / maxUploadBytes) * 100);
+      var isNearLimit = selectedBytes >= maxUploadBytes * 0.85;
+      var isOverLimit = selectedBytes > maxUploadBytes;
+
+      if (uploadSizeLabel) {
+        uploadSizeLabel.textContent =
+          formatMegabytes(selectedBytes) + " / " + formatMegabytes(maxUploadBytes);
+      }
+      if (uploadMeter) {
+        uploadMeter.setAttribute("aria-valuenow", String(selectedBytes));
+        uploadMeter.classList.toggle("is-near-limit", isNearLimit && !isOverLimit);
+        uploadMeter.classList.toggle("is-over-limit", isOverLimit);
+      }
+      if (uploadMeterBar) {
+        uploadMeterBar.style.width = percentage + "%";
+      }
+    }
+
     function getActiveImageCards() {
       return getImageCards().filter(function (card) {
         return !card.classList.contains("is-removed");
@@ -1308,7 +1348,11 @@
       activeCards.forEach(function (card, index) {
         var label = card.querySelector("div small");
         if (label) {
-          label.textContent = "Image " + (index + 1);
+          var imageSize = Number(card.getAttribute("data-image-size") || 0);
+          label.textContent =
+            "Image " +
+            (index + 1) +
+            (imageSize > 0 ? " · " + formatMegabytes(imageSize) : "");
         }
         var viewButton = card.querySelector("[data-highlight-editor-image-view]");
         var removeButton = card.querySelector("[data-highlight-editor-image-remove]");
@@ -1341,6 +1385,7 @@
         }
       }
       rebuildRemovalInputs();
+      updateUploadBudget();
     }
 
     function syncSelectedImageFiles() {
@@ -1383,6 +1428,7 @@
       card.setAttribute("data-highlight-editor-new-image", "");
       card.setAttribute("data-image-key", record.fingerprint);
       card.setAttribute("data-image-url", record.url);
+      card.setAttribute("data-image-size", String(record.file.size || 0));
 
       var viewButton = document.createElement("button");
       viewButton.type = "button";
@@ -1439,10 +1485,7 @@
         return;
       }
       var validFiles = incomingFiles.filter(function (file) {
-        return (
-          String(file.type || "").startsWith("image/") ||
-          /\.(?:jpe?g|png)$/i.test(String(file.name || ""))
-        );
+        return /\.(?:jpe?g|png)$/i.test(String(file.name || ""));
       });
 
       if (!canRewriteSelectedImageFiles()) {
@@ -1457,24 +1500,59 @@
       var activeExistingCount = getActiveImageCards().filter(function (card) {
         return card.hasAttribute("data-highlight-editor-existing-image");
       }).length;
-      var availableSlots = Math.max(0, maxImages - activeExistingCount - selectedImageFiles.length);
-      var filesToAdd = validFiles
-        .filter(function (file) {
-          return !existingFingerprints.has(imageFileFingerprint(file));
-        })
-        .slice(0, availableSlots);
-      var ignoredCount = incomingFiles.length - filesToAdd.length;
+      var filesToAdd = validFiles.filter(function (file) {
+        return !existingFingerprints.has(imageFileFingerprint(file));
+      });
 
-      if (ignoredCount > 0) {
+      function restorePreviousSelection() {
+        if (!syncSelectedImageFiles()) {
+          imageInput.value = "";
+          clearNewImageCards();
+          refreshImageLibrary();
+        }
+      }
+
+      if (validFiles.length !== incomingFiles.length) {
         setImageFeedback(
-          "Some files were not added. Use JPG or PNG images and keep the gallery within " +
+          "The selection was not added. Choose JPG or PNG image files only."
+        );
+        restorePreviousSelection();
+        return;
+      }
+
+      if (!filesToAdd.length) {
+        setImageFeedback("Those images are already in the new upload selection.");
+        restorePreviousSelection();
+        return;
+      }
+
+      if (activeExistingCount + selectedImageFiles.length + filesToAdd.length > maxImages) {
+        setImageFeedback(
+          "The selection was not added. A highlight can contain up to " +
             maxImages +
             " images."
         );
-      } else {
-        setImageFeedback("");
+        restorePreviousSelection();
+        return;
       }
 
+      var incomingBytes = filesToAdd.reduce(function (total, file) {
+        return total + Math.max(0, Number(file.size) || 0);
+      }, 0);
+      var nextUploadBytes = getSelectedUploadBytes() + incomingBytes;
+      if (nextUploadBytes > maxUploadBytes) {
+        setImageFeedback(
+          "The selection was not added. It would bring this save to " +
+            formatMegabytes(nextUploadBytes) +
+            ". Keep newly selected images at or below " +
+            formatMegabytes(maxUploadBytes) +
+            " combined."
+        );
+        restorePreviousSelection();
+        return;
+      }
+
+      setImageFeedback("");
       var firstNewCard = null;
       filesToAdd.forEach(function (file) {
         var url = window.URL.createObjectURL(file);
@@ -1588,6 +1666,23 @@
     });
 
     editor.addEventListener("submit", function (event) {
+      var selectedUploadBytes = getSelectedUploadBytes();
+      if (selectedUploadBytes > maxUploadBytes) {
+        event.preventDefault();
+        event.stopImmediatePropagation();
+        setImageFeedback(
+          "Saving was stopped because the new images total " +
+            formatMegabytes(selectedUploadBytes) +
+            ". Keep the combined upload at or below " +
+            formatMegabytes(maxUploadBytes) +
+            "."
+        );
+        if (imageLibrary) {
+          imageLibrary.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+        return;
+      }
+
       var requirements = [
         { name: "short_description", min: 12, language: "en", message: "Enter at least 12 characters for the English short description." },
         { name: "long_description", min: 24, language: "en", message: "Enter at least 24 characters for the English full description." },
@@ -1611,6 +1706,45 @@
         invalidField.reportValidity();
       }
     }, { capture: true });
+
+    editor.addEventListener("submit", function () {
+      var selectedUploadBytes = getSelectedUploadBytes();
+      var selectedUploadCount = selectedImageFiles.length;
+      var submitLabel = String(
+        editor.getAttribute("data-highlight-editor-submit-label") || "Save Changes"
+      ).trim();
+
+      editor.setAttribute("aria-busy", "true");
+      Array.prototype.slice.call(
+        editor.querySelectorAll('button[type="submit"]')
+      ).forEach(function (button) {
+        button.disabled = true;
+      });
+
+      if (!saveNotice) {
+        return;
+      }
+      if (saveNoticeTitle) {
+        saveNoticeTitle.textContent =
+          submitLabel === "Create Highlight"
+            ? "Creating community highlight…"
+            : "Saving community highlight changes…";
+      }
+      if (saveNoticeDetail) {
+        saveNoticeDetail.textContent = selectedUploadCount
+          ? "Uploading " +
+            selectedUploadCount +
+            (selectedUploadCount === 1 ? " image" : " images") +
+            " (" +
+            formatMegabytes(selectedUploadBytes) +
+            "). Please keep this page open."
+          : "Saving the highlight information. Please keep this page open.";
+      }
+      saveNotice.hidden = false;
+      window.requestAnimationFrame(function () {
+        saveNotice.classList.add("is-visible");
+      });
+    });
 
     window.addEventListener("beforeunload", function () {
       previewObjectUrls.forEach(function (url) {

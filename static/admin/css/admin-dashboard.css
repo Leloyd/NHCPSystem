@@ -4000,6 +4000,69 @@ body.admin-confirm-open {
   font-size: 0.62rem;
 }
 
+.admin-highlight-editor-upload-budget {
+  margin-bottom: 0.68rem;
+  padding: 0.62rem 0.68rem;
+  border: 1px solid #e2e6e3;
+  border-radius: 0.72rem;
+  background: #f7f9f7;
+}
+
+.admin-highlight-editor-upload-budget > div:first-child {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  margin-bottom: 0.42rem;
+}
+
+.admin-highlight-editor-upload-budget span,
+.admin-highlight-editor-upload-budget strong {
+  font-size: 0.61rem;
+}
+
+.admin-highlight-editor-upload-budget span {
+  color: #717b74;
+  font-weight: 750;
+}
+
+.admin-highlight-editor-upload-budget strong {
+  color: var(--dashboard-green-900);
+  font-weight: 850;
+}
+
+.admin-highlight-editor-upload-budget > small {
+  display: block;
+  margin-top: 0.4rem;
+  color: #7f8882;
+  font-size: 0.56rem;
+  line-height: 1.45;
+}
+
+.admin-highlight-editor-upload-meter {
+  height: 0.38rem;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #e2e8e4;
+}
+
+.admin-highlight-editor-upload-meter i {
+  width: 0;
+  height: 100%;
+  display: block;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--dashboard-green-700), var(--dashboard-gold-500));
+  transition: width 180ms ease, background 180ms ease;
+}
+
+.admin-highlight-editor-upload-meter.is-near-limit i {
+  background: #c68b2d;
+}
+
+.admin-highlight-editor-upload-meter.is-over-limit i {
+  background: #b54141;
+}
+
 .admin-highlight-editor-library-grid {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -4355,6 +4418,78 @@ body.admin-confirm-open {
   margin-top: 0.25rem;
 }
 
+.admin-highlight-save-notice[hidden] {
+  display: none;
+}
+
+.admin-highlight-save-notice {
+  min-width: min(25rem, calc(100vw - 2rem));
+  max-width: calc(100vw - 2rem);
+  position: fixed;
+  right: max(1rem, env(safe-area-inset-right));
+  bottom: max(1rem, env(safe-area-inset-bottom));
+  z-index: 1700;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.82rem 0.9rem;
+  border: 1px solid rgba(212, 175, 106, 0.62);
+  border-radius: 0.9rem;
+  background:
+    radial-gradient(circle at 100% 0, rgba(212, 175, 106, 0.18), transparent 42%),
+    #102d21;
+  color: #faf7f2;
+  box-shadow: 0 18px 44px rgba(5, 22, 15, 0.3);
+  opacity: 0;
+  transform: translateY(0.7rem);
+  transition: opacity 180ms ease, transform 180ms ease;
+}
+
+.admin-highlight-save-notice.is-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-highlight-save-notice > span:last-child,
+.admin-highlight-save-notice strong,
+.admin-highlight-save-notice small {
+  display: block;
+}
+
+.admin-highlight-save-notice strong {
+  color: #fff7dc;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 0.86rem;
+}
+
+.admin-highlight-save-notice small {
+  margin-top: 0.18rem;
+  color: rgba(250, 247, 242, 0.74);
+  font-size: 0.64rem;
+  line-height: 1.45;
+}
+
+.admin-highlight-save-spinner {
+  width: 1.7rem;
+  height: 1.7rem;
+  flex: 0 0 1.7rem;
+  border: 2px solid rgba(250, 247, 242, 0.22);
+  border-top-color: var(--dashboard-gold-500);
+  border-radius: 50%;
+  animation: admin-highlight-save-spin 780ms linear infinite;
+}
+
+@keyframes admin-highlight-save-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.admin-highlight-editor[aria-busy="true"] .admin-highlight-view-action[type="submit"] {
+  opacity: 0.66;
+  cursor: wait;
+}
+
 @media (max-width: 1050px) {
   .admin-highlight-view-layout {
     grid-template-columns: 1fr;
@@ -4535,6 +4670,14 @@ body.admin-confirm-open {
     scroll-snap-align: start;
   }
 
+  .admin-highlight-save-notice {
+    min-width: 0;
+    right: max(0.65rem, env(safe-area-inset-right));
+    bottom: max(0.65rem, env(safe-area-inset-bottom));
+    left: max(0.65rem, env(safe-area-inset-left));
+    max-width: none;
+  }
+
   .admin-highlight-view-facts dl {
     grid-template-columns: 1fr;
   }
@@ -4634,6 +4777,8 @@ body.admin-confirm-open {
 @media (prefers-reduced-motion: reduce) {
   .admin-highlight-editor-upload,
   .admin-highlight-editor-title,
+  .admin-highlight-editor-upload-meter i,
+  .admin-highlight-save-notice,
   .admin-highlight-view-action,
   .admin-highlight-create-action,
   .admin-highlight-library-card,
@@ -4647,5 +4792,10 @@ body.admin-confirm-open {
   .admin-confirm-cancel,
   .admin-confirm-submit {
     transition: none;
+  }
+
+  .admin-highlight-save-spinner {
+    animation: none;
+    border-top-color: #faf7f2;
   }
 }
