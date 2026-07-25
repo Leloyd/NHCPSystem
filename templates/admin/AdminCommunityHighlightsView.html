@@ -198,8 +198,14 @@
                       <dd>{{ highlight_item.estimated_read_label }}</dd>
                     </div>
                     <div>
-                      <dt>Image</dt>
-                      <dd>{{ highlight_item.image_filename or 'No image uploaded' }}</dd>
+                      <dt>Images</dt>
+                      <dd>
+                        {% if highlight_item.image_count %}
+                        {{ highlight_item.image_count }} image{% if highlight_item.image_count != 1 %}s{% endif %} uploaded
+                        {% else %}
+                        No images uploaded
+                        {% endif %}
+                      </dd>
                     </div>
                     <div>
                       <dt>Public slug</dt>

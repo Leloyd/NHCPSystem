@@ -11,6 +11,7 @@ from supabase_client import is_supabase_configured
 from .service import (
     COMMUNITY_EVENT_CATEGORIES,
     COMMUNITY_EVENT_STATUS_OPTIONS,
+    COMMUNITY_HIGHLIGHT_MAX_IMAGES,
     COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
     COMMUNITY_HIGHLIGHT_CATEGORIES,
     COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
@@ -25,6 +26,7 @@ from .service import (
     load_news_community_highlights,
     load_published_community_event,
     load_published_community_highlight,
+    normalize_community_highlight_image_filenames,
     render_admin_community_highlight_form,
     render_admin_event_form,
 )
@@ -73,7 +75,17 @@ def _build_unique_community_event_slug(title: str, *, current_id: int | None, sl
     )
 
 
-def _build_community_highlight_form_payload(form, files, *, current_item, normalize_checkbox, validate_event_date, save_uploaded_image, slugify_text):
+def _build_community_highlight_form_payload(
+    form,
+    files,
+    *,
+    current_item,
+    normalize_checkbox,
+    validate_event_date,
+    save_uploaded_image,
+    delete_uploaded_image,
+    slugify_text,
+):
     title = str(form.get("title") or "").strip()
     category = str(form.get("category") or "").strip()
     status = str(form.get("status") or "draft").strip().lower()
@@ -115,16 +127,57 @@ def _build_community_highlight_form_payload(form, files, *, current_item, normal
         "is_featured": bool(current_item and current_item.get("is_featured") and status == "active"),
     }
 
-    uploaded_file = files.get("image_file")
-    new_image_filename = save_uploaded_image(uploaded_file, title, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
-    if new_image_filename:
-        payload["image_filename"] = new_image_filename
-    elif current_item:
-        payload["image_filename"] = current_item.get("image_filename")
-    else:
-        payload["image_filename"] = None
+    existing_image_filenames = normalize_community_highlight_image_filenames(
+        current_item.get("image_filenames") if current_item else [],
+        legacy_image_filename=current_item.get("image_filename") if current_item else None,
+    )
+    requested_removals = {
+        str(value or "").strip()
+        for value in form.getlist("remove_image_filenames")
+        if str(value or "").strip()
+    }
+    removed_image_filenames = [
+        filename for filename in existing_image_filenames if filename in requested_removals
+    ]
+    retained_image_filenames = [
+        filename for filename in existing_image_filenames if filename not in requested_removals
+    ]
 
-    return payload, new_image_filename
+    uploaded_files = [
+        file_storage
+        for file_storage in files.getlist("image_files")
+        if file_storage is not None and str(getattr(file_storage, "filename", "") or "").strip()
+    ]
+    if not uploaded_files:
+        legacy_upload = files.get("image_file")
+        if legacy_upload is not None and str(getattr(legacy_upload, "filename", "") or "").strip():
+            uploaded_files = [legacy_upload]
+
+    if len(retained_image_filenames) + len(uploaded_files) > COMMUNITY_HIGHLIGHT_MAX_IMAGES:
+        raise ValueError(
+            f"A community highlight can contain up to {COMMUNITY_HIGHLIGHT_MAX_IMAGES} images."
+        )
+
+    new_image_filenames: list[str] = []
+    try:
+        for file_storage in uploaded_files:
+            uploaded_filename = save_uploaded_image(
+                file_storage,
+                title,
+                COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
+            )
+            if uploaded_filename:
+                new_image_filenames.append(uploaded_filename)
+    except Exception:
+        for uploaded_filename in new_image_filenames:
+            delete_uploaded_image(uploaded_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+        raise
+
+    final_image_filenames = retained_image_filenames + new_image_filenames
+    payload["image_filenames"] = final_image_filenames
+    payload["image_filename"] = final_image_filenames[0] if final_image_filenames else None
+
+    return payload, new_image_filenames, removed_image_filenames
 
 
 def _build_community_event_form_payload(form, files, *, current_item, normalize_checkbox, validate_event_date, save_uploaded_image, slugify_text):
@@ -263,20 +316,21 @@ def register_community_content_routes(
                 error_message="Supabase community highlights integration is not configured.",
             )
 
-        new_image_filename = None
+        new_image_filenames: list[str] = []
         try:
-            payload, new_image_filename = _build_community_highlight_form_payload(
+            payload, new_image_filenames, _ = _build_community_highlight_form_payload(
                 request.form,
                 request.files,
                 current_item=None,
                 normalize_checkbox=normalize_checkbox,
                 validate_event_date=validate_event_date,
                 save_uploaded_image=save_uploaded_image,
+                delete_uploaded_image=delete_local_image,
                 slugify_text=slugify_text,
             )
             create_community_highlight(payload)
         except ValueError as exc:
-            if new_image_filename:
+            for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
             return render_admin_community_highlight_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -289,7 +343,7 @@ def register_community_content_routes(
                 error_message=str(exc),
             )
         except Exception as exc:
-            if new_image_filename:
+            for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
             app.logger.exception("Failed to create community highlight: %s", exc)
             return render_admin_community_highlight_form(
@@ -326,23 +380,24 @@ def register_community_content_routes(
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
             return redirect(url_for("admin_community_highlights"))
 
-        new_image_filename = None
-        previous_image_filename = current_item.get("image_filename")
+        new_image_filenames: list[str] = []
+        removed_image_filenames: list[str] = []
         try:
-            payload, new_image_filename = _build_community_highlight_form_payload(
+            payload, new_image_filenames, removed_image_filenames = _build_community_highlight_form_payload(
                 request.form,
                 request.files,
                 current_item=current_item,
                 normalize_checkbox=normalize_checkbox,
                 validate_event_date=validate_event_date,
                 save_uploaded_image=save_uploaded_image,
+                delete_uploaded_image=delete_local_image,
                 slugify_text=slugify_text,
             )
             update_community_highlight(highlight_id, payload)
-            if new_image_filename and previous_image_filename and previous_image_filename != new_image_filename:
-                delete_local_image(previous_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            for removed_image_filename in removed_image_filenames:
+                delete_local_image(removed_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
         except ValueError as exc:
-            if new_image_filename:
+            for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
             return render_admin_community_highlight_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -355,7 +410,7 @@ def register_community_content_routes(
                 error_message=str(exc),
             )
         except Exception as exc:
-            if new_image_filename:
+            for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
             app.logger.exception("Failed to update community highlight %s: %s", highlight_id, exc)
             return render_admin_community_highlight_form(

@@ -63,8 +63,9 @@
                 <figure class="admin-highlight-view-media admin-highlight-editor-media">
                   <img
                     src="{{ highlight_form.image_url or '' }}"
-                    alt=""
+                    alt="{{ highlight_form.title or 'Community highlight image preview' }}"
                     data-highlight-editor-image-preview
+                    data-highlight-editor-image-key="{{ highlight_form.image_filename }}"
                     {% if not highlight_form.image_url %}hidden{% endif %}
                   />
                   <div
@@ -86,11 +87,67 @@
                     <svg viewBox="0 0 24 24"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
                   </span>
                   <span>
-                    <strong>{% if highlight_form.image_filename %}Replace image{% else %}Upload card image{% endif %}</strong>
-                    <small>JPG or PNG, up to 50 MB</small>
+                    <strong>{% if highlight_form.image_filename %}Add more images{% else %}Upload highlight images{% endif %}</strong>
+                    <small>Choose up to {{ max_images }} JPG or PNG images</small>
                   </span>
-                  <input id="highlightImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-highlight-editor-image-input />
+                  <input
+                    id="highlightImage"
+                    name="image_files"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                    multiple
+                    data-highlight-editor-image-input
+                  />
                 </label>
+
+                <section
+                  class="admin-highlight-editor-library"
+                  data-highlight-editor-image-library
+                  data-highlight-editor-max-images="{{ max_images }}"
+                >
+                  <header>
+                    <span>
+                      <strong>Image library</strong>
+                      <small>Click an image to preview it. Remove images before saving.</small>
+                    </span>
+                    <b data-highlight-editor-image-count>{{ highlight_form.image_count }} / {{ max_images }}</b>
+                  </header>
+                  <div class="admin-highlight-editor-library-grid" data-highlight-editor-image-grid>
+                    {% for image in highlight_form.gallery_images %}
+                    <article
+                      class="admin-highlight-editor-image-card{% if loop.first %} is-selected{% endif %}"
+                      data-highlight-editor-existing-image
+                      data-image-key="{{ image.filename }}"
+                      data-image-url="{{ image.url }}"
+                    >
+                      <button
+                        type="button"
+                        class="admin-highlight-editor-image-view"
+                        data-highlight-editor-image-view
+                        aria-label="Preview image {{ loop.index }}"
+                      >
+                        <img src="{{ image.url }}" alt="" loading="lazy" />
+                        <span>View</span>
+                      </button>
+                      <div>
+                        <small>Image {{ loop.index }}</small>
+                        <button
+                          type="button"
+                          data-highlight-editor-image-remove
+                          aria-label="Remove image {{ loop.index }}"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </article>
+                    {% endfor %}
+                  </div>
+                  <p data-highlight-editor-image-empty {% if highlight_form.image_count %}hidden{% endif %}>
+                    No images selected yet.
+                  </p>
+                  <p class="admin-highlight-editor-library-feedback" data-highlight-editor-image-feedback role="status" hidden></p>
+                  <div data-highlight-editor-removal-inputs></div>
+                </section>
 
                 <section
                   class="admin-highlight-view-visibility {% if highlight_form.status == 'active' %}is-active{% elif highlight_form.status == 'archived' %}is-archived{% else %}is-draft{% endif %}"

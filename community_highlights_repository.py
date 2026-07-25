@@ -6,7 +6,7 @@ from supabase_client import get_supabase_client
 COMMUNITY_HIGHLIGHTS_TABLE = "community_highlights"
 COMMUNITY_HIGHLIGHTS_SELECT_FIELDS = (
     "id, title, slug, category, event_date, short_description, long_description, "
-    "short_description_tl, long_description_tl, image_filename, status, is_featured, "
+    "short_description_tl, long_description_tl, image_filename, image_filenames, status, is_featured, "
     "is_published, created_at, updated_at"
 )
 

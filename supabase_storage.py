@@ -60,7 +60,9 @@ def _upload_public_object(file_storage, *, title: str, folder_prefix: str, slugi
     if not file_bytes:
         raise ValueError("Please choose a non-empty file.")
 
-    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S")
+    # Microseconds keep consecutive files in a multi-image upload from
+    # resolving to the same storage object path.
+    timestamp = datetime.utcnow().strftime("%Y%m%d%H%M%S%f")
     safe_title = slugify_text(title, fallback="image")
     normalized_prefix = str(folder_prefix or "").strip().strip("/")
     object_path = f"{normalized_prefix}/{safe_title}-{timestamp}{extension}"

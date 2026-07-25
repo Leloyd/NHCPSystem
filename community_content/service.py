@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from datetime import datetime
 from pathlib import Path
 from typing import Any
@@ -26,6 +27,7 @@ COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "commun
 COMMUNITY_EVENTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "events").resolve()
 COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX = "community-highlights"
 COMMUNITY_EVENTS_STORAGE_PREFIX = "events"
+COMMUNITY_HIGHLIGHT_MAX_IMAGES = 12
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
     "Museum Programs",
     "School Engagement",
@@ -115,6 +117,54 @@ def resolve_community_upload_image_url(image_filename: Any, *, upload_dir: Path,
     return resolve_local_upload_image_url(upload_dir, upload_folder_name, normalized_value)
 
 
+def normalize_community_highlight_image_filenames(
+    raw_value: Any,
+    *,
+    legacy_image_filename: Any = None,
+) -> list[str]:
+    values: list[Any]
+    if isinstance(raw_value, (list, tuple)):
+        values = list(raw_value)
+    elif isinstance(raw_value, str) and raw_value.strip():
+        raw_text = raw_value.strip()
+        try:
+            parsed = json.loads(raw_text)
+        except (TypeError, ValueError, json.JSONDecodeError):
+            parsed = [raw_text]
+        values = list(parsed) if isinstance(parsed, list) else []
+    else:
+        values = []
+
+    legacy_value = str(legacy_image_filename or "").strip()
+    if legacy_value and legacy_value not in values:
+        values.insert(0, legacy_value)
+
+    normalized: list[str] = []
+    for value in values:
+        filename = str(value or "").strip()
+        if not filename or filename in normalized:
+            continue
+        normalized.append(filename)
+    return normalized
+
+
+def build_community_highlight_gallery(image_filenames: Any, *, legacy_image_filename: Any = None) -> list[dict[str, str]]:
+    gallery: list[dict[str, str]] = []
+    for filename in normalize_community_highlight_image_filenames(
+        image_filenames,
+        legacy_image_filename=legacy_image_filename,
+    ):
+        image_url = resolve_community_upload_image_url(
+            filename,
+            upload_dir=COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
+            upload_folder_name="community-highlights",
+            storage_prefix=COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX,
+        )
+        if image_url:
+            gallery.append({"filename": filename, "url": image_url})
+    return gallery
+
+
 def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared = dict(item or {})
     raw_status = str(prepared.get("status") or "").strip().lower()
@@ -125,12 +175,18 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
     estimated_read_minutes = max(1, round(word_count / 180))
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_highlight_detail", slug=prepared.get("slug", ""))
-    prepared["image_url"] = resolve_community_upload_image_url(
-        prepared.get("image_filename"),
-        upload_dir=COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
-        upload_folder_name="community-highlights",
-        storage_prefix=COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX,
+    gallery_images = build_community_highlight_gallery(
+        prepared.get("image_filenames"),
+        legacy_image_filename=prepared.get("image_filename"),
     )
+    image_filenames = [image["filename"] for image in gallery_images]
+    image_urls = [image["url"] for image in gallery_images]
+    prepared["gallery_images"] = gallery_images
+    prepared["image_filenames"] = image_filenames
+    prepared["image_urls"] = image_urls
+    prepared["image_filename"] = image_filenames[0] if image_filenames else None
+    prepared["image_url"] = image_urls[0] if image_urls else None
+    prepared["image_count"] = len(gallery_images)
     prepared["category"] = category
     prepared["category_color"] = category_style["color"]
     prepared["category_bg"] = category_style["bg"]
@@ -302,6 +358,22 @@ def build_community_highlight_form_state(source: dict[str, Any] | None = None) -
     source = source or {}
     raw_category = str(source.get("category") or "").strip()
     raw_status = str(source.get("status") or "").strip().lower()
+    gallery_images = source.get("gallery_images")
+    if not isinstance(gallery_images, list):
+        gallery_images = build_community_highlight_gallery(
+            source.get("image_filenames"),
+            legacy_image_filename=source.get("image_filename"),
+        )
+    normalized_gallery = [
+        {
+            "filename": str(image.get("filename") or "").strip(),
+            "url": str(image.get("url") or "").strip(),
+        }
+        for image in gallery_images
+        if isinstance(image, dict)
+        and str(image.get("filename") or "").strip()
+        and str(image.get("url") or "").strip()
+    ]
     return {
         "title": str(source.get("title") or "").strip(),
         "category": raw_category if raw_category in COMMUNITY_HIGHLIGHT_CATEGORIES else COMMUNITY_HIGHLIGHT_CATEGORIES[0],
@@ -313,8 +385,12 @@ def build_community_highlight_form_state(source: dict[str, Any] | None = None) -
         "long_description_tl": str(source.get("long_description_tl") or "").strip(),
         "is_published": bool(source.get("is_published")),
         "is_featured": bool(source.get("is_featured")),
-        "image_filename": str(source.get("image_filename") or "").strip(),
-        "image_url": source.get("image_url"),
+        "image_filename": normalized_gallery[0]["filename"] if normalized_gallery else "",
+        "image_filenames": [image["filename"] for image in normalized_gallery],
+        "image_url": normalized_gallery[0]["url"] if normalized_gallery else None,
+        "image_urls": [image["url"] for image in normalized_gallery],
+        "gallery_images": normalized_gallery,
+        "image_count": len(normalized_gallery),
     }
 
 
@@ -377,6 +453,7 @@ def render_admin_community_highlight_form(
         highlight_form=highlight_form,
         category_options=COMMUNITY_HIGHLIGHT_CATEGORIES,
         status_options=COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
+        max_images=COMMUNITY_HIGHLIGHT_MAX_IMAGES,
         error_message=error_message,
     )
 

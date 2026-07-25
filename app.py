@@ -56,7 +56,8 @@ def _bool_env(name, default):
 
 
 def _configured_admin_image_sources():
-    sources = ["'self'", "data:"]
+    # Local upload previews use object URLs before the image reaches Supabase.
+    sources = ["'self'", "data:", "blob:"]
     configured_url = (os.getenv("SUPABASE_URL") or "").strip()
     if not configured_url:
         return " ".join(sources)

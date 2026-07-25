@@ -39,22 +39,48 @@
           <div class="ogd-detail-layout">
             <div class="ogd-detail-media-column">
               <div class="ogd-detail-media-sticky">
-                <button id="highlightDetailZoomToggle" data-detail-zoom-toggle class="ogd-detail-media" type="button" aria-label="Click to zoom image" aria-pressed="false">
-                  <div class="ogd-detail-media__frame">
+                <div class="ogd-detail-media" data-highlight-detail-gallery data-highlight-gallery-title="{{ highlight_item.title }}">
+                  <button
+                    type="button"
+                    class="ogd-detail-media__open"
+                    data-highlight-gallery-open
+                    aria-label="{% if highlight_item.image_url %}Expand {{ highlight_item.title }} image{% else %}No image available{% endif %}"
+                    {% if not highlight_item.image_url %}disabled{% endif %}
+                  >
+                    <span class="ogd-detail-media__frame">
                     {% if highlight_item.image_url %}
-                    <img src="{{ highlight_item.image_url }}" alt="{{ highlight_item.title }}" class="ogd-detail-media__image" loading="eager" />
+                    <img
+                      src="{{ highlight_item.image_url }}"
+                      alt="{{ highlight_item.title }} — image 1 of {{ highlight_item.image_count }}"
+                      class="ogd-detail-media__image"
+                      loading="eager"
+                      data-highlight-gallery-image
+                    />
                     {% else %}
                     <div class="ogd-detail-media__fallback">{{ (highlight_item.title or 'C')[:1]|upper }}</div>
                     {% endif %}
-                  </div>
+                    </span>
+                    {% if highlight_item.image_url %}
+                    <span class="ogd-detail-media__hint">
+                      <i data-lucide="maximize-2" aria-hidden="true"></i>
+                      <span>Click to expand</span>
+                    </span>
+                    {% endif %}
+                  </button>
+
                   <span class="ogd-detail-media__badge{% if highlight_item.is_featured %} bg-stone-900 text-white{% endif %}">
                     {% if highlight_item.is_featured %}Featured{% else %}{{ highlight_item.category }}{% endif %}
                   </span>
-                  <span class="ogd-detail-media__hint">
-                    <i data-lucide="zoom-in" aria-hidden="true"></i>
-                    <span data-detail-zoom-hint>Click to zoom in</span>
-                  </span>
-                </button>
+                  {% if highlight_item.image_count > 1 %}
+                  <button type="button" class="ogd-detail-gallery-arrow is-previous" data-highlight-gallery-previous aria-label="Previous image">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+                  </button>
+                  <button type="button" class="ogd-detail-gallery-arrow is-next" data-highlight-gallery-next aria-label="Next image">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+                  </button>
+                  <span class="ogd-detail-gallery-counter" data-highlight-gallery-counter aria-live="polite">1 / {{ highlight_item.image_count }}</span>
+                  {% endif %}
+                </div>
               </div>
             </div>
 
@@ -183,6 +209,45 @@
         </div>
       </section>
     </main>
+
+    {% if highlight_item.image_url %}
+    <script id="communityHighlightGalleryData" type="application/json">{{ highlight_item.gallery_images|tojson }}</script>
+    <div
+      class="ogd-detail-lightbox"
+      data-highlight-gallery-lightbox
+      role="dialog"
+      aria-modal="true"
+      aria-label="{{ highlight_item.title }} image gallery"
+      aria-hidden="true"
+      hidden
+    >
+      <button type="button" class="ogd-detail-lightbox__backdrop" data-highlight-gallery-close tabindex="-1" aria-label="Close expanded image"></button>
+      <section class="ogd-detail-lightbox__dialog">
+        <button type="button" class="ogd-detail-lightbox__close" data-highlight-gallery-close aria-label="Close expanded image">
+          <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6 6 12 12M18 6 6 18"></path></svg>
+        </button>
+        <div class="ogd-detail-lightbox__stage">
+          <img
+            src="{{ highlight_item.image_url }}"
+            alt="{{ highlight_item.title }} — expanded image 1 of {{ highlight_item.image_count }}"
+            data-highlight-gallery-lightbox-image
+          />
+          {% if highlight_item.image_count > 1 %}
+          <button type="button" class="ogd-detail-lightbox__arrow is-previous" data-highlight-gallery-lightbox-previous aria-label="Previous expanded image">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m15 5-7 7 7 7"></path></svg>
+          </button>
+          <button type="button" class="ogd-detail-lightbox__arrow is-next" data-highlight-gallery-lightbox-next aria-label="Next expanded image">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9 5 7 7-7 7"></path></svg>
+          </button>
+          {% endif %}
+        </div>
+        <footer>
+          <strong>{{ highlight_item.title }}</strong>
+          <span data-highlight-gallery-lightbox-counter aria-live="polite">1 / {{ highlight_item.image_count }}</span>
+        </footer>
+      </section>
+    </div>
+    {% endif %}
 
     {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_public_footer.html' %}

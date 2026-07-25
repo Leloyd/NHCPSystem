@@ -1071,12 +1071,23 @@
     var imageInput = editor.querySelector("[data-highlight-editor-image-input]");
     var imagePreview = editor.querySelector("[data-highlight-editor-image-preview]");
     var imageFallback = editor.querySelector("[data-highlight-editor-image-fallback]");
+    var imageLibrary = editor.querySelector("[data-highlight-editor-image-library]");
+    var imageGrid = editor.querySelector("[data-highlight-editor-image-grid]");
+    var imageCount = editor.querySelector("[data-highlight-editor-image-count]");
+    var imageEmpty = editor.querySelector("[data-highlight-editor-image-empty]");
+    var imageFeedback = editor.querySelector("[data-highlight-editor-image-feedback]");
+    var removalInputs = editor.querySelector("[data-highlight-editor-removal-inputs]");
     var readTime = editor.querySelector("[data-highlight-editor-read-time]");
     var copyFields = Array.prototype.slice.call(
       editor.querySelectorAll("[data-highlight-editor-copy]")
     );
     var activeLanguage = "en";
-    var previewObjectUrl = "";
+    var selectedImageFiles = [];
+    var previewObjectUrls = [];
+    var maxImages = Math.max(
+      1,
+      parseInt((imageLibrary && imageLibrary.getAttribute("data-highlight-editor-max-images")) || "12", 10) || 12
+    );
 
     var visibilityStates = {
       active: {
@@ -1143,6 +1154,9 @@
       }
       var title = String(titleInput.value || "").trim();
       fallbackLetter.textContent = (title.charAt(0) || "C").toUpperCase();
+      if (imagePreview) {
+        imagePreview.alt = title ? title + " image preview" : "Community highlight image preview";
+      }
     }
 
     function updateCategory() {
@@ -1199,21 +1213,322 @@
       field.style.height = Math.min(Math.max(field.scrollHeight, 112), 416) + "px";
     }
 
-    function updateImagePreview() {
-      if (!imageInput || !imagePreview || !imageFallback) {
+    function getImageCards() {
+      return imageGrid
+        ? Array.prototype.slice.call(
+            imageGrid.querySelectorAll(
+              "[data-highlight-editor-existing-image], [data-highlight-editor-new-image]"
+            )
+          )
+        : [];
+    }
+
+    function setImageFeedback(message) {
+      if (!imageFeedback) {
         return;
       }
-      var file = imageInput.files && imageInput.files[0];
-      if (!file || !String(file.type || "").startsWith("image/")) {
+      imageFeedback.textContent = String(message || "");
+      imageFeedback.hidden = !message;
+    }
+
+    function getActiveImageCards() {
+      return getImageCards().filter(function (card) {
+        return !card.classList.contains("is-removed");
+      });
+    }
+
+    function showImageFallback() {
+      if (imagePreview) {
+        imagePreview.hidden = true;
+        imagePreview.removeAttribute("src");
+        imagePreview.setAttribute("data-highlight-editor-image-key", "");
+      }
+      if (imageFallback) {
+        imageFallback.hidden = false;
+      }
+      getImageCards().forEach(function (card) {
+        card.classList.remove("is-selected");
+      });
+    }
+
+    function selectImageCard(card) {
+      if (
+        !card ||
+        card.classList.contains("is-removed") ||
+        !imagePreview ||
+        !imageFallback
+      ) {
         return;
       }
-      if (previewObjectUrl) {
-        window.URL.revokeObjectURL(previewObjectUrl);
+      var imageUrl = String(card.getAttribute("data-image-url") || "").trim();
+      if (!imageUrl) {
+        return;
       }
-      previewObjectUrl = window.URL.createObjectURL(file);
-      imagePreview.src = previewObjectUrl;
+      getImageCards().forEach(function (candidate) {
+        candidate.classList.toggle("is-selected", candidate === card);
+      });
+      imagePreview.src = imageUrl;
       imagePreview.hidden = false;
+      imagePreview.setAttribute(
+        "data-highlight-editor-image-key",
+        String(card.getAttribute("data-image-key") || "")
+      );
       imageFallback.hidden = true;
+    }
+
+    function rebuildRemovalInputs() {
+      if (!removalInputs) {
+        return;
+      }
+      removalInputs.replaceChildren();
+      getImageCards().forEach(function (card) {
+        if (
+          !card.hasAttribute("data-highlight-editor-existing-image") ||
+          !card.classList.contains("is-removed")
+        ) {
+          return;
+        }
+        var input = document.createElement("input");
+        input.type = "hidden";
+        input.name = "remove_image_filenames";
+        input.value = String(card.getAttribute("data-image-key") || "");
+        removalInputs.appendChild(input);
+      });
+    }
+
+    function refreshImageLibrary() {
+      var cards = getImageCards();
+      var activeCards = getActiveImageCards();
+      if (imageCount) {
+        imageCount.textContent = activeCards.length + " / " + maxImages;
+      }
+      if (imageEmpty) {
+        imageEmpty.hidden = activeCards.length > 0;
+      }
+      activeCards.forEach(function (card, index) {
+        var label = card.querySelector("div small");
+        if (label) {
+          label.textContent = "Image " + (index + 1);
+        }
+        var viewButton = card.querySelector("[data-highlight-editor-image-view]");
+        var removeButton = card.querySelector("[data-highlight-editor-image-remove]");
+        if (viewButton) {
+          viewButton.setAttribute("aria-label", "Preview image " + (index + 1));
+        }
+        if (removeButton) {
+          removeButton.setAttribute("aria-label", "Remove image " + (index + 1));
+        }
+      });
+      cards
+        .filter(function (card) {
+          return card.classList.contains("is-removed");
+        })
+        .forEach(function (card) {
+          var removeButton = card.querySelector("[data-highlight-editor-image-remove]");
+          if (removeButton) {
+            removeButton.setAttribute("aria-label", "Restore removed image");
+          }
+        });
+
+      var selectedCard = cards.find(function (card) {
+        return card.classList.contains("is-selected") && !card.classList.contains("is-removed");
+      });
+      if (!selectedCard) {
+        if (activeCards[0]) {
+          selectImageCard(activeCards[0]);
+        } else {
+          showImageFallback();
+        }
+      }
+      rebuildRemovalInputs();
+    }
+
+    function syncSelectedImageFiles() {
+      if (!imageInput || typeof window.DataTransfer !== "function") {
+        return false;
+      }
+      try {
+        var transfer = new window.DataTransfer();
+        selectedImageFiles.forEach(function (record) {
+          transfer.items.add(record.file);
+        });
+        imageInput.files = transfer.files;
+        return true;
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function canRewriteSelectedImageFiles() {
+      if (typeof window.DataTransfer !== "function") {
+        return false;
+      }
+      try {
+        return Boolean(new window.DataTransfer());
+      } catch (error) {
+        return false;
+      }
+    }
+
+    function imageFileFingerprint(file) {
+      return [file.name, file.size, file.lastModified].join(":");
+    }
+
+    function createNewImageCard(record) {
+      if (!imageGrid) {
+        return null;
+      }
+      var card = document.createElement("article");
+      card.className = "admin-highlight-editor-image-card";
+      card.setAttribute("data-highlight-editor-new-image", "");
+      card.setAttribute("data-image-key", record.fingerprint);
+      card.setAttribute("data-image-url", record.url);
+
+      var viewButton = document.createElement("button");
+      viewButton.type = "button";
+      viewButton.className = "admin-highlight-editor-image-view";
+      viewButton.setAttribute("data-highlight-editor-image-view", "");
+
+      var thumbnail = document.createElement("img");
+      thumbnail.src = record.url;
+      thumbnail.alt = "";
+      viewButton.appendChild(thumbnail);
+
+      var viewLabel = document.createElement("span");
+      viewLabel.textContent = "View";
+      viewButton.appendChild(viewLabel);
+
+      var actions = document.createElement("div");
+      var itemLabel = document.createElement("small");
+      itemLabel.textContent = "New image";
+      actions.appendChild(itemLabel);
+
+      var removeButton = document.createElement("button");
+      removeButton.type = "button";
+      removeButton.setAttribute("data-highlight-editor-image-remove", "");
+      removeButton.textContent = "Remove";
+      actions.appendChild(removeButton);
+
+      card.appendChild(viewButton);
+      card.appendChild(actions);
+      imageGrid.appendChild(card);
+      return card;
+    }
+
+    function clearNewImageCards() {
+      getImageCards()
+        .filter(function (card) {
+          return card.hasAttribute("data-highlight-editor-new-image");
+        })
+        .forEach(function (card) {
+          card.remove();
+        });
+      previewObjectUrls.forEach(function (url) {
+        window.URL.revokeObjectURL(url);
+      });
+      previewObjectUrls = [];
+      selectedImageFiles = [];
+    }
+
+    function addSelectedImages() {
+      if (!imageInput || !imageGrid) {
+        return;
+      }
+      var incomingFiles = Array.prototype.slice.call(imageInput.files || []);
+      if (!incomingFiles.length) {
+        return;
+      }
+      var validFiles = incomingFiles.filter(function (file) {
+        return (
+          String(file.type || "").startsWith("image/") ||
+          /\.(?:jpe?g|png)$/i.test(String(file.name || ""))
+        );
+      });
+
+      if (!canRewriteSelectedImageFiles()) {
+        clearNewImageCards();
+      }
+
+      var existingFingerprints = new Set(
+        selectedImageFiles.map(function (record) {
+          return record.fingerprint;
+        })
+      );
+      var activeExistingCount = getActiveImageCards().filter(function (card) {
+        return card.hasAttribute("data-highlight-editor-existing-image");
+      }).length;
+      var availableSlots = Math.max(0, maxImages - activeExistingCount - selectedImageFiles.length);
+      var filesToAdd = validFiles
+        .filter(function (file) {
+          return !existingFingerprints.has(imageFileFingerprint(file));
+        })
+        .slice(0, availableSlots);
+      var ignoredCount = incomingFiles.length - filesToAdd.length;
+
+      if (ignoredCount > 0) {
+        setImageFeedback(
+          "Some files were not added. Use JPG or PNG images and keep the gallery within " +
+            maxImages +
+            " images."
+        );
+      } else {
+        setImageFeedback("");
+      }
+
+      var firstNewCard = null;
+      filesToAdd.forEach(function (file) {
+        var url = window.URL.createObjectURL(file);
+        var record = {
+          file: file,
+          fingerprint: imageFileFingerprint(file),
+          url: url,
+        };
+        selectedImageFiles.push(record);
+        previewObjectUrls.push(url);
+        var card = createNewImageCard(record);
+        if (!firstNewCard) {
+          firstNewCard = card;
+        }
+      });
+
+      syncSelectedImageFiles();
+      refreshImageLibrary();
+      if (firstNewCard) {
+        selectImageCard(firstNewCard);
+      }
+    }
+
+    function removeNewImageCard(card) {
+      var fingerprint = String(card.getAttribute("data-image-key") || "");
+      var record = selectedImageFiles.find(function (candidate) {
+        return candidate.fingerprint === fingerprint;
+      });
+      selectedImageFiles = selectedImageFiles.filter(function (candidate) {
+        return candidate.fingerprint !== fingerprint;
+      });
+      if (record) {
+        window.URL.revokeObjectURL(record.url);
+        previewObjectUrls = previewObjectUrls.filter(function (url) {
+          return url !== record.url;
+        });
+      }
+      card.remove();
+      if (!syncSelectedImageFiles() && imageInput) {
+        imageInput.value = "";
+        clearNewImageCards();
+      }
+      setImageFeedback("");
+      refreshImageLibrary();
+    }
+
+    function toggleExistingImageRemoval(card) {
+      var isRemoved = card.classList.toggle("is-removed");
+      var removeButton = card.querySelector("[data-highlight-editor-image-remove]");
+      if (removeButton) {
+        removeButton.textContent = isRemoved ? "Undo" : "Remove";
+      }
+      setImageFeedback("");
+      refreshImageLibrary();
     }
 
     languageButtons.forEach(function (button) {
@@ -1235,7 +1550,31 @@
       dateInput.addEventListener("input", updateDate);
     }
     if (imageInput) {
-      imageInput.addEventListener("change", updateImagePreview);
+      imageInput.addEventListener("change", addSelectedImages);
+    }
+    if (imageGrid) {
+      imageGrid.addEventListener("click", function (event) {
+        var viewButton = event.target.closest("[data-highlight-editor-image-view]");
+        var removeButton = event.target.closest("[data-highlight-editor-image-remove]");
+        var card = event.target.closest(
+          "[data-highlight-editor-existing-image], [data-highlight-editor-new-image]"
+        );
+        if (!card) {
+          return;
+        }
+        if (viewButton) {
+          selectImageCard(card);
+          return;
+        }
+        if (!removeButton) {
+          return;
+        }
+        if (card.hasAttribute("data-highlight-editor-new-image")) {
+          removeNewImageCard(card);
+        } else {
+          toggleExistingImageRemoval(card);
+        }
+      });
     }
     copyFields.forEach(function (field) {
       field.addEventListener("input", function () {
@@ -1274,9 +1613,9 @@
     }, { capture: true });
 
     window.addEventListener("beforeunload", function () {
-      if (previewObjectUrl) {
-        window.URL.revokeObjectURL(previewObjectUrl);
-      }
+      previewObjectUrls.forEach(function (url) {
+        window.URL.revokeObjectURL(url);
+      });
     });
 
     setLanguage("en");
@@ -1284,6 +1623,7 @@
     updateFallbackLetter();
     updateCategory();
     updateDate();
+    refreshImageLibrary();
   }
 
   function initDashboardUi() {

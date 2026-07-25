@@ -114,6 +114,7 @@ CREATE TABLE public.community_highlights (
   short_description_tl text NOT NULL DEFAULT ''::text,
   long_description_tl text NOT NULL DEFAULT ''::text,
   image_filename text,
+  image_filenames jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(image_filenames) = 'array'::text),
   status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),
   is_featured boolean NOT NULL DEFAULT false,
   is_published boolean NOT NULL DEFAULT true,

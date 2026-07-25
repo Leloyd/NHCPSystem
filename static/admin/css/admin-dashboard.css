@@ -3946,6 +3946,183 @@ body.admin-confirm-open {
   opacity: 0;
 }
 
+.admin-highlight-editor-library {
+  padding: 0.75rem;
+  border: 1px solid #e0e5e1;
+  border-radius: 0.9rem;
+  background: rgba(255, 255, 255, 0.78);
+}
+
+.admin-highlight-editor-library > header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.7rem;
+  margin-bottom: 0.65rem;
+}
+
+.admin-highlight-editor-library > header strong,
+.admin-highlight-editor-library > header small {
+  display: block;
+}
+
+.admin-highlight-editor-library > header strong {
+  color: var(--dashboard-green-900);
+  font-size: 0.72rem;
+}
+
+.admin-highlight-editor-library > header small {
+  margin-top: 0.13rem;
+  color: #7e8881;
+  font-size: 0.59rem;
+  line-height: 1.4;
+}
+
+.admin-highlight-editor-library > header b {
+  flex: 0 0 auto;
+  padding: 0.32rem 0.48rem;
+  border: 1px solid #e2d39f;
+  border-radius: 999px;
+  background: #fff9e7;
+  color: var(--dashboard-gold-600);
+  font-size: 0.62rem;
+}
+
+.admin-highlight-editor-library-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.52rem;
+}
+
+.admin-highlight-editor-image-card {
+  min-width: 0;
+  overflow: hidden;
+  border: 1px solid #dfe5e1;
+  border-radius: 0.72rem;
+  background: #fff;
+  transition: border-color 160ms ease, box-shadow 160ms ease, opacity 160ms ease;
+}
+
+.admin-highlight-editor-image-card.is-selected {
+  border-color: var(--dashboard-gold-600);
+  box-shadow: 0 0 0 2px rgba(201, 168, 76, 0.19);
+}
+
+.admin-highlight-editor-image-card.is-removed {
+  opacity: 0.5;
+  border-style: dashed;
+  background: #f2f3f2;
+}
+
+.admin-highlight-editor-image-view {
+  position: relative;
+  width: 100%;
+  display: block;
+  overflow: hidden;
+  border: 0;
+  border-bottom: 1px solid #edf0ee;
+  background: #102d21;
+  padding: 0;
+  cursor: pointer;
+}
+
+.admin-highlight-editor-image-view img {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  display: block;
+  object-fit: cover;
+  transition: transform 180ms ease, opacity 180ms ease;
+}
+
+.admin-highlight-editor-image-view span {
+  position: absolute;
+  right: 0.38rem;
+  bottom: 0.38rem;
+  padding: 0.24rem 0.38rem;
+  border-radius: 0.42rem;
+  background: rgba(9, 34, 24, 0.86);
+  color: #fff6d6;
+  font-size: 0.55rem;
+  font-weight: 800;
+  opacity: 0;
+  transform: translateY(0.2rem);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+.admin-highlight-editor-image-view:hover img,
+.admin-highlight-editor-image-view:focus-visible img {
+  transform: scale(1.035);
+  opacity: 0.84;
+}
+
+.admin-highlight-editor-image-view:hover span,
+.admin-highlight-editor-image-view:focus-visible span {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.admin-highlight-editor-image-card.is-removed .admin-highlight-editor-image-view {
+  pointer-events: none;
+}
+
+.admin-highlight-editor-image-card > div {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.4rem;
+  padding: 0.42rem 0.48rem;
+}
+
+.admin-highlight-editor-image-card > div small {
+  overflow: hidden;
+  color: #7a837d;
+  font-size: 0.57rem;
+  font-weight: 750;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-highlight-editor-image-card > div button {
+  border: 0;
+  background: transparent;
+  padding: 0.18rem;
+  color: #9a473f;
+  font-size: 0.58rem;
+  font-weight: 850;
+  cursor: pointer;
+}
+
+.admin-highlight-editor-image-card.is-removed > div button {
+  color: #287357;
+}
+
+.admin-highlight-editor-image-card > div button:hover,
+.admin-highlight-editor-image-card > div button:focus-visible {
+  text-decoration: underline;
+}
+
+.admin-highlight-editor-library > p {
+  margin: 0;
+  padding: 0.75rem;
+  border: 1px dashed #d9dfdb;
+  border-radius: 0.65rem;
+  color: #858e88;
+  font-size: 0.64rem;
+  text-align: center;
+}
+
+.admin-highlight-editor-library > p[hidden] {
+  display: none;
+}
+
+.admin-highlight-editor-library > .admin-highlight-editor-library-feedback {
+  margin-top: 0.55rem;
+  border-color: #e6c7a2;
+  background: #fff7ec;
+  color: #8b5727;
+  text-align: left;
+}
+
 .admin-highlight-editor-title-label,
 .admin-highlight-editor-sr-label {
   position: absolute;
@@ -4329,6 +4506,21 @@ body.admin-confirm-open {
 
   .admin-highlight-view-media-fallback {
     min-height: 17rem;
+  }
+
+  .admin-highlight-editor-library-grid {
+    display: flex;
+    overflow-x: auto;
+    padding: 0.12rem 0.12rem 0.4rem;
+    scroll-snap-type: x proximity;
+    overscroll-behavior-x: contain;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .admin-highlight-editor-image-card {
+    width: min(42vw, 10rem);
+    flex: 0 0 min(42vw, 10rem);
+    scroll-snap-align: start;
   }
 
   .admin-highlight-view-facts dl {
