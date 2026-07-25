@@ -15,14 +15,156 @@
 
   function initConfirmedSubmissions() {
     var forms = document.querySelectorAll("[data-confirm-submit]");
+    var modal = document.querySelector("[data-admin-confirm-modal]");
+    var title = modal && modal.querySelector("[data-admin-confirm-title]");
+    var message = modal && modal.querySelector("[data-admin-confirm-message]");
+    var cancelButton = modal && modal.querySelector("[data-admin-confirm-cancel]");
+    var approveButton = modal && modal.querySelector("[data-admin-confirm-approve]");
+    var pendingForm = null;
+    var pendingSubmitter = null;
+    var approvedForm = null;
+    var previousFocus = null;
+    var closeTimer = 0;
+
+    function closeModal(restoreFocus) {
+      if (!modal) {
+        return;
+      }
+
+      modal.classList.remove("is-open");
+      modal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("admin-confirm-open");
+
+      if (closeTimer) {
+        window.clearTimeout(closeTimer);
+      }
+      closeTimer = window.setTimeout(function () {
+        modal.hidden = true;
+        closeTimer = 0;
+      }, 180);
+
+      pendingForm = null;
+      pendingSubmitter = null;
+
+      if (restoreFocus !== false && previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+      previousFocus = null;
+    }
+
+    function openModal(form, submitter) {
+      var variant = String(form.getAttribute("data-confirm-variant") || "disable").trim().toLowerCase();
+      var nextTitle = String(form.getAttribute("data-confirm-title") || "Confirm action").trim();
+      var nextMessage = String(form.getAttribute("data-confirm-message") || "").trim();
+      var nextLabel = String(form.getAttribute("data-confirm-label") || "Confirm").trim();
+
+      if (!modal || !title || !message || !approveButton || !cancelButton) {
+        return window.confirm(nextMessage || nextTitle);
+      }
+
+      if (closeTimer) {
+        window.clearTimeout(closeTimer);
+        closeTimer = 0;
+      }
+
+      pendingForm = form;
+      pendingSubmitter = submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+      previousFocus = document.activeElement;
+      title.textContent = nextTitle;
+      message.textContent = nextMessage;
+      approveButton.textContent = nextLabel;
+      modal.classList.toggle("is-enable", variant === "enable");
+      modal.classList.toggle("is-disable", variant !== "enable");
+      modal.hidden = false;
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("admin-confirm-open");
+
+      window.requestAnimationFrame(function () {
+        modal.classList.add("is-open");
+        cancelButton.focus();
+      });
+      return false;
+    }
 
     forms.forEach(function (form) {
       form.addEventListener("submit", function (event) {
-        var message = String(form.getAttribute("data-confirm-message") || "").trim();
-        if (message && !window.confirm(message)) {
-          event.preventDefault();
+        if (approvedForm === form) {
+          approvedForm = null;
+          return;
+        }
+
+        event.preventDefault();
+        if (openModal(form, event.submitter)) {
+          approvedForm = form;
+          if (typeof form.requestSubmit === "function") {
+            form.requestSubmit(event.submitter || undefined);
+          } else {
+            form.submit();
+          }
         }
       });
+    });
+
+    if (!modal || !cancelButton || !approveButton) {
+      return;
+    }
+
+    cancelButton.addEventListener("click", function () {
+      closeModal(true);
+    });
+
+    approveButton.addEventListener("click", function () {
+      var form = pendingForm;
+      var submitter = pendingSubmitter;
+      if (!form) {
+        closeModal(true);
+        return;
+      }
+
+      closeModal(false);
+      approvedForm = form;
+      if (typeof form.requestSubmit === "function") {
+        form.requestSubmit(submitter || undefined);
+        return;
+      }
+
+      if (submitter && submitter.name) {
+        var fallbackValue = document.createElement("input");
+        fallbackValue.type = "hidden";
+        fallbackValue.name = submitter.name;
+        fallbackValue.value = submitter.value;
+        form.appendChild(fallbackValue);
+      }
+      form.submit();
+    });
+
+    modal.addEventListener("click", function (event) {
+      if (event.target === modal) {
+        closeModal(true);
+      }
+    });
+
+    modal.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeModal(true);
+        return;
+      }
+
+      if (event.key !== "Tab") {
+        return;
+      }
+
+      var focusable = [cancelButton, approveButton];
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     });
   }
 

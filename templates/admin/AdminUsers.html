@@ -96,7 +96,10 @@
                           method="post"
                           action="{{ url_for('admin_user_detail', user_id=user.id) }}"
                           data-confirm-submit
+                          data-confirm-title="{% if user.is_active %}Disable this account?{% else %}Enable this account?{% endif %}"
                           data-confirm-message="{% if user.is_active %}Disable {{ user.display_name }}? This account will immediately lose access to the public site.{% else %}Enable {{ user.display_name }}? This account will be allowed to sign in to the public site again.{% endif %}"
+                          data-confirm-label="{% if user.is_active %}Disable account{% else %}Enable account{% endif %}"
+                          data-confirm-variant="{% if user.is_active %}disable{% else %}enable{% endif %}"
                         >
                           <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                           <input type="hidden" name="return_filter" value="{{ status_filter }}" />
