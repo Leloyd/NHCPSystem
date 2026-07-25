@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 
-from flask import redirect, render_template, request, session, url_for
+from flask import jsonify, redirect, render_template, request, session, url_for
 
 from public_users_repository import update_public_user
 from supabase_client import is_supabase_configured
@@ -17,6 +17,26 @@ from .service import (
 
 VALID_STATUS_FILTERS = {"all", "active", "deactivated"}
 VALID_ACCOUNT_ACTIONS = {"activate", "deactivate"}
+CLIENT_USER_FIELDS = (
+    "id",
+    "display_name",
+    "username",
+    "is_active",
+    "status_label",
+    "email",
+    "phone_display",
+    "organization_display",
+    "roles_display",
+    "use_case_display",
+    "location_display",
+    "auth_provider_label",
+    "verified_label",
+    "display_verified_at",
+    "onboarding_label",
+    "display_created",
+    "display_last_login",
+    "display_updated",
+)
 
 
 def _utcnow() -> datetime:
@@ -61,6 +81,15 @@ def register_user_management_routes(
         deactivated_count = total_count - active_count
 
         visible_users = filter_public_users(all_users, search=search_query, status=status_filter)
+        visible_user_ids = {
+            int(user.get("id"))
+            for user in visible_users
+            if user.get("id") is not None
+        }
+        client_users = [
+            {field: user.get(field) for field in CLIENT_USER_FIELDS}
+            for user in all_users
+        ]
 
         status_message = get_public_user_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase user accounts integration is not configured."
@@ -68,7 +97,9 @@ def register_user_management_routes(
             "admin/AdminUsers.html",
             csrf_token=csrf_token,
             admin_username=current_admin_username,
-            users=visible_users,
+            users=all_users,
+            client_users=client_users,
+            visible_user_ids=visible_user_ids,
             total_count=total_count,
             active_count=active_count,
             deactivated_count=deactivated_count,
@@ -83,21 +114,37 @@ def register_user_management_routes(
     def admin_user_detail(user_id):
         user = load_admin_public_user(user_id)
         if user is None:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify({"ok": False, "error": "This account could not be found."}), 404
             return redirect(url_for("admin_users"))
 
         if request.method == "GET":
             return _render_user_detail(user)
 
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify({"ok": False, "error": "Invalid request."}), 400
             return redirect(url_for("admin_users"))
 
         account_action = str(request.form.get("account_action") or "").strip().lower()
         if account_action not in VALID_ACCOUNT_ACTIONS:
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify({"ok": False, "error": "Please choose a valid account action."}), 400
             return _render_user_detail(user, error_message="Please choose a valid account action.")
 
         next_active = account_action == "activate"
         if bool(user.get("is_active")) == next_active:
             # Nothing to change — the account is already in the requested state.
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify(
+                    {
+                        "ok": True,
+                        "user_id": user_id,
+                        "is_active": next_active,
+                        "status_label": "Active" if next_active else "Deactivated",
+                        "message": get_public_user_status_message("activated" if next_active else "deactivated"),
+                    }
+                )
             return redirect(url_for("admin_user_detail", user_id=user_id))
 
         try:
@@ -110,7 +157,21 @@ def register_user_management_routes(
             )
         except Exception as exc:  # noqa: BLE001
             app.logger.exception("Failed to update account status for user %s: %s", user_id, exc)
+            if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+                return jsonify({"ok": False, "error": "Could not update this account right now."}), 500
             return _render_user_detail(user, error_message="Could not update this account right now.")
+
+        status_key = "activated" if next_active else "deactivated"
+        if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+            return jsonify(
+                {
+                    "ok": True,
+                    "user_id": user_id,
+                    "is_active": next_active,
+                    "status_label": "Active" if next_active else "Deactivated",
+                    "message": get_public_user_status_message(status_key),
+                }
+            )
 
         return_filter = str(request.form.get("return_filter") or "all").strip().lower()
         if return_filter not in VALID_STATUS_FILTERS:
@@ -120,7 +181,7 @@ def register_user_management_routes(
         return redirect(
             url_for(
                 "admin_users",
-                status="activated" if next_active else "deactivated",
+                status=status_key,
                 filter=return_filter,
                 q=return_query,
             )

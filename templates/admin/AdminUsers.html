@@ -21,24 +21,30 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel admin-users-panel">
+          <section
+            class="admin-panel admin-panel-wide admin-resource-panel admin-users-panel"
+            data-admin-users
+            data-current-filter="{{ status_filter }}"
+          >
+            <div class="admin-users-live-notice" data-admin-users-notice role="status" aria-live="polite" hidden></div>
+
             <div class="admin-panel-head admin-users-panel-head">
               <div>
                 <h3>Registered Accounts</h3>
                 <p>Review visitor information and manage access to public-site accounts.</p>
               </div>
               <div class="admin-users-summary" aria-label="Account summary">
-                <span><strong>{{ total_count }}</strong> Total</span>
-                <span class="is-active"><strong>{{ active_count }}</strong> Active</span>
-                <span class="is-disabled"><strong>{{ deactivated_count }}</strong> Deactivated</span>
+                <span><strong data-users-total-count>{{ total_count }}</strong> Total</span>
+                <span class="is-active"><strong data-users-active-count>{{ active_count }}</strong> Active</span>
+                <span class="is-disabled"><strong data-users-deactivated-count>{{ deactivated_count }}</strong> Deactivated</span>
               </div>
             </div>
 
             <div class="admin-users-toolbar">
               <nav class="admin-users-filters" aria-label="Filter accounts by status">
-                <a href="{{ url_for('admin_users', filter='all', q=search_query) }}" class="admin-users-filter{% if status_filter == 'all' %} is-active{% endif %}"{% if status_filter == 'all' %} aria-current="page"{% endif %}>All <span>{{ total_count }}</span></a>
-                <a href="{{ url_for('admin_users', filter='active', q=search_query) }}" class="admin-users-filter{% if status_filter == 'active' %} is-active{% endif %}"{% if status_filter == 'active' %} aria-current="page"{% endif %}>Active <span>{{ active_count }}</span></a>
-                <a href="{{ url_for('admin_users', filter='deactivated', q=search_query) }}" class="admin-users-filter{% if status_filter == 'deactivated' %} is-active{% endif %}"{% if status_filter == 'deactivated' %} aria-current="page"{% endif %}>Deactivated <span>{{ deactivated_count }}</span></a>
+                <a href="{{ url_for('admin_users', filter='all', q=search_query) }}" class="admin-users-filter{% if status_filter == 'all' %} is-active{% endif %}" data-users-filter="all"{% if status_filter == 'all' %} aria-current="page"{% endif %}>All <span data-users-filter-count="all">{{ total_count }}</span></a>
+                <a href="{{ url_for('admin_users', filter='active', q=search_query) }}" class="admin-users-filter{% if status_filter == 'active' %} is-active{% endif %}" data-users-filter="active"{% if status_filter == 'active' %} aria-current="page"{% endif %}>Active <span data-users-filter-count="active">{{ active_count }}</span></a>
+                <a href="{{ url_for('admin_users', filter='deactivated', q=search_query) }}" class="admin-users-filter{% if status_filter == 'deactivated' %} is-active{% endif %}" data-users-filter="deactivated"{% if status_filter == 'deactivated' %} aria-current="page"{% endif %}>Deactivated <span data-users-filter-count="deactivated">{{ deactivated_count }}</span></a>
               </nav>
 
               <form method="get" action="{{ url_for('admin_users') }}" class="admin-users-search-form" role="search">
@@ -50,9 +56,7 @@
                   <input id="adminUsersSearch" type="search" name="q" value="{{ search_query }}" placeholder="Search name, email, or username…" maxlength="128" />
                 </label>
                 <button type="submit" class="admin-users-search-button">Search</button>
-                {% if search_query %}
-                <a href="{{ url_for('admin_users', filter=status_filter) }}" class="admin-users-clear-search">Clear</a>
-                {% endif %}
+                <a href="{{ url_for('admin_users', filter=status_filter) }}" class="admin-users-clear-search" data-users-clear-search{% if not search_query %} hidden{% endif %}>Clear</a>
               </form>
             </div>
 
@@ -71,7 +75,13 @@
                 </thead>
                 <tbody>
                   {% for user in users %}
-                  <tr>
+                  <tr
+                    data-user-row
+                    data-user-id="{{ user.id }}"
+                    data-user-status="{{ 'active' if user.is_active else 'deactivated' }}"
+                    data-user-search="{{ (user.display_name ~ ' ' ~ user.username ~ ' ' ~ user.email ~ ' ' ~ user.organization_display)|lower }}"
+                    {% if user.id|int not in visible_user_ids %}hidden{% endif %}
+                  >
                     <td>
                       <div class="admin-user-identity">
                         <span class="admin-user-avatar" aria-hidden="true">{{ (user.display_name or 'U')[:1]|upper }}</span>
@@ -84,11 +94,11 @@
                     <td><span class="admin-user-email">{{ user.email }}</span></td>
                     <td><span class="admin-user-muted">{{ user.organization_display }}</span></td>
                     <td><span class="admin-status-badge {% if user.is_verified %}is-published{% else %}is-draft{% endif %}">{{ user.verified_label }}</span></td>
-                    <td><span class="admin-status-badge {% if user.is_active %}is-published{% else %}is-cancelled{% endif %}">{{ user.status_label }}</span></td>
+                    <td><span class="admin-status-badge {% if user.is_active %}is-published{% else %}is-cancelled{% endif %}" data-user-status-badge>{{ user.status_label }}</span></td>
                     <td><span class="admin-user-muted">{{ user.display_created }}</span></td>
                     <td>
                       <div class="admin-user-row-actions">
-                        <a href="{{ url_for('admin_user_detail', user_id=user.id) }}" class="admin-user-action is-view" aria-label="View {{ user.display_name }}">
+                        <a href="{{ url_for('admin_user_detail', user_id=user.id) }}" class="admin-user-action is-view" data-user-view="{{ user.id }}" aria-label="View {{ user.display_name }}">
                           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
                           <span>View</span>
                         </a>
@@ -100,6 +110,8 @@
                           data-confirm-message="{% if user.is_active %}Disable {{ user.display_name }}? This account will immediately lose access to the public site.{% else %}Enable {{ user.display_name }}? This account will be allowed to sign in to the public site again.{% endif %}"
                           data-confirm-label="{% if user.is_active %}Disable account{% else %}Enable account{% endif %}"
                           data-confirm-variant="{% if user.is_active %}disable{% else %}enable{% endif %}"
+                          data-async-user-action
+                          data-user-action-form="{{ user.id }}"
                         >
                           <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                           <input type="hidden" name="return_filter" value="{{ status_filter }}" />
@@ -120,19 +132,65 @@
                     </td>
                   </tr>
                   {% endfor %}
-                  {% if not users %}
-                  <tr>
+                  <tr data-users-empty-row {% if users and visible_user_ids %}hidden{% endif %}>
                     <td colspan="7">
-                      {% if total_count and (search_query or status_filter != 'all') %}
-                      No accounts match your search or filter.
-                      {% else %}
-                      No registered accounts yet. Visitor sign-ups will appear here.
-                      {% endif %}
+                      <div class="admin-users-empty">
+                        <strong data-users-empty-title>{% if total_count %}No matching accounts{% else %}No registered accounts yet{% endif %}</strong>
+                        <span data-users-empty-copy>{% if total_count %}Try a different search or status filter.{% else %}Visitor sign-ups will appear here.{% endif %}</span>
+                      </div>
                     </td>
                   </tr>
-                  {% endif %}
                 </tbody>
               </table>
             </div>
           </section>
+
+          <div
+            class="admin-user-detail-modal"
+            data-user-detail-modal
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="adminUserQuickViewTitle"
+            aria-hidden="true"
+            hidden
+          >
+            <section class="admin-user-detail-dialog" role="document">
+              <div class="admin-user-detail-accent" aria-hidden="true"></div>
+              <button type="button" class="admin-user-detail-close" data-user-detail-close aria-label="Close account details">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m6.7 5.3 5.3 5.3 5.3-5.3 1.4 1.4-5.3 5.3 5.3 5.3-1.4 1.4-5.3-5.3-5.3 5.3-1.4-1.4 5.3-5.3-5.3-5.3Z"></path></svg>
+              </button>
+
+              <header class="admin-user-detail-header">
+                <span class="admin-user-detail-avatar" data-user-detail-avatar aria-hidden="true">U</span>
+                <div>
+                  <p class="admin-user-detail-eyebrow">Visitor account</p>
+                  <h2 id="adminUserQuickViewTitle" data-user-detail-name>Account details</h2>
+                  <p data-user-detail-username></p>
+                </div>
+                <span class="admin-status-badge" data-user-detail-status></span>
+              </header>
+
+              <div class="admin-user-detail-grid">
+                <div><span>Email address</span><strong data-user-detail-field="email"></strong></div>
+                <div><span>Phone number</span><strong data-user-detail-field="phone_display"></strong></div>
+                <div><span>Organization</span><strong data-user-detail-field="organization_display"></strong></div>
+                <div><span>Roles</span><strong data-user-detail-field="roles_display"></strong></div>
+                <div><span>Website use case</span><strong data-user-detail-field="use_case_display"></strong></div>
+                <div><span>Location</span><strong data-user-detail-field="location_display"></strong></div>
+                <div><span>Sign-in method</span><strong data-user-detail-field="auth_provider_label"></strong></div>
+                <div><span>Email verification</span><strong data-user-detail-field="verification_display"></strong></div>
+                <div><span>Onboarding</span><strong data-user-detail-field="onboarding_label"></strong></div>
+                <div><span>Joined</span><strong data-user-detail-field="display_created"></strong></div>
+                <div><span>Last sign-in</span><strong data-user-detail-field="display_last_login"></strong></div>
+                <div><span>Last updated</span><strong data-user-detail-field="display_updated"></strong></div>
+              </div>
+
+              <div class="admin-user-detail-footer">
+                <a href="#" class="admin-user-detail-full-link" data-user-detail-full-link>Open full account record</a>
+                <button type="button" class="admin-user-detail-done" data-user-detail-close>Done</button>
+              </div>
+            </section>
+          </div>
+
+          <script id="adminUsersData" type="application/json">{{ client_users|tojson }}</script>
 {% endblock %}

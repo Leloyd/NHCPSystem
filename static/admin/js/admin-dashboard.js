@@ -94,6 +94,7 @@
         }
 
         event.preventDefault();
+        event.stopImmediatePropagation();
         if (openModal(form, event.submitter)) {
           approvedForm = form;
           if (typeof form.requestSubmit === "function") {
@@ -522,6 +523,452 @@
     });
   }
 
+  function initAdminUserManagement() {
+    var root = document.querySelector("[data-admin-users]");
+    if (!root) {
+      return;
+    }
+
+    var rows = Array.prototype.slice.call(root.querySelectorAll("[data-user-row]"));
+    var filterLinks = Array.prototype.slice.call(root.querySelectorAll("[data-users-filter]"));
+    var searchForm = root.querySelector(".admin-users-search-form");
+    var searchInput = root.querySelector("#adminUsersSearch");
+    var clearSearch = root.querySelector("[data-users-clear-search]");
+    var filterInput = searchForm && searchForm.querySelector('input[name="filter"]');
+    var emptyRow = root.querySelector("[data-users-empty-row]");
+    var emptyTitle = root.querySelector("[data-users-empty-title]");
+    var emptyCopy = root.querySelector("[data-users-empty-copy]");
+    var notice = root.querySelector("[data-admin-users-notice]");
+    var dataElement = document.getElementById("adminUsersData");
+    var detailModal = document.querySelector("[data-user-detail-modal]");
+    var detailName = detailModal && detailModal.querySelector("[data-user-detail-name]");
+    var detailUsername = detailModal && detailModal.querySelector("[data-user-detail-username]");
+    var detailAvatar = detailModal && detailModal.querySelector("[data-user-detail-avatar]");
+    var detailStatus = detailModal && detailModal.querySelector("[data-user-detail-status]");
+    var detailFullLink = detailModal && detailModal.querySelector("[data-user-detail-full-link]");
+    var detailCloseButtons = detailModal
+      ? Array.prototype.slice.call(detailModal.querySelectorAll("[data-user-detail-close]"))
+      : [];
+    var usersById = {};
+    var currentFilter = String(root.getAttribute("data-current-filter") || "all").toLowerCase();
+    var noticeTimer = 0;
+    var detailCloseTimer = 0;
+    var detailPreviousFocus = null;
+    var openDetailUserId = "";
+
+    try {
+      var userData = JSON.parse((dataElement && dataElement.textContent) || "[]");
+      if (Array.isArray(userData)) {
+        userData.forEach(function (user) {
+          if (user && user.id != null) {
+            usersById[String(user.id)] = user;
+          }
+        });
+      }
+    } catch (error) {
+      console.error("Failed to parse administrator user data.", error);
+    }
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function getQuery() {
+      return normalize(searchInput && searchInput.value);
+    }
+
+    function updateAddress(mode) {
+      if (!window.history || typeof window.history.replaceState !== "function") {
+        return;
+      }
+
+      var url = new URL(window.location.href);
+      url.searchParams.set("filter", currentFilter);
+      var query = String((searchInput && searchInput.value) || "").trim();
+      if (query) {
+        url.searchParams.set("q", query);
+      } else {
+        url.searchParams.delete("q");
+      }
+      var method = mode === "push" ? "pushState" : "replaceState";
+      window.history[method]({ filter: currentFilter, q: query }, "", url.pathname + url.search + url.hash);
+    }
+
+    function refreshCounts() {
+      var activeCount = rows.filter(function (row) {
+        return row.getAttribute("data-user-status") === "active";
+      }).length;
+      var deactivatedCount = rows.length - activeCount;
+      var values = {
+        all: rows.length,
+        active: activeCount,
+        deactivated: deactivatedCount,
+      };
+
+      Object.keys(values).forEach(function (key) {
+        var summary = root.querySelector("[data-users-" + (key === "all" ? "total" : key) + "-count]");
+        var filterCount = root.querySelector('[data-users-filter-count="' + key + '"]');
+        if (summary) {
+          summary.textContent = String(values[key]);
+        }
+        if (filterCount) {
+          filterCount.textContent = String(values[key]);
+        }
+      });
+    }
+
+    function applyFilters(options) {
+      var query = getQuery();
+      var visibleCount = 0;
+
+      rows.forEach(function (row) {
+        var statusMatches = currentFilter === "all" || row.getAttribute("data-user-status") === currentFilter;
+        var searchMatches = !query || normalize(row.getAttribute("data-user-search")).indexOf(query) !== -1;
+        var isVisible = statusMatches && searchMatches;
+        row.hidden = !isVisible;
+        if (isVisible) {
+          visibleCount += 1;
+        }
+      });
+
+      filterLinks.forEach(function (link) {
+        var isActive = link.getAttribute("data-users-filter") === currentFilter;
+        link.classList.toggle("is-active", isActive);
+        if (isActive) {
+          link.setAttribute("aria-current", "page");
+        } else {
+          link.removeAttribute("aria-current");
+        }
+      });
+
+      if (filterInput) {
+        filterInput.value = currentFilter;
+      }
+
+      if (clearSearch) {
+        clearSearch.hidden = !query;
+      }
+
+      if (emptyRow) {
+        emptyRow.hidden = visibleCount > 0;
+      }
+      if (emptyTitle) {
+        emptyTitle.textContent = rows.length ? "No matching accounts" : "No registered accounts yet";
+      }
+      if (emptyCopy) {
+        emptyCopy.textContent = rows.length
+          ? "Try a different search or status filter."
+          : "Visitor sign-ups will appear here.";
+      }
+
+      if (!options || options.updateUrl !== false) {
+        updateAddress(options && options.historyMode);
+      }
+    }
+
+    function showNotice(text, kind) {
+      if (!notice) {
+        return;
+      }
+      if (noticeTimer) {
+        window.clearTimeout(noticeTimer);
+      }
+      notice.textContent = String(text || "");
+      notice.classList.toggle("is-error", kind === "error");
+      notice.hidden = false;
+      noticeTimer = window.setTimeout(function () {
+        notice.hidden = true;
+        noticeTimer = 0;
+      }, 5000);
+    }
+
+    function setDetailText(fieldName, value) {
+      if (!detailModal) {
+        return;
+      }
+      var target = detailModal.querySelector('[data-user-detail-field="' + fieldName + '"]');
+      if (target) {
+        target.textContent = String(value || "—");
+      }
+    }
+
+    function renderDetail(user, fallbackHref) {
+      if (!detailModal || !user) {
+        return false;
+      }
+
+      openDetailUserId = String(user.id);
+      detailName.textContent = String(user.display_name || user.username || "Unnamed user");
+      detailUsername.textContent = user.username ? "@" + user.username : "No username";
+      detailAvatar.textContent = String(user.display_name || user.username || "U").charAt(0).toUpperCase();
+      detailStatus.textContent = user.is_active ? "Active" : "Deactivated";
+      detailStatus.classList.toggle("is-published", Boolean(user.is_active));
+      detailStatus.classList.toggle("is-cancelled", !user.is_active);
+      detailFullLink.href = fallbackHref || "/_admin/users/" + encodeURIComponent(user.id);
+
+      setDetailText("email", user.email);
+      setDetailText("phone_display", user.phone_display);
+      setDetailText("organization_display", user.organization_display);
+      setDetailText("roles_display", user.roles_display);
+      setDetailText("use_case_display", user.use_case_display);
+      setDetailText("location_display", user.location_display);
+      setDetailText("auth_provider_label", user.auth_provider_label);
+      setDetailText(
+        "verification_display",
+        String(user.verified_label || "Unverified") + " · " + String(user.display_verified_at || "Not verified")
+      );
+      setDetailText("onboarding_label", user.onboarding_label);
+      setDetailText("display_created", user.display_created);
+      setDetailText("display_last_login", user.display_last_login);
+      setDetailText("display_updated", user.display_updated);
+
+      if (detailCloseTimer) {
+        window.clearTimeout(detailCloseTimer);
+        detailCloseTimer = 0;
+      }
+      detailPreviousFocus = document.activeElement;
+      detailModal.hidden = false;
+      detailModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("admin-user-detail-open");
+      window.requestAnimationFrame(function () {
+        detailModal.classList.add("is-open");
+        if (detailCloseButtons[0]) {
+          detailCloseButtons[0].focus();
+        }
+      });
+      return true;
+    }
+
+    function closeDetail() {
+      if (!detailModal || detailModal.hidden) {
+        return;
+      }
+      detailModal.classList.remove("is-open");
+      detailModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("admin-user-detail-open");
+      openDetailUserId = "";
+      detailCloseTimer = window.setTimeout(function () {
+        detailModal.hidden = true;
+        detailCloseTimer = 0;
+      }, 180);
+      if (detailPreviousFocus && typeof detailPreviousFocus.focus === "function") {
+        detailPreviousFocus.focus();
+      }
+      detailPreviousFocus = null;
+    }
+
+    function updateActionForm(form, user) {
+      var isActive = Boolean(user.is_active);
+      var button = form.querySelector('button[type="submit"]');
+      var name = String(user.display_name || user.username || "this user");
+      if (!button) {
+        return;
+      }
+
+      form.setAttribute("data-confirm-title", isActive ? "Disable this account?" : "Enable this account?");
+      form.setAttribute(
+        "data-confirm-message",
+        isActive
+          ? "Disable " + name + "? This account will immediately lose access to the public site."
+          : "Enable " + name + "? This account will be allowed to sign in to the public site again."
+      );
+      form.setAttribute("data-confirm-label", isActive ? "Disable account" : "Enable account");
+      form.setAttribute("data-confirm-variant", isActive ? "disable" : "enable");
+      button.value = isActive ? "deactivate" : "activate";
+      button.classList.toggle("is-disable", isActive);
+      button.classList.toggle("is-enable", !isActive);
+      button.setAttribute("aria-label", (isActive ? "Disable " : "Enable ") + name);
+      var label = button.querySelector("span");
+      if (label) {
+        label.textContent = isActive ? "Disable" : "Enable";
+      }
+      var icon = button.querySelector("svg");
+      if (icon) {
+        icon.innerHTML = isActive
+          ? '<path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm0 2a8 8 0 0 1 5.2 14.08L5.92 6.8A7.94 7.94 0 0 1 12 4Zm-8 8a7.94 7.94 0 0 1 .8-3.48L15.48 19.2A8 8 0 0 1 4 12Z"></path>'
+          : '<path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path>';
+      }
+    }
+
+    filterLinks.forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        event.preventDefault();
+        currentFilter = String(link.getAttribute("data-users-filter") || "all");
+        applyFilters({ historyMode: "push" });
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", function () {
+        applyFilters({ historyMode: "replace" });
+      });
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && searchInput.value) {
+          searchInput.value = "";
+          applyFilters({ historyMode: "replace" });
+        }
+      });
+    }
+
+    if (searchForm) {
+      searchForm.addEventListener("submit", function (event) {
+        event.preventDefault();
+        applyFilters({ historyMode: "replace" });
+      });
+    }
+
+    if (clearSearch) {
+      clearSearch.addEventListener("click", function (event) {
+        event.preventDefault();
+        if (searchInput) {
+          searchInput.value = "";
+          searchInput.focus();
+        }
+        applyFilters({ historyMode: "replace" });
+      });
+    }
+
+    Array.prototype.slice.call(root.querySelectorAll("[data-user-view]")).forEach(function (link) {
+      link.addEventListener("click", function (event) {
+        var user = usersById[String(link.getAttribute("data-user-view") || "")];
+        if (user && renderDetail(user, link.href)) {
+          event.preventDefault();
+        }
+      });
+    });
+
+    Array.prototype.slice.call(root.querySelectorAll("[data-async-user-action]")).forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        if (typeof window.fetch !== "function" || typeof window.FormData !== "function") {
+          return;
+        }
+
+        event.preventDefault();
+        if (form.getAttribute("aria-busy") === "true") {
+          return;
+        }
+
+        var submitter = event.submitter || form.querySelector('button[type="submit"]');
+        var formData = new FormData(form);
+        if (submitter && submitter.name) {
+          formData.set(submitter.name, submitter.value);
+        }
+        form.setAttribute("aria-busy", "true");
+        if (submitter) {
+          submitter.disabled = true;
+        }
+
+        fetch(form.action, {
+          method: "POST",
+          body: formData,
+          credentials: "same-origin",
+          headers: {
+            "X-Requested-With": "XMLHttpRequest",
+            "Accept": "application/json",
+          },
+        })
+          .then(function (response) {
+            return response.json().catch(function () {
+              return {};
+            }).then(function (payload) {
+              if (!response.ok || !payload.ok) {
+                throw new Error(payload.error || "Could not update this account right now.");
+              }
+              return payload;
+            });
+          })
+          .then(function (payload) {
+            var userId = String(payload.user_id || form.getAttribute("data-user-action-form") || "");
+            var user = usersById[userId];
+            var row = root.querySelector('[data-user-row][data-user-id="' + userId + '"]');
+            if (!user || !row) {
+              throw new Error("The account was updated, but its row could not be refreshed.");
+            }
+
+            user.is_active = Boolean(payload.is_active);
+            user.status_label = String(payload.status_label || (user.is_active ? "Active" : "Deactivated"));
+            row.setAttribute("data-user-status", user.is_active ? "active" : "deactivated");
+            var badge = row.querySelector("[data-user-status-badge]");
+            if (badge) {
+              badge.textContent = user.status_label;
+              badge.classList.toggle("is-published", user.is_active);
+              badge.classList.toggle("is-cancelled", !user.is_active);
+            }
+            updateActionForm(form, user);
+            refreshCounts();
+            applyFilters({ historyMode: "replace" });
+
+            if (openDetailUserId === userId && detailStatus) {
+              detailStatus.textContent = user.status_label;
+              detailStatus.classList.toggle("is-published", user.is_active);
+              detailStatus.classList.toggle("is-cancelled", !user.is_active);
+            }
+            showNotice(payload.message || "The account access was updated.", "success");
+          })
+          .catch(function (error) {
+            showNotice(error.message || "Could not update this account right now.", "error");
+          })
+          .then(function () {
+            form.removeAttribute("aria-busy");
+            if (submitter) {
+              submitter.disabled = false;
+            }
+          });
+      });
+    });
+
+    detailCloseButtons.forEach(function (button) {
+      button.addEventListener("click", closeDetail);
+    });
+    if (detailModal) {
+      detailModal.addEventListener("click", function (event) {
+        if (event.target === detailModal) {
+          closeDetail();
+        }
+      });
+      detailModal.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeDetail();
+          return;
+        }
+
+        if (event.key === "Tab") {
+          var focusable = Array.prototype.slice.call(
+            detailModal.querySelectorAll('a[href], button:not([disabled]), input:not([disabled]), [tabindex]:not([tabindex="-1"])')
+          ).filter(function (element) {
+            return !element.hidden && element.offsetParent !== null;
+          });
+          if (!focusable.length) {
+            return;
+          }
+          var first = focusable[0];
+          var last = focusable[focusable.length - 1];
+          if (event.shiftKey && document.activeElement === first) {
+            event.preventDefault();
+            last.focus();
+          } else if (!event.shiftKey && document.activeElement === last) {
+            event.preventDefault();
+            first.focus();
+          }
+        }
+      });
+    }
+
+    window.addEventListener("popstate", function () {
+      var params = new URLSearchParams(window.location.search);
+      var nextFilter = normalize(params.get("filter") || "all");
+      currentFilter = ["all", "active", "deactivated"].indexOf(nextFilter) !== -1 ? nextFilter : "all";
+      if (searchInput) {
+        searchInput.value = String(params.get("q") || "");
+      }
+      applyFilters({ updateUrl: false });
+    });
+
+    refreshCounts();
+    applyFilters({ updateUrl: false });
+  }
+
   function initDashboardUi() {
     var toggle = document.querySelector("[data-sidebar-toggle]");
     var overlay = document.querySelector("[data-sidebar-overlay]");
@@ -560,6 +1007,7 @@
     initAdminBookingCalendar();
     initDashboardSearch();
     initConfirmedSubmissions();
+    initAdminUserManagement();
     initAutoDismissAlerts();
   }
 

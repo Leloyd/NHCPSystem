@@ -1842,6 +1842,311 @@ a.admin-text-link {
   background: #e4faef;
 }
 
+.admin-user-row-actions form[aria-busy="true"] .admin-user-action {
+  opacity: 0.58;
+  cursor: wait;
+  transform: none;
+}
+
+.admin-users-live-notice {
+  display: flex;
+  align-items: center;
+  min-height: 2.85rem;
+  margin: 0 0 1rem;
+  padding: 0.72rem 0.9rem;
+  border: 1px solid #b9dfca;
+  border-radius: 0.85rem;
+  background: #eefaf3;
+  color: #146344;
+  font-size: 0.8rem;
+  font-weight: 700;
+  line-height: 1.45;
+  box-shadow: 0 8px 20px rgba(13, 43, 31, 0.06);
+}
+
+.admin-users-live-notice[hidden] {
+  display: none;
+}
+
+.admin-users-live-notice.is-error {
+  border-color: #efc4c4;
+  background: #fff2f2;
+  color: #a83131;
+}
+
+.admin-users-empty {
+  display: grid;
+  justify-items: center;
+  gap: 0.3rem;
+  padding: 1.35rem;
+  color: #737d76;
+  text-align: center;
+}
+
+.admin-users-empty strong {
+  color: var(--dashboard-green-900);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1rem;
+}
+
+/* Instant account quick view -------------------------------------------- */
+
+body.admin-user-detail-open {
+  overflow: hidden;
+}
+
+.admin-user-detail-modal[hidden] {
+  display: none;
+}
+
+.admin-user-detail-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 90;
+  display: grid;
+  place-items: center;
+  padding:
+    max(1rem, env(safe-area-inset-top))
+    max(1rem, env(safe-area-inset-right))
+    max(1rem, env(safe-area-inset-bottom))
+    max(1rem, env(safe-area-inset-left));
+  overflow-y: auto;
+  background: rgba(5, 18, 12, 0.72);
+  -webkit-backdrop-filter: blur(7px);
+  backdrop-filter: blur(7px);
+  opacity: 0;
+  transition: opacity 180ms ease;
+}
+
+.admin-user-detail-modal.is-open {
+  opacity: 1;
+}
+
+.admin-user-detail-dialog {
+  position: relative;
+  width: min(52rem, 100%);
+  max-height: calc(100vh - 2rem);
+  max-height: calc(100dvh - 2rem);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: 1px solid rgba(201, 168, 76, 0.34);
+  border-radius: 1.35rem;
+  background: #fffdf8;
+  padding: clamp(1.25rem, 3vw, 2rem);
+  box-shadow: 0 28px 75px rgba(0, 0, 0, 0.34);
+  transform: translateY(12px) scale(0.98);
+  transition: transform 180ms ease;
+  scrollbar-color: rgba(13, 43, 31, 0.28) transparent;
+}
+
+.admin-user-detail-modal.is-open .admin-user-detail-dialog {
+  transform: translateY(0) scale(1);
+}
+
+.admin-user-detail-accent {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 0.28rem;
+  background: linear-gradient(90deg, var(--dashboard-gold-600), var(--dashboard-gold-500));
+}
+
+.admin-user-detail-close {
+  position: absolute;
+  top: 1rem;
+  right: 1rem;
+  width: 2.35rem;
+  height: 2.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #dfe5e1;
+  border-radius: 0.72rem;
+  background: #f7f9f7;
+  color: var(--dashboard-green-800);
+  cursor: pointer;
+}
+
+.admin-user-detail-close:hover,
+.admin-user-detail-close:focus-visible {
+  border-color: #b8c9be;
+  background: #edf4ef;
+  outline: none;
+}
+
+.admin-user-detail-close svg {
+  width: 1rem;
+  height: 1rem;
+  fill: currentColor;
+}
+
+.admin-user-detail-header {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 0.45rem 3rem 1.25rem 0;
+  border-bottom: 1px solid #e8ece9;
+}
+
+.admin-user-detail-avatar {
+  width: 3.35rem;
+  height: 3.35rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid rgba(201, 168, 76, 0.38);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #f8edce, #ead89d);
+  color: var(--dashboard-green-900);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.admin-user-detail-eyebrow {
+  margin: 0 0 0.2rem;
+  color: var(--dashboard-gold-600);
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.admin-user-detail-header h2 {
+  margin: 0;
+  color: var(--dashboard-green-900);
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: clamp(1.35rem, 3vw, 1.7rem);
+  line-height: 1.2;
+}
+
+.admin-user-detail-header p:last-child {
+  margin: 0.18rem 0 0;
+  color: #737d76;
+  font-size: 0.78rem;
+}
+
+.admin-user-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.72rem;
+  padding: 1.2rem 0;
+}
+
+.admin-user-detail-grid > div {
+  min-width: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #e7ebe8;
+  border-radius: 0.85rem;
+  background: #fafbf9;
+}
+
+.admin-user-detail-grid span {
+  display: block;
+  margin-bottom: 0.28rem;
+  color: #7a847d;
+  font-size: 0.65rem;
+  font-weight: 750;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-user-detail-grid strong {
+  display: block;
+  overflow-wrap: anywhere;
+  color: var(--dashboard-text-soft);
+  font-size: 0.8rem;
+  font-weight: 650;
+  line-height: 1.5;
+}
+
+.admin-user-detail-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.8rem;
+  padding-top: 1rem;
+  border-top: 1px solid #e8ece9;
+}
+
+.admin-user-detail-full-link,
+.admin-user-detail-done {
+  min-height: 2.7rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.82rem;
+  font-size: 0.78rem;
+  font-weight: 750;
+  text-decoration: none;
+}
+
+.admin-user-detail-full-link {
+  color: var(--dashboard-green-800);
+}
+
+.admin-user-detail-full-link:hover,
+.admin-user-detail-full-link:focus-visible {
+  color: var(--dashboard-gold-700);
+  outline: none;
+}
+
+.admin-user-detail-done {
+  min-width: 6.5rem;
+  border: 1px solid var(--dashboard-green-900);
+  background: var(--dashboard-green-900);
+  color: #f6e8b8;
+  cursor: pointer;
+}
+
+.admin-user-detail-done:hover,
+.admin-user-detail-done:focus-visible {
+  background: var(--dashboard-green-800);
+  outline: none;
+}
+
+@media (max-width: 620px) {
+  .admin-user-detail-modal {
+    align-items: end;
+    padding:
+      max(0.5rem, env(safe-area-inset-top))
+      max(0.5rem, env(safe-area-inset-right))
+      max(0.5rem, env(safe-area-inset-bottom))
+      max(0.5rem, env(safe-area-inset-left));
+  }
+
+  .admin-user-detail-dialog {
+    max-height: calc(100vh - 1rem);
+    max-height: calc(100dvh - 1rem);
+    border-radius: 1.2rem;
+  }
+
+  .admin-user-detail-header {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: start;
+    padding-right: 2.5rem;
+  }
+
+  .admin-user-detail-header > .admin-status-badge {
+    grid-column: 2;
+    justify-self: start;
+  }
+
+  .admin-user-detail-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-user-detail-footer {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-user-detail-full-link,
+  .admin-user-detail-done {
+    width: 100%;
+  }
+}
+
 /* System confirmation modal --------------------------------------------- */
 
 body.admin-confirm-open {
@@ -2476,6 +2781,8 @@ body.admin-confirm-open {
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .admin-user-detail-modal,
+  .admin-user-detail-dialog,
   .admin-confirm-modal,
   .admin-confirm-dialog,
   .admin-confirm-cancel,
