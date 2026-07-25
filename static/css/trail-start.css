@@ -7223,13 +7223,14 @@ body.trail-archive-open {
     padding-bottom: max(6.5rem, calc(5rem + env(safe-area-inset-bottom)));
   }
 
+  /* Stay inside the content column — centered, two tidy rows — instead of the
+     old full-viewport breakout that could cut off on the left. */
   .trailx-living-memory__timeline {
     column-gap: clamp(0.5rem, 2.8vw, 0.95rem);
-    row-gap: 0.2rem;
+    row-gap: 0.35rem;
     place-content: center;
-    width: calc(100vw - 2rem - env(safe-area-inset-left) - env(safe-area-inset-right));
-    margin-left: calc(1rem + env(safe-area-inset-left) - clamp(5.75rem, 27vw, 8.5rem));
-    margin-right: 0;
+    width: 100%;
+    margin-inline: 0;
   }
 
   .trailx-living-memory__timeline button {
@@ -7252,7 +7253,8 @@ body.trail-archive-open {
 
   .trailx-living-memory__timeline {
     column-gap: clamp(0.38rem, 2.2vw, 0.65rem);
-    margin-left: calc(1rem + env(safe-area-inset-left) - clamp(5.1rem, 25vw, 6.5rem));
+    margin-inline: 0;
+    width: 100%;
   }
 
   .trailx-living-memory__timeline button {
