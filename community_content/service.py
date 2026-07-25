@@ -417,6 +417,8 @@ def get_community_highlights_status_message(status_key: Any) -> str | None:
         "archived": "Community highlight archived successfully.",
         "featured": "Community highlight marked as featured.",
         "unfeatured": "Community highlight removed from the featured slot.",
+        "posted": "Community highlight posted and made active.",
+        "restored": "Community highlight restored to drafts.",
     }
     return mapping.get(str(status_key or "").strip().lower())
 

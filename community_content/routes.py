@@ -458,6 +458,53 @@ def register_community_content_routes(
             return redirect(url_for("admin_community_highlight_view", highlight_id=highlight_id, status="featured"))
         return redirect(url_for("admin_community_highlights", status="featured"))
 
+    @app.route(f"{admin_route_prefix}/community-highlights/<int:highlight_id>/status", methods=["POST"])
+    @admin_required
+    def admin_community_highlight_status(highlight_id):
+        if not is_admin_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("admin_community_highlights"))
+
+        current_item = load_admin_community_highlight(highlight_id)
+        if current_item is None:
+            return redirect(url_for("admin_community_highlights"))
+
+        current_status = str(current_item.get("status") or "").strip().lower()
+        status_action = str(request.form.get("status_action") or "").strip().lower()
+        transitions = {
+            "post": {
+                "from": "draft",
+                "payload": {"status": "active", "is_published": True, "is_featured": False},
+                "result": "posted",
+            },
+            "restore": {
+                "from": "archived",
+                "payload": {"status": "draft", "is_published": False, "is_featured": False},
+                "result": "restored",
+            },
+        }
+        transition = transitions.get(status_action)
+        if transition is None or current_status != transition["from"]:
+            return redirect(url_for("admin_community_highlights"))
+
+        try:
+            update_community_highlight(highlight_id, transition["payload"])
+        except Exception as exc:
+            app.logger.exception(
+                "Failed to apply '%s' status action to community highlight %s: %s",
+                status_action,
+                highlight_id,
+                exc,
+            )
+            return redirect(url_for("admin_community_highlights"))
+
+        return redirect(
+            url_for(
+                "admin_community_highlights",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status=transition["result"],
+            )
+        )
+
     @app.route(f"{admin_route_prefix}/community-highlights/<int:highlight_id>/delete", methods=["POST"])
     @admin_required
     def admin_community_highlight_delete(highlight_id):

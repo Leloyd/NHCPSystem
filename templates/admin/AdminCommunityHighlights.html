@@ -139,6 +139,45 @@
                       </button>
                     </form>
                     {% endif %}
+                    {% if highlight_item.status == 'draft' %}
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_community_highlight_status', highlight_id=highlight_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Publication status"
+                      data-confirm-title="Post this highlight?"
+                      data-confirm-message="Post {{ highlight_item.title }}? It will become active and immediately appear on the public Community Highlights page."
+                      data-confirm-label="Post highlight"
+                      data-confirm-variant="enable"
+                    >
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <input type="hidden" name="status_action" value="post" />
+                      <input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-post">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                        Post
+                      </button>
+                    </form>
+                    {% elif highlight_item.status == 'archived' %}
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_community_highlight_status', highlight_id=highlight_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Content status"
+                      data-confirm-title="Restore this highlight?"
+                      data-confirm-message="Restore {{ highlight_item.title }} to Draft? It will return to the draft collection and remain hidden from the public site until posted."
+                      data-confirm-label="Restore to Draft"
+                      data-confirm-variant="enable"
+                    >
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <input type="hidden" name="status_action" value="restore" />
+                      <input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-restore">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6ZM11 8h2v5H8v-2h3Z"></path></svg>
+                        Restore
+                      </button>
+                    </form>
+                    {% endif %}
                     {% if highlight_item.status != 'archived' %}
                     <form
                       method="post"

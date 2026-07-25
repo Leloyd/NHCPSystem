@@ -3378,6 +3378,18 @@ body.admin-confirm-open {
   color: #936b20;
 }
 
+.admin-highlight-action.is-post {
+  border-color: #b9ddca;
+  background: #eefaf3;
+  color: #147452;
+}
+
+.admin-highlight-action.is-restore {
+  border-color: #d8c995;
+  background: #fff9e8;
+  color: #86611f;
+}
+
 .admin-highlight-action.is-archive {
   border-color: #efcece;
   background: #fff5f5;
