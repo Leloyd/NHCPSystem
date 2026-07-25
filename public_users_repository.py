@@ -132,3 +132,35 @@ def update_public_user(user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     if not rows:
         raise RuntimeError("Supabase did not return the updated public user row.")
     return rows[0]
+
+
+def list_public_users() -> list[dict[str, Any]]:
+    """All visitor accounts, newest first — for the admin User Management list.
+
+    Unlike ``get_public_user_profile_by_id`` this deliberately does not filter on
+    ``is_active`` so that deactivated accounts remain visible to administrators.
+    """
+    client = get_supabase_client()
+    response = (
+        client.table(PUBLIC_USERS_TABLE)
+        .select(PUBLIC_USER_PROFILE_FIELDS)
+        .order("created_at", desc=True)
+        .execute()
+    )
+    return list(response.data or [])
+
+
+def get_public_user_by_id(user_id: int) -> dict[str, Any] | None:
+    """A single account by id regardless of active state (admin detail view)."""
+    client = get_supabase_client()
+    response = (
+        client.table(PUBLIC_USERS_TABLE)
+        .select(PUBLIC_USER_PROFILE_FIELDS)
+        .eq("id", int(user_id))
+        .limit(1)
+        .execute()
+    )
+    rows = list(response.data or [])
+    if not rows:
+        return None
+    return rows[0]

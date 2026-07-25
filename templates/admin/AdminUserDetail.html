@@ -1,0 +1,108 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Account Details | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'users' %}
+{% set admin_topbar_title = 'Account Details' %}
+{% set admin_topbar_subtitle = 'Review a visitor account and control its access to the public site.' %}
+{% set admin_topbar_tool_href = url_for('admin_users') %}
+{% set admin_topbar_tool_label = 'Back to users' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if error_message %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Unable to save</strong>
+            <span>{{ error_message }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>{{ user.display_name }}</h3>
+                <p>@{{ user.username }} · {{ user.auth_provider_label }}</p>
+              </div>
+              <span class="admin-status-badge {% if user.is_active %}is-published{% else %}is-cancelled{% endif %}">{{ user.status_label }}</span>
+            </div>
+
+            <div class="admin-form-grid">
+              <div class="admin-form-field">
+                <label>Full Name</label>
+                <p class="admin-field-hint">{{ user.display_name }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Email Address</label>
+                <p class="admin-field-hint">{{ user.email }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Username</label>
+                <p class="admin-field-hint">@{{ user.username }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Phone Number</label>
+                <p class="admin-field-hint">{{ user.phone_display }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Organization</label>
+                <p class="admin-field-hint">{{ user.organization_display }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Roles</label>
+                <p class="admin-field-hint">{{ user.roles_display }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Website Use Case</label>
+                <p class="admin-field-hint">{{ user.use_case_display }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Location</label>
+                <p class="admin-field-hint">{{ user.location_display }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Sign-in Method</label>
+                <p class="admin-field-hint">{{ user.auth_provider_label }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Email Verified</label>
+                <p class="admin-field-hint">{{ user.verified_label }} · {{ user.display_verified_at }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Onboarding</label>
+                <p class="admin-field-hint">{{ user.onboarding_label }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Joined</label>
+                <p class="admin-field-hint">{{ user.display_created }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Last Sign-in</label>
+                <p class="admin-field-hint">{{ user.display_last_login }}</p>
+              </div>
+              <div class="admin-form-field">
+                <label>Last Updated</label>
+                <p class="admin-field-hint">{{ user.display_updated }}</p>
+              </div>
+            </div>
+
+            <div class="admin-form-field admin-form-field-wide">
+              <label>Account Access</label>
+              <p class="admin-field-hint">
+                {% if user.is_active %}
+                This account is active and can sign in to the public site. Deactivating it immediately blocks sign-in and ends any active session; the record and its data are kept and can be reactivated at any time.
+                {% else %}
+                This account is deactivated and cannot sign in. Reactivating it restores normal access.
+                {% endif %}
+              </p>
+            </div>
+
+            <form method="post" action="{{ url_for('admin_user_detail', user_id=user.id) }}" class="admin-form-actions">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+              {% if user.is_active %}
+              <button type="submit" name="account_action" value="deactivate" class="admin-secondary-action">Deactivate Account</button>
+              {% else %}
+              <button type="submit" name="account_action" value="activate" class="admin-primary-action">Activate Account</button>
+              {% endif %}
+            </form>
+          </section>
+{% endblock %}

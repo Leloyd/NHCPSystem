@@ -1,0 +1,98 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'User Management | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'users' %}
+{% set admin_topbar_title = 'User Management' %}
+{% set admin_topbar_subtitle = 'View registered visitor accounts and control who can sign in to the public site.' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          {% if config_error %}
+          <section class="admin-alert admin-alert-error">
+            <strong>Configuration issue</strong>
+            <span>{{ config_error }}</span>
+          </section>
+          {% endif %}
+
+          <section class="admin-panel admin-panel-wide admin-resource-panel">
+            <div class="admin-panel-head">
+              <div>
+                <h3>Registered Accounts</h3>
+                <p>{{ total_count }} total · {{ active_count }} active · {{ deactivated_count }} deactivated</p>
+              </div>
+            </div>
+
+            <div class="admin-media-toolbar" style="display:flex;flex-wrap:wrap;gap:0.75rem;align-items:center;justify-content:space-between;margin-bottom:1rem;">
+              <div style="display:flex;gap:0.5rem;flex-wrap:wrap;">
+                <a href="{{ url_for('admin_users', filter='all', q=search_query) }}" class="{{ 'admin-primary-action' if status_filter == 'all' else 'admin-secondary-action' }}">All ({{ total_count }})</a>
+                <a href="{{ url_for('admin_users', filter='active', q=search_query) }}" class="{{ 'admin-primary-action' if status_filter == 'active' else 'admin-secondary-action' }}">Active ({{ active_count }})</a>
+                <a href="{{ url_for('admin_users', filter='deactivated', q=search_query) }}" class="{{ 'admin-primary-action' if status_filter == 'deactivated' else 'admin-secondary-action' }}">Deactivated ({{ deactivated_count }})</a>
+              </div>
+              <form method="get" action="{{ url_for('admin_users') }}" style="display:flex;gap:0.5rem;align-items:center;flex-wrap:wrap;">
+                <input type="hidden" name="filter" value="{{ status_filter }}" />
+                <label class="admin-search" aria-label="Search accounts">
+                  <span class="admin-search-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
+                  </span>
+                  <input type="search" name="q" value="{{ search_query }}" placeholder="Search name, email, username…" />
+                </label>
+                <button type="submit" class="admin-primary-action">Search</button>
+                {% if search_query %}
+                <a href="{{ url_for('admin_users', filter=status_filter) }}" class="admin-text-link">Clear</a>
+                {% endif %}
+              </form>
+            </div>
+
+            <div class="admin-resource-table-wrap">
+              <table class="admin-resource-table">
+                <thead>
+                  <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Organization</th>
+                    <th>Verified</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for user in users %}
+                  <tr>
+                    <td>
+                      <div class="admin-resource-main">
+                        <strong>{{ user.display_name }}</strong>
+                        <span>@{{ user.username }}</span>
+                      </div>
+                    </td>
+                    <td>{{ user.email }}</td>
+                    <td>{{ user.organization_display }}</td>
+                    <td><span class="admin-status-badge {% if user.is_verified %}is-published{% else %}is-draft{% endif %}">{{ user.verified_label }}</span></td>
+                    <td><span class="admin-status-badge {% if user.is_active %}is-published{% else %}is-cancelled{% endif %}">{{ user.status_label }}</span></td>
+                    <td>{{ user.display_created }}</td>
+                    <td><a href="{{ url_for('admin_user_detail', user_id=user.id) }}" class="admin-inline-link">Manage</a></td>
+                  </tr>
+                  {% endfor %}
+                  {% if not users %}
+                  <tr>
+                    <td colspan="7">
+                      {% if total_count and (search_query or status_filter != 'all') %}
+                      No accounts match your search or filter.
+                      {% else %}
+                      No registered accounts yet. Visitor sign-ups will appear here.
+                      {% endif %}
+                    </td>
+                  </tr>
+                  {% endif %}
+                </tbody>
+              </table>
+            </div>
+          </section>
+{% endblock %}

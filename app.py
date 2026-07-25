@@ -29,6 +29,7 @@ from supabase_storage import delete_public_image, upload_public_file, upload_pub
 from supabase_client import is_supabase_configured
 from tour_bookings_content import load_admin_tour_bookings, load_public_tour_bookings, register_tour_booking_routes
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
+from user_management_content import load_admin_public_users, register_user_management_routes
 from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
 
 try:
@@ -247,6 +248,10 @@ def _build_admin_dashboard_context():
     booking_items = load_admin_tour_bookings()
     submission_items = load_admin_participation_submissions()
     feedback_items = load_admin_visitor_feedback()
+    user_items = load_admin_public_users()
+
+    active_users = [item for item in user_items if item.get("is_active")]
+    deactivated_users = [item for item in user_items if not item.get("is_active")]
 
     active_highlights = [item for item in highlights_items if item.get("status") == "active"]
     draft_highlights = [item for item in highlights_items if item.get("status") == "draft"]
@@ -281,6 +286,14 @@ def _build_admin_dashboard_context():
     )
 
     dashboard_stat_cards = [
+        {
+            "icon_class": "visitors",
+            "label": "Registered Users",
+            "value": len(user_items),
+            "summary": f"{len(active_users)} active · {len(deactivated_users)} deactivated",
+            "href": url_for("admin_users"),
+            "action_label": "Manage users",
+        },
         {
             "icon_class": "posts",
             "label": "Community Highlights",
@@ -531,6 +544,11 @@ def _build_admin_dashboard_context():
 
     dashboard_workspace_rows = [
         {
+            "short_label": "Users",
+            "count": len(user_items),
+            "href": url_for("admin_users"),
+        },
+        {
             "short_label": "Highlights",
             "count": len(highlights_items),
             "href": url_for("admin_community_highlights"),
@@ -569,6 +587,14 @@ def _build_admin_dashboard_context():
             item["bar_width"] = max(12, round((item["count"] / workspace_max_count) * 100))
 
     dashboard_overview_rows = [
+        {
+            "label": "Registered Users",
+            "description": "Visitor accounts that can sign in to the public site.",
+            "count": len(user_items),
+            "summary": f"{len(active_users)} active · {len(deactivated_users)} deactivated",
+            "action_href": url_for("admin_users"),
+            "action_label": "Manage",
+        },
         {
             "label": "Community Highlights",
             "description": "Public stories, updates, and featured museum content.",
@@ -1170,6 +1196,17 @@ register_visitor_feedback_routes(
     is_public_csrf_valid=_is_public_csrf_valid,
     get_current_public_user=_get_current_public_user,
     consume_public_action_rate_limit=_consume_public_action_rate_limit,
+)
+
+
+register_user_management_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    ensure_admin_csrf_token=_ensure_admin_csrf_token,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    admin_session_user_key=ADMIN_SESSION_USER_KEY,
+    admin_username=ADMIN_DEFAULT_USERNAME,
 )
 
 
