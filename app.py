@@ -12,7 +12,7 @@ from flask import Flask, g, jsonify, make_response, redirect, render_template, r
 from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
-from admin_users_repository import get_active_admin_user_by_username
+from admin_users_repository import get_active_admin_user_by_email
 from community_content import load_news_community_highlights, register_community_content_routes
 from community_content.service import load_admin_community_highlights
 from edu_resources_content import load_admin_edu_resources, load_public_edu_resources, register_edu_resources_routes
@@ -77,7 +77,7 @@ ADMIN_DASHBOARD_PATH = ADMIN_ROUTE_PREFIX
 ADMIN_LOGOUT_PATH = f"{ADMIN_ROUTE_PREFIX}/logout"
 
 ADMIN_SESSION_KEY = "admin_authenticated"
-ADMIN_SESSION_USER_KEY = "admin_username"
+ADMIN_SESSION_USER_KEY = "admin_email"
 ADMIN_CSRF_KEY = "admin_csrf"
 ADMIN_DEFAULT_USERNAME = "Administrator"
 PUBLIC_SESSION_KEY = "public_authenticated"
@@ -704,7 +704,14 @@ def _save_uploaded_file(file_storage, title, upload_dir, allowed_extensions, inv
     )
 
 
-def _normalize_admin_identity(raw_value):
+ADMIN_EMAIL_PATTERN = re.compile(
+    r"^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*"
+    r"@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?"
+    r"(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$"
+)
+
+
+def _normalize_admin_email(raw_value):
     return str(raw_value or "").strip().lower()
 
 
@@ -768,22 +775,29 @@ def _clear_failed_logins(client_ip):
         _ADMIN_LOGIN_ATTEMPTS.pop(client_ip, None)
 
 
-def _is_valid_login_payload(username, password):
-    if not username or len(username) > 128:
+def _is_valid_admin_email(email):
+    if not email or len(email) > 254 or email.count("@") != 1:
         return False
-    if re.fullmatch(r"[a-z0-9._@+\-]+", username) is None:
+    local_part, _domain = email.rsplit("@", 1)
+    if len(local_part) > 64:
+        return False
+    return ADMIN_EMAIL_PATTERN.fullmatch(email) is not None
+
+
+def _is_valid_login_payload(email, password):
+    if not _is_valid_admin_email(email):
         return False
     if not password or len(password) > 1024:
         return False
     return True
 
 
-def _authenticate_admin_credentials(username, password):
+def _authenticate_admin_credentials(email, password):
     if not _is_admin_auth_configured():
         return None
 
     try:
-        admin_user = get_active_admin_user_by_username(username)
+        admin_user = get_active_admin_user_by_email(email)
     except (ValueError, TypeError):
         return None
     except Exception:  # noqa: BLE001
@@ -793,17 +807,17 @@ def _authenticate_admin_credentials(username, password):
     if not admin_user:
         return False
 
-    stored_username = _normalize_admin_identity(admin_user.get("username", ""))
+    stored_email = _normalize_admin_email(admin_user.get("email", ""))
     stored_password_hash = str(admin_user.get("password_hash", "") or "")
 
-    if not stored_username or not stored_password_hash:
+    if not stored_email or not stored_password_hash:
         return False
-    if not hmac.compare_digest(username, stored_username):
+    if not hmac.compare_digest(email, stored_email):
         return False
 
     try:
         if check_password_hash(stored_password_hash, password):
-            return stored_username
+            return stored_email
     except (ValueError, TypeError):
         return False
 
@@ -828,8 +842,8 @@ def _is_admin_csrf_valid(submitted_token):
 def _is_admin_authenticated():
     if session.get(ADMIN_SESSION_KEY) is not True:
         return False
-    session_username = _normalize_admin_identity(session.get(ADMIN_SESSION_USER_KEY, ""))
-    return bool(session_username)
+    session_email = _normalize_admin_email(session.get(ADMIN_SESSION_USER_KEY, ""))
+    return _is_valid_admin_email(session_email)
 
 
 def _admin_required(view_func):
@@ -898,27 +912,31 @@ def admin_login():
                 status_code = 429
                 error_message = f"Too many attempts. Try again in {retry_after_seconds} seconds."
             else:
-                username = _normalize_admin_identity(request.form.get("username", ""))
+                email = _normalize_admin_email(request.form.get("email", ""))
                 password = str(request.form.get("password", ""))
 
-                if _is_valid_login_payload(username, password):
-                    authenticated_username = _authenticate_admin_credentials(username, password)
+                if _is_valid_login_payload(email, password):
+                    authenticated_email = _authenticate_admin_credentials(email, password)
 
-                    if authenticated_username is None:
+                    if authenticated_email is None:
                         status_code = 503
                         error_message = "Login is temporarily unavailable."
-                    elif authenticated_username:
+                    elif authenticated_email:
                         _clear_failed_logins(client_ip)
                         session.clear()
                         session.permanent = True
                         session[ADMIN_SESSION_KEY] = True
-                        session[ADMIN_SESSION_USER_KEY] = authenticated_username
+                        session[ADMIN_SESSION_USER_KEY] = authenticated_email
                         session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
                         return redirect(url_for("admin_dashboard"))
                     else:
                         _record_failed_login(client_ip)
                         status_code = 401
                         error_message = "Invalid credentials."
+                else:
+                    _record_failed_login(client_ip)
+                    status_code = 401
+                    error_message = "Invalid credentials."
 
     csrf_token = _ensure_admin_csrf_token()
     response = make_response(

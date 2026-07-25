@@ -3,12 +3,19 @@
 
 CREATE TABLE public.admin_users (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  username text NOT NULL UNIQUE,
+  email text NOT NULL,
   password_hash text NOT NULL,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-  CONSTRAINT admin_users_pkey PRIMARY KEY (id)
+  CONSTRAINT admin_users_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_users_email_key UNIQUE (email),
+  CONSTRAINT admin_users_email_normalized_check CHECK (email = lower(btrim(email))),
+  CONSTRAINT admin_users_email_format_check CHECK (
+    char_length(email) >= 3
+    AND char_length(email) <= 254
+    AND email ~ '^[a-z0-9!#$%&''*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*@[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
+  )
 );
 CREATE TABLE public.public_users (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
