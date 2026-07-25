@@ -303,3 +303,119 @@ html[data-theme="dark"] .ap-page .text-amber-700,
 html[data-theme="dark"] .ap-page .text-amber-800 { color: #e6cf8a !important; }
 html[data-theme="dark"] .ap-page .hover\:bg-amber-50:hover { background: rgba(201, 168, 76, 0.12) !important; }
 html[data-theme="dark"] .ap-page .hover\:text-amber-800:hover { color: #e6cf8a !important; }
+
+/* ==========================================================================
+   HIGH CONTRAST — full page treatment (black bg / white text / yellow accents)
+   to match the nav + gallery. Variable-based pages are handled by overriding
+   their design tokens; Tailwind/hardcoded pages get direct overrides.
+   ========================================================================== */
+
+/* ---- Token overrides (Digital Exhibits, Interactive, Support, Settings) --- */
+html[data-contrast="on"] {
+  --dx-bg: #000; --dx-surface: #000; --dx-surface-alt: #000; --dx-ink: #fff;
+  --dx-muted: #fff; --dx-muted-2: #fff; --dx-gold: #facc15; --dx-dark: #000;
+  --ix-bg: #000; --ix-surface: #000; --ix-surface-alt: #000; --ix-ink: #fff;
+  --ix-muted: #fff; --ix-muted-2: #fff; --ix-gold: #facc15; --ix-dark: #000;
+  --support-bg: #000; --support-surface: #000; --support-surface-alt: #000; --support-ink: #fff;
+  --support-muted: #fff; --support-muted-2: #fff; --support-gold: #facc15; --support-dark: #000;
+  --s-bg: #000; --s-surface: #000; --s-surface-2: #000; --s-ink: #fff;
+  --s-muted: #fff; --s-gold: #facc15; --s-gold-2: #facc15; --s-field: #000; --s-line: #facc15;
+  --color-bg-light: #000; --color-primary: #facc15; --color-primary-light: #facc15;
+  --color-text-primary: #fff; --color-text-secondary: #fff; --color-text-muted: #fff;
+  --color-border: #facc15; --color-border-light: #facc15; --color-accent: #facc15;
+}
+/* Re-assert Settings tokens in dark, where the page defines them at higher
+   specificity (:root[data-theme="dark"]). */
+html[data-theme="dark"][data-contrast="on"] {
+  --s-bg: #000; --s-surface: #000; --s-surface-2: #000; --s-ink: #fff;
+  --s-muted: #fff; --s-gold: #facc15; --s-gold-2: #facc15; --s-field: #000; --s-line: #facc15;
+}
+/* Collection pages define vars on the body, so scope the override there. */
+html[data-contrast="on"] .collection-page {
+  --collection-bg: #000; --collection-surface: #000; --collection-surface-soft: #000;
+  --collection-ink: #fff; --collection-muted: #fff; --collection-muted-soft: #fff;
+  --collection-gold: #facc15; --collection-gold-deep: #facc15; --collection-gold-border: #facc15;
+}
+
+/* ---- Page shells + sections to solid black ------------------------------- */
+html[data-contrast="on"] .dx-page,
+html[data-contrast="on"] .ix-page,
+html[data-contrast="on"] .support-page,
+html[data-contrast="on"] .collection-page,
+html[data-contrast="on"] .ap-page,
+html[data-contrast="on"] .s-page,
+html[data-contrast="on"] body.min-h-screen,
+html[data-contrast="on"] #community-highlights,
+html[data-contrast="on"] #events-calendar,
+html[data-contrast="on"] #e-participation { background: #000 !important; color: #fff !important; }
+
+/* ---- Hardcoded light surfaces (buttons/chips/inputs/cards) ---------------- */
+html[data-contrast="on"] .dx-btn-secondary,
+html[data-contrast="on"] .dx-chip,
+html[data-contrast="on"] .ix-btn-secondary,
+html[data-contrast="on"] .ix-chip,
+html[data-contrast="on"] .support-search-input,
+html[data-contrast="on"] .support-faq-tab,
+html[data-contrast="on"] .support-results-card,
+html[data-contrast="on"] .participation-card,
+html[data-contrast="on"] .calendar-container,
+html[data-contrast="on"] .upcoming-events-sidebar,
+html[data-contrast="on"] .form-input,
+html[data-contrast="on"] .form-textarea,
+html[data-contrast="on"] .ap-page .bg-white,
+html[data-contrast="on"] .ap-page .bg-stone-100,
+html[data-contrast="on"] .ap-page .bg-amber-50,
+html[data-contrast="on"] .ap-page .bg-amber-100 {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #facc15 !important;
+}
+
+/* ---- Text to white (Tailwind/hardcoded colors the tokens don't reach) ----- */
+html[data-contrast="on"] .community-section-title,
+html[data-contrast="on"] .community-section-description,
+html[data-contrast="on"] .participation-card-title,
+html[data-contrast="on"] .participation-card-description,
+html[data-contrast="on"] .upcoming-events-title,
+html[data-contrast="on"] .calendar-month-title,
+html[data-contrast="on"] .calendar-day,
+html[data-contrast="on"] .calendar-day-label,
+html[data-contrast="on"] .calendar-day-number,
+html[data-contrast="on"] .ap-page .text-stone-900,
+html[data-contrast="on"] .ap-page .text-stone-600,
+html[data-contrast="on"] .ap-page .text-stone-500,
+html[data-contrast="on"] .ap-page .text-stone-400 { color: #fff !important; }
+
+/* ---- Gold / amber accents + links to yellow ------------------------------ */
+html[data-contrast="on"] .dx-card-link,
+html[data-contrast="on"] .ix-card-link,
+html[data-contrast="on"] .support-policy-link,
+html[data-contrast="on"] .support-contact-label,
+html[data-contrast="on"] .support-visit-eyebrow,
+html[data-contrast="on"] .participation-card-purpose,
+html[data-contrast="on"] .ap-page .text-amber-700,
+html[data-contrast="on"] .ap-page .text-amber-800 { color: #facc15 !important; }
+
+/* ---- Borders to yellow --------------------------------------------------- */
+html[data-contrast="on"] .dx-card,
+html[data-contrast="on"] .ix-card,
+html[data-contrast="on"] .support-policy-card,
+html[data-contrast="on"] .s-card,
+html[data-contrast="on"] .ap-page .border-amber-200\/70,
+html[data-contrast="on"] .ap-page .border-stone-100,
+html[data-contrast="on"] .ap-page .border-stone-200 { border-color: #facc15 !important; }
+
+/* ---- Primary buttons + colored icons: yellow bg / black text ------------- */
+html[data-contrast="on"] .dx-btn-primary,
+html[data-contrast="on"] .ix-btn-primary,
+html[data-contrast="on"] .s-btn-primary,
+html[data-contrast="on"] .participation-card-btn,
+html[data-contrast="on"] .community-btn-secondary,
+html[data-contrast="on"] .form-submit-btn,
+html[data-contrast="on"] .participation-card-icon,
+html[data-contrast="on"] .event-dot {
+  background: #facc15 !important;
+  color: #000 !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .calendar-nav-btn { background: #000 !important; color: #facc15 !important; border: 1px solid #facc15 !important; }
