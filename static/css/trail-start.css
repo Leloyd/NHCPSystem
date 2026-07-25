@@ -7213,21 +7213,16 @@ body.trail-archive-open {
 }
 
 @media (max-width: 820px) {
+  /* Left-aligned like every other stop on mobile — full width over the scene,
+     with the readability scrim behind the text. */
   .trailx__story--archive .trailx__chapter--living-memory,
   .trailx__story--archive .trailx__chapter--living-memory[data-side="right"] {
-    left: clamp(5.75rem, 27vw, 8.5rem);
-    right: 1.3rem;
+    left: 1.1rem;
+    right: 2rem;
     width: auto;
     max-width: none;
     padding-top: max(4.4rem, calc(3.8rem + env(safe-area-inset-top)));
     padding-bottom: max(6.5rem, calc(5rem + env(safe-area-inset-bottom)));
-  }
-  /* The chapter is shifted right to clear Ana, but its readability scrim must
-     still reach the left edge — otherwise a shaded band starts partway across
-     with a visible seam. The gradient is vertical, so over-extending left just
-     makes the shade continuous. */
-  .trailx__story--archive .trailx__chapter--living-memory::before {
-    left: -60vw;
   }
 
   /* Stay inside the content column — centered, two tidy rows — instead of the
@@ -7254,8 +7249,8 @@ body.trail-archive-open {
 @media (max-width: 420px) {
   .trailx__story--archive .trailx__chapter--living-memory,
   .trailx__story--archive .trailx__chapter--living-memory[data-side="right"] {
-    left: clamp(5.1rem, 25vw, 6.5rem);
-    right: 0.9rem;
+    left: 0.9rem;
+    right: 1.4rem;
   }
 
   .trailx-living-memory__timeline {
