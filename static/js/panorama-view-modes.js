@@ -74,6 +74,7 @@ export function createPanoramaViewModes(options) {
     controllers: [],
     infoCard: null,
     infoTarget: null,
+    infoSourceRecord: null,
     infoControls: [],
     infoMode: "image",
     infoLanguage: "tl",
@@ -549,6 +550,9 @@ export function createPanoramaViewModes(options) {
       return false;
     }
     const card = vr.infoCard;
+    if (vr.infoSourceRecord && vr.infoSourceRecord.sprite) {
+      vr.infoSourceRecord.sprite.visible = true;
+    }
     if (card.parent) {
       card.parent.remove(card);
     }
@@ -564,6 +568,7 @@ export function createPanoramaViewModes(options) {
     });
     vr.infoCard = null;
     vr.infoTarget = null;
+    vr.infoSourceRecord = null;
     vr.infoControls = [];
     vr.infoMediaRoot = null;
     vr.infoSubtitleRoot = null;
@@ -572,7 +577,7 @@ export function createPanoramaViewModes(options) {
     return true;
   }
 
-  function showVrInfoCard(hotspot) {
+  function showVrInfoCard(hotspot, sourceRecord) {
     closeVrInfoCard();
     if (!vr.scene) {
       return;
@@ -581,14 +586,19 @@ export function createPanoramaViewModes(options) {
     // Keep the opened content fixed to its panorama hotspot instead of
     // attaching it to the camera. Looking away therefore leaves the card in
     // that real 360 position, and looking back reveals it again.
-    group.position.copy(hotspotPosition(hotspot.pitch, hotspot.yaw, 8.55));
+    group.position.copy(hotspotPosition(hotspot.pitch, hotspot.yaw, 6.4));
     group.lookAt(0, 0, 0);
+    group.scale.setScalar(1.08);
     vr.infoCard = group;
     vr.infoTarget = hotspot;
+    vr.infoSourceRecord = sourceRecord || null;
+    if (vr.infoSourceRecord && vr.infoSourceRecord.sprite) {
+      vr.infoSourceRecord.sprite.visible = false;
+    }
     vr.infoMode = "image";
     vr.infoLanguage = hotspot.language === "en" ? "en" : "tl";
     vr.infoSubtitlesOpen = false;
-    vr.infoZoom = 1;
+    vr.infoZoom = 1.08;
 
     const borderMaterial = new THREE.MeshBasicMaterial({
       color: 0xd4af6a,
@@ -627,11 +637,11 @@ export function createPanoramaViewModes(options) {
       });
     }
     addVrInfoControl("−", 0.36, -0.58, function () {
-      vr.infoZoom = Math.max(0.75, vr.infoZoom - 0.15);
+      vr.infoZoom = Math.max(0.65, vr.infoZoom - 0.2);
       vr.infoCard.scale.setScalar(vr.infoZoom);
     });
     addVrInfoControl("+", 0.72, -0.58, function () {
-      vr.infoZoom = Math.min(1.55, vr.infoZoom + 0.15);
+      vr.infoZoom = Math.min(2.2, vr.infoZoom + 0.2);
       vr.infoCard.scale.setScalar(vr.infoZoom);
     });
     addVrInfoControl("×", 0.84, 0.58, function () {
@@ -653,7 +663,7 @@ export function createPanoramaViewModes(options) {
       return;
     }
     if (record.hotspot.type !== "scene") {
-      showVrInfoCard(record.hotspot);
+      showVrInfoCard(record.hotspot, record);
     }
     try {
       activateHotspot(record.hotspot);

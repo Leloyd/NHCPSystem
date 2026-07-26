@@ -924,6 +924,7 @@ const trailVr = {
   controllers: [],
   infoCard: null,
   infoTarget: null,
+  infoSourceRecord: null,
   infoControls: [],
   infoMode: 'image',
   infoLanguage: 'tl',
@@ -1369,6 +1370,7 @@ function renderTrailVrInfoMedia() {
 function closeTrailVrInfoCard() {
   if (!trailVr.infoCard) return false;
   const card = trailVr.infoCard;
+  if (trailVr.infoSourceRecord?.sprite) trailVr.infoSourceRecord.sprite.visible = true;
   card.parent?.remove(card);
   card.traverse((object) => {
     object.geometry?.dispose?.();
@@ -1380,6 +1382,7 @@ function closeTrailVrInfoCard() {
   });
   trailVr.infoCard = null;
   trailVr.infoTarget = null;
+  trailVr.infoSourceRecord = null;
   trailVr.infoControls = [];
   trailVr.infoMediaRoot = null;
   trailVr.infoSubtitleRoot = null;
@@ -1388,21 +1391,24 @@ function closeTrailVrInfoCard() {
   return true;
 }
 
-function showTrailVrInfoCard(hotspot) {
+function showTrailVrInfoCard(hotspot, sourceRecord) {
   closeTrailVrInfoCard();
   if (!trailVr.scene) return;
   const args = hotspot?.clickHandlerArgs || {};
   const group = new THREE.Group();
   // World-anchor the content at the hotspot's pitch / yaw. The panel stays
   // in that location when the visitor turns away instead of following them.
-  group.position.copy(trailVrHotspotPosition(hotspot.pitch, hotspot.yaw, 8.55));
+  group.position.copy(trailVrHotspotPosition(hotspot.pitch, hotspot.yaw, 6.4));
   group.lookAt(0, 0, 0);
+  group.scale.setScalar(1.08);
   trailVr.infoCard = group;
   trailVr.infoTarget = hotspot;
+  trailVr.infoSourceRecord = sourceRecord || null;
+  if (trailVr.infoSourceRecord?.sprite) trailVr.infoSourceRecord.sprite.visible = false;
   trailVr.infoMode = 'image';
   trailVr.infoLanguage = state.lang === 'en' ? 'en' : 'tl';
   trailVr.infoSubtitlesOpen = false;
-  trailVr.infoZoom = 1;
+  trailVr.infoZoom = 1.08;
 
   const border = new THREE.Mesh(
     new THREE.PlaneGeometry(2.08, 1.58),
@@ -1468,11 +1474,11 @@ function showTrailVrInfoCard(hotspot) {
     });
   }
   addTrailVrInfoControl('−', 0.36, -0.58, () => {
-    trailVr.infoZoom = Math.max(0.75, trailVr.infoZoom - 0.15);
+    trailVr.infoZoom = Math.max(0.65, trailVr.infoZoom - 0.2);
     trailVr.infoCard.scale.setScalar(trailVr.infoZoom);
   });
   addTrailVrInfoControl('+', 0.72, -0.58, () => {
-    trailVr.infoZoom = Math.min(1.55, trailVr.infoZoom + 0.15);
+    trailVr.infoZoom = Math.min(2.2, trailVr.infoZoom + 0.2);
     trailVr.infoCard.scale.setScalar(trailVr.infoZoom);
   });
   addTrailVrInfoControl('×', 0.84, 0.58, () => {
@@ -1501,7 +1507,7 @@ function activateTrailVrTarget(record) {
     return;
   }
   if (hotspot.type === 'info' && typeof hotspot.clickHandlerFunc === 'function') {
-    showTrailVrInfoCard(hotspot);
+    showTrailVrInfoCard(hotspot, record);
     hotspot.clickHandlerFunc(
       { preventDefault() {}, stopPropagation() {} },
       hotspot.clickHandlerArgs,
