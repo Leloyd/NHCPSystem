@@ -5117,6 +5117,11 @@
                     imageSrc: String(args.imageSrc || ""),
                     glbSrc: getArtifactCurrentGlbSrc(args),
                     subtitle: args.subtitle || subtitleForArtifact(args.imageAlt || args.title || ""),
+                    imageHotspots: Array.isArray(args.imageHotspots)
+                      ? args.imageHotspots.map(function (imageHotspot) {
+                          return { ...imageHotspot };
+                        })
+                      : [],
                     language: "tl",
                     source: hotspot,
                   };
@@ -5150,6 +5155,22 @@
               forceCloseAllFloatingOverlays();
             },
             changeHotspotLanguage: function (target, language) {
+              const hotspot = target && target.source;
+              const args = hotspot && hotspot.clickHandlerArgs;
+              if (!args) {
+                return;
+              }
+              setActiveSubtitle(target.subtitle || null);
+              playFloatingArtifactAudio(args.audioByLanguage || null, language);
+            },
+            activateNestedHotspot: function (target, detail, language) {
+              if (!detail) {
+                return;
+              }
+              setActiveSubtitle(detail.subtitle || null);
+              playFloatingArtifactAudio(detail.audioByLanguage || null, language);
+            },
+            restoreHotspotNarration: function (target, language) {
               const hotspot = target && target.source;
               const args = hotspot && hotspot.clickHandlerArgs;
               if (!args) {

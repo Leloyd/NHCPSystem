@@ -30,6 +30,12 @@ export function createPanoramaViewModes(options) {
   const changeHotspotLanguage = typeof options.changeHotspotLanguage === "function"
     ? options.changeHotspotLanguage
     : function () {};
+  const activateNestedHotspot = typeof options.activateNestedHotspot === "function"
+    ? options.activateNestedHotspot
+    : function () {};
+  const restoreHotspotNarration = typeof options.restoreHotspotNarration === "function"
+    ? options.restoreHotspotNarration
+    : function () {};
   const translate = typeof options.translate === "function"
     ? options.translate
     : function (english) { return english; };
@@ -83,6 +89,8 @@ export function createPanoramaViewModes(options) {
     infoMediaRoot: null,
     infoSubtitleRoot: null,
     infoModelRoot: null,
+    infoImageHotspotsVisible: true,
+    infoDetail: null,
   };
 
   const orientationEuler = new THREE.Euler();
@@ -462,7 +470,7 @@ export function createPanoramaViewModes(options) {
     if (!vr.infoCard || !vr.infoTarget || !vr.infoSubtitlesOpen) {
       return;
     }
-    const texture = createSubtitleTexture(vr.infoTarget, vr.infoLanguage);
+    const texture = createSubtitleTexture(vr.infoDetail || vr.infoTarget, vr.infoLanguage);
     if (!texture) {
       vr.infoSubtitlesOpen = false;
       return;
@@ -492,7 +500,11 @@ export function createPanoramaViewModes(options) {
       -0.6,
       function () {
         vr.infoLanguage = vr.infoLanguage === "tl" ? "en" : "tl";
-        changeHotspotLanguage(vr.infoTarget, vr.infoLanguage);
+        if (vr.infoDetail) {
+          activateNestedHotspot(vr.infoTarget, vr.infoDetail, vr.infoLanguage);
+        } else {
+          changeHotspotLanguage(vr.infoTarget, vr.infoLanguage);
+        }
         renderVrInfoSubtitle();
       },
       0.25,
@@ -507,6 +519,9 @@ export function createPanoramaViewModes(options) {
   }
 
   function renderVrInfoMedia() {
+    vr.infoControls = vr.infoControls.filter(function (record) {
+      return record.controlArea !== "media";
+    });
     disposeThreeObject(vr.infoMediaRoot);
     vr.infoMediaRoot = null;
     vr.infoModelRoot = null;
@@ -514,12 +529,13 @@ export function createPanoramaViewModes(options) {
       return;
     }
     const hotspot = vr.infoTarget;
+    const detail = vr.infoDetail;
     const root = new THREE.Group();
     root.position.set(0, 0.12, 0.018);
     vr.infoCard.add(root);
     vr.infoMediaRoot = root;
 
-    if (vr.infoMode === "model" && hotspot.glbSrc) {
+    if (!detail && vr.infoMode === "model" && hotspot.glbSrc) {
       const loadingTexture = createInfoLabelTexture(tr("Preparing 3D model…", "Inihahanda ang 3D model…"));
       const loading = new THREE.Mesh(
         new THREE.PlaneGeometry(1.82, 1.04),
@@ -576,9 +592,10 @@ export function createPanoramaViewModes(options) {
       return;
     }
 
-    if (hotspot.imageSrc) {
+    const imageSrc = detail && detail.imageSrc ? detail.imageSrc : hotspot.imageSrc;
+    if (imageSrc) {
       new THREE.TextureLoader().load(
-        hotspot.imageSrc,
+        imageSrc,
         function (texture) {
           if (vr.infoMediaRoot !== root || vr.infoMode !== "image") {
             texture.dispose();
@@ -600,6 +617,41 @@ export function createPanoramaViewModes(options) {
           );
           image.renderOrder = 105;
           root.add(image);
+
+          if (detail) {
+            const backRecord = addVrInfoControl("←", -width * 0.42, height * 0.39, function () {
+              vr.infoDetail = null;
+              restoreHotspotNarration(vr.infoTarget, vr.infoLanguage);
+              renderVrInfoMedia();
+              if (vr.infoSubtitlesOpen) renderVrInfoSubtitle();
+            }, 0.2, root);
+            if (backRecord) backRecord.controlArea = "media";
+            return;
+          }
+
+          const imageHotspots = Array.isArray(hotspot.imageHotspots)
+            ? hotspot.imageHotspots.filter(function (item) {
+                return item
+                  && item.imageSrc
+                  && Number.isFinite(Number(item.x))
+                  && Number.isFinite(Number(item.y));
+              })
+            : [];
+          if (!vr.infoImageHotspotsVisible) {
+            return;
+          }
+          imageHotspots.forEach(function (item, index) {
+            const x = (Math.min(100, Math.max(0, Number(item.x))) / 100 - 0.5) * width;
+            const y = (0.5 - Math.min(100, Math.max(0, Number(item.y))) / 100) * height;
+            const pinRecord = addVrInfoControl(String(index + 1), x, y, function () {
+              vr.infoDetail = item;
+              vr.infoMode = "image";
+              activateNestedHotspot(vr.infoTarget, item, vr.infoLanguage);
+              renderVrInfoMedia();
+              if (vr.infoSubtitlesOpen) renderVrInfoSubtitle();
+            }, 0.15, root);
+            if (pinRecord) pinRecord.controlArea = "media";
+          });
         },
         undefined,
         function () {},
@@ -635,6 +687,8 @@ export function createPanoramaViewModes(options) {
     vr.infoMediaRoot = null;
     vr.infoSubtitleRoot = null;
     vr.infoModelRoot = null;
+    vr.infoImageHotspotsVisible = true;
+    vr.infoDetail = null;
     vr.activationLockedUntil = performance.now() + 450;
     return true;
   }
@@ -661,6 +715,8 @@ export function createPanoramaViewModes(options) {
     vr.infoLanguage = hotspot.language === "en" ? "en" : "tl";
     vr.infoSubtitlesOpen = false;
     vr.infoZoom = 2;
+    vr.infoImageHotspotsVisible = true;
+    vr.infoDetail = null;
 
     const borderMaterial = new THREE.MeshBasicMaterial({
       color: 0xd4af6a,
@@ -687,14 +743,29 @@ export function createPanoramaViewModes(options) {
 
     if (hotspot.glbSrc) {
       addVrInfoControl("3D", -0.72, -0.58, function () {
+        if (vr.infoDetail) {
+          vr.infoDetail = null;
+          restoreHotspotNarration(vr.infoTarget, vr.infoLanguage);
+          if (vr.infoSubtitlesOpen) renderVrInfoSubtitle();
+        }
         vr.infoMode = vr.infoMode === "image" ? "model" : "image";
         renderVrInfoMedia();
       });
     }
-    if (hotspot.subtitle && (hotspot.subtitle.tl || hotspot.subtitle.en)) {
+    const imageHotspots = Array.isArray(hotspot.imageHotspots) ? hotspot.imageHotspots : [];
+    const hasNestedSubtitle = imageHotspots.some(function (item) {
+      return item && item.subtitle && (item.subtitle.tl || item.subtitle.en);
+    });
+    if ((hotspot.subtitle && (hotspot.subtitle.tl || hotspot.subtitle.en)) || hasNestedSubtitle) {
       addVrInfoControl("CC", -0.36, -0.58, function () {
         vr.infoSubtitlesOpen = !vr.infoSubtitlesOpen;
         renderVrInfoSubtitle();
+      });
+    }
+    if (imageHotspots.length) {
+      addVrInfoControl("PIN", 0, -0.58, function () {
+        vr.infoImageHotspotsVisible = !vr.infoImageHotspotsVisible;
+        renderVrInfoMedia();
       });
     }
     addVrInfoControl("−", 0.36, -0.58, function () {
