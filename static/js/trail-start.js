@@ -1109,16 +1109,6 @@ function buildTrailVrTargets() {
   });
 }
 
-function getTrailVrHotspotLabel(hotspot) {
-  const args = hotspot?.clickHandlerArgs || {};
-  const raw = args.title || args.imageAlt || hotspot?.text || '';
-  if (raw && typeof raw === 'object') return raw[state.lang] || raw.en || raw.tl || '';
-  return String(raw || localizedViewCopy(
-    hotspot?.type === 'scene' ? 'Move to the next view' : 'Museum artifact',
-    hotspot?.type === 'scene' ? 'Lumipat sa susunod na tanaw' : 'Artifact ng museo',
-  ));
-}
-
 function createTrailVrControlTexture(label) {
   return createTrailVrCanvasTexture((context) => {
     context.clearRect(0, 0, 256, 256);
@@ -1417,39 +1407,10 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   border.renderOrder = 101;
   group.add(border);
 
-  const labelTexture = createTrailVrCanvasTexture((context) => {
-    context.fillStyle = 'rgba(13, 10, 4, 0.95)';
-    context.fillRect(0, 0, 256, 256);
-    context.strokeStyle = '#d4af6a';
-    context.lineWidth = 8;
-    context.strokeRect(5, 5, 246, 246);
-    context.fillStyle = '#faf7f2';
-    context.textAlign = 'center';
-    context.textBaseline = 'middle';
-    context.font = '700 25px Georgia, serif';
-    const words = getTrailVrHotspotLabel(hotspot).trim().split(/\s+/);
-    const lines = [];
-    let line = '';
-    words.forEach((word) => {
-      const candidate = line ? `${line} ${word}` : word;
-      if (context.measureText(candidate).width > 218 && line) {
-        lines.push(line);
-        line = word;
-      } else {
-        line = candidate;
-      }
-    });
-    if (line) lines.push(line);
-    lines.slice(0, 3).forEach((item, index) => context.fillText(item, 128, 101 + index * 32));
-    context.fillStyle = '#d4af6a';
-    context.font = '600 14px Inter, sans-serif';
-    context.fillText(localizedViewCopy('Look at a control to select', 'Tumingin sa control upang piliin'), 128, 224);
-  });
   const panel = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 1.5),
     new THREE.MeshBasicMaterial({
-      map: labelTexture,
-      color: labelTexture ? 0xffffff : 0x0d0a04,
+      color: 0xfaf7f2,
       depthTest: false,
       depthWrite: false,
     }),

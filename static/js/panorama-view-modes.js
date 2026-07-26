@@ -609,10 +609,8 @@ export function createPanoramaViewModes(options) {
     border.renderOrder = 101;
     group.add(border);
 
-    const labelTexture = createInfoLabelTexture(hotspot.label);
     const panelMaterial = new THREE.MeshBasicMaterial({
-      map: labelTexture,
-      color: labelTexture ? 0xffffff : 0x0d0a04,
+      color: 0xfaf7f2,
       depthTest: false,
       depthWrite: false,
     });
