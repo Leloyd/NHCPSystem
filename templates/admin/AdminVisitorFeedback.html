@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'visitor-feedback' %}
 {% set admin_topbar_title = 'Visitor Feedback' %}
-{% set admin_topbar_subtitle = 'Review visitor feedback from on-site and website visitors and keep a record of what has already been checked.' %}
+{% set admin_topbar_subtitle = 'Review visitor experiences and monitor satisfaction across on-site and website visits.' %}
 
 {% block admin_content %}
           {% if status_message %}
@@ -21,142 +21,190 @@
           </section>
           {% endif %}
 
-          {% if feedback_items %}
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          <section class="admin-feedback-analytics" aria-labelledby="feedbackAnalyticsTitle">
+            <header class="admin-feedback-analytics-head">
               <div>
-                <h3>New Feedback</h3>
-                <p>Fresh visitor feedback waiting for review.</p>
+                <p>Visitor experience overview</p>
+                <h2 id="feedbackAnalyticsTitle">Feedback Analytics</h2>
+                <span>Calculated from all {{ feedback_analytics.total }} stored feedback records, including archived responses.</span>
               </div>
+              <span class="admin-feedback-analytics-live">
+                <i aria-hidden="true"></i>
+                Live database summary
+              </span>
+            </header>
+
+            <div class="admin-feedback-metrics">
+              <article>
+                <span class="admin-feedback-metric-icon is-rating" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg>
+                </span>
+                <span><small>Average rating</small><strong>{{ '%.1f'|format(feedback_analytics.average_rating) }}<em>/5</em></strong><span>{{ feedback_analytics.rated_total }} rated responses</span></span>
+              </article>
+              <article>
+                <span class="admin-feedback-metric-icon is-total" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5ZM4 22v-2a7 7 0 0 1 14 0v2h-2v-2a5 5 0 0 0-10 0v2Z"></path></svg>
+                </span>
+                <span><small>Total responses</small><strong>{{ feedback_analytics.total }}</strong><span>{{ feedback_analytics.comment_count }} include comments</span></span>
+              </article>
+              <article>
+                <span class="admin-feedback-metric-icon is-pending" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2Zm0 2a8 8 0 1 0 8 8 8 8 0 0 0-8-8Zm-1 3h2v5.6l3.2 1.9-1 1.7-4.2-2.5Z"></path></svg>
+                </span>
+                <span><small>Needs review</small><strong>{{ feedback_analytics.new_count }}</strong><span>{{ feedback_analytics.reviewed_count }} already reviewed</span></span>
+              </article>
+              <article>
+                <span class="admin-feedback-metric-icon is-positive" aria-hidden="true">
+                  <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm-7.2 5a5 5 0 0 0 8.4 0l-1.7-1a3 3 0 0 1-5 0Z"></path></svg>
+                </span>
+                <span><small>Positive experience</small><strong>{{ feedback_analytics.positive_percent }}<em>%</em></strong><span>{{ feedback_analytics.positive_count }} ratings of 4 or 5</span></span>
+              </article>
             </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Visitor</th>
-                    <th>Visit Type</th>
-                    <th>Rating</th>
-                    <th>Comments</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for feedback_item in new_items %}
-                  <tr>
-                    <td>
-                      <div class="admin-resource-main">
-                        <strong>{{ feedback_item.visitor_display }}</strong>
-                        <span>{{ feedback_item.display_date }}</span>
-                      </div>
-                    </td>
-                    <td>{{ feedback_item.visit_type_label }}</td>
-                    <td>{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</td>
-                    <td>{{ feedback_item.preview_text }}</td>
-                    <td><span class="admin-status-badge is-draft">New</span></td>
-                    <td><a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-inline-link">Review</a></td>
-                  </tr>
+
+            <div class="admin-feedback-insights">
+              <section class="admin-feedback-distribution">
+                <header><div><h3>Rating Distribution</h3><p>How all visitor scores are distributed</p></div><span>{{ feedback_analytics.rated_total }} ratings</span></header>
+                <div>
+                  {% for rating_row in feedback_analytics.rating_distribution %}
+                  <div class="admin-feedback-rating-row">
+                    <span>{{ rating_row.rating }} <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg></span>
+                    <div><i style="--feedback-value: {{ rating_row.percent }}%;"></i></div>
+                    <strong>{{ rating_row.count }}</strong>
+                    <small>{{ rating_row.percent }}%</small>
+                  </div>
                   {% endfor %}
-                  {% if not new_items %}
-                  <tr><td colspan="6">No new visitor feedback entries.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
+                </div>
+              </section>
+
+              <section class="admin-feedback-channels">
+                <header><div><h3>Visit Channels</h3><p>Where feedback experiences happened</p></div></header>
+                <div class="admin-feedback-channel-list">
+                  {% for channel in feedback_analytics.visit_types %}
+                  <div>
+                    <span class="admin-feedback-channel-icon is-{{ channel.key }}" aria-hidden="true">
+                      {% if channel.key == 'on-site' %}
+                      <svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 5.5-8 12-8 12S4 15.5 4 10a8 8 0 0 1 8-8Zm0 2a6 6 0 0 0-6 6c0 3.7 4.5 8.2 6 9.6 1.5-1.4 6-5.9 6-9.6a6 6 0 0 0-6-6Zm0 3a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                      {% else %}
+                      <svg viewBox="0 0 24 24"><path d="M3 4h18v14H3Zm2 2v10h14V6Zm4 14h6v2H9Z"></path></svg>
+                      {% endif %}
+                    </span>
+                    <span><small>{{ channel.label }}</small><strong>{{ channel.count }} responses</strong><i><b style="--feedback-value: {{ channel.percent }}%;"></b></i></span>
+                    <em>{{ channel.percent }}%</em>
+                  </div>
+                  {% endfor %}
+                </div>
+                <div class="admin-feedback-attention">
+                  <span aria-hidden="true">!</span>
+                  <span><small>Needs attention</small><strong>{{ feedback_analytics.attention_count }} low ratings ({{ feedback_analytics.attention_percent }}%)</strong></span>
+                </div>
+              </section>
             </div>
           </section>
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          <section class="admin-gallery-manager admin-feedback-manager" data-admin-feedback-manager data-feedback-filter="{{ status_filter }}">
+            <header class="admin-gallery-manager-head">
               <div>
-                <h3>Reviewed Feedback</h3>
-                <p>Visitor feedback that has already been checked by admin.</p>
+                <p class="admin-gallery-manager-eyebrow">Visitor response archive</p>
+                <h2>Feedback Review Library</h2>
+                <p>Read visitor comments, identify low-rating experiences, and maintain a clear moderation record.</p>
               </div>
-            </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Visitor</th>
-                    <th>Visit Type</th>
-                    <th>Rating</th>
-                    <th>Comments</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for feedback_item in reviewed_items %}
-                  <tr>
-                    <td>
-                      <div class="admin-resource-main">
-                        <strong>{{ feedback_item.visitor_display }}</strong>
-                        <span>{{ feedback_item.display_date }}</span>
-                      </div>
-                    </td>
-                    <td>{{ feedback_item.visit_type_label }}</td>
-                    <td>{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</td>
-                    <td>{{ feedback_item.preview_text }}</td>
-                    <td><span class="admin-status-badge is-published">Reviewed</span></td>
-                    <td><a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-inline-link">View</a></td>
-                  </tr>
-                  {% endfor %}
-                  {% if not reviewed_items %}
-                  <tr><td colspan="6">No reviewed feedback yet.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
-            </div>
-          </section>
+              <span class="admin-submission-manager-queue">
+                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2Zm-1 5h2v6h-2Zm0 8h2v2h-2Z"></path></svg>
+                {{ feedback_analytics.new_count }} awaiting review
+              </span>
+            </header>
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+            <div class="admin-gallery-toolbar">
+              <nav class="admin-gallery-filters" aria-label="Filter visitor feedback by review status">
+                <button type="button" class="admin-gallery-filter is-active" data-feedback-filter-button="all" aria-pressed="true">All <span>{{ feedback_analytics.total }}</span></button>
+                <button type="button" class="admin-gallery-filter" data-feedback-filter-button="new" aria-pressed="false">New <span>{{ feedback_analytics.new_count }}</span></button>
+                <button type="button" class="admin-gallery-filter" data-feedback-filter-button="reviewed" aria-pressed="false">Reviewed <span>{{ feedback_analytics.reviewed_count }}</span></button>
+                <button type="button" class="admin-gallery-filter" data-feedback-filter-button="archived" aria-pressed="false">Archived <span>{{ feedback_analytics.archived_count }}</span></button>
+              </nav>
+
+              <label class="admin-gallery-search" for="adminFeedbackSearch">
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg></span>
+                <input id="adminFeedbackSearch" type="search" placeholder="Search visitor, comments, channel, or rating…" maxlength="160" autocomplete="off" />
+                <button type="button" data-feedback-search-clear aria-label="Clear feedback search" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m7.4 6 4.6 4.6L16.6 6 18 7.4 13.4 12l4.6 4.6-1.4 1.4-4.6-4.6L7.4 18 6 16.6l4.6-4.6L6 7.4Z"></path></svg></button>
+              </label>
+            </div>
+
+            <div class="admin-gallery-library-head">
               <div>
-                <h3>Archived Feedback</h3>
-                <p>Entries you no longer want in the active review queue.</p>
+                <span class="admin-gallery-library-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2Zm0 2v13.4L7.4 17H19V5Z"></path></svg></span>
+                <span><strong data-feedback-library-title>Complete feedback record</strong><small data-feedback-library-description>Every new, reviewed, and archived visitor response</small></span>
               </div>
+              <span class="admin-gallery-visible-count" data-feedback-visible-count>{{ feedback_analytics.total }} responses</span>
             </div>
-            <div class="admin-resource-table-wrap">
-              <table class="admin-resource-table">
-                <thead>
-                  <tr>
-                    <th>Visitor</th>
-                    <th>Visit Type</th>
-                    <th>Rating</th>
-                    <th>Comments</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {% for feedback_item in archived_items %}
-                  <tr>
-                    <td>
-                      <div class="admin-resource-main">
-                        <strong>{{ feedback_item.visitor_display }}</strong>
-                        <span>{{ feedback_item.display_date }}</span>
-                      </div>
-                    </td>
-                    <td>{{ feedback_item.visit_type_label }}</td>
-                    <td>{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</td>
-                    <td>{{ feedback_item.preview_text }}</td>
-                    <td><span class="admin-status-badge is-draft">Archived</span></td>
-                    <td><a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-inline-link">View</a></td>
-                  </tr>
-                  {% endfor %}
-                  {% if not archived_items %}
-                  <tr><td colspan="6">No archived feedback.</td></tr>
-                  {% endif %}
-                </tbody>
-              </table>
+
+            <div class="admin-gallery-library" data-feedback-library>
+              {% for feedback_item in feedback_items %}
+              <article class="admin-gallery-card admin-feedback-card is-{{ feedback_item.status }} is-rating-{{ feedback_item.rating }}"
+                data-feedback-card data-feedback-status="{{ feedback_item.status }}"
+                data-feedback-search="{{ (feedback_item.visitor_display ~ ' ' ~ feedback_item.comments ~ ' ' ~ feedback_item.visit_type_label ~ ' ' ~ feedback_item.rating_label ~ ' ' ~ feedback_item.rating ~ ' ' ~ feedback_item.sentiment_label)|lower }}">
+                <figure class="admin-gallery-card-media admin-feedback-card-score is-{{ feedback_item.sentiment_class }}">
+                  <div class="admin-feedback-score">
+                    <span><strong>{{ feedback_item.rating }}</strong><small>/5</small></span>
+                    <div class="admin-feedback-stars" aria-label="{{ feedback_item.rating }} out of 5 stars">
+                      {% for star in range(1, 6) %}<svg class="{% if star <= feedback_item.rating %}is-filled{% endif %}" viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg>{% endfor %}
+                    </div>
+                    <p>{{ feedback_item.rating_label }}</p>
+                  </div>
+                  <span class="admin-feedback-quote-mark" aria-hidden="true">“</span>
+                  <div class="admin-gallery-card-badges">
+                    <span class="admin-status-badge {% if feedback_item.status == 'reviewed' %}is-published{% elif feedback_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">{{ feedback_item.status_label }}</span>
+                    <span class="admin-gallery-model-badge admin-feedback-channel-badge">{{ feedback_item.visit_type_label }}</span>
+                  </div>
+                </figure>
+
+                <div class="admin-gallery-card-body">
+                  <div class="admin-gallery-card-meta">
+                    <span class="is-{{ feedback_item.sentiment_class }}">{{ feedback_item.sentiment_label }}</span>
+                    <span>{{ feedback_item.display_date }}</span>
+                  </div>
+                  <h3>{{ feedback_item.visitor_display }}</h3>
+                  <p>{{ feedback_item.preview_text }}</p>
+                  <div class="admin-gallery-card-assets admin-feedback-card-details">
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v14H3Zm2 2v10h14V6Z"></path></svg>{{ feedback_item.visit_type_label }}</span>
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5Zm2 2v14h10V5Z"></path></svg>{% if feedback_item.comments %}Comment included{% else %}Rating only{% endif %}</span>
+                  </div>
+                </div>
+
+                <footer class="admin-highlight-card-actions">
+                  <div>
+                    <a href="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-highlight-action {% if feedback_item.status == 'new' %}is-primary{% else %}is-secondary{% endif %}">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Z"></path></svg>
+                      {% if feedback_item.status == 'new' %}Review{% else %}View{% endif %}
+                    </a>
+                  </div>
+                  <div>
+                    {% if feedback_item.status == 'reviewed' %}
+                    <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
+                      data-confirm-submit data-confirm-eyebrow="Feedback status" data-confirm-title="Archive this feedback?"
+                      data-confirm-message="Archive the feedback from {{ feedback_item.visitor_display }}? It will remain included in aggregate analytics."
+                      data-confirm-label="Archive feedback" data-confirm-variant="disable">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="archive" /><input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-archive"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Z"></path></svg>Archive</button>
+                    </form>
+                    {% elif feedback_item.status == 'archived' %}
+                    <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
+                      data-confirm-submit data-confirm-eyebrow="Review queue" data-confirm-title="Restore this feedback?"
+                      data-confirm-message="Restore the feedback from {{ feedback_item.visitor_display }} to New Feedback for another review?"
+                      data-confirm-label="Restore to Review" data-confirm-variant="enable">
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="restore" /><input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-restore"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6Z"></path></svg>Restore</button>
+                    </form>
+                    {% endif %}
+                  </div>
+                </footer>
+              </article>
+              {% endfor %}
+            </div>
+
+            <div class="admin-gallery-empty" data-feedback-empty {% if feedback_items %}hidden{% endif %}>
+              <span class="admin-gallery-empty-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2Z"></path></svg></span>
+              <h3 data-feedback-empty-title>No visitor feedback yet</h3>
+              <p data-feedback-empty-copy>Visitor responses will appear here after signed-in visitors share their experience.</p>
             </div>
           </section>
-          {% else %}
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-empty-state">
-              <div class="admin-empty-state-icon">+</div>
-              <h3>No visitor feedback yet</h3>
-              <p>Visitor feedback submissions from Community Participation will appear here once people start sending them.</p>
-            </div>
-          </section>
-          {% endif %}
 {% endblock %}

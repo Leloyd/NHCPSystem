@@ -1,62 +1,133 @@
 {% extends 'admin/_layout.html' %}
 
-{% set admin_document_title = 'Review Visitor Feedback | NHCP Admin' %}
+{% set is_new_feedback = feedback_item.status == 'new' %}
+{% set admin_document_title = ('Review ' if is_new_feedback else 'View ') ~ 'Visitor Feedback | NHCP Admin' %}
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'visitor-feedback' %}
-{% set admin_topbar_title = 'Review Visitor Feedback' %}
-{% set admin_topbar_subtitle = 'Inspect the visitor feedback details and mark each entry as reviewed or archived.' %}
-{% set admin_topbar_tool_href = url_for('admin_visitor_feedback') %}
-{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_title = 'Review Visitor Feedback' if is_new_feedback else 'Visitor Feedback Details' %}
+{% set admin_topbar_subtitle = 'Inspect the visitor rating, experience channel, comments, and moderation record.' %}
+{% set admin_topbar_tool_href = url_for('admin_visitor_feedback', filter=feedback_item.status) %}
+{% set admin_topbar_tool_label = 'Back to feedback' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
 {% block admin_content %}
           {% if error_message %}
-          <section class="admin-alert admin-alert-error">
-            <strong>Unable to save</strong>
-            <span>{{ error_message }}</span>
-          </section>
+          <section class="admin-alert admin-alert-error"><strong>Unable to save</strong><span>{{ error_message }}</span></section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
+          <article class="admin-submission-record admin-feedback-record">
+            <div class="admin-submission-record-accent" aria-hidden="true"></div>
+            <header class="admin-submission-record-hero">
+              <span class="admin-submission-record-mark admin-feedback-record-mark is-{{ feedback_item.sentiment_class }}" aria-hidden="true">
+                {% if feedback_item.rating >= 4 %}
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm-7.2 5a5 5 0 0 0 8.4 0l-1.7-1a3 3 0 0 1-5 0Z"></path></svg>
+                {% elif feedback_item.rating == 3 %}
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm-7 5h8v2H8Z"></path></svg>
+                {% else %}
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm1 8H8a4 4 0 0 1 8 0Z"></path></svg>
+                {% endif %}
+              </span>
+              <div class="admin-submission-record-identity">
+                <p>Visitor feedback <span>#{{ feedback_item.id }}</span></p>
+                <h2>{{ feedback_item.visitor_display }}</h2>
+                <div><span>{{ feedback_item.visit_type_label }}</span><span aria-hidden="true">•</span><span>Submitted {{ feedback_item.display_date }}</span></div>
+              </div>
+              <span class="admin-status-badge admin-submission-record-status {% if feedback_item.status == 'reviewed' %}is-published{% elif feedback_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">{{ feedback_item.status_label }}</span>
+            </header>
+
+            <div class="admin-submission-record-highlights admin-feedback-record-highlights">
               <div>
-                <h3>{{ feedback_item.visitor_display }}</h3>
-                <p>{{ feedback_item.visit_type_label }} · {{ feedback_item.display_date }}</p>
+                <span class="is-rating" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 2.8 2.8 5.7 6.2.9-4.5 4.4 1.1 6.2-5.6-3-5.6 3 1.1-6.2L3 9.4l6.2-.9Z"></path></svg></span>
+                <span><small>Visitor rating</small><strong>{{ feedback_item.rating }} / 5 · {{ feedback_item.rating_label }}</strong></span>
               </div>
-              <span class="admin-status-badge {% if feedback_item.status == 'reviewed' %}is-published{% else %}is-draft{% endif %}">{{ feedback_item.status|title }}</span>
-            </div>
-
-            <div class="admin-form-grid">
-              <div class="admin-form-field">
-                <label>Visitor Name</label>
-                <p class="admin-field-hint">{{ feedback_item.visitor_display }}</p>
+              <div>
+                <span class="is-attachment" aria-hidden="true">{% if feedback_item.visit_type == 'on-site' %}<svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 5.5-8 12-8 12S4 15.5 4 10a8 8 0 0 1 8-8Zm0 5a3 3 0 1 0 3 3 3 3 0 0 0-3-3Z"></path></svg>{% else %}<svg viewBox="0 0 24 24"><path d="M3 4h18v14H3Zm2 2v10h14V6Zm4 14h6v2H9Z"></path></svg>{% endif %}</span>
+                <span><small>Experience channel</small><strong>{{ feedback_item.visit_type_label }}</strong></span>
               </div>
-
-              <div class="admin-form-field">
-                <label>Visit Type</label>
-                <p class="admin-field-hint">{{ feedback_item.visit_type_label }}</p>
-              </div>
-
-              <div class="admin-form-field">
-                <label>Rating</label>
-                <p class="admin-field-hint">{{ feedback_item.rating_label }} ({{ feedback_item.rating }}/5)</p>
-              </div>
-
-              <div class="admin-form-field">
-                <label>Reviewed</label>
-                <p class="admin-field-hint">{{ feedback_item.reviewed_display_date }}</p>
-              </div>
-
-              <div class="admin-form-field admin-form-field-wide">
-                <label>Comments &amp; Suggestions</label>
-                <div class="admin-field-hint" style="white-space: pre-wrap;">{{ feedback_item.comments or 'No comments provided.' }}</div>
+              <div>
+                <span class="is-privacy" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2h2Zm12 8H5v8h14ZM5 8h14V6H5Z"></path></svg></span>
+                <span><small>Submitted</small><strong>{{ feedback_item.display_date }}</strong></span>
               </div>
             </div>
+          </article>
 
-            <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-form-actions">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-              <button type="submit" name="moderation_action" value="archive" class="admin-secondary-action">Archive</button>
-              <button type="submit" name="moderation_action" value="reviewed" class="admin-primary-action">Mark as Reviewed</button>
-            </form>
-          </section>
+          <div class="admin-submission-review-layout admin-feedback-review-layout">
+            <div class="admin-submission-review-sections">
+              <section class="admin-submission-review-section admin-feedback-comment-section">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H8l-5 3V5a2 2 0 0 1 2-2Z"></path></svg></span><div><h3>Comments and Suggestions</h3><p>The visitor’s complete written response.</p></div></header>
+                <blockquote>
+                  <span aria-hidden="true">“</span>
+                  <p>{{ feedback_item.comments or 'No written comments were provided with this rating.' }}</p>
+                </blockquote>
+              </section>
+
+              <section class="admin-submission-review-section">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5ZM4 22v-2a7 7 0 0 1 14 0v2h-2v-2a5 5 0 0 0-10 0v2Z"></path></svg></span><div><h3>Feedback Details</h3><p>Visitor identity, rating classification, and experience channel.</p></div></header>
+                <dl class="admin-submission-review-details">
+                  <div><dt>Visitor</dt><dd>{{ feedback_item.visitor_display }}</dd></div>
+                  <div><dt>Visit type</dt><dd>{{ feedback_item.visit_type_label }}</dd></div>
+                  <div><dt>Rating</dt><dd>{{ feedback_item.rating }} out of 5</dd></div>
+                  <div><dt>Experience classification</dt><dd>{{ feedback_item.sentiment_label }}</dd></div>
+                  <div class="is-wide"><dt>Submitted</dt><dd>{{ feedback_item.display_date }}</dd></div>
+                </dl>
+              </section>
+
+              {% if feedback_item.reviewed_at %}
+              <section class="admin-submission-review-section">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5Zm2 2v14h10V5Zm2 3h6v2H9Z"></path></svg></span><div><h3>Moderation Record</h3><p>The latest administrator action saved with this feedback.</p></div></header>
+                <dl class="admin-submission-review-details">
+                  <div><dt>Last moderated</dt><dd>{{ feedback_item.reviewed_display_date }}</dd></div>
+                  <div><dt>Reviewed by</dt><dd>{{ feedback_item.reviewed_by or 'Administrator not recorded' }}</dd></div>
+                </dl>
+              </section>
+              {% endif %}
+            </div>
+
+            <aside class="admin-submission-decision-panel">
+              {% if feedback_item.status == 'new' %}
+              <section class="admin-submission-decision">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span><div><p>Staff moderation</p><h3>Complete the Review</h3></div></header>
+                <p class="admin-submission-decision-copy">Read the full comment and rating before recording this response as reviewed or archived.</p>
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Feedback review" data-confirm-title="Mark this feedback as reviewed?"
+                  data-confirm-message="Mark the feedback from {{ feedback_item.visitor_display }} as reviewed?"
+                  data-confirm-label="Mark as Reviewed" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="reviewed" />
+                  <button type="submit" class="admin-submission-decision-action is-approve"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span><span><strong>Mark as Reviewed</strong><small>Move this response out of the pending queue</small></span></button>
+                </form>
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Feedback status" data-confirm-title="Archive this feedback?"
+                  data-confirm-message="Archive the feedback from {{ feedback_item.visitor_display }}? It will remain included in aggregate analytics."
+                  data-confirm-label="Archive Feedback" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="archive" />
+                  <button type="submit" class="admin-submission-decision-action is-archive"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Z"></path></svg></span><span><strong>Archive Feedback</strong><small>Retain it outside the active review record</small></span></button>
+                </form>
+              </section>
+              {% elif feedback_item.status == 'reviewed' %}
+              <section class="admin-submission-finalized is-active">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.25 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.2-5.2 1.4 1.4Z"></path></svg></span><div><p>Current status</p><h3>Reviewed</h3></div></header>
+                <p>This visitor response has been checked and remains in the reviewed feedback record.</p>
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Feedback status" data-confirm-title="Archive this feedback?"
+                  data-confirm-message="Archive the feedback from {{ feedback_item.visitor_display }}? It will remain included in aggregate analytics."
+                  data-confirm-label="Archive Feedback" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="archive" />
+                  <button type="submit" class="admin-submission-finalized-action is-archive">Archive feedback</button>
+                </form>
+              </section>
+              {% else %}
+              <section class="admin-submission-finalized is-archived">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Z"></path></svg></span><div><p>Current status</p><h3>Archived</h3></div></header>
+                <p>This response remains part of historical analytics but is outside the active review record.</p>
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Review queue" data-confirm-title="Restore this feedback?"
+                  data-confirm-message="Restore the feedback from {{ feedback_item.visitor_display }} to New Feedback for another review?"
+                  data-confirm-label="Restore to Review" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="restore" />
+                  <button type="submit" class="admin-submission-finalized-action is-restore">Restore to New Feedback</button>
+                </form>
+              </section>
+              {% endif %}
+            </aside>
+          </div>
 {% endblock %}

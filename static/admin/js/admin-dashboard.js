@@ -1417,6 +1417,154 @@
     applySubmissionView();
   }
 
+  function initAdminFeedbackManagement() {
+    var root = document.querySelector("[data-admin-feedback-manager]");
+    if (!root) {
+      return;
+    }
+
+    var cards = Array.prototype.slice.call(
+      root.querySelectorAll("[data-feedback-card]")
+    );
+    var filterButtons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-feedback-filter-button]")
+    );
+    var searchInput = root.querySelector("#adminFeedbackSearch");
+    var clearButton = root.querySelector("[data-feedback-search-clear]");
+    var visibleCount = root.querySelector("[data-feedback-visible-count]");
+    var libraryTitle = root.querySelector("[data-feedback-library-title]");
+    var libraryDescription = root.querySelector(
+      "[data-feedback-library-description]"
+    );
+    var emptyState = root.querySelector("[data-feedback-empty]");
+    var emptyTitle = root.querySelector("[data-feedback-empty-title]");
+    var emptyCopy = root.querySelector("[data-feedback-empty-copy]");
+    var currentFilter = String(
+      root.getAttribute("data-feedback-filter") || "all"
+    ).toLowerCase();
+
+    var filterCopy = {
+      all: {
+        title: "Complete feedback record",
+        description: "Every new, reviewed, and archived visitor response",
+      },
+      new: {
+        title: "Pending review queue",
+        description: "Fresh visitor responses awaiting an administrator's review",
+      },
+      reviewed: {
+        title: "Reviewed feedback",
+        description: "Visitor responses already checked by an administrator",
+      },
+      archived: {
+        title: "Feedback archive",
+        description: "Historical responses retained outside the active review record",
+      },
+    };
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function applyFeedbackView() {
+      var query = normalize(searchInput && searchInput.value);
+      var shown = 0;
+
+      cards.forEach(function (card) {
+        var statusMatches =
+          currentFilter === "all" ||
+          card.getAttribute("data-feedback-status") === currentFilter;
+        var searchMatches =
+          !query ||
+          normalize(card.getAttribute("data-feedback-search")).indexOf(query) !==
+            -1;
+        var shouldShow = statusMatches && searchMatches;
+        card.hidden = !shouldShow;
+        if (shouldShow) {
+          shown += 1;
+        }
+      });
+
+      filterButtons.forEach(function (button) {
+        var isActive =
+          button.getAttribute("data-feedback-filter-button") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      var copy = filterCopy[currentFilter] || filterCopy.all;
+      if (libraryTitle) {
+        libraryTitle.textContent = copy.title;
+      }
+      if (libraryDescription) {
+        libraryDescription.textContent = copy.description;
+      }
+      if (visibleCount) {
+        visibleCount.textContent =
+          shown + " response" + (shown === 1 ? "" : "s");
+      }
+      if (clearButton) {
+        clearButton.hidden = !query;
+      }
+      if (emptyState) {
+        emptyState.hidden = shown > 0;
+      }
+
+      if (shown === 0 && emptyTitle && emptyCopy) {
+        if (query) {
+          emptyTitle.textContent = "No matching visitor feedback";
+          emptyCopy.textContent =
+            "Try another visitor name, comment, visit channel, rating, or status.";
+        } else if (currentFilter === "new") {
+          emptyTitle.textContent = "The feedback queue is clear";
+          emptyCopy.textContent =
+            "New visitor responses will appear here for review.";
+        } else if (currentFilter === "reviewed") {
+          emptyTitle.textContent = "No reviewed feedback";
+          emptyCopy.textContent =
+            "Responses marked as reviewed will appear here.";
+        } else if (currentFilter === "archived") {
+          emptyTitle.textContent = "No archived feedback";
+          emptyCopy.textContent =
+            "Archived visitor responses will be retained here.";
+        } else {
+          emptyTitle.textContent = "No visitor feedback yet";
+          emptyCopy.textContent =
+            "Visitor responses will appear here after signed-in visitors share their experience.";
+        }
+      }
+    }
+
+    filterButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var nextFilter = button.getAttribute("data-feedback-filter-button");
+        currentFilter = filterCopy[nextFilter] ? nextFilter : "all";
+        root.setAttribute("data-feedback-filter", currentFilter);
+        applyFeedbackView();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applyFeedbackView);
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && searchInput.value) {
+          searchInput.value = "";
+          applyFeedbackView();
+        }
+      });
+    }
+
+    if (clearButton && searchInput) {
+      clearButton.addEventListener("click", function () {
+        searchInput.value = "";
+        applyFeedbackView();
+        searchInput.focus();
+      });
+    }
+
+    applyFeedbackView();
+  }
+
   function initAdminUserManagement() {
     var root = document.querySelector("[data-admin-users]");
     if (!root) {
@@ -2620,6 +2768,7 @@
     initAdminGalleryView();
     initAdminEduResourceManagement();
     initAdminSubmissionManagement();
+    initAdminFeedbackManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();

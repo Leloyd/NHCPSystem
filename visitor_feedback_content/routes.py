@@ -10,6 +10,7 @@ from visitor_feedback_repository import create_visitor_feedback, update_visitor_
 
 from .service import (
     VISITOR_FEEDBACK_STATUS_OPTIONS,
+    build_visitor_feedback_analytics,
     get_visitor_feedback_status_message,
     load_admin_visitor_feedback,
     load_admin_visitor_feedback_item,
@@ -18,6 +19,7 @@ from .service import (
 
 
 VALID_VISIT_TYPES = {"on-site", "website"}
+ADMIN_FEEDBACK_STATUSES = set(VISITOR_FEEDBACK_STATUS_OPTIONS)
 
 
 def _utcnow() -> datetime:
@@ -101,9 +103,10 @@ def register_visitor_feedback_routes(
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
         feedback_items = load_admin_visitor_feedback()
-        new_items = [item for item in feedback_items if item.get("status") == "new"]
-        reviewed_items = [item for item in feedback_items if item.get("status") == "reviewed"]
-        archived_items = [item for item in feedback_items if item.get("status") == "archived"]
+        status_filter = str(request.args.get("filter") or "all").strip().lower()
+        if status_filter not in ADMIN_FEEDBACK_STATUSES | {"all"}:
+            status_filter = "all"
+        feedback_analytics = build_visitor_feedback_analytics(feedback_items)
         status_message = get_visitor_feedback_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase visitor feedback integration is not configured."
         return render_template(
@@ -111,9 +114,8 @@ def register_visitor_feedback_routes(
             csrf_token=csrf_token,
             admin_username=current_admin_username,
             feedback_items=feedback_items,
-            new_items=new_items,
-            reviewed_items=reviewed_items,
-            archived_items=archived_items,
+            status_filter=status_filter,
+            feedback_analytics=feedback_analytics,
             status_message=status_message,
             config_error=config_error,
         )
@@ -137,16 +139,35 @@ def register_visitor_feedback_routes(
             return redirect(url_for("admin_visitor_feedback"))
 
         moderation_action = str(request.form.get("moderation_action") or "").strip().lower()
-        if moderation_action not in {"reviewed", "archive"}:
+        transitions = {
+            "reviewed": {
+                "from": {"new"},
+                "status": "reviewed",
+                "result": "reviewed",
+            },
+            "archive": {
+                "from": {"new", "reviewed"},
+                "status": "archived",
+                "result": "archived",
+            },
+            "restore": {
+                "from": {"archived"},
+                "status": "new",
+                "result": "restored",
+            },
+        }
+        transition = transitions.get(moderation_action)
+        current_status = str(feedback_item.get("status") or "").strip().lower()
+        if transition is None or current_status not in transition["from"]:
             return render_admin_visitor_feedback_review(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
                 admin_username=admin_username,
                 feedback_item=feedback_item,
-                error_message="Please choose a valid moderation action.",
+                error_message="This moderation action is not available for the feedback's current status.",
             )
 
-        next_status = "reviewed" if moderation_action == "reviewed" else "archived"
+        next_status = transition["status"]
         try:
             update_visitor_feedback(
                 feedback_id,
@@ -166,4 +187,10 @@ def register_visitor_feedback_routes(
                 error_message="Could not update the visitor feedback right now.",
             )
 
-        return redirect(url_for("admin_visitor_feedback", status=next_status))
+        return redirect(
+            url_for(
+                "admin_visitor_feedback",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status=transition["result"],
+            )
+        )

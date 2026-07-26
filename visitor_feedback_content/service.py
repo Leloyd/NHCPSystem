@@ -71,7 +71,77 @@ def prepare_visitor_feedback_item(item: dict[str, Any] | None) -> dict[str, Any]
     prepared["status"] = status
     prepared["display_date"] = format_feedback_datetime(prepared.get("created_at"))
     prepared["reviewed_display_date"] = format_feedback_datetime(prepared.get("reviewed_at")) if prepared.get("reviewed_at") else "Not reviewed yet"
+    prepared["status_label"] = {
+        "new": "New Feedback",
+        "reviewed": "Reviewed",
+        "archived": "Archived",
+    }.get(status, status.replace("_", " ").title())
+    if rating >= 4:
+        prepared["sentiment_label"] = "Positive"
+        prepared["sentiment_class"] = "positive"
+    elif rating == 3:
+        prepared["sentiment_label"] = "Neutral"
+        prepared["sentiment_class"] = "neutral"
+    else:
+        prepared["sentiment_label"] = "Needs Attention"
+        prepared["sentiment_class"] = "attention"
     return prepared
+
+
+def build_visitor_feedback_analytics(items: list[dict[str, Any]] | None) -> dict[str, Any]:
+    feedback_items = list(items or [])
+    valid_ratings = [
+        int(item.get("rating"))
+        for item in feedback_items
+        if isinstance(item.get("rating"), int) and 1 <= int(item.get("rating")) <= 5
+    ]
+    total = len(feedback_items)
+    rated_total = len(valid_ratings)
+    average_rating = round(sum(valid_ratings) / rated_total, 1) if rated_total else 0.0
+    status_counts = {
+        status: sum(1 for item in feedback_items if item.get("status") == status)
+        for status in VISITOR_FEEDBACK_STATUS_OPTIONS
+    }
+    visit_type_counts = {
+        visit_type: sum(1 for item in feedback_items if item.get("visit_type") == visit_type)
+        for visit_type in VISIT_TYPE_LABELS
+    }
+    rating_distribution = []
+    for rating in range(5, 0, -1):
+        count = valid_ratings.count(rating)
+        rating_distribution.append(
+            {
+                "rating": rating,
+                "count": count,
+                "percent": round((count / rated_total) * 100) if rated_total else 0,
+            }
+        )
+
+    positive_count = sum(1 for rating in valid_ratings if rating >= 4)
+    attention_count = sum(1 for rating in valid_ratings if rating <= 2)
+    return {
+        "total": total,
+        "rated_total": rated_total,
+        "average_rating": average_rating,
+        "new_count": status_counts["new"],
+        "reviewed_count": status_counts["reviewed"],
+        "archived_count": status_counts["archived"],
+        "positive_count": positive_count,
+        "positive_percent": round((positive_count / rated_total) * 100) if rated_total else 0,
+        "attention_count": attention_count,
+        "attention_percent": round((attention_count / rated_total) * 100) if rated_total else 0,
+        "comment_count": sum(1 for item in feedback_items if str(item.get("comments") or "").strip()),
+        "rating_distribution": rating_distribution,
+        "visit_types": [
+            {
+                "key": visit_type,
+                "label": VISIT_TYPE_LABELS[visit_type],
+                "count": count,
+                "percent": round((count / total) * 100) if total else 0,
+            }
+            for visit_type, count in visit_type_counts.items()
+        ],
+    }
 
 
 def load_admin_visitor_feedback() -> list[dict[str, Any]]:
@@ -105,6 +175,7 @@ def get_visitor_feedback_status_message(status_key: Any) -> str | None:
     mapping = {
         "reviewed": "Visitor feedback marked as reviewed successfully.",
         "archived": "Visitor feedback archived successfully.",
+        "restored": "Visitor feedback restored to the review queue successfully.",
     }
     return mapping.get(str(status_key or "").strip().lower())
 
