@@ -92,7 +92,6 @@
 
                 <div class="admin-gallery-editor-model-preview" data-gallery-editor-media-panel="model" hidden>
                   <model-viewer
-                    src="{{ gallery_form.model_url or '' }}"
                     camera-controls
                     auto-rotate
                     shadow-intensity="0.7"
@@ -101,8 +100,14 @@
                     reveal="auto"
                     loading="eager"
                     data-gallery-editor-model-preview
+                    data-model-src="{{ gallery_form.model_url or '' }}"
                     {% if not gallery_form.model_url %}hidden{% endif %}
-                  ></model-viewer>
+                  >
+                    <div class="admin-gallery-model-loading" slot="poster">
+                      <i aria-hidden="true"></i>
+                      <span>Preparing 3D object…</span>
+                    </div>
+                  </model-viewer>
                   <div class="admin-gallery-editor-model-fallback" data-gallery-editor-model-fallback {% if gallery_form.model_url %}hidden{% endif %}>
                     <span aria-hidden="true">
                       <svg viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>

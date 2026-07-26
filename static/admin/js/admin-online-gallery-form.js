@@ -202,6 +202,20 @@
       panel.hidden =
         panel.getAttribute("data-gallery-editor-media-panel") !== activeMedia;
     });
+    if (
+      activeMedia === "model" &&
+      modelPreview &&
+      !normalize(modelPreview.getAttribute("src")) &&
+      savedModelUrl
+    ) {
+      modelPreview.hidden = false;
+      if (modelFallback) {
+        modelFallback.hidden = true;
+      }
+      window.requestAnimationFrame(function () {
+        modelPreview.setAttribute("src", savedModelUrl);
+      });
+    }
   }
 
   function setLanguage(language) {

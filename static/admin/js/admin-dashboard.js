@@ -1028,34 +1028,90 @@
     );
     var modelViewer = root.querySelector("[data-gallery-view-model]");
     var modelFallback = root.querySelector("[data-gallery-view-model-fallback]");
+    var modelRetry = root.querySelector("[data-gallery-view-model-retry]");
+    var modelSource = modelViewer
+      ? String(modelViewer.getAttribute("data-model-src") || "").trim()
+      : "";
+    var modelFailed = false;
+
+    function loadModelPreview(forceReload) {
+      if (!modelViewer || !modelSource) {
+        return;
+      }
+
+      modelViewer.hidden = false;
+      if (modelFallback) {
+        modelFallback.hidden = true;
+      }
+
+      if (modelFailed && !forceReload) {
+        modelViewer.hidden = true;
+        if (modelFallback) {
+          modelFallback.hidden = false;
+        }
+        return;
+      }
+      if (forceReload) {
+        modelFailed = false;
+      }
+
+      var currentSource = String(modelViewer.getAttribute("src") || "").trim();
+      if (currentSource && !forceReload) {
+        return;
+      }
+
+      modelViewer.removeAttribute("src");
+      window.requestAnimationFrame(function () {
+        modelViewer.setAttribute("src", modelSource);
+      });
+    }
+
+    function setGalleryMedia(media) {
+      buttons.forEach(function (item) {
+        var active =
+          item.getAttribute("data-gallery-view-media-tab") === media;
+        item.classList.toggle("is-active", active);
+        item.setAttribute("aria-selected", active ? "true" : "false");
+      });
+      panels.forEach(function (panel) {
+        panel.hidden =
+          panel.getAttribute("data-gallery-view-media-panel") !== media;
+      });
+      if (media === "model") {
+        loadModelPreview(false);
+      }
+    }
 
     buttons.forEach(function (button) {
       button.addEventListener("click", function () {
         var media = button.getAttribute("data-gallery-view-media-tab");
-        buttons.forEach(function (item) {
-          var active = item === button;
-          item.classList.toggle("is-active", active);
-          item.setAttribute("aria-selected", active ? "true" : "false");
-        });
-        panels.forEach(function (panel) {
-          panel.hidden =
-            panel.getAttribute("data-gallery-view-media-panel") !== media;
-        });
+        setGalleryMedia(media);
       });
     });
 
     if (modelViewer) {
       modelViewer.addEventListener("load", function () {
+        modelFailed = false;
         modelViewer.hidden = false;
         if (modelFallback) {
           modelFallback.hidden = true;
         }
       });
-      modelViewer.addEventListener("error", function () {
+      modelViewer.addEventListener("error", function (event) {
+        modelFailed = true;
         modelViewer.hidden = true;
         if (modelFallback) {
           modelFallback.hidden = false;
         }
+        console.warn(
+          "[Admin gallery] The stored GLB could not be rendered.",
+          event && event.detail ? event.detail : modelSource
+        );
+      });
+    }
+    if (modelRetry) {
+      modelRetry.addEventListener("click", function () {
+        loadModelPreview(true);
       });
     }
   }

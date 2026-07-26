@@ -903,7 +903,9 @@ def _set_security_headers(response):
             "default-src 'self'; "
             f"img-src {ADMIN_IMAGE_SOURCES}; "
             "script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; "
-            "style-src 'self'; "
+            # <model-viewer> injects its component styles inside Shadow DOM.
+            # Inline JavaScript remains blocked; only component CSS is allowed.
+            "style-src 'self' 'unsafe-inline'; "
             f"connect-src {ADMIN_ASSET_SOURCES}; "
             f"media-src {ADMIN_ASSET_SOURCES}; "
             "worker-src 'self' blob:; "

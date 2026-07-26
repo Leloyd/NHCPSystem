@@ -136,7 +136,6 @@
                 {% if gallery_item.model_url %}
                 <div class="admin-gallery-editor-model-preview admin-gallery-view-model" data-gallery-view-media-panel="model" hidden>
                   <model-viewer
-                    src="{{ gallery_item.model_url }}"
                     alt="Interactive 3D preview of {{ gallery_item.title }}"
                     camera-controls
                     auto-rotate
@@ -146,13 +145,20 @@
                     reveal="auto"
                     loading="eager"
                     data-gallery-view-model
-                  ></model-viewer>
+                    data-model-src="{{ gallery_item.model_url }}"
+                  >
+                    <div class="admin-gallery-model-loading" slot="poster">
+                      <i aria-hidden="true"></i>
+                      <span>Preparing 3D object…</span>
+                    </div>
+                  </model-viewer>
                   <div class="admin-gallery-editor-model-fallback" data-gallery-view-model-fallback hidden>
                     <span aria-hidden="true">
                       <svg viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>
                     </span>
                     <strong>3D preview unavailable</strong>
                     <small>The GLB could not be loaded. Check the stored file and try uploading it again.</small>
+                    <button type="button" class="admin-gallery-model-retry" data-gallery-view-model-retry>Try again</button>
                   </div>
                   <div class="admin-gallery-editor-model-caption">
                     <span>Interactive 3D preview</span>
