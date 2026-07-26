@@ -5122,7 +5122,7 @@
                           return { ...imageHotspot };
                         })
                       : [],
-                    language: "tl",
+                    language: floatingArtifactAudioLanguage === "en" ? "en" : "tl",
                     source: hotspot,
                   };
                 });

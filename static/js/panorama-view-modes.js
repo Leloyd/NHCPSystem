@@ -91,6 +91,7 @@ export function createPanoramaViewModes(options) {
     infoModelRoot: null,
     infoImageHotspotsVisible: true,
     infoDetail: null,
+    infoLanguageControl: null,
   };
 
   const orientationEuler = new THREE.Euler();
@@ -384,6 +385,22 @@ export function createPanoramaViewModes(options) {
     return record;
   }
 
+  function updateVrInfoControlLabel(record, label) {
+    const material = record && record.sprite && record.sprite.material;
+    if (!material) {
+      return;
+    }
+    const nextTexture = createControlTexture(label);
+    if (!nextTexture) {
+      return;
+    }
+    if (material.map) {
+      material.map.dispose();
+    }
+    material.map = nextTexture;
+    material.needsUpdate = true;
+  }
+
   function disposeThreeObject(root) {
     if (!root) {
       return;
@@ -513,6 +530,10 @@ export function createPanoramaViewModes(options) {
         } else {
           changeHotspotLanguage(vr.infoTarget, vr.infoLanguage);
         }
+        updateVrInfoControlLabel(
+          vr.infoLanguageControl,
+          vr.infoLanguage === "tl" ? "TL" : "EN",
+        );
         renderVrInfoSubtitle();
       },
       0.25,
@@ -698,6 +719,7 @@ export function createPanoramaViewModes(options) {
     vr.infoModelRoot = null;
     vr.infoImageHotspotsVisible = true;
     vr.infoDetail = null;
+    vr.infoLanguageControl = null;
     vr.activationLockedUntil = performance.now() + 450;
     return true;
   }
@@ -724,6 +746,7 @@ export function createPanoramaViewModes(options) {
     vr.infoZoom = 2;
     vr.infoImageHotspotsVisible = true;
     vr.infoDetail = null;
+    vr.infoLanguageControl = null;
 
     const borderMaterial = new THREE.MeshBasicMaterial({
       color: 0xd4af6a,
@@ -760,9 +783,35 @@ export function createPanoramaViewModes(options) {
       });
     }
     const imageHotspots = Array.isArray(hotspot.imageHotspots) ? hotspot.imageHotspots : [];
+    const hasBilingualTableAudio = imageHotspots.some(function (item) {
+      const audio = item && item.audioByLanguage;
+      return Boolean(audio && audio.tl && audio.en);
+    });
     const hasNestedSubtitle = imageHotspots.some(function (item) {
       return item && item.subtitle && (item.subtitle.tl || item.subtitle.en);
     });
+    if (hasBilingualTableAudio) {
+      let languageRecord = null;
+      languageRecord = addVrInfoControl(
+        vr.infoLanguage === "tl" ? "TL" : "EN",
+        -0.72,
+        -0.58,
+        function () {
+          vr.infoLanguage = vr.infoLanguage === "tl" ? "en" : "tl";
+          if (vr.infoDetail) {
+            activateNestedHotspot(vr.infoTarget, vr.infoDetail, vr.infoLanguage);
+          } else {
+            changeHotspotLanguage(vr.infoTarget, vr.infoLanguage);
+          }
+          updateVrInfoControlLabel(
+            languageRecord,
+            vr.infoLanguage === "tl" ? "TL" : "EN",
+          );
+          if (vr.infoSubtitlesOpen) renderVrInfoSubtitle();
+        },
+      );
+      vr.infoLanguageControl = languageRecord;
+    }
     if ((hotspot.subtitle && (hotspot.subtitle.tl || hotspot.subtitle.en)) || hasNestedSubtitle) {
       addVrInfoControl("CC", -0.36, -0.58, function () {
         vr.infoSubtitlesOpen = !vr.infoSubtitlesOpen;

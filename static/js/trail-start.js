@@ -935,6 +935,7 @@ const trailVr = {
   infoModelRoot: null,
   infoImageHotspotsVisible: true,
   infoDetail: null,
+  infoLanguageControl: null,
 };
 const gyroEuler = new THREE.Euler();
 const gyroQuaternion = new THREE.Quaternion();
@@ -1189,6 +1190,16 @@ function addTrailVrInfoControl(label, x, y, action, scale = 0.28, parent = null)
   return record;
 }
 
+function updateTrailVrInfoControlLabel(record, label) {
+  const material = record?.sprite?.material;
+  if (!material) return;
+  const nextTexture = createTrailVrControlTexture(label);
+  if (!nextTexture) return;
+  material.map?.dispose?.();
+  material.map = nextTexture;
+  material.needsUpdate = true;
+}
+
 function disposeTrailVrObject(object) {
   if (!object) return;
   object.traverse((node) => {
@@ -1304,6 +1315,10 @@ function renderTrailVrInfoSubtitle() {
     () => {
       trailVr.infoLanguage = trailVr.infoLanguage === 'tl' ? 'en' : 'tl';
       artApi.setLang?.(trailVr.infoLanguage);
+      updateTrailVrInfoControlLabel(
+        trailVr.infoLanguageControl,
+        trailVr.infoLanguage === 'tl' ? 'TL' : 'EN',
+      );
       renderTrailVrInfoSubtitle();
     },
     0.25,
@@ -1484,6 +1499,7 @@ function closeTrailVrInfoCard() {
   trailVr.infoModelRoot = null;
   trailVr.infoImageHotspotsVisible = true;
   trailVr.infoDetail = null;
+  trailVr.infoLanguageControl = null;
   trailVr.activationLockedUntil = performance.now() + 450;
   return true;
 }
@@ -1508,6 +1524,7 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   trailVr.infoZoom = 2;
   trailVr.infoImageHotspotsVisible = true;
   trailVr.infoDetail = null;
+  trailVr.infoLanguageControl = null;
 
   const border = new THREE.Mesh(
     new THREE.PlaneGeometry(2.08, 1.58),
@@ -1544,9 +1561,30 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   }
   const subtitle = args.subtitle;
   const imageHotspots = Array.isArray(args.imageHotspots) ? args.imageHotspots : [];
+  const hasBilingualTableAudio = imageHotspots.some((item) => (
+    item?.audioByLanguage?.tl && item.audioByLanguage.en
+  ));
   const hasNestedSubtitle = imageHotspots.some(
     (item) => item?.subtitle && (item.subtitle.tl || item.subtitle.en),
   );
+  if (hasBilingualTableAudio) {
+    let languageRecord = null;
+    languageRecord = addTrailVrInfoControl(
+      trailVr.infoLanguage === 'tl' ? 'TL' : 'EN',
+      -0.72,
+      -0.58,
+      () => {
+        trailVr.infoLanguage = trailVr.infoLanguage === 'tl' ? 'en' : 'tl';
+        artApi.setLang?.(trailVr.infoLanguage);
+        updateTrailVrInfoControlLabel(
+          languageRecord,
+          trailVr.infoLanguage === 'tl' ? 'TL' : 'EN',
+        );
+        if (trailVr.infoSubtitlesOpen) renderTrailVrInfoSubtitle();
+      },
+    );
+    trailVr.infoLanguageControl = languageRecord;
+  }
   if ((subtitle && (subtitle.tl || subtitle.en)) || hasNestedSubtitle) {
     addTrailVrInfoControl('CC', -0.36, -0.58, () => {
       trailVr.infoSubtitlesOpen = !trailVr.infoSubtitlesOpen;
