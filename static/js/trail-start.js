@@ -1127,6 +1127,41 @@ function createTrailVrControlTexture(label) {
   });
 }
 
+function createTrailVrViewerBackdropTexture() {
+  return createTrailVrCanvasTexture((context) => {
+    const base = context.createLinearGradient(0, 0, 0, 256);
+    base.addColorStop(0, '#211b15');
+    base.addColorStop(0.58, '#3d342a');
+    base.addColorStop(1, '#15100c');
+    context.fillStyle = base;
+    context.fillRect(0, 0, 256, 256);
+
+    const light = context.createRadialGradient(128, 102, 8, 128, 113, 159);
+    light.addColorStop(0, 'rgba(250, 247, 242, 0.48)');
+    light.addColorStop(0.42, 'rgba(190, 171, 143, 0.22)');
+    light.addColorStop(1, 'rgba(13, 10, 4, 0)');
+    context.fillStyle = light;
+    context.fillRect(0, 0, 256, 256);
+
+    context.save();
+    context.scale(1, 0.32);
+    const floorGlow = context.createRadialGradient(128, 653, 4, 128, 653, 118);
+    floorGlow.addColorStop(0, 'rgba(212, 175, 106, 0.32)');
+    floorGlow.addColorStop(1, 'rgba(212, 175, 106, 0)');
+    context.fillStyle = floorGlow;
+    context.beginPath();
+    context.arc(128, 653, 118, 0, Math.PI * 2);
+    context.fill();
+    context.restore();
+
+    const vignette = context.createRadialGradient(128, 123, 64, 128, 123, 184);
+    vignette.addColorStop(0, 'rgba(0, 0, 0, 0)');
+    vignette.addColorStop(1, 'rgba(0, 0, 0, 0.58)');
+    context.fillStyle = vignette;
+    context.fillRect(0, 0, 256, 256);
+  });
+}
+
 function addTrailVrInfoControl(label, x, y, action, scale = 0.28) {
   if (!trailVr.infoCard) return null;
   const texture = createTrailVrControlTexture(label);
@@ -1410,7 +1445,8 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   const panel = new THREE.Mesh(
     new THREE.PlaneGeometry(2, 1.5),
     new THREE.MeshBasicMaterial({
-      color: 0xfaf7f2,
+      map: createTrailVrViewerBackdropTexture(),
+      color: 0xffffff,
       depthTest: false,
       depthWrite: false,
     }),
