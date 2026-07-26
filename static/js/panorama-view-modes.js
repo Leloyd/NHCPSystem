@@ -400,6 +400,14 @@ export function createPanoramaViewModes(options) {
     if (root.parent) root.parent.remove(root);
   }
 
+  function setVrInfoSourceVisible(visible) {
+    const sourceSprite = vr.infoSourceRecord && vr.infoSourceRecord.sprite;
+    if (!sourceSprite) {
+      return;
+    }
+    sourceSprite.visible = Boolean(visible);
+  }
+
   function createSubtitleTexture(hotspot, language) {
     const subtitle = hotspot && hotspot.subtitle;
     const text = subtitle
@@ -519,6 +527,9 @@ export function createPanoramaViewModes(options) {
   }
 
   function renderVrInfoMedia() {
+    // Keep the panorama marker hidden while any of its image, model, subtitle,
+    // or nested table details remain open.
+    setVrInfoSourceVisible(false);
     vr.infoControls = vr.infoControls.filter(function (record) {
       return record.controlArea !== "media";
     });
@@ -664,9 +675,7 @@ export function createPanoramaViewModes(options) {
       return false;
     }
     const card = vr.infoCard;
-    if (vr.infoSourceRecord && vr.infoSourceRecord.sprite) {
-      vr.infoSourceRecord.sprite.visible = true;
-    }
+    setVrInfoSourceVisible(true);
     if (card.parent) {
       card.parent.remove(card);
     }
@@ -708,9 +717,7 @@ export function createPanoramaViewModes(options) {
     vr.infoCard = group;
     vr.infoTarget = hotspot;
     vr.infoSourceRecord = sourceRecord || null;
-    if (vr.infoSourceRecord && vr.infoSourceRecord.sprite) {
-      vr.infoSourceRecord.sprite.visible = false;
-    }
+    setVrInfoSourceVisible(false);
     vr.infoMode = "image";
     vr.infoLanguage = hotspot.language === "en" ? "en" : "tl";
     vr.infoSubtitlesOpen = false;

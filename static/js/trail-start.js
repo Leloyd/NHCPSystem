@@ -1202,6 +1202,12 @@ function disposeTrailVrObject(object) {
   object.parent?.remove(object);
 }
 
+function setTrailVrInfoSourceVisible(visible) {
+  const sourceSprite = trailVr.infoSourceRecord?.sprite;
+  if (!sourceSprite) return;
+  sourceSprite.visible = Boolean(visible);
+}
+
 function createTrailVrSubtitleTexture(hotspot, language) {
   const subtitle = hotspot?.subtitle || hotspot?.clickHandlerArgs?.subtitle;
   const text = subtitle
@@ -1312,6 +1318,9 @@ function renderTrailVrInfoSubtitle() {
 }
 
 function renderTrailVrInfoMedia() {
+  // Do not let the selected panorama marker show through its open content.
+  // It returns only after the whole artifact viewer is closed.
+  setTrailVrInfoSourceVisible(false);
   trailVr.infoControls = trailVr.infoControls.filter(
     (record) => record.controlArea !== 'media',
   );
@@ -1456,7 +1465,7 @@ function renderTrailVrInfoMedia() {
 function closeTrailVrInfoCard() {
   if (!trailVr.infoCard) return false;
   const card = trailVr.infoCard;
-  if (trailVr.infoSourceRecord?.sprite) trailVr.infoSourceRecord.sprite.visible = true;
+  setTrailVrInfoSourceVisible(true);
   card.parent?.remove(card);
   card.traverse((object) => {
     object.geometry?.dispose?.();
@@ -1492,7 +1501,7 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   trailVr.infoCard = group;
   trailVr.infoTarget = hotspot;
   trailVr.infoSourceRecord = sourceRecord || null;
-  if (trailVr.infoSourceRecord?.sprite) trailVr.infoSourceRecord.sprite.visible = false;
+  setTrailVrInfoSourceVisible(false);
   trailVr.infoMode = 'image';
   trailVr.infoLanguage = state.lang === 'en' ? 'en' : 'tl';
   trailVr.infoSubtitlesOpen = false;
