@@ -1000,9 +1000,13 @@ function applyTrailGyroReading() {
   trailGyro.rafId = 0;
   if (!trailGyro.enabled || !trailGyro.hasReading || trailGyro.dragging || !viewer) return;
 
+  // DeviceOrientation and Pannellum use opposite horizontal directions:
+  // negate the sensor yaw so turning the phone right turns the view right.
+  const pannellumYaw = -trailGyro.yaw;
+
   if (trailGyro.needsSync) {
     try {
-      trailGyro.yawOffset = viewer.getYaw() - trailGyro.yaw;
+      trailGyro.yawOffset = viewer.getYaw() - pannellumYaw;
       trailGyro.pitchOffset = viewer.getPitch() - trailGyro.pitch;
     } catch {
       return;
@@ -1011,7 +1015,7 @@ function applyTrailGyroReading() {
   }
 
   try {
-    const yaw = ((trailGyro.yaw + trailGyro.yawOffset + 540) % 360) - 180;
+    const yaw = ((pannellumYaw + trailGyro.yawOffset + 540) % 360) - 180;
     const pitch = Math.max(-85, Math.min(85, trailGyro.pitch + trailGyro.pitchOffset));
     viewer.setYaw(yaw, false);
     viewer.setPitch(pitch, false);
