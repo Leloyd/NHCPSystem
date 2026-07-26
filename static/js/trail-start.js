@@ -1162,7 +1162,7 @@ function createTrailVrViewerBackdropTexture() {
   });
 }
 
-function addTrailVrInfoControl(label, x, y, action, scale = 0.28) {
+function addTrailVrInfoControl(label, x, y, action, scale = 0.28, parent = null) {
   if (!trailVr.infoCard) return null;
   const texture = createTrailVrControlTexture(label);
   if (!texture) return null;
@@ -1175,7 +1175,7 @@ function addTrailVrInfoControl(label, x, y, action, scale = 0.28) {
   sprite.position.set(x, y, 0.09);
   sprite.scale.setScalar(scale);
   sprite.renderOrder = 130;
-  trailVr.infoCard.add(sprite);
+  (parent || trailVr.infoCard).add(sprite);
   const record = {
     sprite,
     action,
@@ -1268,7 +1268,10 @@ function renderTrailVrInfoSubtitle() {
     return;
   }
   const subtitleRoot = new THREE.Group();
-  subtitleRoot.position.set(0, -1.62, 0.025);
+  subtitleRoot.position.set(0, -1.62, 0.18);
+  // Tilt the subtitle upward toward the visitor so it remains a comfortable
+  // reading surface when the artifact viewer is enlarged.
+  subtitleRoot.rotation.x = THREE.MathUtils.degToRad(-20);
   const panel = new THREE.Mesh(
     new THREE.PlaneGeometry(2.72, 1.55),
     new THREE.MeshBasicMaterial({
@@ -1286,18 +1289,19 @@ function renderTrailVrInfoSubtitle() {
   const languageRecord = addTrailVrInfoControl(
     trailVr.infoLanguage === 'tl' ? 'TL' : 'EN',
     0.94,
-    -2.22,
+    -0.6,
     () => {
       trailVr.infoLanguage = trailVr.infoLanguage === 'tl' ? 'en' : 'tl';
       artApi.setLang?.(trailVr.infoLanguage);
       renderTrailVrInfoSubtitle();
     },
     0.25,
+    subtitleRoot,
   );
-  const closeRecord = addTrailVrInfoControl('×', 1.24, -2.22, () => {
+  const closeRecord = addTrailVrInfoControl('×', 1.24, -0.6, () => {
     trailVr.infoSubtitlesOpen = false;
     renderTrailVrInfoSubtitle();
-  }, 0.25);
+  }, 0.25, subtitleRoot);
   if (languageRecord) languageRecord.controlArea = 'subtitle';
   if (closeRecord) closeRecord.controlArea = 'subtitle';
 }

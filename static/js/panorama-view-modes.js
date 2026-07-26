@@ -345,7 +345,7 @@ export function createPanoramaViewModes(options) {
     });
   }
 
-  function addVrInfoControl(label, x, y, action, scale) {
+  function addVrInfoControl(label, x, y, action, scale, parent) {
     if (!vr.infoCard) {
       return null;
     }
@@ -364,7 +364,7 @@ export function createPanoramaViewModes(options) {
     sprite.position.set(x, y, 0.09);
     sprite.scale.setScalar(baseScale);
     sprite.renderOrder = 130;
-    vr.infoCard.add(sprite);
+    (parent || vr.infoCard).add(sprite);
     const record = {
       sprite,
       action,
@@ -468,7 +468,10 @@ export function createPanoramaViewModes(options) {
       return;
     }
     const root = new THREE.Group();
-    root.position.set(0, -1.62, 0.025);
+    root.position.set(0, -1.62, 0.18);
+    // Angle the lower reading panel toward the visitor. This keeps long
+    // subtitles facing the eyes when the complete artifact viewer is zoomed.
+    root.rotation.x = THREE.MathUtils.degToRad(-20);
     const panel = new THREE.Mesh(
       new THREE.PlaneGeometry(2.72, 1.55),
       new THREE.MeshBasicMaterial({
@@ -486,18 +489,19 @@ export function createPanoramaViewModes(options) {
     const languageRecord = addVrInfoControl(
       vr.infoLanguage === "tl" ? "TL" : "EN",
       0.94,
-      -2.22,
+      -0.6,
       function () {
         vr.infoLanguage = vr.infoLanguage === "tl" ? "en" : "tl";
         changeHotspotLanguage(vr.infoTarget, vr.infoLanguage);
         renderVrInfoSubtitle();
       },
       0.25,
+      root,
     );
-    const closeRecord = addVrInfoControl("×", 1.24, -2.22, function () {
+    const closeRecord = addVrInfoControl("×", 1.24, -0.6, function () {
       vr.infoSubtitlesOpen = false;
       renderVrInfoSubtitle();
-    }, 0.25);
+    }, 0.25, root);
     if (languageRecord) languageRecord.controlArea = "subtitle";
     if (closeRecord) closeRecord.controlArea = "subtitle";
   }
