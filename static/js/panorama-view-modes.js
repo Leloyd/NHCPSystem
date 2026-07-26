@@ -59,6 +59,7 @@ export function createPanoramaViewModes(options) {
     nativeSupported: false,
     renderer: null,
     scene: null,
+    worldRoot: null,
     camera: null,
     stereo: null,
     sphere: null,
@@ -92,6 +93,8 @@ export function createPanoramaViewModes(options) {
     infoImageHotspotsVisible: true,
     infoDetail: null,
     infoLanguageControl: null,
+    pendingSceneView: null,
+    lastGazeDirection: new THREE.Vector3(0, 0, -1),
   };
 
   const orientationEuler = new THREE.Euler();
@@ -107,6 +110,10 @@ export function createPanoramaViewModes(options) {
   const controllerDirection = new THREE.Vector3();
   const controllerOrigin = new THREE.Vector3();
   const targetWorldPosition = new THREE.Vector3();
+  const sceneTargetEuler = new THREE.Euler(0, 0, 0, "YXZ");
+  const sceneGazeEuler = new THREE.Euler(0, 0, 0, "YXZ");
+  const sceneTargetQuaternion = new THREE.Quaternion();
+  const sceneGazeQuaternion = new THREE.Quaternion();
   const DWELL_MS = 1250;
   const GAZE_ANGLE_DEG = 6;
 
@@ -235,7 +242,7 @@ export function createPanoramaViewModes(options) {
       sprite.scale.setScalar(0.58);
       sprite.renderOrder = 20;
       sprite.userData.vrHotspotIndex = index;
-      vr.scene.add(sprite);
+      (vr.worldRoot || vr.scene).add(sprite);
       vr.targets.push({
         hotspot,
         sprite,
@@ -768,7 +775,7 @@ export function createPanoramaViewModes(options) {
     panel.renderOrder = 102;
     group.add(panel);
 
-    vr.scene.add(group);
+    (vr.worldRoot || vr.scene).add(group);
     renderVrInfoMedia();
 
     if (hotspot.glbSrc) {
@@ -850,6 +857,21 @@ export function createPanoramaViewModes(options) {
       record.action();
       return;
     }
+    if (record.hotspot.type === "scene") {
+      const source = record.hotspot.source || {};
+      const targetPitch = Number(
+        record.hotspot.targetPitch ?? source.targetPitch,
+      );
+      const targetYaw = Number(
+        record.hotspot.targetYaw ?? source.targetYaw,
+      );
+      vr.pendingSceneView = Number.isFinite(targetPitch) || Number.isFinite(targetYaw)
+        ? {
+            pitch: Number.isFinite(targetPitch) ? targetPitch : null,
+            yaw: Number.isFinite(targetYaw) ? targetYaw : null,
+          }
+        : null;
+    }
     if (record.hotspot.type !== "scene") {
       showVrInfoCard(record.hotspot, record);
     }
@@ -862,7 +884,12 @@ export function createPanoramaViewModes(options) {
 
   function updateVrGaze(camera, now) {
     const selectableTargets = vr.infoCard ? vr.infoControls : vr.targets;
-    if (!camera || !selectableTargets.length) {
+    if (!camera) {
+      return;
+    }
+    camera.getWorldDirection(gazeDirection);
+    vr.lastGazeDirection.copy(gazeDirection);
+    if (!selectableTargets.length) {
       vr.gazeTarget = null;
       vr.gazeSince = 0;
       vr.gazeLatchedTarget = null;
@@ -870,7 +897,6 @@ export function createPanoramaViewModes(options) {
       overlay.style.setProperty("--vr-dwell-progress", "0");
       return;
     }
-    camera.getWorldDirection(gazeDirection);
     let closest = null;
     let closestAngle = Infinity;
     camera.getWorldPosition(controllerOrigin);
@@ -1140,11 +1166,14 @@ export function createPanoramaViewModes(options) {
     }
     vr.renderer = null;
     vr.scene = null;
+    vr.worldRoot = null;
     vr.camera = null;
     vr.stereo = null;
     vr.sphere = null;
     vr.material = null;
     vr.texture = null;
+    vr.pendingSceneView = null;
+    vr.lastGazeDirection.set(0, 0, -1);
     vr.width = 0;
     vr.height = 0;
     stage.replaceChildren();
@@ -1190,6 +1219,8 @@ export function createPanoramaViewModes(options) {
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x000000);
+    const worldRoot = new THREE.Group();
+    scene.add(worldRoot);
     const camera = new THREE.PerspectiveCamera(78, 1, 0.05, 40);
     camera.rotation.order = "YXZ";
     scene.add(camera);
@@ -1210,10 +1241,11 @@ export function createPanoramaViewModes(options) {
     // camera / hotspot coordinate system uses -Z. Rotate only the panorama
     // by -90° so a Pannellum pitch/yaw lands on the same visible pixel in VR.
     sphere.rotation.y = -Math.PI / 2;
-    scene.add(sphere);
+    worldRoot.add(sphere);
 
     vr.renderer = renderer;
     vr.scene = scene;
+    vr.worldRoot = worldRoot;
     vr.camera = camera;
     vr.sphere = sphere;
     vr.material = material;
@@ -1252,6 +1284,73 @@ export function createPanoramaViewModes(options) {
     );
   }
 
+  function applyPendingVrSceneView() {
+    const target = vr.pendingSceneView;
+    vr.pendingSceneView = null;
+    if (!target) {
+      return;
+    }
+
+    const viewer = getViewer();
+    let fallbackPitch = 0;
+    let fallbackYaw = 0;
+    try {
+      fallbackPitch = Number(viewer.getPitch()) || 0;
+      fallbackYaw = Number(viewer.getYaw()) || 0;
+    } catch {
+      // Neutral values are safe if the underlying viewer is unavailable.
+    }
+    const rawPitch = target.pitch !== null && Number.isFinite(Number(target.pitch))
+      ? Number(target.pitch)
+      : fallbackPitch;
+    const rawYaw = target.yaw !== null && Number.isFinite(Number(target.yaw))
+      ? Number(target.yaw)
+      : fallbackYaw;
+    const targetPitch = Math.max(-85, Math.min(85, rawPitch));
+    const targetYaw = ((rawYaw % 360) + 540) % 360 - 180;
+
+    if (vr.mode === "native" && vr.worldRoot) {
+      const gaze = vr.lastGazeDirection.lengthSq() > 0
+        ? vr.lastGazeDirection.clone().normalize()
+        : new THREE.Vector3(0, 0, -1);
+      const gazePitch = Math.asin(Math.max(-1, Math.min(1, gaze.y)));
+      const gazeYaw = Math.atan2(gaze.x, -gaze.z);
+      sceneTargetEuler.set(
+        THREE.MathUtils.degToRad(targetPitch),
+        THREE.MathUtils.degToRad(-targetYaw),
+        0,
+        "YXZ",
+      );
+      sceneGazeEuler.set(gazePitch, -gazeYaw, 0, "YXZ");
+      sceneTargetQuaternion.setFromEuler(sceneTargetEuler).invert();
+      sceneGazeQuaternion.setFromEuler(sceneGazeEuler);
+      vr.worldRoot.quaternion.copy(sceneGazeQuaternion).multiply(sceneTargetQuaternion);
+      return;
+    }
+
+    if (vr.worldRoot) {
+      vr.worldRoot.quaternion.identity();
+    }
+    try {
+      viewer.setYaw(targetYaw, false);
+      viewer.setPitch(targetPitch, false);
+    } catch {
+      // The underlying viewer may still be completing its scene transition.
+    }
+    if (gyro.enabled && gyro.hasReading) {
+      gyro.yawOffset = targetYaw - (-gyro.yaw);
+      gyro.pitchOffset = targetPitch - gyro.pitch;
+      gyro.needsSync = false;
+    } else {
+      gyro.needsSync = true;
+    }
+    if (vr.camera) {
+      vr.camera.rotation.x = THREE.MathUtils.degToRad(targetPitch);
+      vr.camera.rotation.y = THREE.MathUtils.degToRad(-targetYaw);
+      vr.camera.rotation.z = 0;
+    }
+  }
+
   function refreshVrWorld() {
     if (!vr.mode || !vr.material) {
       return;
@@ -1262,6 +1361,7 @@ export function createPanoramaViewModes(options) {
     }
     closeVrInfoCard();
     buildVrTargets();
+    applyPendingVrSceneView();
     status.classList.remove("is-ready");
     const material = vr.material;
     new THREE.TextureLoader().load(

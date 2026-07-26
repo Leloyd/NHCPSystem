@@ -5102,6 +5102,9 @@
                 })
                 .map(function (hotspot, index) {
                   const args = hotspot.clickHandlerArgs || {};
+                  const targetScene = hotspot.sceneId && resolvedScenes[hotspot.sceneId]
+                    ? resolvedScenes[hotspot.sceneId]
+                    : null;
                   const rawTitle = args.title || args.imageAlt || hotspot.text || "";
                   const title = rawTitle && typeof rawTitle === "object"
                     ? (rawTitle[floatingArtifactAudioLanguage] || rawTitle.en || rawTitle.tl || "")
@@ -5111,6 +5114,12 @@
                     type: hotspot.type,
                     pitch: Number(hotspot.pitch),
                     yaw: Number(hotspot.yaw),
+                    targetPitch: Number.isFinite(Number(hotspot.targetPitch))
+                      ? Number(hotspot.targetPitch)
+                      : (targetScene ? Number(targetScene.pitch) : null),
+                    targetYaw: Number.isFinite(Number(hotspot.targetYaw))
+                      ? Number(hotspot.targetYaw)
+                      : (targetScene ? Number(targetScene.yaw) : null),
                     label: title || (hotspot.type === "scene"
                       ? getTourViewCopy("Move to the next view", "Lumipat sa susunod na tanaw")
                       : getTourViewCopy("Museum artifact", "Artifact ng museo")),
