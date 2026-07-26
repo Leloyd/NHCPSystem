@@ -3058,18 +3058,19 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   position: absolute;
   z-index: 2;
   top: 50%;
-  width: 0.72rem;
-  height: 0.72rem;
-  border: 1px solid rgba(250, 247, 242, 0.68);
+  width: 0.34rem;
+  height: 0.34rem;
+  border: 0;
   border-radius: 50%;
-  box-shadow: 0 0 0 1px rgba(13, 10, 4, 0.42), 0 0 0.7rem rgba(212, 175, 106, 0.25);
+  background: var(--tx-gold);
+  box-shadow: 0 0 0 1px rgba(13, 10, 4, 0.75), 0 0 0.5rem rgba(212, 175, 106, 0.55);
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
 .trailx-vr__reticle::before {
   content: "";
   position: absolute;
-  inset: -0.36rem;
+  inset: -0.3rem;
   border-radius: 50%;
   background: conic-gradient(
     var(--tx-gold) calc(var(--vr-dwell-progress, 0) * 1turn),
@@ -3082,15 +3083,7 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 }
 .trailx-vr.is-targeting .trailx-vr__reticle::before { opacity: 1; }
 .trailx-vr__reticle::after {
-  content: "";
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 2px;
-  height: 2px;
-  border-radius: 50%;
-  background: var(--tx-gold);
-  transform: translate(-50%, -50%);
+  content: none;
 }
 .trailx-vr__reticle--left { left: 25%; }
 .trailx-vr__reticle--right { left: 75%; }

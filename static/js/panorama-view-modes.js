@@ -687,6 +687,11 @@ export function createPanoramaViewModes(options) {
     geometry.scale(-1, 1, 1);
     const material = new THREE.MeshBasicMaterial({ color: 0x17110a });
     const sphere = new THREE.Mesh(geometry, material);
+    // Pannellum yaw 0 is the horizontal center of an equirectangular image.
+    // Three's inverted SphereGeometry places that center on -X, while this
+    // camera / hotspot coordinate system uses -Z. Rotate only the panorama
+    // by -90° so a Pannellum pitch/yaw lands on the same visible pixel in VR.
+    sphere.rotation.y = -Math.PI / 2;
     scene.add(sphere);
 
     vr.renderer = renderer;

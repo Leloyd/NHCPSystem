@@ -1516,6 +1516,9 @@ function buildTrailVrWorld(source) {
   geometry.scale(-1, 1, 1);
   const material = new THREE.MeshBasicMaterial({ color: 0x17110a });
   const sphere = new THREE.Mesh(geometry, material);
+  // Match Pannellum's yaw origin: image center (yaw 0) must face -Z in this
+  // renderer, so rotate Three's inverted equirectangular sphere by -90°.
+  sphere.rotation.y = -Math.PI / 2;
   scene.add(sphere);
 
   trailVr.renderer = renderer;
