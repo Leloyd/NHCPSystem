@@ -1983,13 +1983,43 @@
         </button>
       </div>
 
-      <!-- Zoom controls — visible only in Full View -->
+      <!-- View controls — visible only in Full View -->
       <div class="trailx__zoom" data-trail-zoom>
+        <button class="trailx-btn" type="button" data-trail-gyro aria-pressed="false" aria-label="Turn on gyro look" title="Gyro look">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2.2"/>
+            <path stroke-linecap="round" d="M10 5h4M11 18.5h2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.1 8.2a8.5 8.5 0 000 7.6M19.9 8.2a8.5 8.5 0 010 7.6"/>
+          </svg>
+        </button>
+        <button class="trailx-btn" type="button" data-trail-vr aria-pressed="false" aria-label="Enter VR mode" title="VR mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.4 8.1A2.6 2.6 0 016 5.8h12a2.6 2.6 0 012.6 2.3l.7 6.2a3 3 0 01-3 3.4h-2.1a2.8 2.8 0 01-2.3-1.2l-.7-1a1.5 1.5 0 00-2.4 0l-.7 1a2.8 2.8 0 01-2.3 1.2H5.7a3 3 0 01-3-3.4l.7-6.2z"/>
+            <circle cx="7.6" cy="11.7" r="2.1"/><circle cx="16.4" cy="11.7" r="2.1"/>
+          </svg>
+        </button>
         <button class="trailx-btn" type="button" data-trail-zoom-in aria-label="Zoom in">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35M11 8v6M8 11h6"/></svg>
         </button>
         <button class="trailx-btn" type="button" data-trail-zoom-out aria-label="Zoom out">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path stroke-linecap="round" d="M21 21l-4.35-4.35M8 11h6"/></svg>
+        </button>
+      </div>
+
+      <!-- Custom WebXR / VR Box view. This deliberately does not use
+           Pannellum's built-in VR control. -->
+      <div class="trailx-vr" data-trail-vr-view hidden role="dialog" aria-modal="true" aria-label="Virtual reality panorama">
+        <div class="trailx-vr__stage" data-trail-vr-stage></div>
+        <span class="trailx-vr__divider" aria-hidden="true"></span>
+        <span class="trailx-vr__reticle trailx-vr__reticle--left" aria-hidden="true"></span>
+        <span class="trailx-vr__reticle trailx-vr__reticle--right" aria-hidden="true"></span>
+        <p class="trailx-vr__status" data-trail-vr-status aria-live="polite">
+          <span data-lang-en>Preparing the VR view…</span>
+          <span data-lang-tl>Inihahanda ang VR na tanaw…</span>
+        </p>
+        <button class="trailx-vr__exit" type="button" data-trail-vr-exit>
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"/></svg>
+          <span data-lang-en>Exit VR</span><span data-lang-tl>Isara ang VR</span>
         </button>
       </div>
     </section>

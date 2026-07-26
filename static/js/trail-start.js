@@ -273,6 +273,12 @@ const storyEls = Array.from(root.querySelectorAll('[data-trail-story]'));
 const progressEl = root.querySelector('[data-trail-progress] span');
 const zoomInBtn = root.querySelector('[data-trail-zoom-in]');
 const zoomOutBtn = root.querySelector('[data-trail-zoom-out]');
+const gyroBtn = root.querySelector('[data-trail-gyro]');
+const vrBtn = root.querySelector('[data-trail-vr]');
+const vrViewEl = root.querySelector('[data-trail-vr-view]');
+const vrStageEl = root.querySelector('[data-trail-vr-stage]');
+const vrStatusEl = root.querySelector('[data-trail-vr-status]');
+const vrExitBtn = root.querySelector('[data-trail-vr-exit]');
 
 const state = {
   lang: localStorage.getItem('anaGuideLang') === 'tl' ? 'tl' : 'en',
@@ -308,6 +314,10 @@ const charApi = {};
 /* Full-View artifact-controls handle (populated by initPanorama). In Full View
    on Stops 3, 4 and 7 the guide controls drive the tapped artifact's audio. */
 const artApi = {};
+
+/* Current Pannellum scene media, shared with the custom WebXR / VR Box
+   renderer. It is populated when initPanorama builds the tour. */
+const panoramaApi = { sceneSources: {} };
 
 /* Stop 4's Fragments of Memory controls. Populated when its story is set up
    so stop transitions and the global mute control can also manage its music. */
@@ -838,6 +848,7 @@ immersiveBtn?.addEventListener('click', () => {
     artApi.update?.(); // Full View → controls act on the artifact at supported stops
     return;
   }
+  exitTrailViewModes();
   immersiveBtn.setAttribute('aria-pressed', 'false');
   // Ease any zoom back to the scene default first, then restore the panels.
   let delay = 0;
@@ -865,6 +876,653 @@ function zoomBy(delta, ms = 220) {
 }
 zoomInBtn?.addEventListener('click', () => zoomBy(-10));
 zoomOutBtn?.addEventListener('click', () => zoomBy(10));
+
+/* --- Gyro magic window + custom WebXR / VR Box mode ------------------------
+   This mirrors the 3D Environment's interaction pattern without enabling
+   Pannellum's built-in VR control:
+   - Gyro maps DeviceOrientation to the active Pannellum view.
+   - VR uses native WebXR immersive-vr where a headset/browser supports it.
+   - Phones without immersive-vr use a split-screen Cardboard renderer driven
+     by the same gyro look. -------------------------------------------------- */
+const trailGyro = {
+  enabled: false,
+  hasReading: false,
+  needsSync: true,
+  dragging: false,
+  yawOffset: 0,
+  pitchOffset: 0,
+  yaw: 0,
+  pitch: 0,
+  rafId: 0,
+  readingTimer: 0,
+  onOrientation: null,
+};
+const trailVr = {
+  mode: '', // '' | 'cardboard' | 'native'
+  nativeSupported: false,
+  nativeChecked: false,
+  renderer: null,
+  scene: null,
+  camera: null,
+  stereo: null,
+  sphere: null,
+  material: null,
+  texture: null,
+  rafId: 0,
+  session: null,
+  exiting: false,
+  fullscreenOwned: false,
+  width: 0,
+  height: 0,
+  lastTapAt: 0,
+};
+const gyroEuler = new THREE.Euler();
+const gyroQuaternion = new THREE.Quaternion();
+const gyroScreenQuaternion = new THREE.Quaternion();
+const gyroLookQuaternion = new THREE.Quaternion().setFromAxisAngle(
+  new THREE.Vector3(1, 0, 0),
+  -Math.PI / 2,
+);
+const gyroZAxis = new THREE.Vector3(0, 0, 1);
+let trailViewNotice = null;
+let trailViewNoticeTimer = 0;
+
+function showTrailViewNotice(title, message, duration = 5000) {
+  if (!trailViewNotice) {
+    trailViewNotice = document.createElement('div');
+    trailViewNotice.className = 'trailx-ar-notice trailx-view-notice';
+    trailViewNotice.hidden = true;
+    trailViewNotice.setAttribute('role', 'status');
+    trailViewNotice.setAttribute('aria-live', 'polite');
+    trailViewNotice.setAttribute('aria-atomic', 'true');
+
+    const icon = document.createElement('span');
+    icon.className = 'trailx-ar-notice__icon';
+    icon.setAttribute('aria-hidden', 'true');
+    icon.textContent = '360°';
+
+    const copy = document.createElement('span');
+    copy.className = 'trailx-ar-notice__copy';
+    const heading = document.createElement('strong');
+    heading.setAttribute('data-trail-view-notice-title', '');
+    const bodyText = document.createElement('span');
+    bodyText.setAttribute('data-trail-view-notice-body', '');
+    copy.append(heading, bodyText);
+
+    const close = document.createElement('button');
+    close.className = 'trailx-ar-notice__close';
+    close.type = 'button';
+    close.setAttribute('aria-label', 'Close viewing-mode notice');
+    close.textContent = '×';
+    close.addEventListener('click', () => {
+      window.clearTimeout(trailViewNoticeTimer);
+      trailViewNotice.classList.remove('is-visible');
+      trailViewNotice.hidden = true;
+    });
+
+    trailViewNotice.append(icon, copy, close);
+    root.appendChild(trailViewNotice);
+  }
+
+  trailViewNotice.querySelector('[data-trail-view-notice-title]').textContent = title;
+  trailViewNotice.querySelector('[data-trail-view-notice-body]').textContent = message;
+  window.clearTimeout(trailViewNoticeTimer);
+  trailViewNotice.hidden = false;
+  window.requestAnimationFrame(() => trailViewNotice.classList.add('is-visible'));
+  trailViewNoticeTimer = window.setTimeout(() => {
+    trailViewNotice.classList.remove('is-visible');
+    window.setTimeout(() => {
+      if (!trailViewNotice.classList.contains('is-visible')) trailViewNotice.hidden = true;
+    }, 220);
+  }, duration);
+}
+
+function localizedViewCopy(en, tl) {
+  return state.lang === 'tl' ? tl : en;
+}
+
+function updateTrailViewButtons() {
+  if (gyroBtn) {
+    gyroBtn.setAttribute('aria-pressed', String(trailGyro.enabled));
+    gyroBtn.setAttribute(
+      'aria-label',
+      trailGyro.enabled ? 'Turn off gyro look' : 'Turn on gyro look',
+    );
+  }
+  if (vrBtn) {
+    const active = Boolean(trailVr.mode);
+    vrBtn.setAttribute('aria-pressed', String(active));
+    vrBtn.setAttribute('aria-label', active ? 'Exit VR mode' : 'Enter VR mode');
+  }
+}
+
+function applyTrailGyroReading() {
+  trailGyro.rafId = 0;
+  if (!trailGyro.enabled || !trailGyro.hasReading || trailGyro.dragging || !viewer) return;
+
+  if (trailGyro.needsSync) {
+    try {
+      trailGyro.yawOffset = viewer.getYaw() - trailGyro.yaw;
+      trailGyro.pitchOffset = viewer.getPitch() - trailGyro.pitch;
+    } catch {
+      return;
+    }
+    trailGyro.needsSync = false;
+  }
+
+  try {
+    const yaw = ((trailGyro.yaw + trailGyro.yawOffset + 540) % 360) - 180;
+    const pitch = Math.max(-85, Math.min(85, trailGyro.pitch + trailGyro.pitchOffset));
+    viewer.setYaw(yaw, false);
+    viewer.setPitch(pitch, false);
+  } catch { /* Pannellum may be changing scenes. */ }
+}
+
+function readTrailOrientation(event) {
+  if (!trailGyro.enabled || event.alpha === null || event.alpha === undefined) return;
+
+  window.clearTimeout(trailGyro.readingTimer);
+  trailGyro.readingTimer = 0;
+  trailGyro.hasReading = true;
+
+  const degToRad = Math.PI / 180;
+  const alpha = Number(event.alpha || 0) * degToRad;
+  const beta = Number(event.beta || 0) * degToRad;
+  const gamma = Number(event.gamma || 0) * degToRad;
+  const screenAngle = Number(
+    (window.screen && window.screen.orientation && window.screen.orientation.angle)
+      || window.orientation
+      || 0,
+  ) * degToRad;
+
+  // Same DeviceOrientationControls conversion used by the 3D Environment.
+  gyroEuler.set(beta, alpha, -gamma, 'YXZ');
+  gyroQuaternion.setFromEuler(gyroEuler);
+  gyroQuaternion.multiply(gyroLookQuaternion);
+  gyroScreenQuaternion.setFromAxisAngle(gyroZAxis, -screenAngle);
+  gyroQuaternion.multiply(gyroScreenQuaternion);
+  gyroEuler.setFromQuaternion(gyroQuaternion, 'YXZ');
+
+  trailGyro.yaw = THREE.MathUtils.radToDeg(gyroEuler.y);
+  trailGyro.pitch = THREE.MathUtils.radToDeg(gyroEuler.x);
+  if (!trailGyro.rafId) trailGyro.rafId = window.requestAnimationFrame(applyTrailGyroReading);
+}
+
+async function setTrailGyroEnabled(enabled, options = {}) {
+  if (!enabled) {
+    window.clearTimeout(trailGyro.readingTimer);
+    trailGyro.readingTimer = 0;
+    if (trailGyro.onOrientation) {
+      window.removeEventListener('deviceorientation', trailGyro.onOrientation, true);
+      trailGyro.onOrientation = null;
+    }
+    trailGyro.enabled = false;
+    trailGyro.hasReading = false;
+    trailGyro.needsSync = true;
+    updateTrailViewButtons();
+    return true;
+  }
+
+  if (!viewer) throw new Error('The 360 view is still loading. Please try again.');
+  if (typeof window.DeviceOrientationEvent === 'undefined') {
+    throw new Error('This device does not report motion or orientation.');
+  }
+
+  if (typeof window.DeviceOrientationEvent.requestPermission === 'function') {
+    let response = '';
+    try {
+      response = await window.DeviceOrientationEvent.requestPermission();
+    } catch {
+      throw new Error('Motion permission could not be requested. Use HTTPS and try again.');
+    }
+    if (response !== 'granted') {
+      throw new Error('Motion access was denied. Allow Motion & Orientation Access, then try again.');
+    }
+  }
+
+  if (trailGyro.onOrientation) {
+    window.removeEventListener('deviceorientation', trailGyro.onOrientation, true);
+  }
+  trailGyro.onOrientation = readTrailOrientation;
+  window.addEventListener('deviceorientation', trailGyro.onOrientation, true);
+  trailGyro.enabled = true;
+  trailGyro.hasReading = false;
+  trailGyro.needsSync = true;
+  updateTrailViewButtons();
+
+  trailGyro.readingTimer = window.setTimeout(() => {
+    if (!trailGyro.enabled || trailGyro.hasReading) return;
+    void setTrailGyroEnabled(false);
+    showTrailViewNotice(
+      localizedViewCopy('Gyro unavailable', 'Hindi magamit ang gyro'),
+      localizedViewCopy(
+        'No motion reading was received. Check your browser sensor permissions and use HTTPS.',
+        'Walang natanggap na motion reading. Suriin ang sensor permission ng browser at gumamit ng HTTPS.',
+      ),
+      6500,
+    );
+  }, 2200);
+
+  if (!options.quiet) {
+    showTrailViewNotice(
+      localizedViewCopy('Gyro look is on', 'Naka-on ang gyro'),
+      localizedViewCopy(
+        'Move your phone to look around the 360 view. Dragging the view resets your facing direction.',
+        'Igalaw ang telepono upang lumingon sa 360 na tanaw. Ang pag-drag ay magtatakda muli ng direksiyong kaharap.',
+      ),
+    );
+  }
+  return true;
+}
+
+function showVrView(kind) {
+  if (!vrViewEl) return;
+  vrViewEl.hidden = false;
+  vrViewEl.dataset.vrKind = kind;
+  if (vrStatusEl) vrStatusEl.classList.remove('is-ready');
+  document.documentElement.classList.add('trailx-vr-active');
+  root.setAttribute('data-vr-mode', kind);
+}
+
+function markVrTextureReady() {
+  if (vrStatusEl) vrStatusEl.classList.add('is-ready');
+}
+
+function disposeTrailVrWorld() {
+  if (trailVr.rafId) {
+    window.cancelAnimationFrame(trailVr.rafId);
+    trailVr.rafId = 0;
+  }
+  if (trailVr.renderer) {
+    trailVr.renderer.setAnimationLoop(null);
+  }
+  trailVr.texture?.dispose?.();
+  trailVr.material?.dispose?.();
+  trailVr.sphere?.geometry?.dispose?.();
+  if (trailVr.renderer) {
+    trailVr.renderer.dispose();
+    trailVr.renderer.forceContextLoss?.();
+    trailVr.renderer.domElement?.remove();
+  }
+  trailVr.renderer = null;
+  trailVr.scene = null;
+  trailVr.camera = null;
+  trailVr.stereo = null;
+  trailVr.sphere = null;
+  trailVr.material = null;
+  trailVr.texture = null;
+  trailVr.width = 0;
+  trailVr.height = 0;
+  if (vrStageEl) vrStageEl.replaceChildren();
+}
+
+function resizeTrailVrRenderer(force = false) {
+  if (!trailVr.renderer || !trailVr.camera) return;
+  const width = Math.max(1, window.innerWidth || document.documentElement.clientWidth || 1);
+  const height = Math.max(1, window.innerHeight || document.documentElement.clientHeight || 1);
+  if (!force && width === trailVr.width && height === trailVr.height) return;
+  trailVr.width = width;
+  trailVr.height = height;
+  trailVr.renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.5));
+  trailVr.renderer.setSize(width, height, false);
+  trailVr.camera.aspect = width / height;
+  trailVr.camera.updateProjectionMatrix();
+}
+
+function buildTrailVrWorld(source) {
+  if (!source || !vrStageEl) throw new Error('The current panorama is unavailable for VR.');
+  disposeTrailVrWorld();
+
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance' });
+  renderer.setClearColor(0x000000, 1);
+  if ('outputColorSpace' in renderer && THREE.SRGBColorSpace) {
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+  }
+  renderer.domElement.setAttribute('aria-hidden', 'true');
+  vrStageEl.appendChild(renderer.domElement);
+
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x000000);
+  const camera = new THREE.PerspectiveCamera(78, 1, 0.05, 40);
+  camera.rotation.order = 'YXZ';
+  try {
+    camera.rotation.x = THREE.MathUtils.degToRad(viewer?.getPitch?.() || 0);
+    camera.rotation.y = THREE.MathUtils.degToRad(-(viewer?.getYaw?.() || 0));
+  } catch { /* keep the neutral view */ }
+
+  const geometry = new THREE.SphereGeometry(12, 72, 48);
+  geometry.scale(-1, 1, 1);
+  const material = new THREE.MeshBasicMaterial({ color: 0x17110a });
+  const sphere = new THREE.Mesh(geometry, material);
+  scene.add(sphere);
+
+  trailVr.renderer = renderer;
+  trailVr.scene = scene;
+  trailVr.camera = camera;
+  trailVr.sphere = sphere;
+  trailVr.material = material;
+  resizeTrailVrRenderer(true);
+
+  new THREE.TextureLoader().load(
+    source,
+    (texture) => {
+      if (trailVr.material !== material) {
+        texture.dispose();
+        return;
+      }
+      if ('colorSpace' in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+      trailVr.texture = texture;
+      material.color.set(0xffffff);
+      material.map = texture;
+      material.needsUpdate = true;
+      markVrTextureReady();
+    },
+    undefined,
+    (error) => {
+      console.warn('[Trail VR] Panorama texture failed to load.', error);
+      showTrailViewNotice(
+        localizedViewCopy('VR view unavailable', 'Hindi mabuksan ang VR'),
+        localizedViewCopy(
+          'The current 360 image could not be prepared for VR. Please try again.',
+          'Hindi maihanda ang kasalukuyang 360 na larawan para sa VR. Subukang muli.',
+        ),
+        6500,
+      );
+      requestTrailVrExit();
+    },
+  );
+}
+
+function renderTrailCardboard() {
+  if (
+    trailVr.mode !== 'cardboard'
+    || !trailVr.renderer
+    || !trailVr.scene
+    || !trailVr.camera
+    || !trailVr.stereo
+  ) return;
+
+  resizeTrailVrRenderer();
+  try {
+    trailVr.camera.rotation.x = THREE.MathUtils.degToRad(viewer?.getPitch?.() || 0);
+    trailVr.camera.rotation.y = THREE.MathUtils.degToRad(-(viewer?.getYaw?.() || 0));
+  } catch { /* keep the most recent orientation */ }
+  trailVr.camera.rotation.z = 0;
+  trailVr.camera.updateWorldMatrix(true, false);
+
+  const renderer = trailVr.renderer;
+  const width = trailVr.width;
+  const height = trailVr.height;
+  const halfWidth = Math.floor(width / 2);
+  trailVr.stereo.aspect = 0.5;
+  trailVr.stereo.update(trailVr.camera);
+
+  renderer.setScissorTest(true);
+  renderer.setScissor(0, 0, halfWidth, height);
+  renderer.setViewport(0, 0, halfWidth, height);
+  renderer.render(trailVr.scene, trailVr.stereo.cameraL);
+  renderer.setScissor(halfWidth, 0, width - halfWidth, height);
+  renderer.setViewport(halfWidth, 0, width - halfWidth, height);
+  renderer.render(trailVr.scene, trailVr.stereo.cameraR);
+  renderer.setScissorTest(false);
+  renderer.setViewport(0, 0, width, height);
+
+  trailVr.rafId = window.requestAnimationFrame(renderTrailCardboard);
+}
+
+async function requestBestTrailFullscreen() {
+  const page = document.documentElement;
+  try {
+    if (page.requestFullscreen) {
+      await page.requestFullscreen();
+      return true;
+    }
+  } catch { /* try WebKit below */ }
+  try {
+    if (page.webkitRequestFullscreen) {
+      page.webkitRequestFullscreen();
+      return Boolean(document.webkitFullscreenElement);
+    }
+  } catch { /* unavailable, notably on iPhone */ }
+  return false;
+}
+
+async function enterTrailCardboard() {
+  try {
+    await setTrailGyroEnabled(true, { quiet: true });
+  } catch (error) {
+    showTrailViewNotice(
+      localizedViewCopy('VR motion unavailable', 'Hindi magamit ang galaw para sa VR'),
+      String(error?.message || error),
+      6500,
+    );
+    return;
+  }
+
+  const source = panoramaApi.sceneSources[currentScene];
+  try {
+    trailVr.mode = 'cardboard';
+    showVrView('cardboard');
+    buildTrailVrWorld(source);
+    trailVr.stereo = new THREE.StereoCamera();
+    trailVr.stereo.eyeSep = 0.064;
+    updateTrailViewButtons();
+    renderTrailCardboard();
+  } catch (error) {
+    trailVr.mode = '';
+    disposeTrailVrWorld();
+    if (vrViewEl) vrViewEl.hidden = true;
+    document.documentElement.classList.remove('trailx-vr-active');
+    root.removeAttribute('data-vr-mode');
+    updateTrailViewButtons();
+    showTrailViewNotice(
+      localizedViewCopy('VR view unavailable', 'Hindi mabuksan ang VR'),
+      String(error?.message || error),
+      6500,
+    );
+    return;
+  }
+
+  trailVr.fullscreenOwned = await requestBestTrailFullscreen();
+  try { await window.screen?.orientation?.lock?.('landscape'); } catch { /* unsupported */ }
+  showTrailViewNotice(
+    localizedViewCopy('VR Box mode is ready', 'Handa na ang VR Box mode'),
+    localizedViewCopy(
+      'Rotate to landscape and place the phone in your viewer. Double-tap or use Exit VR to leave.',
+      'I-rotate sa landscape at ilagay ang telepono sa VR viewer. Mag-double tap o pindutin ang Isara ang VR upang lumabas.',
+    ),
+    trailVr.fullscreenOwned ? 6000 : 8500,
+  );
+}
+
+async function enterTrailNativeVr() {
+  let session;
+  try {
+    // Called directly from the VR button gesture, as WebXR requires.
+    session = await navigator.xr.requestSession('immersive-vr', {
+      optionalFeatures: ['local-floor', 'bounded-floor'],
+    });
+  } catch (error) {
+    showTrailViewNotice(
+      localizedViewCopy('VR session did not start', 'Hindi nagsimula ang VR session'),
+      localizedViewCopy(
+        'The headset or browser declined the immersive VR session.',
+        'Hindi pinayagan ng headset o browser ang immersive VR session.',
+      ),
+      6500,
+    );
+    return;
+  }
+
+  try {
+    // The headset supplies its own tracked pose; do not keep the phone sensor
+    // moving the hidden Pannellum view behind the native XR session.
+    await setTrailGyroEnabled(false);
+    trailVr.mode = 'native';
+    trailVr.session = session;
+    showVrView('native');
+    buildTrailVrWorld(panoramaApi.sceneSources[currentScene]);
+    trailVr.renderer.xr.enabled = true;
+    trailVr.renderer.xr.setReferenceSpaceType('local');
+    session.addEventListener('end', finishTrailVrExit, { once: true });
+    await trailVr.renderer.xr.setSession(session);
+    trailVr.renderer.setAnimationLoop(() => {
+      if (trailVr.scene && trailVr.camera) trailVr.renderer.render(trailVr.scene, trailVr.camera);
+    });
+    updateTrailViewButtons();
+  } catch (error) {
+    console.warn('[Trail VR] Native session setup failed.', error);
+    try { await session.end(); } catch { /* already ended */ }
+    finishTrailVrExit();
+    showTrailViewNotice(
+      localizedViewCopy('VR view unavailable', 'Hindi mabuksan ang VR'),
+      localizedViewCopy(
+        'The panorama could not be connected to the headset.',
+        'Hindi maikonekta ang panorama sa headset.',
+      ),
+      6500,
+    );
+  }
+}
+
+function finishTrailVrExit() {
+  if (!trailVr.mode && !trailVr.exiting && !trailVr.renderer) return;
+  const ownedFullscreen = trailVr.fullscreenOwned;
+  trailVr.mode = '';
+  trailVr.session = null;
+  trailVr.exiting = false;
+  trailVr.fullscreenOwned = false;
+  disposeTrailVrWorld();
+  if (vrViewEl) {
+    vrViewEl.hidden = true;
+    delete vrViewEl.dataset.vrKind;
+  }
+  document.documentElement.classList.remove('trailx-vr-active');
+  root.removeAttribute('data-vr-mode');
+  try { window.screen?.orientation?.unlock?.(); } catch { /* unsupported */ }
+  if (ownedFullscreen) {
+    if (document.fullscreenElement) {
+      void document.exitFullscreen?.().catch(() => {});
+    } else if (document.webkitFullscreenElement) {
+      try { document.webkitExitFullscreen?.(); } catch { /* unsupported */ }
+    }
+  }
+  updateTrailViewButtons();
+  window.setTimeout(() => {
+    try { viewer?.resize?.(); } catch { /* viewer may be changing scenes */ }
+  }, 80);
+}
+
+function requestTrailVrExit() {
+  if (!trailVr.mode || trailVr.exiting) return;
+  if (trailVr.mode === 'native' && trailVr.session) {
+    trailVr.exiting = true;
+    const ending = trailVr.session.end();
+    if (ending && typeof ending.catch === 'function') {
+      ending.catch(() => finishTrailVrExit());
+    }
+    return;
+  }
+  finishTrailVrExit();
+}
+
+function exitTrailViewModes() {
+  requestTrailVrExit();
+  void setTrailGyroEnabled(false);
+}
+
+gyroBtn?.addEventListener('click', async () => {
+  if (!isImmersive()) return;
+  try {
+    await setTrailGyroEnabled(!trailGyro.enabled);
+  } catch (error) {
+    updateTrailViewButtons();
+    showTrailViewNotice(
+      localizedViewCopy('Gyro unavailable', 'Hindi magamit ang gyro'),
+      String(error?.message || error),
+      6500,
+    );
+  }
+});
+
+vrBtn?.addEventListener('click', () => {
+  if (!isImmersive()) return;
+  if (trailVr.mode) {
+    requestTrailVrExit();
+    return;
+  }
+  if (trailVr.nativeSupported && navigator.xr) {
+    void enterTrailNativeVr();
+    return;
+  }
+  void enterTrailCardboard();
+});
+vrExitBtn?.addEventListener('click', requestTrailVrExit);
+
+vrViewEl?.addEventListener('touchend', (event) => {
+  const exitTarget = event.target instanceof Element
+    && event.target.closest('[data-trail-vr-exit]');
+  if (trailVr.mode !== 'cardboard' || exitTarget) return;
+  const now = performance.now();
+  if (now - trailVr.lastTapAt < 350) {
+    requestTrailVrExit();
+    trailVr.lastTapAt = 0;
+    return;
+  }
+  trailVr.lastTapAt = now;
+}, { passive: true });
+
+panoEl?.addEventListener('pointerdown', () => {
+  if (trailGyro.enabled) trailGyro.dragging = true;
+});
+window.addEventListener('pointerup', () => {
+  if (!trailGyro.dragging) return;
+  trailGyro.dragging = false;
+  trailGyro.needsSync = true;
+});
+window.addEventListener('orientationchange', () => {
+  if (trailGyro.enabled) trailGyro.needsSync = true;
+});
+window.addEventListener('resize', () => resizeTrailVrRenderer());
+window.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && trailVr.mode) requestTrailVrExit();
+});
+document.addEventListener('fullscreenchange', () => {
+  if (trailVr.mode === 'cardboard' && trailVr.fullscreenOwned && !document.fullscreenElement) {
+    finishTrailVrExit();
+  }
+});
+document.addEventListener('webkitfullscreenchange', () => {
+  if (trailVr.mode === 'cardboard' && trailVr.fullscreenOwned && !document.webkitFullscreenElement) {
+    finishTrailVrExit();
+  }
+});
+window.addEventListener('pagehide', exitTrailViewModes);
+
+const sensorCapable = typeof window.DeviceOrientationEvent !== 'undefined'
+  && (navigator.maxTouchPoints > 0 || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
+if (gyroBtn) {
+  gyroBtn.disabled = !sensorCapable;
+  gyroBtn.setAttribute('aria-disabled', String(!sensorCapable));
+}
+if (vrBtn) {
+  vrBtn.disabled = !sensorCapable;
+  vrBtn.setAttribute('aria-disabled', String(!sensorCapable));
+}
+if (navigator.xr && typeof navigator.xr.isSessionSupported === 'function') {
+  navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
+    trailVr.nativeSupported = Boolean(supported);
+    trailVr.nativeChecked = true;
+    if (vrBtn) {
+      const available = trailVr.nativeSupported || sensorCapable;
+      vrBtn.disabled = !available;
+      vrBtn.setAttribute('aria-disabled', String(!available));
+    }
+  }).catch(() => {
+    trailVr.nativeChecked = true;
+  });
+}
+updateTrailViewButtons();
 
 /* --- Stop entry / transitions ------------------------------------------------ */
 function enterStop(stopId, opts) {
@@ -2564,6 +3222,14 @@ function initPanorama() {
           ]);
         }
       }
+
+      // Keep the exact panorama source for the custom WebXR / VR Box renderer.
+      panoramaApi.sceneSources = Object.fromEntries(
+        Object.entries(scenes).map(([sceneId, sceneConfig]) => [
+          sceneId,
+          sceneConfig && sceneConfig.panorama ? sceneConfig.panorama : '',
+        ]),
+      );
 
       // Refresh restore: open directly on the remembered stop's scene.
       const startConf = wantsStop ? STOP_CONF[wantsStop] : null;
