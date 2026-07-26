@@ -7391,3 +7391,564 @@ body.admin-confirm-open {
     transition: none;
   }
 }
+
+/* Editable Online Gallery preview --------------------------------------- */
+
+.admin-gallery-editor-management {
+  align-items: center;
+}
+
+.admin-gallery-editor-status-field,
+.admin-gallery-editor-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin-gallery-editor-status-field > label {
+  color: #757e78;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+}
+
+.admin-gallery-editor-status-field select {
+  min-width: 9.5rem;
+  min-height: 2.65rem;
+  appearance: none;
+  -webkit-appearance: none;
+  border: 1px solid #dbc98f;
+  border-radius: 0.78rem;
+  outline: none;
+  background-color: #fffaf0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23a07830' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.72rem center;
+  background-size: 1rem;
+  padding: 0.55rem 2.45rem 0.55rem 0.78rem;
+  color: var(--dashboard-green-900);
+  font-size: 0.75rem;
+  font-weight: 800;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(13, 43, 31, 0.055);
+}
+
+.admin-gallery-editor-status-field select:focus-visible {
+  border-color: var(--dashboard-gold-600);
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.2);
+}
+
+.admin-gallery-editor-status-note {
+  padding: 0.34rem 0.5rem;
+  border: 1px solid #bce0ce;
+  border-radius: 999px;
+  background: #eefaf3;
+  color: #147452;
+  font-size: 0.6rem;
+  font-weight: 800;
+}
+
+.admin-gallery-editor-status-note.is-draft {
+  border-color: #e2d49e;
+  background: #fff9e5;
+  color: #89631f;
+}
+
+.admin-gallery-editor-layout {
+  grid-template-columns: minmax(18rem, 0.85fr) minmax(0, 1.15fr);
+}
+
+.admin-gallery-editor-media-column {
+  gap: 0.72rem;
+}
+
+.admin-gallery-editor-media-tabs {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.22rem;
+  padding: 0.24rem;
+  border: 1px solid rgba(201, 168, 76, 0.27);
+  border-radius: 0.8rem;
+  background: #102d21;
+}
+
+.admin-gallery-editor-media-tabs button {
+  min-height: 2.15rem;
+  border: 0;
+  border-radius: 0.58rem;
+  background: transparent;
+  color: rgba(246, 232, 184, 0.65);
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.admin-gallery-editor-media-tabs button.is-active {
+  background: #f4e4b6;
+  color: var(--dashboard-green-900);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+}
+
+.admin-gallery-editor-media[hidden],
+.admin-gallery-editor-model-preview[hidden],
+.admin-gallery-editor-media img[hidden],
+.admin-gallery-editor-media [data-gallery-editor-image-fallback][hidden],
+.admin-gallery-editor-model-preview model-viewer[hidden],
+.admin-gallery-editor-model-fallback[hidden] {
+  display: none;
+}
+
+.admin-gallery-editor-media {
+  min-height: 20rem;
+}
+
+.admin-gallery-editor-media img {
+  max-height: 34rem;
+  aspect-ratio: 4 / 3;
+}
+
+.admin-gallery-editor-model-preview {
+  overflow: hidden;
+  border: 1px solid rgba(201, 168, 76, 0.3);
+  border-radius: 1.15rem;
+  background: #0d2b1f;
+  box-shadow: 0 16px 34px rgba(13, 43, 31, 0.14);
+}
+
+.admin-gallery-editor-model-preview model-viewer {
+  width: 100%;
+  min-height: 24rem;
+  display: block;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(212, 175, 106, 0.22), transparent 38%),
+    linear-gradient(145deg, #173c2d, #0a251a);
+  --poster-color: transparent;
+}
+
+.admin-gallery-editor-model-fallback {
+  min-height: 24rem;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.4rem;
+  padding: 1.5rem;
+  color: rgba(246, 232, 184, 0.7);
+  text-align: center;
+}
+
+.admin-gallery-editor-model-fallback > span {
+  width: 3.8rem;
+  height: 3.8rem;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(246, 232, 184, 0.24);
+  border-radius: 1.15rem;
+  background: rgba(255, 255, 255, 0.06);
+  color: #f6e8b8;
+}
+
+.admin-gallery-editor-model-fallback svg {
+  width: 1.65rem;
+  height: 1.65rem;
+  fill: currentColor;
+}
+
+.admin-gallery-editor-model-fallback strong {
+  margin-top: 0.35rem;
+  color: #f6e8b8;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 0.9rem;
+}
+
+.admin-gallery-editor-model-fallback small {
+  max-width: 15rem;
+  font-size: 0.62rem;
+  line-height: 1.45;
+}
+
+.admin-gallery-editor-model-caption {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.7rem;
+  padding: 0.72rem 0.8rem;
+  border-top: 1px solid rgba(201, 168, 76, 0.18);
+  color: rgba(255, 255, 255, 0.62);
+  font-size: 0.61rem;
+}
+
+.admin-gallery-editor-model-caption span:first-child {
+  color: var(--dashboard-gold-500);
+  font-weight: 800;
+}
+
+.admin-gallery-editor-model-caption span:last-child {
+  max-width: 65%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-gallery-editor-upload {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.72rem 0.8rem;
+  border: 1px dashed rgba(160, 120, 48, 0.45);
+  border-radius: 0.9rem;
+  background: #fffaf0;
+  color: var(--dashboard-green-900);
+  cursor: pointer;
+  transition: border-color 160ms ease, background 160ms ease;
+}
+
+.admin-gallery-editor-upload.is-model {
+  border-color: rgba(45, 106, 79, 0.36);
+  background: #f2f8f4;
+}
+
+.admin-gallery-editor-upload:hover,
+.admin-gallery-editor-upload:focus-within {
+  border-color: var(--dashboard-gold-600);
+  background: #fff7e4;
+}
+
+.admin-gallery-editor-upload.is-model:hover,
+.admin-gallery-editor-upload.is-model:focus-within {
+  border-color: var(--dashboard-green-700);
+  background: #eaf5ee;
+}
+
+.admin-gallery-editor-upload-icon {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 2.25rem;
+  border-radius: 0.7rem;
+  background: #f4e4b6;
+  color: var(--dashboard-gold-600);
+}
+
+.admin-gallery-editor-upload.is-model .admin-gallery-editor-upload-icon {
+  background: #dfeee5;
+  color: var(--dashboard-green-700);
+}
+
+.admin-gallery-editor-upload-icon svg {
+  width: 1.05rem;
+  height: 1.05rem;
+  fill: currentColor;
+}
+
+.admin-gallery-editor-upload strong,
+.admin-gallery-editor-upload small {
+  display: block;
+}
+
+.admin-gallery-editor-upload strong {
+  font-size: 0.74rem;
+}
+
+.admin-gallery-editor-upload small {
+  max-width: 20rem;
+  margin-top: 0.12rem;
+  overflow: hidden;
+  color: #7b847e;
+  font-size: 0.61rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.admin-gallery-editor-upload input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  opacity: 0;
+}
+
+.admin-gallery-editor-upload-feedback {
+  margin: 0;
+  padding: 0.62rem 0.7rem;
+  border: 1px solid #b9dfca;
+  border-radius: 0.72rem;
+  background: #eefaf3;
+  color: #146344;
+  font-size: 0.63rem;
+  font-weight: 700;
+  line-height: 1.45;
+}
+
+.admin-gallery-editor-upload-feedback[hidden] {
+  display: none;
+}
+
+.admin-gallery-editor-upload-feedback.is-error {
+  border-color: #efc4c4;
+  background: #fff2f2;
+  color: #a83131;
+}
+
+.admin-gallery-editor-language {
+  margin: 0 0 1rem;
+}
+
+.admin-gallery-editor [data-gallery-editor-lang-panel][hidden],
+.admin-gallery-editor [data-category-field][hidden] {
+  display: none;
+}
+
+.admin-gallery-editor-title {
+  margin-bottom: 0.45rem;
+}
+
+.admin-gallery-editor-meta {
+  margin-top: 0.65rem;
+}
+
+.admin-gallery-editor-meta label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  min-height: 2.6rem;
+  padding: 0.34rem 0.42rem 0.34rem 0.62rem;
+  border: 1px solid #e0e5e1;
+  border-radius: 0.78rem;
+  background: #fff;
+  box-shadow: 0 3px 10px rgba(13, 43, 31, 0.04);
+}
+
+.admin-gallery-editor-meta label:focus-within {
+  border-color: var(--dashboard-gold-600);
+  background: #fffaf0;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.17);
+}
+
+.admin-gallery-editor-meta label > span {
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #7a837d;
+  font-size: 0.59rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.admin-gallery-editor-meta select,
+.admin-gallery-editor-meta input {
+  min-width: 0;
+  border: 0;
+  outline: none;
+  background-color: transparent;
+  color: var(--dashboard-green-800);
+  font-size: 0.66rem;
+  font-weight: 750;
+}
+
+.admin-gallery-editor-meta select {
+  width: 13rem;
+  max-width: 100%;
+  min-height: 1.9rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='18' height='18' viewBox='0 0 24 24' fill='none' stroke='%23a07830' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.42rem center;
+  background-size: 0.9rem;
+  padding: 0.28rem 1.85rem 0.28rem 0.45rem;
+  cursor: pointer;
+}
+
+.admin-gallery-editor-meta input {
+  width: 7rem;
+  padding: 0.28rem 0.4rem;
+}
+
+.admin-gallery-editor-location {
+  margin-top: 0.8rem;
+  padding: 0.78rem 0.85rem;
+  border: 1px solid #e1e6e2;
+  border-radius: 0.88rem;
+  background: #fff;
+  box-shadow: 0 4px 12px rgba(13, 43, 31, 0.04);
+}
+
+.admin-gallery-editor-location > header {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  margin-bottom: 0.55rem;
+}
+
+.admin-gallery-editor-location > header > span {
+  width: 1.9rem;
+  height: 1.9rem;
+  display: grid;
+  place-items: center;
+  flex: 0 0 1.9rem;
+  border-radius: 0.6rem;
+  background: #f8edce;
+  color: var(--dashboard-gold-600);
+}
+
+.admin-gallery-editor-location svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  fill: currentColor;
+}
+
+.admin-gallery-editor-location strong,
+.admin-gallery-editor-location small {
+  display: block;
+}
+
+.admin-gallery-editor-location strong {
+  color: var(--dashboard-green-900);
+  font-size: 0.7rem;
+}
+
+.admin-gallery-editor-location small {
+  margin-top: 0.08rem;
+  color: #818a84;
+  font-size: 0.58rem;
+}
+
+.admin-gallery-editor-location input {
+  width: 100%;
+  min-height: 2.55rem;
+  padding: 0.55rem 0.68rem;
+  border: 1px solid #dfe5e1;
+  border-radius: 0.7rem;
+  outline: none;
+  background: #fafbf9;
+  color: #4c5850;
+  font: inherit;
+  font-size: 0.72rem;
+}
+
+.admin-gallery-editor-location input:focus {
+  border-color: var(--dashboard-gold-600);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.13);
+}
+
+.admin-gallery-editor-section textarea {
+  width: 100%;
+  min-height: 7rem;
+  max-height: 26rem;
+  resize: vertical;
+  border: 0;
+  outline: none;
+  background: transparent;
+  padding: 0.15rem 0;
+  color: #5f6962;
+  font-size: 0.82rem;
+  line-height: 1.72;
+}
+
+.admin-gallery-editor-section textarea[data-gallery-editor-copy="long"] {
+  min-height: 14rem;
+}
+
+.admin-gallery-editor-section textarea::placeholder,
+.admin-gallery-editor-title::placeholder,
+.admin-gallery-editor-location input::placeholder {
+  color: #9aa39d;
+}
+
+.admin-gallery-editor-section:focus-within {
+  border-color: rgba(160, 120, 48, 0.45);
+  box-shadow: 0 7px 22px rgba(160, 120, 48, 0.08);
+}
+
+.admin-gallery-editor-note {
+  margin-top: 1rem;
+}
+
+.admin-gallery-editor[aria-busy="true"] .admin-highlight-view-action[type="submit"] {
+  opacity: 0.66;
+  cursor: wait;
+}
+
+@media (max-width: 1050px) {
+  .admin-gallery-editor-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-gallery-editor-media-column {
+    position: static;
+  }
+
+  .admin-gallery-editor-media img,
+  .admin-gallery-editor-model-preview model-viewer,
+  .admin-gallery-editor-model-fallback {
+    max-height: 34rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .admin-gallery-editor-management {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-gallery-editor-status-field,
+  .admin-gallery-editor-actions {
+    width: 100%;
+  }
+
+  .admin-gallery-editor-status-field select {
+    flex: 1 1 auto;
+  }
+
+  .admin-gallery-editor-actions > * {
+    flex: 1 1 auto;
+  }
+
+  .admin-gallery-editor-meta {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-gallery-editor-meta label {
+    width: 100%;
+  }
+
+  .admin-gallery-editor-meta select,
+  .admin-gallery-editor-meta input {
+    width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-gallery-editor-status-field {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .admin-gallery-editor-status-note {
+    align-self: flex-start;
+  }
+
+  .admin-gallery-editor-actions {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .admin-gallery-editor-model-preview model-viewer,
+  .admin-gallery-editor-model-fallback {
+    min-height: 19rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-gallery-editor-upload,
+  .admin-gallery-editor-location input {
+    transition: none;
+  }
+}

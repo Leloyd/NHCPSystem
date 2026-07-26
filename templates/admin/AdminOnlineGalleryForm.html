@@ -4,9 +4,9 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'online-gallery' %}
 {% set admin_topbar_title = form_title %}
-{% set admin_topbar_subtitle = 'Create or update the public card content shown inside the Online Gallery archive.' %}
+{% set admin_topbar_subtitle = 'Compose the bilingual gallery record directly beside a preview of its public presentation.' %}
 {% set admin_topbar_tool_href = url_for('admin_online_gallery') %}
-{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_label = 'Back to gallery' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
 {% block admin_content %}
@@ -17,99 +17,304 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <form
+            method="post"
+            action="{{ form_action }}"
+            enctype="multipart/form-data"
+            class="admin-highlight-view admin-gallery-editor"
+            data-gallery-editor
+            data-gallery-editor-submit-label="{{ submit_label }}"
+            data-gallery-editor-has-image="{% if gallery_form.image_filename %}1{% else %}0{% endif %}"
+            data-confirm-submit
+            data-confirm-eyebrow="Online Gallery"
+            data-confirm-title="{% if submit_label == 'Create Card' %}Create this gallery card?{% else %}Save these gallery changes?{% endif %}"
+            data-confirm-message="{% if submit_label == 'Create Card' %}Create this bilingual gallery card using the publication setting, image, and optional 3D object shown in the preview?{% else %}Save the bilingual content, publication setting, image, and 3D object changes shown in the preview?{% endif %}"
+            data-confirm-label="{{ submit_label }}"
+            data-confirm-variant="enable"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <div class="admin-highlight-view-accent" aria-hidden="true"></div>
 
-              <div class="admin-form-grid">
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryTitleEn">Title (English)</label>
-                  <input id="galleryTitleEn" name="title_en" type="text" maxlength="180" required value="{{ gallery_form.title_en }}" />
+            <header class="admin-highlight-view-management admin-gallery-editor-management">
+              <div class="admin-gallery-editor-status-field">
+                <label for="galleryPublicationStatus">Publication status</label>
+                <select id="galleryPublicationStatus" name="is_published" data-gallery-editor-status>
+                  <option value="1" {% if gallery_form.is_published %}selected{% endif %}>Published</option>
+                  <option value="0" {% if not gallery_form.is_published %}selected{% endif %}>Draft</option>
+                </select>
+                <span class="admin-gallery-editor-status-note" data-gallery-editor-status-note>
+                  {% if gallery_form.is_published %}Visible to visitors{% else %}Hidden from visitors{% endif %}
+                </span>
+              </div>
+
+              <div class="admin-gallery-editor-actions">
+                <a href="{{ url_for('admin_online_gallery') }}" class="admin-highlight-view-action is-secondary">Cancel</a>
+                <button type="submit" class="admin-highlight-view-action is-primary">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l2 2v16H5Zm2 2v14h10V6.8L15.2 5H15v5H9V5Zm4 0v3h2V5Zm1 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"></path></svg>
+                  {{ submit_label }}
+                </button>
+              </div>
+            </header>
+
+            <div class="admin-highlight-view-layout admin-gallery-editor-layout">
+              <div class="admin-highlight-view-media-column admin-gallery-editor-media-column">
+                <div class="admin-gallery-editor-media-tabs" role="tablist" aria-label="Gallery media preview">
+                  <button type="button" class="is-active" data-gallery-editor-media-tab="image" role="tab" aria-selected="true">Image</button>
+                  <button type="button" data-gallery-editor-media-tab="model" role="tab" aria-selected="false">3D Object</button>
                 </div>
 
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryTitleTl">Title (Tagalog)</label>
-                  <input id="galleryTitleTl" name="title_tl" type="text" maxlength="180" required value="{{ gallery_form.title_tl }}" />
-                </div>
+                <figure class="admin-highlight-view-media admin-gallery-editor-media" data-gallery-editor-media-panel="image">
+                  <img
+                    src="{{ gallery_form.image_url or '' }}"
+                    alt="{{ gallery_form.title_en or gallery_form.title_tl or 'Gallery image preview' }}"
+                    data-gallery-editor-image-preview
+                    {% if not gallery_form.image_url %}hidden{% endif %}
+                  />
+                  <div
+                    class="admin-highlight-view-media-fallback"
+                    data-gallery-editor-image-fallback
+                    {% if gallery_form.image_url %}hidden{% endif %}
+                  >
+                    <span data-gallery-editor-fallback-letter>{{ (gallery_form.title_en or gallery_form.title_tl or 'G')[:1]|upper }}</span>
+                    <small>Gallery image preview</small>
+                  </div>
+                  <figcaption>
+                    <span data-gallery-editor-output="category">Select a category</span>
+                    <span data-gallery-editor-output="context">
+                      {{ gallery_form.year_label or gallery_form.location_en or gallery_form.location_tl or 'Gallery record' }}
+                    </span>
+                  </figcaption>
+                </figure>
 
-                <div class="admin-form-field">
-                  <label for="galleryCategory">Category</label>
-                  <select id="galleryCategory" name="category_id" required>
-                    {% if not categories %}
-                    <option value="" selected disabled>No categories available</option>
-                    {% endif %}
-                    {% for category in categories %}
-                    <option value="{{ category.id }}" data-category-slug="{{ category.slug }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-
-                <div class="admin-form-field" data-category-field="year_label" hidden>
-                  <label for="galleryYearLabel">Year</label>
-                  <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" value="{{ gallery_form.year_label }}" />
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide" data-category-field="location" hidden>
-                  <div class="admin-form-grid">
-                    <div class="admin-form-field">
-                      <label for="galleryLocationEn">Location (English)</label>
-                      <input id="galleryLocationEn" name="location_en" type="text" maxlength="180" value="{{ gallery_form.location_en }}" />
-                    </div>
-                    <div class="admin-form-field">
-                      <label for="galleryLocationTl">Location (Tagalog)</label>
-                      <input id="galleryLocationTl" name="location_tl" type="text" maxlength="180" value="{{ gallery_form.location_tl }}" />
-                    </div>
+                <div class="admin-gallery-editor-model-preview" data-gallery-editor-media-panel="model" hidden>
+                  <model-viewer
+                    src="{{ gallery_form.model_url or '' }}"
+                    camera-controls
+                    auto-rotate
+                    shadow-intensity="0.7"
+                    environment-image="neutral"
+                    interaction-prompt="none"
+                    data-gallery-editor-model-preview
+                    {% if not gallery_form.model_url %}hidden{% endif %}
+                  ></model-viewer>
+                  <div class="admin-gallery-editor-model-fallback" data-gallery-editor-model-fallback {% if gallery_form.model_url %}hidden{% endif %}>
+                    <span aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>
+                    </span>
+                    <strong>No 3D object selected</strong>
+                    <small>Upload an optional GLB to preview it here.</small>
+                  </div>
+                  <div class="admin-gallery-editor-model-caption">
+                    <span>Interactive 3D preview</span>
+                    <span data-gallery-editor-model-name>{{ gallery_form.model_filename or 'No GLB attached' }}</span>
                   </div>
                 </div>
 
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryShortCaptionEn">Short Description (English)</label>
-                  <textarea id="galleryShortCaptionEn" name="short_caption_en" rows="4" required>{{ gallery_form.short_caption_en }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryShortCaptionTl">Short Description (Tagalog)</label>
-                  <textarea id="galleryShortCaptionTl" name="short_caption_tl" rows="4" required>{{ gallery_form.short_caption_tl }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryFullDescriptionEn">Full Description (English)</label>
-                  <textarea id="galleryFullDescriptionEn" name="full_description_en" rows="8" required>{{ gallery_form.full_description_en }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryFullDescriptionTl">Full Description (Tagalog)</label>
-                  <textarea id="galleryFullDescriptionTl" name="full_description_tl" rows="8" required>{{ gallery_form.full_description_tl }}</textarea>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryImage">Card Image (JPG or PNG)</label>
-                  <input id="galleryImage" name="image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                  {% if gallery_form.image_filename %}
-                  <p class="admin-field-hint">Current image: <strong>{{ gallery_form.image_filename }}</strong></p>
-                  {% endif %}
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="galleryModel">3D Object (GLB)</label>
-                  <input id="galleryModel" name="model_file" type="file" accept=".glb,model/gltf-binary" />
-                  <p class="admin-field-hint">Optional. Upload a GLB file to enable the 3D object view on the public detail page.</p>
-                  {% if gallery_form.model_filename %}
-                  <p class="admin-field-hint">Current 3D object: <strong>{{ gallery_form.model_filename }}</strong></p>
-                  {% endif %}
-                </div>
-
-                <label class="admin-checkbox-field admin-form-field-wide">
-                  <input name="is_published" type="checkbox" value="1" {% if gallery_form.is_published %}checked{% endif %} />
-                  <span>Publish this card on the public site</span>
+                <label class="admin-gallery-editor-upload" for="galleryImage">
+                  <span class="admin-gallery-editor-upload-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                  </span>
+                  <span>
+                    <strong>{% if gallery_form.image_filename %}Replace gallery image{% else %}Upload gallery image{% endif %}</strong>
+                    <small>JPG or PNG{% if gallery_form.image_filename %} · Current: {{ gallery_form.image_filename }}{% endif %}</small>
+                  </span>
+                  <input
+                    id="galleryImage"
+                    name="image_file"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,image/jpeg,image/png"
+                    data-gallery-editor-image-input
+                  />
                 </label>
+
+                <label class="admin-gallery-editor-upload is-model" for="galleryModel">
+                  <span class="admin-gallery-editor-upload-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>
+                  </span>
+                  <span>
+                    <strong>{% if gallery_form.model_filename %}Replace 3D object{% else %}Add a 3D object{% endif %}</strong>
+                    <small>Optional GLB{% if gallery_form.model_filename %} · Current: {{ gallery_form.model_filename }}{% endif %}</small>
+                  </span>
+                  <input
+                    id="galleryModel"
+                    name="model_file"
+                    type="file"
+                    accept=".glb,model/gltf-binary"
+                    data-gallery-editor-model-input
+                  />
+                </label>
+
+                <p class="admin-gallery-editor-upload-feedback" data-gallery-editor-upload-feedback role="status" hidden></p>
+
+                <section class="admin-highlight-view-visibility {% if gallery_form.is_published %}is-active{% else %}is-draft{% endif %}" data-gallery-editor-visibility>
+                  <span class="admin-highlight-view-visibility-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path data-gallery-editor-visibility-icon d="{% if gallery_form.is_published %}M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z{% else %}M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z{% endif %}"></path></svg>
+                  </span>
+                  <span>
+                    <small>Public visibility</small>
+                    <strong data-gallery-editor-visibility-text>
+                      {% if gallery_form.is_published %}Visible in the Online Gallery{% else %}Draft and hidden{% endif %}
+                    </strong>
+                  </span>
+                </section>
               </div>
 
-              <div class="admin-form-actions">
-                <a href="{{ url_for('admin_online_gallery') }}" class="admin-secondary-action">Cancel</a>
-                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
+              <div class="admin-highlight-view-content admin-gallery-editor-content">
+                <p class="admin-highlight-manager-eyebrow">Editable gallery preview</p>
+
+                <div class="admin-highlight-editor-language admin-gallery-editor-language" role="group" aria-label="Content language">
+                  <span>Editing language</span>
+                  <div>
+                    <button type="button" class="is-active" data-gallery-editor-lang="en" aria-pressed="true">English</button>
+                    <button type="button" data-gallery-editor-lang="tl" aria-pressed="false">Tagalog</button>
+                  </div>
+                </div>
+
+                <div data-gallery-editor-lang-panel="en">
+                  <label class="admin-highlight-editor-title-label" for="galleryTitleEn">English gallery title</label>
+                  <input
+                    id="galleryTitleEn"
+                    class="admin-highlight-editor-title admin-gallery-editor-title"
+                    name="title_en"
+                    type="text"
+                    maxlength="180"
+                    value="{{ gallery_form.title_en }}"
+                    placeholder="Enter the English gallery title"
+                    data-gallery-editor-title="en"
+                  />
+                </div>
+                <div data-gallery-editor-lang-panel="tl" hidden>
+                  <label class="admin-highlight-editor-title-label" for="galleryTitleTl">Tagalog gallery title</label>
+                  <input
+                    id="galleryTitleTl"
+                    class="admin-highlight-editor-title admin-gallery-editor-title"
+                    name="title_tl"
+                    type="text"
+                    maxlength="180"
+                    value="{{ gallery_form.title_tl }}"
+                    placeholder="Ilagay ang pamagat sa Tagalog"
+                    data-gallery-editor-title="tl"
+                  />
+                </div>
+
+                <div class="admin-highlight-view-meta admin-gallery-editor-meta">
+                  <label class="admin-highlight-editor-meta-control is-category">
+                    <span>Category</span>
+                    <select id="galleryCategory" name="category_id" required data-gallery-editor-category>
+                      {% if not categories %}
+                      <option value="" selected disabled>No categories available</option>
+                      {% endif %}
+                      {% for category in categories %}
+                      <option value="{{ category.id }}" data-category-slug="{{ category.slug }}" {% if gallery_form.category_id == (category.id|string) %}selected{% endif %}>{{ category.display_name }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+
+                  <label class="admin-highlight-editor-meta-control is-year" data-category-field="year_label">
+                    <span>Year</span>
+                    <input id="galleryYearLabel" name="year_label" type="text" maxlength="120" value="{{ gallery_form.year_label }}" placeholder="e.g. 1896" data-gallery-editor-year />
+                  </label>
+                  <span data-gallery-editor-read-time>1 min read</span>
+                </div>
+
+                <section class="admin-gallery-editor-location" data-category-field="location">
+                  <header>
+                    <span aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M12 2a8 8 0 0 1 8 8c0 5.5-8 12-8 12S4 15.5 4 10a8 8 0 0 1 8-8Zm0 2a6 6 0 0 0-6 6c0 3.7 4.5 8.2 6 9.6 1.5-1.4 6-5.9 6-9.6a6 6 0 0 0-6-6Zm0 3a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                    </span>
+                    <div>
+                      <strong>Location</strong>
+                      <small data-gallery-editor-language-label>English location</small>
+                    </div>
+                  </header>
+                  <div data-gallery-editor-lang-panel="en">
+                    <label class="admin-highlight-editor-sr-label" for="galleryLocationEn">Location (English)</label>
+                    <input id="galleryLocationEn" name="location_en" type="text" maxlength="180" value="{{ gallery_form.location_en }}" placeholder="Enter the English location" data-gallery-editor-location="en" />
+                  </div>
+                  <div data-gallery-editor-lang-panel="tl" hidden>
+                    <label class="admin-highlight-editor-sr-label" for="galleryLocationTl">Location (Tagalog)</label>
+                    <input id="galleryLocationTl" name="location_tl" type="text" maxlength="180" value="{{ gallery_form.location_tl }}" placeholder="Ilagay ang lokasyon sa Tagalog" data-gallery-editor-location="tl" />
+                  </div>
+                </section>
+
+                <section class="admin-highlight-view-section admin-highlight-editor-section admin-gallery-editor-section">
+                  <header>
+                    <span>01</span>
+                    <div>
+                      <h2>Short Description</h2>
+                      <small data-gallery-editor-language-label>English short description</small>
+                    </div>
+                  </header>
+                  <div data-gallery-editor-lang-panel="en">
+                    <label class="admin-highlight-editor-sr-label" for="galleryShortCaptionEn">Short Description (English)</label>
+                    <textarea
+                      id="galleryShortCaptionEn"
+                      name="short_caption_en"
+                      rows="4"
+                      minlength="12"
+                      placeholder="Write the short English summary shown on the gallery card."
+                      data-gallery-editor-copy="short"
+                      data-gallery-editor-copy-language="en"
+                    >{{ gallery_form.short_caption_en }}</textarea>
+                  </div>
+                  <div data-gallery-editor-lang-panel="tl" hidden>
+                    <label class="admin-highlight-editor-sr-label" for="galleryShortCaptionTl">Short Description (Tagalog)</label>
+                    <textarea
+                      id="galleryShortCaptionTl"
+                      name="short_caption_tl"
+                      rows="4"
+                      minlength="12"
+                      placeholder="Isulat ang maikling paglalarawan sa Tagalog."
+                      data-gallery-editor-copy="short"
+                      data-gallery-editor-copy-language="tl"
+                    >{{ gallery_form.short_caption_tl }}</textarea>
+                  </div>
+                </section>
+
+                <section class="admin-highlight-view-section admin-highlight-editor-section admin-gallery-editor-section">
+                  <header>
+                    <span>02</span>
+                    <div>
+                      <h2>Full Description</h2>
+                      <small data-gallery-editor-language-label>English full description</small>
+                    </div>
+                  </header>
+                  <div data-gallery-editor-lang-panel="en">
+                    <label class="admin-highlight-editor-sr-label" for="galleryFullDescriptionEn">Full Description (English)</label>
+                    <textarea
+                      id="galleryFullDescriptionEn"
+                      name="full_description_en"
+                      rows="9"
+                      minlength="24"
+                      placeholder="Write the complete English gallery description."
+                      data-gallery-editor-copy="long"
+                      data-gallery-editor-copy-language="en"
+                    >{{ gallery_form.full_description_en }}</textarea>
+                  </div>
+                  <div data-gallery-editor-lang-panel="tl" hidden>
+                    <label class="admin-highlight-editor-sr-label" for="galleryFullDescriptionTl">Full Description (Tagalog)</label>
+                    <textarea
+                      id="galleryFullDescriptionTl"
+                      name="full_description_tl"
+                      rows="9"
+                      minlength="24"
+                      placeholder="Isulat ang buong paglalarawan sa Tagalog."
+                      data-gallery-editor-copy="long"
+                      data-gallery-editor-copy-language="tl"
+                    >{{ gallery_form.full_description_tl }}</textarea>
+                  </div>
+                </section>
+
+                <aside class="admin-highlight-editor-note admin-gallery-editor-note">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 10h2v7h-2Zm0-4h2v2h-2Zm1-4a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"></path></svg>
+                  <p>
+                    English and Tagalog titles and descriptions are required. Year appears only for History records, while bilingual Location appears only for Regional Customs. The 3D object remains optional.
+                  </p>
+                </aside>
               </div>
-            </form>
-          </section>
+            </div>
+          </form>
+
+          <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
           <script defer src="{{ url_for('static', filename='admin/js/admin-online-gallery-form.js') }}"></script>
 {% endblock %}
