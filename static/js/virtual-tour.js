@@ -22,6 +22,13 @@
   const subtitlesButton = document.getElementById("tourSubs");
   const subtitleBar = document.getElementById("tourSubtitle");
   const subtitleTextEl = document.getElementById("tourSubtitleText");
+  const viewModesEl = document.getElementById("tourViewModes");
+  const gyroButton = document.getElementById("tourGyro");
+  const vrModeButton = document.getElementById("tourVrMode");
+  const vrViewEl = document.getElementById("tourVrView");
+  const vrStageEl = document.getElementById("tourVrStage");
+  const vrStatusEl = document.getElementById("tourVrStatus");
+  const vrExitButton = document.getElementById("tourVrExit");
   const minimapEl = document.getElementById("tourMinimap");
   const minimapImg = document.getElementById("tourMinimapImg");
   const minimapCircle = document.getElementById("tourMinimapCircle");
@@ -304,6 +311,8 @@
   let hotspotsVisible = true;
   let tourViewer = null;
   let resolvedScenes = null;
+  let panoramaViewModes = null;
+  let tourViewerReady = false;
   // Live "you are here" minimap
   let minimapData = null;
   const minimapDotEls = {}; // expanded-map dots, keyed by sceneId
@@ -354,6 +363,66 @@
   let narrationMuted = false;
   let subtitlesOn = true;
   let activeSubtitle = null; // { tl, en } text for the artifact currently open
+  let tourViewNotice = null;
+  let tourViewNoticeTimer = 0;
+
+  function getTourViewCopy(english, tagalog) {
+    return floatingArtifactAudioLanguage === "tl" ? tagalog : english;
+  }
+
+  function showTourViewNotice(title, message, duration) {
+    if (!tourViewNotice) {
+      tourViewNotice = document.createElement("div");
+      tourViewNotice.className = "tour-ar-notice tour-view-notice";
+      tourViewNotice.hidden = true;
+      tourViewNotice.setAttribute("role", "status");
+      tourViewNotice.setAttribute("aria-live", "polite");
+      tourViewNotice.setAttribute("aria-atomic", "true");
+
+      const icon = document.createElement("span");
+      icon.className = "tour-ar-notice__icon";
+      icon.setAttribute("aria-hidden", "true");
+      icon.textContent = "360°";
+
+      const copy = document.createElement("span");
+      copy.className = "tour-ar-notice__copy";
+      const heading = document.createElement("strong");
+      heading.setAttribute("data-tour-view-notice-title", "");
+      const bodyText = document.createElement("span");
+      bodyText.setAttribute("data-tour-view-notice-body", "");
+      copy.append(heading, bodyText);
+
+      const close = document.createElement("button");
+      close.className = "tour-ar-notice__close";
+      close.type = "button";
+      close.setAttribute("aria-label", "Close viewing-mode notice");
+      close.textContent = "×";
+      close.addEventListener("click", function () {
+        window.clearTimeout(tourViewNoticeTimer);
+        tourViewNotice.classList.remove("is-visible");
+        tourViewNotice.hidden = true;
+      });
+
+      tourViewNotice.append(icon, copy, close);
+      app.appendChild(tourViewNotice);
+    }
+
+    tourViewNotice.querySelector("[data-tour-view-notice-title]").textContent = title;
+    tourViewNotice.querySelector("[data-tour-view-notice-body]").textContent = message;
+    window.clearTimeout(tourViewNoticeTimer);
+    tourViewNotice.hidden = false;
+    window.requestAnimationFrame(function () {
+      tourViewNotice.classList.add("is-visible");
+    });
+    tourViewNoticeTimer = window.setTimeout(function () {
+      tourViewNotice.classList.remove("is-visible");
+      window.setTimeout(function () {
+        if (!tourViewNotice.classList.contains("is-visible")) {
+          tourViewNotice.hidden = true;
+        }
+      }, 220);
+    }, duration || 5000);
+  }
 
   // Per-artifact narration subtitles (Tagalog + English), keyed by a normalized
   // artifact name that matches each hotspot's imageAlt (e.g. "Ulóh" -> "uloh").
@@ -4850,6 +4919,11 @@
   }
 
   document.addEventListener("fullscreenchange", syncFullscreenButton);
+  window.addEventListener("pagehide", function () {
+    if (panoramaViewModes) {
+      panoramaViewModes.suspend();
+    }
+  });
   setControlDockVisibility(false);
   updateHotspotVisibilityState();
   syncFullscreenButton();
@@ -4983,6 +5057,54 @@
       const viewer = createViewerWithCaptureSupport(scenes);
       tourViewer = viewer;
 
+      if (
+        viewer
+        && viewModesEl
+        && gyroButton
+        && vrModeButton
+        && vrViewEl
+        && vrStageEl
+        && vrStatusEl
+        && vrExitButton
+        && viewerContainer
+      ) {
+        import("/static/js/panorama-view-modes.js").then(function (viewModeModule) {
+          if (tourViewer !== viewer || !viewModeModule.createPanoramaViewModes) {
+            return;
+          }
+          panoramaViewModes = viewModeModule.createPanoramaViewModes({
+            getViewer: function () {
+              return tourViewer;
+            },
+            getPanoramaSource: function () {
+              if (!tourViewer || !resolvedScenes) {
+                return "";
+              }
+              const sceneId = typeof tourViewer.getScene === "function"
+                ? tourViewer.getScene()
+                : initialScene;
+              return resolvedScenes[sceneId] ? resolvedScenes[sceneId].panorama : "";
+            },
+            gyroButton,
+            vrButton: vrModeButton,
+            overlay: vrViewEl,
+            stage: vrStageEl,
+            status: vrStatusEl,
+            exitButton: vrExitButton,
+            interactionElement: viewerContainer,
+            activeRootClass: "tour-vr-active",
+            translate: getTourViewCopy,
+            notify: showTourViewNotice,
+          });
+          if (tourViewerReady) {
+            viewModesEl.hidden = false;
+          }
+        }).catch(function (error) {
+          console.warn("[Virtual Tour] Viewing modes could not initialize.", error);
+          viewModesEl.hidden = true;
+        });
+      }
+
       if (viewer && typeof viewer.on === "function") {
         syncSceneInUrl(initialScene);
         updateHotspotVisibilityState();
@@ -5008,6 +5130,9 @@
           });
           syncSceneInUrl(sceneId);
           minimapSetActive(sceneId);
+          if (panoramaViewModes) {
+            panoramaViewModes.syncScene();
+          }
           window.requestAnimationFrame(updateHotspotVisibilityState);
         });
 
@@ -5019,6 +5144,10 @@
             errorOverlay.hidden = true;
           }
           setControlDockVisibility(true);
+          tourViewerReady = true;
+          if (viewModesEl && panoramaViewModes) {
+            viewModesEl.hidden = false;
+          }
           minimapSetActive(typeof viewer.getScene === "function" ? viewer.getScene() : initialScene);
           if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === "function") {
             const loadedScene = typeof viewer.getScene === "function" ? viewer.getScene() : initialScene;
@@ -5059,6 +5188,10 @@
     .catch(() => {
       resolvedScenes = null;
       tourViewer = null;
+      tourViewerReady = false;
+      if (viewModesEl) {
+        viewModesEl.hidden = true;
+      }
       if (loadingOverlay) {
         loadingOverlay.hidden = true;
       }

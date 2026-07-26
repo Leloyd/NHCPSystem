@@ -13,6 +13,13 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ar.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/virtual-tour.css') }}" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/webxr/static/vendor/three/three.module.js"
+        }
+      }
+    </script>
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
   </head>
   <body class="tour-body">
@@ -205,6 +212,24 @@
         <p class="tour-minimap__label" id="tourMinimapLabel"></p>
       </div>
 
+      <!-- Gyro + custom WebXR / VR Box controls. These stay on the right side
+           and deliberately do not use Pannellum's built-in VR control. -->
+      <div class="tour-viewmodes" id="tourViewModes" hidden aria-label="360 viewing modes">
+        <button class="tour-viewmodes__button" id="tourGyro" type="button" aria-pressed="false" aria-label="Turn on gyro look" title="Gyro look">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <rect x="7" y="2.5" width="10" height="19" rx="2.2"/>
+            <path stroke-linecap="round" d="M10 5h4M11 18.5h2"/>
+            <path stroke-linecap="round" stroke-linejoin="round" d="M4.1 8.2a8.5 8.5 0 000 7.6M19.9 8.2a8.5 8.5 0 010 7.6"/>
+          </svg>
+        </button>
+        <button class="tour-viewmodes__button" id="tourVrMode" type="button" aria-pressed="false" aria-label="Enter VR mode" title="VR mode">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M3.4 8.1A2.6 2.6 0 016 5.8h12a2.6 2.6 0 012.6 2.3l.7 6.2a3 3 0 01-3 3.4h-2.1a2.8 2.8 0 01-2.3-1.2l-.7-1a1.5 1.5 0 00-2.4 0l-.7 1a2.8 2.8 0 01-2.3 1.2H5.7a3 3 0 01-3-3.4l.7-6.2z"/>
+            <circle cx="7.6" cy="11.7" r="2.1"/><circle cx="16.4" cy="11.7" r="2.1"/>
+          </svg>
+        </button>
+      </div>
+
       <!-- Expanded full map: opened from the minimap; tap a marker to travel -->
       <div class="tour-mapx" id="tourMapx" hidden>
         <div class="tour-mapx__panel">
@@ -315,6 +340,18 @@
             </div>
           </div>
         </section>
+      </div>
+
+      <div class="tour-vr" id="tourVrView" hidden role="dialog" aria-modal="true" aria-label="Virtual reality panorama">
+        <div class="tour-vr__stage" id="tourVrStage"></div>
+        <span class="tour-vr__divider" aria-hidden="true"></span>
+        <span class="tour-vr__reticle tour-vr__reticle--left" aria-hidden="true"></span>
+        <span class="tour-vr__reticle tour-vr__reticle--right" aria-hidden="true"></span>
+        <p class="tour-vr__status" id="tourVrStatus" aria-live="polite">Preparing the VR view…</p>
+        <button class="tour-vr__exit" id="tourVrExit" type="button">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"/></svg>
+          <span>Exit VR</span>
+        </button>
       </div>
     </main>
 
