@@ -156,6 +156,11 @@ def prepare_online_gallery_item(item: dict[str, Any] | None, *, categories_by_id
     prepared["image_url"] = resolve_online_gallery_image_url(prepared.get("image_filename"))
     prepared["model_url"] = resolve_online_gallery_model_url(prepared.get("model_filename"))
     prepared["teaching_note"] = str(prepared.get("teaching_note") or "").strip()
+    status = _normalize_text(prepared.get("status")).lower()
+    if status not in {"published", "draft", "archived"}:
+        status = "published" if bool(prepared.get("is_published")) else "draft"
+    prepared["status"] = status
+    prepared["is_published"] = status == "published"
     return prepared
 
 
@@ -262,6 +267,10 @@ def build_online_gallery_form_state(source: dict[str, Any] | None = None, *, cat
     if category_id not in valid_category_ids and categories:
         category_id = str(categories[0].get("id"))
 
+    status = str(source.get("status") or "").strip().lower()
+    if status not in {"published", "draft", "archived"}:
+        status = "published" if bool(source.get("is_published")) else "draft"
+
     return {
         "title": str(source.get("title") or source.get("title_en") or "").strip(),
         "title_en": str(source.get("title_en") or source.get("title") or "").strip(),
@@ -277,7 +286,8 @@ def build_online_gallery_form_state(source: dict[str, Any] | None = None, *, cat
         "full_description": str(source.get("full_description") or source.get("full_description_en") or "").strip(),
         "full_description_en": str(source.get("full_description_en") or source.get("full_description") or "").strip(),
         "full_description_tl": str(source.get("full_description_tl") or source.get("full_description") or "").strip(),
-        "is_published": bool(source.get("is_published")),
+        "status": status,
+        "is_published": status == "published",
         "image_filename": str(source.get("image_filename") or "").strip(),
         "image_url": source.get("image_url"),
         "model_filename": str(source.get("model_filename") or "").strip(),
@@ -289,6 +299,9 @@ def get_online_gallery_status_message(status_key: Any) -> str | None:
     mapping = {
         "created": "Online gallery card created successfully.",
         "updated": "Online gallery card updated successfully.",
+        "published": "Online gallery card published successfully.",
+        "archived": "Online gallery card archived successfully.",
+        "restored": "Online gallery card restored to Draft successfully.",
         "deleted": "Online gallery card deleted successfully.",
     }
     return mapping.get(str(status_key or "").strip().lower())

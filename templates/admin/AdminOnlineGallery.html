@@ -21,10 +21,11 @@
           </section>
           {% endif %}
 
-          {% set published_count = gallery_items|selectattr('is_published')|list|length %}
-          {% set draft_count = (gallery_items|length) - published_count %}
+          {% set published_count = gallery_items|selectattr('status', 'equalto', 'published')|list|length %}
+          {% set draft_count = gallery_items|selectattr('status', 'equalto', 'draft')|list|length %}
+          {% set archived_count = gallery_items|selectattr('status', 'equalto', 'archived')|list|length %}
 
-          <section class="admin-gallery-manager" data-admin-gallery-manager data-gallery-filter="all">
+          <section class="admin-gallery-manager" data-admin-gallery-manager data-gallery-filter="{{ status_filter }}">
             <header class="admin-gallery-manager-head">
               <div>
                 <p class="admin-gallery-manager-eyebrow">Digital collection</p>
@@ -48,6 +49,9 @@
                 <button type="button" class="admin-gallery-filter" data-gallery-filter-button="draft" aria-pressed="false">
                   Draft <span>{{ draft_count }}</span>
                 </button>
+                <button type="button" class="admin-gallery-filter" data-gallery-filter-button="archived" aria-pressed="false">
+                  Archived <span>{{ archived_count }}</span>
+                </button>
               </nav>
 
               <label class="admin-gallery-search" for="adminGallerySearch">
@@ -68,7 +72,7 @@
                 </span>
                 <span>
                   <strong data-gallery-library-title>Complete collection</strong>
-                  <small data-gallery-library-description>Every published and draft gallery card</small>
+                  <small data-gallery-library-description>Every published, draft, and archived gallery card</small>
                 </span>
               </div>
               <span class="admin-gallery-visible-count" data-gallery-visible-count>{{ gallery_items|length }} cards</span>
@@ -77,9 +81,9 @@
             <div class="admin-gallery-library" data-gallery-library>
               {% for gallery_item in gallery_items %}
               <article
-                class="admin-gallery-card{% if not gallery_item.is_published %} is-draft{% endif %}"
+                class="admin-gallery-card is-{{ gallery_item.status }}"
                 data-gallery-card
-                data-gallery-status="{% if gallery_item.is_published %}published{% else %}draft{% endif %}"
+                data-gallery-status="{{ gallery_item.status }}"
                 data-gallery-search="{{ (gallery_item.title ~ ' ' ~ gallery_item.title_en ~ ' ' ~ gallery_item.title_tl ~ ' ' ~ gallery_item.short_caption ~ ' ' ~ gallery_item.short_caption_en ~ ' ' ~ gallery_item.short_caption_tl ~ ' ' ~ gallery_item.category ~ ' ' ~ gallery_item.category_en ~ ' ' ~ gallery_item.category_tl ~ ' ' ~ gallery_item.year ~ ' ' ~ gallery_item.location_en ~ ' ' ~ gallery_item.location_tl)|lower }}"
               >
                 <figure class="admin-gallery-card-media">
@@ -93,8 +97,8 @@
                   {% endif %}
 
                   <div class="admin-gallery-card-badges">
-                    <span class="admin-status-badge {% if gallery_item.is_published %}is-published{% else %}is-draft{% endif %}">
-                      {% if gallery_item.is_published %}Published{% else %}Draft{% endif %}
+                    <span class="admin-status-badge {% if gallery_item.status == 'published' %}is-published{% elif gallery_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">
+                      {{ gallery_item.status|title }}
                     </span>
                     {% if gallery_item.model_url or gallery_item.model_filename %}
                     <span class="admin-gallery-model-badge">
@@ -131,31 +135,77 @@
                   </div>
                 </div>
 
-                <footer class="admin-gallery-card-actions">
-                  <a href="{{ url_for('online_gallery_details', item=gallery_item.id) }}" class="admin-gallery-action is-view">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
-                    View
-                  </a>
-                  <a href="{{ url_for('admin_online_gallery_edit', item_id=gallery_item.id) }}" class="admin-gallery-action is-edit">
-                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
-                    Edit
-                  </a>
-                  <form
-                    method="post"
-                    action="{{ url_for('admin_online_gallery_delete', item_id=gallery_item.id) }}"
-                    data-confirm-submit
-                    data-confirm-eyebrow="Gallery record"
-                    data-confirm-title="Delete this gallery card?"
-                    data-confirm-message="Permanently delete {{ gallery_item.title }} and its uploaded image{% if gallery_item.model_filename %} and 3D object{% endif %}? This action cannot be undone."
-                    data-confirm-label="Delete gallery card"
-                    data-confirm-variant="disable"
-                  >
-                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                    <button type="submit" class="admin-gallery-action is-delete">
-                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M8 3h8l1 2h4v2H3V5h4Zm-2 6h12l-1 12H7Zm3 2v8h2v-8Zm4 0v8h2v-8Z"></path></svg>
-                      Delete
-                    </button>
-                  </form>
+                <footer class="admin-highlight-card-actions">
+                  <div>
+                    <a href="{{ url_for('admin_online_gallery_view', item_id=gallery_item.id) }}" class="admin-highlight-action is-secondary">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                      View
+                    </a>
+                    <a href="{{ url_for('admin_online_gallery_edit', item_id=gallery_item.id) }}" class="admin-highlight-action is-primary">
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
+                      Edit
+                    </a>
+                  </div>
+                  <div>
+                    {% if gallery_item.status == 'draft' %}
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_online_gallery_status', item_id=gallery_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Publication status"
+                      data-confirm-title="Publish this gallery card?"
+                      data-confirm-message="Publish {{ gallery_item.title }}? It will immediately become visible in the public Online Gallery."
+                      data-confirm-label="Publish card"
+                      data-confirm-variant="enable"
+                    >
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <input type="hidden" name="status_action" value="publish" />
+                      <input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-post">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                        Publish
+                      </button>
+                    </form>
+                    {% elif gallery_item.status == 'archived' %}
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_online_gallery_status', item_id=gallery_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Collection status"
+                      data-confirm-title="Restore this gallery card?"
+                      data-confirm-message="Restore {{ gallery_item.title }} to Draft? It will remain hidden until it is published again."
+                      data-confirm-label="Restore to Draft"
+                      data-confirm-variant="enable"
+                    >
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <input type="hidden" name="status_action" value="restore" />
+                      <input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-restore">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6ZM11 8h2v5H8v-2h3Z"></path></svg>
+                        Restore
+                      </button>
+                    </form>
+                    {% endif %}
+                    {% if gallery_item.status != 'archived' %}
+                    <form
+                      method="post"
+                      action="{{ url_for('admin_online_gallery_delete', item_id=gallery_item.id) }}"
+                      data-confirm-submit
+                      data-confirm-eyebrow="Collection status"
+                      data-confirm-title="Archive this gallery card?"
+                      data-confirm-message="Archive {{ gallery_item.title }}? It will be hidden from the public gallery but retained for future restoration."
+                      data-confirm-label="Archive card"
+                      data-confirm-variant="disable"
+                    >
+                      <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                      <input type="hidden" name="return_filter" value="{{ status_filter }}" />
+                      <button type="submit" class="admin-highlight-action is-archive">
+                        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                        Archive
+                      </button>
+                    </form>
+                    {% endif %}
+                  </div>
                 </footer>
               </article>
               {% endfor %}

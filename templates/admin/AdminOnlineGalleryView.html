@@ -1,0 +1,274 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = gallery_item.title ~ ' | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'online-gallery' %}
+{% set admin_topbar_title = 'Gallery Card Details' %}
+{% set admin_topbar_subtitle = 'Preview the complete bilingual record and manage its collection status.' %}
+{% set admin_topbar_tool_href = url_for('admin_online_gallery', filter=gallery_item.status) %}
+{% set admin_topbar_tool_label = 'Back to gallery' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          <article class="admin-highlight-view admin-gallery-view">
+            <div class="admin-highlight-view-accent" aria-hidden="true"></div>
+
+            <header class="admin-highlight-view-management">
+              <div class="admin-highlight-view-state">
+                <span class="admin-status-badge {% if gallery_item.status == 'published' %}is-published{% elif gallery_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">
+                  {{ gallery_item.status|title }}
+                </span>
+                {% if gallery_item.model_url %}
+                <span class="admin-gallery-model-badge">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m12 2 9 5v10l-9 5-9-5V7Zm0 2.3L6.1 7.6 12 10.9l5.9-3.3ZM5 9.3v6.5l6 3.3v-6.5Zm8 9.8 6-3.3V9.3l-6 3.3Z"></path></svg>
+                  3D object
+                </span>
+                {% endif %}
+                <span class="admin-highlight-view-record">Record #{{ gallery_item.id }}</span>
+              </div>
+
+              <div class="admin-highlight-view-actions" aria-label="Manage this gallery card">
+                {% if gallery_item.status == 'published' %}
+                <a href="{{ url_for('online_gallery_details', item=gallery_item.id) }}" class="admin-highlight-view-action is-secondary" target="_blank" rel="noopener">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14ZM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"></path></svg>
+                  Public page
+                </a>
+                {% endif %}
+
+                <a href="{{ url_for('admin_online_gallery_edit', item_id=gallery_item.id) }}" class="admin-highlight-view-action is-primary">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
+                  Edit content
+                </a>
+
+                {% if gallery_item.status == 'draft' %}
+                <form
+                  method="post"
+                  action="{{ url_for('admin_online_gallery_status', item_id=gallery_item.id) }}"
+                  data-confirm-submit
+                  data-confirm-eyebrow="Publication status"
+                  data-confirm-title="Publish this gallery card?"
+                  data-confirm-message="Publish {{ gallery_item.title }}? It will immediately become visible in the public Online Gallery."
+                  data-confirm-label="Publish card"
+                  data-confirm-variant="enable"
+                >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="status_action" value="publish" />
+                  <input type="hidden" name="return_to" value="view" />
+                  <button type="submit" class="admin-highlight-view-action is-publish">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                    Publish
+                  </button>
+                </form>
+                {% elif gallery_item.status == 'archived' %}
+                <form
+                  method="post"
+                  action="{{ url_for('admin_online_gallery_status', item_id=gallery_item.id) }}"
+                  data-confirm-submit
+                  data-confirm-eyebrow="Collection status"
+                  data-confirm-title="Restore this gallery card?"
+                  data-confirm-message="Restore {{ gallery_item.title }} to Draft? It will remain hidden until it is published again."
+                  data-confirm-label="Restore to Draft"
+                  data-confirm-variant="enable"
+                >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="status_action" value="restore" />
+                  <input type="hidden" name="return_to" value="view" />
+                  <button type="submit" class="admin-highlight-view-action is-restore">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6ZM11 8h2v5H8v-2h3Z"></path></svg>
+                    Restore to Draft
+                  </button>
+                </form>
+                {% endif %}
+
+                {% if gallery_item.status != 'archived' %}
+                <form
+                  method="post"
+                  action="{{ url_for('admin_online_gallery_delete', item_id=gallery_item.id) }}"
+                  data-confirm-submit
+                  data-confirm-eyebrow="Collection status"
+                  data-confirm-title="Archive this gallery card?"
+                  data-confirm-message="Archive {{ gallery_item.title }}? It will be hidden from the public gallery but retained for future restoration."
+                  data-confirm-label="Archive card"
+                  data-confirm-variant="disable"
+                >
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="return_to" value="view" />
+                  <button type="submit" class="admin-highlight-view-action is-archive">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                    Archive
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </header>
+
+            <div class="admin-highlight-view-layout">
+              <div class="admin-highlight-view-media-column">
+                <div class="admin-gallery-editor-media-tabs" role="tablist" aria-label="Gallery media preview">
+                  <button type="button" class="is-active" data-gallery-view-media-tab="image" role="tab" aria-selected="true">Image</button>
+                  {% if gallery_item.model_url %}
+                  <button type="button" data-gallery-view-media-tab="model" role="tab" aria-selected="false">3D Object</button>
+                  {% endif %}
+                </div>
+
+                <figure class="admin-highlight-view-media admin-gallery-view-media" data-gallery-view-media-panel="image">
+                  {% if gallery_item.image_url %}
+                  <img src="{{ gallery_item.image_url }}" alt="{{ gallery_item.title }}" />
+                  {% else %}
+                  <div class="admin-highlight-view-media-fallback" aria-label="No image available">
+                    <span>{{ (gallery_item.title or 'G')[:1]|upper }}</span>
+                    <small>No image uploaded</small>
+                  </div>
+                  {% endif %}
+                  <figcaption>
+                    <span>{{ gallery_item.category or 'Uncategorized' }}</span>
+                    <span>{{ gallery_item.year or gallery_item.location_tl or gallery_item.location_en or 'Gallery record' }}</span>
+                  </figcaption>
+                </figure>
+
+                {% if gallery_item.model_url %}
+                <div class="admin-gallery-editor-model-preview admin-gallery-view-model" data-gallery-view-media-panel="model" hidden>
+                  <model-viewer
+                    src="{{ gallery_item.model_url }}"
+                    alt="Interactive 3D preview of {{ gallery_item.title }}"
+                    camera-controls
+                    auto-rotate
+                    shadow-intensity="0.7"
+                    environment-image="neutral"
+                    interaction-prompt="none"
+                  ></model-viewer>
+                  <div class="admin-gallery-editor-model-caption">
+                    <span>Interactive 3D preview</span>
+                    <span>{{ gallery_item.model_filename }}</span>
+                  </div>
+                </div>
+                {% endif %}
+
+                <section class="admin-highlight-view-visibility {% if gallery_item.status == 'published' %}is-active{% elif gallery_item.status == 'archived' %}is-archived{% else %}is-draft{% endif %}">
+                  <span class="admin-highlight-view-visibility-icon" aria-hidden="true">
+                    {% if gallery_item.status == 'published' %}
+                    <svg viewBox="0 0 24 24"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"></path></svg>
+                    {% elif gallery_item.status == 'archived' %}
+                    <svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z"></path></svg>
+                    {% endif %}
+                  </span>
+                  <span>
+                    <small>Public visibility</small>
+                    <strong>
+                      {% if gallery_item.status == 'published' %}Visible in the Online Gallery{% elif gallery_item.status == 'archived' %}Archived and hidden{% else %}Draft and hidden{% endif %}
+                    </strong>
+                  </span>
+                </section>
+              </div>
+
+              <div class="admin-highlight-view-content">
+                <p class="admin-highlight-manager-eyebrow">Online Gallery collection</p>
+                <h1>{{ gallery_item.title }}</h1>
+
+                <div class="admin-highlight-view-meta">
+                  <span>{{ gallery_item.category or 'Uncategorized' }}</span>
+                  {% if gallery_item.year %}<span>{{ gallery_item.year }}</span>{% endif %}
+                  {% if gallery_item.location_tl or gallery_item.location_en %}<span>{{ gallery_item.location_tl or gallery_item.location_en }}</span>{% endif %}
+                </div>
+
+                <section class="admin-highlight-view-section">
+                  <header>
+                    <span>01</span>
+                    <h2>Titles</h2>
+                  </header>
+                  <div class="admin-highlight-view-copy-grid">
+                    <div>
+                      <span>English</span>
+                      <p>{{ gallery_item.title_en }}</p>
+                    </div>
+                    <div>
+                      <span>Tagalog</span>
+                      <p>{{ gallery_item.title_tl }}</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="admin-highlight-view-section">
+                  <header>
+                    <span>02</span>
+                    <h2>Short Description</h2>
+                  </header>
+                  <div class="admin-highlight-view-copy-grid">
+                    <div>
+                      <span>English</span>
+                      <p>{{ gallery_item.short_caption_en }}</p>
+                    </div>
+                    <div>
+                      <span>Tagalog</span>
+                      <p>{{ gallery_item.short_caption_tl }}</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="admin-highlight-view-section">
+                  <header>
+                    <span>03</span>
+                    <h2>Full Description</h2>
+                  </header>
+                  <div class="admin-highlight-view-copy-grid">
+                    <div>
+                      <span>English</span>
+                      <p>{{ gallery_item.full_description_en }}</p>
+                    </div>
+                    <div>
+                      <span>Tagalog</span>
+                      <p>{{ gallery_item.full_description_tl }}</p>
+                    </div>
+                  </div>
+                </section>
+
+                <section class="admin-highlight-view-facts">
+                  <h2>Gallery Details</h2>
+                  <dl>
+                    <div>
+                      <dt>Publication status</dt>
+                      <dd>{{ gallery_item.status|title }}</dd>
+                    </div>
+                    <div>
+                      <dt>Category</dt>
+                      <dd>{{ gallery_item.category or 'Uncategorized' }}</dd>
+                    </div>
+                    <div>
+                      <dt>Image</dt>
+                      <dd>{% if gallery_item.image_filename %}Image attached{% else %}No image attached{% endif %}</dd>
+                    </div>
+                    <div>
+                      <dt>3D object</dt>
+                      <dd>{% if gallery_item.model_filename %}GLB attached{% else %}Image-only record{% endif %}</dd>
+                    </div>
+                    {% if gallery_item.year %}
+                    <div>
+                      <dt>Year</dt>
+                      <dd>{{ gallery_item.year }}</dd>
+                    </div>
+                    {% endif %}
+                    {% if gallery_item.location_tl or gallery_item.location_en %}
+                    <div>
+                      <dt>Location</dt>
+                      <dd>{{ gallery_item.location_tl or gallery_item.location_en }}</dd>
+                    </div>
+                    {% endif %}
+                  </dl>
+                </section>
+              </div>
+            </div>
+          </article>
+
+          {% if gallery_item.model_url %}
+          <script type="module" src="https://unpkg.com/@google/model-viewer/dist/model-viewer.min.js"></script>
+          {% endif %}
+{% endblock %}

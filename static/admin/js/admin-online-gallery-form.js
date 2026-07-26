@@ -224,28 +224,38 @@
   }
 
   function updateVisibility() {
-    var isPublished = Boolean(statusSelect && statusSelect.value === "1");
+    var status = statusSelect ? statusSelect.value : "draft";
+    var isPublished = status === "published";
+    var isArchived = status === "archived";
     if (visibility) {
       visibility.classList.toggle("is-active", isPublished);
-      visibility.classList.toggle("is-draft", !isPublished);
+      visibility.classList.toggle("is-draft", !isPublished && !isArchived);
+      visibility.classList.toggle("is-archived", isArchived);
     }
     if (visibilityText) {
       visibilityText.textContent = isPublished
         ? "Visible in the Online Gallery"
-        : "Draft and hidden";
+        : isArchived
+          ? "Archived and hidden"
+          : "Draft and hidden";
     }
     if (statusNote) {
       statusNote.textContent = isPublished
         ? "Visible to visitors"
-        : "Hidden from visitors";
-      statusNote.classList.toggle("is-draft", !isPublished);
+        : isArchived
+          ? "Retained in the archive"
+          : "Hidden from visitors";
+      statusNote.classList.toggle("is-draft", !isPublished && !isArchived);
+      statusNote.classList.toggle("is-archived", isArchived);
     }
     if (visibilityPath) {
       visibilityPath.setAttribute(
         "d",
         isPublished
           ? "M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z"
-          : "M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z"
+          : isArchived
+            ? "M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"
+            : "M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z"
       );
     }
   }

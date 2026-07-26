@@ -32,7 +32,8 @@ create table if not exists public.online_gallery_items (
   tags jsonb not null default '[]'::jsonb,
   image_filename text,
   model_filename text,
-  is_published boolean not null default true,
+  status text not null default 'draft' check (status in ('published', 'draft', 'archived')),
+  is_published boolean not null default false,
   sort_order integer not null default 0,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
@@ -57,7 +58,8 @@ alter table if exists public.online_gallery_items
   add column if not exists tags jsonb default '[]'::jsonb,
   add column if not exists image_filename text,
   add column if not exists model_filename text,
-  add column if not exists is_published boolean default true,
+  add column if not exists status text,
+  add column if not exists is_published boolean default false,
   add column if not exists sort_order integer default 0,
   add column if not exists created_at timestamptz default timezone('utc', now()),
   add column if not exists updated_at timestamptz default timezone('utc', now());
@@ -132,7 +134,16 @@ set title_en = coalesce(title_en, title),
     full_description_tl = coalesce(full_description_tl, full_description),
     teaching_note = coalesce(teaching_note, ''),
     tags = coalesce(tags, '[]'::jsonb),
-    is_published = coalesce(is_published, true),
+    status = case
+      when status in ('published', 'draft', 'archived') then status
+      when coalesce(is_published, true) then 'published'
+      else 'draft'
+    end,
+    is_published = case
+      when status = 'published' then true
+      when status in ('draft', 'archived') then false
+      else coalesce(is_published, true)
+    end,
     sort_order = coalesce(sort_order, 0),
     created_at = coalesce(created_at, timezone('utc', now())),
     updated_at = coalesce(updated_at, timezone('utc', now()))
@@ -152,6 +163,8 @@ where title_en is null
    or full_description_tl is null
    or teaching_note is null
    or tags is null
+   or status is null
+   or status not in ('published', 'draft', 'archived')
    or is_published is null
   or sort_order is null
   or created_at is null
@@ -172,7 +185,8 @@ alter table if exists public.online_gallery_items
   alter column full_description_tl set default '',
   alter column teaching_note set default '',
   alter column tags set default '[]'::jsonb,
-  alter column is_published set default true,
+  alter column status set default 'draft',
+  alter column is_published set default false,
   alter column sort_order set default 0,
   alter column created_at set default timezone('utc', now()),
   alter column updated_at set default timezone('utc', now());
@@ -194,10 +208,28 @@ alter table if exists public.online_gallery_items
   alter column full_description_tl set not null,
   alter column teaching_note set not null,
   alter column tags set not null,
+  alter column status set not null,
   alter column is_published set not null,
   alter column sort_order set not null,
   alter column created_at set not null,
   alter column updated_at set not null;
+
+alter table if exists public.online_gallery_items
+  drop constraint if exists online_gallery_items_status_check;
+
+alter table if exists public.online_gallery_items
+  add constraint online_gallery_items_status_check
+  check (status in ('published', 'draft', 'archived'));
+
+alter table if exists public.online_gallery_items
+  drop constraint if exists online_gallery_items_publication_check;
+
+alter table if exists public.online_gallery_items
+  add constraint online_gallery_items_publication_check
+  check ((status = 'published') = is_published);
+
+create index if not exists online_gallery_items_status_idx
+  on public.online_gallery_items (status);
 
 alter table if exists public.online_gallery_categories
   alter column display_name_en set not null,

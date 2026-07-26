@@ -896,7 +896,7 @@
     var filterCopy = {
       all: {
         title: "Complete collection",
-        description: "Every published and draft gallery card",
+        description: "Every published, draft, and archived gallery card",
       },
       published: {
         title: "Public collection",
@@ -905,6 +905,10 @@
       draft: {
         title: "Draft workspace",
         description: "Unpublished cards still being prepared",
+      },
+      archived: {
+        title: "Collection archive",
+        description: "Hidden cards retained for future restoration",
       },
     };
 
@@ -968,6 +972,10 @@
           emptyTitle.textContent = "No draft gallery cards";
           emptyCopy.textContent =
             "Every gallery card is currently published.";
+        } else if (currentFilter === "archived") {
+          emptyTitle.textContent = "No archived gallery cards";
+          emptyCopy.textContent =
+            "Archived cards will remain available here for restoration.";
         } else {
           emptyTitle.textContent = "No gallery cards yet";
           emptyCopy.textContent =
@@ -1004,6 +1012,35 @@
     }
 
     applyGalleryView();
+  }
+
+  function initAdminGalleryView() {
+    var root = document.querySelector(".admin-gallery-view");
+    if (!root) {
+      return;
+    }
+
+    var buttons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-gallery-view-media-tab]")
+    );
+    var panels = Array.prototype.slice.call(
+      root.querySelectorAll("[data-gallery-view-media-panel]")
+    );
+
+    buttons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var media = button.getAttribute("data-gallery-view-media-tab");
+        buttons.forEach(function (item) {
+          var active = item === button;
+          item.classList.toggle("is-active", active);
+          item.setAttribute("aria-selected", active ? "true" : "false");
+        });
+        panels.forEach(function (panel) {
+          panel.hidden =
+            panel.getAttribute("data-gallery-view-media-panel") !== media;
+        });
+      });
+    });
   }
 
   function initAdminUserManagement() {
@@ -2206,6 +2243,7 @@
     initAdminBookingManagement();
     initAdminBookingReview();
     initAdminGalleryManagement();
+    initAdminGalleryView();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();

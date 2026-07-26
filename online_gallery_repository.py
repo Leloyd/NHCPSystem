@@ -39,7 +39,7 @@ def list_published_online_gallery_items() -> list[dict[str, Any]]:
     response = (
         client.table(ONLINE_GALLERY_ITEMS_TABLE)
         .select(ONLINE_GALLERY_ITEM_FIELDS)
-        .eq("is_published", True)
+        .eq("status", "published")
         .order("sort_order")
         .order("created_at", desc=True)
         .execute()

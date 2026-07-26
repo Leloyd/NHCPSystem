@@ -38,12 +38,13 @@
             <header class="admin-highlight-view-management admin-gallery-editor-management">
               <div class="admin-gallery-editor-status-field">
                 <label for="galleryPublicationStatus">Publication status</label>
-                <select id="galleryPublicationStatus" name="is_published" data-gallery-editor-status>
-                  <option value="1" {% if gallery_form.is_published %}selected{% endif %}>Published</option>
-                  <option value="0" {% if not gallery_form.is_published %}selected{% endif %}>Draft</option>
+                <select id="galleryPublicationStatus" name="status" data-gallery-editor-status>
+                  <option value="published" {% if gallery_form.status == 'published' %}selected{% endif %}>Published</option>
+                  <option value="draft" {% if gallery_form.status == 'draft' %}selected{% endif %}>Draft</option>
+                  <option value="archived" {% if gallery_form.status == 'archived' %}selected{% endif %}>Archived</option>
                 </select>
                 <span class="admin-gallery-editor-status-note" data-gallery-editor-status-note>
-                  {% if gallery_form.is_published %}Visible to visitors{% else %}Hidden from visitors{% endif %}
+                  {% if gallery_form.status == 'published' %}Visible to visitors{% elif gallery_form.status == 'archived' %}Retained in the archive{% else %}Hidden from visitors{% endif %}
                 </span>
               </div>
 
@@ -146,14 +147,14 @@
 
                 <p class="admin-gallery-editor-upload-feedback" data-gallery-editor-upload-feedback role="status" hidden></p>
 
-                <section class="admin-highlight-view-visibility {% if gallery_form.is_published %}is-active{% else %}is-draft{% endif %}" data-gallery-editor-visibility>
+                <section class="admin-highlight-view-visibility {% if gallery_form.status == 'published' %}is-active{% elif gallery_form.status == 'archived' %}is-archived{% else %}is-draft{% endif %}" data-gallery-editor-visibility>
                   <span class="admin-highlight-view-visibility-icon" aria-hidden="true">
-                    <svg viewBox="0 0 24 24"><path data-gallery-editor-visibility-icon d="{% if gallery_form.is_published %}M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z{% else %}M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z{% endif %}"></path></svg>
+                    <svg viewBox="0 0 24 24"><path data-gallery-editor-visibility-icon d="{% if gallery_form.status == 'published' %}M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z{% elif gallery_form.status == 'archived' %}M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z{% else %}M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z{% endif %}"></path></svg>
                   </span>
                   <span>
                     <small>Public visibility</small>
                     <strong data-gallery-editor-visibility-text>
-                      {% if gallery_form.is_published %}Visible in the Online Gallery{% else %}Draft and hidden{% endif %}
+                      {% if gallery_form.status == 'published' %}Visible in the Online Gallery{% elif gallery_form.status == 'archived' %}Archived and hidden{% else %}Draft and hidden{% endif %}
                     </strong>
                   </span>
                 </section>

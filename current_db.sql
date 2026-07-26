@@ -148,7 +148,8 @@ CREATE TABLE public.online_gallery_items (
   tags jsonb NOT NULL DEFAULT '[]'::jsonb,
   image_filename text,
   model_filename text,
-  is_published boolean NOT NULL DEFAULT true,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['published'::text, 'draft'::text, 'archived'::text])),
+  is_published boolean NOT NULL DEFAULT false,
   sort_order integer NOT NULL DEFAULT 0,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
@@ -161,7 +162,8 @@ CREATE TABLE public.online_gallery_items (
   short_caption_en text NOT NULL DEFAULT ''::text,
   full_description_en text NOT NULL DEFAULT ''::text,
   CONSTRAINT online_gallery_items_pkey PRIMARY KEY (id),
-  CONSTRAINT online_gallery_items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.online_gallery_categories(id)
+  CONSTRAINT online_gallery_items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.online_gallery_categories(id),
+  CONSTRAINT online_gallery_items_publication_check CHECK (((status = 'published'::text) = is_published))
 );
 CREATE TABLE public.edu_resources (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

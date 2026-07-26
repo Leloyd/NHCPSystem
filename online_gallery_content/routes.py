@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from flask import redirect, render_template, request, session, url_for
 
-from online_gallery_repository import create_online_gallery_item, delete_online_gallery_item, update_online_gallery_item
+from online_gallery_repository import create_online_gallery_item, update_online_gallery_item
 from supabase_client import is_supabase_configured
 
 from .service import (
@@ -20,6 +20,7 @@ CATEGORY_REQUIRES_LOCATION = {"mga-rehiyunal-na-kaugalian-regional-customs"}
 CATEGORY_REQUIRES_YEAR = {"kasaysayan-history"}
 ONLINE_GALLERY_MODEL_ALLOWED_EXTENSIONS = {".glb"}
 ONLINE_GALLERY_MODEL_INVALID_TYPE_MESSAGE = "3D object must be a GLB file."
+ONLINE_GALLERY_STATUSES = {"published", "draft", "archived"}
 
 
 def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image, save_uploaded_file):
@@ -71,6 +72,10 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
         location_en = ""
         location_tl = ""
 
+    requested_status = str(form.get("status") or "").strip().lower()
+    if requested_status not in ONLINE_GALLERY_STATUSES:
+        requested_status = "published" if normalize_checkbox(form.get("is_published")) else "draft"
+
     payload = {
         "title": title_tl,
         "title_en": title_en,
@@ -90,7 +95,8 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
         "full_description_tl": full_description_tl,
         "teaching_note": "",
         "tags": [],
-        "is_published": normalize_checkbox(form.get("is_published")),
+        "status": requested_status,
+        "is_published": requested_status == "published",
         "sort_order": 0,
     }
 
@@ -144,6 +150,9 @@ def register_online_gallery_content_routes(
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
         gallery_items = load_admin_online_gallery_items()
+        status_filter = str(request.args.get("filter") or "all").strip().lower()
+        if status_filter not in ONLINE_GALLERY_STATUSES | {"all"}:
+            status_filter = "all"
         status_message = get_online_gallery_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase online gallery integration is not configured."
         return render_template(
@@ -151,8 +160,24 @@ def register_online_gallery_content_routes(
             csrf_token=csrf_token,
             admin_username=current_admin_username,
             gallery_items=gallery_items,
+            status_filter=status_filter,
             status_message=status_message,
             config_error=config_error,
+        )
+
+    @app.route(f"{admin_route_prefix}/online-gallery/<int:item_id>")
+    @admin_required
+    def admin_online_gallery_view(item_id):
+        gallery_item = load_admin_online_gallery_item(item_id)
+        if gallery_item is None:
+            return redirect(url_for("admin_online_gallery"))
+
+        return render_template(
+            "admin/AdminOnlineGalleryView.html",
+            csrf_token=ensure_admin_csrf_token(),
+            admin_username=session.get(admin_session_user_key, admin_username),
+            gallery_item=gallery_item,
+            status_message=get_online_gallery_status_message(request.args.get("status")),
         )
 
     @app.route(f"{admin_route_prefix}/online-gallery/new", methods=["GET", "POST"])
@@ -167,7 +192,7 @@ def register_online_gallery_content_routes(
                 form_title="Create Online Gallery Card",
                 submit_label="Create Card",
                 form_action=url_for("admin_online_gallery_new"),
-                gallery_form=build_online_gallery_form_state({"is_published": True}, categories=categories),
+                gallery_form=build_online_gallery_form_state({"status": "draft"}, categories=categories),
                 categories=categories,
                 error_message=None if categories else "No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.",
             )
@@ -214,7 +239,7 @@ def register_online_gallery_content_routes(
                 submit_label="Create Card",
                 form_action=url_for("admin_online_gallery_new"),
                 gallery_form=build_online_gallery_form_state(
-                    {**request.form, "is_published": normalize_checkbox(request.form.get("is_published"))},
+                    dict(request.form),
                     categories=categories,
                 ),
                 categories=categories,
@@ -234,7 +259,7 @@ def register_online_gallery_content_routes(
                 submit_label="Create Card",
                 form_action=url_for("admin_online_gallery_new"),
                 gallery_form=build_online_gallery_form_state(
-                    {**request.form, "is_published": normalize_checkbox(request.form.get("is_published"))},
+                    dict(request.form),
                     categories=categories,
                 ),
                 categories=categories,
@@ -299,7 +324,7 @@ def register_online_gallery_content_routes(
                 submit_label="Save Changes",
                 form_action=url_for("admin_online_gallery_edit", item_id=item_id),
                 gallery_form=build_online_gallery_form_state(
-                    {**current_item, **request.form, "is_published": normalize_checkbox(request.form.get("is_published"))},
+                    {**current_item, **request.form},
                     categories=categories,
                 ),
                 categories=categories,
@@ -319,7 +344,7 @@ def register_online_gallery_content_routes(
                 submit_label="Save Changes",
                 form_action=url_for("admin_online_gallery_edit", item_id=item_id),
                 gallery_form=build_online_gallery_form_state(
-                    {**current_item, **request.form, "is_published": normalize_checkbox(request.form.get("is_published"))},
+                    {**current_item, **request.form},
                     categories=categories,
                 ),
                 categories=categories,
@@ -327,6 +352,62 @@ def register_online_gallery_content_routes(
             )
 
         return redirect(url_for("admin_online_gallery", status="updated"))
+
+    @app.route(f"{admin_route_prefix}/online-gallery/<int:item_id>/status", methods=["POST"])
+    @admin_required
+    def admin_online_gallery_status(item_id):
+        if not is_admin_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("admin_online_gallery"))
+
+        current_item = load_admin_online_gallery_item(item_id)
+        if current_item is None:
+            return redirect(url_for("admin_online_gallery"))
+
+        current_status = str(current_item.get("status") or "").strip().lower()
+        status_action = str(request.form.get("status_action") or "").strip().lower()
+        transitions = {
+            "publish": {
+                "from": "draft",
+                "payload": {"status": "published", "is_published": True},
+                "result": "published",
+            },
+            "restore": {
+                "from": "archived",
+                "payload": {"status": "draft", "is_published": False},
+                "result": "restored",
+            },
+        }
+        transition = transitions.get(status_action)
+        if transition is None or current_status != transition["from"]:
+            return redirect(url_for("admin_online_gallery"))
+
+        try:
+            update_online_gallery_item(item_id, transition["payload"])
+        except Exception as exc:
+            app.logger.exception(
+                "Failed to apply '%s' status action to online gallery item %s: %s",
+                status_action,
+                item_id,
+                exc,
+            )
+            return redirect(url_for("admin_online_gallery"))
+
+        if request.form.get("return_to") == "view":
+            return redirect(
+                url_for(
+                    "admin_online_gallery_view",
+                    item_id=item_id,
+                    status=transition["result"],
+                )
+            )
+
+        return redirect(
+            url_for(
+                "admin_online_gallery",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status=transition["result"],
+            )
+        )
 
     @app.route(f"{admin_route_prefix}/online-gallery/<int:item_id>/delete", methods=["POST"])
     @admin_required
@@ -337,13 +418,21 @@ def register_online_gallery_content_routes(
         current_item = load_admin_online_gallery_item(item_id)
         if current_item is None:
             return redirect(url_for("admin_online_gallery"))
+        if str(current_item.get("status") or "").strip().lower() == "archived":
+            return redirect(url_for("admin_online_gallery", filter="archived"))
 
         try:
-            delete_online_gallery_item(item_id)
-            delete_local_image(current_item.get("image_filename"), ONLINE_GALLERY_UPLOAD_DIR)
-            delete_local_image(current_item.get("model_filename"), ONLINE_GALLERY_UPLOAD_DIR)
+            update_online_gallery_item(item_id, {"status": "archived", "is_published": False})
         except Exception as exc:
-            app.logger.exception("Failed to delete online gallery item %s: %s", item_id, exc)
+            app.logger.exception("Failed to archive online gallery item %s: %s", item_id, exc)
             return redirect(url_for("admin_online_gallery"))
 
-        return redirect(url_for("admin_online_gallery", status="deleted"))
+        if request.form.get("return_to") == "view":
+            return redirect(url_for("admin_online_gallery_view", item_id=item_id, status="archived"))
+        return redirect(
+            url_for(
+                "admin_online_gallery",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status="archived",
+            )
+        )
