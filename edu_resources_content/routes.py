@@ -10,6 +10,7 @@ from supabase_client import is_supabase_configured
 
 from .service import (
     EDU_RESOURCES_UPLOAD_DIR,
+    EDU_RESOURCES_UPLOAD_MAX_BYTES,
     EDU_RESOURCE_CATEGORIES,
     EDU_RESOURCE_STATUS_OPTIONS,
     build_edu_resource_form_state,
@@ -25,6 +26,26 @@ CATEGORY_ALLOWED_EXTENSIONS = {
     "DOCS": ({".docx"}, "Document upload must be a .docx file."),
     "PDF": ({".pdf"}, "Document upload must be a .pdf file."),
 }
+EDU_RESOURCE_STATUSES = set(EDU_RESOURCE_STATUS_OPTIONS)
+
+
+def _get_uploaded_file_size(file_storage) -> int:
+    if file_storage is None or not str(getattr(file_storage, "filename", "") or "").strip():
+        return 0
+
+    stream = getattr(file_storage, "stream", None)
+    if stream is None:
+        raise ValueError("The selected upload size could not be verified.")
+
+    try:
+        original_position = stream.tell()
+        stream.seek(0, 2)
+        file_size = int(stream.tell())
+        stream.seek(original_position)
+    except (AttributeError, OSError, TypeError, ValueError) as exc:
+        raise ValueError("The selected upload size could not be verified.") from exc
+
+    return max(0, file_size)
 
 
 def _matches_allowed_extension(file_name: Any, allowed_extensions: set[str]) -> bool:
@@ -105,6 +126,16 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
 
     new_file_filename = None
     new_cover_image_filename = None
+    uploaded_file = files.get("resource_file")
+    uploaded_cover = files.get("cover_image_file")
+    upload_size_bytes = _get_uploaded_file_size(uploaded_file) + _get_uploaded_file_size(uploaded_cover)
+    if upload_size_bytes > EDU_RESOURCES_UPLOAD_MAX_BYTES:
+        upload_size_mb = upload_size_bytes / (1024 * 1024)
+        max_upload_mb = EDU_RESOURCES_UPLOAD_MAX_BYTES / (1024 * 1024)
+        raise ValueError(
+            f"The selected upload is {upload_size_mb:.2f} MB. "
+            f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
+        )
 
     if category == "Books":
         if len(author) < 2:
@@ -114,7 +145,6 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
         payload["author"] = author
         payload["year_label"] = year_label
 
-        uploaded_cover = files.get("cover_image_file")
         new_cover_image_filename = save_uploaded_image(uploaded_cover, title, EDU_RESOURCES_UPLOAD_DIR)
         if new_cover_image_filename:
             payload["cover_image_filename"] = new_cover_image_filename
@@ -135,7 +165,6 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
         payload["subject_topic"] = subject_topic
 
         allowed_extensions, invalid_type_message = CATEGORY_ALLOWED_EXTENSIONS[category]
-        uploaded_file = files.get("resource_file")
         new_file_filename = save_uploaded_file(
             uploaded_file,
             title,
@@ -173,9 +202,9 @@ def register_edu_resources_routes(
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
         resources_items = load_admin_edu_resources()
-        active_resources_items = [item for item in resources_items if item.get("status") == "active"]
-        draft_resources_items = [item for item in resources_items if item.get("status") == "draft"]
-        archived_resources_items = [item for item in resources_items if item.get("status") == "archived"]
+        status_filter = str(request.args.get("filter") or "all").strip().lower()
+        if status_filter not in EDU_RESOURCE_STATUSES | {"all"}:
+            status_filter = "all"
         status_message = get_edu_resources_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase edu resources integration is not configured."
         return render_template(
@@ -183,11 +212,24 @@ def register_edu_resources_routes(
             csrf_token=csrf_token,
             admin_username=current_admin_username,
             resources_items=resources_items,
-            active_resources_items=active_resources_items,
-            draft_resources_items=draft_resources_items,
-            archived_resources_items=archived_resources_items,
+            status_filter=status_filter,
             status_message=status_message,
             config_error=config_error,
+        )
+
+    @app.route(f"{admin_route_prefix}/edu-resources/<int:item_id>")
+    @admin_required
+    def admin_edu_resource_view(item_id):
+        resource_item = load_admin_edu_resource(item_id)
+        if resource_item is None:
+            return redirect(url_for("admin_edu_resources"))
+
+        return render_template(
+            "admin/AdminEduResourcesView.html",
+            csrf_token=ensure_admin_csrf_token(),
+            admin_username=session.get(admin_session_user_key, admin_username),
+            resource_item=resource_item,
+            status_message=get_edu_resources_status_message(request.args.get("status")),
         )
 
     @app.route(f"{admin_route_prefix}/edu-resources/new", methods=["GET", "POST"])
@@ -342,6 +384,62 @@ def register_edu_resources_routes(
 
         return redirect(url_for("admin_edu_resources", status="updated"))
 
+    @app.route(f"{admin_route_prefix}/edu-resources/<int:item_id>/status", methods=["POST"])
+    @admin_required
+    def admin_edu_resource_status(item_id):
+        if not is_admin_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("admin_edu_resources"))
+
+        current_item = load_admin_edu_resource(item_id)
+        if current_item is None:
+            return redirect(url_for("admin_edu_resources"))
+
+        current_status = str(current_item.get("status") or "").strip().lower()
+        status_action = str(request.form.get("status_action") or "").strip().lower()
+        transitions = {
+            "activate": {
+                "from": "draft",
+                "payload": {"status": "active", "is_published": True},
+                "result": "activated",
+            },
+            "restore": {
+                "from": "archived",
+                "payload": {"status": "draft", "is_published": False},
+                "result": "restored",
+            },
+        }
+        transition = transitions.get(status_action)
+        if transition is None or current_status != transition["from"]:
+            return redirect(url_for("admin_edu_resources"))
+
+        try:
+            update_edu_resource(item_id, transition["payload"])
+        except Exception as exc:
+            app.logger.exception(
+                "Failed to apply '%s' status action to edu resource %s: %s",
+                status_action,
+                item_id,
+                exc,
+            )
+            return redirect(url_for("admin_edu_resources"))
+
+        if request.form.get("return_to") == "view":
+            return redirect(
+                url_for(
+                    "admin_edu_resource_view",
+                    item_id=item_id,
+                    status=transition["result"],
+                )
+            )
+
+        return redirect(
+            url_for(
+                "admin_edu_resources",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status=transition["result"],
+            )
+        )
+
     @app.route(f"{admin_route_prefix}/edu-resources/<int:item_id>/delete", methods=["POST"])
     @admin_required
     def admin_edu_resource_delete(item_id):
@@ -351,6 +449,8 @@ def register_edu_resources_routes(
         current_item = load_admin_edu_resource(item_id)
         if current_item is None:
             return redirect(url_for("admin_edu_resources"))
+        if str(current_item.get("status") or "").strip().lower() == "archived":
+            return redirect(url_for("admin_edu_resources", filter="archived"))
 
         try:
             update_edu_resource(item_id, {"status": "archived", "is_published": False})
@@ -358,4 +458,12 @@ def register_edu_resources_routes(
             app.logger.exception("Failed to archive edu resource %s: %s", item_id, exc)
             return redirect(url_for("admin_edu_resources"))
 
-        return redirect(url_for("admin_edu_resources", status="deleted"))
+        if request.form.get("return_to") == "view":
+            return redirect(url_for("admin_edu_resource_view", item_id=item_id, status="archived"))
+        return redirect(
+            url_for(
+                "admin_edu_resources",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status="archived",
+            )
+        )

@@ -4,9 +4,9 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'edu-resources' %}
 {% set admin_topbar_title = form_title %}
-{% set admin_topbar_subtitle = 'Create or update learning materials shown in the public Edu Resources page.' %}
+{% set admin_topbar_subtitle = 'Compose the educational resource directly beside a preview of its public presentation.' %}
 {% set admin_topbar_tool_href = url_for('admin_edu_resources') %}
-{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_tool_label = 'Back to resources' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
 {% block admin_content %}
@@ -17,95 +17,167 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <form method="post" action="{{ form_action }}" enctype="multipart/form-data" class="admin-resource-form">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+          <form
+            method="post"
+            action="{{ form_action }}"
+            enctype="multipart/form-data"
+            class="admin-highlight-view admin-gallery-editor admin-edu-editor"
+            data-edu-editor
+            data-edu-editor-max-upload-bytes="{{ max_upload_bytes }}"
+            data-edu-editor-saved-cover-url="{{ resource_form.cover_image_url or '' }}"
+            data-edu-editor-has-cover="{% if resource_form.cover_image_filename %}1{% else %}0{% endif %}"
+            data-edu-editor-has-file="{% if resource_form.file_filename %}1{% else %}0{% endif %}"
+            data-confirm-submit
+            data-confirm-eyebrow="Educational Resources"
+            data-confirm-title="{% if submit_label == 'Create Resource' %}Create this educational resource?{% else %}Save these resource changes?{% endif %}"
+            data-confirm-message="{% if submit_label == 'Create Resource' %}Create this learning resource using the status, metadata, description, and uploaded file shown in the preview?{% else %}Save the status, metadata, description, and file changes shown in the preview?{% endif %}"
+            data-confirm-label="{{ submit_label }}"
+            data-confirm-variant="enable"
+          >
+            <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+            <div class="admin-highlight-view-accent" aria-hidden="true"></div>
 
-              <div class="admin-form-grid">
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="resourceTitle">Title</label>
-                  <input id="resourceTitle" name="title" type="text" maxlength="180" required value="{{ resource_form.title }}" />
-                </div>
+            <header class="admin-highlight-view-management admin-gallery-editor-management">
+              <div class="admin-gallery-editor-status-field">
+                <label for="resourceStatus">Publication status</label>
+                <select id="resourceStatus" name="status" required data-edu-editor-status>
+                  {% for status_option in status_options %}
+                  <option value="{{ status_option }}" {% if resource_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
+                  {% endfor %}
+                </select>
+                <span class="admin-gallery-editor-status-note" data-edu-editor-status-note>
+                  {% if resource_form.status == 'active' %}Visible to visitors{% elif resource_form.status == 'archived' %}Retained in the archive{% else %}Hidden from visitors{% endif %}
+                </span>
+              </div>
 
-                <div class="admin-form-field">
-                  <label for="resourceCategory">Category</label>
-                  <select id="resourceCategory" name="category" required>
-                    {% for category_option in category_options %}
-                    <option value="{{ category_option }}" {% if resource_form.category == category_option %}selected{% endif %}>{{ category_option }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
+              <div class="admin-gallery-editor-actions">
+                <a href="{{ url_for('admin_edu_resources') }}" class="admin-highlight-view-action is-secondary">Cancel</a>
+                <button type="submit" class="admin-highlight-view-action is-primary">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h12l2 2v16H5Zm2 2v14h10V6.8L15.2 5H15v5H9V5Zm4 0v3h2V5Zm1 8a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5Z"></path></svg>
+                  {{ submit_label }}
+                </button>
+              </div>
+            </header>
 
-                <div class="admin-form-field">
-                  <label for="resourceStatus">Status</label>
-                  <select id="resourceStatus" name="status" required>
-                    {% for status_option in status_options %}
-                    <option value="{{ status_option }}" {% if resource_form.status == status_option %}selected{% endif %}>{{ status_option|title }}</option>
-                    {% endfor %}
-                  </select>
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide" data-resource-field="book_meta" hidden>
-                  <div class="admin-form-grid">
-                    <div class="admin-form-field">
-                      <label for="resourceAuthor">Author</label>
-                      <input id="resourceAuthor" name="author" type="text" maxlength="180" value="{{ resource_form.author }}" />
-                    </div>
-                    <div class="admin-form-field">
-                      <label for="resourceYear">Year</label>
-                      <input id="resourceYear" name="year_label" type="text" maxlength="20" value="{{ resource_form.year_label }}" />
-                    </div>
+            <div class="admin-highlight-view-layout admin-gallery-editor-layout">
+              <div class="admin-highlight-view-media-column admin-gallery-editor-media-column">
+                <figure class="admin-highlight-view-media admin-gallery-editor-media admin-edu-editor-preview">
+                  <img src="{{ resource_form.cover_image_url or '' }}" alt="{{ resource_form.title or 'Book cover preview' }}" data-edu-editor-cover-preview {% if not resource_form.cover_image_url %}hidden{% endif %} />
+                  <div class="admin-highlight-view-media-fallback admin-edu-editor-document" data-edu-editor-document-preview {% if resource_form.cover_image_url %}hidden{% endif %}>
+                    <span>
+                      <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Zm-5 8h6v2H9Zm0 4h6v2H9Z"></path></svg>
+                    </span>
+                    <strong data-edu-editor-format>{{ resource_form.category or 'PPT' }}</strong>
+                    <small data-edu-editor-file-name>{{ resource_form.file_filename or 'Resource file preview' }}</small>
                   </div>
-                </div>
+                  <figcaption>
+                    <span data-edu-editor-output="category">{{ resource_form.category or 'Select a category' }}</span>
+                    <span data-edu-editor-output="context">
+                      {% if resource_form.category == 'Books' %}{{ resource_form.author or resource_form.year_label or 'Book resource' }}{% else %}{{ resource_form.grade_level or resource_form.subject_topic or 'Learning material' }}{% endif %}
+                    </span>
+                  </figcaption>
+                </figure>
 
-                <div class="admin-form-field" data-resource-field="material_meta">
-                  <label for="resourceEducatorName">Educator Name / Source</label>
-                  <input id="resourceEducatorName" name="educator_name" type="text" maxlength="180" value="{{ resource_form.educator_name }}" />
-                </div>
+                <label class="admin-gallery-editor-upload" for="resourceCoverImage" data-resource-field="book_upload" {% if resource_form.category != 'Books' %}hidden{% endif %}>
+                  <span class="admin-gallery-editor-upload-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                  </span>
+                  <span>
+                    <strong>{% if resource_form.cover_image_filename %}Replace book cover{% else %}Upload book cover{% endif %}</strong>
+                    <small>JPG or PNG{% if resource_form.cover_image_filename %} · Current: {{ resource_form.cover_image_filename }}{% endif %}</small>
+                  </span>
+                  <input id="resourceCoverImage" name="cover_image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-edu-editor-cover-input />
+                </label>
 
-                <div class="admin-form-field" data-resource-field="material_meta">
-                  <label for="resourceGradeLevel">Grade Level</label>
-                  <input id="resourceGradeLevel" name="grade_level" type="text" maxlength="120" value="{{ resource_form.grade_level }}" />
-                </div>
+                <label class="admin-gallery-editor-upload is-model admin-edu-file-upload" for="resourceFile" data-resource-field="material_upload" {% if resource_form.category == 'Books' %}hidden{% endif %}>
+                  <span class="admin-gallery-editor-upload-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                  </span>
+                  <span>
+                    <strong>{% if resource_form.file_filename %}Replace resource file{% else %}Upload resource file{% endif %}</strong>
+                    <small data-edu-editor-upload-help>
+                      {% if resource_form.file_filename %}Current: {{ resource_form.file_filename }}{% else %}Choose the file that matches the selected category{% endif %}
+                    </small>
+                  </span>
+                  <input id="resourceFile" name="resource_file" type="file" data-edu-editor-file-input />
+                </label>
 
-                <div class="admin-form-field admin-form-field-wide" data-resource-field="material_meta">
-                  <label for="resourceSubjectTopic">Subject / Topic</label>
-                  <input id="resourceSubjectTopic" name="subject_topic" type="text" maxlength="180" value="{{ resource_form.subject_topic }}" />
-                </div>
+                <section class="admin-highlight-editor-upload-budget admin-gallery-editor-upload-budget">
+                  <div>
+                    <span>New upload size</span>
+                    <strong data-edu-editor-upload-size>0.00 MB / {{ '%.1f'|format(max_upload_mb) }} MB</strong>
+                  </div>
+                  <div class="admin-highlight-editor-upload-meter" role="progressbar" aria-label="Size of the selected educational resource upload" aria-valuemin="0" aria-valuemax="{{ max_upload_bytes }}" aria-valuenow="0" data-edu-editor-upload-meter>
+                    <i data-edu-editor-upload-meter-bar></i>
+                  </div>
+                  <small>The newly selected cover or resource file must be {{ '%.1f'|format(max_upload_mb) }} MB or less per save to remain below Vercel’s 4.5 MB request limit.</small>
+                </section>
 
-                <div class="admin-form-field admin-form-field-wide">
-                  <label for="resourceDescription">Description</label>
-                  <textarea id="resourceDescription" name="description" rows="5" required>{{ resource_form.description }}</textarea>
-                </div>
+                <p class="admin-gallery-editor-upload-feedback" data-edu-editor-upload-feedback role="status" hidden></p>
 
-                <div class="admin-form-field admin-form-field-wide" data-resource-field="material_upload">
-                  <label for="resourceFile">Upload Resource File</label>
-                  <input id="resourceFile" name="resource_file" type="file" />
-                  {% if resource_form.file_filename %}
-                  <p class="admin-field-hint">Current file: <strong>{{ resource_form.file_filename }}</strong></p>
-                  {% endif %}
-                </div>
-
-                <div class="admin-form-field admin-form-field-wide" data-resource-field="book_upload" hidden>
-                  <label for="resourceCoverImage">Book Cover Image (JPG or PNG)</label>
-                  <input id="resourceCoverImage" name="cover_image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" />
-                  {% if resource_form.cover_image_filename %}
-                  <p class="admin-field-hint">Current cover image: <strong>{{ resource_form.cover_image_filename }}</strong></p>
-                  {% endif %}
-                </div>
+                <section class="admin-highlight-view-visibility {% if resource_form.status == 'active' %}is-active{% elif resource_form.status == 'archived' %}is-archived{% else %}is-draft{% endif %}" data-edu-editor-visibility>
+                  <span class="admin-highlight-view-visibility-icon" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path data-edu-editor-visibility-icon d="{% if resource_form.status == 'active' %}M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1 0 6 3 3 0 0 1 0-6Z{% elif resource_form.status == 'archived' %}M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z{% else %}M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Zm0 4h6v2H9Z{% endif %}"></path></svg>
+                  </span>
+                  <span>
+                    <small>Public visibility</small>
+                    <strong data-edu-editor-visibility-text>{% if resource_form.status == 'active' %}Visible in Educational Resources{% elif resource_form.status == 'archived' %}Archived and hidden{% else %}Draft and hidden{% endif %}</strong>
+                  </span>
+                </section>
               </div>
 
-              {% if resource_form.cover_image_url %}
-              <div class="admin-image-preview-card">
-                <img src="{{ resource_form.cover_image_url }}" alt="Current book cover preview" />
-              </div>
-              {% endif %}
+              <div class="admin-highlight-view-content admin-gallery-editor-content">
+                <p class="admin-highlight-manager-eyebrow">Editable resource preview</p>
 
-              <div class="admin-form-actions">
-                <a href="{{ url_for('admin_edu_resources') }}" class="admin-secondary-action">Cancel</a>
-                <button type="submit" class="admin-primary-action">{{ submit_label }}</button>
+                <label class="admin-highlight-editor-title-label" for="resourceTitle">Resource title</label>
+                <input id="resourceTitle" class="admin-highlight-editor-title admin-gallery-editor-title" name="title" type="text" maxlength="180" required value="{{ resource_form.title }}" placeholder="Enter the educational resource title" data-edu-editor-title />
+
+                <div class="admin-highlight-view-meta admin-gallery-editor-meta admin-edu-editor-meta">
+                  <label class="admin-highlight-editor-meta-control is-category">
+                    <span>Category</span>
+                    <select id="resourceCategory" name="category" required data-edu-editor-category>
+                      {% for category_option in category_options %}
+                      <option value="{{ category_option }}" {% if resource_form.category == category_option %}selected{% endif %}>{{ category_option }}</option>
+                      {% endfor %}
+                    </select>
+                  </label>
+                  <span data-edu-editor-kind>{% if resource_form.category == 'Books' %}Book resource{% else %}Downloadable file{% endif %}</span>
+                </div>
+
+                <section class="admin-gallery-editor-location admin-edu-editor-metadata" data-resource-field="book_meta" {% if resource_form.category != 'Books' %}hidden{% endif %}>
+                  <header>
+                    <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 3h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v17h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4Z"></path></svg></span>
+                    <div><strong>Book details</strong><small>Author and publication year</small></div>
+                  </header>
+                  <div class="admin-edu-editor-field-grid">
+                    <label><span>Author</span><input id="resourceAuthor" name="author" type="text" maxlength="180" value="{{ resource_form.author }}" placeholder="Enter the author or publisher" data-edu-editor-author /></label>
+                    <label><span>Year</span><input id="resourceYear" name="year_label" type="text" maxlength="20" value="{{ resource_form.year_label }}" placeholder="e.g. 2024" data-edu-editor-year /></label>
+                  </div>
+                </section>
+
+                <section class="admin-gallery-editor-location admin-edu-editor-metadata" data-resource-field="material_meta" {% if resource_form.category == 'Books' %}hidden{% endif %}>
+                  <header>
+                    <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10ZM3 22a9 9 0 0 1 18 0h-2a7 7 0 0 0-14 0Z"></path></svg></span>
+                    <div><strong>Learning details</strong><small>Source, audience, and subject</small></div>
+                  </header>
+                  <div class="admin-edu-editor-field-grid">
+                    <label class="is-wide"><span>Educator name / source</span><input id="resourceEducatorName" name="educator_name" type="text" maxlength="180" value="{{ resource_form.educator_name }}" placeholder="Enter the educator, office, or source" data-edu-editor-educator /></label>
+                    <label><span>Grade level</span><input id="resourceGradeLevel" name="grade_level" type="text" maxlength="120" value="{{ resource_form.grade_level }}" placeholder="e.g. Grade 6" data-edu-editor-grade /></label>
+                    <label><span>Subject / topic</span><input id="resourceSubjectTopic" name="subject_topic" type="text" maxlength="180" value="{{ resource_form.subject_topic }}" placeholder="e.g. Heritage Awareness" data-edu-editor-topic /></label>
+                  </div>
+                </section>
+
+                <section class="admin-highlight-view-section admin-highlight-editor-section admin-gallery-editor-section">
+                  <header>
+                    <span>01</span>
+                    <div><h2>Description</h2><small>Public resource summary</small></div>
+                  </header>
+                  <label class="admin-highlight-editor-sr-label" for="resourceDescription">Description</label>
+                  <textarea id="resourceDescription" name="description" rows="9" minlength="12" required placeholder="Explain what this learning resource contains and how visitors or educators can use it." data-edu-editor-description>{{ resource_form.description }}</textarea>
+                </section>
               </div>
-            </form>
-          </section>
+            </div>
+          </form>
+
           <script defer src="{{ url_for('static', filename='admin/js/admin-edu-resource-form.js') }}"></script>
 {% endblock %}

@@ -13,6 +13,9 @@ from supabase_storage import EDU_RESOURCES_STORAGE_PREFIX, is_storage_object_pat
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EDU_RESOURCES_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "edu-resources").resolve()
+# Vercel Functions reject request bodies above 4.5 MB. Keep a selected cover
+# image or learning-resource file at 4 MiB so multipart form fields still fit.
+EDU_RESOURCES_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
 EDU_RESOURCE_CATEGORIES = (
     "PPT",
     "Books",
@@ -154,6 +157,9 @@ def get_edu_resources_status_message(status_key: Any) -> str | None:
     mapping = {
         "created": "Edu resource created successfully.",
         "updated": "Edu resource updated successfully.",
+        "activated": "Edu resource activated successfully.",
+        "archived": "Edu resource archived successfully.",
+        "restored": "Edu resource restored to Draft successfully.",
         "deleted": "Edu resource archived successfully.",
     }
     return mapping.get(str(status_key or "").strip().lower())
@@ -183,4 +189,6 @@ def render_admin_edu_resource_form(
         category_options=EDU_RESOURCE_CATEGORIES,
         status_options=EDU_RESOURCE_STATUS_OPTIONS,
         error_message=error_message,
+        max_upload_bytes=EDU_RESOURCES_UPLOAD_MAX_BYTES,
+        max_upload_mb=EDU_RESOURCES_UPLOAD_MAX_BYTES / (1024 * 1024),
     )

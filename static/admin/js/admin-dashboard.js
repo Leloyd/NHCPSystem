@@ -1116,6 +1116,146 @@
     }
   }
 
+  function initAdminEduResourceManagement() {
+    var root = document.querySelector("[data-admin-edu-manager]");
+    if (!root) {
+      return;
+    }
+
+    var cards = Array.prototype.slice.call(root.querySelectorAll("[data-edu-card]"));
+    var filterButtons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-edu-filter-button]")
+    );
+    var searchInput = root.querySelector("#adminEduSearch");
+    var clearButton = root.querySelector("[data-edu-search-clear]");
+    var visibleCount = root.querySelector("[data-edu-visible-count]");
+    var libraryTitle = root.querySelector("[data-edu-library-title]");
+    var libraryDescription = root.querySelector("[data-edu-library-description]");
+    var emptyState = root.querySelector("[data-edu-empty]");
+    var emptyTitle = root.querySelector("[data-edu-empty-title]");
+    var emptyCopy = root.querySelector("[data-edu-empty-copy]");
+    var currentFilter = String(root.getAttribute("data-edu-filter") || "all").toLowerCase();
+
+    var filterCopy = {
+      all: {
+        title: "Complete collection",
+        description: "Every active, draft, and archived educational resource",
+      },
+      active: {
+        title: "Public learning collection",
+        description: "Resources currently visible to visitors and educators",
+      },
+      draft: {
+        title: "Draft workspace",
+        description: "Learning materials still being prepared",
+      },
+      archived: {
+        title: "Resource archive",
+        description: "Hidden materials retained for future restoration",
+      },
+    };
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function applyResourceView() {
+      var query = normalize(searchInput && searchInput.value);
+      var shown = 0;
+
+      cards.forEach(function (card) {
+        var statusMatches =
+          currentFilter === "all" ||
+          card.getAttribute("data-edu-status") === currentFilter;
+        var searchMatches =
+          !query ||
+          normalize(card.getAttribute("data-edu-search")).indexOf(query) !== -1;
+        var shouldShow = statusMatches && searchMatches;
+        card.hidden = !shouldShow;
+        if (shouldShow) {
+          shown += 1;
+        }
+      });
+
+      filterButtons.forEach(function (button) {
+        var isActive =
+          button.getAttribute("data-edu-filter-button") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      var copy = filterCopy[currentFilter] || filterCopy.all;
+      if (libraryTitle) {
+        libraryTitle.textContent = copy.title;
+      }
+      if (libraryDescription) {
+        libraryDescription.textContent = copy.description;
+      }
+      if (visibleCount) {
+        visibleCount.textContent =
+          shown + " resource" + (shown === 1 ? "" : "s");
+      }
+      if (clearButton) {
+        clearButton.hidden = !query;
+      }
+      if (emptyState) {
+        emptyState.hidden = shown > 0;
+      }
+
+      if (shown === 0 && emptyTitle && emptyCopy) {
+        if (query) {
+          emptyTitle.textContent = "No matching educational resources";
+          emptyCopy.textContent =
+            "Try another title, category, grade, topic, author, or source.";
+        } else if (currentFilter === "active") {
+          emptyTitle.textContent = "No active educational resources";
+          emptyCopy.textContent =
+            "Activate a draft to make it available in the public collection.";
+        } else if (currentFilter === "draft") {
+          emptyTitle.textContent = "No draft educational resources";
+          emptyCopy.textContent =
+            "Every learning material is currently active or archived.";
+        } else if (currentFilter === "archived") {
+          emptyTitle.textContent = "No archived educational resources";
+          emptyCopy.textContent =
+            "Archived materials will remain available here for restoration.";
+        } else {
+          emptyTitle.textContent = "No educational resources yet";
+          emptyCopy.textContent =
+            "Create the first book or downloadable learning material.";
+        }
+      }
+    }
+
+    filterButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var nextFilter = button.getAttribute("data-edu-filter-button");
+        currentFilter = filterCopy[nextFilter] ? nextFilter : "all";
+        root.setAttribute("data-edu-filter", currentFilter);
+        applyResourceView();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applyResourceView);
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && searchInput.value) {
+          searchInput.value = "";
+          applyResourceView();
+        }
+      });
+    }
+    if (clearButton && searchInput) {
+      clearButton.addEventListener("click", function () {
+        searchInput.value = "";
+        applyResourceView();
+        searchInput.focus();
+      });
+    }
+
+    applyResourceView();
+  }
+
   function initAdminUserManagement() {
     var root = document.querySelector("[data-admin-users]");
     if (!root) {
@@ -2317,6 +2457,7 @@
     initAdminBookingReview();
     initAdminGalleryManagement();
     initAdminGalleryView();
+    initAdminEduResourceManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();

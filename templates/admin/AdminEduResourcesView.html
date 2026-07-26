@@ -1,0 +1,163 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = resource_item.title ~ ' | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'edu-resources' %}
+{% set admin_topbar_title = 'Educational Resource Details' %}
+{% set admin_topbar_subtitle = 'Preview the complete learning record and manage its publication status.' %}
+{% set admin_topbar_tool_href = url_for('admin_edu_resources', filter=resource_item.status) %}
+{% set admin_topbar_tool_label = 'Back to resources' %}
+{% set admin_topbar_tool_class = 'admin-text-link' %}
+
+{% block admin_content %}
+          {% if status_message %}
+          <section class="admin-alert admin-alert-success">
+            <strong>Success</strong>
+            <span>{{ status_message }}</span>
+          </section>
+          {% endif %}
+
+          <article class="admin-highlight-view admin-edu-view">
+            <div class="admin-highlight-view-accent" aria-hidden="true"></div>
+
+            <header class="admin-highlight-view-management">
+              <div class="admin-highlight-view-state">
+                <span class="admin-status-badge {% if resource_item.status == 'active' %}is-published{% elif resource_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">{{ resource_item.status|title }}</span>
+                <span class="admin-gallery-model-badge admin-edu-format-badge">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Z"></path></svg>
+                  {{ resource_item.format }}
+                </span>
+                <span class="admin-highlight-view-record">Record #{{ resource_item.id }}</span>
+              </div>
+
+              <div class="admin-highlight-view-actions" aria-label="Manage this educational resource">
+                {% if resource_item.status == 'active' %}
+                <a href="{{ url_for('edu_resources_details', item=resource_item.id) }}" class="admin-highlight-view-action is-secondary" target="_blank" rel="noopener">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14ZM5 5h6v2H5v12h12v-6h2v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"></path></svg>
+                  Public page
+                </a>
+                {% endif %}
+                <a href="{{ url_for('admin_edu_resource_edit', item_id=resource_item.id) }}" class="admin-highlight-view-action is-primary">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="m4 15.5 10-10 4.5 4.5-10 10H4Zm11.4-11.4 1.4-1.4a2 2 0 0 1 2.8 0l1.7 1.7a2 2 0 0 1 0 2.8l-1.4 1.4Z"></path></svg>
+                  Edit content
+                </a>
+
+                {% if resource_item.status == 'draft' %}
+                <form method="post" action="{{ url_for('admin_edu_resource_status', item_id=resource_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Publication status"
+                  data-confirm-title="Activate this educational resource?"
+                  data-confirm-message="Activate {{ resource_item.title }}? It will immediately become available in the public Educational Resources collection."
+                  data-confirm-label="Activate resource" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="status_action" value="activate" />
+                  <input type="hidden" name="return_to" value="view" />
+                  <button type="submit" class="admin-highlight-view-action is-publish">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 16V8.8L8.4 11.4 7 10l5-5 5 5-1.4 1.4L13 8.8V16Zm-6 3h14v-4h2v6H3v-6h2Z"></path></svg>
+                    Activate
+                  </button>
+                </form>
+                {% elif resource_item.status == 'archived' %}
+                <form method="post" action="{{ url_for('admin_edu_resource_status', item_id=resource_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Resource status"
+                  data-confirm-title="Restore this educational resource?"
+                  data-confirm-message="Restore {{ resource_item.title }} to Draft? It will remain hidden until it is activated again."
+                  data-confirm-label="Restore to Draft" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="status_action" value="restore" />
+                  <input type="hidden" name="return_to" value="view" />
+                  <button type="submit" class="admin-highlight-view-action is-restore">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7.1 7.1A7 7 0 1 1 5 12H3a9 9 0 1 0 2.6-6.4L3 3v6h6ZM11 8h2v5H8v-2h3Z"></path></svg>
+                    Restore to Draft
+                  </button>
+                </form>
+                {% endif %}
+
+                {% if resource_item.status != 'archived' %}
+                <form method="post" action="{{ url_for('admin_edu_resource_delete', item_id=resource_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Resource status"
+                  data-confirm-title="Archive this educational resource?"
+                  data-confirm-message="Archive {{ resource_item.title }}? It will be hidden from visitors but retained for future restoration."
+                  data-confirm-label="Archive resource" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="return_to" value="view" />
+                  <button type="submit" class="admin-highlight-view-action is-archive">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                    Archive
+                  </button>
+                </form>
+                {% endif %}
+              </div>
+            </header>
+
+            <div class="admin-highlight-view-layout">
+              <div class="admin-highlight-view-media-column">
+                <figure class="admin-highlight-view-media admin-edu-view-media">
+                  {% if resource_item.is_book and resource_item.cover_image_url %}
+                  <img src="{{ resource_item.cover_image_url }}" alt="Cover of {{ resource_item.title }}" />
+                  {% else %}
+                  <div class="admin-highlight-view-media-fallback admin-edu-view-document">
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Zm-5 8h6v2H9Zm0 4h6v2H9Z"></path></svg></span>
+                    <strong>{{ resource_item.format }}</strong>
+                    <small>{% if resource_item.is_book %}No book cover available{% else %}{{ resource_item.file_filename or 'No resource file uploaded' }}{% endif %}</small>
+                  </div>
+                  {% endif %}
+                  <figcaption><span>{{ resource_item.category }}</span><span>{{ resource_item.year if resource_item.is_book else resource_item.grade_level }}</span></figcaption>
+                </figure>
+
+                {% if resource_item.file_url %}
+                <a href="{{ resource_item.file_url }}" class="admin-edu-download-action" target="_blank" rel="noopener">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10.2l3.6-3.6L18 11l-6 6-6-6 1.4-1.4 3.6 3.6ZM4 19h16v2H4Z"></path></svg>
+                  Open uploaded {{ resource_item.format }} file
+                </a>
+                {% endif %}
+
+                <section class="admin-highlight-view-visibility {% if resource_item.status == 'active' %}is-active{% elif resource_item.status == 'archived' %}is-archived{% else %}is-draft{% endif %}">
+                  <span class="admin-highlight-view-visibility-icon" aria-hidden="true">
+                    {% if resource_item.status == 'active' %}
+                    <svg viewBox="0 0 24 24"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2C8.2 7 5.2 10.3 4.6 12c.6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Z"></path></svg>
+                    {% elif resource_item.status == 'archived' %}
+                    <svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24"><path d="M5 3h10l4 4v14H5Zm2 2v14h10V8h-3V5Zm2 7h6v2H9Z"></path></svg>
+                    {% endif %}
+                  </span>
+                  <span><small>Public visibility</small><strong>{% if resource_item.status == 'active' %}Visible in Educational Resources{% elif resource_item.status == 'archived' %}Archived and hidden{% else %}Draft and hidden{% endif %}</strong></span>
+                </section>
+              </div>
+
+              <div class="admin-highlight-view-content">
+                <p class="admin-highlight-manager-eyebrow">Educational resource</p>
+                <h1>{{ resource_item.title }}</h1>
+                <div class="admin-highlight-view-meta">
+                  <span>{{ resource_item.category }}</span>
+                  {% if resource_item.is_book and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
+                  {% if not resource_item.is_book and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
+                  {% if not resource_item.is_book and resource_item.subject_topic %}<span>{{ resource_item.subject_topic }}</span>{% endif %}
+                </div>
+
+                <section class="admin-highlight-view-section">
+                  <header><span>01</span><h2>Description</h2></header>
+                  <p>{{ resource_item.description }}</p>
+                </section>
+
+                <section class="admin-highlight-view-facts">
+                  <h2>Resource Details</h2>
+                  <dl>
+                    <div><dt>Publication status</dt><dd>{{ resource_item.status|title }}</dd></div>
+                    <div><dt>Category</dt><dd>{{ resource_item.category }}</dd></div>
+                    {% if resource_item.is_book %}
+                    <div><dt>Author</dt><dd>{{ resource_item.author or 'Not provided' }}</dd></div>
+                    <div><dt>Year</dt><dd>{{ resource_item.year or 'Not provided' }}</dd></div>
+                    <div><dt>Cover image</dt><dd>{% if resource_item.cover_image_filename %}Image attached{% else %}No image attached{% endif %}</dd></div>
+                    {% else %}
+                    <div><dt>Educator / source</dt><dd>{{ resource_item.educator_name or 'Not provided' }}</dd></div>
+                    <div><dt>Grade level</dt><dd>{{ resource_item.grade_level or 'Not provided' }}</dd></div>
+                    <div><dt>Subject / topic</dt><dd>{{ resource_item.subject_topic or 'Not provided' }}</dd></div>
+                    <div><dt>Resource file</dt><dd>{% if resource_item.file_filename %}{{ resource_item.format }} attached{% else %}No file attached{% endif %}</dd></div>
+                    {% endif %}
+                  </dl>
+                </section>
+              </div>
+            </div>
+          </article>
+{% endblock %}
