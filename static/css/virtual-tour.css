@@ -617,12 +617,13 @@ body {
 .tour-viewmodes {
   position: fixed;
   z-index: 24;
-  top: 50%;
+  top: auto;
   right: calc(var(--tour-safe-right) + 1rem);
+  bottom: calc(var(--tour-safe-bottom) + 4.75rem);
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
-  transform: translateY(-50%);
+  transform: none;
   pointer-events: auto;
 }
 .tour-viewmodes[hidden] { display: none !important; }
@@ -2496,6 +2497,7 @@ html.tour-vr-active body {
 @media (max-width: 768px) {
   .tour-viewmodes {
     right: calc(var(--tour-safe-right) + 0.65rem);
+    bottom: calc(var(--tour-safe-bottom) + 4.25rem);
     gap: 0.42rem;
   }
   .tour-viewmodes__button {
