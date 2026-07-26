@@ -34,6 +34,8 @@ def _guess_content_type(extension: str) -> str:
         return "image/jpeg"
     if normalized_extension == ".png":
         return "image/png"
+    if normalized_extension == ".glb":
+        return "model/gltf-binary"
     if normalized_extension == ".pdf":
         return "application/pdf"
     if normalized_extension == ".docx":

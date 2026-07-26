@@ -7709,6 +7709,10 @@ body.admin-confirm-open {
   line-height: 1.45;
 }
 
+.admin-gallery-editor-upload-budget {
+  margin: 0.1rem 0 0;
+}
+
 .admin-gallery-editor-upload-feedback[hidden] {
   display: none;
 }

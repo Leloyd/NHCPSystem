@@ -1026,6 +1026,8 @@
     var panels = Array.prototype.slice.call(
       root.querySelectorAll("[data-gallery-view-media-panel]")
     );
+    var modelViewer = root.querySelector("[data-gallery-view-model]");
+    var modelFallback = root.querySelector("[data-gallery-view-model-fallback]");
 
     buttons.forEach(function (button) {
       button.addEventListener("click", function () {
@@ -1041,6 +1043,21 @@
         });
       });
     });
+
+    if (modelViewer) {
+      modelViewer.addEventListener("load", function () {
+        modelViewer.hidden = false;
+        if (modelFallback) {
+          modelFallback.hidden = true;
+        }
+      });
+      modelViewer.addEventListener("error", function () {
+        modelViewer.hidden = true;
+        if (modelFallback) {
+          modelFallback.hidden = false;
+        }
+      });
+    }
   }
 
   function initAdminUserManagement() {

@@ -48,6 +48,9 @@
     editor.querySelectorAll("[data-gallery-editor-media-panel]")
   );
   var uploadFeedback = editor.querySelector("[data-gallery-editor-upload-feedback]");
+  var uploadSizeOutput = editor.querySelector("[data-gallery-editor-upload-size]");
+  var uploadMeter = editor.querySelector("[data-gallery-editor-upload-meter]");
+  var uploadMeterBar = editor.querySelector("[data-gallery-editor-upload-meter-bar]");
   var readTime = editor.querySelector("[data-gallery-editor-read-time]");
   var conditionalFields = {
     year_label: editor.querySelector('[data-category-field="year_label"]'),
@@ -64,8 +67,19 @@
   var selectedCategoryFields = [];
   var imageObjectUrl = "";
   var modelObjectUrl = "";
-  var hasSavedImage =
+  var maxUploadBytes = Math.max(
+    0,
+    Number(editor.getAttribute("data-gallery-editor-max-upload-bytes")) || 0
+  );
+  var savedImageUrl = normalize(
+    editor.getAttribute("data-gallery-editor-saved-image-url")
+  );
+  var savedModelUrl = normalize(
+    editor.getAttribute("data-gallery-editor-saved-model-url")
+  );
+  var hasPersistedImage =
     editor.getAttribute("data-gallery-editor-has-image") === "1";
+  var hasSavedImage = hasPersistedImage;
 
   function normalize(value) {
     return String(value || "").trim();
@@ -86,6 +100,94 @@
     uploadFeedback.textContent = message;
     uploadFeedback.classList.toggle("is-error", Boolean(isError));
     uploadFeedback.hidden = !message;
+  }
+
+  function formatMegabytes(byteCount) {
+    return (
+      Math.max(0, Number(byteCount) || 0) /
+      (1024 * 1024)
+    ).toFixed(2) + " MB";
+  }
+
+  function getSelectedFile(input) {
+    return input && input.files && input.files[0] ? input.files[0] : null;
+  }
+
+  function getSelectedUploadBytes() {
+    return [getSelectedFile(imageInput), getSelectedFile(modelInput)].reduce(
+      function (total, file) {
+        return total + Math.max(0, Number(file && file.size) || 0);
+      },
+      0
+    );
+  }
+
+  function updateUploadBudget() {
+    var selectedBytes = getSelectedUploadBytes();
+    var ratio = maxUploadBytes > 0 ? selectedBytes / maxUploadBytes : 0;
+    if (uploadSizeOutput) {
+      uploadSizeOutput.textContent =
+        formatMegabytes(selectedBytes) + " / " + formatMegabytes(maxUploadBytes);
+    }
+    if (uploadMeter) {
+      uploadMeter.setAttribute("aria-valuenow", String(selectedBytes));
+      uploadMeter.classList.toggle("is-near-limit", ratio >= 0.8 && ratio <= 1);
+      uploadMeter.classList.toggle("is-over-limit", ratio > 1);
+    }
+    if (uploadMeterBar) {
+      uploadMeterBar.style.width = Math.min(100, ratio * 100) + "%";
+    }
+    return selectedBytes;
+  }
+
+  function resetImagePreviewToSaved() {
+    if (imagePreview) {
+      imagePreview.src = savedImageUrl;
+      imagePreview.hidden = !savedImageUrl;
+    }
+    if (imageFallback) {
+      imageFallback.hidden = Boolean(savedImageUrl);
+    }
+    hasSavedImage = hasPersistedImage;
+  }
+
+  function resetModelPreviewToSaved() {
+    if (modelPreview) {
+      modelPreview.src = savedModelUrl;
+      modelPreview.hidden = !savedModelUrl;
+    }
+    if (modelFallback) {
+      modelFallback.hidden = Boolean(savedModelUrl);
+    }
+    if (modelName && !savedModelUrl) {
+      modelName.textContent = "No GLB attached";
+    }
+  }
+
+  function rejectUploadOverBudget(changedInput) {
+    var selectedBytes = getSelectedUploadBytes();
+    if (!maxUploadBytes || selectedBytes <= maxUploadBytes) {
+      updateUploadBudget();
+      return false;
+    }
+
+    var selectedLabel = formatMegabytes(selectedBytes);
+    changedInput.value = "";
+    if (changedInput === imageInput) {
+      resetImagePreviewToSaved();
+    } else {
+      resetModelPreviewToSaved();
+    }
+    updateUploadBudget();
+    showFeedback(
+      "The selected image and GLB total " +
+        selectedLabel +
+        ". Keep each save at or below " +
+        formatMegabytes(maxUploadBytes) +
+        " for Vercel.",
+      true
+    );
+    return true;
   }
 
   function setMedia(media) {
@@ -300,7 +402,12 @@
     }
     if (!isAllowedImage(file)) {
       imageInput.value = "";
+      resetImagePreviewToSaved();
+      updateUploadBudget();
       showFeedback("The gallery image must be a JPG or PNG file.", true);
+      return;
+    }
+    if (rejectUploadOverBudget(imageInput)) {
       return;
     }
     if (imageObjectUrl) {
@@ -326,7 +433,12 @@
     }
     if (!isAllowedModel(file)) {
       modelInput.value = "";
+      resetModelPreviewToSaved();
+      updateUploadBudget();
       showFeedback("The 3D object must be a GLB file.", true);
+      return;
+    }
+    if (rejectUploadOverBudget(modelInput)) {
       return;
     }
     if (modelObjectUrl) {
@@ -364,6 +476,18 @@
 
   function validateEditor(event) {
     clearFieldErrors();
+
+    if (maxUploadBytes && getSelectedUploadBytes() > maxUploadBytes) {
+      event.preventDefault();
+      event.stopImmediatePropagation();
+      showFeedback(
+        "The selected image and GLB must total " +
+          formatMegabytes(maxUploadBytes) +
+          " or less before saving.",
+        true
+      );
+      return;
+    }
 
     var requirements = [
       {
@@ -506,6 +630,27 @@
   if (modelInput) {
     modelInput.addEventListener("change", handleModelSelection);
   }
+  if (modelPreview) {
+    modelPreview.addEventListener("load", function () {
+      modelPreview.hidden = false;
+      if (modelFallback) {
+        modelFallback.hidden = true;
+      }
+    });
+    modelPreview.addEventListener("error", function () {
+      if (!normalize(modelPreview.getAttribute("src"))) {
+        return;
+      }
+      modelPreview.hidden = true;
+      if (modelFallback) {
+        modelFallback.hidden = false;
+      }
+      showFeedback(
+        "The GLB preview could not be loaded. Try selecting the GLB again or replacing the stored file.",
+        true
+      );
+    });
+  }
 
   editor.addEventListener("submit", validateEditor, { capture: true });
   window.addEventListener("beforeunload", function () {
@@ -522,5 +667,6 @@
   updateCategory();
   updateVisibility();
   updateTitlePreview();
+  updateUploadBudget();
   copyFields.forEach(resizeTextarea);
 })();

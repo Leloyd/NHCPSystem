@@ -7,6 +7,7 @@ from supabase_client import is_supabase_configured
 
 from .service import (
     ONLINE_GALLERY_UPLOAD_DIR,
+    ONLINE_GALLERY_UPLOAD_MAX_BYTES,
     build_online_gallery_form_state,
     get_online_gallery_status_message,
     load_admin_online_gallery_categories,
@@ -21,6 +22,25 @@ CATEGORY_REQUIRES_YEAR = {"kasaysayan-history"}
 ONLINE_GALLERY_MODEL_ALLOWED_EXTENSIONS = {".glb"}
 ONLINE_GALLERY_MODEL_INVALID_TYPE_MESSAGE = "3D object must be a GLB file."
 ONLINE_GALLERY_STATUSES = {"published", "draft", "archived"}
+
+
+def _get_uploaded_file_size(file_storage) -> int:
+    if file_storage is None or not str(getattr(file_storage, "filename", "") or "").strip():
+        return 0
+
+    stream = getattr(file_storage, "stream", None)
+    if stream is None:
+        raise ValueError("The selected upload size could not be verified.")
+
+    try:
+        original_position = stream.tell()
+        stream.seek(0, 2)
+        file_size = int(stream.tell())
+        stream.seek(original_position)
+    except (AttributeError, OSError, TypeError, ValueError) as exc:
+        raise ValueError("The selected upload size could not be verified.") from exc
+
+    return max(0, file_size)
 
 
 def _build_online_gallery_form_payload(form, files, *, current_item, categories, normalize_checkbox, save_uploaded_image, save_uploaded_file):
@@ -101,6 +121,16 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     }
 
     uploaded_file = files.get("image_file")
+    uploaded_model_file = files.get("model_file")
+    upload_size_bytes = _get_uploaded_file_size(uploaded_file) + _get_uploaded_file_size(uploaded_model_file)
+    if upload_size_bytes > ONLINE_GALLERY_UPLOAD_MAX_BYTES:
+        upload_size_mb = upload_size_bytes / (1024 * 1024)
+        max_upload_mb = ONLINE_GALLERY_UPLOAD_MAX_BYTES / (1024 * 1024)
+        raise ValueError(
+            f"The selected image and GLB total {upload_size_mb:.2f} MB. "
+            f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
+        )
+
     new_image_filename = save_uploaded_image(uploaded_file, title_en or title_tl, ONLINE_GALLERY_UPLOAD_DIR)
     if new_image_filename:
         payload["image_filename"] = new_image_filename
@@ -109,7 +139,6 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     else:
         payload["image_filename"] = None
 
-    uploaded_model_file = files.get("model_file")
     new_model_filename = save_uploaded_file(
         uploaded_model_file,
         title_en or title_tl,

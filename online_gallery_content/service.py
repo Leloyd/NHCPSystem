@@ -46,6 +46,9 @@ def _resolve_runtime_uploads_root() -> Path:
 
 ONLINE_GALLERY_UPLOADS_ROOT = _resolve_runtime_uploads_root()
 ONLINE_GALLERY_UPLOAD_DIR = (ONLINE_GALLERY_UPLOADS_ROOT / "online-gallery").resolve()
+# Vercel Functions reject request bodies above 4.5 MB. Keep the combined
+# replacement image + GLB payload at 4 MiB so multipart fields still fit.
+ONLINE_GALLERY_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
 ONLINE_GALLERY_DEFAULT_CATEGORIES = [
     "Mga Rehiyunal na Kaugalian",
     "Mga Paniniwala sa Buong Bansa",
@@ -331,4 +334,6 @@ def render_admin_online_gallery_form(
         gallery_form=gallery_form,
         categories=categories,
         error_message=error_message,
+        max_upload_bytes=ONLINE_GALLERY_UPLOAD_MAX_BYTES,
+        max_upload_mb=ONLINE_GALLERY_UPLOAD_MAX_BYTES / (1024 * 1024),
     )

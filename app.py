@@ -69,8 +69,24 @@ def _configured_admin_image_sources():
     return " ".join(sources)
 
 
+def _configured_admin_asset_sources():
+    # GLBs are fetched by <model-viewer>. Local previews use blob URLs, while
+    # saved models are read from the configured Supabase project origin.
+    sources = ["'self'", "blob:"]
+    configured_url = (os.getenv("SUPABASE_URL") or "").strip()
+    if not configured_url:
+        return " ".join(sources)
+
+    parsed = urlparse(configured_url)
+    hostname = str(parsed.hostname or "").strip().lower()
+    if parsed.scheme == "https" and hostname and re.fullmatch(r"[a-z0-9.-]+", hostname):
+        sources.append(f"https://{hostname}")
+    return " ".join(sources)
+
+
 app = Flask(__name__)
 ADMIN_IMAGE_SOURCES = _configured_admin_image_sources()
+ADMIN_ASSET_SOURCES = _configured_admin_asset_sources()
 
 IS_PRODUCTION = os.getenv("FLASK_ENV", "development").strip().lower() in {"prod", "production"}
 _secret_key = os.getenv("FLASK_SECRET_KEY", "").strip()
@@ -886,9 +902,11 @@ def _set_security_headers(response):
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             f"img-src {ADMIN_IMAGE_SOURCES}; "
-            "script-src 'self' https://cdnjs.cloudflare.com; "
+            "script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; "
             "style-src 'self'; "
-            "connect-src 'self'; "
+            f"connect-src {ADMIN_ASSET_SOURCES}; "
+            f"media-src {ADMIN_ASSET_SOURCES}; "
+            "worker-src 'self' blob:; "
             "font-src 'self'; "
             "base-uri 'self'; "
             "form-action 'self'; "
