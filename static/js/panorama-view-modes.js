@@ -1,4 +1,5 @@
 import * as THREE from "three";
+import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
 /*
  * Shared 360 viewing modes for a Pannellum viewer:
@@ -22,6 +23,12 @@ export function createPanoramaViewModes(options) {
     : function () { return []; };
   const activateHotspot = typeof options.activateHotspot === "function"
     ? options.activateHotspot
+    : function () {};
+  const closeHotspot = typeof options.closeHotspot === "function"
+    ? options.closeHotspot
+    : function () {};
+  const changeHotspotLanguage = typeof options.changeHotspotLanguage === "function"
+    ? options.changeHotspotLanguage
     : function () {};
   const translate = typeof options.translate === "function"
     ? options.translate
@@ -62,9 +69,19 @@ export function createPanoramaViewModes(options) {
     targets: [],
     gazeTarget: null,
     gazeSince: 0,
+    gazeLatchedTarget: null,
     activationLockedUntil: 0,
     controllers: [],
     infoCard: null,
+    infoTarget: null,
+    infoControls: [],
+    infoMode: "image",
+    infoLanguage: "tl",
+    infoSubtitlesOpen: false,
+    infoZoom: 1,
+    infoMediaRoot: null,
+    infoSubtitleRoot: null,
+    infoModelRoot: null,
   };
 
   const orientationEuler = new THREE.Euler();
@@ -168,6 +185,7 @@ export function createPanoramaViewModes(options) {
     vr.targets = [];
     vr.gazeTarget = null;
     vr.gazeSince = 0;
+    vr.gazeLatchedTarget = null;
     if (overlay) {
       overlay.classList.remove("is-targeting");
       overlay.style.setProperty("--vr-dwell-progress", "0");
@@ -246,8 +264,284 @@ export function createPanoramaViewModes(options) {
       });
       context.fillStyle = "#d4af6a";
       context.font = "600 14px Inter, sans-serif";
-      context.fillText(tr("Select again to close", "Piliin muli upang isara"), 128, 224);
+      context.fillText(tr("Look at a control to select", "Tumingin sa control upang piliin"), 128, 224);
     });
+  }
+
+  function createControlTexture(label) {
+    return createCanvasTexture(function (context) {
+      context.clearRect(0, 0, 256, 256);
+      context.beginPath();
+      context.arc(128, 128, 103, 0, Math.PI * 2);
+      context.fillStyle = "rgba(13, 10, 4, 0.95)";
+      context.fill();
+      context.lineWidth = 9;
+      context.strokeStyle = "#d4af6a";
+      context.stroke();
+      context.fillStyle = "#faf7f2";
+      context.font = label.length > 2 ? "700 60px Inter, sans-serif" : "700 92px Inter, sans-serif";
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(label, 128, 132);
+    });
+  }
+
+  function addVrInfoControl(label, x, y, action, scale) {
+    if (!vr.infoCard) {
+      return null;
+    }
+    const texture = createControlTexture(label);
+    if (!texture) {
+      return null;
+    }
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+    });
+    const sprite = new THREE.Sprite(material);
+    const baseScale = scale || 0.28;
+    sprite.position.set(x, y, 0.09);
+    sprite.scale.setScalar(baseScale);
+    sprite.renderOrder = 130;
+    vr.infoCard.add(sprite);
+    const record = {
+      sprite,
+      action,
+      baseScale,
+      hotspot: vr.infoTarget,
+      isUi: true,
+    };
+    vr.infoControls.push(record);
+    return record;
+  }
+
+  function disposeThreeObject(root) {
+    if (!root) {
+      return;
+    }
+    root.traverse(function (object) {
+      if (object.geometry) object.geometry.dispose();
+      if (!object.material) return;
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach(function (material) {
+        if (material.map) material.map.dispose();
+        material.dispose();
+      });
+    });
+    if (root.parent) root.parent.remove(root);
+  }
+
+  function createSubtitleTexture(hotspot, language) {
+    const subtitle = hotspot && hotspot.subtitle;
+    const text = subtitle
+      ? String(subtitle[language] || subtitle.en || subtitle.tl || "").trim()
+      : "";
+    if (!text) return null;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = 1024;
+    canvas.height = 640;
+    const context = canvas.getContext("2d");
+    if (!context) return null;
+    context.fillStyle = "rgba(250, 247, 242, 0.97)";
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.strokeStyle = "#d4af6a";
+    context.lineWidth = 10;
+    context.strokeRect(7, 7, canvas.width - 14, canvas.height - 14);
+    context.fillStyle = "#9a7428";
+    context.font = "700 25px Inter, sans-serif";
+    context.textAlign = "left";
+    context.textBaseline = "top";
+    context.fillText(language === "tl" ? "SALAYSAY" : "NARRATION", 54, 40);
+
+    const paragraphs = text.split(/\n+/);
+    const lines = [];
+    context.font = "500 31px Georgia, serif";
+    paragraphs.forEach(function (paragraph, paragraphIndex) {
+      const words = paragraph.trim().split(/\s+/).filter(Boolean);
+      let line = "";
+      words.forEach(function (word) {
+        const candidate = line ? `${line} ${word}` : word;
+        if (context.measureText(candidate).width > 910 && line) {
+          lines.push(line);
+          line = word;
+        } else {
+          line = candidate;
+        }
+      });
+      if (line) lines.push(line);
+      if (paragraphIndex < paragraphs.length - 1) lines.push("");
+    });
+    let fontSize = 31;
+    while (lines.length * (fontSize + 10) > 490 && fontSize > 21) {
+      fontSize -= 2;
+    }
+    context.font = `500 ${fontSize}px Georgia, serif`;
+    context.fillStyle = "#1c1208";
+    const lineHeight = fontSize + 10;
+    lines.slice(0, Math.floor(490 / lineHeight)).forEach(function (line, index) {
+      context.fillText(line, 54, 92 + index * lineHeight);
+    });
+
+    const texture = new THREE.CanvasTexture(canvas);
+    if ("colorSpace" in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  function renderVrInfoSubtitle() {
+    vr.infoControls
+      .filter(function (record) { return record.controlArea === "subtitle"; })
+      .forEach(function (record) { disposeThreeObject(record.sprite); });
+    disposeThreeObject(vr.infoSubtitleRoot);
+    vr.infoSubtitleRoot = null;
+    vr.infoControls = vr.infoControls.filter(function (record) {
+      return record.controlArea !== "subtitle";
+    });
+    if (!vr.infoCard || !vr.infoTarget || !vr.infoSubtitlesOpen) {
+      return;
+    }
+    const texture = createSubtitleTexture(vr.infoTarget, vr.infoLanguage);
+    if (!texture) {
+      vr.infoSubtitlesOpen = false;
+      return;
+    }
+    const root = new THREE.Group();
+    root.position.set(0, -1.62, 0.025);
+    const panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.72, 1.55),
+      new THREE.MeshBasicMaterial({
+        map: texture,
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    panel.renderOrder = 115;
+    root.add(panel);
+    vr.infoCard.add(root);
+    vr.infoSubtitleRoot = root;
+
+    const languageRecord = addVrInfoControl(
+      vr.infoLanguage === "tl" ? "TL" : "EN",
+      0.94,
+      -2.22,
+      function () {
+        vr.infoLanguage = vr.infoLanguage === "tl" ? "en" : "tl";
+        changeHotspotLanguage(vr.infoTarget, vr.infoLanguage);
+        renderVrInfoSubtitle();
+      },
+      0.25,
+    );
+    const closeRecord = addVrInfoControl("×", 1.24, -2.22, function () {
+      vr.infoSubtitlesOpen = false;
+      renderVrInfoSubtitle();
+    }, 0.25);
+    if (languageRecord) languageRecord.controlArea = "subtitle";
+    if (closeRecord) closeRecord.controlArea = "subtitle";
+  }
+
+  function renderVrInfoMedia() {
+    disposeThreeObject(vr.infoMediaRoot);
+    vr.infoMediaRoot = null;
+    vr.infoModelRoot = null;
+    if (!vr.infoCard || !vr.infoTarget) {
+      return;
+    }
+    const hotspot = vr.infoTarget;
+    const root = new THREE.Group();
+    root.position.set(0, 0.12, 0.018);
+    vr.infoCard.add(root);
+    vr.infoMediaRoot = root;
+
+    if (vr.infoMode === "model" && hotspot.glbSrc) {
+      const loadingTexture = createInfoLabelTexture(tr("Preparing 3D model…", "Inihahanda ang 3D model…"));
+      const loading = new THREE.Mesh(
+        new THREE.PlaneGeometry(1.82, 1.04),
+        new THREE.MeshBasicMaterial({ map: loadingTexture, depthTest: false, depthWrite: false }),
+      );
+      loading.renderOrder = 103;
+      root.add(loading);
+      new GLTFLoader().load(
+        hotspot.glbSrc,
+        function (gltf) {
+          if (vr.infoMediaRoot !== root || vr.infoMode !== "model") {
+            disposeThreeObject(gltf.scene);
+            return;
+          }
+          disposeThreeObject(loading);
+          const model = gltf.scene;
+          const bounds = new THREE.Box3().setFromObject(model);
+          const size = new THREE.Vector3();
+          const center = new THREE.Vector3();
+          bounds.getSize(size);
+          bounds.getCenter(center);
+          const largest = Math.max(size.x, size.y, size.z, 0.001);
+          const fitScale = 1.25 / largest;
+          model.scale.setScalar(fitScale);
+          model.position.set(
+            -center.x * fitScale,
+            -center.y * fitScale,
+            -center.z * fitScale,
+          );
+          model.position.y += 0.03;
+          model.traverse(function (node) {
+            if (node.isMesh) {
+              node.frustumCulled = false;
+              node.renderOrder = 106;
+            }
+          });
+          root.add(new THREE.HemisphereLight(0xffffff, 0x6b4e24, 1.8));
+          const light = new THREE.DirectionalLight(0xffffff, 2.2);
+          light.position.set(1.5, 2, 2);
+          root.add(light);
+          const pivot = new THREE.Group();
+          pivot.add(model);
+          root.add(pivot);
+          vr.infoModelRoot = pivot;
+        },
+        undefined,
+        function () {
+          if (vr.infoMediaRoot === root) {
+            vr.infoMode = "image";
+            renderVrInfoMedia();
+          }
+        },
+      );
+      return;
+    }
+
+    if (hotspot.imageSrc) {
+      new THREE.TextureLoader().load(
+        hotspot.imageSrc,
+        function (texture) {
+          if (vr.infoMediaRoot !== root || vr.infoMode !== "image") {
+            texture.dispose();
+            return;
+          }
+          if ("colorSpace" in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+          const imageWidth = texture.image && texture.image.width ? texture.image.width : 1;
+          const imageHeight = texture.image && texture.image.height ? texture.image.height : 1;
+          const aspect = imageWidth / imageHeight;
+          let width = 1.82;
+          let height = width / aspect;
+          if (height > 1.04) {
+            height = 1.04;
+            width = height * aspect;
+          }
+          const image = new THREE.Mesh(
+            new THREE.PlaneGeometry(width, height),
+            new THREE.MeshBasicMaterial({ map: texture, depthTest: false, depthWrite: false }),
+          );
+          image.renderOrder = 105;
+          root.add(image);
+        },
+        undefined,
+        function () {},
+      );
+    }
   }
 
   function closeVrInfoCard() {
@@ -269,6 +563,11 @@ export function createPanoramaViewModes(options) {
       }
     });
     vr.infoCard = null;
+    vr.infoTarget = null;
+    vr.infoControls = [];
+    vr.infoMediaRoot = null;
+    vr.infoSubtitleRoot = null;
+    vr.infoModelRoot = null;
     vr.activationLockedUntil = performance.now() + 450;
     return true;
   }
@@ -284,6 +583,12 @@ export function createPanoramaViewModes(options) {
     // that real 360 position, and looking back reveals it again.
     group.position.copy(hotspotPosition(hotspot.pitch, hotspot.yaw, 8.55));
     group.lookAt(0, 0, 0);
+    vr.infoCard = group;
+    vr.infoTarget = hotspot;
+    vr.infoMode = "image";
+    vr.infoLanguage = hotspot.language === "en" ? "en" : "tl";
+    vr.infoSubtitlesOpen = false;
+    vr.infoZoom = 1;
 
     const borderMaterial = new THREE.MeshBasicMaterial({
       color: 0xd4af6a,
@@ -306,45 +611,34 @@ export function createPanoramaViewModes(options) {
     panel.renderOrder = 102;
     group.add(panel);
 
-    if (hotspot.imageSrc) {
-      new THREE.TextureLoader().load(
-        hotspot.imageSrc,
-        function (texture) {
-          if (vr.infoCard !== group) {
-            texture.dispose();
-            return;
-          }
-          if ("colorSpace" in texture && THREE.SRGBColorSpace) {
-            texture.colorSpace = THREE.SRGBColorSpace;
-          }
-          const imageWidth = texture.image && texture.image.width ? texture.image.width : 1;
-          const imageHeight = texture.image && texture.image.height ? texture.image.height : 1;
-          const aspect = imageWidth / imageHeight;
-          let width = 1.82;
-          let height = width / aspect;
-          if (height > 1.04) {
-            height = 1.04;
-            width = height * aspect;
-          }
-          const imageMaterial = new THREE.MeshBasicMaterial({
-            map: texture,
-            depthTest: false,
-            depthWrite: false,
-          });
-          const image = new THREE.Mesh(new THREE.PlaneGeometry(width, height), imageMaterial);
-          image.position.set(0, 0.12, 0.014);
-          image.renderOrder = 103;
-          group.add(image);
-        },
-        undefined,
-        function () {
-          // The title card remains useful when an image cannot be decoded.
-        },
-      );
-    }
-
     vr.scene.add(group);
-    vr.infoCard = group;
+    renderVrInfoMedia();
+
+    if (hotspot.glbSrc) {
+      addVrInfoControl("3D", -0.72, -0.58, function () {
+        vr.infoMode = vr.infoMode === "image" ? "model" : "image";
+        renderVrInfoMedia();
+      });
+    }
+    if (hotspot.subtitle && (hotspot.subtitle.tl || hotspot.subtitle.en)) {
+      addVrInfoControl("CC", -0.36, -0.58, function () {
+        vr.infoSubtitlesOpen = !vr.infoSubtitlesOpen;
+        renderVrInfoSubtitle();
+      });
+    }
+    addVrInfoControl("−", 0.36, -0.58, function () {
+      vr.infoZoom = Math.max(0.75, vr.infoZoom - 0.15);
+      vr.infoCard.scale.setScalar(vr.infoZoom);
+    });
+    addVrInfoControl("+", 0.72, -0.58, function () {
+      vr.infoZoom = Math.min(1.55, vr.infoZoom + 0.15);
+      vr.infoCard.scale.setScalar(vr.infoZoom);
+    });
+    addVrInfoControl("×", 0.84, 0.58, function () {
+      const target = vr.infoTarget;
+      closeVrInfoCard();
+      closeHotspot(target);
+    });
   }
 
   function activateVrTarget(record) {
@@ -353,6 +647,11 @@ export function createPanoramaViewModes(options) {
     }
     vr.activationLockedUntil = performance.now() + 900;
     vr.gazeSince = 0;
+    vr.gazeLatchedTarget = record;
+    if (record.action) {
+      record.action();
+      return;
+    }
     if (record.hotspot.type !== "scene") {
       showVrInfoCard(record.hotspot);
     }
@@ -364,9 +663,11 @@ export function createPanoramaViewModes(options) {
   }
 
   function updateVrGaze(camera, now) {
-    if (!camera || !vr.targets.length || vr.infoCard) {
+    const selectableTargets = vr.infoCard ? vr.infoControls : vr.targets;
+    if (!camera || !selectableTargets.length) {
       vr.gazeTarget = null;
       vr.gazeSince = 0;
+      vr.gazeLatchedTarget = null;
       overlay.classList.remove("is-targeting");
       overlay.style.setProperty("--vr-dwell-progress", "0");
       return;
@@ -374,21 +675,25 @@ export function createPanoramaViewModes(options) {
     camera.getWorldDirection(gazeDirection);
     let closest = null;
     let closestAngle = Infinity;
-    vr.targets.forEach(function (record) {
-      targetDirection.copy(record.sprite.position).sub(camera.getWorldPosition(controllerOrigin)).normalize();
+    camera.getWorldPosition(controllerOrigin);
+    selectableTargets.forEach(function (record) {
+      record.sprite.getWorldPosition(targetWorldPosition);
+      targetDirection.copy(targetWorldPosition).sub(controllerOrigin).normalize();
       const angle = THREE.MathUtils.radToDeg(gazeDirection.angleTo(targetDirection));
       if (angle < closestAngle) {
         closestAngle = angle;
         closest = record;
       }
     });
-    if (!closest || closestAngle > GAZE_ANGLE_DEG) {
-      vr.targets.forEach(function (record) {
-        record.sprite.scale.setScalar(0.58);
+    const selectionAngle = closest && closest.isUi ? 2.2 : GAZE_ANGLE_DEG;
+    if (!closest || closestAngle > selectionAngle) {
+      selectableTargets.forEach(function (record) {
+        record.sprite.scale.setScalar(record.baseScale || 0.58);
         record.sprite.material.opacity = 0.86;
       });
       vr.gazeTarget = null;
       vr.gazeSince = 0;
+      vr.gazeLatchedTarget = null;
       overlay.classList.remove("is-targeting");
       overlay.style.setProperty("--vr-dwell-progress", "0");
       return;
@@ -397,10 +702,21 @@ export function createPanoramaViewModes(options) {
       vr.gazeTarget = closest;
       vr.gazeSince = now;
     }
+    if (vr.gazeLatchedTarget === closest) {
+      selectableTargets.forEach(function (record) {
+        const baseScale = record.baseScale || 0.58;
+        record.sprite.scale.setScalar(record === closest ? baseScale * 1.08 : baseScale);
+        record.sprite.material.opacity = record === closest ? 1 : 0.75;
+      });
+      overlay.classList.remove("is-targeting");
+      overlay.style.setProperty("--vr-dwell-progress", "0");
+      return;
+    }
     const progress = Math.min(1, Math.max(0, (now - vr.gazeSince) / DWELL_MS));
-    vr.targets.forEach(function (record) {
+    selectableTargets.forEach(function (record) {
       const focused = record === closest;
-      record.sprite.scale.setScalar(focused ? 0.66 + progress * 0.14 : 0.58);
+      const baseScale = record.baseScale || 0.58;
+      record.sprite.scale.setScalar(focused ? baseScale * (1.14 + progress * 0.24) : baseScale);
       record.sprite.material.opacity = focused ? 1 : 0.75;
     });
     overlay.classList.add("is-targeting");
@@ -806,6 +1122,9 @@ export function createPanoramaViewModes(options) {
     }
     vr.camera.rotation.z = 0;
     vr.camera.updateWorldMatrix(true, false);
+    if (vr.infoModelRoot) {
+      vr.infoModelRoot.rotation.y = (Number(now) || performance.now()) * 0.00028;
+    }
     updateVrGaze(vr.camera, Number(now) || performance.now());
 
     const width = vr.width;
@@ -828,7 +1147,8 @@ export function createPanoramaViewModes(options) {
   }
 
   function findControllerTarget(controller) {
-    if (!controller || !vr.targets.length) {
+    const selectableTargets = vr.infoCard ? vr.infoControls : vr.targets;
+    if (!controller || !selectableTargets.length) {
       return null;
     }
     controller.updateWorldMatrix(true, false);
@@ -837,7 +1157,7 @@ export function createPanoramaViewModes(options) {
     controllerDirection.set(0, 0, -1).applyQuaternion(orientationQuaternion).normalize();
     let closest = null;
     let closestAngle = Infinity;
-    vr.targets.forEach(function (record) {
+    selectableTargets.forEach(function (record) {
       record.sprite.getWorldPosition(targetWorldPosition);
       targetDirection.copy(targetWorldPosition).sub(controllerOrigin).normalize();
       const angle = THREE.MathUtils.radToDeg(controllerDirection.angleTo(targetDirection));
@@ -846,7 +1166,8 @@ export function createPanoramaViewModes(options) {
         closest = record;
       }
     });
-    return closestAngle <= 10 ? closest : null;
+    const selectionAngle = closest && closest.isUi ? 3 : 10;
+    return closestAngle <= selectionAngle ? closest : null;
   }
 
   function setupNativeControllers() {
@@ -869,9 +1190,6 @@ export function createPanoramaViewModes(options) {
       ray.userData.panoramaVrRay = true;
       controller.add(ray);
       const onSelect = function () {
-        if (closeVrInfoCard()) {
-          return;
-        }
         activateVrTarget(findControllerTarget(controller) || vr.gazeTarget);
       };
       controller.userData.vrSelectHandler = onSelect;
@@ -988,6 +1306,9 @@ export function createPanoramaViewModes(options) {
           const gazeCamera = xrCamera && xrCamera.cameras && xrCamera.cameras.length
             ? xrCamera.cameras[0]
             : xrCamera;
+          if (vr.infoModelRoot) {
+            vr.infoModelRoot.rotation.y = (Number(time) || performance.now()) * 0.00028;
+          }
           updateVrGaze(gazeCamera || vr.camera, Number(time) || performance.now());
           vr.renderer.render(vr.scene, vr.camera);
         }
@@ -1127,9 +1448,6 @@ export function createPanoramaViewModes(options) {
     }
     vr.tapTimer = window.setTimeout(function () {
       vr.tapTimer = 0;
-      if (closeVrInfoCard()) {
-        return;
-      }
       activateVrTarget(vr.gazeTarget);
     }, 360);
   }

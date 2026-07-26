@@ -5115,6 +5115,9 @@
                       ? getTourViewCopy("Move to the next view", "Lumipat sa susunod na tanaw")
                       : getTourViewCopy("Museum artifact", "Artifact ng museo")),
                     imageSrc: String(args.imageSrc || ""),
+                    glbSrc: getArtifactCurrentGlbSrc(args),
+                    subtitle: args.subtitle || subtitleForArtifact(args.imageAlt || args.title || ""),
+                    language: "tl",
                     source: hotspot,
                   };
                 });
@@ -5142,6 +5145,18 @@
                   hotspot.clickHandlerArgs,
                 );
               }
+            },
+            closeHotspot: function () {
+              forceCloseAllFloatingOverlays();
+            },
+            changeHotspotLanguage: function (target, language) {
+              const hotspot = target && target.source;
+              const args = hotspot && hotspot.clickHandlerArgs;
+              if (!args) {
+                return;
+              }
+              setActiveSubtitle(target.subtitle || null);
+              playFloatingArtifactAudio(args.audioByLanguage || null, language);
             },
             gyroButton,
             vrButton: vrModeButton,
