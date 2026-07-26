@@ -3066,6 +3066,21 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
   transform: translate(-50%, -50%);
   pointer-events: none;
 }
+.trailx-vr__reticle::before {
+  content: "";
+  position: absolute;
+  inset: -0.36rem;
+  border-radius: 50%;
+  background: conic-gradient(
+    var(--tx-gold) calc(var(--vr-dwell-progress, 0) * 1turn),
+    rgba(250, 247, 242, 0.16) 0
+  );
+  opacity: 0;
+  -webkit-mask: radial-gradient(circle, transparent 52%, #000 55%);
+  mask: radial-gradient(circle, transparent 52%, #000 55%);
+  transition: opacity 0.12s ease;
+}
+.trailx-vr.is-targeting .trailx-vr__reticle::before { opacity: 1; }
 .trailx-vr__reticle::after {
   content: "";
   position: absolute;

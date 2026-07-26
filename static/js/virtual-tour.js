@@ -5085,6 +5085,64 @@
                 : initialScene;
               return resolvedScenes[sceneId] ? resolvedScenes[sceneId].panorama : "";
             },
+            getHotspots: function () {
+              if (!tourViewer || !resolvedScenes || !hotspotsVisible) {
+                return [];
+              }
+              const sceneId = typeof tourViewer.getScene === "function"
+                ? tourViewer.getScene()
+                : initialScene;
+              const scene = resolvedScenes[sceneId];
+              const sceneHotspots = scene && Array.isArray(scene.hotSpots)
+                ? scene.hotSpots
+                : [];
+              return sceneHotspots
+                .filter(function (hotspot) {
+                  return hotspot && (hotspot.type === "scene" || hotspot.type === "info");
+                })
+                .map(function (hotspot, index) {
+                  const args = hotspot.clickHandlerArgs || {};
+                  const rawTitle = args.title || args.imageAlt || hotspot.text || "";
+                  const title = rawTitle && typeof rawTitle === "object"
+                    ? (rawTitle[floatingArtifactAudioLanguage] || rawTitle.en || rawTitle.tl || "")
+                    : String(rawTitle || "");
+                  return {
+                    id: hotspot.id || `${sceneId}-vr-hotspot-${index}`,
+                    type: hotspot.type,
+                    pitch: Number(hotspot.pitch),
+                    yaw: Number(hotspot.yaw),
+                    label: title || (hotspot.type === "scene"
+                      ? getTourViewCopy("Move to the next view", "Lumipat sa susunod na tanaw")
+                      : getTourViewCopy("Museum artifact", "Artifact ng museo")),
+                    imageSrc: String(args.imageSrc || ""),
+                    source: hotspot,
+                  };
+                });
+            },
+            activateHotspot: function (target) {
+              const hotspot = target && target.source;
+              if (!hotspot || !tourViewer) {
+                return;
+              }
+              if (hotspot.type === "scene" && hotspot.sceneId) {
+                tourViewer.loadScene(
+                  hotspot.sceneId,
+                  hotspot.targetPitch,
+                  hotspot.targetYaw,
+                  hotspot.targetHfov,
+                );
+                return;
+              }
+              if (hotspot.type === "info" && typeof hotspot.clickHandlerFunc === "function") {
+                hotspot.clickHandlerFunc(
+                  {
+                    preventDefault: function () {},
+                    stopPropagation: function () {},
+                  },
+                  hotspot.clickHandlerArgs,
+                );
+              }
+            },
             gyroButton,
             vrButton: vrModeButton,
             overlay: vrViewEl,

@@ -317,7 +317,7 @@ const artApi = {};
 
 /* Current Pannellum scene media, shared with the custom WebXR / VR Box
    renderer. It is populated when initPanorama builds the tour. */
-const panoramaApi = { sceneSources: {} };
+const panoramaApi = { sceneSources: {}, sceneHotspots: {} };
 
 /* Stop 4's Fragments of Memory controls. Populated when its story is set up
    so stop transitions and the global mute control can also manage its music. */
@@ -915,6 +915,13 @@ const trailVr = {
   width: 0,
   height: 0,
   lastTapAt: 0,
+  tapTimer: 0,
+  targets: [],
+  gazeTarget: null,
+  gazeSince: 0,
+  activationLockedUntil: 0,
+  controllers: [],
+  infoCard: null,
 };
 const gyroEuler = new THREE.Euler();
 const gyroQuaternion = new THREE.Quaternion();
@@ -979,6 +986,297 @@ function showTrailViewNotice(title, message, duration = 5000) {
 
 function localizedViewCopy(en, tl) {
   return state.lang === 'tl' ? tl : en;
+}
+
+const trailVrGazeDirection = new THREE.Vector3();
+const trailVrTargetDirection = new THREE.Vector3();
+const trailVrOrigin = new THREE.Vector3();
+const trailVrWorldPosition = new THREE.Vector3();
+const trailVrControllerDirection = new THREE.Vector3();
+const trailVrControllerQuaternion = new THREE.Quaternion();
+const TRAIL_VR_DWELL_MS = 1250;
+
+function createTrailVrCanvasTexture(draw) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 256;
+  canvas.height = 256;
+  const context = canvas.getContext('2d');
+  if (!context) return null;
+  draw(context);
+  const texture = new THREE.CanvasTexture(canvas);
+  if ('colorSpace' in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+  texture.needsUpdate = true;
+  return texture;
+}
+
+function createTrailVrHotspotTexture(type) {
+  return createTrailVrCanvasTexture((context) => {
+    context.clearRect(0, 0, 256, 256);
+    context.beginPath();
+    context.arc(128, 128, 91, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(13, 10, 4, 0.9)';
+    context.fill();
+    context.lineWidth = 12;
+    context.strokeStyle = '#d4af6a';
+    context.stroke();
+    context.beginPath();
+    context.arc(128, 128, 71, 0, Math.PI * 2);
+    context.lineWidth = 3;
+    context.strokeStyle = 'rgba(250, 247, 242, 0.72)';
+    context.stroke();
+    context.fillStyle = '#faf7f2';
+    context.strokeStyle = '#faf7f2';
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    if (type === 'scene') {
+      context.lineWidth = 13;
+      context.beginPath();
+      context.moveTo(76, 128);
+      context.lineTo(171, 128);
+      context.moveTo(139, 91);
+      context.lineTo(176, 128);
+      context.lineTo(139, 165);
+      context.stroke();
+    } else {
+      context.font = '700 112px Georgia, serif';
+      context.textAlign = 'center';
+      context.textBaseline = 'middle';
+      context.fillText('i', 128, 129);
+    }
+  });
+}
+
+function trailVrHotspotPosition(pitch, yaw, radius = 10.7) {
+  const pitchRad = THREE.MathUtils.degToRad(Number(pitch) || 0);
+  const yawRad = THREE.MathUtils.degToRad(Number(yaw) || 0);
+  const horizontal = Math.cos(pitchRad) * radius;
+  return new THREE.Vector3(
+    Math.sin(yawRad) * horizontal,
+    Math.sin(pitchRad) * radius,
+    -Math.cos(yawRad) * horizontal,
+  );
+}
+
+function getTrailVrHotspots() {
+  return (panoramaApi.sceneHotspots[currentScene] || [])
+    .filter((hotspot) => hotspot && (hotspot.type === 'scene' || hotspot.type === 'info'));
+}
+
+function clearTrailVrTargets() {
+  trailVr.targets.forEach((record) => {
+    record.sprite?.parent?.remove(record.sprite);
+    record.sprite?.material?.map?.dispose?.();
+    record.sprite?.material?.dispose?.();
+  });
+  trailVr.targets = [];
+  trailVr.gazeTarget = null;
+  trailVr.gazeSince = 0;
+  vrViewEl?.classList.remove('is-targeting');
+  vrViewEl?.style.setProperty('--vr-dwell-progress', '0');
+}
+
+function buildTrailVrTargets() {
+  clearTrailVrTargets();
+  if (!trailVr.scene) return;
+  getTrailVrHotspots().forEach((hotspot) => {
+    const texture = createTrailVrHotspotTexture(hotspot.type);
+    if (!texture) return;
+    const material = new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      opacity: 0.86,
+    });
+    const sprite = new THREE.Sprite(material);
+    sprite.position.copy(trailVrHotspotPosition(hotspot.pitch, hotspot.yaw));
+    sprite.scale.setScalar(0.58);
+    sprite.renderOrder = 20;
+    trailVr.scene.add(sprite);
+    trailVr.targets.push({ hotspot, sprite });
+  });
+}
+
+function getTrailVrHotspotLabel(hotspot) {
+  const args = hotspot?.clickHandlerArgs || {};
+  const raw = args.title || args.imageAlt || hotspot?.text || '';
+  if (raw && typeof raw === 'object') return raw[state.lang] || raw.en || raw.tl || '';
+  return String(raw || localizedViewCopy(
+    hotspot?.type === 'scene' ? 'Move to the next view' : 'Museum artifact',
+    hotspot?.type === 'scene' ? 'Lumipat sa susunod na tanaw' : 'Artifact ng museo',
+  ));
+}
+
+function closeTrailVrInfoCard() {
+  if (!trailVr.infoCard) return false;
+  const card = trailVr.infoCard;
+  card.parent?.remove(card);
+  card.traverse((object) => {
+    object.geometry?.dispose?.();
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    materials.filter(Boolean).forEach((material) => {
+      material.map?.dispose?.();
+      material.dispose?.();
+    });
+  });
+  trailVr.infoCard = null;
+  trailVr.activationLockedUntil = performance.now() + 450;
+  return true;
+}
+
+function showTrailVrInfoCard(hotspot) {
+  closeTrailVrInfoCard();
+  if (!trailVr.camera) return;
+  const args = hotspot?.clickHandlerArgs || {};
+  const group = new THREE.Group();
+  group.position.set(0, 0, -2.35);
+
+  const border = new THREE.Mesh(
+    new THREE.PlaneGeometry(2.08, 1.58),
+    new THREE.MeshBasicMaterial({ color: 0xd4af6a, depthTest: false, depthWrite: false }),
+  );
+  border.renderOrder = 101;
+  group.add(border);
+
+  const labelTexture = createTrailVrCanvasTexture((context) => {
+    context.fillStyle = 'rgba(13, 10, 4, 0.95)';
+    context.fillRect(0, 0, 256, 256);
+    context.strokeStyle = '#d4af6a';
+    context.lineWidth = 8;
+    context.strokeRect(5, 5, 246, 246);
+    context.fillStyle = '#faf7f2';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.font = '700 25px Georgia, serif';
+    const words = getTrailVrHotspotLabel(hotspot).trim().split(/\s+/);
+    const lines = [];
+    let line = '';
+    words.forEach((word) => {
+      const candidate = line ? `${line} ${word}` : word;
+      if (context.measureText(candidate).width > 218 && line) {
+        lines.push(line);
+        line = word;
+      } else {
+        line = candidate;
+      }
+    });
+    if (line) lines.push(line);
+    lines.slice(0, 3).forEach((item, index) => context.fillText(item, 128, 101 + index * 32));
+    context.fillStyle = '#d4af6a';
+    context.font = '600 14px Inter, sans-serif';
+    context.fillText(localizedViewCopy('Select again to close', 'Piliin muli upang isara'), 128, 224);
+  });
+  const panel = new THREE.Mesh(
+    new THREE.PlaneGeometry(2, 1.5),
+    new THREE.MeshBasicMaterial({
+      map: labelTexture,
+      color: labelTexture ? 0xffffff : 0x0d0a04,
+      depthTest: false,
+      depthWrite: false,
+    }),
+  );
+  panel.position.z = 0.006;
+  panel.renderOrder = 102;
+  group.add(panel);
+
+  if (args.imageSrc) {
+    new THREE.TextureLoader().load(args.imageSrc, (texture) => {
+      if (trailVr.infoCard !== group) {
+        texture.dispose();
+        return;
+      }
+      if ('colorSpace' in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+      const width = texture.image?.width || 1;
+      const height = texture.image?.height || 1;
+      const aspect = width / height;
+      let imageWidth = 1.82;
+      let imageHeight = imageWidth / aspect;
+      if (imageHeight > 1.04) {
+        imageHeight = 1.04;
+        imageWidth = imageHeight * aspect;
+      }
+      const image = new THREE.Mesh(
+        new THREE.PlaneGeometry(imageWidth, imageHeight),
+        new THREE.MeshBasicMaterial({ map: texture, depthTest: false, depthWrite: false }),
+      );
+      image.position.set(0, 0.12, 0.014);
+      image.renderOrder = 103;
+      group.add(image);
+    });
+  }
+
+  trailVr.camera.add(group);
+  trailVr.infoCard = group;
+}
+
+function activateTrailVrTarget(record) {
+  if (!record || performance.now() < trailVr.activationLockedUntil) return;
+  trailVr.activationLockedUntil = performance.now() + 900;
+  trailVr.gazeSince = 0;
+  const hotspot = record.hotspot;
+  if (hotspot.type === 'scene' && hotspot.sceneId) {
+    viewer?.loadScene?.(
+      hotspot.sceneId,
+      hotspot.targetPitch,
+      hotspot.targetYaw,
+      hotspot.targetHfov,
+    );
+    return;
+  }
+  if (hotspot.type === 'info' && typeof hotspot.clickHandlerFunc === 'function') {
+    showTrailVrInfoCard(hotspot);
+    hotspot.clickHandlerFunc(
+      { preventDefault() {}, stopPropagation() {} },
+      hotspot.clickHandlerArgs,
+    );
+  }
+}
+
+function updateTrailVrGaze(camera, now = performance.now()) {
+  if (!camera || !trailVr.targets.length || trailVr.infoCard) {
+    trailVr.gazeTarget = null;
+    trailVr.gazeSince = 0;
+    vrViewEl?.classList.remove('is-targeting');
+    vrViewEl?.style.setProperty('--vr-dwell-progress', '0');
+    return;
+  }
+  camera.getWorldDirection(trailVrGazeDirection);
+  camera.getWorldPosition(trailVrOrigin);
+  let closest = null;
+  let closestAngle = Infinity;
+  trailVr.targets.forEach((record) => {
+    record.sprite.getWorldPosition(trailVrWorldPosition);
+    trailVrTargetDirection.copy(trailVrWorldPosition).sub(trailVrOrigin).normalize();
+    const angle = THREE.MathUtils.radToDeg(trailVrGazeDirection.angleTo(trailVrTargetDirection));
+    if (angle < closestAngle) {
+      closest = record;
+      closestAngle = angle;
+    }
+  });
+  if (!closest || closestAngle > 6) {
+    trailVr.targets.forEach((record) => {
+      record.sprite.scale.setScalar(0.58);
+      record.sprite.material.opacity = 0.86;
+    });
+    trailVr.gazeTarget = null;
+    trailVr.gazeSince = 0;
+    vrViewEl?.classList.remove('is-targeting');
+    vrViewEl?.style.setProperty('--vr-dwell-progress', '0');
+    return;
+  }
+  if (trailVr.gazeTarget !== closest) {
+    trailVr.gazeTarget = closest;
+    trailVr.gazeSince = now;
+  }
+  const progress = Math.min(1, Math.max(0, (now - trailVr.gazeSince) / TRAIL_VR_DWELL_MS));
+  trailVr.targets.forEach((record) => {
+    const focused = record === closest;
+    record.sprite.scale.setScalar(focused ? 0.66 + progress * 0.14 : 0.58);
+    record.sprite.material.opacity = focused ? 1 : 0.75;
+  });
+  vrViewEl?.classList.add('is-targeting');
+  vrViewEl?.style.setProperty('--vr-dwell-progress', String(progress));
+  if (progress >= 1) activateTrailVrTarget(closest);
 }
 
 function updateTrailViewButtons() {
@@ -1140,6 +1438,25 @@ function disposeTrailVrWorld() {
   if (trailVr.renderer) {
     trailVr.renderer.setAnimationLoop(null);
   }
+  if (trailVr.tapTimer) {
+    window.clearTimeout(trailVr.tapTimer);
+    trailVr.tapTimer = 0;
+  }
+  closeTrailVrInfoCard();
+  clearTrailVrTargets();
+  trailVr.controllers.forEach((controller) => {
+    if (controller.userData?.trailVrSelectHandler) {
+      controller.removeEventListener('select', controller.userData.trailVrSelectHandler);
+    }
+    controller.children.slice().forEach((child) => {
+      if (!child.userData?.trailVrRay) return;
+      child.geometry?.dispose?.();
+      child.material?.dispose?.();
+      controller.remove(child);
+    });
+    controller.parent?.remove(controller);
+  });
+  trailVr.controllers = [];
   trailVr.texture?.dispose?.();
   trailVr.material?.dispose?.();
   trailVr.sphere?.geometry?.dispose?.();
@@ -1189,6 +1506,7 @@ function buildTrailVrWorld(source) {
   scene.background = new THREE.Color(0x000000);
   const camera = new THREE.PerspectiveCamera(78, 1, 0.05, 40);
   camera.rotation.order = 'YXZ';
+  scene.add(camera);
   try {
     camera.rotation.x = THREE.MathUtils.degToRad(viewer?.getPitch?.() || 0);
     camera.rotation.y = THREE.MathUtils.degToRad(-(viewer?.getYaw?.() || 0));
@@ -1206,6 +1524,7 @@ function buildTrailVrWorld(source) {
   trailVr.sphere = sphere;
   trailVr.material = material;
   resizeTrailVrRenderer(true);
+  buildTrailVrTargets();
 
   new THREE.TextureLoader().load(
     source,
@@ -1237,7 +1556,41 @@ function buildTrailVrWorld(source) {
   );
 }
 
-function renderTrailCardboard() {
+function refreshTrailVrScene() {
+  if (!trailVr.mode || !trailVr.material) return;
+  const source = panoramaApi.sceneSources[currentScene];
+  if (!source) return;
+  closeTrailVrInfoCard();
+  buildTrailVrTargets();
+  vrStatusEl?.classList.remove('is-ready');
+  const material = trailVr.material;
+  new THREE.TextureLoader().load(source, (texture) => {
+    if (trailVr.material !== material) {
+      texture.dispose();
+      return;
+    }
+    if ('colorSpace' in texture && THREE.SRGBColorSpace) texture.colorSpace = THREE.SRGBColorSpace;
+    const previous = trailVr.texture;
+    trailVr.texture = texture;
+    material.map = texture;
+    material.color.set(0xffffff);
+    material.needsUpdate = true;
+    if (previous && previous !== texture) previous.dispose();
+    markVrTextureReady();
+  }, undefined, (error) => {
+    console.warn('[Trail VR] Next panorama texture failed to load.', error);
+    showTrailViewNotice(
+      localizedViewCopy('Scene unavailable in VR', 'Hindi mabuksan ang tanaw sa VR'),
+      localizedViewCopy(
+        'The next 360 image could not be prepared. Please try that hotspot again.',
+        'Hindi maihanda ang susunod na 360 na larawan. Subukang piliin muli ang hotspot.',
+      ),
+      6500,
+    );
+  });
+}
+
+function renderTrailCardboard(now) {
   if (
     trailVr.mode !== 'cardboard'
     || !trailVr.renderer
@@ -1253,6 +1606,7 @@ function renderTrailCardboard() {
   } catch { /* keep the most recent orientation */ }
   trailVr.camera.rotation.z = 0;
   trailVr.camera.updateWorldMatrix(true, false);
+  updateTrailVrGaze(trailVr.camera, Number(now) || performance.now());
 
   const renderer = trailVr.renderer;
   const width = trailVr.width;
@@ -1272,6 +1626,56 @@ function renderTrailCardboard() {
   renderer.setViewport(0, 0, width, height);
 
   trailVr.rafId = window.requestAnimationFrame(renderTrailCardboard);
+}
+
+function findTrailVrControllerTarget(controller) {
+  if (!controller || !trailVr.targets.length) return null;
+  controller.updateWorldMatrix(true, false);
+  controller.getWorldPosition(trailVrOrigin);
+  controller.getWorldQuaternion(trailVrControllerQuaternion);
+  trailVrControllerDirection
+    .set(0, 0, -1)
+    .applyQuaternion(trailVrControllerQuaternion)
+    .normalize();
+  let closest = null;
+  let closestAngle = Infinity;
+  trailVr.targets.forEach((record) => {
+    record.sprite.getWorldPosition(trailVrWorldPosition);
+    trailVrTargetDirection.copy(trailVrWorldPosition).sub(trailVrOrigin).normalize();
+    const angle = THREE.MathUtils.radToDeg(
+      trailVrControllerDirection.angleTo(trailVrTargetDirection),
+    );
+    if (angle < closestAngle) {
+      closest = record;
+      closestAngle = angle;
+    }
+  });
+  return closestAngle <= 10 ? closest : null;
+}
+
+function setupTrailVrControllers() {
+  if (!trailVr.renderer || !trailVr.scene) return;
+  for (let index = 0; index < 2; index += 1) {
+    const controller = trailVr.renderer.xr.getController(index);
+    const ray = new THREE.Line(
+      new THREE.BufferGeometry().setFromPoints([
+        new THREE.Vector3(0, 0, 0),
+        new THREE.Vector3(0, 0, -1),
+      ]),
+      new THREE.LineBasicMaterial({ color: 0xd4af6a, transparent: true, opacity: 0.88 }),
+    );
+    ray.scale.z = 4;
+    ray.userData.trailVrRay = true;
+    controller.add(ray);
+    const onSelect = () => {
+      if (closeTrailVrInfoCard()) return;
+      activateTrailVrTarget(findTrailVrControllerTarget(controller) || trailVr.gazeTarget);
+    };
+    controller.userData.trailVrSelectHandler = onSelect;
+    controller.addEventListener('select', onSelect);
+    trailVr.scene.add(controller);
+    trailVr.controllers.push(controller);
+  }
 }
 
 async function requestBestTrailFullscreen() {
@@ -1332,8 +1736,8 @@ async function enterTrailCardboard() {
   showTrailViewNotice(
     localizedViewCopy('VR Box mode is ready', 'Handa na ang VR Box mode'),
     localizedViewCopy(
-      'Rotate to landscape and place the phone in your viewer. Double-tap or use Exit VR to leave.',
-      'I-rotate sa landscape at ilagay ang telepono sa VR viewer. Mag-double tap o pindutin ang Isara ang VR upang lumabas.',
+      'Aim the center dot at a gold hotspot and hold, or tap once to select it. Double-tap or use Exit VR to leave.',
+      'Itapat ang gitnang tuldok sa gold hotspot at manatili, o mag-tap nang isang beses upang piliin. Mag-double tap o pindutin ang Isara ang VR upang lumabas.',
     ),
     trailVr.fullscreenOwned ? 6000 : 8500,
   );
@@ -1370,10 +1774,24 @@ async function enterTrailNativeVr() {
     trailVr.renderer.xr.setReferenceSpaceType('local');
     session.addEventListener('end', finishTrailVrExit, { once: true });
     await trailVr.renderer.xr.setSession(session);
-    trailVr.renderer.setAnimationLoop(() => {
-      if (trailVr.scene && trailVr.camera) trailVr.renderer.render(trailVr.scene, trailVr.camera);
+    setupTrailVrControllers();
+    trailVr.renderer.setAnimationLoop((time) => {
+      if (trailVr.scene && trailVr.camera) {
+        const xrCamera = trailVr.renderer.xr.getCamera(trailVr.camera);
+        const gazeCamera = xrCamera?.cameras?.length ? xrCamera.cameras[0] : xrCamera;
+        updateTrailVrGaze(gazeCamera || trailVr.camera, Number(time) || performance.now());
+        trailVr.renderer.render(trailVr.scene, trailVr.camera);
+      }
     });
     updateTrailViewButtons();
+    showTrailViewNotice(
+      localizedViewCopy('Headset hotspots are ready', 'Handa na ang mga hotspot sa headset'),
+      localizedViewCopy(
+        'Look at a gold hotspot and hold, or point a controller and press its trigger.',
+        'Tumingin at manatili sa gold hotspot, o itutok ang controller at pindutin ang trigger.',
+      ),
+      6500,
+    );
   } catch (error) {
     console.warn('[Trail VR] Native session setup failed.', error);
     try { await session.end(); } catch { /* already ended */ }
@@ -1469,11 +1887,21 @@ vrViewEl?.addEventListener('touchend', (event) => {
   if (trailVr.mode !== 'cardboard' || exitTarget) return;
   const now = performance.now();
   if (now - trailVr.lastTapAt < 350) {
+    if (trailVr.tapTimer) {
+      window.clearTimeout(trailVr.tapTimer);
+      trailVr.tapTimer = 0;
+    }
     requestTrailVrExit();
     trailVr.lastTapAt = 0;
     return;
   }
   trailVr.lastTapAt = now;
+  if (trailVr.tapTimer) window.clearTimeout(trailVr.tapTimer);
+  trailVr.tapTimer = window.setTimeout(() => {
+    trailVr.tapTimer = 0;
+    if (closeTrailVrInfoCard()) return;
+    activateTrailVrTarget(trailVr.gazeTarget);
+  }, 360);
 }, { passive: true });
 
 panoEl?.addEventListener('pointerdown', () => {
@@ -3234,6 +3662,12 @@ function initPanorama() {
           sceneConfig && sceneConfig.panorama ? sceneConfig.panorama : '',
         ]),
       );
+      panoramaApi.sceneHotspots = Object.fromEntries(
+        Object.entries(scenes).map(([sceneId, sceneConfig]) => [
+          sceneId,
+          sceneConfig && Array.isArray(sceneConfig.hotSpots) ? sceneConfig.hotSpots : [],
+        ]),
+      );
 
       // Refresh restore: open directly on the remembered stop's scene.
       const startConf = wantsStop ? STOP_CONF[wantsStop] : null;
@@ -3261,6 +3695,8 @@ function initPanorama() {
       viewer.on('scenechange', (id) => {
         currentScene = id;
         closeFloatingImage(); // leaving the scene closes the wall photo + audio
+        trailGyro.needsSync = true;
+        if (trailVr.mode) window.setTimeout(refreshTrailVrScene, 40);
       });
 
       // Helper for picking views: log where the visitor is looking after
