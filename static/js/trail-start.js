@@ -1126,10 +1126,13 @@ function closeTrailVrInfoCard() {
 
 function showTrailVrInfoCard(hotspot) {
   closeTrailVrInfoCard();
-  if (!trailVr.camera) return;
+  if (!trailVr.scene) return;
   const args = hotspot?.clickHandlerArgs || {};
   const group = new THREE.Group();
-  group.position.set(0, 0, -2.35);
+  // World-anchor the content at the hotspot's pitch / yaw. The panel stays
+  // in that location when the visitor turns away instead of following them.
+  group.position.copy(trailVrHotspotPosition(hotspot.pitch, hotspot.yaw, 8.55));
+  group.lookAt(0, 0, 0);
 
   const border = new THREE.Mesh(
     new THREE.PlaneGeometry(2.08, 1.58),
@@ -1205,7 +1208,7 @@ function showTrailVrInfoCard(hotspot) {
     });
   }
 
-  trailVr.camera.add(group);
+  trailVr.scene.add(group);
   trailVr.infoCard = group;
 }
 

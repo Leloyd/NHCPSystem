@@ -275,11 +275,15 @@ export function createPanoramaViewModes(options) {
 
   function showVrInfoCard(hotspot) {
     closeVrInfoCard();
-    if (!vr.camera) {
+    if (!vr.scene) {
       return;
     }
     const group = new THREE.Group();
-    group.position.set(0, 0, -2.35);
+    // Keep the opened content fixed to its panorama hotspot instead of
+    // attaching it to the camera. Looking away therefore leaves the card in
+    // that real 360 position, and looking back reveals it again.
+    group.position.copy(hotspotPosition(hotspot.pitch, hotspot.yaw, 8.55));
+    group.lookAt(0, 0, 0);
 
     const borderMaterial = new THREE.MeshBasicMaterial({
       color: 0xd4af6a,
@@ -339,7 +343,7 @@ export function createPanoramaViewModes(options) {
       );
     }
 
-    vr.camera.add(group);
+    vr.scene.add(group);
     vr.infoCard = group;
   }
 
