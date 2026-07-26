@@ -1,12 +1,13 @@
 {% extends 'admin/_layout.html' %}
 
-{% set admin_document_title = 'Review Participation Submission | NHCP Admin' %}
+{% set is_pending_review = submission_item.status == 'pending_review' %}
+{% set admin_document_title = ('Review ' if is_pending_review else 'View ') ~ submission_item.title ~ ' | NHCP Admin' %}
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'community-participation-submissions' %}
-{% set admin_topbar_title = 'Review Participation Submission' %}
-{% set admin_topbar_subtitle = 'Inspect the submission details, privacy setting, and moderation decision before publishing to Edu Resources.' %}
-{% set admin_topbar_tool_href = url_for('admin_participation_submissions') %}
-{% set admin_topbar_tool_label = 'Back to list' %}
+{% set admin_topbar_title = 'Review Participation Submission' if is_pending_review else 'Participation Submission Details' %}
+{% set admin_topbar_subtitle = 'Inspect the community contribution, privacy setting, uploaded content, and moderation record.' %}
+{% set admin_topbar_tool_href = url_for('admin_participation_submissions', filter=submission_item.status) %}
+{% set admin_topbar_tool_label = 'Back to submissions' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
 {% block admin_content %}
@@ -17,84 +18,194 @@
           </section>
           {% endif %}
 
-          <section class="admin-panel admin-panel-wide admin-resource-panel">
-            <div class="admin-panel-head">
-              <div>
-                <h3>{{ submission_item.title }}</h3>
-                <p>{{ submission_item.submission_type_label }} · {{ submission_item.display_date }}</p>
-              </div>
-              <span class="admin-status-badge {% if submission_item.status == 'active' %}is-published{% else %}is-draft{% endif %}">{{ submission_item.status|replace('_', ' ')|title }}</span>
-            </div>
-
-            <div class="admin-form-grid">
-              <div class="admin-form-field admin-form-field-wide">
-                <label>Contributor</label>
-                {% if submission_item.is_private and submission_item.status == 'active' %}
-                <p class="admin-field-hint"><strong>Hidden by privacy request</strong></p>
-                <p class="admin-field-hint">Name and email are hidden after approval.</p>
+          <article class="admin-submission-record">
+            <div class="admin-submission-record-accent" aria-hidden="true"></div>
+            <header class="admin-submission-record-hero">
+              <span class="admin-submission-record-mark" aria-hidden="true">
+                {% if submission_item.submission_type == 'teacher_corner' %}
+                <svg viewBox="0 0 24 24"><path d="M4 4h16v3H4Zm1 5h14v11H5Zm2 2v7h10v-7Z"></path></svg>
                 {% else %}
-                <p class="admin-field-hint"><strong>{{ submission_item.submitter_name }}</strong></p>
-                <p class="admin-field-hint">{{ submission_item.submitter_email }}</p>
+                <svg viewBox="0 0 24 24"><path d="M4 3h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v17h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4Zm2 2v13h4a5 5 0 0 1 1 .1V6a1 1 0 0 0-1-1Zm7 1v12.1a5 5 0 0 1 1-.1h4V5h-4a1 1 0 0 0-1 1Z"></path></svg>
                 {% endif %}
+              </span>
+              <div class="admin-submission-record-identity">
+                <p>{{ submission_item.submission_type_label }} <span>#{{ submission_item.id }}</span></p>
+                <h2>{{ submission_item.title }}</h2>
+                <div>
+                  <span>Submitted {{ submission_item.display_date }}</span>
+                  <span aria-hidden="true">•</span>
+                  <span>{{ submission_item.resource_category or submission_item.story_category or 'Community contribution' }}</span>
+                </div>
+              </div>
+              <span class="admin-status-badge admin-submission-record-status {% if submission_item.status == 'active' %}is-published{% elif submission_item.status == 'archived' %}is-cancelled{% elif submission_item.status == 'pending_verification' %}is-rescheduled{% else %}is-draft{% endif %}">
+                {{ submission_item.status_label }}
+              </span>
+            </header>
+
+            <div class="admin-submission-record-highlights">
+              <div>
+                <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5ZM4 22v-2a7 7 0 0 1 14 0v2h-2v-2a5 5 0 0 0-10 0v2Z"></path></svg></span>
+                <span><small>Contributor</small><strong>{{ submission_item.submitter_name or 'Anonymous' }}</strong></span>
+              </div>
+              <div>
+                <span class="is-privacy" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2 4 5v6c0 5 3.4 9.4 8 11 4.6-1.6 8-6 8-11V5Zm0 2.1L18 6.3V11c0 3.9-2.5 7.4-6 8.8-3.5-1.4-6-4.9-6-8.8V6.3ZM11 8h2v5h-2Zm0 7h2v2h-2Z"></path></svg></span>
+                <span><small>Public attribution</small><strong>{% if submission_item.is_private %}Hidden by privacy request{% else %}Contributor credited{% endif %}</strong></span>
+              </div>
+              <div>
+                <span class="is-attachment" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8.5 12.5 6.8-6.8a3 3 0 0 1 4.2 4.2l-8.9 8.9a5 5 0 0 1-7.1-7.1l8.2-8.2 1.4 1.4-8.2 8.2a3 3 0 0 0 4.3 4.3l8.9-8.9a1 1 0 0 0-1.4-1.4l-6.8 6.8a1 1 0 0 0 1.4 1.4l5.4-5.4 1.4 1.4-5.4 5.4a3 3 0 0 1-4.2-4.2Z"></path></svg></span>
+                <span><small>Submission asset</small><strong>{% if submission_item.has_attachment %}Attachment available{% else %}Text contribution only{% endif %}</strong></span>
+              </div>
+            </div>
+          </article>
+
+          <div class="admin-submission-review-layout">
+            <div class="admin-submission-review-sections">
+              <section class="admin-submission-review-section">
+                <header>
+                  <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5ZM4 22v-2a7 7 0 0 1 14 0v2h-2v-2a5 5 0 0 0-10 0v2Z"></path></svg></span>
+                  <div><h3>Contributor Information</h3><p>Identity and privacy instructions supplied with this submission.</p></div>
+                </header>
+                <dl class="admin-submission-review-details">
+                  <div><dt>Contributor name</dt><dd>{{ submission_item.submitter_name or 'Not provided' }}</dd></div>
+                  <div><dt>Email address</dt><dd>{% if submission_item.submitter_email %}<a href="mailto:{{ submission_item.submitter_email }}">{{ submission_item.submitter_email }}</a>{% else %}Not provided{% endif %}</dd></div>
+                  <div class="is-wide"><dt>Privacy preference</dt><dd>{% if submission_item.is_private %}Do not show the contributor’s name or email on public pages.{% else %}Public attribution is permitted.{% endif %}</dd></div>
+                </dl>
                 {% if submission_item.is_private %}
-                <p class="admin-field-hint"><strong>Privacy requested:</strong> public pages will hide the contributor name and email after approval.</p>
+                <div class="admin-submission-privacy-notice">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Zm2 0h6V7a3 3 0 0 0-6 0Zm-3 2v6h12v-6Z"></path></svg>
+                  <span><strong>Privacy request</strong>The admin may review these details, but public Educational Resources pages must hide the contributor’s identity.</span>
+                </div>
                 {% endif %}
-              </div>
+              </section>
 
-              <div class="admin-form-field">
-                <label>Submission Type</label>
-                <p class="admin-field-hint">{{ submission_item.submission_type_label }}</p>
-              </div>
+              <section class="admin-submission-review-section">
+                <header>
+                  <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14a2 2 0 0 1 2 2v14H3V5a2 2 0 0 1 2-2Zm0 2v12h14V5Zm2 3h10v2H7Zm0 4h7v2H7Z"></path></svg></span>
+                  <div><h3>Submission Content</h3><p>The learning information or community story provided by the contributor.</p></div>
+                </header>
+                <dl class="admin-submission-review-details">
+                  <div><dt>Submission type</dt><dd>{{ submission_item.submission_type_label }}</dd></div>
+                  <div><dt>Resource category</dt><dd>{{ submission_item.resource_category or 'Books' }}</dd></div>
+                  {% if submission_item.grade_level %}<div><dt>Grade level</dt><dd>{{ submission_item.grade_level }}</dd></div>{% endif %}
+                  {% if submission_item.subject_topic or submission_item.story_category %}<div><dt>Subject / story category</dt><dd>{{ submission_item.subject_topic or submission_item.story_category }}</dd></div>{% endif %}
+                  <div class="is-wide"><dt>Summary</dt><dd>{{ submission_item.description or submission_item.preview_text or 'No summary provided.' }}</dd></div>
+                </dl>
 
-              <div class="admin-form-field">
-                <label>Resource Category</label>
-                <p class="admin-field-hint">{{ submission_item.resource_category or 'Books' }}</p>
-              </div>
+                {% if submission_item.story_content %}
+                <article class="admin-submission-story">
+                  <p>Complete community story</p>
+                  <div>{{ submission_item.story_content }}</div>
+                </article>
+                {% endif %}
+              </section>
 
-              {% if submission_item.grade_level %}
-              <div class="admin-form-field">
-                <label>Grade Level</label>
-                <p class="admin-field-hint">{{ submission_item.grade_level }}</p>
-              </div>
+              {% if submission_item.photo_url or submission_item.resource_file_url %}
+              <section class="admin-submission-review-section">
+                <header>
+                  <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m8.5 12.5 6.8-6.8a3 3 0 0 1 4.2 4.2l-8.9 8.9a5 5 0 0 1-7.1-7.1l8.2-8.2 1.4 1.4-8.2 8.2a3 3 0 0 0 4.3 4.3l8.9-8.9a1 1 0 0 0-1.4-1.4Z"></path></svg></span>
+                  <div><h3>Submitted Attachment</h3><p>Open the original file or inspect the submitted photograph before deciding.</p></div>
+                </header>
+                {% if submission_item.photo_url %}
+                <a href="{{ submission_item.photo_url }}" class="admin-submission-photo" target="_blank" rel="noopener">
+                  <img src="{{ submission_item.photo_url }}" alt="Submitted image for {{ submission_item.title }}" />
+                  <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14ZM5 5h6v2H5v12h12v-6h2v6H5Z"></path></svg>Open full image</span>
+                </a>
+                {% endif %}
+                {% if submission_item.resource_file_url %}
+                <a href="{{ submission_item.resource_file_url }}" class="admin-submission-file" target="_blank" rel="noopener">
+                  <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Z"></path></svg></span>
+                  <span><small>Attached learning material</small><strong>Open uploaded {{ submission_item.resource_category or 'resource' }} file</strong></span>
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M14 3h7v7h-2V6.4l-8.3 8.3-1.4-1.4L17.6 5H14ZM5 5h6v2H5v12h12v-6h2v6H5Z"></path></svg>
+                </a>
+                {% endif %}
+              </section>
               {% endif %}
 
-              {% if submission_item.subject_topic or submission_item.story_category %}
-              <div class="admin-form-field">
-                <label>Subject / Story Category</label>
-                <p class="admin-field-hint">{{ submission_item.subject_topic or submission_item.story_category }}</p>
-              </div>
-              {% endif %}
-
-              <div class="admin-form-field admin-form-field-wide">
-                <label>Summary</label>
-                <p class="admin-field-hint">{{ submission_item.description or submission_item.preview_text }}</p>
-              </div>
-
-              {% if submission_item.story_content %}
-              <div class="admin-form-field admin-form-field-wide">
-                <label>Story Content</label>
-                <div class="admin-field-hint" style="white-space: pre-wrap;">{{ submission_item.story_content }}</div>
-              </div>
-              {% endif %}
-
-              {% if submission_item.resource_file_url %}
-              <div class="admin-form-field admin-form-field-wide">
-                <label>Attached Resource File</label>
-                <p class="admin-field-hint"><a href="{{ submission_item.resource_file_url }}" target="_blank" rel="noopener noreferrer">Open uploaded file</a></p>
-              </div>
+              {% if submission_item.reviewed_at or submission_item.verified_at %}
+              <section class="admin-submission-review-section">
+                <header>
+                  <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5Zm2 2v14h10V5Zm2 3h6v2H9Zm0 4h6v2H9Z"></path></svg></span>
+                  <div><h3>Moderation Record</h3><p>Verification and staff review information retained with this contribution.</p></div>
+                </header>
+                <dl class="admin-submission-review-details">
+                  {% if submission_item.verified_at %}<div><dt>Verified</dt><dd>{{ submission_item.verified_display_date }}</dd></div>{% endif %}
+                  {% if submission_item.reviewed_at %}<div><dt>Last moderated</dt><dd>{{ submission_item.reviewed_display_date }}</dd></div>{% endif %}
+                  {% if submission_item.reviewed_by %}<div class="is-wide"><dt>Reviewed by</dt><dd>{{ submission_item.reviewed_by }}</dd></div>{% endif %}
+                </dl>
+              </section>
               {% endif %}
             </div>
 
-            {% if submission_item.photo_url %}
-            <div class="admin-image-preview-card">
-              <img src="{{ submission_item.photo_url }}" alt="Submission preview image" />
-            </div>
-            {% endif %}
+            <aside class="admin-submission-decision-panel">
+              {% if submission_item.status == 'pending_review' %}
+              <section class="admin-submission-decision">
+                <header>
+                  <span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span>
+                  <div><p>Staff moderation</p><h3>Record a Decision</h3></div>
+                </header>
+                <p class="admin-submission-decision-copy">Confirm that the contribution is appropriate, complete, and safe for the public learning collection.</p>
 
-            <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}" class="admin-form-actions">
-              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-              <button type="submit" name="moderation_action" value="archive" class="admin-secondary-action">Archive / Reject</button>
-              <button type="submit" name="moderation_action" value="approve" class="admin-primary-action">Approve and Publish</button>
-            </form>
-          </section>
+                <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Submission decision"
+                  data-confirm-title="Approve and publish this submission?"
+                  data-confirm-message="Approve {{ submission_item.title }}? It will become visible in the public Educational Resources collection."
+                  data-confirm-label="Approve and Publish" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="moderation_action" value="approve" />
+                  <button type="submit" class="admin-submission-decision-action is-approve">
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span>
+                    <span><strong>Approve and Publish</strong><small>Add this contribution to Educational Resources</small></span>
+                  </button>
+                </form>
+
+                <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Submission decision"
+                  data-confirm-title="Archive and reject this submission?"
+                  data-confirm-message="Archive {{ submission_item.title }}? It will not appear in the public learning collection."
+                  data-confirm-label="Archive Submission" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="moderation_action" value="archive" />
+                  <button type="submit" class="admin-submission-decision-action is-archive">
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg></span>
+                    <span><strong>Archive / Reject</strong><small>Retain the record without publishing it</small></span>
+                  </button>
+                </form>
+              </section>
+              {% elif submission_item.status == 'active' %}
+              <section class="admin-submission-finalized is-active">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.25 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.2-5.2 1.4 1.4Z"></path></svg></span><div><p>Current decision</p><h3>Approved and Published</h3></div></header>
+                <p>This contribution is currently part of the public Educational Resources collection.</p>
+                <a href="{{ url_for('edu_resources_details', item='submission-' ~ submission_item.id) }}" target="_blank" rel="noopener" class="admin-submission-public-link">Open public resource</a>
+                <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Submission status"
+                  data-confirm-title="Archive this published submission?"
+                  data-confirm-message="Archive {{ submission_item.title }}? It will be removed from the public Educational Resources collection."
+                  data-confirm-label="Archive Submission" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="moderation_action" value="archive" />
+                  <button type="submit" class="admin-submission-finalized-action is-archive">Archive submission</button>
+                </form>
+              </section>
+              {% elif submission_item.status == 'archived' %}
+              <section class="admin-submission-finalized is-archived">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg></span><div><p>Current decision</p><h3>Archived</h3></div></header>
+                <p>This contribution is retained for reference and is hidden from public Educational Resources.</p>
+                <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}"
+                  data-confirm-submit data-confirm-eyebrow="Review queue"
+                  data-confirm-title="Restore this submission?"
+                  data-confirm-message="Restore {{ submission_item.title }} to Pending Review? It will remain hidden until an admin approves it again."
+                  data-confirm-label="Restore to Review" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                  <input type="hidden" name="moderation_action" value="restore" />
+                  <button type="submit" class="admin-submission-finalized-action is-restore">Restore to Pending Review</button>
+                </form>
+              </section>
+              {% else %}
+              <section class="admin-submission-finalized is-verification">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M7 10V7a5 5 0 0 1 10 0v3h1a2 2 0 0 1 2 2v8H4v-8a2 2 0 0 1 2-2Zm2 0h6V7a3 3 0 0 0-6 0Z"></path></svg></span><div><p>Submission locked</p><h3>Awaiting Verification</h3></div></header>
+                <p>This legacy entry cannot be moderated because its email verification was not completed.</p>
+              </section>
+              {% endif %}
+            </aside>
+          </div>
 {% endblock %}

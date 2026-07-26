@@ -94,6 +94,15 @@ def prepare_participation_submission_item(item: dict[str, Any] | None) -> dict[s
     prepared["contributor_display"] = "Hidden by privacy request" if is_private and status == "active" else (submitter_name or "Anonymous")
     prepared["email_display"] = "Hidden by privacy request" if is_private and status == "active" else (submitter_email or "No email")
     prepared["display_date"] = format_submission_datetime(prepared.get("created_at"))
+    prepared["reviewed_display_date"] = format_submission_datetime(prepared.get("reviewed_at")) if prepared.get("reviewed_at") else ""
+    prepared["verified_display_date"] = format_submission_datetime(prepared.get("verified_at")) if prepared.get("verified_at") else ""
+    prepared["status_label"] = {
+        "pending_verification": "Awaiting Verification",
+        "pending_review": "Pending Review",
+        "active": "Approved and Published",
+        "archived": "Archived",
+    }.get(status, status.replace("_", " ").title())
+    prepared["has_attachment"] = bool(prepared.get("resource_file_url") or prepared.get("photo_url"))
     return prepared
 
 
@@ -194,6 +203,7 @@ def get_participation_submissions_status_message(status_key: Any) -> str | None:
     mapping = {
         "approved": "Submission approved and published successfully.",
         "archived": "Submission archived successfully.",
+        "restored": "Submission restored to the review queue successfully.",
     }
     return mapping.get(str(status_key or "").strip().lower())
 

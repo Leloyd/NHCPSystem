@@ -33,6 +33,7 @@ from .service import (
 VERIFICATION_WINDOW_MINUTES = 30
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 TEACHER_ALLOWED_EXTENSIONS = {".pdf", ".docx", ".ppt", ".pptx"}
+ADMIN_SUBMISSION_STATUSES = {"pending_verification", "pending_review", "active", "archived"}
 
 
 def _utcnow() -> datetime:
@@ -220,10 +221,9 @@ def register_participation_submission_routes(
         csrf_token = ensure_admin_csrf_token()
         current_admin_username = session.get(admin_session_user_key, admin_username)
         submissions_items = load_admin_participation_submissions()
-        pending_review_items = [item for item in submissions_items if item.get("status") == "pending_review"]
-        active_items = [item for item in submissions_items if item.get("status") == "active"]
-        archived_items = [item for item in submissions_items if item.get("status") == "archived"]
-        awaiting_verification_items = [item for item in submissions_items if item.get("status") == "pending_verification"]
+        status_filter = str(request.args.get("filter") or "all").strip().lower()
+        if status_filter not in ADMIN_SUBMISSION_STATUSES | {"all"}:
+            status_filter = "all"
         status_message = get_participation_submissions_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase participation submissions integration is not configured."
         email_config_error = None
@@ -232,10 +232,7 @@ def register_participation_submission_routes(
             csrf_token=csrf_token,
             admin_username=current_admin_username,
             submissions_items=submissions_items,
-            pending_review_items=pending_review_items,
-            active_items=active_items,
-            archived_items=archived_items,
-            awaiting_verification_items=awaiting_verification_items,
+            status_filter=status_filter,
             status_message=status_message,
             config_error=config_error,
             email_config_error=email_config_error,
@@ -260,15 +257,34 @@ def register_participation_submission_routes(
             return redirect(url_for("admin_participation_submissions"))
 
         moderation_action = str(request.form.get("moderation_action") or "").strip().lower()
-        if moderation_action not in {"approve", "archive"}:
+        transitions = {
+            "approve": {
+                "from": {"pending_review"},
+                "status": "active",
+                "result": "approved",
+            },
+            "archive": {
+                "from": {"pending_review", "active"},
+                "status": "archived",
+                "result": "archived",
+            },
+            "restore": {
+                "from": {"archived"},
+                "status": "pending_review",
+                "result": "restored",
+            },
+        }
+        transition = transitions.get(moderation_action)
+        current_status = str(submission_item.get("status") or "").strip().lower()
+        if transition is None or current_status not in transition["from"]:
             return render_admin_participation_submission_review(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
                 admin_username=admin_username,
                 submission_item=submission_item,
-                error_message="Please choose a valid moderation action.",
+                error_message="This moderation action is not available for the submission's current status.",
             )
-        if submission_item.get("status") == "pending_verification":
+        if current_status == "pending_verification":
             return render_admin_participation_submission_review(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -277,7 +293,7 @@ def register_participation_submission_routes(
                 error_message="This submission has not completed email verification yet.",
             )
 
-        next_status = "active" if moderation_action == "approve" else "archived"
+        next_status = transition["status"]
         try:
             update_participation_submission(
                 submission_id,
@@ -297,4 +313,10 @@ def register_participation_submission_routes(
                 error_message="Could not update the submission right now.",
             )
 
-        return redirect(url_for("admin_participation_submissions", status="approved" if next_status == "active" else "archived"))
+        return redirect(
+            url_for(
+                "admin_participation_submissions",
+                filter=str(request.form.get("return_filter") or "all").strip().lower(),
+                status=transition["result"],
+            )
+        )

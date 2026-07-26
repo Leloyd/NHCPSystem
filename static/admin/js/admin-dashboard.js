@@ -1256,6 +1256,167 @@
     applyResourceView();
   }
 
+  function initAdminSubmissionManagement() {
+    var root = document.querySelector("[data-admin-submission-manager]");
+    if (!root) {
+      return;
+    }
+
+    var cards = Array.prototype.slice.call(
+      root.querySelectorAll("[data-submission-card]")
+    );
+    var filterButtons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-submission-filter-button]")
+    );
+    var searchInput = root.querySelector("#adminSubmissionSearch");
+    var clearButton = root.querySelector("[data-submission-search-clear]");
+    var visibleCount = root.querySelector("[data-submission-visible-count]");
+    var libraryTitle = root.querySelector("[data-submission-library-title]");
+    var libraryDescription = root.querySelector(
+      "[data-submission-library-description]"
+    );
+    var emptyState = root.querySelector("[data-submission-empty]");
+    var emptyTitle = root.querySelector("[data-submission-empty-title]");
+    var emptyCopy = root.querySelector("[data-submission-empty-copy]");
+    var currentFilter = String(
+      root.getAttribute("data-submission-filter") || "all"
+    ).toLowerCase();
+
+    var filterCopy = {
+      all: {
+        title: "Complete submission record",
+        description:
+          "Every pending, published, archived, and legacy unverified entry",
+      },
+      pending_review: {
+        title: "Pending review queue",
+        description:
+          "Verified contributions waiting for an administrator's decision",
+      },
+      active: {
+        title: "Published contributions",
+        description:
+          "Approved entries currently visible in Educational Resources",
+      },
+      archived: {
+        title: "Submission archive",
+        description:
+          "Rejected or withdrawn entries retained for future reference",
+      },
+      pending_verification: {
+        title: "Legacy unverified entries",
+        description:
+          "Older submissions that did not complete email verification",
+      },
+    };
+
+    function normalize(value) {
+      return String(value || "").trim().toLowerCase();
+    }
+
+    function applySubmissionView() {
+      var query = normalize(searchInput && searchInput.value);
+      var shown = 0;
+
+      cards.forEach(function (card) {
+        var statusMatches =
+          currentFilter === "all" ||
+          card.getAttribute("data-submission-status") === currentFilter;
+        var searchMatches =
+          !query ||
+          normalize(card.getAttribute("data-submission-search")).indexOf(query) !==
+            -1;
+        var shouldShow = statusMatches && searchMatches;
+        card.hidden = !shouldShow;
+        if (shouldShow) {
+          shown += 1;
+        }
+      });
+
+      filterButtons.forEach(function (button) {
+        var isActive =
+          button.getAttribute("data-submission-filter-button") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      var copy = filterCopy[currentFilter] || filterCopy.all;
+      if (libraryTitle) {
+        libraryTitle.textContent = copy.title;
+      }
+      if (libraryDescription) {
+        libraryDescription.textContent = copy.description;
+      }
+      if (visibleCount) {
+        visibleCount.textContent =
+          shown + " submission" + (shown === 1 ? "" : "s");
+      }
+      if (clearButton) {
+        clearButton.hidden = !query;
+      }
+      if (emptyState) {
+        emptyState.hidden = shown > 0;
+      }
+
+      if (shown === 0 && emptyTitle && emptyCopy) {
+        if (query) {
+          emptyTitle.textContent = "No matching participation submissions";
+          emptyCopy.textContent =
+            "Try another title, contributor, type, grade, category, or topic.";
+        } else if (currentFilter === "pending_review") {
+          emptyTitle.textContent = "The review queue is clear";
+          emptyCopy.textContent =
+            "New verified community contributions will appear here.";
+        } else if (currentFilter === "active") {
+          emptyTitle.textContent = "No published submissions";
+          emptyCopy.textContent =
+            "Approved community contributions will appear here.";
+        } else if (currentFilter === "archived") {
+          emptyTitle.textContent = "No archived submissions";
+          emptyCopy.textContent =
+            "Rejected or withdrawn entries will be retained here.";
+        } else if (currentFilter === "pending_verification") {
+          emptyTitle.textContent = "No unverified submissions";
+          emptyCopy.textContent =
+            "There are no legacy entries awaiting email verification.";
+        } else {
+          emptyTitle.textContent = "No participation submissions yet";
+          emptyCopy.textContent =
+            "Teacher Corner materials and community stories will appear here.";
+        }
+      }
+    }
+
+    filterButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        var nextFilter = button.getAttribute("data-submission-filter-button");
+        currentFilter = filterCopy[nextFilter] ? nextFilter : "all";
+        root.setAttribute("data-submission-filter", currentFilter);
+        applySubmissionView();
+      });
+    });
+
+    if (searchInput) {
+      searchInput.addEventListener("input", applySubmissionView);
+      searchInput.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && searchInput.value) {
+          searchInput.value = "";
+          applySubmissionView();
+        }
+      });
+    }
+
+    if (clearButton && searchInput) {
+      clearButton.addEventListener("click", function () {
+        searchInput.value = "";
+        applySubmissionView();
+        searchInput.focus();
+      });
+    }
+
+    applySubmissionView();
+  }
+
   function initAdminUserManagement() {
     var root = document.querySelector("[data-admin-users]");
     if (!root) {
@@ -2458,6 +2619,7 @@
     initAdminGalleryManagement();
     initAdminGalleryView();
     initAdminEduResourceManagement();
+    initAdminSubmissionManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
     initAdminUserManagement();
