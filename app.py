@@ -14,6 +14,7 @@ from werkzeug.security import check_password_hash
 from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_email
+from analytics_content import load_admin_analytics_dashboard, register_analytics_routes
 from community_content import load_news_community_highlights, register_community_content_routes
 from community_content.service import load_admin_community_highlights
 from edu_resources_content import load_admin_edu_resources, load_public_edu_resources, register_edu_resources_routes
@@ -281,6 +282,7 @@ def _build_admin_dashboard_context():
     submission_items = load_admin_participation_submissions()
     feedback_items = load_admin_visitor_feedback()
     user_items = load_admin_public_users()
+    analytics_dashboard = load_admin_analytics_dashboard(days=30)
 
     active_users = [item for item in user_items if item.get("is_active")]
     deactivated_users = [item for item in user_items if not item.get("is_active")]
@@ -695,6 +697,7 @@ def _build_admin_dashboard_context():
         "dashboard_recent_activity": dashboard_recent_activity,
         "dashboard_workspace_rows": dashboard_workspace_rows,
         "dashboard_overview_rows": dashboard_overview_rows,
+        "analytics_dashboard": analytics_dashboard,
     }
 
 
@@ -1281,6 +1284,13 @@ register_user_management_routes(
     admin_username=ADMIN_DEFAULT_USERNAME,
 )
 
+register_analytics_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    public_session_user_id_key=PUBLIC_SESSION_USER_ID_KEY,
+)
+
 
 register_tour_booking_routes(
     app,
@@ -1496,15 +1506,6 @@ def edu_resources_details():
 @app.route("/ar-content-detection")
 def ar_content_detection():
     return render_template("ARContentDetection.html", analytics_endpoint=url_for("ar_analytics"))
-
-
-@app.route("/api/ar/analytics", methods=["POST"])
-def ar_analytics():
-    payload = request.get_json(silent=True)
-    if not isinstance(payload, dict):
-        payload = {}
-    app.logger.info("AR analytics event received", extra={"ar_event": payload})
-    return jsonify({"ok": True}), 200
 
 
 @app.route("/participation")

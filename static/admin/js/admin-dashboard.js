@@ -237,6 +237,7 @@
   function initDashboardVisuals() {
     var chartElements = document.querySelectorAll("[data-dashboard-chart]");
     var barElements = document.querySelectorAll("[data-dashboard-bar-value]");
+    var heightElements = document.querySelectorAll("[data-dashboard-bar-height]");
 
     chartElements.forEach(function (element) {
       var chartValue = String(element.getAttribute("data-dashboard-chart") || "").trim();
@@ -249,6 +250,12 @@
       var rawValue = Number(element.getAttribute("data-dashboard-bar-value") || 0);
       var clampedValue = Math.max(0, Math.min(100, rawValue));
       element.style.width = clampedValue + "%";
+    });
+
+    heightElements.forEach(function (element) {
+      var rawValue = Number(element.getAttribute("data-dashboard-bar-height") || 0);
+      var clampedValue = Math.max(0, Math.min(100, rawValue));
+      element.style.height = clampedValue + "%";
     });
   }
 

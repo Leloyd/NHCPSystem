@@ -227,3 +227,19 @@ CREATE TABLE public.visitor_feedback (
   CONSTRAINT visitor_feedback_pkey PRIMARY KEY (id),
   CONSTRAINT visitor_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
 );
+CREATE TABLE public.analytics_events (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  event_type text NOT NULL CHECK (event_type = ANY (ARRAY['page_view'::text, 'virtual_tour_opened'::text, 'tour_scene_viewed'::text, 'artifact_viewed'::text, 'ar_session_started'::text, 'ar_marker_found'::text, 'ar_puzzle_solved'::text, 'heritage_trail_started'::text, 'heritage_trail_stop_viewed'::text, 'learning_activity_completed'::text, 'gallery_item_viewed'::text, 'resource_viewed'::text, 'webxr_opened'::text])),
+  module text NOT NULL CHECK ((char_length(module) >= 1) AND (char_length(module) <= 50)),
+  target_id text NOT NULL DEFAULT ''::text CHECK (char_length(target_id) <= 160),
+  visitor_hash text NOT NULL CHECK (char_length(visitor_hash) = 64),
+  user_id bigint,
+  device_type text NOT NULL CHECK (device_type = ANY (ARRAY['desktop'::text, 'mobile'::text, 'tablet'::text, 'other'::text])),
+  browser_family text NOT NULL DEFAULT 'Other'::text CHECK (char_length(browser_family) <= 40),
+  os_family text NOT NULL DEFAULT 'Other'::text CHECK (char_length(os_family) <= 40),
+  page_path text NOT NULL DEFAULT ''::text CHECK (char_length(page_path) <= 300),
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb CHECK ((jsonb_typeof(metadata) = 'object'::text) AND (octet_length(metadata::text) <= 4096)),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT analytics_events_pkey PRIMARY KEY (id),
+  CONSTRAINT analytics_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE SET NULL
+);

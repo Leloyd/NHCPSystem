@@ -873,6 +873,15 @@ function enterStop(stopId, opts) {
   if (!conf || state.mode === stopId) return;
   if (stopId !== 'stop4') memoryApi.stopAudio?.();
   state.mode = stopId;
+  if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
+    window.NHCPAnalytics.track(
+      'heritage_trail_stop_viewed',
+      'heritage-trail',
+      stopId,
+      { title: conf.hash || stopId },
+      { onceKey: `heritage-trail-stop:${stopId}` }
+    );
+  }
   root.setAttribute('data-mode', stopId);
   root.setAttribute('data-phase', 'guide'); // brings Ana + controls back in
   storyEls.forEach((el) => { el.hidden = el.getAttribute('data-trail-story') !== stopId; });
@@ -4325,6 +4334,15 @@ function setupKeeperArchive(storyEl, api = {}) {
     archiveRoot.classList.toggle('has-collected-records', discovered.size > 0);
     archiveRoot.classList.toggle('is-search-complete', discovered.size === cards.length);
     archiveRoot.classList.toggle('is-archive-complete', complete);
+    if (complete && window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
+      window.NHCPAnalytics.track(
+        'learning_activity_completed',
+        'heritage-trail',
+        'memory-archive',
+        { score: cards.length, total: cards.length },
+        { onceKey: 'learning:memory-archive' }
+      );
+    }
     if (exitButton) {
       exitButton.disabled = !complete;
       exitButton.setAttribute('aria-disabled', String(!complete));
@@ -4978,6 +4996,16 @@ function setupStory(el) {
     wholeHost: mapWholeHost,
     onCompletionChange: (complete) => {
       mapCompletionUnlocked = Boolean(complete);
+      if (complete && window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
+        const artifactTotal = el.querySelectorAll('[data-map-card]').length;
+        window.NHCPAnalytics.track(
+          'learning_activity_completed',
+          'heritage-trail',
+          'map-of-traditions',
+          { score: artifactTotal, total: artifactTotal },
+          { onceKey: 'learning:map-of-traditions' }
+        );
+      }
       syncMapCompletionGate();
     },
     onReset: () => {
@@ -5867,6 +5895,15 @@ function initTimeAlbums() {
 }
 
 /* --- Boot -------------------------------------------------------------------- */
+if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
+  window.NHCPAnalytics.track(
+    'heritage_trail_started',
+    'heritage-trail',
+    'starting-point',
+    null,
+    { onceKey: 'heritage-trail-started' }
+  );
+}
 narrate({ speakIt: false }); // seed the bubble
 initPanorama();
 initCharacter();

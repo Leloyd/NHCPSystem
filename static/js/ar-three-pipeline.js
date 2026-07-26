@@ -655,6 +655,10 @@
         event: eventName,
         marker: runtime.markerFilter,
         timestamp: Date.now(),
+        client_id:
+          window.NHCPAnalytics && typeof window.NHCPAnalytics.getClientId === "function"
+            ? window.NHCPAnalytics.getClientId()
+            : "",
       },
       extraData || {}
     );

@@ -1,14 +1,14 @@
 {% extends 'admin/_layout.html' %}
 
-{% set admin_document_title = 'NHCP Admin Dashboard' %}
-{% set admin_layout_class = 'admin-layout' %}
+{% set admin_document_title = 'Analytics Dashboard | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-command-layout' %}
 {% set admin_active_page = 'dashboard' %}
-{% set admin_topbar_title = 'Dashboard' %}
-{% set admin_topbar_subtitle = 'NCHP Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan' %}
+{% set admin_topbar_title = 'System Command Center' %}
+{% set admin_topbar_subtitle = 'NHCP Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan' %}
 {% set admin_topbar_variant = 'dashboard' %}
 
 {% block admin_content %}
-          <div data-dashboard-search-root>
+          <div class="admin-command-center" data-dashboard-search-root>
             {% if dashboard_config_error %}
             <section class="admin-alert admin-alert-error" data-dashboard-search-item>
               <strong>Configuration issue</strong>
@@ -16,21 +16,29 @@
             </section>
             {% endif %}
 
-            <section class="admin-welcome-card" data-dashboard-search-item>
-              <div class="admin-welcome-copy">
-                <p class="admin-welcome-label">Welcome back</p>
+            <section class="admin-command-hero" data-dashboard-search-item>
+              <div class="admin-command-hero-copy">
+                <p class="admin-command-eyebrow">Museum digital operations</p>
                 <h2>Good day, {{ admin_username or 'Administrator' }}</h2>
                 <p>
-                  This dashboard now reflects the real admin workspace: content libraries, review queues,
-                  booking requests, participation submissions, and visitor feedback.
+                  Monitor visitor engagement, immersive experiences, learning outcomes,
+                  public activity, and content operations from one secure workspace.
                 </p>
-                <div class="admin-hero-actions">
-                  <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-primary-action">New Highlight Card</a>
-                  <a href="{{ url_for('admin_edu_resource_new') }}" class="admin-secondary-action">Create Edu Resource</a>
+                <div class="admin-command-hero-actions">
+                  <a href="#visitor-analytics" class="admin-primary-action">View Analytics</a>
+                  <a href="{{ url_for('admin_analytics_report', days=30) }}" class="admin-secondary-action">
+                    <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 3h2v10l3.5-3.5 1.4 1.4-5.9 5.9-5.9-5.9 1.4-1.4L11 13Zm-6 16h14v2H5Z"></path></svg>
+                    Download 30-Day Report
+                  </a>
                 </div>
               </div>
-              <div class="admin-welcome-mark" aria-hidden="true">
-                <svg viewBox="0 0 40 40"><path d="M20 2L38 13V27L20 38L2 27V13L20 2Z"></path><path d="M20 10L30 16V24L20 30L10 24V16L20 10Z"></path><circle cx="20" cy="20" r="4"></circle></svg>
+              <div class="admin-command-hero-status" aria-label="System status">
+                <span class="{% if analytics_dashboard.available %}is-online{% else %}is-pending{% endif %}">
+                  <i aria-hidden="true"></i>
+                  {% if analytics_dashboard.available %}Analytics online{% else %}Analytics setup needed{% endif %}
+                </span>
+                <strong>{{ analytics_dashboard.period_label }}</strong>
+                <small>Privacy-minimized monitoring</small>
               </div>
             </section>
 
@@ -38,218 +46,321 @@
               <div class="admin-panel-head compact-head">
                 <div>
                   <h3>No dashboard results</h3>
-                  <p>Try searching for highlights, gallery, resources, bookings, submissions, or feedback.</p>
+                  <p>Try searching for analytics, visitors, artifacts, tours, bookings, submissions, or feedback.</p>
                 </div>
               </div>
             </section>
 
-            <section class="admin-stats-grid" aria-label="Dashboard statistics" data-dashboard-search-group>
-              {% for stat_card in dashboard_stat_cards %}
-              <article class="admin-stat-card" data-dashboard-search-item>
-                <div class="admin-stat-icon {{ stat_card.icon_class }}">
-                  {% if stat_card.icon_class == 'posts' %}
-                  <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5"></path><path d="M8 12h8M8 16h8M8 8h3"></path></svg>
-                  {% elif stat_card.icon_class == 'views' %}
-                  <svg viewBox="0 0 24 24"><path d="M12 5c-7 0-10 7-10 7s3 7 10 7 10-7 10-7-3-7-10-7Zm0 11a4 4 0 1 1 4-4 4 4 0 0 1-4 4Z"></path><circle cx="12" cy="12" r="2"></circle></svg>
-                  {% elif stat_card.icon_class == 'media' %}
-                  <svg viewBox="0 0 24 24"><path d="M4 5h16v14H4Zm2 2v10h12V7Zm1 8 3-4 2.5 3 1.5-2 3 3Z"></path></svg>
-                  {% else %}
-                  <svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4Zm-8 0a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4ZM8 13c-.29 0-.62.02-.97.05A4.93 4.93 0 0 1 10 17v2H2v-2c0-2 3.46-3.54 6-3.92Z"></path></svg>
-                  {% endif %}
+            {% if not analytics_dashboard.available %}
+            <section class="admin-analytics-setup" data-dashboard-search-item>
+              <span class="admin-analytics-setup-icon" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2Zm-1 5h2v6h-2Zm0 8h2v2h-2Z"></path></svg>
+              </span>
+              <div>
+                <strong>Analytics is ready in the code, but its database table is not active.</strong>
+                <p>{{ analytics_dashboard.error }} Run <code>analytics_events_migration.sql</code> once in Supabase; incoming activity will then populate these charts automatically.</p>
+              </div>
+            </section>
+            {% endif %}
+
+            <section id="visitor-analytics" class="admin-monitor-section" data-dashboard-search-group>
+              <header class="admin-monitor-section-head" data-dashboard-search-item>
+                <div>
+                  <p>Analytics &amp; Monitoring Module</p>
+                  <h2>Visitor Engagement</h2>
+                  <span>Real usage across the museum’s public, immersive, and learning experiences.</span>
                 </div>
-                <div class="admin-stat-text">
-                  <p>{{ stat_card.label }}</p>
-                  <strong>{{ stat_card.value }}</strong>
-                  <span class="admin-trend up">{{ stat_card.summary }}</span>
-                  <a href="{{ stat_card.href }}" class="admin-inline-link admin-dashboard-card-link">{{ stat_card.action_label }}</a>
+                <div class="admin-monitor-report-menu">
+                  <span>Download CSV</span>
+                  <a href="{{ url_for('admin_analytics_report', days=7) }}">7 days</a>
+                  <a href="{{ url_for('admin_analytics_report', days=30) }}">30 days</a>
+                  <a href="{{ url_for('admin_analytics_report', days=90) }}">90 days</a>
                 </div>
-              </article>
-              {% endfor %}
+              </header>
+
+              <div class="admin-monitor-kpis">
+                {% set analytics_kpis = [
+                  {
+                    'class': 'visitors',
+                    'label': 'Unique Visitors',
+                    'value': analytics_dashboard.unique_visitors,
+                    'detail': analytics_dashboard.signed_in_users ~ ' signed-in users',
+                    'trend': analytics_dashboard.visitor_trend
+                  },
+                  {
+                    'class': 'views',
+                    'label': 'Page Views',
+                    'value': analytics_dashboard.page_views,
+                    'detail': analytics_dashboard.total_events ~ ' total tracked events',
+                    'trend': analytics_dashboard.page_view_trend
+                  },
+                  {
+                    'class': 'artifacts',
+                    'label': 'Artifact Views',
+                    'value': analytics_dashboard.artifact_views,
+                    'detail': analytics_dashboard.distinct_artifacts ~ ' artifacts represented',
+                    'trend': analytics_dashboard.artifact_trend
+                  },
+                  {
+                    'class': 'learning',
+                    'label': 'Learning Completions',
+                    'value': analytics_dashboard.learning_completions,
+                    'detail': 'Completed interactive activities',
+                    'trend': analytics_dashboard.learning_trend
+                  }
+                ] %}
+                {% for metric in analytics_kpis %}
+                <article class="admin-monitor-kpi is-{{ metric.class }}" data-dashboard-search-item>
+                  <span class="admin-monitor-kpi-icon" aria-hidden="true">
+                    {% if metric.class == 'visitors' %}
+                    <svg viewBox="0 0 24 24"><path d="M16 11a4 4 0 1 0-4-4 4 4 0 0 0 4 4ZM8 11a3 3 0 1 0-3-3 3 3 0 0 0 3 3Zm8 2c-2.7 0-8 1.3-8 4v2h16v-2c0-2.7-5.3-4-8-4ZM8 13c-.3 0-.6 0-1 .1A5 5 0 0 1 10 17v2H2v-2c0-2 3.5-3.5 6-4Z"></path></svg>
+                    {% elif metric.class == 'views' %}
+                    <svg viewBox="0 0 24 24"><path d="M12 5c5.5 0 9.5 5.4 9.5 7s-4 7-9.5 7S2.5 13.6 2.5 12 6.5 5 12 5Zm0 2c-3.8 0-6.8 3.3-7.4 5 .6 1.7 3.6 5 7.4 5s6.8-3.3 7.4-5c-.6-1.7-3.6-5-7.4-5Zm0 2a3 3 0 1 1-3 3 3 3 0 0 1 3-3Z"></path></svg>
+                    {% elif metric.class == 'artifacts' %}
+                    <svg viewBox="0 0 24 24"><path d="M5 3h14v4h2v14H3V7h2Zm2 2v2h10V5Zm-2 4v10h14V9Zm3 2h8v2H8Zm0 4h5v2H8Z"></path></svg>
+                    {% else %}
+                    <svg viewBox="0 0 24 24"><path d="M4 3h16v18H4Zm2 2v14h12V5Zm2 2h8v2H8Zm0 4h5v2H8Zm0 4h7v2H8Z"></path></svg>
+                    {% endif %}
+                  </span>
+                  <div>
+                    <small>{{ metric.label }}</small>
+                    <strong>{{ metric.value }}</strong>
+                    <span>{{ metric.detail }}</span>
+                  </div>
+                  <em class="is-{{ metric.trend.direction }}">
+                    {% if metric.trend.direction == 'up' %}↗{% elif metric.trend.direction == 'down' %}↘{% else %}—{% endif %}
+                    {{ metric.trend.label }}
+                  </em>
+                </article>
+                {% endfor %}
+              </div>
             </section>
 
-            <section class="admin-panels admin-panels-main" data-dashboard-search-group>
-              <article class="admin-panel admin-panel-wide" data-dashboard-search-item id="dashboard-review-queue">
-                <div class="admin-panel-head">
-                  <div>
-                    <h3>Review Queue</h3>
-                    <p>Items that currently need admin attention across bookings, submissions, and feedback.</p>
-                  </div>
-                  <span class="admin-chip is-dark">{{ dashboard_review_queue|length }}</span>
-                </div>
-
-                {% if dashboard_review_queue %}
-                <div class="admin-post-list">
-                  {% for queue_item in dashboard_review_queue %}
-                  <article class="admin-post-item">
-                    <div class="admin-post-icon">
-                      <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5"></path><path d="M8 12h8M8 16h8M8 8h3"></path></svg>
-                    </div>
-                    <div class="admin-post-copy">
-                      <strong>{{ queue_item.title }}</strong>
-                      <div class="admin-post-meta">
-                        <span class="admin-mini-pill">{{ queue_item.module_label }}</span>
-                        <span>{{ queue_item.date_label }}</span>
-                        <span>{{ queue_item.meta_label }}</span>
-                      </div>
-                    </div>
-                    <span class="admin-status-badge {{ queue_item.status_class }}">{{ queue_item.status_label }}</span>
-                    <a href="{{ queue_item.action_href }}" class="admin-inline-link">{{ queue_item.action_label }}</a>
-                  </article>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div class="admin-empty-state">
-                  <div class="admin-empty-state-icon">✓</div>
-                  <h3>No pending review items</h3>
-                  <p>Your review queues are currently clear across bookings, submissions, and visitor feedback.</p>
-                </div>
-                {% endif %}
-              </article>
-
-              <article class="admin-panel admin-panel-side" data-dashboard-search-item>
-                <div class="admin-panel-head">
-                  <div>
-                    <h3>Content Types</h3>
-                    <p>Distribution of records currently stored across the main content modules.</p>
-                  </div>
-                  <span class="admin-chip">{{ dashboard_content_breakdown_total }}</span>
-                </div>
-
-                <div class="admin-donut-card" role="img" aria-label="Dashboard content type distribution">
-                  <div class="admin-donut-chart" data-dashboard-chart="{{ dashboard_content_breakdown_chart }}">
-                    <div class="admin-donut-hole">
-                      <strong>{{ dashboard_content_breakdown_total }}</strong>
-                      <span>Total items</span>
-                    </div>
-                  </div>
-                </div>
-
-                <ul class="admin-content-breakdown">
-                  {% for content_item in dashboard_content_breakdown %}
-                  <li>
-                    <span><i class="legend-dot {{ content_item.legend_class }}"></i><a href="{{ content_item.href }}" class="admin-inline-link">{{ content_item.label }}</a></span>
-                    <strong>{{ content_item.count }} · {{ content_item.percentage_label }}</strong>
-                  </li>
-                  {% endfor %}
-                </ul>
-              </article>
-            </section>
-
-            <section class="admin-panels admin-panels-bottom" data-dashboard-search-group>
-              <article class="admin-panel admin-panel-wide" data-dashboard-search-item>
-                <div class="admin-panel-head">
-                  <div>
-                    <h3>Recent Activity</h3>
-                    <p>Newest and recently updated records across all active admin modules.</p>
-                  </div>
-                  <span class="admin-chip is-dark">{{ dashboard_recent_activity|length }}</span>
-                </div>
-
-                {% if dashboard_recent_activity %}
-                <div class="admin-post-list">
-                  {% for activity_item in dashboard_recent_activity %}
-                  <article class="admin-post-item">
-                    <div class="admin-post-icon">
-                      <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 1.5V8h4.5"></path><path d="M8 12h8M8 16h8M8 8h3"></path></svg>
-                    </div>
-                    <div class="admin-post-copy">
-                      <strong>{{ activity_item.title }}</strong>
-                      <div class="admin-post-meta">
-                        <span class="admin-mini-pill">{{ activity_item.module_label }}</span>
-                        <span>{{ activity_item.date_label }}</span>
-                        <span>{{ activity_item.meta_label }}</span>
-                      </div>
-                    </div>
-                    <span class="admin-status-badge {{ activity_item.status_class }}">{{ activity_item.status_label }}</span>
-                    <a href="{{ activity_item.action_href }}" class="admin-inline-link">{{ activity_item.action_label }}</a>
-                  </article>
-                  {% endfor %}
-                </div>
-                {% else %}
-                <div class="admin-empty-state">
-                  <div class="admin-empty-state-icon">+</div>
-                  <h3>No recent admin activity</h3>
-                  <p>Create or update content in the admin modules to populate this activity stream.</p>
-                </div>
-                {% endif %}
-              </article>
-
-              <div class="admin-side-stack" data-dashboard-search-group>
-                <article class="admin-panel" data-dashboard-search-item>
-                  <div class="admin-panel-head">
-                    <div>
-                      <h3>Workspace Overview</h3>
-                      <p>Current record volume across the active admin modules.</p>
-                    </div>
-                  </div>
-                  <div class="admin-top-pages">
-                    {% for workspace_item in dashboard_workspace_rows %}
-                    <div class="admin-top-page-row">
-                      <span><a href="{{ workspace_item.href }}" class="admin-inline-link">{{ workspace_item.short_label }}</a></span>
-                      <div class="admin-top-page-bar"><i data-dashboard-bar-value="{{ workspace_item.bar_width }}"></i></div>
-                      <strong>{{ workspace_item.count }}</strong>
+            <section class="admin-monitor-primary-grid" data-dashboard-search-group>
+              <article class="admin-monitor-card admin-monitor-traffic" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Traffic trend</p><h3>Daily System Activity</h3><span>Events and unique visitors over {{ analytics_dashboard.period_days }} days</span></div>
+                  <span class="admin-monitor-live"><i></i>Live records</span>
+                </header>
+                <div class="admin-traffic-chart" role="img" aria-label="Daily system activity for the last {{ analytics_dashboard.period_days }} days">
+                  <div class="admin-traffic-grid" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+                  <div class="admin-traffic-bars">
+                    {% for day in analytics_dashboard.daily_activity %}
+                    <div class="admin-traffic-day" title="{{ day.label }}: {{ day.events }} events, {{ day.visitors }} visitors">
+                      <span><i data-dashboard-bar-height="{{ day.height }}"></i></span>
+                      {% if loop.first or loop.last or loop.index0 % 5 == 0 %}<small>{{ day.short_label }}</small>{% else %}<small aria-hidden="true">&nbsp;</small>{% endif %}
                     </div>
                     {% endfor %}
                   </div>
+                </div>
+                <footer class="admin-traffic-legend">
+                  <span><i></i>{{ analytics_dashboard.total_events }} engagement events</span>
+                  <span><i></i>{{ analytics_dashboard.unique_visitors }} unique visitors</span>
+                </footer>
+              </article>
+
+              <article class="admin-monitor-card admin-monitor-artifacts" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Content engagement</p><h3>Most Viewed Artifacts</h3><span>Combined tour, gallery, and AR interactions</span></div>
+                </header>
+                {% if analytics_dashboard.top_artifacts %}
+                <div class="admin-monitor-ranking">
+                  {% for artifact in analytics_dashboard.top_artifacts %}
+                  <div>
+                    <span class="admin-monitor-rank">{{ '%02d'|format(loop.index) }}</span>
+                    <span><strong>{{ artifact.label }}</strong><i><b data-dashboard-bar-value="{{ artifact.bar_width }}"></b></i></span>
+                    <em>{{ artifact.views }} views</em>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="admin-monitor-empty"><strong>No artifact views yet</strong><span>Artifact engagement will appear after visitors open tour, gallery, or AR artifacts.</span></div>
+                {% endif %}
+              </article>
+            </section>
+
+            <section class="admin-monitor-secondary-grid" data-dashboard-search-group>
+              <article class="admin-monitor-card admin-tour-monitor" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Immersive experience</p><h3>Virtual Tour Statistics</h3><span>How visitors explore the 360° site</span></div>
+                  <span class="admin-monitor-card-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2Zm0 2a8 8 0 0 0-7.7 6h3.8A13 13 0 0 1 10 4.3 8 8 0 0 0 12 4Zm4 6a11 11 0 0 0-2-5.7V10Zm-4-5.7A11 11 0 0 0 10 10h4a11 11 0 0 0-2-5.7ZM4.3 14A8 8 0 0 0 10 19.7 13 13 0 0 1 8.1 14Zm5.8 0A11 11 0 0 0 12 19.7a11 11 0 0 0 1.9-5.7Zm5.8 0a13 13 0 0 1-1.9 5.7A8 8 0 0 0 19.7 14Z"></path></svg></span>
+                </header>
+                <div class="admin-tour-metrics">
+                  <div><strong>{{ analytics_dashboard.virtual_tour.sessions }}</strong><span>Tour sessions</span></div>
+                  <div><strong>{{ analytics_dashboard.virtual_tour.scene_views }}</strong><span>Scene views</span></div>
+                  <div><strong>{{ analytics_dashboard.virtual_tour.unique_scenes }}</strong><span>Scenes explored</span></div>
+                  <div><strong>{{ analytics_dashboard.virtual_tour.average_scenes }}</strong><span>Avg. scenes/session</span></div>
+                </div>
+                <div class="admin-tour-scenes">
+                  <strong>Most visited scenes</strong>
+                  {% if analytics_dashboard.virtual_tour.top_scenes %}
+                    {% for scene in analytics_dashboard.virtual_tour.top_scenes %}
+                    <span><i>{{ loop.index }}</i><b>{{ scene.label }}</b><em>{{ scene.views }}</em></span>
+                    {% endfor %}
+                  {% else %}
+                    <p>No scene activity recorded yet.</p>
+                  {% endif %}
+                </div>
+              </article>
+
+              <article class="admin-monitor-card admin-device-monitor" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Technology</p><h3>Device Usage</h3><span>Devices used across tracked experiences</span></div>
+                </header>
+                <div class="admin-device-overview">
+                  <div class="admin-device-donut" data-dashboard-chart="{{ analytics_dashboard.device_chart }}">
+                    <span><strong>{{ analytics_dashboard.unique_visitors }}</strong><small>Visitors</small></span>
+                  </div>
+                  <div class="admin-device-list">
+                    {% for device in analytics_dashboard.devices %}
+                    <div class="is-{{ device.key }}"><span><i></i>{{ device.label }}</span><strong>{{ device.percentage }}%</strong><small>{{ device.count }}</small></div>
+                    {% endfor %}
+                  </div>
+                </div>
+                <div class="admin-browser-list">
+                  <strong>Top browsers</strong>
+                  {% if analytics_dashboard.browsers %}
+                    {% for browser in analytics_dashboard.browsers %}
+                    <span><b>{{ browser.label }}</b><i>{{ browser.count }} events</i><em>{{ browser.percentage }}%</em></span>
+                    {% endfor %}
+                  {% else %}
+                    <p>No browser activity recorded yet.</p>
+                  {% endif %}
+                </div>
+              </article>
+
+              <article class="admin-monitor-card admin-learning-monitor" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Learning outcomes</p><h3>Activity Results</h3><span>Completed interactive heritage activities</span></div>
+                  <span class="admin-monitor-card-icon is-learning" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 10 5-10 5L2 8Zm-6 8.1 6 3 6-3V16c0 2-2.7 4-6 4s-6-2-6-4Z"></path></svg></span>
+                </header>
+                <div class="admin-learning-score">
+                  <span><strong>{{ analytics_dashboard.learning.completions }}</strong><small>Completions</small></span>
+                  <span><strong>{% if analytics_dashboard.learning.average_score is not none %}{{ analytics_dashboard.learning.average_score }}%{% else %}—{% endif %}</strong><small>Average score</small></span>
+                </div>
+                <div class="admin-learning-results">
+                  {% if analytics_dashboard.learning.results %}
+                    {% for result in analytics_dashboard.learning.results %}
+                    <span><i aria-hidden="true">✓</i><b>{{ result.label }}</b><em>{{ result.completions }}</em></span>
+                    {% endfor %}
+                  {% else %}
+                    <div class="admin-monitor-empty is-compact"><strong>No completed activities yet</strong><span>Trail learning results will appear here.</span></div>
+                  {% endif %}
+                </div>
+              </article>
+            </section>
+
+            <section class="admin-monitor-activity-grid" data-dashboard-search-group>
+              <article class="admin-monitor-card admin-activity-log" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Monitoring log</p><h3>Recent User Activity</h3><span>Latest privacy-minimized visitor events</span></div>
+                  <span class="admin-chip is-dark">{{ analytics_dashboard.recent_activity|length }}</span>
+                </header>
+                {% if analytics_dashboard.recent_activity %}
+                <div class="admin-activity-log-list">
+                  {% for activity in analytics_dashboard.recent_activity %}
+                  <div>
+                    <span class="admin-activity-log-mark" aria-hidden="true"><i></i></span>
+                    <span><strong>{{ activity.event_label }}</strong><small>{{ activity.module_label }}{% if activity.target_label %} · {{ activity.target_label }}{% endif %}</small></span>
+                    <span><b>{{ activity.user_label }}</b><small>{{ activity.device_label }}</small></span>
+                    <time>{{ activity.date_label }}</time>
+                  </div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="admin-monitor-empty"><strong>No user activity recorded yet</strong><span>New visits and interactions will populate this monitoring log.</span></div>
+                {% endif %}
+              </article>
+
+              <article class="admin-monitor-card admin-module-monitor" data-dashboard-search-item>
+                <header class="admin-monitor-card-head">
+                  <div><p>Feature adoption</p><h3>Engagement by Module</h3><span>Share of tracked interactions</span></div>
+                </header>
+                {% if analytics_dashboard.module_rows %}
+                <div class="admin-module-engagement">
+                  {% for module in analytics_dashboard.module_rows %}
+                  <div><span><strong>{{ module.label }}</strong><small>{{ module.events }} events</small></span><i><b data-dashboard-bar-value="{{ module.percentage }}"></b></i><em>{{ module.percentage }}%</em></div>
+                  {% endfor %}
+                </div>
+                {% else %}
+                <div class="admin-monitor-empty"><strong>No module activity yet</strong><span>Feature adoption will appear after tracking begins.</span></div>
+                {% endif %}
+              </article>
+            </section>
+
+            <section class="admin-operations-section" data-dashboard-search-group>
+              <header class="admin-monitor-section-head" data-dashboard-search-item>
+                <div>
+                  <p>Administrative Operations</p>
+                  <h2>Content &amp; Review Workspace</h2>
+                  <span>Current records, pending decisions, and management shortcuts.</span>
+                </div>
+              </header>
+
+              <div class="admin-operations-stats">
+                {% for stat_card in dashboard_stat_cards %}
+                <article data-dashboard-search-item>
+                  <span class="admin-operations-stat-icon {{ stat_card.icon_class }}" aria-hidden="true">
+                    <svg viewBox="0 0 24 24"><path d="M4 3h16v18H4Zm2 2v14h12V5Zm2 3h8v2H8Zm0 4h8v2H8Z"></path></svg>
+                  </span>
+                  <span><small>{{ stat_card.label }}</small><strong>{{ stat_card.value }}</strong><em>{{ stat_card.summary }}</em></span>
+                  <a href="{{ stat_card.href }}" aria-label="{{ stat_card.action_label }}: {{ stat_card.label }}">→</a>
+                </article>
+                {% endfor %}
+              </div>
+
+              <div class="admin-operations-grid">
+                <article class="admin-panel admin-review-command" data-dashboard-search-item id="dashboard-review-queue">
+                  <div class="admin-panel-head">
+                    <div><h3>Review Queue</h3><p>Bookings, submissions, and feedback requiring attention.</p></div>
+                    <span class="admin-chip is-dark">{{ dashboard_review_queue|length }}</span>
+                  </div>
+                  {% if dashboard_review_queue %}
+                  <div class="admin-command-queue">
+                    {% for queue_item in dashboard_review_queue %}
+                    <div>
+                      <span class="admin-command-queue-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 3h14v18H5Zm2 2v14h10V5Zm2 3h6v2H9Z"></path></svg></span>
+                      <span><strong>{{ queue_item.title }}</strong><small>{{ queue_item.module_label }} · {{ queue_item.meta_label }}</small></span>
+                      <span class="admin-status-badge {{ queue_item.status_class }}">{{ queue_item.status_label }}</span>
+                      <a href="{{ queue_item.action_href }}">{{ queue_item.action_label }}</a>
+                    </div>
+                    {% endfor %}
+                  </div>
+                  {% else %}
+                  <div class="admin-monitor-empty"><strong>All review queues are clear</strong><span>New booking, submission, and feedback requests will appear here.</span></div>
+                  {% endif %}
                 </article>
 
-                <article class="admin-panel admin-panel-accent" data-dashboard-search-item>
-                  <div class="admin-panel-head compact-head">
-                    <div>
-                      <h3>Quick Actions</h3>
+                <aside class="admin-command-side">
+                  <article class="admin-panel" data-dashboard-search-item>
+                    <div class="admin-panel-head"><div><h3>Quick Actions</h3><p>Common content and review tasks.</p></div></div>
+                    <div class="admin-command-actions">
+                      <a href="{{ url_for('admin_community_highlight_new') }}"><span>+</span><strong>Create Highlight</strong></a>
+                      <a href="{{ url_for('admin_online_gallery_new') }}"><span>+</span><strong>Create Gallery Item</strong></a>
+                      <a href="{{ url_for('admin_edu_resource_new') }}"><span>+</span><strong>Create Edu Resource</strong></a>
+                      <a href="{{ url_for('admin_tour_bookings') }}"><span>→</span><strong>Review Bookings</strong></a>
                     </div>
-                  </div>
-                  <div class="admin-quick-actions">
-                    <a href="{{ url_for('admin_community_highlight_new') }}" class="admin-quick-action">Create Highlight</a>
-                    <a href="{{ url_for('admin_online_gallery_new') }}" class="admin-quick-action">Create Gallery Card</a>
-                    <a href="{{ url_for('admin_edu_resource_new') }}" class="admin-quick-action">Create Edu Resource</a>
-                    <a href="{{ url_for('admin_tour_bookings') }}" class="admin-quick-action">Review Bookings</a>
-                    <a href="{{ url_for('admin_participation_submissions') }}" class="admin-quick-action">Review Submissions</a>
-                    <a href="{{ url_for('admin_visitor_feedback') }}" class="admin-quick-action">Visitor Feedback</a>
-                  </div>
-                </article>
+                  </article>
+                </aside>
               </div>
             </section>
 
-            <section class="admin-panels admin-panels-footer" data-dashboard-search-group>
-              <article class="admin-panel admin-panel-wide admin-resource-panel" data-dashboard-search-item>
-                <div class="admin-panel-head">
-                  <div>
-                    <h3>Module Overview</h3>
-                    <p>Functional summary of each workspace currently supported by the admin system.</p>
-                  </div>
-                </div>
-
-                <div class="admin-resource-table-wrap">
-                  <table class="admin-resource-table">
-                    <thead>
-                      <tr>
-                        <th>Module</th>
-                        <th>Description</th>
-                        <th>Records</th>
-                        <th>Status Summary</th>
-                        <th>Action</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {% for overview_item in dashboard_overview_rows %}
-                      <tr>
-                        <td>
-                          <div class="admin-resource-main">
-                            <strong>{{ overview_item.label }}</strong>
-                            <span>{{ overview_item.description }}</span>
-                          </div>
-                        </td>
-                        <td>{{ overview_item.description }}</td>
-                        <td>{{ overview_item.count }}</td>
-                        <td>{{ overview_item.summary }}</td>
-                        <td><a href="{{ overview_item.action_href }}" class="admin-inline-link">{{ overview_item.action_label }}</a></td>
-                      </tr>
-                      {% endfor %}
-                    </tbody>
-                  </table>
-                </div>
-              </article>
+            <section class="admin-panel admin-system-modules" data-dashboard-search-item>
+              <div class="admin-panel-head">
+                <div><h3>System Feature Coverage</h3><p>Operational status of the platform’s administrative modules.</p></div>
+                <span class="admin-chip">{{ dashboard_overview_rows|length }} modules</span>
+              </div>
+              <div class="admin-system-module-grid">
+                {% for overview_item in dashboard_overview_rows %}
+                <article>
+                  <span><i aria-hidden="true"></i>{{ overview_item.label }}</span>
+                  <p>{{ overview_item.description }}</p>
+                  <strong>{{ overview_item.count }} records</strong>
+                  <small>{{ overview_item.summary }}</small>
+                  <a href="{{ overview_item.action_href }}">{{ overview_item.action_label }} →</a>
+                </article>
+                {% endfor %}
+              </div>
             </section>
           </div>
 {% endblock %}

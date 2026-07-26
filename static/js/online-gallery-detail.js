@@ -600,6 +600,15 @@
 
     document.title = `${title} | ${strings.detailTitleSuffix}`;
     renderRelatedItems(item);
+    if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === "function") {
+      window.NHCPAnalytics.track(
+        "gallery_item_viewed",
+        "online-gallery",
+        String(item.id || title),
+        { title: title },
+        { onceKey: `gallery-item:${item.id || title}` }
+      );
+    }
 
     if (window.lucide && typeof window.lucide.createIcons === "function") {
       window.lucide.createIcons();

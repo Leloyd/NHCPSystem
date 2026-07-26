@@ -159,6 +159,7 @@
     {% include 'partials/_public_footer.html' %}
 
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script id="onlineGalleryItemsData" type="application/json">{{ gallery_items|tojson }}</script>
     <script id="onlineGalleryBookmarkIdsData" type="application/json">{{ bookmarked_gallery_item_ids|default([], true)|tojson }}</script>

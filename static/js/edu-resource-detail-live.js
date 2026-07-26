@@ -331,6 +331,15 @@
         .replace("{current}", String(activeIndex + 1))
         .replace("{total}", String(items.length));
     }
+    if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === "function") {
+      window.NHCPAnalytics.track(
+        "resource_viewed",
+        "edu-resources",
+        String(item.id || item.title),
+        { title: item.title || "" },
+        { onceKey: `edu-resource:${item.id || item.title}` }
+      );
+    }
 
     if (downloadRowEl && downloadLinkEl) {
       const hasDownload = !item.is_book && normalizeText(item.file_url);

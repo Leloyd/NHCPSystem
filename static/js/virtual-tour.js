@@ -4375,6 +4375,14 @@
     const isSameFloatingWindowOpen = floatingArtifactHotspots.has(artifactHotspotKey);
     const artifactAudioByLanguage = args.audioByLanguage && typeof args.audioByLanguage === "object" ? { ...args.audioByLanguage } : null;
     const artifactAlternateAudioSrc = args.alternateAudioSrc || "";
+    if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === "function") {
+      window.NHCPAnalytics.track(
+        "artifact_viewed",
+        "virtual-tour",
+        args.imageAlt || args.sourceHotspotId || "artifact",
+        { scene: sceneId, title: args.imageAlt || "" }
+      );
+    }
 
     if (isSameFloatingWindowOpen) {
       forceCloseAllFloatingOverlays();
@@ -4980,6 +4988,14 @@
         updateHotspotVisibilityState();
 
         viewer.on("scenechange", function (sceneId) {
+          if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === "function") {
+            window.NHCPAnalytics.track(
+              "tour_scene_viewed",
+              "virtual-tour",
+              sceneId,
+              { scene: sceneId }
+            );
+          }
           Array.from(floatingImageHotspots.values()).forEach(function (entry) {
             if (entry.sceneId !== sceneId) {
               closeFloatingImageOverlay(entry.hotspotId, entry.sceneId);
@@ -5004,6 +5020,23 @@
           }
           setControlDockVisibility(true);
           minimapSetActive(typeof viewer.getScene === "function" ? viewer.getScene() : initialScene);
+          if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === "function") {
+            const loadedScene = typeof viewer.getScene === "function" ? viewer.getScene() : initialScene;
+            window.NHCPAnalytics.track(
+              "virtual_tour_opened",
+              "virtual-tour",
+              loadedScene,
+              { scene: loadedScene },
+              { onceKey: "virtual-tour-opened" }
+            );
+            window.NHCPAnalytics.track(
+              "tour_scene_viewed",
+              "virtual-tour",
+              loadedScene,
+              { scene: loadedScene },
+              { onceKey: `virtual-tour-scene:${loadedScene}` }
+            );
+          }
         });
 
         if (hotspotDebugEnabled) {
