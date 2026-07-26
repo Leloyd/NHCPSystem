@@ -588,7 +588,7 @@ export function createPanoramaViewModes(options) {
     // that real 360 position, and looking back reveals it again.
     group.position.copy(hotspotPosition(hotspot.pitch, hotspot.yaw, 6.4));
     group.lookAt(0, 0, 0);
-    group.scale.setScalar(1.08);
+    group.scale.setScalar(2);
     vr.infoCard = group;
     vr.infoTarget = hotspot;
     vr.infoSourceRecord = sourceRecord || null;
@@ -598,7 +598,7 @@ export function createPanoramaViewModes(options) {
     vr.infoMode = "image";
     vr.infoLanguage = hotspot.language === "en" ? "en" : "tl";
     vr.infoSubtitlesOpen = false;
-    vr.infoZoom = 1.08;
+    vr.infoZoom = 2;
 
     const borderMaterial = new THREE.MeshBasicMaterial({
       color: 0xd4af6a,
@@ -639,7 +639,7 @@ export function createPanoramaViewModes(options) {
       vr.infoCard.scale.setScalar(vr.infoZoom);
     });
     addVrInfoControl("+", 0.72, -0.58, function () {
-      vr.infoZoom = Math.min(2.2, vr.infoZoom + 0.2);
+      vr.infoZoom = Math.min(3, vr.infoZoom + 0.2);
       vr.infoCard.scale.setScalar(vr.infoZoom);
     });
     addVrInfoControl("×", 0.84, 0.58, function () {

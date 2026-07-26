@@ -1390,7 +1390,7 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   // in that location when the visitor turns away instead of following them.
   group.position.copy(trailVrHotspotPosition(hotspot.pitch, hotspot.yaw, 6.4));
   group.lookAt(0, 0, 0);
-  group.scale.setScalar(1.08);
+  group.scale.setScalar(2);
   trailVr.infoCard = group;
   trailVr.infoTarget = hotspot;
   trailVr.infoSourceRecord = sourceRecord || null;
@@ -1398,7 +1398,7 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   trailVr.infoMode = 'image';
   trailVr.infoLanguage = state.lang === 'en' ? 'en' : 'tl';
   trailVr.infoSubtitlesOpen = false;
-  trailVr.infoZoom = 1.08;
+  trailVr.infoZoom = 2;
 
   const border = new THREE.Mesh(
     new THREE.PlaneGeometry(2.08, 1.58),
@@ -1439,7 +1439,7 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
     trailVr.infoCard.scale.setScalar(trailVr.infoZoom);
   });
   addTrailVrInfoControl('+', 0.72, -0.58, () => {
-    trailVr.infoZoom = Math.min(2.2, trailVr.infoZoom + 0.2);
+    trailVr.infoZoom = Math.min(3, trailVr.infoZoom + 0.2);
     trailVr.infoCard.scale.setScalar(trailVr.infoZoom);
   });
   addTrailVrInfoControl('×', 0.84, 0.58, () => {
