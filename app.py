@@ -56,6 +56,11 @@ WEBXR_SCENE_ZIP_PATHS = {
     "church.zip": WEBXR_SCENE_PATHS["church"],
     "underground.zip": WEBXR_SCENE_PATHS["underground"],
 }
+WEBXR_EXTRACTED_SCENE_PATHS = {
+    f"{scene_name}_extracted": scene_path
+    for scene_name, scene_path in WEBXR_SCENE_PATHS.items()
+}
+WEBXR_SCENE_EXTRACTION_LOCK = threading.Lock()
 STATIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "static" / "AR-Artifacts").resolve()
 
 if load_dotenv is not None:
@@ -210,6 +215,21 @@ def _ensure_webxr_runtime_initialized():
 
     WEBXR_CONFIG, WEBXR_RUNTIME_SCENE, WEBXR_INIT_ERROR = _initialize_webxr_runtime()
     return WEBXR_RUNTIME_SCENE is not None
+
+
+def _ensure_webxr_asset_scene_extracted(asset_path):
+    normalized_path = str(asset_path or "").replace("\\", "/").lstrip("/")
+    extracted_dir_name = normalized_path.split("/", 1)[0]
+    scene_zip_path = WEBXR_EXTRACTED_SCENE_PATHS.get(extracted_dir_name)
+    if scene_zip_path is None:
+        return False
+
+    with WEBXR_SCENE_EXTRACTION_LOCK:
+        if not _ensure_webxr_runtime_initialized():
+            return False
+        WEBXR_RUNTIME_SCENE.get_scene_description(zip_override=str(scene_zip_path.resolve()))
+
+    return True
 
 
 def _slugify_text(value, fallback="exhibit"):
@@ -1511,9 +1531,21 @@ def webxr_runtime_asset(asset_path):
     candidate_path = _resolve_safe_path(runtime_dir, asset_path)
     if candidate_path is None:
         return jsonify({"error": "Invalid WebXR runtime asset path"}), 400
+
     if not candidate_path.exists() or not candidate_path.is_file():
+        try:
+            scene_prepared = _ensure_webxr_asset_scene_extracted(asset_path)
+        except Exception:  # noqa: BLE001
+            app.logger.exception("WebXR scene recovery failed for asset %s", asset_path)
+            return jsonify({"error": "The WebXR scene could not be prepared."}), 503
+
+        if scene_prepared:
+            candidate_path = _resolve_safe_path(runtime_dir, asset_path)
+
+    if candidate_path is None or not candidate_path.exists() or not candidate_path.is_file():
         return jsonify({"error": f"WebXR runtime asset not found: {asset_path}"}), 404
-    return send_from_directory(str(runtime_dir), asset_path)
+
+    return send_from_directory(str(runtime_dir), asset_path, conditional=True, max_age=3600)
 
 
 @app.route("/webxr/static/<path:filename>")

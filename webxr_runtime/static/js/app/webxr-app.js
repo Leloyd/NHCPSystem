@@ -1608,6 +1608,7 @@ export class WebXRApp {
     const meshAssets = this.metadata.scene?.assets?.meshes ?? [];
 
     const total = splatAssets.length + meshAssets.length;
+    const requireEverySplat = this._isMuseumScene();
     const splatsBeforeLoad = this.splatEntries.length;
     let done = 0;
 
@@ -1621,13 +1622,13 @@ export class WebXRApp {
     updateProgress('Loading scene assets...');
 
     for (const splat of splatAssets) {
-      await this._loadSingleSplat(splat);
+      await this._loadSingleSplat(splat, { required: requireEverySplat });
       done += 1;
       updateProgress(`Loaded SPZ ${done}/${splatAssets.length}`);
     }
 
     const loadedSplatCount = this.splatEntries.length - splatsBeforeLoad;
-    if (loadedSplatCount !== splatAssets.length) {
+    if (requireEverySplat && loadedSplatCount !== splatAssets.length) {
       throw new Error(
         `Scene startup stopped: loaded ${loadedSplatCount} of ${splatAssets.length} SPZ files.`,
       );
@@ -1644,9 +1645,14 @@ export class WebXRApp {
     }
   }
 
-  async _loadSingleSplat(asset) {
+  async _loadSingleSplat(asset, { required = false } = {}) {
     if (!this.SplatMeshCtor) {
-      throw new Error(`Spark is unavailable; cannot load ${asset.relativePath}.`);
+      const error = new Error(`Spark is unavailable; cannot load ${asset.relativePath}.`);
+      if (required) {
+        throw error;
+      }
+      console.warn('[splat] skipped', asset.relativePath, error);
+      return false;
     }
 
     let splatObject = null;
@@ -1662,11 +1668,13 @@ export class WebXRApp {
 
       await splatObject.initialized;
 
-      if (splatObject.isInitialized !== true) {
-        throw new Error('Spark initialization did not complete.');
-      }
-      if (!Number.isFinite(splatObject.numSplats) || splatObject.numSplats < 1) {
-        throw new Error('The SPZ contains no renderable splats.');
+      if (required) {
+        if (splatObject.isInitialized !== true) {
+          throw new Error('Spark initialization did not complete.');
+        }
+        if (!Number.isFinite(splatObject.numSplats) || splatObject.numSplats < 1) {
+          throw new Error('The SPZ contains no renderable splats.');
+        }
       }
 
       splatObject.name = asset.name || asset.fileName;
@@ -1678,11 +1686,16 @@ export class WebXRApp {
         asset,
         object: splatObject,
       });
+      return true;
     } catch (error) {
       if (splatObject && typeof splatObject.dispose === 'function') {
         splatObject.dispose();
       }
-      throw new Error(`Failed to fully load ${asset.relativePath}: ${error?.message ?? error}`);
+      if (required) {
+        throw new Error(`Failed to fully load ${asset.relativePath}: ${error?.message ?? error}`);
+      }
+      console.warn(`[splat] failed to load ${asset.relativePath}`, error);
+      return false;
     }
   }
 
