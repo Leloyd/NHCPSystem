@@ -1672,9 +1672,6 @@ export class WebXRApp {
         if (splatObject.isInitialized !== true) {
           throw new Error('Spark initialization did not complete.');
         }
-        if (!Number.isFinite(splatObject.numSplats) || splatObject.numSplats < 1) {
-          throw new Error('The SPZ contains no renderable splats.');
-        }
       }
 
       splatObject.name = asset.name || asset.fileName;
