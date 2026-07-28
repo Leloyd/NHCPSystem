@@ -90,11 +90,78 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     interactionMaxDistance: DOOR_INTERACTION_MAX_DISTANCE,
   },
 ];
-const CHURCH_FLOATING_LABEL_IMAGES = {};
-const CHURCH_HOTSPOT_INFO_TEXT = {
-  'hotspot-1':
-    'Sample exhibit: glazed azulejo tilework from Philippine heritage craftsmanship, often used for decorative floors and wall accents in historic structures.',
+const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
+const TABLE_AUDIO_BASE = '/audio/360VT/TableAudio/';
+const tableAudio = (tl, en) => ({
+  tl: tl ? `${TABLE_AUDIO_BASE}${tl}` : '',
+  en: en ? `${TABLE_AUDIO_BASE}${en}` : '',
+});
+const CHURCH_HOTSPOT_TABLES = {
+  // The negative-Z pair is the right table; hotspot-1 is the display that
+  // begins with the Azulejos tile, matching the original runtime placeholder.
+  'hotspot-1': {
+    title: { en: 'Architectural Details I', tl: 'Mga Detalye ng Arkitektura I' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art1-RightTable.png`,
+    imageAlt: 'Art1 Right Table',
+    hotspots: [
+      { id: 'art1-right-table-1', x: 27.20, y: 52.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/AzulejosTile.png`, title: 'Azulejos Tile', audio: tableAudio('Azulejos-T.mp3', 'Azulejos-E.mp3') },
+      { id: 'art1-right-table-2', x: 48.46, y: 29.74, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/RightWindow.png`, title: 'Right Window', audio: tableAudio('Right Window(T).mp3', 'Right Window.mp3') },
+      { id: 'art1-right-table-3', x: 47.90, y: 56.52, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/ChapelCeiling.png`, title: 'Chapel Ceiling', audio: tableAudio('Chapel Ceiling(T).mp3', 'Chapel Ceiling.mp3') },
+      { id: 'art1-right-table-4', x: 69.59, y: 30.90, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/PigmentAboveNiche.png`, title: 'Pigment Above Niche', audio: tableAudio('Pigment Above Niche(T).mp3', 'Pigment Above Niche.mp3') },
+      { id: 'art1-right-table-5', x: 69.45, y: 56.29, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/BasReliefNiche.png`, title: 'Bas-Relief Niche', audio: tableAudio('Bas Relief Niche(T).mp3', 'Bas Relief Niche.mp3') },
+    ],
+  },
+  'hotspot-2': {
+    title: { en: 'Architectural Details II', tl: 'Mga Detalye ng Arkitektura II' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art2-RightTable.png`,
+    imageAlt: 'Art2 Right Table',
+    hotspots: [
+      { id: 'art2-right-table-1', x: 29.44, y: 18.22, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/InteriorWall.png`, title: 'Interior Wall', audio: tableAudio('Interior Wall, Chapel(T).mp3', 'Interior Wall, Chapel.mp3') },
+      { id: 'art2-right-table-2', x: 29.58, y: 38.40, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Flooring.png`, title: 'Flooring', audio: tableAudio('Flooring, Crypt(T).mp3', 'Flooring, Crypt.mp3') },
+      { id: 'art2-right-table-3', x: 29.58, y: 56.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Pilaster.png`, title: 'Pilaster', audio: tableAudio('Pilaster (T).mp3', 'Pilaster.mp3') },
+      { id: 'art2-right-table-4', x: 29.02, y: 73.96, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/PerimeterWall.png`, title: 'Perimeter Wall', audio: tableAudio('Perimeter Wall(T).mp3', 'Perimeter Wall.mp3') },
+      { id: 'art2-right-table-5', x: 40.49, y: 19.73, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Pigments.png`, title: 'Pigments', audio: tableAudio('Mga Kulay Pigments.mp3', 'Mga Kulay Pigments(E).mp3') },
+      { id: 'art2-right-table-6', x: 40.49, y: 73.21, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Artist_sMarterials.png`, title: "Artist's Materials", audio: tableAudio('Mga Kagamitan sa Pagdisenyo.mp3', 'Mga Kagamitan sa Pagdisenyo(E).mp3') },
+      { id: 'art2-right-table-7', x: 70.56, y: 36.89, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/CoralPowder.png`, title: 'Coral Powder', audio: tableAudio('Pulbos na Koral.mp3', 'Pulbos na Koral(E).mp3') },
+      { id: 'art2-right-table-8', x: 80.92, y: 37.64, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/AdobePowder.png`, title: 'Adobe Powder', audio: tableAudio('Pulbos na Adobe.mp3', 'Pulbos na Adobe(E).mp3') },
+      { id: 'art2-right-table-9', x: 91.55, y: 38.40, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/BrickPowder.png`, title: 'Brick Powder', audio: tableAudio('Pulbos na Ladrilyo.mp3', 'Pulbos na Ladrilyo(E).mp3') },
+      { id: 'art2-right-table-10', x: 73.92, y: 70.43, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Lime.png`, title: 'Lime', audio: tableAudio('Apog.mp3', 'Apog(E).mp3') },
+      { id: 'art2-right-table-11', x: 85.53, y: 70.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Sand.png`, title: 'Sand', audio: tableAudio('Buhangin.mp3', 'Buhangin(E).mp3') },
+    ],
+  },
+  'hotspot-3': {
+    title: { en: 'Construction Materials I', tl: 'Mga Materyales sa Konstruksyon I' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art1-LeftTable.png`,
+    imageAlt: 'Art1 Left Table',
+    hotspots: [
+      { id: 'art1-left-table-1', x: 14.40, y: 28.76, imageUrl: `${TABLE_IMAGE_BASE}Artifact/ApogAdobe.png`, title: 'Lime Putty and Adobe Powder', audio: tableAudio('ApogAdobe-T.mp3', 'ApogAdobe-E.mp3') },
+      { id: 'art1-left-table-2', x: 13.70, y: 50.00, imageUrl: `${TABLE_IMAGE_BASE}Artifact/LimeSand.png`, title: 'Lime Putty and Sand', audio: tableAudio('ApogSand-T.mp3', 'ApogSand-E.mp3') },
+      { id: 'art1-left-table-3', x: 13.28, y: 71.24, imageUrl: `${TABLE_IMAGE_BASE}Artifact/LimeCoral.png`, title: 'Lime Putty and Coral Powder', audio: tableAudio('ApogCoral-T.mp3', 'ApogCoral-E.mp3') },
+      { id: 'art1-left-table-4', x: 58.74, y: 39.13, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Limestone.png`, title: 'Limestone', audio: tableAudio('Batong-Apog-T.mp3', 'Batong-Apog-E.mp3') },
+      { id: 'art1-left-table-5', x: 58.46, y: 78.82, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Brick.png`, title: 'Brick', audio: tableAudio('Ladrilyo-T.mp3', 'Ladrilyo-E.mp3') },
+      { id: 'art1-left-table-6', x: 84.62, y: 78.06, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Adobe.png`, title: 'Adobe', audio: tableAudio('Adobe-T.mp3', 'Adobe-E.mp3') },
+      { id: 'art1-left-table-7', x: 83.79, y: 36.35, imageUrl: `${TABLE_IMAGE_BASE}Artifact/CoralStone.png`, title: 'Coral Stone', audio: tableAudio('CoralStone-T.mp3', 'CoralStone-E.mp3') },
+    ],
+  },
+  'hotspot-4': {
+    title: { en: 'Wood and Structural Elements', tl: 'Kahoy at mga Elementong Istruktural' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art2-LeftTable.png`,
+    imageAlt: 'Art2 Left Table',
+    hotspots: [
+      { id: 'art2-left-table-1', x: 23.77, y: 21.26, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/molave.png`, title: 'Molave', audio: tableAudio('Molave-T.mp3', 'Molave-E.mp3') },
+      { id: 'art2-left-table-2', x: 23.28, y: 48.22, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Narra.png`, title: 'Narra', audio: tableAudio('Narra-T.mp3', 'Narra-E.mp3') },
+      { id: 'art2-left-table-3', x: 23.42, y: 75.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/KatongMatsing.png`, title: 'Katong Matsing', audio: tableAudio('Katong-Matsing-T.mp3', 'Katong-Matsing-E.mp3') },
+      { id: 'art2-left-table-4', x: 45.66, y: 32.45, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Kamagong.png`, title: 'Kamagong', audio: tableAudio('Kamagong-T.mp3', 'Kamagong-E.mp3') },
+      { id: 'art2-left-table-5', x: 45.80, y: 66.28, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Yakal.png`, title: 'Yakal', audio: tableAudio('Yakal-T.mp3', 'Yakal-E.mp3') },
+      { id: 'art2-left-table-6', x: 62.31, y: 55.60, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/BatikulingWHR.png`, title: 'Batikuling WHR', audio: tableAudio('Batikuling-T.mp3', 'Batikuling-E.mp3') },
+      { id: 'art2-left-table-7', x: 74.76, y: 53.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Headrest.png`, title: 'Headrest', audio: tableAudio('Headrest-T.mp3', 'Headrest-E.mp3') },
+      { id: 'art2-left-table-8', x: 75.46, y: 87.14, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/IronNail.png`, title: 'Iron Nail', audio: tableAudio('IronNail-T.mp3', 'IronNail-E.mp3') },
+    ],
+  },
 };
+const CHURCH_FLOATING_LABEL_IMAGES = Object.fromEntries(
+  Object.entries(CHURCH_HOTSPOT_TABLES).map(([id, table]) => [id, table.imageUrl]),
+);
 const QUALITY_PRESETS = {
   auto: {
     pixelRatio: () => Math.min(window.devicePixelRatio || 1, isMobileLikeDevice() ? 1.2 : 1.6),
@@ -161,7 +228,20 @@ export class WebXRApp {
     this.expandedHotspotOverlayImage = null;
     this.expandedHotspotOverlayCaption = null;
     this.expandedHotspotOverlayToggle = null;
-    this.expandedHotspotOverlayDescription = null;
+    this.expandedHotspotOverlayLanguage = null;
+    this.expandedHotspotOverlayLayer = null;
+    this.expandedHotspotOverlayDetail = null;
+    this.expandedHotspotOverlayDetailImage = null;
+    this.expandedHotspotOverlayDetailTitle = null;
+    this.expandedHotspotTable = null;
+    this.expandedHotspotDetail = null;
+    this.expandedHotspotLanguage = 'tl';
+    this.expandedHotspotAudio = null;
+    this.xrHotspotTableViewer = null;
+    this.xrHotspotTableId = '';
+    this.xrHotspotTableDetail = null;
+    this.xrHotspotTablePinsVisible = true;
+    this.xrHotspotTableSourceMarker = null;
 
     this.sparkRenderer = null;
     this.SplatMeshCtor = null;
@@ -463,22 +543,58 @@ export class WebXRApp {
     closeButton.textContent = 'x';
     closeButton.setAttribute('aria-label', 'Close hotspot image');
 
+    const mediaFrame = document.createElement('div');
+    mediaFrame.className = 'hotspot-image-overlay-media';
+
     const image = document.createElement('img');
     image.className = 'hotspot-image-overlay-image';
     image.alt = '';
 
+    const hotspotLayer = document.createElement('div');
+    hotspotLayer.className = 'hotspot-image-overlay-hotspots';
+    hotspotLayer.setAttribute('aria-label', 'Table image hotspots');
+
+    const detail = document.createElement('div');
+    detail.className = 'hotspot-image-overlay-detail hidden';
+    detail.setAttribute('role', 'dialog');
+    detail.setAttribute('aria-label', 'Artifact detail');
+
+    const detailImage = document.createElement('img');
+    detailImage.className = 'hotspot-image-overlay-detail-image';
+    detailImage.alt = '';
+
+    const detailTitle = document.createElement('p');
+    detailTitle.className = 'hotspot-image-overlay-detail-title';
+
+    const detailBack = document.createElement('button');
+    detailBack.type = 'button';
+    detailBack.className = 'hotspot-image-overlay-detail-back';
+    detailBack.textContent = '← Back to table';
+    detailBack.setAttribute('aria-label', 'Return to the complete table');
+
+    detail.append(detailImage, detailTitle, detailBack);
+    mediaFrame.append(image, hotspotLayer, detail);
+
     const caption = document.createElement('p');
     caption.className = 'hotspot-image-overlay-caption';
+
+    const controls = document.createElement('div');
+    controls.className = 'hotspot-image-overlay-controls';
 
     const toggleInfoButton = document.createElement('button');
     toggleInfoButton.type = 'button';
     toggleInfoButton.className = 'hotspot-image-overlay-toggle hidden';
-    toggleInfoButton.textContent = 'Show info';
+    toggleInfoButton.textContent = 'Hide hotspots';
+    toggleInfoButton.setAttribute('aria-pressed', 'true');
 
-    const description = document.createElement('p');
-    description.className = 'hotspot-image-overlay-description hidden';
+    const languageButton = document.createElement('button');
+    languageButton.type = 'button';
+    languageButton.className = 'hotspot-image-overlay-toggle hidden';
+    languageButton.textContent = 'TL';
+    languageButton.setAttribute('aria-label', 'Switch table narration to English');
 
-    panel.append(closeButton, image, caption, toggleInfoButton, description);
+    controls.append(toggleInfoButton, languageButton);
+    panel.append(closeButton, mediaFrame, caption, controls);
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
 
@@ -495,21 +611,56 @@ export class WebXRApp {
 
     toggleInfoButton.addEventListener('click', (event) => {
       event.preventDefault();
+      const shouldHide = !hotspotLayer.classList.contains('hidden');
+      hotspotLayer.classList.toggle('hidden', shouldHide);
+      toggleInfoButton.textContent = shouldHide ? 'Show hotspots' : 'Hide hotspots';
+      toggleInfoButton.setAttribute('aria-pressed', String(!shouldHide));
+    });
 
-      const shouldShow = description.classList.contains('hidden');
-      description.classList.toggle('hidden', !shouldShow);
-      toggleInfoButton.textContent = shouldShow ? 'Hide info' : 'Show info';
+    languageButton.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
+      languageButton.textContent = this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN';
+      languageButton.setAttribute(
+        'aria-label',
+        this.expandedHotspotLanguage === 'tl'
+          ? 'Switch table narration to English'
+          : 'Switch table narration to Tagalog',
+      );
+      if (this.expandedHotspotTable && this.expandedHotspotOverlayCaption) {
+        this.expandedHotspotOverlayCaption.textContent =
+          this.expandedHotspotTable.title?.[this.expandedHotspotLanguage]
+          || this.expandedHotspotTable.title?.en
+          || this.expandedHotspotTable.imageAlt;
+      }
+      if (this.expandedHotspotDetail) {
+        this._playExpandedHotspotAudio(this.expandedHotspotDetail.audio);
+      }
+    });
+
+    detailBack.addEventListener('click', (event) => {
+      event.preventDefault();
+      this._hideExpandedHotspotDetail();
     });
 
     this.expandedHotspotOverlay = overlay;
     this.expandedHotspotOverlayImage = image;
     this.expandedHotspotOverlayCaption = caption;
     this.expandedHotspotOverlayToggle = toggleInfoButton;
-    this.expandedHotspotOverlayDescription = description;
+    this.expandedHotspotOverlayLanguage = languageButton;
+    this.expandedHotspotOverlayLayer = hotspotLayer;
+    this.expandedHotspotOverlayDetail = detail;
+    this.expandedHotspotOverlayDetailImage = detailImage;
+    this.expandedHotspotOverlayDetailTitle = detailTitle;
   }
 
   _showExpandedHotspotImage(imageUrl, hotspotId) {
-    if (!imageUrl) {
+    const table = CHURCH_HOTSPOT_TABLES[hotspotId];
+    if (!table || !imageUrl) {
+      return;
+    }
+    if (this.renderer.xr.isPresenting) {
+      this._showXrHotspotTable(hotspotId);
       return;
     }
 
@@ -518,31 +669,395 @@ export class WebXRApp {
       return;
     }
 
-    this.expandedHotspotOverlayImage.src = imageUrl;
-    this.expandedHotspotOverlayImage.alt = `${hotspotId} full image`;
+    this._stopExpandedHotspotAudio();
+    this.expandedHotspotTable = table;
+    this.expandedHotspotDetail = null;
+    this.expandedHotspotOverlayImage.src = table.imageUrl || imageUrl;
+    this.expandedHotspotOverlayImage.alt = table.imageAlt || `${hotspotId} full image`;
     if (this.expandedHotspotOverlayCaption) {
-      this.expandedHotspotOverlayCaption.textContent = String(hotspotId || '').replace(/-/g, ' ');
+      this.expandedHotspotOverlayCaption.textContent =
+        table.title?.[this.expandedHotspotLanguage] || table.title?.en || table.imageAlt;
     }
 
-    const infoText = CHURCH_HOTSPOT_INFO_TEXT[hotspotId] ?? '';
-    if (this.expandedHotspotOverlayToggle && this.expandedHotspotOverlayDescription) {
-      const hasInfoText = Boolean(infoText);
-      this.expandedHotspotOverlayToggle.classList.toggle('hidden', !hasInfoText);
-      this.expandedHotspotOverlayToggle.textContent = 'Show info';
+    this._hideExpandedHotspotDetail();
+    this._renderExpandedHotspotPins(table);
 
-      this.expandedHotspotOverlayDescription.textContent = infoText;
-      this.expandedHotspotOverlayDescription.classList.add('hidden');
+    const hasHotspots = Array.isArray(table.hotspots) && table.hotspots.length > 0;
+    if (this.expandedHotspotOverlayToggle) {
+      this.expandedHotspotOverlayToggle.classList.toggle('hidden', !hasHotspots);
+      this.expandedHotspotOverlayToggle.textContent = 'Hide hotspots';
+      this.expandedHotspotOverlayToggle.setAttribute('aria-pressed', 'true');
+    }
+    if (this.expandedHotspotOverlayLayer) {
+      this.expandedHotspotOverlayLayer.classList.toggle('hidden', !hasHotspots);
+    }
+    if (this.expandedHotspotOverlayLanguage) {
+      const hasBilingualAudio = table.hotspots.some((hotspot) => (
+        hotspot?.audio?.tl && hotspot.audio.en
+      ));
+      this.expandedHotspotOverlayLanguage.classList.toggle('hidden', !hasBilingualAudio);
+      this.expandedHotspotOverlayLanguage.textContent =
+        this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN';
     }
 
     this.expandedHotspotOverlay.classList.remove('hidden');
   }
 
-  _hideExpandedHotspotImage() {
-    this.expandedHotspotOverlayDescription?.classList.add('hidden');
-    if (this.expandedHotspotOverlayToggle) {
-      this.expandedHotspotOverlayToggle.textContent = 'Show info';
+  _renderExpandedHotspotPins(table) {
+    if (!this.expandedHotspotOverlayLayer) {
+      return;
+    }
+    this.expandedHotspotOverlayLayer.replaceChildren();
+    const hotspots = Array.isArray(table?.hotspots) ? table.hotspots : [];
+    hotspots.forEach((hotspot, index) => {
+      if (
+        !hotspot?.imageUrl
+        || !Number.isFinite(Number(hotspot.x))
+        || !Number.isFinite(Number(hotspot.y))
+      ) {
+        return;
+      }
+      const pin = document.createElement('button');
+      pin.type = 'button';
+      pin.className = 'hotspot-image-overlay-pin';
+      pin.style.left = `${Math.min(100, Math.max(0, Number(hotspot.x)))}%`;
+      pin.style.top = `${Math.min(100, Math.max(0, Number(hotspot.y)))}%`;
+      pin.textContent = String(index + 1);
+      pin.setAttribute('aria-label', `Open ${hotspot.title || `table detail ${index + 1}`}`);
+      pin.addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        this._showExpandedHotspotDetail(hotspot);
+      });
+      this.expandedHotspotOverlayLayer.appendChild(pin);
+    });
+  }
+
+  _showExpandedHotspotDetail(detail) {
+    if (
+      !detail?.imageUrl
+      || !this.expandedHotspotOverlayDetail
+      || !this.expandedHotspotOverlayDetailImage
+    ) {
+      return;
+    }
+    this.expandedHotspotDetail = detail;
+    this.expandedHotspotOverlayDetailImage.src = detail.imageUrl;
+    this.expandedHotspotOverlayDetailImage.alt = detail.title || 'Artifact detail';
+    if (this.expandedHotspotOverlayDetailTitle) {
+      this.expandedHotspotOverlayDetailTitle.textContent = detail.title || 'Artifact detail';
+    }
+    this.expandedHotspotOverlayDetail.setAttribute(
+      'aria-label',
+      detail.title || 'Artifact detail',
+    );
+    this.expandedHotspotOverlayDetail.classList.remove('hidden');
+    this._playExpandedHotspotAudio(detail.audio);
+  }
+
+  _hideExpandedHotspotDetail() {
+    this._stopExpandedHotspotAudio();
+    this.expandedHotspotDetail = null;
+    this.expandedHotspotOverlayDetail?.classList.add('hidden');
+    if (this.expandedHotspotOverlayDetailImage) {
+      this.expandedHotspotOverlayDetailImage.removeAttribute('src');
+      this.expandedHotspotOverlayDetailImage.alt = '';
+    }
+    if (this.expandedHotspotOverlayDetailTitle) {
+      this.expandedHotspotOverlayDetailTitle.textContent = '';
+    }
+  }
+
+  _playExpandedHotspotAudio(audioByLanguage) {
+    this._stopExpandedHotspotAudio();
+    const source = audioByLanguage
+      ? (
+          audioByLanguage[this.expandedHotspotLanguage]
+          || audioByLanguage.en
+          || audioByLanguage.tl
+          || ''
+        )
+      : '';
+    if (!source) {
+      return;
+    }
+    const audio = new Audio(encodeURI(source));
+    audio.preload = 'auto';
+    this.expandedHotspotAudio = audio;
+    const playing = audio.play();
+    if (playing?.catch) {
+      playing.catch((error) => {
+        console.warn('[hotspot] Table detail audio could not autoplay.', error);
+      });
+    }
+  }
+
+  _stopExpandedHotspotAudio() {
+    if (!this.expandedHotspotAudio) {
+      return;
+    }
+    this.expandedHotspotAudio.pause();
+    this.expandedHotspotAudio.currentTime = 0;
+    this.expandedHotspotAudio = null;
+  }
+
+  _createXrTableControlTexture(label) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+    context.clearRect(0, 0, 256, 256);
+    context.beginPath();
+    context.arc(128, 128, 104, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(13, 10, 4, 0.96)';
+    context.fill();
+    context.lineWidth = 10;
+    context.strokeStyle = '#d4af6a';
+    context.stroke();
+    context.fillStyle = '#faf7f2';
+    context.font = String(label).length > 2
+      ? '700 54px Inter, sans-serif'
+      : '800 86px Inter, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(String(label), 128, 132);
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  _createXrTableControl({
+    parent,
+    label,
+    position,
+    scale = 0.2,
+    name,
+    metadata = {},
+  }) {
+    const texture = this._createXrTableControlTexture(label);
+    if (!parent || !texture) {
+      return null;
+    }
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    }));
+    sprite.position.set(position[0], position[1], position[2] ?? 0.08);
+    sprite.scale.setScalar(scale);
+    sprite.renderOrder = 54;
+    sprite.userData.isXrTablePickable = true;
+    sprite.userData.interaction = {
+      name,
+      suppressPanel: true,
+      metadata,
+    };
+    parent.add(sprite);
+    this.pickableMeshes.push(sprite);
+    return sprite;
+  }
+
+  _showXrHotspotTable(hotspotId) {
+    const table = CHURCH_HOTSPOT_TABLES[hotspotId];
+    if (!table || !this.scene || !this.camera) {
+      return;
+    }
+    this._disposeXrHotspotTableViewer();
+    this.xrHotspotTableId = hotspotId;
+    this.xrHotspotTableDetail = null;
+    this.xrHotspotTablePinsVisible = true;
+    this.xrHotspotTableSourceMarker =
+      this.hotspotMarkers.find((marker) => marker.name === hotspotId) || null;
+    if (this.xrHotspotTableSourceMarker) {
+      this.xrHotspotTableSourceMarker.visible = false;
+    }
+    this._rebuildXrHotspotTableViewer();
+  }
+
+  _rebuildXrHotspotTableViewer() {
+    const table = CHURCH_HOTSPOT_TABLES[this.xrHotspotTableId];
+    if (!table || !this.scene || !this.camera) {
+      return;
     }
 
+    const previousViewer = this.xrHotspotTableViewer;
+    const previousPosition = previousViewer?.position?.clone() || null;
+    const previousQuaternion = previousViewer?.quaternion?.clone() || null;
+    this._disposeXrHotspotTableViewer({ restoreSource: false, stopAudio: false });
+
+    const viewerRoot = new THREE.Group();
+    viewerRoot.name = 'xr-hotspot-table-viewer';
+    if (previousPosition && previousQuaternion) {
+      viewerRoot.position.copy(previousPosition);
+      viewerRoot.quaternion.copy(previousQuaternion);
+    } else {
+      const cameraPosition = new THREE.Vector3();
+      const cameraDirection = new THREE.Vector3();
+      this.camera.getWorldPosition(cameraPosition);
+      this.camera.getWorldDirection(cameraDirection);
+      cameraDirection.y = Math.max(-0.18, Math.min(0.18, cameraDirection.y));
+      cameraDirection.normalize();
+      viewerRoot.position.copy(cameraPosition).addScaledVector(cameraDirection, 1.75);
+      viewerRoot.lookAt(cameraPosition);
+    }
+
+    const border = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.94, 1.44),
+      new THREE.MeshBasicMaterial({
+        color: 0xd4af6a,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    border.renderOrder = 45;
+    viewerRoot.add(border);
+
+    const panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.88, 1.38),
+      new THREE.MeshBasicMaterial({
+        color: 0x1c1208,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    panel.position.z = 0.012;
+    panel.renderOrder = 46;
+    viewerRoot.add(panel);
+
+    this.xrHotspotTableViewer = viewerRoot;
+    this.scene.add(viewerRoot);
+
+    this._createXrTableControl({
+      parent: viewerRoot,
+      label: '×',
+      position: [0.81, 0.58, 0.09],
+      scale: 0.2,
+      name: 'xr-table-close',
+    });
+    this._createXrTableControl({
+      parent: viewerRoot,
+      label: this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN',
+      position: [-0.66, -0.56, 0.09],
+      scale: 0.2,
+      name: 'xr-table-language',
+    });
+
+    const detail = this.xrHotspotTableDetail;
+    const imageUrl = detail?.imageUrl || table.imageUrl;
+    const viewerAtBuild = viewerRoot;
+    new THREE.TextureLoader().load(imageUrl, (texture) => {
+      if (this.xrHotspotTableViewer !== viewerAtBuild) {
+        texture.dispose();
+        return;
+      }
+      texture.colorSpace = THREE.SRGBColorSpace;
+      const sourceWidth = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
+      const sourceHeight = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
+      const aspect = sourceWidth / Math.max(1, sourceHeight);
+      let width = 1.68;
+      let height = width / aspect;
+      if (height > 1.02) {
+        height = 1.02;
+        width = height * aspect;
+      }
+      const image = new THREE.Mesh(
+        new THREE.PlaneGeometry(width, height),
+        new THREE.MeshBasicMaterial({
+          map: texture,
+          transparent: true,
+          depthTest: false,
+          depthWrite: false,
+          toneMapped: false,
+        }),
+      );
+      image.position.set(0, 0.08, 0.06);
+      image.renderOrder = 49;
+      viewerRoot.add(image);
+
+      if (detail) {
+        this._createXrTableControl({
+          parent: viewerRoot,
+          label: '←',
+          position: [-0.72, 0.52, 0.09],
+          scale: 0.2,
+          name: 'xr-table-back',
+        });
+        return;
+      }
+
+      if (!this.xrHotspotTablePinsVisible) {
+        return;
+      }
+      table.hotspots.forEach((hotspot, index) => {
+        const x = (Math.min(100, Math.max(0, Number(hotspot.x))) / 100 - 0.5) * width;
+        const y = (0.5 - Math.min(100, Math.max(0, Number(hotspot.y))) / 100) * height + 0.08;
+        this._createXrTableControl({
+          parent: viewerRoot,
+          label: String(index + 1),
+          position: [x, y, 0.09],
+          scale: 0.13,
+          name: 'xr-table-detail',
+          metadata: {
+            hotspotId: this.xrHotspotTableId,
+            detailId: hotspot.id,
+          },
+        });
+      });
+    });
+
+    if (!detail) {
+      this._createXrTableControl({
+        parent: viewerRoot,
+        label: 'PIN',
+        position: [-0.34, -0.56, 0.09],
+        scale: 0.2,
+        name: 'xr-table-toggle',
+      });
+    }
+  }
+
+  _disposeXrHotspotTableViewer(options = {}) {
+    const restoreSource = options.restoreSource !== false;
+    const stopAudio = options.stopAudio !== false;
+    const viewerRoot = this.xrHotspotTableViewer;
+    if (viewerRoot) {
+      const removedPickables = new Set();
+      viewerRoot.traverse((object) => {
+        if (object.userData?.isXrTablePickable) {
+          removedPickables.add(object);
+        }
+        object.geometry?.dispose?.();
+        const materials = Array.isArray(object.material) ? object.material : [object.material];
+        materials.filter(Boolean).forEach((material) => {
+          material.map?.dispose?.();
+          material.dispose?.();
+        });
+      });
+      this.pickableMeshes = this.pickableMeshes.filter((mesh) => !removedPickables.has(mesh));
+      viewerRoot.parent?.remove(viewerRoot);
+    }
+    this.xrHotspotTableViewer = null;
+    if (restoreSource && this.xrHotspotTableSourceMarker) {
+      this.xrHotspotTableSourceMarker.visible = true;
+      this.xrHotspotTableSourceMarker = null;
+      this.xrHotspotTableId = '';
+      this.xrHotspotTableDetail = null;
+    }
+    if (stopAudio) {
+      this._stopExpandedHotspotAudio();
+    }
+  }
+
+  _hideExpandedHotspotImage() {
+    this._hideExpandedHotspotDetail();
+    this.expandedHotspotTable = null;
+    this.expandedHotspotOverlayLayer?.replaceChildren();
     this.expandedHotspotOverlay?.classList.add('hidden');
   }
 
@@ -890,6 +1405,7 @@ export class WebXRApp {
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
+      this._disposeXrHotspotTableViewer();
 
       this.uiController.setMobileControlsVisible(true);
     });
@@ -902,6 +1418,45 @@ export class WebXRApp {
 
     this.interactionRegistry.register('go-back-to-church', () => {
       this._transferToChurch(CHURCH_RETURN_SPAWN);
+    });
+
+    Object.keys(CHURCH_HOTSPOT_TABLES).forEach((hotspotId) => {
+      this.interactionRegistry.register(hotspotId, () => {
+        const table = CHURCH_HOTSPOT_TABLES[hotspotId];
+        if (table) {
+          this._showExpandedHotspotImage(table.imageUrl, hotspotId);
+        }
+      });
+    });
+    this.interactionRegistry.register('xr-table-close', () => {
+      this._disposeXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-toggle', () => {
+      this.xrHotspotTablePinsVisible = !this.xrHotspotTablePinsVisible;
+      this._rebuildXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-language', () => {
+      this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
+      if (this.xrHotspotTableDetail) {
+        this._playExpandedHotspotAudio(this.xrHotspotTableDetail.audio);
+      }
+      this._rebuildXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-back', () => {
+      this._stopExpandedHotspotAudio();
+      this.xrHotspotTableDetail = null;
+      this._rebuildXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-detail', (context) => {
+      const table = CHURCH_HOTSPOT_TABLES[this.xrHotspotTableId];
+      const detailId = context?.metadata?.detailId;
+      const detail = table?.hotspots?.find((hotspot) => hotspot.id === detailId);
+      if (!detail) {
+        return;
+      }
+      this.xrHotspotTableDetail = detail;
+      this._playExpandedHotspotAudio(detail.audio);
+      this._rebuildXrHotspotTableViewer();
     });
 
     this.interactionRegistry.register('altar', (context) => {
@@ -1241,7 +1796,7 @@ export class WebXRApp {
     for (const hotspot of activeHotspots) {
       const interactionName = hotspot.id === 'go-back-to-church'
         ? hotspot.id
-        : null;
+        : (CHURCH_HOTSPOT_TABLES[hotspot.id] ? hotspot.id : null);
       const { root } = this._buildHotspotMarker({
         id: hotspot.id,
         position: hotspot.position,
