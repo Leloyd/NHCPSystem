@@ -97,9 +97,10 @@ const tableAudio = (tl, en) => ({
   en: en ? `${TABLE_AUDIO_BASE}${en}` : '',
 });
 const CHURCH_HOTSPOT_TABLES = {
-  // The negative-Z pair is the right table; hotspot-1 is the display that
-  // begins with the Azulejos tile, matching the original runtime placeholder.
-  'hotspot-1': {
+  // Physical marker assignment:
+  // hotspot-1 = Materials I, hotspot-2 = Wood / structural elements,
+  // hotspot-3 = Details I, hotspot-4 = Details II.
+  'hotspot-3': {
     title: { en: 'Architectural Details I', tl: 'Mga Detalye ng Arkitektura I' },
     imageUrl: `${TABLE_IMAGE_BASE}Art1-RightTable.png`,
     imageAlt: 'Art1 Right Table',
@@ -111,7 +112,7 @@ const CHURCH_HOTSPOT_TABLES = {
       { id: 'art1-right-table-5', x: 69.45, y: 56.29, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/BasReliefNiche.png`, title: 'Bas-Relief Niche', audio: tableAudio('Bas Relief Niche(T).mp3', 'Bas Relief Niche.mp3') },
     ],
   },
-  'hotspot-2': {
+  'hotspot-4': {
     title: { en: 'Architectural Details II', tl: 'Mga Detalye ng Arkitektura II' },
     imageUrl: `${TABLE_IMAGE_BASE}Art2-RightTable.png`,
     imageAlt: 'Art2 Right Table',
@@ -129,7 +130,7 @@ const CHURCH_HOTSPOT_TABLES = {
       { id: 'art2-right-table-11', x: 85.53, y: 70.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Sand.png`, title: 'Sand', audio: tableAudio('Buhangin.mp3', 'Buhangin(E).mp3') },
     ],
   },
-  'hotspot-3': {
+  'hotspot-1': {
     title: { en: 'Construction Materials I', tl: 'Mga Materyales sa Konstruksyon I' },
     imageUrl: `${TABLE_IMAGE_BASE}Art1-LeftTable.png`,
     imageAlt: 'Art1 Left Table',
@@ -143,7 +144,7 @@ const CHURCH_HOTSPOT_TABLES = {
       { id: 'art1-left-table-7', x: 83.79, y: 36.35, imageUrl: `${TABLE_IMAGE_BASE}Artifact/CoralStone.png`, title: 'Coral Stone', audio: tableAudio('CoralStone-T.mp3', 'CoralStone-E.mp3') },
     ],
   },
-  'hotspot-4': {
+  'hotspot-2': {
     title: { en: 'Wood and Structural Elements', tl: 'Kahoy at mga Elementong Istruktural' },
     imageUrl: `${TABLE_IMAGE_BASE}Art2-LeftTable.png`,
     imageAlt: 'Art2 Left Table',
