@@ -1608,6 +1608,7 @@ export class WebXRApp {
     const meshAssets = this.metadata.scene?.assets?.meshes ?? [];
 
     const total = splatAssets.length + meshAssets.length;
+    const splatsBeforeLoad = this.splatEntries.length;
     let done = 0;
 
     const updateProgress = (label) => {
@@ -1622,7 +1623,14 @@ export class WebXRApp {
     for (const splat of splatAssets) {
       await this._loadSingleSplat(splat);
       done += 1;
-      updateProgress(`Loaded splat ${done}/${total}`);
+      updateProgress(`Loaded SPZ ${done}/${splatAssets.length}`);
+    }
+
+    const loadedSplatCount = this.splatEntries.length - splatsBeforeLoad;
+    if (loadedSplatCount !== splatAssets.length) {
+      throw new Error(
+        `Scene startup stopped: loaded ${loadedSplatCount} of ${splatAssets.length} SPZ files.`,
+      );
     }
 
     for (const mesh of meshAssets) {
@@ -1638,18 +1646,27 @@ export class WebXRApp {
 
   async _loadSingleSplat(asset) {
     if (!this.SplatMeshCtor) {
-      console.warn('[splat] Spark not available; skipping', asset.relativePath);
-      return;
+      throw new Error(`Spark is unavailable; cannot load ${asset.relativePath}.`);
     }
 
+    let splatObject = null;
     try {
-      const splatObject = new this.SplatMeshCtor({
+      splatObject = new this.SplatMeshCtor({
         url: asset.url,
         lod: true,
       });
 
-      if (splatObject && splatObject.initialized && typeof splatObject.initialized.then === 'function') {
-        await splatObject.initialized;
+      if (!splatObject?.initialized || typeof splatObject.initialized.then !== 'function') {
+        throw new Error('Spark did not provide an initialization promise.');
+      }
+
+      await splatObject.initialized;
+
+      if (splatObject.isInitialized !== true) {
+        throw new Error('Spark initialization did not complete.');
+      }
+      if (!Number.isFinite(splatObject.numSplats) || splatObject.numSplats < 1) {
+        throw new Error('The SPZ contains no renderable splats.');
       }
 
       splatObject.name = asset.name || asset.fileName;
@@ -1662,7 +1679,10 @@ export class WebXRApp {
         object: splatObject,
       });
     } catch (error) {
-      console.warn(`[splat] failed to load ${asset.relativePath}`, error);
+      if (splatObject && typeof splatObject.dispose === 'function') {
+        splatObject.dispose();
+      }
+      throw new Error(`Failed to fully load ${asset.relativePath}: ${error?.message ?? error}`);
     }
   }
 
