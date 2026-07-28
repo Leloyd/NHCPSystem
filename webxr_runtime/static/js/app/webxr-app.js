@@ -27,6 +27,36 @@ const MUSEUM_SPAWN_POINT = [-8.42, 0.0, -2.24];
 const MUSEUM_SPAWN_YAW = Math.PI; // Face toward increasing Z.
 const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -5], max: [4, 5, 5] };
 const MUSEUM_MAX_POSITIVE_CLAMP = { x: 4, z: 5 };
+const MUSEUM_WALK_BOUNDARY = [
+  [-7.46, -2.27],
+  [-7.46, -0.83],
+  [-8.85, -0.83],
+  [-8.85, 0.20],
+  [-6.25, -1.22],
+  [-5.78, -1.79],
+  [-4.31, -1.95],
+  [-3.64, -1.54],
+  [-3.41, -0.69],
+  [-2.48, -0.66],
+  [-2.30, -2.00],
+  [-0.84, -1.95],
+  [-0.86, -1.57],
+  [1.37, -1.63],
+  [1.25, 1.10],
+  [-0.64, 1.02],
+  [-0.71, 1.73],
+  [-2.17, -1.84],
+  [-2.14, 0.84],
+  [-3.59, 1.08],
+  [-7.39, -1.46],
+  [-7.32, 2.43],
+  [-10.34, 2.62],
+  [-10.67, 0.44],
+  [-10.32, 0.46],
+  [-10.25, -1.77],
+  [-8.96, -2.03],
+  [-8.80, -2.36],
+];
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];
@@ -2096,7 +2126,11 @@ export class WebXRApp {
     this.collisionSystem = new CollisionSystem({
       scene: this.scene,
       debugEnabled: Boolean(this.metadata.debug?.collision),
-      walkBoundary: this._isUndergroundScene() ? UNDERGROUND_WALK_BOUNDARY : null,
+      walkBoundary: this._isUndergroundScene()
+        ? UNDERGROUND_WALK_BOUNDARY
+        : this._isMuseumScene()
+          ? MUSEUM_WALK_BOUNDARY
+          : null,
       maxPositiveClamp,
       floorRegions: this._isUndergroundScene() ? UNDERGROUND_FLOOR_REGIONS : null,
     });
