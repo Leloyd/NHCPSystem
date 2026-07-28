@@ -52,6 +52,11 @@ WEBXR_SCENE_PATHS = {
     "underground": WEBXR_BASE_DIR / "underground.zip",
     "museum": WEBXR_BASE_DIR / "museum.zip",
 }
+WEBXR_SCENE_PLAYER_OVERRIDES = {
+    "museum": {
+        "height": 1.8,
+    },
+}
 WEBXR_SCENE_ZIP_PATHS = {
     "church.zip": WEBXR_SCENE_PATHS["church"],
     "underground.zip": WEBXR_SCENE_PATHS["underground"],
@@ -203,6 +208,14 @@ def _get_webxr_config_value(name, fallback):
         if value not in (None, ""):
             return value
     return fallback
+
+
+def _get_webxr_player_settings(scene_name=""):
+    configured_settings = _get_webxr_config_value("PLAYER_SETTINGS", {})
+    player_settings = dict(configured_settings) if isinstance(configured_settings, dict) else {}
+    scene_override = WEBXR_SCENE_PLAYER_OVERRIDES.get(str(scene_name or "").strip().lower(), {})
+    player_settings.update(scene_override)
+    return player_settings
 
 
 def _ensure_webxr_runtime_initialized():
@@ -1512,7 +1525,7 @@ def webxr_scene_metadata():
             "name": _get_webxr_config_value("APP_NAME", "Marble WebXR Viewer"),
             "debug": bool(_get_webxr_config_value("DEBUG", False)),
         },
-        "player": _get_webxr_config_value("PLAYER_SETTINGS", {}),
+        "player": _get_webxr_player_settings(requested_scene),
         "quality": {
             "default": _get_webxr_config_value("DEFAULT_QUALITY", "auto"),
             "options": ["auto", "low", "medium", "high"],
