@@ -44,13 +44,17 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
 PUBLIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "public" / "AR-Artifacts").resolve()
 
-# Allowlisted WebXR scene ZIPs (friendly name -> absolute path). church and
-# underground ship inside webxr_runtime/; museum lives in the project-root zip/
-# folder. The allowlist also prevents arbitrary ?zip= paths from being extracted.
+# Allowlisted WebXR scene archives. Public scene routes use stable names rather
+# than exposing archive filenames, and the legacy ZIP query remains available
+# only for the existing Church/Underground transitions.
+WEBXR_SCENE_PATHS = {
+    "church": WEBXR_BASE_DIR / "church.zip",
+    "underground": WEBXR_BASE_DIR / "underground.zip",
+    "museum": WEBXR_BASE_DIR / "museum.zip",
+}
 WEBXR_SCENE_ZIP_PATHS = {
-    "church.zip": WEBXR_BASE_DIR / "church.zip",
-    "underground.zip": WEBXR_BASE_DIR / "underground.zip",
-    "museum.zip": PROJECT_ROOT / "zip" / "museum.zip",
+    "church.zip": WEBXR_SCENE_PATHS["church"],
+    "underground.zip": WEBXR_SCENE_PATHS["underground"],
 }
 STATIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "static" / "AR-Artifacts").resolve()
 
@@ -1449,7 +1453,15 @@ def site_map():
 
 @app.route("/3d-environment")
 def three_d_environment():
-    return render_template("WebXREnvironment.html")
+    return render_template("WebXREnvironment.html", webxr_scene="")
+
+
+@app.route("/3d-environment/<scene_name>")
+def three_d_environment_scene(scene_name):
+    normalized_scene = str(scene_name or "").strip().lower()
+    if normalized_scene not in WEBXR_SCENE_PATHS:
+        return jsonify({"error": f"Unknown WebXR scene: {scene_name}"}), 404
+    return render_template("WebXREnvironment.html", webxr_scene=normalized_scene)
 
 
 @app.route("/api/webxr/scene")
@@ -1457,9 +1469,17 @@ def webxr_scene_metadata():
     if not _ensure_webxr_runtime_initialized():
         return jsonify({"error": "WebXR runtime is unavailable.", "details": WEBXR_INIT_ERROR}), 503
 
+    requested_scene = (request.args.get("scene") or "").strip().lower()
     requested_zip = (request.args.get("zip") or "").strip()
     zip_override = None
-    if requested_zip:
+    if requested_scene:
+        resolved_zip = WEBXR_SCENE_PATHS.get(requested_scene)
+        if resolved_zip is not None:
+            resolved_zip = resolved_zip.resolve()
+        if resolved_zip is None or not resolved_zip.exists() or not resolved_zip.is_file():
+            return jsonify({"error": f"Unknown WebXR scene: {requested_scene}"}), 404
+        zip_override = str(resolved_zip)
+    elif requested_zip:
         resolved_zip = WEBXR_SCENE_ZIP_PATHS.get(requested_zip)
         if resolved_zip is not None:
             resolved_zip = resolved_zip.resolve()

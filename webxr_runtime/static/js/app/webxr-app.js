@@ -201,6 +201,7 @@ export class WebXRApp {
     this.refs = refs;
 
     this.metadata = null;
+    this.requestedScene = String(this.container?.dataset?.webxrScene || '').trim().toLowerCase() || null;
     this.requestedZipOverride = this._readZipOverrideFromUrl();
     this.requestedSpawnOverride = this._readSpawnOverrideFromUrl();
 
@@ -1481,9 +1482,12 @@ export class WebXRApp {
       return prefetched;
     }
 
-    const query = this.requestedZipOverride
-      ? `?zip=${encodeURIComponent(this.requestedZipOverride)}`
-      : '';
+    let query = '';
+    if (this.requestedScene) {
+      query = `?scene=${encodeURIComponent(this.requestedScene)}`;
+    } else if (this.requestedZipOverride) {
+      query = `?zip=${encodeURIComponent(this.requestedZipOverride)}`;
+    }
     const response = await fetch(`/api/webxr/scene${query}`, { cache: 'no-store' });
     if (!response.ok) {
       throw new Error(`Could not load /api/webxr/scene (${response.status})`);
@@ -1494,7 +1498,7 @@ export class WebXRApp {
   }
 
   _readPrefetchedMetadata() {
-    if (this.requestedZipOverride) {
+    if (this.requestedScene || this.requestedZipOverride) {
       return null;
     }
 
@@ -1547,7 +1551,7 @@ export class WebXRApp {
   }
 
   _storePrefetchedMetadata(payload) {
-    if (this.requestedZipOverride) {
+    if (this.requestedScene || this.requestedZipOverride) {
       return;
     }
 
@@ -2188,6 +2192,10 @@ export class WebXRApp {
   }
 
   _isMuseumScene() {
+    if (this.requestedScene === 'museum') {
+      return true;
+    }
+
     const zipSource = String(
       this.requestedZipOverride || this.metadata?.scene?.source?.zipPath || '',
     ).toLowerCase();

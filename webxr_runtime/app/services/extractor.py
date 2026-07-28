@@ -92,6 +92,29 @@ def _safe_extract_zip(zip_path: Path, destination: Path) -> None:
         archive.extractall(destination)
 
 
+def _is_extraction_complete(zip_path: Path, destination: Path) -> bool:
+    if not destination.exists() or not destination.is_dir():
+        return False
+
+    destination_resolved = destination.resolve()
+
+    try:
+        with ZipFile(zip_path, mode="r") as archive:
+            for member in archive.infolist():
+                if member.is_dir():
+                    continue
+
+                target_path = (destination / member.filename).resolve()
+                if destination_resolved not in target_path.parents:
+                    return False
+                if not target_path.is_file() or target_path.stat().st_size != member.file_size:
+                    return False
+    except (OSError, ValueError):
+        return False
+
+    return True
+
+
 def _collect_inventory(extracted_dir: Path) -> dict[str, int]:
     inventory = {
         "files_total": 0,
@@ -146,7 +169,10 @@ def ensure_extracted(config: dict) -> ExtractionResult:
     state = _load_extract_state(state_file)
     previous_fingerprint = state.get("fingerprint")
 
-    should_extract = not extracted_dir.exists() or previous_fingerprint != fingerprint
+    should_extract = (
+        previous_fingerprint != fingerprint
+        or not _is_extraction_complete(zip_path, extracted_dir)
+    )
 
     if should_extract:
         if extracted_dir.exists():
