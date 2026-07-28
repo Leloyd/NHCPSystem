@@ -9,6 +9,7 @@ function getRefs() {
     errorBanner: document.getElementById('error-banner'),
     xrButtonContainer: document.getElementById('xr-button-container'),
     xrStatus: document.getElementById('xr-status'),
+    positionDebugPanel: document.getElementById('position-debug-panel'),
     playerCoordinates: document.getElementById('player-coordinates'),
     hotspotHelper: document.getElementById('hotspot-helper'),
     fullscreenButton: document.getElementById('control-fullscreen-button'),
@@ -24,8 +25,19 @@ function getRefs() {
   };
 }
 
+function configurePositionDebug(refs) {
+  const params = new URLSearchParams(window.location.search);
+  const enabled = params.get('positionDebug') === '1';
+
+  if (refs.positionDebugPanel) {
+    refs.positionDebugPanel.hidden = !enabled;
+  }
+}
+
 async function bootstrap() {
   const refs = getRefs();
+  configurePositionDebug(refs);
+
   const app = new WebXRApp({
     container: refs.root,
     refs,

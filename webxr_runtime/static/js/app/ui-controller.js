@@ -135,7 +135,7 @@ export class UiController {
     const y = Number.isFinite(position.y) ? position.y : 0;
     const z = Number.isFinite(position.z) ? position.z : 0;
 
-    this.refs.playerCoordinates.textContent = `Position: X ${x.toFixed(2)} Y ${y.toFixed(2)} Z ${z.toFixed(2)}`;
+    this.refs.playerCoordinates.textContent = `position: [${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}]`;
   }
 
   setHotspotHelperHint(message, resetAfterMs = 0) {
