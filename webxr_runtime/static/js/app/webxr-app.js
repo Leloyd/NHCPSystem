@@ -23,7 +23,8 @@ const MUSEUM_HOTSPOT_MARKERS = [];
 // and roam area come from these bounds rather than mesh geometry. Values are
 // derived from the scene.json splat extents (X ~ -9.8..0, Z ~ 0). Tune to taste;
 // ?spawn=x,y,z overrides the start position live for quick calibration.
-const MUSEUM_SPAWN_POINT = [-4.7, 0.0, 0.1];
+const MUSEUM_SPAWN_POINT = [-8.42, 0.0, -2.24];
+const MUSEUM_SPAWN_YAW = Math.PI; // Face toward increasing Z.
 const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -5], max: [4, 5, 5] };
 const MUSEUM_MAX_POSITIVE_CLAMP = { x: 4, z: 5 };
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
@@ -2121,11 +2122,14 @@ export class WebXRApp {
 
     const spawnPoint = this._computeSpawnPoint();
     this.playerController.setFeetPosition(spawnPoint);
-    const spawnYaw = this._isUndergroundScene()
-      ? Math.PI / 2
-      : this.requestedSpawnOverride
-        ? 0
-        : -Math.PI / 2;
+    let spawnYaw = -Math.PI / 2;
+    if (this._isUndergroundScene()) {
+      spawnYaw = Math.PI / 2;
+    } else if (this._isMuseumScene()) {
+      spawnYaw = MUSEUM_SPAWN_YAW;
+    } else if (this.requestedSpawnOverride) {
+      spawnYaw = 0;
+    }
     this.camera.rotation.set(0, spawnYaw, 0);
     this.uiController.setPlayerCoordinates(this.playerRig.position);
 
