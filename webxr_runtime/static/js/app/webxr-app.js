@@ -16,6 +16,16 @@ const HOTSPOT_INTERACTION_MAX_DISTANCE = 1.85;
 const HOTSPOT_HELPER_COLOR = 0xffd54a;
 const HOTSPOT_HELPER_RADIUS = 0.07;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
+const MUSEUM_ZIP_NAME = 'museum.zip';
+// Museum has no hand-tuned hotspots yet; keep it empty so church markers don't leak in.
+const MUSEUM_HOTSPOT_MARKERS = [];
+// Museum is a splat-only capture (no .glb collision meshes), so its floor height
+// and roam area come from these bounds rather than mesh geometry. Values are
+// derived from the scene.json splat extents (X ~ -9.8..0, Z ~ 0). Tune to taste;
+// ?spawn=x,y,z overrides the start position live for quick calibration.
+const MUSEUM_SPAWN_POINT = [-4.7, 0.0, 0.1];
+const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -5], max: [4, 5, 5] };
+const MUSEUM_MAX_POSITIVE_CLAMP = { x: 4, z: 5 };
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];
@@ -1702,9 +1712,13 @@ export class WebXRApp {
   }
 
   _getActiveHotspotMarkers() {
-    return this._isUndergroundScene()
-      ? UNDERGROUND_HOTSPOT_MARKERS
-      : CHURCH_HOTSPOT_MARKERS;
+    if (this._isUndergroundScene()) {
+      return UNDERGROUND_HOTSPOT_MARKERS;
+    }
+    if (this._isMuseumScene()) {
+      return MUSEUM_HOTSPOT_MARKERS;
+    }
+    return CHURCH_HOTSPOT_MARKERS;
   }
 
   _getHotspotConfig(hotspotId) {
@@ -2027,9 +2041,14 @@ export class WebXRApp {
   }
 
   _setupGameplaySystems() {
-    const maxPositiveClamp = this._isUndergroundScene()
-      ? UNDERGROUND_MAX_POSITIVE_CLAMP
-      : CHURCH_MAX_POSITIVE_CLAMP;
+    let maxPositiveClamp;
+    if (this._isUndergroundScene()) {
+      maxPositiveClamp = UNDERGROUND_MAX_POSITIVE_CLAMP;
+    } else if (this._isMuseumScene()) {
+      maxPositiveClamp = MUSEUM_MAX_POSITIVE_CLAMP;
+    } else {
+      maxPositiveClamp = CHURCH_MAX_POSITIVE_CLAMP;
+    }
     const preferredCollisionIds = new Set(this.metadata.scene?.collision?.preferredMeshIds ?? []);
     const collisionEntries = this.meshEntries.filter((entry) => preferredCollisionIds.has(entry.asset.id));
     const useUndergroundFallbackOnly = this._isUndergroundScene() && collisionEntries.length === 0 && this.meshEntries.length <= 2;
@@ -2114,6 +2133,13 @@ export class WebXRApp {
       );
     }
 
+    if (this._isMuseumScene()) {
+      return new THREE.Box3(
+        new THREE.Vector3(...MUSEUM_FALLBACK_BOUNDS.min),
+        new THREE.Vector3(...MUSEUM_FALLBACK_BOUNDS.max),
+      );
+    }
+
     return this._computeWorldBounds();
   }
 
@@ -2124,6 +2150,10 @@ export class WebXRApp {
 
     if (this.requestedSpawnOverride) {
       return this.requestedSpawnOverride.clone();
+    }
+
+    if (this._isMuseumScene()) {
+      return new THREE.Vector3(...MUSEUM_SPAWN_POINT);
     }
 
     return new THREE.Vector3(-4.04, -0.32, -0.04);
@@ -2155,6 +2185,13 @@ export class WebXRApp {
       this.requestedZipOverride || this.metadata?.scene?.source?.zipPath || '',
     ).toLowerCase();
     return zipSource.includes(UNDERGROUND_ZIP_NAME);
+  }
+
+  _isMuseumScene() {
+    const zipSource = String(
+      this.requestedZipOverride || this.metadata?.scene?.source?.zipPath || '',
+    ).toLowerCase();
+    return zipSource.includes(MUSEUM_ZIP_NAME);
   }
 
   _transferToChurch(spawnOverride = null) {

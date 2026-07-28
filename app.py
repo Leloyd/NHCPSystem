@@ -43,6 +43,15 @@ except ModuleNotFoundError:  # pragma: no cover - optional in some environments
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
 PUBLIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "public" / "AR-Artifacts").resolve()
+
+# Allowlisted WebXR scene ZIPs (friendly name -> absolute path). church and
+# underground ship inside webxr_runtime/; museum lives in the project-root zip/
+# folder. The allowlist also prevents arbitrary ?zip= paths from being extracted.
+WEBXR_SCENE_ZIP_PATHS = {
+    "church.zip": WEBXR_BASE_DIR / "church.zip",
+    "underground.zip": WEBXR_BASE_DIR / "underground.zip",
+    "museum.zip": PROJECT_ROOT / "zip" / "museum.zip",
+}
 STATIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "static" / "AR-Artifacts").resolve()
 
 if load_dotenv is not None:
@@ -1448,7 +1457,15 @@ def webxr_scene_metadata():
     if not _ensure_webxr_runtime_initialized():
         return jsonify({"error": "WebXR runtime is unavailable.", "details": WEBXR_INIT_ERROR}), 503
 
-    zip_override = (request.args.get("zip") or "").strip() or None
+    requested_zip = (request.args.get("zip") or "").strip()
+    zip_override = None
+    if requested_zip:
+        resolved_zip = WEBXR_SCENE_ZIP_PATHS.get(requested_zip)
+        if resolved_zip is not None:
+            resolved_zip = resolved_zip.resolve()
+        if resolved_zip is None or not resolved_zip.exists() or not resolved_zip.is_file():
+            return jsonify({"error": f"Unknown WebXR scene: {requested_zip}"}), 404
+        zip_override = str(resolved_zip)
     scene_description = WEBXR_RUNTIME_SCENE.get_scene_description(zip_override=zip_override)
     payload = {
         "app": {
