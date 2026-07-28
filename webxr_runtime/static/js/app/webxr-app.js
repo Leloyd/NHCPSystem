@@ -25,7 +25,7 @@ const MUSEUM_HOTSPOT_MARKERS = [];
 // ?spawn=x,y,z overrides the start position live for quick calibration.
 const MUSEUM_SPAWN_POINT = [-8.42, 0.0, -2.24];
 const MUSEUM_SPAWN_YAW = Math.PI; // Face toward increasing Z.
-const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -5], max: [4, 5, 5] };
+const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -21], max: [4, 5, 5] };
 const MUSEUM_MAX_POSITIVE_CLAMP = { x: 4, z: 5 };
 const MUSEUM_WALK_BOUNDARY = [
   [-7.46, -2.27],
@@ -54,7 +54,7 @@ const MUSEUM_WALK_BOUNDARY = [
   [-10.67, 0.44],
   [-10.32, 0.46],
   [-10.25, -1.77],
-  [-8.96, -2.03],
+  [-8.96, -20.30],
   [-8.80, -2.36],
 ];
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
