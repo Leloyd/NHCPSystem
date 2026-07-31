@@ -1,8 +1,12 @@
 {
   "image": {
-    "url": "/static/images/site-map/aerial-view.jpg",
+    "url": "/static/images/site-map/aerial-map.jpg",
     "coordinateWidth": 3840,
-    "coordinateHeight": 2160
+    "coordinateHeight": 2160,
+    "referenceWidth": 4000,
+    "referenceHeight": 2250,
+    "cropOffsetX": 612.64,
+    "cropOffsetY": 0
   },
   "hotspots": [
     {

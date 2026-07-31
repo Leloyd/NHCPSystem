@@ -45,7 +45,7 @@
     },
   };
 
-  var DEFAULT_IMAGE_URL = "/static/images/site-map/aerial-view.jpg";
+  var DEFAULT_IMAGE_URL = "/static/images/site-map/aerial-map.jpg";
   var ALT_IMAGE_URL = "/static/images/site-map/360aerial_view.jpg";
   var HOTSPOT_DATA_URL = "/static/data/site-map-hotspots.json";
   var INTRO_AUDIO_BY_LANGUAGE = {
@@ -258,6 +258,10 @@
     return {
       width: width,
       height: height,
+      referenceWidth: normalizePositiveNumber(imageMeta.referenceWidth),
+      referenceHeight: normalizePositiveNumber(imageMeta.referenceHeight),
+      cropOffsetX: Number(imageMeta.cropOffsetX) || 0,
+      cropOffsetY: Number(imageMeta.cropOffsetY) || 0,
     };
   }
 
@@ -423,7 +427,7 @@
   }
 
   function getHotspotMarkerHtml() {
-    return '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><span class="map-pin__core"></span></span></span>';
+    return '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><svg class="map-pin__glyph" viewBox="0 0 24 24"><path d="M12 6.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm0 1.5a1.75 1.75 0 1 1 0 3.5 1.75 1.75 0 0 1 0-3.5Z" fill="currentColor"/><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 6.12 11.22 6.38 11.48a.88.88 0 0 0 1.24 0C12.88 20.72 19 14.6 19 9.5a7 7 0 0 0-7-7Zm0 1.5a5.5 5.5 0 0 1 5.5 5.5c0 3.75-4.11 8.4-5.5 9.86C10.61 17.9 6.5 13.25 6.5 9.5A5.5 5.5 0 0 1 12 4Z" fill="currentColor"/></svg></span></span>';
   }
 
   function getPanoramaStops() {
@@ -539,12 +543,16 @@
     }
 
     var coordinateSpace = state.sourceCoordinateSpace || state.imageSize;
-    var scaleX = state.imageSize.width / coordinateSpace.width;
-    var scaleY = state.imageSize.height / coordinateSpace.height;
+    var referenceWidth = coordinateSpace.referenceWidth || state.imageSize.width;
+    var referenceHeight = coordinateSpace.referenceHeight || state.imageSize.height;
+    var scaleX = referenceWidth / coordinateSpace.width;
+    var scaleY = referenceHeight / coordinateSpace.height;
+    var cropOffsetX = Number(coordinateSpace.cropOffsetX) || 0;
+    var cropOffsetY = Number(coordinateSpace.cropOffsetY) || 0;
 
     state.hotspots.forEach(function (spot) {
-      spot.x = spot.sourceX * scaleX;
-      spot.y = spot.sourceY * scaleY;
+      spot.x = spot.sourceX * scaleX - cropOffsetX;
+      spot.y = spot.sourceY * scaleY - cropOffsetY;
     });
   }
 
@@ -957,7 +965,7 @@
           window.console.error("Site map initialization failed", error);
         }
         elements.mapRoot.innerHTML =
-          '<div class="map-empty-state">Unable to initialize map image. Try <strong>Ctrl+F5</strong> to hard refresh, then open <code>/static/images/site-map/aerial-view.jpg</code> directly to confirm it loads.</div>';
+          '<div class="map-empty-state">Unable to initialize map image. Try <strong>Ctrl+F5</strong> to hard refresh, then open <code>/static/images/site-map/aerial-map.jpg</code> directly to confirm it loads.</div>';
       });
   }
 
@@ -971,8 +979,8 @@
       icon: window.L.divIcon({
         className: "map-pin-marker",
         html: getHotspotMarkerHtml(),
-        iconSize: [36, 36],
-        iconAnchor: [18, 18],
+        iconSize: [44, 44],
+        iconAnchor: [22, 40],
       }),
     });
 

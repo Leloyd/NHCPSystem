@@ -611,54 +611,60 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 36px;
-  height: 36px;
-  transform-origin: 50% 50%;
+  width: 44px;
+  height: 44px;
+  transform-origin: 50% 90%;
   transition: transform 0.18s ease, filter 0.18s ease;
 }
 
 .map-pin__pulse {
   position: absolute;
-  inset: -10px;
+  top: 2px;
+  left: 5px;
+  width: 34px;
+  height: 34px;
   border-radius: 999px;
-  border: 2px solid rgba(249, 115, 22, 0.32);
-  background: rgba(251, 191, 36, 0.12);
+  border: 1px solid rgba(212, 175, 106, 0.5);
+  background: rgba(212, 175, 106, 0.12);
   animation: map-pin-pulse 1.9s ease-out infinite;
   transition: background 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
 }
 
 .map-pin__shadow {
-  position: relative;
-  width: 36px;
-  height: 36px;
-  border-radius: 999px;
-  background: radial-gradient(circle at 50% 62%, rgba(15, 23, 42, 0.3), rgba(15, 23, 42, 0));
-  transform: scale(0.92);
+  position: absolute;
+  left: 50%;
+  bottom: 1px;
+  width: 22px;
+  height: 7px;
+  border-radius: 50%;
+  background: rgba(13, 10, 4, 0.34);
+  filter: blur(2px);
+  transform: translateX(-50%);
 }
 
 .map-pin__badge {
   position: absolute;
-  top: 50%;
+  top: 0;
   left: 50%;
-  width: 28px;
-  height: 28px;
-  border-radius: 999px;
-  transform: translate(-50%, -50%);
-  background: linear-gradient(180deg, #fbbf24 0%, #f97316 100%);
-  border: 2px solid rgba(255, 255, 255, 0.96);
-  box-shadow: 0 10px 24px rgba(194, 65, 12, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.45);
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 40px;
+  color: #d4af6a;
+  transform: translateX(-50%);
+  transition: color 0.18s ease, filter 0.18s ease;
 }
 
-.map-pin__core {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  background: #ffffff;
-  transform: translate(-50%, -50%);
-  box-shadow: 0 0 0 4px rgba(255, 255, 255, 0.24);
+.map-pin__glyph {
+  display: block;
+  width: 34px;
+  height: 40px;
+  overflow: visible;
+  filter: drop-shadow(0 5px 5px rgba(13, 10, 4, 0.45));
+}
+
+.map-pin__glyph path:first-child {
+  fill: #1c1208;
 }
 
 @keyframes map-pin-pulse {
@@ -686,22 +692,22 @@
 
 .map-pin-marker.is-hover .map-pin__pulse,
 .map-pin-marker:focus-visible .map-pin__pulse {
-  background: rgba(250, 204, 21, 0.16);
-  border-color: rgba(251, 191, 36, 0.46);
+  background: rgba(212, 175, 106, 0.2);
+  border-color: rgba(212, 175, 106, 0.72);
 }
 
 .map-pin-marker.is-active .map-pin__pulse {
-  background: rgba(96, 165, 250, 0.14);
-  border-color: rgba(96, 165, 250, 0.44);
+  background: rgba(250, 247, 242, 0.16);
+  border-color: rgba(250, 247, 242, 0.72);
 }
 
 .map-pin-marker.is-active .map-pin__badge {
-  background: linear-gradient(180deg, #60a5fa 0%, #1d4ed8 100%);
-  box-shadow: 0 12px 28px rgba(29, 78, 216, 0.34), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+  color: #faf7f2;
+  filter: drop-shadow(0 0 7px rgba(212, 175, 106, 0.78));
 }
 
 .map-pin-marker:focus-visible .map-pin__badge {
-  box-shadow: 0 0 0 5px rgba(96, 165, 250, 0.24), 0 12px 24px rgba(122, 63, 16, 0.24);
+  filter: drop-shadow(0 0 6px rgba(250, 247, 242, 0.9));
 }
 
 .site-map-panorama-hotspot {
