@@ -348,9 +348,9 @@ canvas {
   margin: 0;
   padding: 10px 12px;
   border-radius: 10px;
-  border: 1px solid rgba(143, 211, 255, 0.26);
-  background: rgba(7, 16, 28, 0.8);
-  color: #e6f4ff;
+  border: 1px solid rgba(212, 175, 106, 0.34);
+  background: rgba(212, 175, 106, 0.09);
+  color: #faf7f2;
   font-size: 0.86rem;
   line-height: 1.45;
 }
@@ -481,6 +481,462 @@ canvas {
 /* Guide controls — the Landing page's gold pill bar, floating over the 3D
    scene. Left/right button groups flank a joystick that is ALWAYS dead-center
    and a size up from the pills. */
+/* Heritage Investigator field notebook. The activity is deliberately a
+   dismissible drawer so it enriches free-roam exploration without blocking it. */
+.heritage-mission {
+  position: fixed;
+  top: max(14px, env(safe-area-inset-top, 0px));
+  right: max(14px, env(safe-area-inset-right, 0px));
+  bottom: max(92px, calc(env(safe-area-inset-bottom, 0px) + 82px));
+  z-index: 78;
+  width: min(430px, calc(100vw - 28px));
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr);
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 106, 0.64);
+  border-radius: 18px;
+  background: linear-gradient(150deg, rgba(250, 247, 242, 0.98), rgba(240, 229, 207, 0.97));
+  box-shadow: 0 24px 70px rgba(0, 0, 0, 0.58);
+  color: var(--tx-ink);
+  font-family: "Inter", "Segoe UI", sans-serif;
+  isolation: isolate;
+}
+
+.heritage-mission::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  opacity: 0.24;
+  background-image:
+    linear-gradient(rgba(184, 146, 58, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(184, 146, 58, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+.heritage-mission__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 16px 16px 13px;
+  border-bottom: 1px solid rgba(184, 146, 58, 0.26);
+  background: rgba(250, 247, 242, 0.7);
+}
+
+.heritage-mission__eyebrow,
+.heritage-mission__chapter {
+  display: block;
+  margin: 0 0 4px;
+  color: #8d6820;
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+}
+
+.heritage-mission__header h2,
+.heritage-mission__section h3,
+.heritage-mission__section h4 {
+  margin: 0;
+  color: #251707;
+  font-family: "Playfair Display", Georgia, serif;
+}
+
+.heritage-mission__header h2 { font-size: clamp(1.15rem, 3vw, 1.48rem); }
+
+.heritage-mission__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+}
+
+.heritage-mission__icon-button {
+  min-width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  padding: 0 8px;
+  border: 1px solid rgba(184, 146, 58, 0.48);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.74);
+  color: #251707;
+  font: 800 0.75rem/1 Inter, sans-serif;
+  cursor: pointer;
+}
+
+.heritage-mission__progress {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 10px 12px;
+  border-bottom: 1px solid rgba(184, 146, 58, 0.2);
+  background: rgba(255, 252, 246, 0.74);
+}
+
+.heritage-mission__step {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+  min-width: 0;
+  color: #8f897e;
+  text-align: center;
+}
+
+.heritage-mission__step:not(:last-child)::after {
+  content: '';
+  position: absolute;
+  left: calc(50% + 13px);
+  right: calc(-50% + 13px);
+  top: 10px;
+  height: 1px;
+  background: rgba(128, 111, 83, 0.28);
+}
+
+.heritage-mission__step i {
+  width: 22px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  border: 1px solid rgba(128, 111, 83, 0.34);
+  border-radius: 50%;
+  background: #f7f2e8;
+  font-size: 0.64rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.heritage-mission__step b {
+  max-width: 100%;
+  overflow: hidden;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.heritage-mission__step.is-current,
+.heritage-mission__step.is-complete { color: #725112; }
+
+.heritage-mission__step.is-current i,
+.heritage-mission__step.is-complete i {
+  border-color: var(--tx-gold-deep);
+  background: var(--tx-gold);
+  color: #1c1208;
+}
+
+.heritage-mission__step.is-complete:not(:last-child)::after { background: var(--tx-gold-deep); }
+
+.heritage-mission__content {
+  min-height: 0;
+  overflow: auto;
+  overscroll-behavior: contain;
+  scrollbar-color: rgba(184, 146, 58, 0.72) transparent;
+}
+
+.heritage-mission__section {
+  display: grid;
+  gap: 14px;
+  padding: 20px;
+}
+
+.heritage-mission__section h3 {
+  font-size: clamp(1.32rem, 4vw, 1.82rem);
+  line-height: 1.08;
+}
+
+.heritage-mission__section h4 {
+  margin-top: 4px;
+  font-size: 1rem;
+}
+
+.heritage-mission__section p {
+  margin: 0;
+  color: #544633;
+  font-size: 0.88rem;
+  line-height: 1.62;
+}
+
+.heritage-mission__role {
+  display: grid;
+  gap: 4px;
+  padding: 13px 14px;
+  border-left: 3px solid var(--tx-gold-deep);
+  background: rgba(255, 255, 255, 0.58);
+}
+
+.heritage-mission__role strong {
+  color: #8d6820;
+  font-size: 0.66rem;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.heritage-mission__role span { font: 600 1.02rem/1.3 "Playfair Display", Georgia, serif; }
+
+.heritage-mission__note {
+  padding: 10px 12px;
+  border: 1px solid rgba(184, 146, 58, 0.24);
+  border-radius: 10px;
+  background: rgba(212, 175, 106, 0.1);
+  font-size: 0.76rem !important;
+}
+
+.heritage-mission__primary,
+.heritage-mission__secondary,
+.heritage-mission__danger {
+  min-height: 42px;
+  border-radius: 999px;
+  padding: 10px 16px;
+  font: 800 0.76rem/1.2 Inter, sans-serif;
+  cursor: pointer;
+}
+
+.heritage-mission__primary {
+  border: 1px solid #0f3b2a;
+  background: #0d3928;
+  color: #fffaf0;
+  box-shadow: 0 8px 20px rgba(13, 57, 40, 0.18);
+}
+
+.heritage-mission__secondary {
+  border: 1px solid rgba(88, 68, 35, 0.42);
+  background: rgba(255, 255, 255, 0.7);
+  color: #2b1c0b;
+}
+
+.heritage-mission__danger {
+  border: 1px solid #8b3131;
+  background: #7a2727;
+  color: #fff;
+}
+
+.heritage-mission__primary:disabled {
+  border-color: rgba(99, 91, 76, 0.25);
+  background: #aaa294;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.heritage-mission__primary:not(:disabled):hover,
+.heritage-mission__secondary:hover,
+.heritage-mission__icon-button:hover { filter: brightness(1.08); }
+
+.heritage-mission__counts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.heritage-mission__counts span {
+  display: grid;
+  gap: 3px;
+  padding: 11px;
+  border: 1px solid rgba(184, 146, 58, 0.25);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.58);
+  color: #625441;
+  font-size: 0.68rem;
+}
+
+.heritage-mission__counts b { color: #725112; font-size: 1.1rem; }
+
+.heritage-mission__checklist {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.heritage-mission__checklist li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 11px;
+  border: 1px solid rgba(88, 73, 51, 0.16);
+  border-radius: 11px;
+  background: rgba(255, 255, 255, 0.48);
+  color: #6d6458;
+  font-size: 0.76rem;
+  line-height: 1.3;
+}
+
+.heritage-mission__checklist li.is-collected {
+  border-color: rgba(31, 112, 78, 0.32);
+  background: rgba(38, 135, 94, 0.09);
+  color: #153e2d;
+}
+
+.heritage-mission__checklist i {
+  flex: 0 0 auto;
+  color: #8d6820;
+  font-size: 0.98rem;
+  font-style: normal;
+  font-weight: 800;
+}
+
+.heritage-mission__checklist span,
+.heritage-mission__checklist--evidence span { display: grid; gap: 2px; }
+.heritage-mission__checklist--evidence b { color: #8d6820; font-size: 0.64rem; letter-spacing: 0.06em; }
+.heritage-mission__checklist--evidence small {
+  margin-top: 3px;
+  color: #5d5346;
+  font-size: 0.67rem;
+  font-weight: 500;
+  line-height: 1.45;
+}
+
+.heritage-mission__timeline-task,
+.heritage-mission__timeline-complete {
+  display: grid;
+  gap: 10px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(184, 146, 58, 0.28);
+}
+
+.heritage-mission__timeline-grid,
+.heritage-mission__curation-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.heritage-mission__timeline-card,
+.heritage-mission__curation-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 66px;
+  padding: 9px;
+  border: 1px solid rgba(113, 91, 54, 0.3);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.66);
+  color: #3b2b17;
+  text-align: left;
+  cursor: pointer;
+}
+
+.heritage-mission__timeline-card > b,
+.heritage-mission__curation-card i {
+  flex: 0 0 auto;
+  width: 24px;
+  height: 24px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #efe2c5;
+  color: #725112;
+  font-size: 0.7rem;
+  font-style: normal;
+}
+
+.heritage-mission__timeline-card span,
+.heritage-mission__curation-card span {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+  font-size: 0.7rem;
+  font-weight: 700;
+  line-height: 1.25;
+}
+
+.heritage-mission__timeline-card small {
+  margin-left: auto;
+  color: #8d6820;
+  font-size: 0.58rem;
+  font-weight: 800;
+}
+
+.heritage-mission__timeline-card.is-selected,
+.heritage-mission__curation-card.is-selected {
+  border-color: #967122;
+  background: rgba(212, 175, 106, 0.22);
+}
+
+.heritage-mission__timeline-complete {
+  color: #184b35;
+  text-align: center;
+}
+.heritage-mission__timeline-complete span { font-size: 0.72rem; letter-spacing: 0.04em; }
+
+.heritage-mission__seal {
+  width: 62px;
+  height: 62px;
+  display: grid;
+  place-items: center;
+  margin: 4px auto;
+  border: 1px solid #967122;
+  border-radius: 50%;
+  background: var(--tx-gold);
+  color: #1c1208;
+  font-size: 1.65rem;
+  box-shadow: 0 0 0 7px rgba(212, 175, 106, 0.16);
+}
+
+.heritage-mission__section--complete { text-align: center; }
+.heritage-mission__confirm-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+.heritage-mission-toast {
+  position: fixed;
+  left: 50%;
+  bottom: max(96px, calc(env(safe-area-inset-bottom, 0px) + 86px));
+  z-index: 88;
+  width: max-content;
+  max-width: min(520px, calc(100vw - 28px));
+  transform: translateX(-50%);
+  padding: 10px 15px;
+  border: 1px solid rgba(212, 175, 106, 0.72);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.93);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.44);
+  color: var(--tx-cream);
+  font: 700 0.74rem/1.35 Inter, sans-serif;
+  text-align: center;
+}
+
+.tour-control-dock__action.tour-control-dock__action--mission { position: relative !important; }
+
+.tour-control-dock__badge {
+  position: absolute;
+  top: -6px;
+  right: -5px;
+  min-width: 17px;
+  height: 17px;
+  display: grid;
+  place-items: center;
+  padding: 0 4px;
+  border: 1px solid #1c1208;
+  border-radius: 999px;
+  background: var(--tx-gold);
+  color: #1c1208;
+  font-size: 0.56rem;
+  font-weight: 900;
+}
+
+.tour-control-dock__badge.is-complete { background: #67d49d; }
+
+.hotspot-floating-label.is-collected {
+  border-color: rgba(103, 212, 157, 0.88);
+  box-shadow: 0 0 0 3px rgba(103, 212, 157, 0.18), 0 12px 32px rgba(3, 7, 15, 0.55);
+}
+
+@media (max-width: 640px) {
+  .heritage-mission {
+    inset: max(7px, env(safe-area-inset-top, 0px)) 7px max(82px, calc(env(safe-area-inset-bottom, 0px) + 72px));
+    width: auto;
+    border-radius: 15px;
+  }
+  .heritage-mission__header { padding: 12px; }
+  .heritage-mission__section { gap: 12px; padding: 15px; }
+  .heritage-mission__step b { font-size: 0.48rem; }
+  .heritage-mission__timeline-grid,
+  .heritage-mission__curation-grid { grid-template-columns: 1fr; }
+  .heritage-mission__timeline-card,
+  .heritage-mission__curation-card { min-height: 52px; }
+}
+
 .tour-control-dock {
   position: fixed;
   left: 50%;

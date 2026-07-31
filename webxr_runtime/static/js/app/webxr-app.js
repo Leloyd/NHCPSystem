@@ -130,6 +130,34 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     radius: 0.07,
     interactionMaxDistance: DOOR_INTERACTION_MAX_DISTANCE,
   },
+  {
+    id: 'evidence-revolution',
+    position: [0.75, 0.34, -1.45],
+    color: 0xd4af6a,
+    radius: 0.075,
+    interactionMaxDistance: 2.2,
+  },
+  {
+    id: 'evidence-biak-na-bato',
+    position: [-0.72, 0.34, -3.75],
+    color: 0xd4af6a,
+    radius: 0.075,
+    interactionMaxDistance: 2.2,
+  },
+  {
+    id: 'evidence-world-war-ii',
+    position: [-2.35, 0.34, 0.25],
+    color: 0xd4af6a,
+    radius: 0.075,
+    interactionMaxDistance: 2.2,
+  },
+  {
+    id: 'evidence-guerrillas',
+    position: [0.62, 0.34, -4.62],
+    color: 0xd4af6a,
+    radius: 0.075,
+    interactionMaxDistance: 2.2,
+  },
 ];
 const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
 const TABLE_AUDIO_BASE = '/audio/360VT/TableAudio/';
@@ -201,8 +229,71 @@ const CHURCH_HOTSPOT_TABLES = {
     ],
   },
 };
-const CHURCH_FLOATING_LABEL_IMAGES = Object.fromEntries(
-  Object.entries(CHURCH_HOTSPOT_TABLES).map(([id, table]) => [id, table.imageUrl]),
+const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
+const HERITAGE_MISSION_VERSION = 1;
+const HERITAGE_MISSION_CHAPEL_IDS = ['hotspot-1', 'hotspot-2', 'hotspot-3', 'hotspot-4'];
+const HERITAGE_MISSION_TIMELINE = [
+  'evidence-revolution',
+  'evidence-biak-na-bato',
+  'evidence-world-war-ii',
+  'evidence-guerrillas',
+];
+const HERITAGE_MISSION_EVIDENCE = {
+  'evidence-revolution': {
+    year: '1896',
+    title: { en: 'Revolution Against Spain', tl: 'Rebolusyon Laban sa Espanya' },
+    imageUrl: `${TABLE_IMAGE_BASE}Cemetery_and_Revolution.png`,
+    imageAlt: 'Nagcarlan Underground Cemetery and the Philippine Revolution',
+    text: {
+      en: 'The underground chambers became a discreet meeting place for Katipuneros during the revolution against Spain.',
+      tl: 'Naging lihim na tagpuan ng mga Katipunero ang mga silid sa ilalim ng lupa noong rebolusyon laban sa Espanya.',
+    },
+  },
+  'evidence-biak-na-bato': {
+    year: '1897',
+    title: { en: 'Road to Biak-na-Bato', tl: 'Landas Patungong Biak-na-Bato' },
+    imageUrl: `${TABLE_IMAGE_BASE}Pact.png`,
+    imageAlt: 'Philippine commissioners associated with the Pact of Biak-na-Bato',
+    text: {
+      en: 'Pedro Paterno and General Severino Taiño met secretly here as discussions developed toward the Pact of Biak-na-Bato.',
+      tl: 'Lihim na nagpulong dito sina Pedro Paterno at Heneral Severino Taiño habang umuusad ang mga usaping humantong sa Kasunduan sa Biak-na-Bato.',
+    },
+  },
+  'evidence-world-war-ii': {
+    year: '1941–1945',
+    title: { en: 'Second World War', tl: 'Ikalawang Digmaang Pandaigdig' },
+    imageUrl: `${TABLE_IMAGE_BASE}World_War_II.png`,
+    imageAlt: 'Nagcarlan Underground Cemetery during the Second World War',
+    text: {
+      en: 'During the Japanese occupation, the cemetery and the surrounding landscape formed part of the community’s wartime memory.',
+      tl: 'Sa panahon ng pananakop ng mga Hapones, naging bahagi ng alaala ng pamayanan sa digmaan ang sementeryo at ang nakapaligid na lupain.',
+    },
+  },
+  'evidence-guerrillas': {
+    year: '1945',
+    title: { en: 'Guerrillas of Nagcarlan', tl: 'Mga Gerilya ng Nagcarlan' },
+    imageUrl: `${TABLE_IMAGE_BASE}Nagcarlan_Guerillas.png`,
+    imageAlt: 'Filipino guerrillas in Nagcarlan in 1945',
+    text: {
+      en: 'Nagcarlan guerrilla groups resisted the occupation through mountain operations, sabotage, and intelligence work for Allied forces.',
+      tl: 'Lumaban ang mga pangkat-gerilya ng Nagcarlan sa pamamagitan ng mga operasyon sa kabundukan, pagsabotahe, at paghahatid ng impormasyon sa mga Allied.',
+    },
+  },
+};
+const HERITAGE_MISSION_EVIDENCE_TABLES = Object.fromEntries(
+  Object.entries(HERITAGE_MISSION_EVIDENCE).map(([id, evidence]) => [id, {
+    title: evidence.title,
+    imageUrl: evidence.imageUrl,
+    imageAlt: evidence.imageAlt,
+    hotspots: [],
+  }]),
+);
+const HOTSPOT_TABLES = {
+  ...CHURCH_HOTSPOT_TABLES,
+  ...HERITAGE_MISSION_EVIDENCE_TABLES,
+};
+const HOTSPOT_FLOATING_LABEL_IMAGES = Object.fromEntries(
+  Object.entries(HOTSPOT_TABLES).map(([id, table]) => [id, table.imageUrl]),
 );
 const QUALITY_PRESETS = {
   auto: {
@@ -270,6 +361,7 @@ export class WebXRApp {
     this.expandedHotspotOverlay = null;
     this.expandedHotspotOverlayImage = null;
     this.expandedHotspotOverlayCaption = null;
+    this.expandedHotspotOverlayDescription = null;
     this.expandedHotspotOverlayToggle = null;
     this.expandedHotspotOverlayLanguage = null;
     this.expandedHotspotOverlayLayer = null;
@@ -277,6 +369,7 @@ export class WebXRApp {
     this.expandedHotspotOverlayDetailImage = null;
     this.expandedHotspotOverlayDetailTitle = null;
     this.expandedHotspotTable = null;
+    this.expandedHotspotId = '';
     this.expandedHotspotDetail = null;
     this.expandedHotspotLanguage = 'tl';
     this.expandedHotspotAudio = null;
@@ -285,6 +378,10 @@ export class WebXRApp {
     this.xrHotspotTableDetail = null;
     this.xrHotspotTablePinsVisible = true;
     this.xrHotspotTableSourceMarker = null;
+
+    this.heritageMission = this._readHeritageMissionState();
+    this.heritageMissionOpen = false;
+    this.heritageMissionToastTimer = 0;
 
     this.sparkRenderer = null;
     this.SplatMeshCtor = null;
@@ -319,6 +416,7 @@ export class WebXRApp {
       this.container.appendChild(this.renderer.domElement);
 
       this._setupUi();
+      this._setupHeritageMission();
       this._setupExpandedHotspotOverlay();
       this._setupLights();
       this._setupXrUi();
@@ -345,6 +443,7 @@ export class WebXRApp {
       this.onResize();
 
       this.renderer.setAnimationLoop(this._animate.bind(this));
+      this._maybeOpenHeritageMissionBriefing();
     } catch (error) {
       console.error('[startup] failed', error);
       this.uiController.showError(`Startup failed: ${error?.message ?? error}`);
@@ -376,6 +475,535 @@ export class WebXRApp {
       && (this.mobileMode || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
     this.uiController.setGyroVisible(gyroCapable);
     this.uiController.setCardboardVisible(gyroCapable);
+  }
+
+  _createDefaultHeritageMissionState() {
+    return {
+      version: HERITAGE_MISSION_VERSION,
+      started: false,
+      language: 'tl',
+      chapelEvidence: [],
+      undergroundEvidence: [],
+      timelineOrder: [],
+      curatedChapel: '',
+      curatedHistory: [],
+      completed: false,
+    };
+  }
+
+  _readHeritageMissionState() {
+    const fallback = this._createDefaultHeritageMissionState();
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(HERITAGE_MISSION_STORAGE_KEY) || 'null');
+      if (!stored || stored.version !== HERITAGE_MISSION_VERSION) {
+        return fallback;
+      }
+      return {
+        ...fallback,
+        ...stored,
+        language: stored.language === 'en' ? 'en' : 'tl',
+        chapelEvidence: Array.isArray(stored.chapelEvidence)
+          ? stored.chapelEvidence.filter((id) => HERITAGE_MISSION_CHAPEL_IDS.includes(id))
+          : [],
+        undergroundEvidence: Array.isArray(stored.undergroundEvidence)
+          ? stored.undergroundEvidence.filter((id) => HERITAGE_MISSION_TIMELINE.includes(id))
+          : [],
+        timelineOrder: Array.isArray(stored.timelineOrder)
+          ? stored.timelineOrder.filter((id) => HERITAGE_MISSION_TIMELINE.includes(id))
+          : [],
+        curatedHistory: Array.isArray(stored.curatedHistory)
+          ? stored.curatedHistory.filter((id) => HERITAGE_MISSION_TIMELINE.includes(id))
+          : [],
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  _saveHeritageMissionState() {
+    try {
+      window.localStorage.setItem(
+        HERITAGE_MISSION_STORAGE_KEY,
+        JSON.stringify(this.heritageMission),
+      );
+    } catch {
+      // The experience remains usable when browser storage is unavailable.
+    }
+    this._renderHeritageMission();
+    this._refreshHeritageMissionMarkers();
+  }
+
+  _missionText(tl, en) {
+    return this.heritageMission.language === 'en' ? en : tl;
+  }
+
+  _missionTrack(eventType, targetId, extra = {}) {
+    try {
+      window.NHCPAnalytics?.track?.(
+        eventType,
+        'webxr',
+        targetId,
+        {
+          language: this.heritageMission.language,
+          scene: this._getHeritageMissionScene(),
+          source: 'heritage-investigator',
+          ...extra,
+        },
+      );
+    } catch {
+      // Analytics must never interrupt the experience.
+    }
+  }
+
+  _getHeritageMissionScene() {
+    if (this._isMuseumScene()) {
+      return 'museum';
+    }
+    if (this._isUndergroundScene()) {
+      return 'underground';
+    }
+    return 'chapel';
+  }
+
+  _setupHeritageMission() {
+    const { missionButton, missionCloseButton, missionLanguageButton, missionContent } = this.refs;
+    missionButton?.addEventListener('click', () => this._setHeritageMissionOpen(!this.heritageMissionOpen));
+    missionCloseButton?.addEventListener('click', () => this._setHeritageMissionOpen(false));
+    missionLanguageButton?.addEventListener('click', () => {
+      this.heritageMission.language = this.heritageMission.language === 'tl' ? 'en' : 'tl';
+      this.expandedHotspotLanguage = this.heritageMission.language;
+      this._saveHeritageMissionState();
+    });
+    missionContent?.addEventListener('click', (event) => {
+      const control = event.target.closest('[data-mission-action]');
+      if (!control) {
+        return;
+      }
+      event.preventDefault();
+      this._handleHeritageMissionAction(
+        control.dataset.missionAction,
+        control.dataset.missionId || '',
+      );
+    });
+    this.expandedHotspotLanguage = this.heritageMission.language;
+    this._renderHeritageMission();
+  }
+
+  _maybeOpenHeritageMissionBriefing() {
+    if (!this._isMuseumScene() || this.heritageMission.started) {
+      return;
+    }
+    try {
+      if (window.sessionStorage.getItem('nhcpHeritageMissionInviteShown') === '1') {
+        return;
+      }
+      window.sessionStorage.setItem('nhcpHeritageMissionInviteShown', '1');
+    } catch {
+      // Still show the invitation when session storage is unavailable.
+    }
+    window.setTimeout(() => this._setHeritageMissionOpen(true), 550);
+  }
+
+  _setHeritageMissionOpen(open) {
+    this.heritageMissionOpen = Boolean(open);
+    this.refs.missionPanel?.classList.toggle('hidden', !this.heritageMissionOpen);
+    this.refs.missionPanel?.setAttribute('aria-hidden', String(!this.heritageMissionOpen));
+    this.refs.missionButton?.classList.toggle('is-active', this.heritageMissionOpen);
+    this.refs.missionButton?.setAttribute('aria-expanded', String(this.heritageMissionOpen));
+    if (this.heritageMissionOpen) {
+      this._renderHeritageMission();
+      this.refs.missionCloseButton?.focus({ preventScroll: true });
+    }
+  }
+
+  _showHeritageMissionToast(tl, en, duration = 4200) {
+    const toast = this.refs.missionToast;
+    if (!toast) {
+      return;
+    }
+    window.clearTimeout(this.heritageMissionToastTimer);
+    toast.textContent = this._missionText(tl, en);
+    toast.classList.remove('hidden');
+    this.heritageMissionToastTimer = window.setTimeout(() => {
+      toast.classList.add('hidden');
+    }, duration);
+  }
+
+  _isChapelMissionComplete() {
+    return HERITAGE_MISSION_CHAPEL_IDS.every((id) => this.heritageMission.chapelEvidence.includes(id));
+  }
+
+  _isUndergroundEvidenceComplete() {
+    return HERITAGE_MISSION_TIMELINE.every((id) => this.heritageMission.undergroundEvidence.includes(id));
+  }
+
+  _isMissionTimelineComplete() {
+    return HERITAGE_MISSION_TIMELINE.every((id, index) => this.heritageMission.timelineOrder[index] === id);
+  }
+
+  _getHeritageMissionStage() {
+    if (this.heritageMission.completed) {
+      return 5;
+    }
+    if (this._isMissionTimelineComplete()) {
+      return 4;
+    }
+    if (this._isChapelMissionComplete()) {
+      return 3;
+    }
+    return this.heritageMission.started ? 2 : 1;
+  }
+
+  _renderHeritageMissionProgress() {
+    const progress = this.refs.missionProgress;
+    if (!progress) {
+      return;
+    }
+    const stage = this._getHeritageMissionStage();
+    const labels = this.heritageMission.language === 'en'
+      ? ['Briefing', 'Chapel', 'Underground', 'Exhibit']
+      : ['Panimula', 'Kapilya', 'Ilalim ng Lupa', 'Eksibit'];
+    progress.innerHTML = labels.map((label, index) => {
+      const step = index + 1;
+      const state = step < stage
+        ? 'is-complete'
+        : (step === stage ? 'is-current' : '');
+      return `<span class="heritage-mission__step ${state}"><i>${step < stage ? '✓' : step}</i><b>${label}</b></span>`;
+    }).join('');
+  }
+
+  _renderHeritageMission() {
+    const { missionContent, missionLanguageButton, missionBadge, missionTitle } = this.refs;
+    if (!missionContent) {
+      return;
+    }
+    const language = this.heritageMission.language;
+    if (missionLanguageButton) {
+      missionLanguageButton.textContent = language === 'tl' ? 'TL' : 'EN';
+      missionLanguageButton.setAttribute(
+        'aria-label',
+        language === 'tl' ? 'Switch mission language to English' : 'Palitan ang wika ng misyon sa Tagalog',
+      );
+    }
+    if (missionTitle) {
+      missionTitle.textContent = this._missionText('Talaang Pananaliksik', 'Field Notebook');
+    }
+    const collectedCount = this.heritageMission.chapelEvidence.length
+      + this.heritageMission.undergroundEvidence.length;
+    if (missionBadge) {
+      missionBadge.textContent = String(collectedCount);
+      missionBadge.hidden = !this.heritageMission.started;
+      missionBadge.classList.toggle('is-complete', this.heritageMission.completed);
+    }
+    this._renderHeritageMissionProgress();
+
+    if (!this.heritageMission.started) {
+      missionContent.innerHTML = this._renderHeritageMissionBriefing();
+      return;
+    }
+    const scene = this._getHeritageMissionScene();
+    if (scene === 'chapel') {
+      missionContent.innerHTML = this._renderChapelMission();
+    } else if (scene === 'underground') {
+      missionContent.innerHTML = this._renderUndergroundMission();
+    } else {
+      missionContent.innerHTML = this._renderMuseumMission();
+    }
+  }
+
+  _renderHeritageMissionBriefing() {
+    return `
+      <section class="heritage-mission__section heritage-mission__section--intro">
+        <span class="heritage-mission__chapter">01 · ${this._missionText('Panimula ng Tagapangasiwa', 'Curator Briefing')}</span>
+        <h3>${this._missionText('Buuin ang kuwento mula sa ebidensiya', 'Build the story from evidence')}</h3>
+        <p>${this._missionText(
+          'May tatlong bahagi ang iyong pagsisiyasat: suriin ang mga materyales sa kapilya, tipunin ang mga tala sa ilalim ng lupa, at bumalik sa museo upang bumuo ng isang maliit na interpretibong eksibit.',
+          'Your investigation has three parts: examine the chapel materials, gather historical records below ground, then return to the museum to curate a small interpretive exhibit.',
+        )}</p>
+        <div class="heritage-mission__role">
+          <strong>${this._missionText('Ang iyong tungkulin', 'Your role')}</strong>
+          <span>${this._missionText('Tagapagsiyasat ng Pamanang Kultural', 'Digital Heritage Investigator')}</span>
+        </div>
+        <p class="heritage-mission__note">${this._missionText(
+          'Opsyonal ang gawaing ito. Maaari ka pa ring malayang maglibot anumang oras.',
+          'This activity is optional. You can continue to explore freely at any time.',
+        )}</p>
+        <button class="heritage-mission__primary" type="button" data-mission-action="begin">${this._missionText('Simulan ang Pagsisiyasat', 'Begin Investigation')}</button>
+      </section>`;
+  }
+
+  _renderMuseumMission() {
+    if (this.heritageMission.completed) {
+      return `
+        <section class="heritage-mission__section heritage-mission__section--complete">
+          <span class="heritage-mission__seal" aria-hidden="true">✓</span>
+          <span class="heritage-mission__chapter">04 · ${this._missionText('Nabuo ang Eksibit', 'Exhibit Completed')}</span>
+          <h3>${this._missionText('Mula sa bagay tungo sa buhay na alaala', 'From evidence to living memory')}</h3>
+          <p>${this._missionText(
+            'Pinag-ugnay mo ang mga materyales ng kapilya at ang mga tala ng kasaysayan upang makabuo ng isang interpretasyong may konteksto.',
+            'You connected the chapel’s material evidence with its historical records to create an interpretation grounded in context.',
+          )}</p>
+          <button class="heritage-mission__secondary" type="button" data-mission-action="reset-confirm">${this._missionText('Ulitin ang Karanasan', 'Restart Experience')}</button>
+        </section>`;
+    }
+    if (!this._isMissionTimelineComplete()) {
+      const nextAction = this._isChapelMissionComplete() ? 'go-underground' : 'go-chapel';
+      const nextLabel = this._isChapelMissionComplete()
+        ? this._missionText('Magpatuloy sa Ilalim ng Lupa', 'Continue Underground')
+        : this._missionText('Magpatuloy sa Kapilya', 'Continue to the Chapel');
+      return `
+        <section class="heritage-mission__section">
+          <span class="heritage-mission__chapter">${this._missionText('Patuloy na Pagsisiyasat', 'Investigation in Progress')}</span>
+          <h3>${this._missionText('Hindi pa kumpleto ang talaan', 'The field record is not complete yet')}</h3>
+          <p>${this._missionText(
+            'Buksan ang apat na talaan ng materyales sa kapilya, pagkatapos ay hanapin ang apat na gintong himpilan ng ebidensiya sa ilalim ng lupa.',
+            'Open all four material tables in the chapel, then locate the four gold evidence stations underground.',
+          )}</p>
+          ${this._renderMissionCounts()}
+          <button class="heritage-mission__primary" type="button" data-mission-action="${nextAction}">${nextLabel}</button>
+        </section>`;
+    }
+    return this._renderMuseumCuration();
+  }
+
+  _renderMissionCounts() {
+    return `
+      <div class="heritage-mission__counts">
+        <span><b>${this.heritageMission.chapelEvidence.length}/4</b>${this._missionText('Talaan ng kapilya', 'Chapel records')}</span>
+        <span><b>${this.heritageMission.undergroundEvidence.length}/4</b>${this._missionText('Tala ng kasaysayan', 'History records')}</span>
+      </div>`;
+  }
+
+  _renderChapelMission() {
+    const cards = HERITAGE_MISSION_CHAPEL_IDS.map((id) => {
+      const table = CHURCH_HOTSPOT_TABLES[id];
+      const complete = this.heritageMission.chapelEvidence.includes(id);
+      return `<li class="${complete ? 'is-collected' : ''}"><i>${complete ? '✓' : '○'}</i><span>${table.title[this.heritageMission.language] || table.title.en}</span></li>`;
+    }).join('');
+    const done = this._isChapelMissionComplete();
+    return `
+      <section class="heritage-mission__section">
+        <span class="heritage-mission__chapter">02 · ${this._missionText('Pagsisiyasat sa Kapilya', 'Chapel Investigation')}</span>
+        <h3>${this._missionText('Basahin ang gusali sa pamamagitan ng materyales', 'Read the building through its materials')}</h3>
+        <p>${this._missionText(
+          'Lumapit at buksan ang bawat glowing table hotspot. Suriin ang bato, kahoy, detalye, at mga pinaghalong ginamit sa kapilya.',
+          'Approach and open each glowing table hotspot. Examine the stone, wood, details, and mixtures used in the chapel.',
+        )}</p>
+        <ul class="heritage-mission__checklist">${cards}</ul>
+        <button class="heritage-mission__primary" type="button" data-mission-action="go-underground" ${done ? '' : 'disabled'}>${done
+          ? this._missionText('Dalhin ang Talaan sa Ilalim ng Lupa', 'Take the Notebook Underground')
+          : this._missionText('Suriin muna ang apat na talaan', 'Examine all four tables first')}</button>
+      </section>`;
+  }
+
+  _renderUndergroundMission() {
+    const cards = HERITAGE_MISSION_TIMELINE.map((id) => {
+      const evidence = HERITAGE_MISSION_EVIDENCE[id];
+      const complete = this.heritageMission.undergroundEvidence.includes(id);
+      return `<li class="${complete ? 'is-collected' : ''}"><i>${complete ? '✓' : '○'}</i><span><b>${evidence.year}</b>${evidence.title[this.heritageMission.language] || evidence.title.en}${complete ? `<small>${evidence.text[this.heritageMission.language] || evidence.text.en}</small>` : ''}</span></li>`;
+    }).join('');
+    const evidenceComplete = this._isUndergroundEvidenceComplete();
+    return `
+      <section class="heritage-mission__section">
+        <span class="heritage-mission__chapter">03 · ${this._missionText('Talaan sa Ilalim ng Lupa', 'Underground Evidence')}</span>
+        <h3>${this._missionText('Hanapin ang mga bakas ng kasaysayan', 'Trace the historical record')}</h3>
+        <p>${this._missionText(
+          'Hanapin at buksan ang apat na gintong himpilan. Ang mga ito ay interpretibong tala, hindi muling pagtatanghal ng eksaktong lokasyon ng pangyayari.',
+          'Find and open the four gold stations. They are interpretive evidence records, not reconstructions of the events’ exact locations.',
+        )}</p>
+        <ul class="heritage-mission__checklist heritage-mission__checklist--evidence">${cards}</ul>
+        ${evidenceComplete ? this._renderTimelineTask() : `<p class="heritage-mission__note">${this._missionText('Lilitaw ang chronology task kapag kumpleto na ang apat na tala.', 'The chronology task unlocks after all four records are collected.')}</p>`}
+      </section>`;
+  }
+
+  _renderTimelineTask() {
+    if (this._isMissionTimelineComplete()) {
+      return `
+        <div class="heritage-mission__timeline-complete">
+          <strong>✓ ${this._missionText('Tama ang pagkakasunod-sunod', 'Chronology restored')}</strong>
+          <span>${this._missionText('1896 → 1897 → 1941–1945 → 1945', '1896 → 1897 → 1941–1945 → 1945')}</span>
+        </div>
+        <button class="heritage-mission__primary" type="button" data-mission-action="go-museum">${this._missionText('Bumalik sa Museo upang Mag-curate', 'Return to the Museum to Curate')}</button>`;
+    }
+    const scrambled = [
+      'evidence-guerrillas',
+      'evidence-revolution',
+      'evidence-world-war-ii',
+      'evidence-biak-na-bato',
+    ];
+    const selected = this.heritageMission.timelineOrder;
+    const buttons = scrambled.map((id) => {
+      const evidence = HERITAGE_MISSION_EVIDENCE[id];
+      const selectedIndex = selected.indexOf(id);
+      return `<button type="button" class="heritage-mission__timeline-card ${selectedIndex >= 0 ? 'is-selected' : ''}" data-mission-action="timeline" data-mission-id="${id}" ${selectedIndex >= 0 ? 'disabled' : ''}><b>${selectedIndex >= 0 ? selectedIndex + 1 : '?'}</b><span>${evidence.title[this.heritageMission.language] || evidence.title.en}</span><small>${evidence.year}</small></button>`;
+    }).join('');
+    return `
+      <div class="heritage-mission__timeline-task">
+        <h4>${this._missionText('Ayusin ang Tala ng Panahon', 'Restore the Chronology')}</h4>
+        <p>${this._missionText('Piliin ang mga pangyayari mula sa pinakamaaga hanggang pinakahuli.', 'Select the events from earliest to latest.')}</p>
+        <div class="heritage-mission__timeline-grid">${buttons}</div>
+      </div>`;
+  }
+
+  _renderMuseumCuration() {
+    const chapelOptions = HERITAGE_MISSION_CHAPEL_IDS.map((id) => {
+      const table = CHURCH_HOTSPOT_TABLES[id];
+      const selected = this.heritageMission.curatedChapel === id;
+      return `<button type="button" class="heritage-mission__curation-card ${selected ? 'is-selected' : ''}" data-mission-action="curate-chapel" data-mission-id="${id}" aria-pressed="${selected}"><i>${selected ? '✓' : '+'}</i><span>${table.title[this.heritageMission.language] || table.title.en}</span></button>`;
+    }).join('');
+    const historyOptions = HERITAGE_MISSION_TIMELINE.map((id) => {
+      const evidence = HERITAGE_MISSION_EVIDENCE[id];
+      const selected = this.heritageMission.curatedHistory.includes(id);
+      return `<button type="button" class="heritage-mission__curation-card ${selected ? 'is-selected' : ''}" data-mission-action="curate-history" data-mission-id="${id}" aria-pressed="${selected}"><i>${selected ? '✓' : '+'}</i><span><b>${evidence.year}</b>${evidence.title[this.heritageMission.language] || evidence.title.en}</span></button>`;
+    }).join('');
+    const ready = Boolean(this.heritageMission.curatedChapel)
+      && this.heritageMission.curatedHistory.length === 2;
+    return `
+      <section class="heritage-mission__section">
+        <span class="heritage-mission__chapter">04 · ${this._missionText('Munting Eksibit', 'Micro-Exhibit')}</span>
+        <h3>${this._missionText('Piliin ang ebidensiyang mag-uugnay sa lugar at kasaysayan', 'Curate a connection between place and history')}</h3>
+        <p>${this._missionText(
+          'Pumili ng isang talaan ng materyales at dalawang tala ng kasaysayan. Ang mahusay na interpretasyon ay nag-uugnay ng pisikal na pamanang nakikita natin sa mga kuwentong pinangangalagaan nito.',
+          'Choose one material record and two history records. Good interpretation connects the physical heritage we can observe with the stories it safeguards.',
+        )}</p>
+        <h4>${this._missionText('Isang talaan ng materyales', 'One material record')}</h4>
+        <div class="heritage-mission__curation-grid">${chapelOptions}</div>
+        <h4>${this._missionText('Dalawang tala ng kasaysayan', 'Two history records')}</h4>
+        <div class="heritage-mission__curation-grid">${historyOptions}</div>
+        <button class="heritage-mission__primary" type="button" data-mission-action="complete" ${ready ? '' : 'disabled'}>${ready
+          ? this._missionText('Buuin ang Interpretibong Eksibit', 'Complete the Interpretive Exhibit')
+          : this._missionText('Pumili ng 1 materyal at 2 tala', 'Choose 1 material and 2 records')}</button>
+      </section>`;
+  }
+
+  _handleHeritageMissionAction(action, id) {
+    if (action === 'begin') {
+      this.heritageMission.started = true;
+      this._saveHeritageMissionState();
+      this._missionTrack('learning_activity_started', 'heritage-investigator');
+      this._showHeritageMissionToast('Nagsimula na ang pagsisiyasat.', 'Investigation started.');
+      return;
+    }
+    if (action === 'go-chapel') {
+      window.location.assign('/3d-environment');
+      return;
+    }
+    if (action === 'go-underground' && this._isChapelMissionComplete()) {
+      window.location.assign('/3d-environment?zip=underground.zip');
+      return;
+    }
+    if (action === 'go-museum' && this._isMissionTimelineComplete()) {
+      window.location.assign('/3d-environment/museum');
+      return;
+    }
+    if (action === 'timeline') {
+      const expected = HERITAGE_MISSION_TIMELINE[this.heritageMission.timelineOrder.length];
+      if (id !== expected) {
+        this._showHeritageMissionToast(
+          'Hindi pa iyan ang susunod. Ihambing ang mga taon sa bawat tala.',
+          'That is not the next event. Compare the year on each record.',
+        );
+        return;
+      }
+      this.heritageMission.timelineOrder.push(id);
+      this._saveHeritageMissionState();
+      if (this._isMissionTimelineComplete()) {
+        this._missionTrack('learning_activity_completed', 'heritage-chronology', { score: 4, total: 4 });
+        this._showHeritageMissionToast('Nabuo ang tamang pagkakasunod-sunod.', 'The chronology is complete.');
+      }
+      return;
+    }
+    if (action === 'curate-chapel' && HERITAGE_MISSION_CHAPEL_IDS.includes(id)) {
+      this.heritageMission.curatedChapel = id;
+      this._saveHeritageMissionState();
+      return;
+    }
+    if (action === 'curate-history' && HERITAGE_MISSION_TIMELINE.includes(id)) {
+      const selected = this.heritageMission.curatedHistory;
+      if (selected.includes(id)) {
+        this.heritageMission.curatedHistory = selected.filter((item) => item !== id);
+      } else if (selected.length < 2) {
+        selected.push(id);
+      } else {
+        this._showHeritageMissionToast('Dalawang tala lamang ang piliin.', 'Choose only two history records.');
+        return;
+      }
+      this._saveHeritageMissionState();
+      return;
+    }
+    if (action === 'complete') {
+      if (!this.heritageMission.curatedChapel || this.heritageMission.curatedHistory.length !== 2) {
+        return;
+      }
+      this.heritageMission.completed = true;
+      this._saveHeritageMissionState();
+      this._missionTrack('learning_activity_completed', 'heritage-investigator', { score: 8, total: 8 });
+      this._showHeritageMissionToast('Nabuo ang iyong interpretibong eksibit.', 'Your interpretive exhibit is complete.', 5200);
+      return;
+    }
+    if (action === 'reset-confirm') {
+      this.refs.missionContent.innerHTML = `
+        <section class="heritage-mission__section heritage-mission__section--confirm">
+          <h3>${this._missionText('Ulitin ang buong karanasan?', 'Restart the full experience?')}</h3>
+          <p>${this._missionText('Mabubura ang kasalukuyang tala ng pagsisiyasat sa device na ito.', 'The current investigation record on this device will be cleared.')}</p>
+          <div class="heritage-mission__confirm-actions">
+            <button class="heritage-mission__secondary" type="button" data-mission-action="reset-cancel">${this._missionText('Kanselahin', 'Cancel')}</button>
+            <button class="heritage-mission__danger" type="button" data-mission-action="reset">${this._missionText('Ulitin', 'Restart')}</button>
+          </div>
+        </section>`;
+      return;
+    }
+    if (action === 'reset-cancel') {
+      this._renderHeritageMission();
+      return;
+    }
+    if (action === 'reset') {
+      const language = this.heritageMission.language;
+      this.heritageMission = this._createDefaultHeritageMissionState();
+      this.heritageMission.language = language;
+      this._saveHeritageMissionState();
+      this._missionTrack('learning_activity_restarted', 'heritage-investigator');
+    }
+  }
+
+  _collectHeritageMissionRecord(id) {
+    if (!this.heritageMission.started) {
+      return;
+    }
+    let target = null;
+    let total = 0;
+    if (HERITAGE_MISSION_CHAPEL_IDS.includes(id)) {
+      target = this.heritageMission.chapelEvidence;
+      total = 4;
+    } else if (HERITAGE_MISSION_TIMELINE.includes(id)) {
+      target = this.heritageMission.undergroundEvidence;
+      total = 4;
+    }
+    if (!target || target.includes(id)) {
+      return;
+    }
+    target.push(id);
+    this._saveHeritageMissionState();
+    this._missionTrack('evidence_collected', id, { score: target.length, total });
+    this._showHeritageMissionToast(
+      `Naitala ang ebidensiya (${target.length}/${total}).`,
+      `Evidence recorded (${target.length}/${total}).`,
+    );
+  }
+
+  _refreshHeritageMissionMarkers() {
+    const collected = new Set([
+      ...this.heritageMission.chapelEvidence,
+      ...this.heritageMission.undergroundEvidence,
+    ]);
+    this.hotspotMarkers.forEach((marker) => {
+      const isCollected = collected.has(marker.name);
+      marker.userData.missionCollected = isCollected;
+      marker.scale.setScalar(isCollected ? 0.84 : 1);
+    });
+    this.floatingHotspotLabels.forEach((label) => {
+      label.element?.classList.toggle('is-collected', collected.has(label.hotspotId));
+    });
   }
 
   async _toggleGyroLook() {
@@ -621,6 +1249,9 @@ export class WebXRApp {
     const caption = document.createElement('p');
     caption.className = 'hotspot-image-overlay-caption';
 
+    const description = document.createElement('p');
+    description.className = 'hotspot-image-overlay-description hidden';
+
     const controls = document.createElement('div');
     controls.className = 'hotspot-image-overlay-controls';
 
@@ -637,7 +1268,7 @@ export class WebXRApp {
     languageButton.setAttribute('aria-label', 'Switch table narration to English');
 
     controls.append(toggleInfoButton, languageButton);
-    panel.append(closeButton, mediaFrame, caption, controls);
+    panel.append(closeButton, mediaFrame, caption, description, controls);
     overlay.appendChild(panel);
     document.body.appendChild(overlay);
 
@@ -676,6 +1307,7 @@ export class WebXRApp {
           || this.expandedHotspotTable.title?.en
           || this.expandedHotspotTable.imageAlt;
       }
+      this._renderExpandedHotspotDescription();
       if (this.expandedHotspotDetail) {
         this._playExpandedHotspotAudio(this.expandedHotspotDetail.audio);
       }
@@ -689,6 +1321,7 @@ export class WebXRApp {
     this.expandedHotspotOverlay = overlay;
     this.expandedHotspotOverlayImage = image;
     this.expandedHotspotOverlayCaption = caption;
+    this.expandedHotspotOverlayDescription = description;
     this.expandedHotspotOverlayToggle = toggleInfoButton;
     this.expandedHotspotOverlayLanguage = languageButton;
     this.expandedHotspotOverlayLayer = hotspotLayer;
@@ -698,10 +1331,11 @@ export class WebXRApp {
   }
 
   _showExpandedHotspotImage(imageUrl, hotspotId) {
-    const table = CHURCH_HOTSPOT_TABLES[hotspotId];
+    const table = HOTSPOT_TABLES[hotspotId];
     if (!table || !imageUrl) {
       return;
     }
+    this._collectHeritageMissionRecord(hotspotId);
     if (this.renderer.xr.isPresenting) {
       this._showXrHotspotTable(hotspotId);
       return;
@@ -714,6 +1348,7 @@ export class WebXRApp {
 
     this._stopExpandedHotspotAudio();
     this.expandedHotspotTable = table;
+    this.expandedHotspotId = hotspotId;
     this.expandedHotspotDetail = null;
     this.expandedHotspotOverlayImage.src = table.imageUrl || imageUrl;
     this.expandedHotspotOverlayImage.alt = table.imageAlt || `${hotspotId} full image`;
@@ -721,6 +1356,7 @@ export class WebXRApp {
       this.expandedHotspotOverlayCaption.textContent =
         table.title?.[this.expandedHotspotLanguage] || table.title?.en || table.imageAlt;
     }
+    this._renderExpandedHotspotDescription();
 
     this._hideExpandedHotspotDetail();
     this._renderExpandedHotspotPins(table);
@@ -735,15 +1371,35 @@ export class WebXRApp {
       this.expandedHotspotOverlayLayer.classList.toggle('hidden', !hasHotspots);
     }
     if (this.expandedHotspotOverlayLanguage) {
-      const hasBilingualAudio = table.hotspots.some((hotspot) => (
+      const hasBilingualAudio = (table.hotspots || []).some((hotspot) => (
         hotspot?.audio?.tl && hotspot.audio.en
       ));
-      this.expandedHotspotOverlayLanguage.classList.toggle('hidden', !hasBilingualAudio);
+      const hasBilingualEvidence = Boolean(
+        HERITAGE_MISSION_EVIDENCE[hotspotId]?.text?.tl
+        && HERITAGE_MISSION_EVIDENCE[hotspotId]?.text?.en,
+      );
+      this.expandedHotspotOverlayLanguage.classList.toggle(
+        'hidden',
+        !(hasBilingualAudio || hasBilingualEvidence),
+      );
       this.expandedHotspotOverlayLanguage.textContent =
         this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN';
     }
 
     this.expandedHotspotOverlay.classList.remove('hidden');
+  }
+
+  _renderExpandedHotspotDescription() {
+    const description = this.expandedHotspotOverlayDescription;
+    if (!description) {
+      return;
+    }
+    const evidence = HERITAGE_MISSION_EVIDENCE[this.expandedHotspotId] || null;
+    const text = evidence?.text?.[this.expandedHotspotLanguage]
+      || evidence?.text?.en
+      || '';
+    description.textContent = text;
+    description.classList.toggle('hidden', !text);
   }
 
   _renderExpandedHotspotPins(table) {
@@ -907,7 +1563,7 @@ export class WebXRApp {
   }
 
   _showXrHotspotTable(hotspotId) {
-    const table = CHURCH_HOTSPOT_TABLES[hotspotId];
+    const table = HOTSPOT_TABLES[hotspotId];
     if (!table || !this.scene || !this.camera) {
       return;
     }
@@ -924,7 +1580,7 @@ export class WebXRApp {
   }
 
   _rebuildXrHotspotTableViewer() {
-    const table = CHURCH_HOTSPOT_TABLES[this.xrHotspotTableId];
+    const table = HOTSPOT_TABLES[this.xrHotspotTableId];
     if (!table || !this.scene || !this.camera) {
       return;
     }
@@ -1037,7 +1693,7 @@ export class WebXRApp {
       if (!this.xrHotspotTablePinsVisible) {
         return;
       }
-      table.hotspots.forEach((hotspot, index) => {
+      (table.hotspots || []).forEach((hotspot, index) => {
         const x = (Math.min(100, Math.max(0, Number(hotspot.x))) / 100 - 0.5) * width;
         const y = (0.5 - Math.min(100, Math.max(0, Number(hotspot.y))) / 100) * height + 0.08;
         this._createXrTableControl({
@@ -1054,7 +1710,7 @@ export class WebXRApp {
       });
     });
 
-    if (!detail) {
+    if (!detail && Array.isArray(table.hotspots) && table.hotspots.length > 0) {
       this._createXrTableControl({
         parent: viewerRoot,
         label: 'PIN',
@@ -1100,6 +1756,11 @@ export class WebXRApp {
   _hideExpandedHotspotImage() {
     this._hideExpandedHotspotDetail();
     this.expandedHotspotTable = null;
+    this.expandedHotspotId = '';
+    if (this.expandedHotspotOverlayDescription) {
+      this.expandedHotspotOverlayDescription.textContent = '';
+      this.expandedHotspotOverlayDescription.classList.add('hidden');
+    }
     this.expandedHotspotOverlayLayer?.replaceChildren();
     this.expandedHotspotOverlay?.classList.add('hidden');
   }
@@ -1463,9 +2124,9 @@ export class WebXRApp {
       this._transferToChurch(CHURCH_RETURN_SPAWN);
     });
 
-    Object.keys(CHURCH_HOTSPOT_TABLES).forEach((hotspotId) => {
+    Object.keys(HOTSPOT_TABLES).forEach((hotspotId) => {
       this.interactionRegistry.register(hotspotId, () => {
-        const table = CHURCH_HOTSPOT_TABLES[hotspotId];
+        const table = HOTSPOT_TABLES[hotspotId];
         if (table) {
           this._showExpandedHotspotImage(table.imageUrl, hotspotId);
         }
@@ -1491,7 +2152,7 @@ export class WebXRApp {
       this._rebuildXrHotspotTableViewer();
     });
     this.interactionRegistry.register('xr-table-detail', (context) => {
-      const table = CHURCH_HOTSPOT_TABLES[this.xrHotspotTableId];
+      const table = HOTSPOT_TABLES[this.xrHotspotTableId];
       const detailId = context?.metadata?.detailId;
       const detail = table?.hotspots?.find((hotspot) => hotspot.id === detailId);
       if (!detail) {
@@ -1876,7 +2537,7 @@ export class WebXRApp {
     for (const hotspot of activeHotspots) {
       const interactionName = hotspot.id === 'go-back-to-church'
         ? hotspot.id
-        : (CHURCH_HOTSPOT_TABLES[hotspot.id] ? hotspot.id : null);
+        : (HOTSPOT_TABLES[hotspot.id] ? hotspot.id : null);
       const { root } = this._buildHotspotMarker({
         id: hotspot.id,
         position: hotspot.position,
@@ -1893,9 +2554,7 @@ export class WebXRApp {
       this.scene.add(root);
       this.hotspotMarkers.push(root);
 
-      const labelImageUrl = !this._isUndergroundScene()
-        ? CHURCH_FLOATING_LABEL_IMAGES[hotspot.id]
-        : null;
+      const labelImageUrl = HOTSPOT_FLOATING_LABEL_IMAGES[hotspot.id] || null;
       if (labelImageUrl) {
         this._createFloatingHotspotLabel(root, hotspot.id, labelImageUrl, hotspot.radius);
       }
@@ -1947,6 +2606,7 @@ export class WebXRApp {
 
     this.floatingHotspotLabels.push({
       anchor,
+      hotspotId,
       element,
       yOffset,
       xrSprite,
@@ -2304,6 +2964,12 @@ export class WebXRApp {
       return;
     }
 
+    if (event.code === 'Escape' && this.heritageMissionOpen) {
+      this._setHeritageMissionOpen(false);
+      this.refs.missionButton?.focus({ preventScroll: true });
+      return;
+    }
+
     if (event.code !== 'KeyH' || event.repeat) {
       return;
     }
@@ -2380,6 +3046,7 @@ export class WebXRApp {
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
     this._updateFloatingHotspotLabels();
+    this._refreshHeritageMissionMarkers();
   }
 
   _animate() {
