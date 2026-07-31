@@ -52,11 +52,43 @@
     en: "/static/images/site-map/SiteMapIntroEng.mp3",
     tl: "/static/images/site-map/SiteMapIntroTag.mp3",
   };
+  var VIRTUAL_TOUR_SCENE_BY_STOP = {
+    "front-gate": "frontGate",
+    "flag-pole": "leftFlag",
+    parking: "leftFrontGate",
+    "museum-entrance": "frontMuseum",
+    "resource-center-office": "frontMuseum",
+    "middle-ground": "middleGInside",
+    "left-side-inside": "leftCornerInsideFrontGate",
+    "right-side-inside": "rightCornerInsideFrontGate",
+    "left-tombs": "leftTombs",
+    "right-tombs": "rightFrontTombs",
+    "church-front": "frontChurch",
+    church: "insideChurch",
+    "underground-crypts": "underground1",
+  };
+  var TAGALOG_TITLE_BY_STOP = {
+    "front-gate": "Harapang Tarangkahan",
+    "flag-pole": "Poste ng Watawat",
+    parking: "Paradahan",
+    "museum-entrance": "Museo",
+    "resource-center-office": "Sentrong Sanggunian",
+    "middle-ground": "Gitnang Bahagi",
+    "left-side-inside": "Kaliwang Bahagi",
+    "right-side-inside": "Kanang Bahagi",
+    "left-tombs": "Mga Puntod sa Kaliwa",
+    "right-tombs": "Mga Puntod sa Kanan",
+    "church-front": "Harap ng Kapilya",
+    church: "Kapilya",
+    "underground-crypts": "Mga Libingan sa Ilalim ng Lupa",
+  };
 
   var state = {
     map: null,
     imageOverlay: null,
     panoramaViewer: null,
+    panoramaReadyPromise: null,
+    panoramaFailed: false,
     panoramaOriginalUrl: "",
     panoramaSourceUrl: "",
     imageBounds: null,
@@ -85,6 +117,9 @@
     storyIndex: 0,
     calibrationEnabled: false,
     hotspotsVisible: true,
+    viewSwitching: false,
+    transitionTimer: 0,
+    controlRevealTimer: 0,
     reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
 
@@ -92,15 +127,23 @@
     mapRoot: document.getElementById("interactiveMap"),
     panoramaRoot: document.getElementById("panoramaMap"),
     resetViewBtn: document.getElementById("resetViewBtn"),
+    viewModeBtn: document.getElementById("mapViewModeBtn"),
+    viewModeLabel: document.getElementById("mapViewModeLabel"),
     languageBtn: document.getElementById("mapLanguageBtn"),
     languageLabel: document.getElementById("mapLanguageLabel"),
+    resetLabel: document.getElementById("mapResetLabel"),
+    hotspotsLabel: document.getElementById("mapHotspotsLabel"),
+    backLabel: document.getElementById("mapBackLabel"),
     toggleHotspotsBtn: document.getElementById("mapToggleHotspotsBtn"),
     controlDock: document.getElementById("mapControlDock"),
     loadingOverlay: document.getElementById("mapLoadingOverlay"),
     loadingTitle: document.getElementById("mapLoadingTitle"),
     loadingCopy: document.getElementById("mapLoadingCopy"),
+    viewTransition: document.getElementById("mapViewTransition"),
+    viewTransitionText: document.getElementById("mapViewTransitionText"),
     mapInfoOverlay: document.getElementById("mapInfoOverlay"),
     mapInfoCard: document.getElementById("mapInfoCard"),
+    mapInfoClose: document.getElementById("mapInfoClose"),
     mapInfoRoute: document.getElementById("mapInfoRoute"),
     mapInfoTitle: document.getElementById("mapInfoTitle"),
     mapInfoMeta: document.getElementById("mapInfoMeta"),
@@ -114,12 +157,8 @@
   }
 
   function setLoadingState(isLoading, title, copy) {
-    if (elements.loadingTitle && title) {
-      elements.loadingTitle.textContent = title;
-    }
-
-    if (elements.loadingCopy && copy) {
-      elements.loadingCopy.textContent = copy;
+    if (elements.loadingCopy && (copy || title)) {
+      elements.loadingCopy.textContent = copy || title;
     }
 
     if (elements.loadingOverlay) {
@@ -127,7 +166,14 @@
     }
 
     if (elements.controlDock) {
-      elements.controlDock.hidden = !!isLoading;
+      window.clearTimeout(state.controlRevealTimer);
+      if (isLoading) {
+        elements.controlDock.hidden = true;
+      } else {
+        state.controlRevealTimer = window.setTimeout(function () {
+          elements.controlDock.hidden = false;
+        }, state.reduceMotion ? 0 : 620);
+      }
     }
   }
 
@@ -282,6 +328,16 @@
     return String(stop.description || "No description available.");
   }
 
+  function getLocalizedTitle(stop) {
+    if (!stop) {
+      return "";
+    }
+    if (getCurrentLanguage() === "tl" && TAGALOG_TITLE_BY_STOP[stop.id]) {
+      return TAGALOG_TITLE_BY_STOP[stop.id];
+    }
+    return String(stop.title || stop.id || "Location");
+  }
+
   function stopHotspotAudio() {
     if (!state.audioPlayer) {
       return;
@@ -400,7 +456,7 @@
       node.dataset.stopMarker = stop.id;
       node.setAttribute("tabindex", "0");
       node.setAttribute("role", "button");
-      node.setAttribute("aria-label", stop.title);
+      node.setAttribute("aria-label", getLocalizedTitle(stop));
     });
   }
 
@@ -536,14 +592,46 @@
 
   function setLeafletVisibility(isVisible) {
     if (elements.mapRoot) {
-      elements.mapRoot.hidden = !isVisible;
+      elements.mapRoot.hidden = false;
+      elements.mapRoot.classList.toggle("is-active", !!isVisible);
+      elements.mapRoot.setAttribute("aria-hidden", isVisible ? "false" : "true");
     }
   }
 
   function setPanoramaVisibility(isVisible) {
     if (elements.panoramaRoot) {
-      elements.panoramaRoot.hidden = !isVisible;
+      elements.panoramaRoot.hidden = false;
+      elements.panoramaRoot.classList.toggle("is-active", !!isVisible);
+      elements.panoramaRoot.setAttribute("aria-hidden", isVisible ? "false" : "true");
     }
+  }
+
+  function showViewTransition(message) {
+    if (!elements.viewTransition) {
+      return;
+    }
+    window.clearTimeout(state.transitionTimer);
+    if (elements.viewTransitionText) {
+      elements.viewTransitionText.textContent = message || "Changing view...";
+    }
+    elements.viewTransition.hidden = false;
+    window.requestAnimationFrame(function () {
+      elements.viewTransition.classList.add("is-visible");
+    });
+  }
+
+  function hideViewTransition(delay) {
+    if (!elements.viewTransition) {
+      return;
+    }
+    state.transitionTimer = window.setTimeout(function () {
+      elements.viewTransition.classList.remove("is-visible");
+      window.setTimeout(function () {
+        if (!elements.viewTransition.classList.contains("is-visible")) {
+          elements.viewTransition.hidden = true;
+        }
+      }, state.reduceMotion ? 0 : 260);
+    }, Math.max(0, Number(delay) || 0));
   }
 
   function getSafeTextureLimit() {
@@ -604,57 +692,85 @@
       return Promise.reject(new Error("Pannellum is unavailable."));
     }
 
-    if (state.panoramaViewer && state.panoramaOriginalUrl === panoramaSrc) {
-      setLoadingState(false);
-      focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
-      renderPanoramaHotspots();
-      return Promise.resolve(state.panoramaViewer);
+    if (state.panoramaReadyPromise && state.panoramaOriginalUrl === panoramaSrc) {
+      return state.panoramaReadyPromise;
     }
 
-    setLoadingState(true, "Loading 360 view...", "Preparing the panoramic scene for smooth navigation.");
-
     var safeTextureLimit = getSafeTextureLimit();
-    return buildSafePanoramaSource(panoramaSrc, safeTextureLimit).then(function (safePanoramaSrc) {
+    state.panoramaOriginalUrl = panoramaSrc;
+    state.panoramaReadyPromise = buildSafePanoramaSource(panoramaSrc, safeTextureLimit).then(function (safePanoramaSrc) {
       state.panoramaOriginalUrl = panoramaSrc;
       state.panoramaSourceUrl = safePanoramaSrc;
       state.panoramaHotspotNodesById = {};
       elements.panoramaRoot.innerHTML = "";
 
-      state.panoramaViewer = window.pannellum.viewer("panoramaMap", {
-        type: "equirectangular",
-        panorama: safePanoramaSrc,
-        hotSpots: getPanoramaStops()
-          .map(buildPanoramaHotspotDefinition)
-          .filter(function (item) {
-            return item;
-          }),
-        autoLoad: true,
-        showControls: true,
-        compass: false,
-        autoRotate: 0,
-        pitch: 0,
-        yaw: 0,
-        hfov: 110,
-        minHfov: 50,
-        maxHfov: 140,
-        mouseZoom: true,
-        draggable: true,
-        disableKeyboardCtrl: false,
-        showZoomCtrl: true,
-        showFullscreenCtrl: true,
-        loadingText: "Loading 360 view...",
-      });
+      return new Promise(function (resolve, reject) {
+        var settled = false;
+        var timeoutId = window.setTimeout(function () {
+          if (!settled) {
+            settled = true;
+            reject(new Error("The 360 aerial view took too long to load."));
+          }
+        }, 30000);
 
-      if (state.panoramaViewer && typeof state.panoramaViewer.on === "function") {
-        state.panoramaViewer.on("load", function () {
-          setLoadingState(false);
-          renderPanoramaHotspots();
-          focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
+        state.panoramaViewer = window.pannellum.viewer("panoramaMap", {
+          type: "equirectangular",
+          panorama: safePanoramaSrc,
+          hotSpots: getPanoramaStops()
+            .map(buildPanoramaHotspotDefinition)
+            .filter(function (item) {
+              return item;
+            }),
+          autoLoad: true,
+          showControls: false,
+          compass: false,
+          autoRotate: 0,
+          pitch: 0,
+          yaw: 0,
+          hfov: 110,
+          minHfov: 50,
+          maxHfov: 140,
+          mouseZoom: true,
+          draggable: true,
+          disableKeyboardCtrl: false,
+          showZoomCtrl: false,
+          showFullscreenCtrl: false,
+          loadingText: "Preparing the 360 aerial view...",
         });
-      }
 
-      return state.panoramaViewer;
+        if (!state.panoramaViewer || typeof state.panoramaViewer.on !== "function") {
+          window.clearTimeout(timeoutId);
+          reject(new Error("The 360 aerial viewer could not start."));
+          return;
+        }
+
+        state.panoramaViewer.on("load", function () {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          window.clearTimeout(timeoutId);
+          state.panoramaFailed = false;
+          renderPanoramaHotspots();
+          resolve(state.panoramaViewer);
+        });
+
+        state.panoramaViewer.on("error", function (message) {
+          if (settled) {
+            return;
+          }
+          settled = true;
+          window.clearTimeout(timeoutId);
+          reject(new Error(String(message || "Unable to load the 360 aerial view.")));
+        });
+      });
+    }).catch(function (error) {
+      state.panoramaFailed = true;
+      state.panoramaReadyPromise = null;
+      throw error;
     });
+
+    return state.panoramaReadyPromise;
   }
 
   function focusPanoramaOnStop(stop) {
@@ -726,44 +842,64 @@
 
   function setViewMode(mode) {
     var nextMode = mode === "360" ? "360" : "default";
-
-    state.activeViewMode = nextMode;
-
-    if (nextMode === "360") {
-      clearActiveSelection();
-      setLeafletVisibility(false);
-      setPanoramaVisibility(true);
-      updateHotspotToggleButton();
-
-      return createPanoramaViewer(state.alternateImageUrl)
-        .then(function () {
-          focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
-          renderPanoramaHotspots();
-          renderAll();
-          playIntroAudio();
-        })
-        .catch(function () {
-          state.activeViewMode = "default";
-          setPanoramaVisibility(false);
-          setLeafletVisibility(true);
-          updateHotspotToggleButton();
-          renderAll();
-          setLoadingState(false);
-        });
-    } else {
-      clearActiveSelection();
-      stopIntroAudio();
-      setPanoramaVisibility(false);
-      setLeafletVisibility(true);
-      if (state.map) {
-        state.map.invalidateSize(false);
-      }
-      updateHotspotToggleButton();
-      resetMapView();
-      renderAll();
-      playIntroAudio();
+    if (state.viewSwitching || nextMode === state.activeViewMode) {
       return Promise.resolve();
     }
+
+    state.viewSwitching = true;
+    var changingCopy = getCurrentLanguage() === "tl"
+      ? (nextMode === "360" ? "Binubuksan ang 360° tanawin..." : "Binubuksan ang aerial map...")
+      : (nextMode === "360" ? "Opening the 360° view..." : "Opening the aerial map...");
+    showViewTransition(changingCopy);
+
+    var ready = nextMode === "360"
+      ? createPanoramaViewer(state.alternateImageUrl)
+      : Promise.resolve(state.map);
+
+    return ready.then(function () {
+      state.activeViewMode = nextMode;
+      setLeafletVisibility(nextMode === "default");
+      setPanoramaVisibility(nextMode === "360");
+
+      if (nextMode === "360") {
+        if (state.panoramaViewer && typeof state.panoramaViewer.resize === "function") {
+          state.panoramaViewer.resize();
+        }
+        focusPanoramaOnStop(state.hotspotsById[state.stopId] || getPanoramaStops()[0] || null);
+      } else if (state.map) {
+        state.map.invalidateSize(false);
+        if (state.stopId && state.hotspotsById[state.stopId]) {
+          var stop = state.hotspotsById[state.stopId];
+          state.map.flyTo([stop.y, stop.x], Math.max(0, state.map.getZoom()), {
+            animate: !state.reduceMotion,
+            duration: state.reduceMotion ? 0 : 0.55,
+          });
+        } else {
+          resetMapView();
+        }
+      }
+
+      updateViewModeButton();
+      updateHotspotToggleButton();
+      renderAll();
+      hideViewTransition(state.reduceMotion ? 0 : 460);
+    }).catch(function (error) {
+      if (window.console && window.console.error) {
+        window.console.error("Site map view transition failed", error);
+      }
+      state.activeViewMode = "default";
+      setPanoramaVisibility(false);
+      setLeafletVisibility(true);
+      updateViewModeButton();
+      if (elements.viewTransitionText) {
+        elements.viewTransitionText.textContent = getCurrentLanguage() === "tl"
+          ? "Hindi mabuksan ang 360° tanawin. Subukan muli."
+          : "The 360° view could not open. Please try again.";
+      }
+      hideViewTransition(1800);
+    }).finally(function () {
+      state.viewSwitching = false;
+    });
   }
 
   function resetMapView() {
@@ -870,7 +1006,7 @@
 
       node.setAttribute("tabindex", "0");
       node.setAttribute("role", "button");
-      node.setAttribute("aria-label", spot.title);
+      node.setAttribute("aria-label", getLocalizedTitle(spot));
       node.dataset.stopMarker = spot.id;
       node.addEventListener("keydown", function (event) {
         if (event.key === "Enter" || event.key === " ") {
@@ -971,6 +1107,10 @@
 
     state.hotspots.forEach(function (spot) {
       var marker = ensureMarker(spot);
+      var markerNode = marker.getElement();
+      if (markerNode) {
+        markerNode.setAttribute("aria-label", getLocalizedTitle(spot));
+      }
       var shouldShow = !!visibleLookup[spot.id];
       var isOnMap = state.map.hasLayer(marker);
 
@@ -1037,12 +1177,32 @@
       return;
     }
 
-    [
-      { href: stop.learnMore, text: stop.learnMoreLabel || "Learn More" },
+    if (stop.panorama) {
+      var locateButton = document.createElement("button");
+      locateButton.type = "button";
+      locateButton.className = "stop-link stop-link--primary";
+      locateButton.textContent = is360ViewActive()
+        ? (getCurrentLanguage() === "tl" ? "Ipakita sa Aerial Map" : "Show on Aerial Map")
+        : (getCurrentLanguage() === "tl" ? "Hanapin sa 360°" : "Locate in 360°");
+      locateButton.addEventListener("click", function () {
+        setViewMode(is360ViewActive() ? "default" : "360");
+      });
+      elements.stopLinks.appendChild(locateButton);
+    }
+
+    var virtualTourScene = VIRTUAL_TOUR_SCENE_BY_STOP[stop.id] || "";
+    var links = [
+      {
+        href: virtualTourScene ? "/virtual-tour?scene=" + encodeURIComponent(virtualTourScene) : "",
+        text: getCurrentLanguage() === "tl" ? "Buksan ang Virtual Tour" : "Open Virtual Tour",
+      },
+      { href: stop.learnMore, text: stop.learnMoreLabel || (getCurrentLanguage() === "tl" ? "Alamin Pa" : "Learn More") },
       { href: stop.view360, text: "360 View" },
       { href: stop.arModel, text: stop.arModelLabel || "AR / 3D" },
-      { href: stop.audio, text: "Audio" },
-    ].forEach(function (linkMeta) {
+      { href: stop.audio, text: getCurrentLanguage() === "tl" ? "Audio" : "Audio" },
+    ];
+
+    links.forEach(function (linkMeta) {
       if (!linkMeta.href) {
         return;
       }
@@ -1094,9 +1254,56 @@
     }
 
     var isTagalog = getCurrentLanguage() === "tl";
-    elements.languageLabel.textContent = isTagalog ? "Tagalog" : "English";
+    elements.languageLabel.textContent = isTagalog ? "TL" : "EN";
     elements.languageBtn.classList.toggle("is-active", isTagalog);
     elements.languageBtn.setAttribute("aria-pressed", isTagalog ? "true" : "false");
+    elements.languageBtn.setAttribute(
+      "aria-label",
+      isTagalog ? "Switch site map language to English" : "Palitan ang wika ng site map sa Tagalog",
+    );
+    if (elements.resetLabel) {
+      elements.resetLabel.textContent = isTagalog ? "I-reset" : "Reset";
+    }
+    if (elements.hotspotsLabel) {
+      elements.hotspotsLabel.textContent = isTagalog ? "Mga Lugar" : "Hotspots";
+    }
+    if (elements.backLabel) {
+      elements.backLabel.textContent = isTagalog ? "Bumalik" : "Back";
+    }
+    updateViewModeButton();
+  }
+
+  function updateViewModeButton() {
+    if (!elements.viewModeBtn || !elements.viewModeLabel) {
+      return;
+    }
+    var inPanorama = is360ViewActive();
+    var isTagalog = getCurrentLanguage() === "tl";
+    elements.viewModeBtn.classList.toggle("is-active", inPanorama);
+    elements.viewModeBtn.setAttribute("aria-pressed", inPanorama ? "true" : "false");
+    elements.viewModeBtn.setAttribute(
+      "aria-label",
+      inPanorama
+        ? (isTagalog ? "Bumalik sa aerial map" : "Return to the aerial map")
+        : (isTagalog ? "Lumipat sa 360° aerial view" : "Switch to the 360° aerial view"),
+    );
+    elements.viewModeLabel.textContent = inPanorama
+      ? (isTagalog ? "Aerial Map" : "Aerial Map")
+      : (isTagalog ? "360° Tanawin" : "360° View");
+  }
+
+  function resetCurrentView() {
+    var activeStop = state.stopId ? state.hotspotsById[state.stopId] || null : null;
+    if (is360ViewActive()) {
+      if (activeStop && activeStop.panorama) {
+        focusPanoramaOnStop(activeStop);
+      } else if (state.panoramaViewer && typeof state.panoramaViewer.lookAt === "function") {
+        state.panoramaViewer.lookAt(0, 0, 110, state.reduceMotion ? 0 : 500);
+      }
+      return;
+    }
+    resetMapView();
+    clearActiveSelection();
   }
 
   function positionMapInfoOverlay(stop) {
@@ -1168,7 +1375,7 @@
 
     elements.mapInfoRoute.textContent = "";
     elements.mapInfoRoute.hidden = true;
-    elements.mapInfoTitle.textContent = stop.title;
+    elements.mapInfoTitle.textContent = getLocalizedTitle(stop);
     elements.mapInfoMeta.textContent = "";
     elements.mapInfoMeta.hidden = true;
     renderMedia(stop);
@@ -1230,10 +1437,21 @@
   }
 
   function bindEvents() {
+    if (elements.viewModeBtn) {
+      elements.viewModeBtn.addEventListener("click", function () {
+        setViewMode(is360ViewActive() ? "default" : "360");
+      });
+    }
+
     if (elements.resetViewBtn) {
       elements.resetViewBtn.addEventListener("click", function () {
-        var nextMode = is360ViewActive() ? "default" : "360";
-        setViewMode(nextMode);
+        resetCurrentView();
+      });
+    }
+
+    if (elements.mapInfoClose) {
+      elements.mapInfoClose.addEventListener("click", function () {
+        clearActiveSelection();
       });
     }
 
@@ -1297,11 +1515,23 @@
   }
 
   function init() {
-    setLoadingState(true, "Loading Site Map...", "Preparing the aerial image and controls.");
+    setLoadingState(true, "", "Preparing the Site Map...");
 
     fetchMapData()
       .then(function () {
         return initLeafletMap();
+      })
+      .then(function () {
+        setLoadingState(true, "", "Preparing the Site Map...");
+        setLeafletVisibility(true);
+        setPanoramaVisibility(false);
+        return createPanoramaViewer(state.alternateImageUrl).catch(function (error) {
+          state.panoramaFailed = true;
+          if (window.console && window.console.warn) {
+            window.console.warn("The Site Map opened without the 360 aerial view.", error);
+          }
+          return null;
+        });
       })
       .then(function () {
         bindEvents();
@@ -1311,12 +1541,17 @@
           state.stopId = initialStops[0].id;
         }
         updateLanguageButton();
+        updateViewModeButton();
         updateHotspotToggleButton();
         setLeafletVisibility(true);
         setPanoramaVisibility(false);
         renderAll();
         setLoadingState(false);
         playIntroAudio();
+
+        if (state.panoramaFailed && elements.viewModeBtn) {
+          elements.viewModeBtn.setAttribute("aria-label", "Retry loading the 360 aerial view");
+        }
       })
       .catch(function () {
         setLoadingState(true, "Unable to load Site Map", "Please refresh the page and try again.");
