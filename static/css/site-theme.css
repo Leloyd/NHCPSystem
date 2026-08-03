@@ -217,6 +217,38 @@ html[data-theme="dark"] .collection-page .ogd-view-toggle__button i { color: #c4
 html[data-theme="dark"] .collection-page .ogd-category-tabs__button.is-active,
 html[data-theme="dark"] .collection-page .ogd-view-toggle__button.is-active { background: linear-gradient(135deg, #b8963e, #c9a84c) !important; color: #1a1208 !important; }
 
+/* Online Gallery card actions: keep Bookmark and View More within the dark
+   collection palette instead of retaining their hardcoded white surfaces. */
+html[data-theme="dark"] .collection-page--gallery .ogd-bookmark-btn {
+  background: #2a2114 !important;
+  color: #e6cf8a !important;
+  border-color: rgba(201, 168, 76, 0.34) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+html[data-theme="dark"] .collection-page--gallery .ogd-bookmark-btn:hover,
+html[data-theme="dark"] .collection-page--gallery .ogd-bookmark-btn:focus-visible {
+  background: rgba(201, 168, 76, 0.16) !important;
+  color: #f2d98c !important;
+  border-color: rgba(230, 207, 138, 0.62) !important;
+}
+html[data-theme="dark"] .collection-page--gallery .ogd-bookmark-btn--icon[data-bookmarked="true"] {
+  background: linear-gradient(135deg, #b8963e, #c9a84c) !important;
+  color: #1a1208 !important;
+  border-color: #d8bc68 !important;
+}
+html[data-theme="dark"] .collection-page--gallery .ogd-artifact-card__action {
+  background: linear-gradient(135deg, #2a2114, #211a10) !important;
+  color: #e6cf8a !important;
+  border-color: rgba(201, 168, 76, 0.34) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+html[data-theme="dark"] .collection-page--gallery .ogd-artifact-card__action:hover,
+html[data-theme="dark"] .collection-page--gallery .ogd-artifact-card__action:focus-visible {
+  background: linear-gradient(135deg, #b8963e, #c9a84c) !important;
+  color: #1a1208 !important;
+  border-color: #d8bc68 !important;
+}
+
 /* ---- Community: keep text readable in dark ------------------------------- */
 html[data-theme="dark"] body.min-h-screen.bg-white { background: #141009 !important; color: #f3ece0; }
 html[data-theme="dark"] .community-section-title,
@@ -335,6 +367,21 @@ html[data-contrast="on"] .collection-page {
   --collection-bg: #000; --collection-surface: #000; --collection-surface-soft: #000;
   --collection-ink: #fff; --collection-muted: #fff; --collection-muted-soft: #fff;
   --collection-gold: #facc15; --collection-gold-deep: #facc15; --collection-gold-border: #facc15;
+}
+html[data-contrast="on"] .collection-page--gallery .ogd-bookmark-btn,
+html[data-contrast="on"] .collection-page--gallery .ogd-bookmark-btn:hover,
+html[data-contrast="on"] .collection-page--gallery .ogd-bookmark-btn:focus-visible {
+  background: #000 !important;
+  color: #facc15 !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .collection-page--gallery .ogd-bookmark-btn--icon[data-bookmarked="true"],
+html[data-contrast="on"] .collection-page--gallery .ogd-artifact-card__action,
+html[data-contrast="on"] .collection-page--gallery .ogd-artifact-card__action:hover,
+html[data-contrast="on"] .collection-page--gallery .ogd-artifact-card__action:focus-visible {
+  background: #facc15 !important;
+  color: #000 !important;
+  border-color: #facc15 !important;
 }
 
 /* ---- Page shells + sections to solid black ------------------------------- */
