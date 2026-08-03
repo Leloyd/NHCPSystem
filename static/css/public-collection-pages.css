@@ -317,6 +317,17 @@
   color: #ffffff;
 }
 
+/* Resource cards have a single action rather than the Gallery's two-control
+   footer. Keep Learn More compact and give it breathing room from metadata. */
+.collection-page--resources .ogd-artifact-card__action {
+  flex: 0 0 auto;
+  align-self: flex-start;
+  min-height: 2.75rem;
+  margin-top: 1.1rem;
+  padding: 0.65rem 1rem;
+  font-size: 0.84rem;
+}
+
 .collection-page .ogd-bookmark-btn {
   border-color: var(--collection-gold-border);
 }
