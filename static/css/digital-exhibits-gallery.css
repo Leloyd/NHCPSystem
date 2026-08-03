@@ -1564,6 +1564,8 @@ body.ogd-detail-lightbox-open {
   background:
     linear-gradient(rgba(250, 247, 242, 0.025), rgba(250, 247, 242, 0.025)),
     #080603;
+  touch-action: none;
+  overscroll-behavior: contain;
 }
 
 .ogd-detail-lightbox__stage img {
@@ -1572,6 +1574,71 @@ body.ogd-detail-lightbox-open {
   max-height: min(76vh, 52rem);
   display: block;
   object-fit: contain;
+  transform-origin: center;
+  user-select: none;
+  -webkit-user-drag: none;
+  will-change: transform;
+  cursor: zoom-in;
+}
+
+.ogd-detail-lightbox__stage img.is-zoomed {
+  cursor: grab;
+}
+
+.ogd-detail-lightbox__stage:active img.is-zoomed {
+  cursor: grabbing;
+}
+
+.ogd-detail-lightbox__zoom-controls {
+  position: absolute;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: 5;
+  display: inline-flex;
+  align-items: center;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 106, 0.58);
+  border-radius: 999px;
+  background: rgba(13, 10, 4, 0.9);
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.32);
+  backdrop-filter: blur(10px);
+}
+
+.ogd-detail-lightbox__zoom-controls button {
+  min-width: 2.6rem;
+  height: 2.6rem;
+  display: grid;
+  place-items: center;
+  border: 0;
+  background: transparent;
+  color: #faf7f2;
+  font: inherit;
+  cursor: pointer;
+}
+
+.ogd-detail-lightbox__zoom-controls button:hover,
+.ogd-detail-lightbox__zoom-controls button:focus-visible {
+  background: rgba(212, 175, 106, 0.2);
+  color: #d4af6a;
+}
+
+.ogd-detail-lightbox__zoom-controls button:disabled {
+  opacity: 0.38;
+  cursor: default;
+}
+
+.ogd-detail-lightbox__zoom-controls svg {
+  width: 1.05rem;
+  height: 1.05rem;
+}
+
+.ogd-detail-lightbox__zoom-controls .ogd-detail-lightbox__zoom-level {
+  min-width: 3.7rem;
+  border-right: 1px solid rgba(212, 175, 106, 0.28);
+  border-left: 1px solid rgba(212, 175, 106, 0.28);
+  color: #d4af6a;
+  font-size: 0.72rem;
+  font-weight: 800;
 }
 
 .ogd-detail-lightbox__close {
@@ -2483,12 +2550,18 @@ html.ogd-high-contrast .ogd-detail-media__frame--viewer {
     top: 0.55rem;
     right: 0.55rem;
   }
+
+  .ogd-detail-lightbox__zoom-controls {
+    right: 0.6rem;
+    bottom: 0.6rem;
+  }
 }
 
 html.ogd-high-contrast .ogd-detail-gallery-arrow,
 html.ogd-high-contrast .ogd-detail-gallery-counter,
 html.ogd-high-contrast .ogd-detail-lightbox__arrow,
 html.ogd-high-contrast .ogd-detail-lightbox__close,
+html.ogd-high-contrast .ogd-detail-lightbox__zoom-controls,
 html.ogd-high-contrast .ogd-detail-lightbox__dialog {
   border-color: #facc15 !important;
   background: #000 !important;

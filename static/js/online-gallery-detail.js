@@ -65,13 +65,25 @@
   const imageLightboxEl = document.getElementById("detailImageLightbox");
   const imageLightboxBackdropEl = document.getElementById("detailImageLightboxBackdrop");
   const imageLightboxCloseEl = document.getElementById("detailImageLightboxClose");
+  const imageLightboxStageEl = document.getElementById("detailImageLightboxStage");
   const imageLightboxImageEl = document.getElementById("detailImageLightboxImage");
   const imageLightboxTitleEl = document.getElementById("detailImageLightboxTitle");
   const imageLightboxLabelEl = document.getElementById("detailImageLightboxLabel");
+  const imageZoomOutEl = document.getElementById("detailImageZoomOut");
+  const imageZoomResetEl = document.getElementById("detailImageZoomReset");
+  const imageZoomInEl = document.getElementById("detailImageZoomIn");
   let activeIndex = 0;
   let activeMediaMode = "photo";
   let imageLightboxPreviousFocus = null;
   let imageLightboxCloseTimer = 0;
+  let imageLightboxScale = 1;
+  let imageLightboxPanX = 0;
+  let imageLightboxPanY = 0;
+  let imageLightboxPinchDistance = 0;
+  let imageLightboxPinchScale = 1;
+  const imageLightboxPointers = new Map();
+  const IMAGE_LIGHTBOX_MIN_SCALE = 1;
+  const IMAGE_LIGHTBOX_MAX_SCALE = 4;
 
   const i18n = {
     english: {
@@ -83,6 +95,10 @@
       zoomIn: "Click to view image",
       zoomOut: "Close expanded image",
       expandedView: "Expanded view",
+      imageZoomControls: "Image zoom controls",
+      imageZoomIn: "Zoom in",
+      imageZoomOut: "Zoom out",
+      imageZoomReset: "Reset zoom",
       description: "Description",
       tags: "Tags",
       teaching: "Teaching Note",
@@ -125,6 +141,10 @@
       zoomIn: "I-click para tingnan ang larawan",
       zoomOut: "Isara ang pinalaking larawan",
       expandedView: "Pinalaking larawan",
+      imageZoomControls: "Mga kontrol sa pag-zoom ng larawan",
+      imageZoomIn: "Palakihin",
+      imageZoomOut: "Paliitin",
+      imageZoomReset: "Ibalik ang zoom",
       description: "Paglalarawan",
       tags: "Mga Tag",
       teaching: "Tala sa Pagtuturo",
@@ -360,6 +380,72 @@
     zoomHintTextEl.textContent = strings.zoomIn;
   }
 
+  function clampImageLightboxPan() {
+    if (!imageLightboxStageEl || imageLightboxScale <= IMAGE_LIGHTBOX_MIN_SCALE) {
+      imageLightboxPanX = 0;
+      imageLightboxPanY = 0;
+      return;
+    }
+
+    const stageRect = imageLightboxStageEl.getBoundingClientRect();
+    const maxX = Math.max(0, (stageRect.width * (imageLightboxScale - 1)) / 2);
+    const maxY = Math.max(0, (stageRect.height * (imageLightboxScale - 1)) / 2);
+    imageLightboxPanX = Math.max(-maxX, Math.min(maxX, imageLightboxPanX));
+    imageLightboxPanY = Math.max(-maxY, Math.min(maxY, imageLightboxPanY));
+  }
+
+  function renderImageLightboxZoom() {
+    clampImageLightboxPan();
+    if (imageLightboxImageEl) {
+      imageLightboxImageEl.style.transform = `translate3d(${imageLightboxPanX}px, ${imageLightboxPanY}px, 0) scale(${imageLightboxScale})`;
+      imageLightboxImageEl.classList.toggle("is-zoomed", imageLightboxScale > IMAGE_LIGHTBOX_MIN_SCALE);
+    }
+    if (imageZoomResetEl) {
+      imageZoomResetEl.textContent = `${Math.round(imageLightboxScale * 100)}%`;
+    }
+    if (imageZoomOutEl) imageZoomOutEl.disabled = imageLightboxScale <= IMAGE_LIGHTBOX_MIN_SCALE;
+    if (imageZoomInEl) imageZoomInEl.disabled = imageLightboxScale >= IMAGE_LIGHTBOX_MAX_SCALE;
+  }
+
+  function setImageLightboxZoom(nextScale, focalX, focalY) {
+    const previousScale = imageLightboxScale;
+    const clampedScale = Math.max(IMAGE_LIGHTBOX_MIN_SCALE, Math.min(IMAGE_LIGHTBOX_MAX_SCALE, Number(nextScale) || 1));
+    if (clampedScale === previousScale) {
+      renderImageLightboxZoom();
+      return;
+    }
+
+    if (Number.isFinite(focalX) && Number.isFinite(focalY) && previousScale > 0) {
+      const ratio = clampedScale / previousScale;
+      imageLightboxPanX = focalX - (focalX - imageLightboxPanX) * ratio;
+      imageLightboxPanY = focalY - (focalY - imageLightboxPanY) * ratio;
+    }
+    imageLightboxScale = clampedScale;
+    renderImageLightboxZoom();
+  }
+
+  function resetImageLightboxZoom() {
+    imageLightboxScale = IMAGE_LIGHTBOX_MIN_SCALE;
+    imageLightboxPanX = 0;
+    imageLightboxPanY = 0;
+    imageLightboxPointers.clear();
+    imageLightboxPinchDistance = 0;
+    renderImageLightboxZoom();
+  }
+
+  function getPointerDistance(firstPointer, secondPointer) {
+    return Math.hypot(secondPointer.x - firstPointer.x, secondPointer.y - firstPointer.y);
+  }
+
+  function syncImageZoomLabels() {
+    const strings = getStrings();
+    const controls = imageLightboxStageEl && imageLightboxStageEl.querySelector(".ogd-detail-lightbox__zoom-controls");
+    if (controls) controls.setAttribute("aria-label", strings.imageZoomControls);
+    if (imageZoomInEl) imageZoomInEl.setAttribute("aria-label", strings.imageZoomIn);
+    if (imageZoomOutEl) imageZoomOutEl.setAttribute("aria-label", strings.imageZoomOut);
+    if (imageZoomResetEl) imageZoomResetEl.setAttribute("aria-label", strings.imageZoomReset);
+  }
+
   function openImageLightbox() {
     const item = items[activeIndex];
     if (!item || !normalizeText(item.image_url) || !imageLightboxEl || !imageLightboxImageEl) {
@@ -376,10 +462,13 @@
     imageLightboxPreviousFocus = document.activeElement;
     imageLightboxImageEl.src = item.image_url;
     imageLightboxImageEl.alt = title + " — " + strings.expandedView;
+    imageLightboxImageEl.draggable = false;
     if (imageLightboxTitleEl) imageLightboxTitleEl.textContent = title;
     if (imageLightboxLabelEl) imageLightboxLabelEl.textContent = strings.expandedView;
     if (imageLightboxCloseEl) imageLightboxCloseEl.setAttribute("aria-label", strings.zoomOut);
     if (imageLightboxBackdropEl) imageLightboxBackdropEl.setAttribute("aria-label", strings.zoomOut);
+    syncImageZoomLabels();
+    resetImageLightboxZoom();
 
     imageLightboxEl.hidden = false;
     imageLightboxEl.setAttribute("aria-hidden", "false");
@@ -398,6 +487,7 @@
     imageLightboxEl.classList.remove("is-open");
     imageLightboxEl.setAttribute("aria-hidden", "true");
     document.body.classList.remove("ogd-detail-lightbox-open");
+    resetImageLightboxZoom();
     imageLightboxCloseTimer = window.setTimeout(() => {
       imageLightboxEl.hidden = true;
       imageLightboxCloseTimer = 0;
@@ -536,6 +626,7 @@
     if (breadcrumbHomeEl) breadcrumbHomeEl.textContent = strings.home;
     if (breadcrumbDigitalExhibitsEl) breadcrumbDigitalExhibitsEl.textContent = strings.digitalExhibits;
     if (breadcrumbGalleryEl) breadcrumbGalleryEl.textContent = strings.gallery;
+    syncImageZoomLabels();
     if (prevBtn) prevBtn.setAttribute("aria-label", strings.prev);
     if (nextBtn) nextBtn.setAttribute("aria-label", strings.next);
     if (descHeadingEl) descHeadingEl.textContent = strings.description;
@@ -698,6 +789,90 @@
 
   if (imageLightboxBackdropEl) {
     imageLightboxBackdropEl.addEventListener("click", closeImageLightbox);
+  }
+
+  if (imageZoomInEl) {
+    imageZoomInEl.addEventListener("click", () => setImageLightboxZoom(imageLightboxScale + 0.5));
+  }
+
+  if (imageZoomOutEl) {
+    imageZoomOutEl.addEventListener("click", () => setImageLightboxZoom(imageLightboxScale - 0.5));
+  }
+
+  if (imageZoomResetEl) {
+    imageZoomResetEl.addEventListener("click", resetImageLightboxZoom);
+  }
+
+  if (imageLightboxStageEl) {
+    imageLightboxStageEl.addEventListener("wheel", (event) => {
+      event.preventDefault();
+      const stageRect = imageLightboxStageEl.getBoundingClientRect();
+      const focalX = event.clientX - stageRect.left - stageRect.width / 2;
+      const focalY = event.clientY - stageRect.top - stageRect.height / 2;
+      const zoomFactor = event.deltaY < 0 ? 1.18 : 1 / 1.18;
+      setImageLightboxZoom(imageLightboxScale * zoomFactor, focalX, focalY);
+    }, { passive: false });
+
+    imageLightboxStageEl.addEventListener("dblclick", (event) => {
+      if (event.target.closest(".ogd-detail-lightbox__zoom-controls")) {
+        return;
+      }
+      const stageRect = imageLightboxStageEl.getBoundingClientRect();
+      const focalX = event.clientX - stageRect.left - stageRect.width / 2;
+      const focalY = event.clientY - stageRect.top - stageRect.height / 2;
+      setImageLightboxZoom(imageLightboxScale > 1 ? 1 : 2, focalX, focalY);
+    });
+
+    imageLightboxStageEl.addEventListener("pointerdown", (event) => {
+      if (event.target.closest(".ogd-detail-lightbox__zoom-controls")) {
+        return;
+      }
+      event.preventDefault();
+      imageLightboxStageEl.setPointerCapture(event.pointerId);
+      imageLightboxPointers.set(event.pointerId, { x: event.clientX, y: event.clientY, previousX: event.clientX, previousY: event.clientY });
+      if (imageLightboxPointers.size === 2) {
+        const pointers = Array.from(imageLightboxPointers.values());
+        imageLightboxPinchDistance = getPointerDistance(pointers[0], pointers[1]);
+        imageLightboxPinchScale = imageLightboxScale;
+      }
+    });
+
+    imageLightboxStageEl.addEventListener("pointermove", (event) => {
+      const pointer = imageLightboxPointers.get(event.pointerId);
+      if (!pointer) {
+        return;
+      }
+      event.preventDefault();
+      pointer.x = event.clientX;
+      pointer.y = event.clientY;
+
+      if (imageLightboxPointers.size >= 2) {
+        const pointers = Array.from(imageLightboxPointers.values()).slice(0, 2);
+        const distance = getPointerDistance(pointers[0], pointers[1]);
+        if (imageLightboxPinchDistance > 0) {
+          setImageLightboxZoom(imageLightboxPinchScale * (distance / imageLightboxPinchDistance));
+        }
+      } else if (imageLightboxScale > IMAGE_LIGHTBOX_MIN_SCALE) {
+        imageLightboxPanX += pointer.x - pointer.previousX;
+        imageLightboxPanY += pointer.y - pointer.previousY;
+        renderImageLightboxZoom();
+      }
+
+      pointer.previousX = pointer.x;
+      pointer.previousY = pointer.y;
+    });
+
+    const releaseImagePointer = (event) => {
+      imageLightboxPointers.delete(event.pointerId);
+      imageLightboxPinchDistance = 0;
+      if (imageLightboxPointers.size === 1) {
+        const remainingPointer = Array.from(imageLightboxPointers.values())[0];
+        remainingPointer.previousX = remainingPointer.x;
+        remainingPointer.previousY = remainingPointer.y;
+      }
+    };
+    imageLightboxStageEl.addEventListener("pointerup", releaseImagePointer);
+    imageLightboxStageEl.addEventListener("pointercancel", releaseImagePointer);
   }
 
   if (photoTabEl) {
