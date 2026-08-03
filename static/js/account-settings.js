@@ -10,10 +10,6 @@
   var noticeClose = document.getElementById("settingsNoticeClose");
   var lastNoticeTrigger = null;
 
-  function activeLanguage() {
-    return document.documentElement.getAttribute("data-lang") === "tl" ? "tl" : "en";
-  }
-
   function syncBodyLock() {
     var anyOpen = document.querySelector(".s-modal:not([hidden])");
     document.body.style.overflow = anyOpen ? "hidden" : "";
@@ -271,17 +267,6 @@
           if (typeof payload.stage === "string") setSecurityStage(payload.stage);
           showNotice(error.message, "error", submitter);
         });
-    });
-  });
-
-  /* Accessibility changes already apply instantly. Confirm them in the same
-     modal without navigating away from Account Settings. */
-  document.querySelectorAll("[data-set-theme],[data-toggle-contrast],[data-set-textsize],[data-set-lang]").forEach(function (button) {
-    button.addEventListener("click", function () {
-      window.setTimeout(function () {
-        var message = activeLanguage() === "tl" ? "Na-update ang iyong accessibility preference." : "Your accessibility preference was updated.";
-        showNotice(message, "success", button);
-      }, 0);
     });
   });
 
