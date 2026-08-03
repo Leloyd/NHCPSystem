@@ -216,9 +216,15 @@ html[data-theme="dark"] .collection-page .ogd-sort-control__icon,
 html[data-theme="dark"] .collection-page .ogd-view-toggle__button i { color: #c4b494 !important; }
 html[data-theme="dark"] .collection-page .ogd-category-tabs__button.is-active,
 html[data-theme="dark"] .collection-page .ogd-view-toggle__button.is-active { background: linear-gradient(135deg, #b8963e, #c9a84c) !important; color: #1a1208 !important; }
-html[data-theme="dark"] .collection-page .ogd-toolbar-section {
-  background: rgba(20, 16, 9, 0.95) !important;
-  border-color: rgba(201, 168, 76, 0.18) !important;
+html[data-theme="dark"] .collection-page--gallery .ogd-toolbar-section {
+  background: var(--collection-bg) !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html[data-theme="dark"] .collection-page--gallery .ogd-toolbar {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 html[data-theme="dark"] .collection-page .ogd-view-toggle__button {
   background: #211a10 !important;
@@ -384,6 +390,16 @@ html[data-contrast="on"] .collection-page {
   --collection-bg: #000; --collection-surface: #000; --collection-surface-soft: #000;
   --collection-ink: #fff; --collection-muted: #fff; --collection-muted-soft: #fff;
   --collection-gold: #facc15; --collection-gold-deep: #facc15; --collection-gold-border: #facc15;
+}
+html[data-contrast="on"] .collection-page--gallery .ogd-toolbar-section {
+  background: #000 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html[data-contrast="on"] .collection-page--gallery .ogd-toolbar {
+  background: transparent !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 html[data-contrast="on"] .collection-page .ogd-view-toggle {
   background: #000 !important;
