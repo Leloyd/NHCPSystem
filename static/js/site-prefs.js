@@ -86,9 +86,13 @@
       var next = v === "tl" ? "tl" : "en";
       if (next === state.lang) return;
       state.lang = next; save(KEY.lang, state.lang); serverSave({ language_preference: state.lang });
-      /* Reload so server-rendered and list-rendered pages pick up the language
-         (Gallery/Edu read <html lang>); span-based pages also settle cleanly. */
-      try { window.location.reload(); } catch (e) { applyDom(); }
+      /* Most list-rendered pages need a reload to request translated server
+         content. Span-based settings pages opt out and update in place. */
+      if (document.body && document.body.hasAttribute("data-site-prefs-no-reload")) {
+        applyDom(); syncControls();
+      } else {
+        try { window.location.reload(); } catch (e) { applyDom(); }
+      }
     },
   };
   window.NHCPPrefs = Prefs;

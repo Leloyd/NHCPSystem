@@ -541,6 +541,31 @@ def register_user_account_routes(
             return ""
         return stage
 
+    def _settings_wants_json() -> bool:
+        return request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.accept_mimetypes.best == "application/json"
+
+    def _settings_response(
+        *,
+        ok: bool,
+        message: str,
+        redirect_status: str = "",
+        http_status: int = 200,
+        **extra: Any,
+    ):
+        if _settings_wants_json():
+            payload: dict[str, Any] = {"ok": ok, "message" if ok else "error": message}
+            payload.update(extra)
+            return jsonify(payload), http_status
+        if redirect_status:
+            return redirect(url_for("account_settings", status=redirect_status))
+        return redirect(url_for("account_settings"))
+
+    def _settings_login_required_response():
+        login_url = url_for("public_login", next=url_for("account_settings"))
+        if _settings_wants_json():
+            return jsonify({"ok": False, "error": "Your session has expired. Please sign in again.", "redirect_url": login_url}), 401
+        return redirect(login_url)
+
     def _render_auth_entry(*, default_view: str, next_url: str, page_title: str, status_message: str | None = None, error_message: str | None = None):
         return render_template(
             "AuthEntry.html",
@@ -1088,7 +1113,7 @@ def register_user_account_routes(
     def account_settings():
         current_user = get_current_public_user()
         if not current_user:
-            return redirect(url_for("public_login"))
+            return _settings_login_required_response()
         if not _user_completed_onboarding(current_user):
             return redirect(url_for("public_account_setup", next=url_for("account_settings")))
 
@@ -1098,6 +1123,8 @@ def register_user_account_routes(
         if request.method == "POST":
             if not is_public_csrf_valid(request.form.get("csrf_token")):
                 error_message = "Invalid request. Please try again."
+                if _settings_wants_json():
+                    return jsonify({"ok": False, "error": error_message}), 400
             else:
                 try:
                     full_name = str(request.form.get("full_name") or "").strip()
@@ -1117,12 +1144,20 @@ def register_user_account_routes(
                             "updated_at": _utcnow().isoformat(),
                         },
                     )
-                    return redirect(url_for("account_settings", status="saved"))
+                    return _settings_response(
+                        ok=True,
+                        message="Your settings were saved.",
+                        redirect_status="saved",
+                    )
                 except ValueError as exc:
                     error_message = str(exc)
+                    if _settings_wants_json():
+                        return jsonify({"ok": False, "error": error_message}), 400
                 except Exception as exc:  # noqa: BLE001
                     app.logger.exception("Failed to update settings for user %s: %s", current_user.get("id"), exc)
                     error_message = "Could not save your settings right now."
+                    if _settings_wants_json():
+                        return jsonify({"ok": False, "error": error_message}), 500
 
             current_user = get_current_public_user() or current_user
 
@@ -1171,20 +1206,27 @@ def register_user_account_routes(
     def account_settings_security_code():
         current_user = get_current_public_user()
         if not current_user:
-            return redirect(url_for("public_login", next=url_for("account_settings")))
+            return _settings_login_required_response()
         if not is_public_csrf_valid(request.form.get("csrf_token")):
-            return redirect(url_for("account_settings", status="security-code-error"))
+            return _settings_response(ok=False, message="Invalid request. Please try again.", redirect_status="security-code-error", http_status=400)
         if not is_public_auth_email_configured():
-            return redirect(url_for("account_settings", status="security-code-error"))
+            return _settings_response(ok=False, message="Email security codes are not available right now.", redirect_status="security-code-error", http_status=503)
 
         try:
             auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
             if not auth_user or bool(auth_user.get("local_password_enabled", True)):
                 _clear_security_setup_state()
-                return redirect(url_for("account_settings"))
+                return _settings_response(ok=False, message="Password sign-in is already enabled for this account.", http_status=400)
             wait_seconds = _resend_wait_seconds(auth_user.get("security_code_sent_at"), SECURITY_CODE_RESEND_COOLDOWN)
             if wait_seconds:
-                return redirect(url_for("account_settings", status="security-code-wait"))
+                return _settings_response(
+                    ok=False,
+                    message=f"Please wait {wait_seconds} seconds before requesting another security code.",
+                    redirect_status="security-code-wait",
+                    http_status=429,
+                    stage="code",
+                    retry_after=wait_seconds,
+                )
 
             security_code = _generate_six_digit_code()
             now = _utcnow()
@@ -1204,39 +1246,44 @@ def register_user_account_routes(
                 expires_minutes=int(SECURITY_CODE_LIFETIME.total_seconds() // 60),
             )
             _set_security_setup_state(int(auth_user.get("id")), "code")
-            return redirect(url_for("account_settings", status="security-code-sent"))
+            return _settings_response(
+                ok=True,
+                message="A security code was sent to your email. It expires in 10 minutes.",
+                redirect_status="security-code-sent",
+                stage="code",
+            )
         except Exception as exc:
             _clear_security_setup_state()
             app.logger.exception("Failed to send a password security code for user %s: %s", current_user.get("id"), exc)
-            return redirect(url_for("account_settings", status="security-code-error"))
+            return _settings_response(ok=False, message="We couldn't send a security code right now. Please try again.", redirect_status="security-code-error", http_status=500)
 
     @app.route("/account/settings/security/verify-code", methods=["POST"])
     def account_settings_security_verify_code():
         current_user = get_current_public_user()
         if not current_user:
-            return redirect(url_for("public_login", next=url_for("account_settings")))
+            return _settings_login_required_response()
         if not is_public_csrf_valid(request.form.get("csrf_token")):
             _clear_security_setup_state()
-            return redirect(url_for("account_settings", status="security-code-invalid"))
+            return _settings_response(ok=False, message="The security code is invalid or expired. Request a new code and try again.", redirect_status="security-code-invalid", http_status=400)
         if _get_security_setup_stage(int(current_user.get("id"))) != "code":
-            return redirect(url_for("account_settings", status="security-code-invalid"))
+            return _settings_response(ok=False, message="Request a new security code before continuing.", redirect_status="security-code-invalid", http_status=400)
 
         client_ip = get_client_ip()
         is_limited, _retry_after = is_public_auth_rate_limited("login", client_ip)
         if is_limited:
-            return redirect(url_for("account_settings", status="security-code-invalid"))
+            return _settings_response(ok=False, message="Too many attempts. Please wait before trying again.", redirect_status="security-code-invalid", http_status=429, stage="code")
 
         try:
             security_code = _validate_six_digit_code(request.form.get("security_code"))
             auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
             if not auth_user or bool(auth_user.get("local_password_enabled", True)):
                 _clear_security_setup_state()
-                return redirect(url_for("account_settings"))
+                return _settings_response(ok=False, message="Password sign-in is already enabled for this account.", http_status=400)
 
             attempts = int(auth_user.get("security_code_attempts") or 0)
             if attempts >= SECURITY_CODE_MAX_ATTEMPTS:
                 _clear_security_setup_state()
-                return redirect(url_for("account_settings", status="security-code-invalid"))
+                return _settings_response(ok=False, message="Too many incorrect codes. Request a new security code.", redirect_status="security-code-invalid", http_status=429, stage="")
             stored_code_hash = str(auth_user.get("security_code_hash") or "")
             code_is_valid = (
                 bool(stored_code_hash)
@@ -1251,7 +1298,13 @@ def register_user_account_routes(
                 record_public_auth_failure("login", client_ip)
                 if attempts + 1 >= SECURITY_CODE_MAX_ATTEMPTS:
                     _clear_security_setup_state()
-                return redirect(url_for("account_settings", status="security-code-invalid"))
+                return _settings_response(
+                    ok=False,
+                    message="The security code is invalid or expired. Check the code or request a new one.",
+                    redirect_status="security-code-invalid",
+                    http_status=400,
+                    stage="" if attempts + 1 >= SECURITY_CODE_MAX_ATTEMPTS else "code",
+                )
 
             update_public_user(
                 int(auth_user.get("id")),
@@ -1265,24 +1318,29 @@ def register_user_account_routes(
             )
             clear_public_auth_failures("login", client_ip)
             _set_security_setup_state(int(auth_user.get("id")), "password")
-            return redirect(url_for("account_settings", status="security-code-verified"))
+            return _settings_response(
+                ok=True,
+                message="Security code confirmed. You can now create your password.",
+                redirect_status="security-code-verified",
+                stage="password",
+            )
         except ValueError:
-            return redirect(url_for("account_settings", status="security-code-invalid"))
+            return _settings_response(ok=False, message="Enter the complete six-digit security code.", redirect_status="security-code-invalid", http_status=400, stage="code")
         except Exception as exc:
             app.logger.exception("Failed to verify password security code for user %s: %s", current_user.get("id"), exc)
-            return redirect(url_for("account_settings", status="security-code-invalid"))
+            return _settings_response(ok=False, message="We couldn't verify the security code right now. Please try again.", redirect_status="security-code-invalid", http_status=500, stage="code")
 
     @app.route("/account/settings/security/password", methods=["POST"])
     def account_settings_security_password():
         current_user = get_current_public_user()
         if not current_user:
-            return redirect(url_for("public_login", next=url_for("account_settings")))
+            return _settings_login_required_response()
         if not is_public_csrf_valid(request.form.get("csrf_token")):
-            return redirect(url_for("account_settings", status="password-error"))
+            return _settings_response(ok=False, message="Invalid request. Please try again.", redirect_status="password-error", http_status=400)
         client_ip = get_client_ip()
         is_limited, _retry_after = is_public_auth_rate_limited("login", client_ip)
         if is_limited:
-            return redirect(url_for("account_settings", status="password-error"))
+            return _settings_response(ok=False, message="Too many password attempts. Please wait before trying again.", redirect_status="password-error", http_status=429)
 
         try:
             auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
@@ -1329,7 +1387,19 @@ def register_user_account_routes(
             clear_public_auth_failures("login", client_ip)
             _clear_security_setup_state()
             set_public_user_session(int(auth_user.get("id")))
-            return redirect(url_for("account_settings", status="password-changed" if had_local_password else "password-created"))
+            return _settings_response(
+                ok=True,
+                message=(
+                    "Your password was changed successfully."
+                    if had_local_password
+                    else "A password was added to your Google account. You can now sign in either way."
+                ),
+                redirect_status="password-changed" if had_local_password else "password-created",
+                password_created=not had_local_password,
+                password_changed=had_local_password,
+                csrf_token=ensure_public_csrf_token(),
+                stage="complete",
+            )
         except ValueError as exc:
             app.logger.warning("Password update rejected for user %s: %s", current_user.get("id"), exc)
             error_text = str(exc).lower()
@@ -1339,18 +1409,18 @@ def register_user_account_routes(
                 status = "password-code"
             else:
                 status = "password-invalid"
-            return redirect(url_for("account_settings", status=status))
+            return _settings_response(ok=False, message=str(exc), redirect_status=status, http_status=400, stage=_get_security_setup_stage(int(current_user.get("id"))))
         except Exception as exc:
             app.logger.exception("Failed to update password for user %s: %s", current_user.get("id"), exc)
-            return redirect(url_for("account_settings", status="password-error"))
+            return _settings_response(ok=False, message="We couldn't update your password right now. Please try again.", redirect_status="password-error", http_status=500)
 
     @app.route("/account/settings/avatar", methods=["POST"])
     def account_settings_avatar():
         current_user = get_current_public_user()
         if not current_user:
-            return redirect(url_for("public_login"))
+            return _settings_login_required_response()
         if not is_public_csrf_valid(request.form.get("csrf_token")):
-            return redirect(url_for("account_settings"))
+            return _settings_response(ok=False, message="Invalid request. Please try again.", http_status=400)
 
         action = str(request.form.get("avatar_action") or "upload").strip().lower()
         old_picture = str(current_user.get("profile_picture") or "").strip()
@@ -1364,13 +1434,13 @@ def register_user_account_routes(
                         delete_public_image(old_picture, folder_prefix=AVATAR_UPLOAD_FOLDER)
                     except Exception:  # noqa: BLE001
                         pass
-                return redirect(url_for("account_settings", status="photo-removed"))
+                return _settings_response(ok=True, message="Your profile picture was removed.", redirect_status="photo-removed", avatar_action="remove")
 
             file_storage = request.files.get("avatar")
             if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
-                return redirect(url_for("account_settings"))
+                return _settings_response(ok=False, message="Choose a JPG or PNG image first.", http_status=400)
             if not is_supabase_configured():
-                return redirect(url_for("account_settings", status="photo-config"))
+                return _settings_response(ok=False, message="Photo uploads are not available right now.", redirect_status="photo-config", http_status=503)
 
             object_path = upload_public_image(
                 file_storage,
@@ -1379,19 +1449,19 @@ def register_user_account_routes(
                 slugify_text=_avatar_slugify,
             )
             if not object_path:
-                return redirect(url_for("account_settings"))
+                return _settings_response(ok=False, message="That image couldn't be uploaded. Please try again.", redirect_status="photo-error", http_status=400)
             update_public_user(int(current_user.get("id")), {"profile_picture": object_path, "updated_at": _utcnow().isoformat()})
             if is_stored_object:
                 try:
                     delete_public_image(old_picture, folder_prefix=AVATAR_UPLOAD_FOLDER)
                 except Exception:  # noqa: BLE001
                     pass
-            return redirect(url_for("account_settings", status="photo"))
+            return _settings_response(ok=True, message="Your profile picture was updated.", redirect_status="photo", avatar_action="upload")
         except ValueError:
-            return redirect(url_for("account_settings", status="photo-error"))
+            return _settings_response(ok=False, message="That image couldn't be uploaded. Please use a JPG or PNG image.", redirect_status="photo-error", http_status=400)
         except Exception as exc:  # noqa: BLE001
             app.logger.exception("Failed to update avatar for user %s: %s", current_user.get("id"), exc)
-            return redirect(url_for("account_settings", status="photo-error"))
+            return _settings_response(ok=False, message="That image couldn't be uploaded. Please try again.", redirect_status="photo-error", http_status=500)
 
     @app.route("/api/account/preferences", methods=["POST"])
     def account_update_preferences():
