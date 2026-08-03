@@ -385,10 +385,16 @@ html[data-contrast="on"] .collection-page {
   --collection-ink: #fff; --collection-muted: #fff; --collection-muted-soft: #fff;
   --collection-gold: #facc15; --collection-gold-deep: #facc15; --collection-gold-border: #facc15;
 }
+html[data-contrast="on"] .collection-page .ogd-view-toggle {
+  background: #000 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
 html[data-contrast="on"] .collection-page .ogd-view-toggle__button {
   background: #000 !important;
   color: #facc15 !important;
-  border-color: #facc15 !important;
+  border: 0 !important;
+  box-shadow: none !important;
 }
 html[data-contrast="on"] .collection-page .ogd-view-toggle__button.is-active,
 html[data-contrast="on"] .collection-page .ogd-view-toggle__button.is-active i {
