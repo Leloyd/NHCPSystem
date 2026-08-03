@@ -32,8 +32,14 @@
     var isError = type === "error";
     lastNoticeTrigger = trigger || document.activeElement;
     if (noticeIcon) noticeIcon.classList.toggle("is-error", isError);
-    if (noticeSuccessIcon) noticeSuccessIcon.hidden = isError;
-    if (noticeErrorIcon) noticeErrorIcon.hidden = !isError;
+    if (noticeSuccessIcon) {
+      noticeSuccessIcon.hidden = isError;
+      noticeSuccessIcon.classList.toggle("is-visible", !isError);
+    }
+    if (noticeErrorIcon) {
+      noticeErrorIcon.hidden = !isError;
+      noticeErrorIcon.classList.toggle("is-visible", isError);
+    }
     setNoticeTitle(type);
     if (noticeMessage) noticeMessage.textContent = String(message || (isError ? "Please try again." : "Your changes have been saved."));
     noticeModal.hidden = false;

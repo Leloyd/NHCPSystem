@@ -109,7 +109,8 @@
       .s-notice-card { width: min(100%, 27rem); text-align: center; padding: 1.75rem; }
       .s-notice-icon { width: 3.5rem; height: 3.5rem; margin: 0 auto 1rem; display: grid; place-items: center; border-radius: 999px; color: var(--s-ok); background: var(--s-ok-bg); border: 1px solid var(--s-ok-line); }
       .s-notice-icon.is-error { color: var(--s-danger); background: var(--s-danger-bg); border-color: var(--s-danger-line); }
-      .s-notice-icon svg { width: 1.6rem; height: 1.6rem; }
+      .s-notice-icon svg { display: none !important; width: 1.6rem; height: 1.6rem; }
+      .s-notice-icon svg.is-visible { display: block !important; }
       .s-btn[aria-busy="true"] { pointer-events: none; opacity: 0.65; }
       @keyframes s-modal-enter { from { opacity: 0; transform: translateY(0.75rem) scale(0.98); } to { opacity: 1; transform: none; } }
       @media (prefers-reduced-motion: reduce) { .s-modal-card { animation: none; } }
@@ -404,7 +405,7 @@
       <div class="s-modal-backdrop" data-settings-notice-close></div>
       <div class="s-modal-card s-notice-card" role="alertdialog" aria-modal="true" aria-labelledby="settingsNoticeTitle" aria-describedby="settingsNoticeMessage">
         <div class="s-notice-icon" id="settingsNoticeIcon" aria-hidden="true">
-          <svg id="settingsNoticeSuccessIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
+          <svg id="settingsNoticeSuccessIcon" class="is-visible" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="m5 12 4 4L19 6"/></svg>
           <svg id="settingsNoticeErrorIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" hidden><path d="m8 8 8 8"/><path d="m16 8-8 8"/></svg>
         </div>
         <p class="s-eyebrow" id="settingsNoticeEyebrow"><span data-lang-en>Account settings</span><span data-lang-tl>Mga setting ng account</span></p>
