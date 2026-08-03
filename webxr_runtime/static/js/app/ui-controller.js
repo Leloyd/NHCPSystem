@@ -3,7 +3,6 @@ export class UiController {
     this.refs = refs;
     this.onBackRequested = null;
     this.onFullscreenToggled = null;
-    this.hotspotHelperResetTimer = null;
     this.errorResetTimer = null;
   }
 
@@ -124,38 +123,6 @@ export class UiController {
       return;
     }
     this.refs.mobileControls.classList.toggle('hidden', !visible);
-  }
-
-  setPlayerCoordinates(position) {
-    if (!this.refs.playerCoordinates || !position) {
-      return;
-    }
-
-    const x = Number.isFinite(position.x) ? position.x : 0;
-    const y = Number.isFinite(position.y) ? position.y : 0;
-    const z = Number.isFinite(position.z) ? position.z : 0;
-
-    this.refs.playerCoordinates.textContent = `position: [${x.toFixed(2)}, ${y.toFixed(2)}, ${z.toFixed(2)}]`;
-  }
-
-  setHotspotHelperHint(message, resetAfterMs = 0) {
-    if (!this.refs.hotspotHelper) {
-      return;
-    }
-
-    this.refs.hotspotHelper.textContent = message;
-
-    if (this.hotspotHelperResetTimer) {
-      window.clearTimeout(this.hotspotHelperResetTimer);
-      this.hotspotHelperResetTimer = null;
-    }
-
-    if (resetAfterMs > 0) {
-      this.hotspotHelperResetTimer = window.setTimeout(() => {
-        this.refs.hotspotHelper.textContent = 'Press H to copy hotspot position.';
-        this.hotspotHelperResetTimer = null;
-      }, resetAfterMs);
-    }
   }
 
   showInteraction(context) {

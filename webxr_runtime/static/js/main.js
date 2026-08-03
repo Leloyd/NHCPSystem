@@ -9,9 +9,6 @@ function getRefs() {
     errorBanner: document.getElementById('error-banner'),
     xrButtonContainer: document.getElementById('xr-button-container'),
     xrStatus: document.getElementById('xr-status'),
-    positionDebugPanel: document.getElementById('position-debug-panel'),
-    playerCoordinates: document.getElementById('player-coordinates'),
-    hotspotHelper: document.getElementById('hotspot-helper'),
     fullscreenButton: document.getElementById('control-fullscreen-button'),
     gyroButton: document.getElementById('control-gyro-button'),
     cardboardButton: document.getElementById('control-cardboard-button'),
@@ -19,33 +16,14 @@ function getRefs() {
     interactionPanel: document.getElementById('interaction-panel'),
     interactionName: document.getElementById('interaction-name'),
     interactionMeta: document.getElementById('interaction-meta'),
-    missionPanel: document.getElementById('heritage-mission'),
-    missionTitle: document.getElementById('heritage-mission-title'),
-    missionLanguageButton: document.getElementById('heritage-mission-language'),
-    missionCloseButton: document.getElementById('heritage-mission-close'),
-    missionProgress: document.getElementById('heritage-mission-progress'),
-    missionContent: document.getElementById('heritage-mission-content'),
-    missionToast: document.getElementById('heritage-mission-toast'),
-    missionButton: document.getElementById('control-mission-button'),
-    missionBadge: document.getElementById('control-mission-badge'),
     mobileControls: document.getElementById('mobile-controls'),
     moveStickZone: document.getElementById('move-stick-zone'),
     moveStickThumb: document.getElementById('move-stick-thumb'),
   };
 }
 
-function configurePositionDebug(refs) {
-  const params = new URLSearchParams(window.location.search);
-  const enabled = params.get('positionDebug') === '1';
-
-  if (refs.positionDebugPanel) {
-    refs.positionDebugPanel.hidden = !enabled;
-  }
-}
-
 async function bootstrap() {
   const refs = getRefs();
-  configurePositionDebug(refs);
 
   const app = new WebXRApp({
     container: refs.root,

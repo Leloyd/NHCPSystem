@@ -40,33 +40,10 @@
 
     <div id="error-banner" class="error-banner hidden"></div>
 
-    <aside id="position-debug-panel" class="position-debug-panel" aria-label="Player position coordinates" hidden>
-      <span class="position-debug-panel__label">Player coordinates</span>
-      <output id="player-coordinates" class="position-debug-panel__value">position: [0.00, 0.00, 0.00]</output>
-      <span id="hotspot-helper" class="position-debug-panel__hint">Press H to copy the point under the crosshair.</span>
-    </aside>
-
     <aside id="interaction-panel" class="interaction-panel hidden">
       <h2 id="interaction-name">Object</h2>
       <pre id="interaction-meta"></pre>
     </aside>
-
-    <aside id="heritage-mission" class="heritage-mission hidden" aria-labelledby="heritage-mission-title" aria-hidden="true">
-      <header class="heritage-mission__header">
-        <div>
-          <p class="heritage-mission__eyebrow">Heritage Investigator</p>
-          <h2 id="heritage-mission-title">Field Notebook</h2>
-        </div>
-        <div class="heritage-mission__header-actions">
-          <button id="heritage-mission-language" class="heritage-mission__icon-button" type="button" aria-label="Switch mission language to English">TL</button>
-          <button id="heritage-mission-close" class="heritage-mission__icon-button" type="button" aria-label="Close field notebook">&times;</button>
-        </div>
-      </header>
-      <div id="heritage-mission-progress" class="heritage-mission__progress" aria-label="Investigation progress"></div>
-      <div id="heritage-mission-content" class="heritage-mission__content" aria-live="polite"></div>
-    </aside>
-
-    <div id="heritage-mission-toast" class="heritage-mission-toast hidden" role="status" aria-live="polite"></div>
 
     <!-- Guide controls — the Landing page's gold pill bar; the joystick stays
          dead-center and slightly larger than the buttons around it. -->
@@ -101,15 +78,6 @@
       </div>
 
       <div class="tour-control-dock__group tour-control-dock__group--right">
-        <button id="control-mission-button" class="tour-control-dock__action tour-control-dock__action--mission" type="button" aria-label="Open Heritage Investigator field notebook" aria-expanded="false">
-          <span class="tour-control-dock__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24">
-              <path d="M7.5 3.25h1.1A2.75 2.75 0 0 1 11.25 1.5h1.5a2.75 2.75 0 0 1 2.65 1.75h1.1A2.5 2.5 0 0 1 19 5.75v14A2.5 2.5 0 0 1 16.5 22h-9A2.5 2.5 0 0 1 5 19.75v-14a2.5 2.5 0 0 1 2.5-2.5Zm3.1.75a.75.75 0 0 0-.75.75v.5h4.3v-.5A.75.75 0 0 0 13.4 4h-2.8ZM7.5 4.75a1 1 0 0 0-1 1v14a1 1 0 0 0 1 1h9a1 1 0 0 0 1-1v-14a1 1 0 0 0-1-1h-.85v1.25a.75.75 0 0 1-.75.75H9.1a.75.75 0 0 1-.75-.75V4.75H7.5Zm1.25 6A.75.75 0 0 1 9.5 10h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75Zm0 4A.75.75 0 0 1 9.5 14h5a.75.75 0 0 1 0 1.5h-5a.75.75 0 0 1-.75-.75Z" fill="currentColor"></path>
-            </svg>
-          </span>
-          <span id="control-mission-badge" class="tour-control-dock__badge" aria-hidden="true" hidden>0</span>
-        </button>
-
         <button id="control-fullscreen-button" class="tour-control-dock__action" type="button" aria-label="Toggle fullscreen" aria-pressed="false">
           <span class="tour-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">

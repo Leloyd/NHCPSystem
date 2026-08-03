@@ -379,10 +379,6 @@ export class WebXRApp {
     this.xrHotspotTablePinsVisible = true;
     this.xrHotspotTableSourceMarker = null;
 
-    this.heritageMission = this._readHeritageMissionState();
-    this.heritageMissionOpen = false;
-    this.heritageMissionToastTimer = 0;
-
     this.sparkRenderer = null;
     this.SplatMeshCtor = null;
 
@@ -407,7 +403,6 @@ export class WebXRApp {
     };
 
     this.boundResize = this.onResize.bind(this);
-    this.boundGlobalKeyDown = this._onGlobalKeyDown.bind(this);
     this.boundFullscreenChange = this._onFullscreenChange.bind(this);
   }
 
@@ -416,8 +411,6 @@ export class WebXRApp {
       this.container.appendChild(this.renderer.domElement);
 
       this._setupUi();
-      this._setupHeritageMission();
-      this._setupExpandedHotspotOverlay();
       this._setupLights();
       this._setupXrUi();
       this._registerInteractions();
@@ -432,18 +425,15 @@ export class WebXRApp {
 
       await this._loadSparkRuntime();
       await this._loadSceneAssets();
-      this._createHotspotMarkers();
       this._setupGameplaySystems();
 
       this.uiController.completeLoading('Scene ready.');
 
       window.addEventListener('resize', this.boundResize);
-      window.addEventListener('keydown', this.boundGlobalKeyDown);
       document.addEventListener('fullscreenchange', this.boundFullscreenChange);
       this.onResize();
 
       this.renderer.setAnimationLoop(this._animate.bind(this));
-      this._maybeOpenHeritageMissionBriefing();
     } catch (error) {
       console.error('[startup] failed', error);
       this.uiController.showError(`Startup failed: ${error?.message ?? error}`);
@@ -2109,7 +2099,6 @@ export class WebXRApp {
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
-      this._disposeXrHotspotTableViewer();
 
       this.uiController.setMobileControlsVisible(true);
     });
@@ -2118,49 +2107,6 @@ export class WebXRApp {
   _registerInteractions() {
     this.interactionRegistry.register('door', () => {
       this._transferToUnderground();
-    });
-
-    this.interactionRegistry.register('go-back-to-church', () => {
-      this._transferToChurch(CHURCH_RETURN_SPAWN);
-    });
-
-    Object.keys(HOTSPOT_TABLES).forEach((hotspotId) => {
-      this.interactionRegistry.register(hotspotId, () => {
-        const table = HOTSPOT_TABLES[hotspotId];
-        if (table) {
-          this._showExpandedHotspotImage(table.imageUrl, hotspotId);
-        }
-      });
-    });
-    this.interactionRegistry.register('xr-table-close', () => {
-      this._disposeXrHotspotTableViewer();
-    });
-    this.interactionRegistry.register('xr-table-toggle', () => {
-      this.xrHotspotTablePinsVisible = !this.xrHotspotTablePinsVisible;
-      this._rebuildXrHotspotTableViewer();
-    });
-    this.interactionRegistry.register('xr-table-language', () => {
-      this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
-      if (this.xrHotspotTableDetail) {
-        this._playExpandedHotspotAudio(this.xrHotspotTableDetail.audio);
-      }
-      this._rebuildXrHotspotTableViewer();
-    });
-    this.interactionRegistry.register('xr-table-back', () => {
-      this._stopExpandedHotspotAudio();
-      this.xrHotspotTableDetail = null;
-      this._rebuildXrHotspotTableViewer();
-    });
-    this.interactionRegistry.register('xr-table-detail', (context) => {
-      const table = HOTSPOT_TABLES[this.xrHotspotTableId];
-      const detailId = context?.metadata?.detailId;
-      const detail = table?.hotspots?.find((hotspot) => hotspot.id === detailId);
-      if (!detail) {
-        return;
-      }
-      this.xrHotspotTableDetail = detail;
-      this._playExpandedHotspotAudio(detail.audio);
-      this._rebuildXrHotspotTableViewer();
     });
 
     this.interactionRegistry.register('altar', (context) => {
@@ -2825,7 +2771,6 @@ export class WebXRApp {
       spawnYaw = 0;
     }
     this.camera.rotation.set(0, spawnYaw, 0);
-    this.uiController.setPlayerCoordinates(this.playerRig.position);
 
     this.interactionSystem?.dispose?.();
     this.interactionSystem = new InteractionSystem({
@@ -3045,8 +2990,6 @@ export class WebXRApp {
     this.camera.aspect = width / height;
     this.camera.updateProjectionMatrix();
     this.renderer.setSize(width, height, false);
-    this._updateFloatingHotspotLabels();
-    this._refreshHeritageMissionMarkers();
   }
 
   _animate() {
@@ -3054,10 +2997,7 @@ export class WebXRApp {
 
     if (this.playerController && this.collisionSystem) {
       this.playerController.update(dt, this.collisionSystem);
-      this.uiController.setPlayerCoordinates(this.playerRig.position);
     }
-
-    this._updateFloatingHotspotLabels();
 
     if (this.cardboard.active && !this.renderer.xr.isPresenting) {
       this._renderCardboardStereo();
