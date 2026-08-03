@@ -26,6 +26,7 @@
 
   const titleEl = document.getElementById("detailTitle");
   const breadcrumbHomeEl = document.getElementById("detailBreadcrumbHome");
+  const breadcrumbDigitalExhibitsEl = document.getElementById("detailBreadcrumbDigitalExhibits");
   const breadcrumbGalleryEl = document.getElementById("detailBreadcrumbGallery");
   const breadcrumbTitleEl = document.getElementById("detailBreadcrumbTitle");
   const metaEl = document.getElementById("detailMeta");
@@ -61,18 +62,27 @@
   const relatedSectionLinkEl = document.getElementById("relatedSectionLink");
   const relatedItemsSection = document.getElementById("relatedItemsSection");
   const relatedItemsGrid = document.getElementById("relatedItemsGrid");
+  const imageLightboxEl = document.getElementById("detailImageLightbox");
+  const imageLightboxBackdropEl = document.getElementById("detailImageLightboxBackdrop");
+  const imageLightboxCloseEl = document.getElementById("detailImageLightboxClose");
+  const imageLightboxImageEl = document.getElementById("detailImageLightboxImage");
+  const imageLightboxTitleEl = document.getElementById("detailImageLightboxTitle");
+  const imageLightboxLabelEl = document.getElementById("detailImageLightboxLabel");
   let activeIndex = 0;
-  let isZoomed = false;
   let activeMediaMode = "photo";
+  let imageLightboxPreviousFocus = null;
+  let imageLightboxCloseTimer = 0;
 
   const i18n = {
     english: {
       home: "Home",
-      gallery: "Gallery",
+      digitalExhibits: "Digital Exhibits",
+      gallery: "Online Gallery",
       prev: "Previous artifact",
       next: "Next artifact",
-      zoomIn: "Click to zoom in",
-      zoomOut: "Click to zoom out",
+      zoomIn: "Click to view image",
+      zoomOut: "Close expanded image",
+      expandedView: "Expanded view",
       description: "Description",
       tags: "Tags",
       teaching: "Teaching Note",
@@ -108,11 +118,13 @@
     },
     filipino: {
       home: "Tahanan",
-      gallery: "Gallery",
+      digitalExhibits: "Mga Digital na Eksibit",
+      gallery: "Online Gallery",
       prev: "Nakaraang artifact",
       next: "Susunod na artifact",
-      zoomIn: "I-click para i-zoom in",
-      zoomOut: "I-click para i-zoom out",
+      zoomIn: "I-click para tingnan ang larawan",
+      zoomOut: "Isara ang pinalaking larawan",
+      expandedView: "Pinalaking larawan",
       description: "Paglalarawan",
       tags: "Mga Tag",
       teaching: "Tala sa Pagtuturo",
@@ -336,17 +348,63 @@
     }
   }
 
-  function setZoomState(nextZoomed) {
-    isZoomed = Boolean(nextZoomed);
+  function syncImageOpenLabel() {
     if (!zoomToggleEl || !zoomHintTextEl) {
       return;
     }
     const strings = getStrings();
-    const label = isZoomed ? strings.zoomOut : strings.zoomIn;
-    zoomToggleEl.classList.toggle("is-zoomed", isZoomed);
-    zoomToggleEl.setAttribute("aria-pressed", isZoomed ? "true" : "false");
-    zoomToggleEl.setAttribute("aria-label", label);
-    zoomHintTextEl.textContent = label;
+    zoomToggleEl.setAttribute("aria-pressed", "false");
+    zoomToggleEl.setAttribute("aria-label", strings.zoomIn);
+    zoomHintTextEl.textContent = strings.zoomIn;
+  }
+
+  function openImageLightbox() {
+    const item = items[activeIndex];
+    if (!item || !normalizeText(item.image_url) || !imageLightboxEl || !imageLightboxImageEl) {
+      return;
+    }
+
+    if (imageLightboxCloseTimer) {
+      window.clearTimeout(imageLightboxCloseTimer);
+      imageLightboxCloseTimer = 0;
+    }
+
+    const strings = getStrings();
+    const title = getLocalizedTitle(item);
+    imageLightboxPreviousFocus = document.activeElement;
+    imageLightboxImageEl.src = item.image_url;
+    imageLightboxImageEl.alt = title + " — " + strings.expandedView;
+    if (imageLightboxTitleEl) imageLightboxTitleEl.textContent = title;
+    if (imageLightboxLabelEl) imageLightboxLabelEl.textContent = strings.expandedView;
+    if (imageLightboxCloseEl) imageLightboxCloseEl.setAttribute("aria-label", strings.zoomOut);
+    if (imageLightboxBackdropEl) imageLightboxBackdropEl.setAttribute("aria-label", strings.zoomOut);
+
+    imageLightboxEl.hidden = false;
+    imageLightboxEl.setAttribute("aria-hidden", "false");
+    document.body.classList.add("ogd-detail-lightbox-open");
+    window.requestAnimationFrame(() => {
+      imageLightboxEl.classList.add("is-open");
+      if (imageLightboxCloseEl) imageLightboxCloseEl.focus();
+    });
+  }
+
+  function closeImageLightbox() {
+    if (!imageLightboxEl || imageLightboxEl.hidden) {
+      return;
+    }
+
+    imageLightboxEl.classList.remove("is-open");
+    imageLightboxEl.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("ogd-detail-lightbox-open");
+    imageLightboxCloseTimer = window.setTimeout(() => {
+      imageLightboxEl.hidden = true;
+      imageLightboxCloseTimer = 0;
+    }, 180);
+
+    if (imageLightboxPreviousFocus && typeof imageLightboxPreviousFocus.focus === "function") {
+      imageLightboxPreviousFocus.focus();
+    }
+    imageLightboxPreviousFocus = null;
   }
 
   function setMediaMode(mode, item) {
@@ -372,10 +430,7 @@
     if (zoomToggleEl) {
       const isPhoto = nextMode === "photo";
       zoomToggleEl.hidden = !isPhoto;
-      zoomToggleEl.disabled = !isPhoto;
-      if (!isPhoto) {
-        setZoomState(false);
-      }
+      zoomToggleEl.disabled = !isPhoto || !normalizeText(item && item.image_url);
     }
 
     if (modelPanelEl) {
@@ -477,6 +532,7 @@
   function updateStaticLabels() {
     const strings = getStrings();
     if (breadcrumbHomeEl) breadcrumbHomeEl.textContent = strings.home;
+    if (breadcrumbDigitalExhibitsEl) breadcrumbDigitalExhibitsEl.textContent = strings.digitalExhibits;
     if (breadcrumbGalleryEl) breadcrumbGalleryEl.textContent = strings.gallery;
     if (prevBtn) prevBtn.setAttribute("aria-label", strings.prev);
     if (nextBtn) nextBtn.setAttribute("aria-label", strings.next);
@@ -494,7 +550,7 @@
     if (activeItem) {
       syncBookmarkButton(activeItem);
     }
-    setZoomState(isZoomed);
+    syncImageOpenLabel();
   }
 
   if (!items.length) {
@@ -545,7 +601,6 @@
     const description = getLocalizedDescription(item);
 
     activeIndex = index;
-    setZoomState(false);
     updateStaticLabels();
 
     if (titleEl) titleEl.textContent = title;
@@ -632,9 +687,15 @@
   }
 
   if (zoomToggleEl) {
-    zoomToggleEl.addEventListener("click", () => {
-      setZoomState(!isZoomed);
-    });
+    zoomToggleEl.addEventListener("click", openImageLightbox);
+  }
+
+  if (imageLightboxCloseEl) {
+    imageLightboxCloseEl.addEventListener("click", closeImageLightbox);
+  }
+
+  if (imageLightboxBackdropEl) {
+    imageLightboxBackdropEl.addEventListener("click", closeImageLightbox);
   }
 
   if (photoTabEl) {
@@ -691,6 +752,12 @@
 
   window.addEventListener("ogd:accessibility-change", () => {
     render(activeIndex);
+  });
+
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && imageLightboxEl && !imageLightboxEl.hidden) {
+      closeImageLightbox();
+    }
   });
 
   render(activeIndex);

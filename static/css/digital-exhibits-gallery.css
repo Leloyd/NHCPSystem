@@ -1347,6 +1347,14 @@
   cursor: default;
 }
 
+#detailZoomToggle:not(:disabled) {
+  cursor: zoom-in;
+}
+
+#detailZoomToggle:disabled .ogd-detail-media__hint {
+  display: none;
+}
+
 .ogd-detail-media__open {
   width: 100%;
   position: relative;
