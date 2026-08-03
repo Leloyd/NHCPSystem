@@ -49,6 +49,47 @@
     });
   });
 
+  var openPasswordChange = document.getElementById("openPasswordChange");
+  var cancelPasswordChange = document.getElementById("cancelPasswordChange");
+  var securityPasswordForm = document.getElementById("securityPasswordForm");
+  var securityCodeInput = document.getElementById("securityCode");
+
+  function setPasswordFormOpen(isOpen) {
+    if (!securityPasswordForm) {
+      return;
+    }
+    securityPasswordForm.hidden = !isOpen;
+    if (openPasswordChange) {
+      openPasswordChange.hidden = isOpen;
+      openPasswordChange.setAttribute("aria-expanded", isOpen ? "true" : "false");
+    }
+    if (isOpen) {
+      var firstPasswordInput = securityPasswordForm.querySelector('input[type="password"]');
+      if (firstPasswordInput) {
+        firstPasswordInput.focus();
+      }
+    } else {
+      securityPasswordForm.reset();
+    }
+  }
+
+  if (openPasswordChange) {
+    openPasswordChange.setAttribute("aria-expanded", "false");
+    openPasswordChange.addEventListener("click", function () {
+      setPasswordFormOpen(true);
+    });
+  }
+  if (cancelPasswordChange) {
+    cancelPasswordChange.addEventListener("click", function () {
+      setPasswordFormOpen(false);
+    });
+  }
+  if (securityCodeInput) {
+    securityCodeInput.addEventListener("input", function () {
+      securityCodeInput.value = securityCodeInput.value.replace(/\D/g, "").slice(0, 6);
+    });
+  }
+
   /* ---- Delete modal ---- */
   var deleteModal = document.getElementById("deleteModal");
   var openDeleteBtn = document.getElementById("openDeleteModal");

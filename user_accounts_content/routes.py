@@ -68,6 +68,7 @@ EMAIL_VERIFICATION_MAX_ATTEMPTS = 5
 SECURITY_CODE_LIFETIME = timedelta(minutes=10)
 SECURITY_CODE_RESEND_COOLDOWN = timedelta(seconds=60)
 SECURITY_CODE_MAX_ATTEMPTS = 5
+SECURITY_SETUP_SESSION_KEY = "public_security_password_setup"
 PASSWORD_RESET_LIFETIME = timedelta(hours=1)
 
 AVATAR_UPLOAD_FOLDER = "avatars"
@@ -514,6 +515,31 @@ def register_user_account_routes(
         if not secret_key:
             raise RuntimeError("The application secret key is required for one-time codes.")
         return hmac.new(secret_key.encode("utf-8"), str(raw_code or "").encode("utf-8"), hashlib.sha256).hexdigest()
+
+    def _clear_security_setup_state() -> None:
+        session.pop(SECURITY_SETUP_SESSION_KEY, None)
+
+    def _set_security_setup_state(user_id: int, stage: str) -> None:
+        session[SECURITY_SETUP_SESSION_KEY] = {
+            "user_id": int(user_id),
+            "stage": "password" if stage == "password" else "code",
+            "expires_at": (_utcnow() + SECURITY_CODE_LIFETIME).isoformat(),
+        }
+
+    def _get_security_setup_stage(user_id: int) -> str:
+        raw_state = session.get(SECURITY_SETUP_SESSION_KEY)
+        if not isinstance(raw_state, dict):
+            return ""
+        try:
+            state_user_id = int(raw_state.get("user_id"))
+        except (TypeError, ValueError):
+            _clear_security_setup_state()
+            return ""
+        stage = str(raw_state.get("stage") or "").strip().lower()
+        if state_user_id != int(user_id) or stage not in {"code", "password"} or _is_expired(raw_state.get("expires_at")):
+            _clear_security_setup_state()
+            return ""
+        return stage
 
     def _render_auth_entry(*, default_view: str, next_url: str, page_title: str, status_message: str | None = None, error_message: str | None = None):
         return render_template(
@@ -1106,6 +1132,7 @@ def register_user_account_routes(
             "photo": "Your profile picture was updated.",
             "photo-removed": "Your profile picture was removed.",
             "security-code-sent": "A security code was sent to your email. It expires in 10 minutes.",
+            "security-code-verified": "Security code confirmed. You can now create your password.",
             "password-changed": "Your password was changed successfully.",
             "password-created": "A password was added to your Google account. You can now sign in either way.",
         }
@@ -1116,6 +1143,7 @@ def register_user_account_routes(
             "delete-error": "We couldn't process that request. Please try again.",
             "security-code-wait": "Please wait before requesting another security code.",
             "security-code-error": "We couldn't send a security code right now. Please try again.",
+            "security-code-invalid": "The security code is invalid or expired. Check the code or request a new one.",
             "password-error": "We couldn't update your password. Check the information and try again.",
             "password-current": "Your current password is incorrect.",
             "password-code": "The security code is invalid, expired, or has too many failed attempts. Request a new code and try again.",
@@ -1136,6 +1164,7 @@ def register_user_account_routes(
             csrf_token=ensure_public_csrf_token(),
             error_message=error_message,
             status_message=status_message,
+            security_setup_stage=_get_security_setup_stage(int(current_user.get("id"))),
         )
 
     @app.route("/account/settings/security/code", methods=["POST"])
@@ -1151,6 +1180,7 @@ def register_user_account_routes(
         try:
             auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
             if not auth_user or bool(auth_user.get("local_password_enabled", True)):
+                _clear_security_setup_state()
                 return redirect(url_for("account_settings"))
             wait_seconds = _resend_wait_seconds(auth_user.get("security_code_sent_at"), SECURITY_CODE_RESEND_COOLDOWN)
             if wait_seconds:
@@ -1173,10 +1203,74 @@ def register_user_account_routes(
                 security_code=security_code,
                 expires_minutes=int(SECURITY_CODE_LIFETIME.total_seconds() // 60),
             )
+            _set_security_setup_state(int(auth_user.get("id")), "code")
             return redirect(url_for("account_settings", status="security-code-sent"))
         except Exception as exc:
+            _clear_security_setup_state()
             app.logger.exception("Failed to send a password security code for user %s: %s", current_user.get("id"), exc)
             return redirect(url_for("account_settings", status="security-code-error"))
+
+    @app.route("/account/settings/security/verify-code", methods=["POST"])
+    def account_settings_security_verify_code():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login", next=url_for("account_settings")))
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            _clear_security_setup_state()
+            return redirect(url_for("account_settings", status="security-code-invalid"))
+        if _get_security_setup_stage(int(current_user.get("id"))) != "code":
+            return redirect(url_for("account_settings", status="security-code-invalid"))
+
+        client_ip = get_client_ip()
+        is_limited, _retry_after = is_public_auth_rate_limited("login", client_ip)
+        if is_limited:
+            return redirect(url_for("account_settings", status="security-code-invalid"))
+
+        try:
+            security_code = _validate_six_digit_code(request.form.get("security_code"))
+            auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
+            if not auth_user or bool(auth_user.get("local_password_enabled", True)):
+                _clear_security_setup_state()
+                return redirect(url_for("account_settings"))
+
+            attempts = int(auth_user.get("security_code_attempts") or 0)
+            if attempts >= SECURITY_CODE_MAX_ATTEMPTS:
+                _clear_security_setup_state()
+                return redirect(url_for("account_settings", status="security-code-invalid"))
+            stored_code_hash = str(auth_user.get("security_code_hash") or "")
+            code_is_valid = (
+                bool(stored_code_hash)
+                and not _is_expired(auth_user.get("security_code_expires_at"))
+                and hmac.compare_digest(stored_code_hash, _hash_one_time_code(security_code))
+            )
+            if not code_is_valid:
+                update_public_user(
+                    int(auth_user.get("id")),
+                    {"security_code_attempts": attempts + 1, "updated_at": _utcnow().isoformat()},
+                )
+                record_public_auth_failure("login", client_ip)
+                if attempts + 1 >= SECURITY_CODE_MAX_ATTEMPTS:
+                    _clear_security_setup_state()
+                return redirect(url_for("account_settings", status="security-code-invalid"))
+
+            update_public_user(
+                int(auth_user.get("id")),
+                {
+                    "security_code_hash": None,
+                    "security_code_expires_at": None,
+                    "security_code_sent_at": None,
+                    "security_code_attempts": 0,
+                    "updated_at": _utcnow().isoformat(),
+                },
+            )
+            clear_public_auth_failures("login", client_ip)
+            _set_security_setup_state(int(auth_user.get("id")), "password")
+            return redirect(url_for("account_settings", status="security-code-verified"))
+        except ValueError:
+            return redirect(url_for("account_settings", status="security-code-invalid"))
+        except Exception as exc:
+            app.logger.exception("Failed to verify password security code for user %s: %s", current_user.get("id"), exc)
+            return redirect(url_for("account_settings", status="security-code-invalid"))
 
     @app.route("/account/settings/security/password", methods=["POST"])
     def account_settings_security_password():
@@ -1213,23 +1307,8 @@ def register_user_account_routes(
                 if check_password_hash(stored_hash, password):
                     raise ValueError("Choose a new password that is different from your current password.")
             else:
-                security_code = _validate_six_digit_code(request.form.get("security_code"))
-                attempts = int(auth_user.get("security_code_attempts") or 0)
-                if attempts >= SECURITY_CODE_MAX_ATTEMPTS:
-                    raise ValueError("Too many incorrect attempts. Request a new security code.")
-                stored_code_hash = str(auth_user.get("security_code_hash") or "")
-                code_is_valid = (
-                    bool(stored_code_hash)
-                    and not _is_expired(auth_user.get("security_code_expires_at"))
-                    and hmac.compare_digest(stored_code_hash, _hash_one_time_code(security_code))
-                )
-                if not code_is_valid:
-                    update_public_user(
-                        int(auth_user.get("id")),
-                        {"security_code_attempts": attempts + 1, "updated_at": _utcnow().isoformat()},
-                    )
-                    record_public_auth_failure("login", client_ip)
-                    raise ValueError("The security code is invalid or has expired.")
+                if _get_security_setup_stage(int(auth_user.get("id"))) != "password":
+                    raise ValueError("Confirm your security code before creating a password.")
 
             now = _utcnow().isoformat()
             update_public_user(
@@ -1248,6 +1327,7 @@ def register_user_account_routes(
             )
             # Rotate the signed session and CSRF token after a credential change.
             clear_public_auth_failures("login", client_ip)
+            _clear_security_setup_state()
             set_public_user_session(int(auth_user.get("id")))
             return redirect(url_for("account_settings", status="password-changed" if had_local_password else "password-created"))
         except ValueError as exc:
