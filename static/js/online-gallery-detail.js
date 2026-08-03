@@ -282,6 +282,8 @@
   function buildCardBookmarkButton(item) {
     const bookmarked = isBookmarked(item.id);
     const title = getLocalizedTitle(item);
+    const strings = getStrings();
+    const accessibleLabel = (bookmarked ? strings.removeBookmarkItem : strings.bookmarkItem).replace("{title}", title);
     return `
       <button
         type="button"
@@ -289,7 +291,7 @@
         data-bookmark-item-id="${item.id}"
         data-bookmarked="${bookmarked ? "true" : "false"}"
         aria-pressed="${bookmarked ? "true" : "false"}"
-        aria-label="${escapeHtml(bookmarked ? `Remove bookmark for ${title}` : `Bookmark ${title}`)}"
+        aria-label="${escapeHtml(accessibleLabel)}"
       >
         <i data-lucide="bookmark${bookmarked ? "-check" : ""}" aria-hidden="true"></i>
       </button>
@@ -746,6 +748,54 @@
         window.alert(error.message || getStrings().bookmarkUpdateError);
       } finally {
         bookmarkButtonEl.disabled = false;
+      }
+    });
+  }
+
+  if (relatedItemsGrid) {
+    relatedItemsGrid.addEventListener("click", async (event) => {
+      const button = event.target.closest("[data-bookmark-item-id]");
+      if (!button || !relatedItemsGrid.contains(button)) {
+        return;
+      }
+
+      event.preventDefault();
+      event.stopPropagation();
+
+      const itemId = Number(button.dataset.bookmarkItemId || "0");
+      const item = items.find((candidate) => Number(candidate.id) === itemId);
+      if (!item) {
+        return;
+      }
+
+      if (!authConfig.isAuthenticated) {
+        window.location.href = authConfig.loginUrl || "/login";
+        return;
+      }
+
+      const currentlyBookmarked = isBookmarked(itemId);
+      button.disabled = true;
+      button.setAttribute("aria-busy", "true");
+
+      try {
+        const nextBookmarked = await updateBookmark(itemId, !currentlyBookmarked);
+        if (nextBookmarked) {
+          bookmarkedItemIds.add(itemId);
+        } else {
+          bookmarkedItemIds.delete(itemId);
+        }
+
+        const activeItem = items[activeIndex];
+        if (activeItem) {
+          renderRelatedItems(activeItem);
+        }
+        if (window.lucide && typeof window.lucide.createIcons === "function") {
+          window.lucide.createIcons();
+        }
+      } catch (error) {
+        button.disabled = false;
+        button.removeAttribute("aria-busy");
+        window.alert(error.message || getStrings().bookmarkUpdateError);
       }
     });
   }
