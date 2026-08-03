@@ -30,6 +30,8 @@ CREATE TABLE public.public_users (
   email_verified_at timestamp with time zone,
   email_verification_token_hash text,
   email_verification_expires_at timestamp with time zone,
+  email_verification_sent_at timestamp with time zone,
+  email_verification_attempts integer NOT NULL DEFAULT 0 CHECK (email_verification_attempts >= 0 AND email_verification_attempts <= 5),
   onboarding_completed_at timestamp with time zone,
   website_use_case text NOT NULL DEFAULT ''::text,
   profile_roles text NOT NULL DEFAULT '[]'::text,
@@ -38,14 +40,21 @@ CREATE TABLE public.public_users (
   province_text text NOT NULL DEFAULT ''::text,
   city_text text NOT NULL DEFAULT ''::text,
   auth_provider text NOT NULL DEFAULT 'password'::text,
+  oauth_subject text,
+  local_password_enabled boolean NOT NULL DEFAULT true,
   password_reset_token_hash text,
   password_reset_expires_at timestamp with time zone,
+  security_code_hash text,
+  security_code_expires_at timestamp with time zone,
+  security_code_sent_at timestamp with time zone,
+  security_code_attempts integer NOT NULL DEFAULT 0 CHECK (security_code_attempts >= 0 AND security_code_attempts <= 5),
   profile_picture text,
   theme_preference text NOT NULL DEFAULT 'light'::text CHECK (theme_preference = ANY (ARRAY['light'::text, 'dark'::text])),
   language_preference text NOT NULL DEFAULT 'en'::text CHECK (language_preference = ANY (ARRAY['en'::text, 'tl'::text])),
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-  CONSTRAINT public_users_pkey PRIMARY KEY (id)
+  CONSTRAINT public_users_pkey PRIMARY KEY (id),
+  CONSTRAINT public_users_oauth_subject_key UNIQUE (oauth_subject)
 );
 CREATE TABLE public.user_bookmarks (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

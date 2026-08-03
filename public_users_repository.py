@@ -7,11 +7,13 @@ PUBLIC_USERS_TABLE = "public_users"
 PUBLIC_USER_PROFILE_FIELDS = (
     "id, email, username, full_name, phone_number, organization, is_active, last_login_at, "
     "email_verified_at, onboarding_completed_at, website_use_case, profile_roles, location_text, country_text, province_text, city_text, auth_provider, "
-    "profile_picture, theme_preference, language_preference, created_at, updated_at"
+    "profile_picture, theme_preference, language_preference, local_password_enabled, created_at, updated_at"
 )
 PUBLIC_USER_AUTH_FIELDS = (
     f"{PUBLIC_USER_PROFILE_FIELDS}, password_hash, email_verification_token_hash, email_verification_expires_at, "
-    "password_reset_token_hash, password_reset_expires_at"
+    "email_verification_sent_at, email_verification_attempts, oauth_subject, "
+    "password_reset_token_hash, password_reset_expires_at, security_code_hash, security_code_expires_at, "
+    "security_code_sent_at, security_code_attempts"
 )
 
 
@@ -77,6 +79,27 @@ def get_public_user_auth_by_identifier(identifier: str) -> dict[str, Any] | None
     if "@" in raw_identifier:
         return get_public_user_auth_by_email(raw_identifier) or get_public_user_auth_by_username(raw_identifier)
     return get_public_user_auth_by_username(raw_identifier) or get_public_user_auth_by_email(raw_identifier)
+
+
+def get_public_user_auth_by_oauth_subject(provider: str, subject: str) -> dict[str, Any] | None:
+    normalized_provider = str(provider or "").strip().lower()
+    normalized_subject = str(subject or "").strip()
+    if not normalized_provider or not normalized_subject:
+        raise ValueError("OAuth provider and subject are required.")
+
+    client = get_supabase_client()
+    response = (
+        client.table(PUBLIC_USERS_TABLE)
+        .select(PUBLIC_USER_AUTH_FIELDS)
+        .eq("auth_provider", normalized_provider)
+        .eq("oauth_subject", normalized_subject)
+        .limit(1)
+        .execute()
+    )
+    rows = list(response.data or [])
+    if not rows:
+        return None
+    return rows[0]
 
 
 def get_public_user_by_email_verification_token_hash(token_hash: str) -> dict[str, Any] | None:

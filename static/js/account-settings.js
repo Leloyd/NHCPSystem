@@ -35,6 +35,20 @@
     });
   }
 
+  /* ---- Password visibility ---- */
+  document.querySelectorAll("[data-settings-password-toggle]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      var input = document.getElementById(button.getAttribute("data-settings-password-toggle") || "");
+      if (!input) {
+        return;
+      }
+      var reveal = input.type === "password";
+      input.type = reveal ? "text" : "password";
+      button.setAttribute("aria-label", reveal ? "Hide password" : "Show password");
+      button.setAttribute("aria-pressed", reveal ? "true" : "false");
+    });
+  });
+
   /* ---- Delete modal ---- */
   var deleteModal = document.getElementById("deleteModal");
   var openDeleteBtn = document.getElementById("openDeleteModal");

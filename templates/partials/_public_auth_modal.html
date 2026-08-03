@@ -106,7 +106,7 @@
             </button>
           </div>
 
-          <p class="public-auth-hint">A verification email will be sent to confirm your account.</p>
+          <p class="public-auth-hint">A six-digit verification code will be sent to your email.</p>
           <p class="public-auth-message hidden" data-auth-message="signup"></p>
           <button type="submit" class="public-auth-submit">Sign Up</button>
         </form>
@@ -147,10 +147,18 @@
 
       <section class="public-auth-panel hidden" data-auth-view="verify">
         <div class="public-auth-status-icon">✉️</div>
-        <h2 class="public-auth-title public-auth-title-center">Check Your Inbox</h2>
-        <p class="public-auth-subtitle public-auth-subtitle-center">We sent a verification email to <strong data-auth-email-display="verify"></strong>. Please open the email and click the verification button to continue.</p>
-        <p class="public-auth-message hidden" data-auth-message="verify"></p>
-        <button type="button" class="public-auth-secondary" data-auth-resend>Resend Verification Email</button>
+        <h2 class="public-auth-title public-auth-title-center">Verify Your Email</h2>
+        <p class="public-auth-subtitle public-auth-subtitle-center">Enter the six-digit code sent to <strong data-auth-email-display="verify"></strong>. The code expires in 10 minutes.</p>
+        <form id="publicAuthVerifyForm" class="public-auth-form" novalidate>
+          <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+          <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
+          <input type="hidden" name="email" value="" data-auth-verify-email />
+          <label class="public-auth-label" for="publicAuthVerificationCode">Verification code</label>
+          <input id="publicAuthVerificationCode" class="public-auth-input public-auth-otp-input" type="text" name="verification_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required />
+          <p class="public-auth-message hidden" data-auth-message="verify"></p>
+          <button type="submit" class="public-auth-submit">Verify Email</button>
+        </form>
+        <button type="button" class="public-auth-secondary" data-auth-resend>Resend Code</button>
         <div class="public-auth-stack-links">
           <button type="button" class="public-auth-inline-link" data-auth-use-another-email>Use another email</button>
           <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login">Back to Login</button>
@@ -162,6 +170,7 @@
 <script id="publicAuthConfigData" type="application/json">{{ {
   'loginEndpoint': url_for('api_public_login'),
   'signupEndpoint': url_for('api_public_signup'),
+  'verifyOtpEndpoint': url_for('api_public_signup_verify_otp'),
   'resendEndpoint': url_for('api_public_signup_resend'),
   'forgotEndpoint': url_for('api_public_forgot_password'),
   'googleAuthEndpoint': url_for('public_google_auth_start'),

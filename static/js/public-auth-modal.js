@@ -28,6 +28,8 @@
   var useAnotherButton = modal.querySelector("[data-auth-use-another-email]");
   var loginForm = document.getElementById("publicAuthLoginForm");
   var signupForm = document.getElementById("publicAuthSignupForm");
+  var verifyForm = document.getElementById("publicAuthVerifyForm");
+  var verificationCodeInput = document.getElementById("publicAuthVerificationCode");
   var forgotForm = document.getElementById("publicAuthForgotForm");
   var emailDisplays = modal.querySelectorAll("[data-auth-email-display]");
   var body = document.body;
@@ -37,6 +39,9 @@
   function setEmailDisplays(value) {
     emailDisplays.forEach(function (node) {
       node.textContent = value || "your email";
+    });
+    modal.querySelectorAll("[data-auth-verify-email]").forEach(function (input) {
+      input.value = value || "";
     });
   }
 
@@ -207,6 +212,34 @@
     });
   }
 
+  if (verificationCodeInput) {
+    verificationCodeInput.addEventListener("input", function () {
+      verificationCodeInput.value = verificationCodeInput.value.replace(/\D/g, "").slice(0, 6);
+    });
+  }
+
+  if (verifyForm) {
+    verifyForm.addEventListener("submit", function (event) {
+      event.preventDefault();
+      clearMessages();
+      var formData = serializeForm(verifyForm);
+      formData.set("email", pendingEmail || String(formData.get("email") || ""));
+      request(config.verifyOtpEndpoint, formData).then(function (result) {
+        var payload = result.payload || {};
+        if (!result.response.ok) {
+          setMessage("verify", payload.error || "Could not verify that code.", "error");
+          if (verificationCodeInput) {
+            verificationCodeInput.select();
+          }
+          return;
+        }
+        window.location.href = payload.redirect_url || config.nextUrl || "/account";
+      }).catch(function () {
+        setMessage("verify", "Could not reach the server right now. Please try again.", "error");
+      });
+    });
+  }
+
   if (forgotForm) {
     forgotForm.addEventListener("submit", function (event) {
       event.preventDefault();
@@ -248,7 +281,11 @@
         }
         pendingEmail = payload.email || resendEmail;
         setEmailDisplays(pendingEmail);
-        setMessage("verify", "Verification email resent.", "success");
+        if (verificationCodeInput) {
+          verificationCodeInput.value = "";
+          verificationCodeInput.focus();
+        }
+        setMessage("verify", "A new verification code was sent.", "success");
       }).catch(function () {
         setMessage("verify", "Could not reach the server right now. Please try again.", "error");
       });

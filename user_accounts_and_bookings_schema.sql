@@ -11,6 +11,8 @@ CREATE TABLE IF NOT EXISTS public.public_users (
   email_verified_at timestamp with time zone,
   email_verification_token_hash text,
   email_verification_expires_at timestamp with time zone,
+  email_verification_sent_at timestamp with time zone,
+  email_verification_attempts integer NOT NULL DEFAULT 0,
   onboarding_completed_at timestamp with time zone,
   website_use_case text NOT NULL DEFAULT ''::text,
   profile_roles text NOT NULL DEFAULT '[]'::text,
@@ -19,8 +21,14 @@ CREATE TABLE IF NOT EXISTS public.public_users (
   province_text text NOT NULL DEFAULT ''::text,
   city_text text NOT NULL DEFAULT ''::text,
   auth_provider text NOT NULL DEFAULT 'password'::text,
+  oauth_subject text,
+  local_password_enabled boolean NOT NULL DEFAULT true,
   password_reset_token_hash text,
   password_reset_expires_at timestamp with time zone,
+  security_code_hash text,
+  security_code_expires_at timestamp with time zone,
+  security_code_sent_at timestamp with time zone,
+  security_code_attempts integer NOT NULL DEFAULT 0,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -83,6 +91,12 @@ ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS email_verification_expires_at timestamp with time zone;
 
 ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS email_verification_sent_at timestamp with time zone;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS email_verification_attempts integer NOT NULL DEFAULT 0;
+
+ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS onboarding_completed_at timestamp with time zone;
 
 ALTER TABLE public.public_users
@@ -107,13 +121,32 @@ ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS auth_provider text NOT NULL DEFAULT 'password'::text;
 
 ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS oauth_subject text;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS local_password_enabled boolean NOT NULL DEFAULT true;
+
+ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS password_reset_token_hash text;
 
 ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS password_reset_expires_at timestamp with time zone;
 
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS security_code_hash text;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS security_code_expires_at timestamp with time zone;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS security_code_sent_at timestamp with time zone;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS security_code_attempts integer NOT NULL DEFAULT 0;
+
 CREATE INDEX IF NOT EXISTS public_users_verification_token_idx ON public.public_users (email_verification_token_hash);
 CREATE INDEX IF NOT EXISTS public_users_password_reset_token_idx ON public.public_users (password_reset_token_hash);
+CREATE UNIQUE INDEX IF NOT EXISTS public_users_google_subject_unique_idx ON public.public_users (oauth_subject) WHERE oauth_subject IS NOT NULL;
 
 ALTER TABLE public.community_participation_submissions
   ADD COLUMN IF NOT EXISTS user_id bigint REFERENCES public.public_users(id) ON DELETE SET NULL;

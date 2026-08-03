@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
 import os
 import re
@@ -19,6 +20,7 @@ from public_users_repository import (
     create_public_user,
     get_public_user_auth_by_email,
     get_public_user_auth_by_identifier,
+    get_public_user_auth_by_oauth_subject,
     get_public_user_auth_by_username,
     get_public_user_by_email_verification_token_hash,
     get_public_user_by_password_reset_token_hash,
@@ -33,6 +35,7 @@ from .emailer import (
     is_public_auth_email_configured,
     send_public_account_verification_email,
     send_public_password_reset_email,
+    send_public_security_code_email,
 )
 from .service import BOOKMARK_ITEM_TYPE_ONLINE_GALLERY, load_user_account_dashboard
 
@@ -59,7 +62,12 @@ ONBOARDING_ROLE_OPTIONS = (
     "Tourist",
     "Other",
 )
-EMAIL_VERIFICATION_LIFETIME = timedelta(hours=24)
+EMAIL_VERIFICATION_LIFETIME = timedelta(minutes=10)
+EMAIL_VERIFICATION_RESEND_COOLDOWN = timedelta(seconds=60)
+EMAIL_VERIFICATION_MAX_ATTEMPTS = 5
+SECURITY_CODE_LIFETIME = timedelta(minutes=10)
+SECURITY_CODE_RESEND_COOLDOWN = timedelta(seconds=60)
+SECURITY_CODE_MAX_ATTEMPTS = 5
 PASSWORD_RESET_LIFETIME = timedelta(hours=1)
 
 AVATAR_UPLOAD_FOLDER = "avatars"
@@ -198,7 +206,10 @@ def _fetch_google_user_profile(access_token: str) -> dict[str, Any]:
 
 
 def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[str, Any]:
+    oauth_subject = str(profile.get("sub") or "").strip()
     email = _normalize_login_identifier(profile.get("email"))
+    if not oauth_subject or len(oauth_subject) > 255:
+        raise ValueError("Google did not return a valid account identifier.")
     if not EMAIL_PATTERN.match(email):
         raise ValueError("Google did not return a valid email address.")
     if not bool(profile.get("email_verified")):
@@ -209,12 +220,19 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
     if not picture_url.startswith(("http://", "https://")):
         picture_url = ""
     now = _utcnow().isoformat()
-    existing_user = get_public_user_auth_by_email(email)
+    existing_user = get_public_user_auth_by_oauth_subject("google", oauth_subject)
+    if not existing_user:
+        existing_user = get_public_user_auth_by_email(email)
     if existing_user:
         if not bool(existing_user.get("is_active")):
             raise ValueError(DISABLED_ACCOUNT_MESSAGE)
+        stored_subject = str(existing_user.get("oauth_subject") or "").strip()
+        if stored_subject and not secrets.compare_digest(stored_subject, oauth_subject):
+            raise ValueError("This email is already linked to a different Google account.")
 
         payload = {
+            "auth_provider": "google",
+            "oauth_subject": oauth_subject,
             "last_login_at": now,
             "updated_at": now,
         }
@@ -228,6 +246,8 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
                     "email_verified_at": now,
                     "email_verification_token_hash": None,
                     "email_verification_expires_at": None,
+                    "email_verification_sent_at": None,
+                    "email_verification_attempts": 0,
                 }
             )
         if not str(existing_user.get("full_name") or "").strip():
@@ -256,9 +276,15 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
             "province_text": "",
             "city_text": "",
             "auth_provider": "google",
+            "oauth_subject": oauth_subject,
+            "local_password_enabled": False,
             "profile_picture": picture_url[:600] if picture_url else None,
             "password_reset_token_hash": None,
             "password_reset_expires_at": None,
+            "security_code_hash": None,
+            "security_code_expires_at": None,
+            "security_code_sent_at": None,
+            "security_code_attempts": 0,
             "updated_at": now,
         }
     )
@@ -275,6 +301,45 @@ def _is_expired(raw_timestamp: Any) -> bool:
     if parsed.tzinfo is None:
         parsed = parsed.replace(tzinfo=timezone.utc)
     return parsed <= _utcnow()
+
+
+def _parse_timestamp(raw_timestamp: Any) -> datetime | None:
+    raw_value = str(raw_timestamp or "").strip()
+    if not raw_value:
+        return None
+    try:
+        parsed = datetime.fromisoformat(raw_value.replace("Z", "+00:00"))
+    except ValueError:
+        return None
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed
+
+
+def _resend_wait_seconds(raw_sent_at: Any, cooldown: timedelta) -> int:
+    sent_at = _parse_timestamp(raw_sent_at)
+    if not sent_at:
+        return 0
+    remaining = (sent_at + cooldown - _utcnow()).total_seconds()
+    return max(0, int(remaining + 0.999))
+
+
+def _generate_six_digit_code() -> str:
+    return f"{secrets.randbelow(1_000_000):06d}"
+
+
+def _validate_six_digit_code(raw_value: Any) -> str:
+    code = re.sub(r"\D", "", str(raw_value or ""))
+    if len(code) != 6:
+        raise ValueError("Enter the six-digit code sent to your email.")
+    return code
+
+
+def _validate_new_password(password: str, confirmation: str) -> None:
+    if len(password) < 8 or len(password) > 128:
+        raise ValueError("Password must be between 8 and 128 characters.")
+    if password != confirmation:
+        raise ValueError("Passwords do not match.")
 
 
 def _user_is_verified(user: dict[str, Any] | None) -> bool:
@@ -444,6 +509,12 @@ def register_user_account_routes(
     record_public_auth_failure,
     clear_public_auth_failures,
 ):
+    def _hash_one_time_code(raw_code: str) -> str:
+        secret_key = str(app.secret_key or os.getenv("FLASK_SECRET_KEY") or "")
+        if not secret_key:
+            raise RuntimeError("The application secret key is required for one-time codes.")
+        return hmac.new(secret_key.encode("utf-8"), str(raw_code or "").encode("utf-8"), hashlib.sha256).hexdigest()
+
     def _render_auth_entry(*, default_view: str, next_url: str, page_title: str, status_message: str | None = None, error_message: str | None = None):
         return render_template(
             "AuthEntry.html",
@@ -599,7 +670,7 @@ def register_user_account_routes(
 
         stored_hash = str(user.get("password_hash") or "")
         try:
-            password_is_valid = bool(stored_hash) and check_password_hash(stored_hash, password)
+            password_is_valid = bool(user.get("local_password_enabled", True)) and bool(stored_hash) and check_password_hash(stored_hash, password)
         except (TypeError, ValueError):
             password_is_valid = False
         if not password_is_valid:
@@ -644,19 +715,31 @@ def register_user_account_routes(
 
         try:
             payload, email = _validate_modal_signup_payload(request.form)
-            raw_token = secrets.token_urlsafe(32)
+            verification_code = _generate_six_digit_code()
             now = _utcnow()
             payload.update(
                 {
-                    "email_verification_token_hash": _hash_token(raw_token),
+                    "email_verification_token_hash": _hash_one_time_code(verification_code),
                     "email_verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
+                    "email_verification_sent_at": now.isoformat(),
+                    "email_verification_attempts": 0,
+                    "oauth_subject": None,
+                    "local_password_enabled": True,
                     "password_reset_token_hash": None,
                     "password_reset_expires_at": None,
+                    "security_code_hash": None,
+                    "security_code_expires_at": None,
+                    "security_code_sent_at": None,
+                    "security_code_attempts": 0,
                     "updated_at": now.isoformat(),
                 }
             )
             created_user = create_public_user(payload)
-            send_public_account_verification_email(to_email=email, verification_url=_build_verify_url(raw_token, next_url))
+            send_public_account_verification_email(
+                to_email=email,
+                verification_code=verification_code,
+                expires_minutes=int(EMAIL_VERIFICATION_LIFETIME.total_seconds() // 60),
+            )
             clear_public_auth_failures("signup", client_ip)
             return jsonify({"ok": True, "email": email, "verify_pending": True, "user_id": created_user.get("id")})
         except ValueError as exc:
@@ -664,7 +747,7 @@ def register_user_account_routes(
             return jsonify({"ok": False, "error": str(exc)}), 400
         except PublicAuthEmailError as exc:
             app.logger.exception("Failed to send account verification email: %s", exc)
-            return jsonify({"ok": False, "error": str(exc)}), 500
+            return jsonify({"ok": False, "error": "Could not send the verification code right now. Please try again."}), 500
         except Exception as exc:
             record_public_auth_failure("signup", client_ip)
             app.logger.exception("Failed to create public user account: %s", exc)
@@ -690,23 +773,105 @@ def register_user_account_routes(
                 return jsonify({"ok": True, "email": email, "verify_pending": True})
             if _user_is_verified(user):
                 return jsonify({"ok": True, "already_verified": True, "redirect_url": url_for("public_login", next=next_url)})
-            raw_token = secrets.token_urlsafe(32)
+            wait_seconds = _resend_wait_seconds(user.get("email_verification_sent_at"), EMAIL_VERIFICATION_RESEND_COOLDOWN)
+            if wait_seconds:
+                return jsonify({"ok": False, "error": f"Please wait {wait_seconds} seconds before requesting another code.", "retry_after": wait_seconds}), 429
+            verification_code = _generate_six_digit_code()
+            now = _utcnow()
             update_public_user(
                 int(user.get("id")),
                 {
-                    "email_verification_token_hash": _hash_token(raw_token),
-                    "email_verification_expires_at": (_utcnow() + EMAIL_VERIFICATION_LIFETIME).isoformat(),
-                    "updated_at": _utcnow().isoformat(),
+                    "email_verification_token_hash": _hash_one_time_code(verification_code),
+                    "email_verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
+                    "email_verification_sent_at": now.isoformat(),
+                    "email_verification_attempts": 0,
+                    "updated_at": now.isoformat(),
                 },
             )
-            send_public_account_verification_email(to_email=email, verification_url=_build_verify_url(raw_token, next_url))
+            send_public_account_verification_email(
+                to_email=email,
+                verification_code=verification_code,
+                expires_minutes=int(EMAIL_VERIFICATION_LIFETIME.total_seconds() // 60),
+            )
             return jsonify({"ok": True, "email": email, "verify_pending": True})
         except PublicAuthEmailError as exc:
             app.logger.exception("Failed to resend account verification email: %s", exc)
-            return jsonify({"ok": False, "error": str(exc)}), 500
+            return jsonify({"ok": False, "error": "Could not resend the verification code right now. Please try again."}), 500
         except Exception as exc:
             app.logger.exception("Failed to resend account verification email for %s: %s", email, exc)
             return jsonify({"ok": False, "error": "Could not resend the verification email right now."}), 500
+
+    @app.route("/api/auth/signup/verify-otp", methods=["POST"])
+    def api_public_signup_verify_otp():
+        next_url = _resolve_safe_next_url(request.form.get("next"), "account_profile")
+        if not is_supabase_configured():
+            return jsonify({"ok": False, "error": "Email verification is temporarily unavailable."}), 503
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            return jsonify({"ok": False, "error": "Invalid request."}), 400
+
+        client_ip = get_client_ip()
+        is_limited, retry_after = is_public_auth_rate_limited("signup", client_ip)
+        if is_limited:
+            return jsonify({"ok": False, "error": f"Too many verification attempts. Try again in {retry_after} seconds."}), 429
+
+        email = _normalize_login_identifier(request.form.get("email"))
+        try:
+            code = _validate_six_digit_code(request.form.get("verification_code"))
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        if not EMAIL_PATTERN.match(email):
+            return jsonify({"ok": False, "error": "Enter the email address used during sign up."}), 400
+
+        try:
+            user = get_public_user_auth_by_email(email)
+            if not user:
+                record_public_auth_failure("signup", client_ip)
+                return jsonify({"ok": False, "error": "The code is invalid or has expired."}), 400
+            if _user_is_verified(user):
+                return jsonify({"ok": True, "redirect_url": url_for("public_login", next=next_url)})
+
+            attempts = int(user.get("email_verification_attempts") or 0)
+            if attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS:
+                return jsonify({"ok": False, "error": "Too many incorrect attempts. Request a new code."}), 429
+            stored_hash = str(user.get("email_verification_token_hash") or "")
+            code_is_valid = (
+                bool(stored_hash)
+                and not _is_expired(user.get("email_verification_expires_at"))
+                and hmac.compare_digest(stored_hash, _hash_one_time_code(code))
+            )
+            if not code_is_valid:
+                update_public_user(
+                    int(user.get("id")),
+                    {"email_verification_attempts": attempts + 1, "updated_at": _utcnow().isoformat()},
+                )
+                record_public_auth_failure("signup", client_ip)
+                remaining = max(0, EMAIL_VERIFICATION_MAX_ATTEMPTS - attempts - 1)
+                message = "The code is invalid or has expired."
+                if remaining:
+                    message += f" {remaining} attempt{'s' if remaining != 1 else ''} remaining."
+                else:
+                    message += " Request a new code."
+                return jsonify({"ok": False, "error": message}), 400
+
+            now = _utcnow().isoformat()
+            verified_user = update_public_user(
+                int(user.get("id")),
+                {
+                    "email_verified_at": str(user.get("email_verified_at") or now),
+                    "email_verification_token_hash": None,
+                    "email_verification_expires_at": None,
+                    "email_verification_sent_at": None,
+                    "email_verification_attempts": 0,
+                    "updated_at": now,
+                },
+            )
+            clear_public_auth_failures("signup", client_ip)
+            set_public_user_session(int(user.get("id")))
+            redirect_url = next_url if _user_completed_onboarding(verified_user) else url_for("public_account_setup", next=next_url)
+            return jsonify({"ok": True, "redirect_url": redirect_url})
+        except Exception as exc:
+            app.logger.exception("Failed to verify signup OTP for %s: %s", email, exc)
+            return jsonify({"ok": False, "error": "Could not verify the code right now."}), 500
 
     @app.route("/verify-email", methods=["GET"])
     def public_verify_email():
@@ -729,6 +894,8 @@ def register_user_account_routes(
                 "email_verified_at": str(user.get("email_verified_at") or now),
                 "email_verification_token_hash": None,
                 "email_verification_expires_at": None,
+                "email_verification_sent_at": None,
+                "email_verification_attempts": 0,
                 "updated_at": now,
             },
         )
@@ -847,6 +1014,7 @@ def register_user_account_routes(
                                 int(token_user.get("id")),
                                 {
                                     "password_hash": generate_password_hash(password),
+                                    "local_password_enabled": True,
                                     "password_reset_token_hash": None,
                                     "password_reset_expires_at": None,
                                     "updated_at": _utcnow().isoformat(),
@@ -937,12 +1105,21 @@ def register_user_account_routes(
             "saved": "Your settings were saved.",
             "photo": "Your profile picture was updated.",
             "photo-removed": "Your profile picture was removed.",
+            "security-code-sent": "A security code was sent to your email. It expires in 10 minutes.",
+            "password-changed": "Your password was changed successfully.",
+            "password-created": "A password was added to your Google account. You can now sign in either way.",
         }
         error_by_status = {
             "photo-error": "That image couldn't be uploaded. Please use a JPG or PNG image.",
             "photo-config": "Photo uploads are not available right now.",
             "delete-mismatch": "The confirmation text didn't match. Type “confirm delete” exactly.",
             "delete-error": "We couldn't process that request. Please try again.",
+            "security-code-wait": "Please wait before requesting another security code.",
+            "security-code-error": "We couldn't send a security code right now. Please try again.",
+            "password-error": "We couldn't update your password. Check the information and try again.",
+            "password-current": "Your current password is incorrect.",
+            "password-code": "The security code is invalid, expired, or has too many failed attempts. Request a new code and try again.",
+            "password-invalid": "Use matching passwords between 8 and 128 characters, different from your current password.",
         }
         if not error_message:
             if status_key in success_by_status:
@@ -960,6 +1137,132 @@ def register_user_account_routes(
             error_message=error_message,
             status_message=status_message,
         )
+
+    @app.route("/account/settings/security/code", methods=["POST"])
+    def account_settings_security_code():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login", next=url_for("account_settings")))
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("account_settings", status="security-code-error"))
+        if not is_public_auth_email_configured():
+            return redirect(url_for("account_settings", status="security-code-error"))
+
+        try:
+            auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
+            if not auth_user or bool(auth_user.get("local_password_enabled", True)):
+                return redirect(url_for("account_settings"))
+            wait_seconds = _resend_wait_seconds(auth_user.get("security_code_sent_at"), SECURITY_CODE_RESEND_COOLDOWN)
+            if wait_seconds:
+                return redirect(url_for("account_settings", status="security-code-wait"))
+
+            security_code = _generate_six_digit_code()
+            now = _utcnow()
+            update_public_user(
+                int(auth_user.get("id")),
+                {
+                    "security_code_hash": _hash_one_time_code(security_code),
+                    "security_code_expires_at": (now + SECURITY_CODE_LIFETIME).isoformat(),
+                    "security_code_sent_at": now.isoformat(),
+                    "security_code_attempts": 0,
+                    "updated_at": now.isoformat(),
+                },
+            )
+            send_public_security_code_email(
+                to_email=str(auth_user.get("email") or ""),
+                security_code=security_code,
+                expires_minutes=int(SECURITY_CODE_LIFETIME.total_seconds() // 60),
+            )
+            return redirect(url_for("account_settings", status="security-code-sent"))
+        except Exception as exc:
+            app.logger.exception("Failed to send a password security code for user %s: %s", current_user.get("id"), exc)
+            return redirect(url_for("account_settings", status="security-code-error"))
+
+    @app.route("/account/settings/security/password", methods=["POST"])
+    def account_settings_security_password():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login", next=url_for("account_settings")))
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("account_settings", status="password-error"))
+        client_ip = get_client_ip()
+        is_limited, _retry_after = is_public_auth_rate_limited("login", client_ip)
+        if is_limited:
+            return redirect(url_for("account_settings", status="password-error"))
+
+        try:
+            auth_user = get_public_user_auth_by_email(str(current_user.get("email") or ""))
+            if not auth_user:
+                raise ValueError("Account not found.")
+
+            password = str(request.form.get("new_password") or "")
+            confirmation = str(request.form.get("confirm_password") or "")
+            _validate_new_password(password, confirmation)
+            had_local_password = bool(auth_user.get("local_password_enabled", True))
+
+            if had_local_password:
+                current_password = str(request.form.get("current_password") or "")
+                stored_hash = str(auth_user.get("password_hash") or "")
+                try:
+                    current_is_valid = bool(stored_hash) and check_password_hash(stored_hash, current_password)
+                except (TypeError, ValueError):
+                    current_is_valid = False
+                if not current_is_valid:
+                    record_public_auth_failure("login", client_ip)
+                    raise ValueError("Your current password is incorrect.")
+                if check_password_hash(stored_hash, password):
+                    raise ValueError("Choose a new password that is different from your current password.")
+            else:
+                security_code = _validate_six_digit_code(request.form.get("security_code"))
+                attempts = int(auth_user.get("security_code_attempts") or 0)
+                if attempts >= SECURITY_CODE_MAX_ATTEMPTS:
+                    raise ValueError("Too many incorrect attempts. Request a new security code.")
+                stored_code_hash = str(auth_user.get("security_code_hash") or "")
+                code_is_valid = (
+                    bool(stored_code_hash)
+                    and not _is_expired(auth_user.get("security_code_expires_at"))
+                    and hmac.compare_digest(stored_code_hash, _hash_one_time_code(security_code))
+                )
+                if not code_is_valid:
+                    update_public_user(
+                        int(auth_user.get("id")),
+                        {"security_code_attempts": attempts + 1, "updated_at": _utcnow().isoformat()},
+                    )
+                    record_public_auth_failure("login", client_ip)
+                    raise ValueError("The security code is invalid or has expired.")
+
+            now = _utcnow().isoformat()
+            update_public_user(
+                int(auth_user.get("id")),
+                {
+                    "password_hash": generate_password_hash(password),
+                    "local_password_enabled": True,
+                    "security_code_hash": None,
+                    "security_code_expires_at": None,
+                    "security_code_sent_at": None,
+                    "security_code_attempts": 0,
+                    "password_reset_token_hash": None,
+                    "password_reset_expires_at": None,
+                    "updated_at": now,
+                },
+            )
+            # Rotate the signed session and CSRF token after a credential change.
+            clear_public_auth_failures("login", client_ip)
+            set_public_user_session(int(auth_user.get("id")))
+            return redirect(url_for("account_settings", status="password-changed" if had_local_password else "password-created"))
+        except ValueError as exc:
+            app.logger.warning("Password update rejected for user %s: %s", current_user.get("id"), exc)
+            error_text = str(exc).lower()
+            if "current password" in error_text:
+                status = "password-current"
+            elif "security code" in error_text or "incorrect attempts" in error_text:
+                status = "password-code"
+            else:
+                status = "password-invalid"
+            return redirect(url_for("account_settings", status=status))
+        except Exception as exc:
+            app.logger.exception("Failed to update password for user %s: %s", current_user.get("id"), exc)
+            return redirect(url_for("account_settings", status="password-error"))
 
     @app.route("/account/settings/avatar", methods=["POST"])
     def account_settings_avatar():

@@ -754,6 +754,15 @@ body.ogd-high-contrast-page .public-account-menu-header {
   padding-right: 3rem;
 }
 
+.public-auth-otp-input {
+  text-align: center;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 0.42em;
+  font-variant-numeric: tabular-nums;
+  padding-left: 1.25rem;
+}
+
 .public-auth-password-toggle {
   position: absolute;
   right: 0.9rem;

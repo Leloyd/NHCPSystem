@@ -43,7 +43,16 @@ def _send_message(message: EmailMessage) -> None:
         raise PublicAuthEmailError(f"Could not send email. Details: {exc}") from exc
 
 
-def send_public_account_verification_email(*, to_email: str, verification_url: str) -> None:
+def _verification_code_html(code: str) -> str:
+    safe_code = "".join(character for character in str(code or "") if character.isdigit())[:6]
+    return (
+        '<div style="display:inline-block;padding:14px 22px;border:1px solid #C9A84C;'
+        'border-radius:12px;background:#F8F2E5;color:#2C1A0E;font:700 28px/1.1 monospace;'
+        f'letter-spacing:8px;">{safe_code}</div>'
+    )
+
+
+def send_public_account_verification_email(*, to_email: str, verification_code: str, expires_minutes: int = 10) -> None:
     _smtp_host, _smtp_port, _smtp_username, _smtp_password, mail_from_address, mail_from_name, _smtp_use_tls = _build_smtp_config()
     message = EmailMessage()
     message["Subject"] = "Verify your NHCP account"
@@ -51,15 +60,38 @@ def send_public_account_verification_email(*, to_email: str, verification_url: s
     message["To"] = str(to_email or "").strip()
     plain_text = (
         "Welcome to NHCP Museo ng Libingan sa Ilalim ng Lupa.\n\n"
-        f"Please verify your email by opening this link:\n{verification_url}\n\n"
+        f"Your email verification code is: {verification_code}\n\n"
+        f"This single-use code expires in {int(expires_minutes)} minutes. Do not share it with anyone.\n\n"
         "If you did not create this account, you can ignore this email."
     )
     html_text = (
         "<p>Welcome to NHCP Museo ng Libingan sa Ilalim ng Lupa.</p>"
-        f"<p>Please verify your email by clicking the button below.</p>"
-        f"<p><a href=\"{verification_url}\" style=\"display:inline-block;padding:12px 20px;border-radius:12px;background:#2C1A0E;color:#F5EDD6;text-decoration:none;font-weight:600;\">Verify Email</a></p>"
-        f"<p>If the button does not work, use this link:<br><a href=\"{verification_url}\">{verification_url}</a></p>"
+        "<p>Enter this verification code in the sign-up window:</p>"
+        f"<p>{_verification_code_html(verification_code)}</p>"
+        f"<p>This single-use code expires in {int(expires_minutes)} minutes. Do not share it with anyone.</p>"
         "<p>If you did not create this account, you can ignore this email.</p>"
+    )
+    message.set_content(plain_text)
+    message.add_alternative(f"<html><body>{html_text}</body></html>", subtype="html")
+    _send_message(message)
+
+
+def send_public_security_code_email(*, to_email: str, security_code: str, expires_minutes: int = 10) -> None:
+    _smtp_host, _smtp_port, _smtp_username, _smtp_password, mail_from_address, mail_from_name, _smtp_use_tls = _build_smtp_config()
+    message = EmailMessage()
+    message["Subject"] = "Your NHCP account security code"
+    message["From"] = f"{mail_from_name} <{mail_from_address}>"
+    message["To"] = str(to_email or "").strip()
+    plain_text = (
+        f"Your NHCP account security code is: {security_code}\n\n"
+        f"This single-use code expires in {int(expires_minutes)} minutes. Do not share it with anyone.\n\n"
+        "If you did not request this code, review your account security and do not use the code."
+    )
+    html_text = (
+        "<p>Use this code to create a password for your NHCP account:</p>"
+        f"<p>{_verification_code_html(security_code)}</p>"
+        f"<p>This single-use code expires in {int(expires_minutes)} minutes. Do not share it with anyone.</p>"
+        "<p>If you did not request this code, review your account security and do not use the code.</p>"
     )
     message.set_content(plain_text)
     message.add_alternative(f"<html><body>{html_text}</body></html>", subtype="html")
