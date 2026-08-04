@@ -13,10 +13,13 @@
       var contrast = ls.getItem("nhcp-contrast") || "off";
       var size = ls.getItem("nhcp-textsize");
       if (["small", "medium", "large"].indexOf(size) < 0) size = "medium";
-      d.setAttribute("data-theme", theme === "dark" ? "dark" : "light");
+      var baseTheme = theme === "dark" ? "dark" : "light";
+      var contrastMode = contrast === "on" ? "on" : "off";
+      d.setAttribute("data-base-theme", baseTheme);
+      d.setAttribute("data-theme", contrastMode === "on" ? "contrast" : baseTheme);
       d.setAttribute("data-lang", lang === "tl" ? "tl" : "en");
       d.setAttribute("lang", lang === "tl" ? "tl" : "en");
-      d.setAttribute("data-contrast", contrast === "on" ? "on" : "off");
+      d.setAttribute("data-contrast", contrastMode);
       d.setAttribute("data-textsize", size);
       if (contrast === "on") d.classList.add("ogd-high-contrast");
     } catch (e) {}

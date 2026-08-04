@@ -769,3 +769,193 @@ html[data-contrast="on"] .collection-page--gallery .ogd-detail-action-button.is-
 html[data-contrast="on"] .collection-page--gallery .ogd-detail-back-button * {
   color: #000 !important;
 }
+
+/* ==========================================================================
+   COMMUNITY PARTICIPATION — legend, action links, and complete modal theming
+   ========================================================================== */
+
+/* Confirmed-booking legend */
+html[data-theme="dark"] .event-legend-item {
+  background: #211a10 !important;
+  color: #d8c9a6 !important;
+  border-color: rgba(201, 168, 76, 0.3) !important;
+}
+html[data-theme="dark"] .event-legend-item .event-dot {
+  background: #e6cf8a !important;
+}
+html[data-contrast="on"] .event-legend-item {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .event-legend-item .event-dot {
+  background: #facc15 !important;
+}
+
+/* These are text actions, not filled primary buttons. Keep them clean and
+   readable instead of placing a yellow rectangle directly behind the words. */
+html[data-contrast="on"] .participation-card-btn,
+html[data-contrast="on"] .participation-card-btn:hover,
+html[data-contrast="on"] .participation-card-btn:focus-visible,
+html[data-contrast="on"] .participation-card-btn * {
+  background: transparent !important;
+  color: #facc15 !important;
+  border: 0 !important;
+  box-shadow: none !important;
+}
+html[data-contrast="on"] .participation-card-btn:focus-visible {
+  outline: 2px solid #facc15 !important;
+  outline-offset: 4px;
+}
+
+/* Submission + event modals in dark mode */
+html[data-theme="dark"] .participation-modal-header,
+html[data-theme="dark"] .participation-modal-body,
+html[data-theme="dark"] .modal-container > div {
+  background: #211a10 !important;
+  border-color: rgba(201, 168, 76, 0.22) !important;
+}
+html[data-theme="dark"] .participation-modal-title,
+html[data-theme="dark"] .participation-verification__title,
+html[data-theme="dark"] .participation-success-title,
+html[data-theme="dark"] .form-label,
+html[data-theme="dark"] .modal-container .text-blue-900,
+html[data-theme="dark"] .modal-container .text-gray-700 {
+  color: #f3ece0 !important;
+}
+html[data-theme="dark"] .participation-modal-subtitle,
+html[data-theme="dark"] .participation-verification__copy,
+html[data-theme="dark"] .participation-success-copy,
+html[data-theme="dark"] .form-helper,
+html[data-theme="dark"] .story-character-count,
+html[data-theme="dark"] .modal-container .text-gray-400,
+html[data-theme="dark"] .modal-container .text-gray-600 {
+  color: #b6a684 !important;
+}
+html[data-theme="dark"] .participation-modal-close {
+  background: #151008 !important;
+  color: #e6cf8a !important;
+  border: 1px solid rgba(201, 168, 76, 0.34) !important;
+}
+html[data-theme="dark"] .participation-modal-close:hover {
+  background: rgba(201, 168, 76, 0.14) !important;
+  color: #fff4d6 !important;
+}
+html[data-theme="dark"] .file-drop-zone,
+html[data-theme="dark"] .photo-upload-zone,
+html[data-theme="dark"] .participation-verification,
+html[data-theme="dark"] .visit-type-btn,
+html[data-theme="dark"] .category-btn,
+html[data-theme="dark"] .form-submit-btn--secondary {
+  background: #1a140c !important;
+  color: #d8c9a6 !important;
+  border-color: rgba(201, 168, 76, 0.28) !important;
+}
+html[data-theme="dark"] .file-drop-zone:hover,
+html[data-theme="dark"] .photo-upload-zone:hover {
+  background: #261d10 !important;
+  border-color: #c9a84c !important;
+}
+html[data-theme="dark"] .file-drop-zone .text-gray-700,
+html[data-theme="dark"] .file-drop-zone .text-gray-400 {
+  color: #c4b494 !important;
+}
+html[data-theme="dark"] .visit-type-btn.active,
+html[data-theme="dark"] .category-btn.active {
+  background: #c9a84c !important;
+  color: #171006 !important;
+  border-color: #c9a84c !important;
+}
+html[data-theme="dark"] .participation-form-message,
+html[data-theme="dark"] .participation-form-message.is-error,
+html[data-theme="dark"] .participation-form-message.is-success {
+  background: #151008 !important;
+  color: #f3ece0 !important;
+  border-color: rgba(201, 168, 76, 0.34) !important;
+}
+html[data-theme="dark"] .participation-success-icon {
+  background: #151008 !important;
+  color: #e6cf8a !important;
+  border: 1px solid rgba(201, 168, 76, 0.34) !important;
+}
+
+/* High contrast is intentionally independent of the stored light/dark theme. */
+html[data-contrast="on"] .participation-modal-shell,
+html[data-contrast="on"] .participation-modal-header,
+html[data-contrast="on"] .participation-modal-body,
+html[data-contrast="on"] .modal-container,
+html[data-contrast="on"] .modal-container > div,
+html[data-contrast="on"] .participation-verification,
+html[data-contrast="on"] .participation-form-message,
+html[data-contrast="on"] .file-drop-zone,
+html[data-contrast="on"] .photo-upload-zone {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .participation-modal-shell,
+html[data-contrast="on"] .modal-container {
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .participation-modal-header {
+  border-bottom: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .participation-modal-close,
+html[data-contrast="on"] .modal-container button[onclick="closeEventModal()"] {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .participation-modal-close *,
+html[data-contrast="on"] .modal-container button[onclick="closeEventModal()"] * {
+  color: #facc15 !important;
+}
+html[data-contrast="on"] .form-input,
+html[data-contrast="on"] .form-textarea,
+html[data-contrast="on"] .form-file-input,
+html[data-contrast="on"] .visit-type-btn,
+html[data-contrast="on"] .category-btn,
+html[data-contrast="on"] .form-submit-btn--secondary {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .form-input::placeholder,
+html[data-contrast="on"] .form-textarea::placeholder {
+  color: #fff !important;
+  opacity: 0.78;
+}
+html[data-contrast="on"] .visit-type-btn.active,
+html[data-contrast="on"] .category-btn.active,
+html[data-contrast="on"] .form-submit-btn,
+html[data-contrast="on"] .success-close-btn {
+  background: #facc15 !important;
+  color: #000 !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .visit-type-btn.active *,
+html[data-contrast="on"] .category-btn.active *,
+html[data-contrast="on"] .form-submit-btn *,
+html[data-contrast="on"] .success-close-btn * {
+  color: #000 !important;
+}
+html[data-contrast="on"] .participation-success-icon,
+html[data-contrast="on"] .participation-modal-icon-box,
+html[data-contrast="on"] .modal-container .bg-blue-50 {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 1px solid #facc15 !important;
+}
+html[data-contrast="on"] .participation-success-icon *,
+html[data-contrast="on"] .participation-modal-icon-box *,
+html[data-contrast="on"] .modal-container .bg-blue-50 * {
+  color: #facc15 !important;
+}
+
+@media (max-width: 639px) {
+  .modal-overlay { padding: 0.625rem; }
+  .participation-modal-shell { max-height: calc(100dvh - 1.25rem); }
+  .participation-modal-header { padding: 1.1rem 3.5rem 0.9rem 1rem; }
+  .participation-modal-close { top: 0.75rem; right: 0.75rem; }
+  .participation-modal-body { padding: 1rem; }
+}

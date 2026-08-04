@@ -21,7 +21,12 @@
   };
 
   function applyDom() {
-    d.setAttribute("data-theme", state.theme);
+    /* High contrast is a complete visual mode. Keep the user's preferred
+       light/dark theme in data-base-theme, but suspend its CSS while contrast
+       is enabled. Turning contrast off immediately restores the latest theme
+       choice without a reload. */
+    d.setAttribute("data-base-theme", state.theme);
+    d.setAttribute("data-theme", state.contrast === "on" ? "contrast" : state.theme);
     d.setAttribute("data-contrast", state.contrast);
     d.setAttribute("data-textsize", state.size);
     d.setAttribute("data-lang", state.lang);
