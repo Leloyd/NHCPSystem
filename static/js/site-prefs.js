@@ -66,36 +66,73 @@
     } catch (e) {}
   }
 
+  function emitPreferenceChange(changedPreference) {
+    var snapshot = {
+      theme: state.theme,
+      contrast: state.contrast,
+      lang: state.lang,
+      size: state.size,
+      changed: changedPreference || "",
+    };
+    try {
+      window.dispatchEvent(new CustomEvent("nhcp:prefs-change", { detail: snapshot }));
+    } catch (e) {}
+
+    /* Gallery and educational-resource renderers predate the shared site
+       preference system. Keep their existing live-language event working so
+       their JavaScript-generated cards and detail text update without reload. */
+    if (changedPreference === "language") {
+      try {
+        window.dispatchEvent(new CustomEvent("ogd:accessibility-change", {
+          detail: {
+            language: state.lang === "en" ? "english" : "filipino",
+            textSize: state.size,
+            highContrast: state.contrast === "on",
+          },
+        }));
+      } catch (e) {}
+    }
+  }
+
   var Prefs = {
     get: function () { return { theme: state.theme, contrast: state.contrast, lang: state.lang, size: state.size }; },
     setTheme: function (v) {
       state.theme = v === "dark" ? "dark" : "light";
       save(KEY.theme, state.theme); serverSave({ theme_preference: state.theme });
-      applyDom(); syncControls();
+      applyDom(); syncControls(); emitPreferenceChange("theme");
     },
     setContrast: function (v) {
       state.contrast = v === "on" ? "on" : "off";
-      save(KEY.contrast, state.contrast); applyDom(); syncControls();
+      save(KEY.contrast, state.contrast); applyDom(); syncControls(); emitPreferenceChange("contrast");
     },
     toggleContrast: function () { this.setContrast(state.contrast === "on" ? "off" : "on"); },
     setTextSize: function (v) {
       state.size = ["small", "medium", "large"].indexOf(v) >= 0 ? v : "medium";
-      save(KEY.size, state.size); applyDom(); syncControls();
+      save(KEY.size, state.size); applyDom(); syncControls(); emitPreferenceChange("textsize");
     },
     setLang: function (v) {
       var next = v === "tl" ? "tl" : "en";
       if (next === state.lang) return;
       state.lang = next; save(KEY.lang, state.lang); serverSave({ language_preference: state.lang });
-      /* Most list-rendered pages need a reload to request translated server
-         content. Span-based settings pages opt out and update in place. */
-      if (document.body && document.body.hasAttribute("data-site-prefs-no-reload")) {
-        applyDom(); syncControls();
-      } else {
-        try { window.location.reload(); } catch (e) { applyDom(); }
-      }
+      applyDom(); syncControls(); emitPreferenceChange("language");
     },
   };
   window.NHCPPrefs = Prefs;
+
+  /* Compatibility facade for the collection renderers. New code should use
+     NHCPPrefs; this keeps their existing getSettings() calls instantaneous. */
+  if (!window.ogdAccessibility) {
+    window.ogdAccessibility = {
+      getSettings: function () {
+        return {
+          language: state.lang === "en" ? "english" : "filipino",
+          textSize: state.size,
+          highContrast: state.contrast === "on",
+          theme: state.theme,
+        };
+      },
+    };
+  }
 
   document.addEventListener("click", function (e) {
     var t = e.target.closest ? e.target.closest(

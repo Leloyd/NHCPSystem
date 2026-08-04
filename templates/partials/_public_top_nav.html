@@ -1,3 +1,7 @@
+<style>
+  :root[data-lang="tl"] [data-lang-en] { display: none !important; }
+  :root:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
+</style>
 <header id="publicNavHeader" class="fixed top-0 left-0 right-0 z-50 transition-all duration-300 {% if public_active_page == 'home' %}bg-transparent{% else %}bg-white/95 backdrop-blur-sm shadow-sm{% endif %}" data-nav-mode="{% if public_active_page == 'home' %}transparent{% else %}solid{% endif %}">
    <div class="container mx-auto px-4">
      <div class="flex items-center justify-between h-20 gap-4">
@@ -14,12 +18,12 @@
        </a>
  
        <nav class="hidden lg:flex items-center space-x-8" id="navLinks">
-         <a href="{{ url_for('index') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'home' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Home</a>
-         <a href="{{ url_for('digital_exhibits') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'digital-exhibits' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Digital Exhibits</a>
-         <a href="{{ url_for('interactive') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'interactive' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Interactive</a>
-         <a href="{{ url_for('trail_start') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'heritage-trail' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Heritage Trail</a>
-         <a href="{{ url_for('community_participation') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'community-participation' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Community Participation</a>
-         <a href="{{ url_for('support') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'support' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link>Support</a>
+         <a href="{{ url_for('index') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'home' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'home' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
+         <a href="{{ url_for('digital_exhibits') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'digital-exhibits' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'digital-exhibits' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link><span data-lang-en>Digital Exhibits</span><span data-lang-tl>Mga Digital na Eksibit</span></a>
+         <a href="{{ url_for('interactive') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'interactive' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'interactive' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link><span data-lang-en>Interactive</span><span data-lang-tl>Interaktibo</span></a>
+         <a href="{{ url_for('trail_start') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'heritage-trail' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'heritage-trail' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link><span data-lang-en>Heritage Trail</span><span data-lang-tl>Landas ng Pamana</span></a>
+         <a href="{{ url_for('community_participation') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'community-participation' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'community-participation' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link><span data-lang-en>Community Participation</span><span data-lang-tl>Pakikilahok ng Komunidad</span></a>
+         <a href="{{ url_for('support') }}" class="transition-colors duration-300 {% if public_active_page == 'home' %}{% if public_active_page == 'support' %}text-[#D4AF6A] font-semibold{% else %}text-white/90 hover:text-white{% endif %}{% else %}{% if public_active_page == 'support' %}text-amber-800{% else %}text-gray-700 hover:text-amber-800{% endif %}{% endif %}" data-nav-link><span data-lang-en>Support</span><span data-lang-tl>Suporta</span></a>
        </nav>
  
        <div class="flex items-center gap-2 sm:gap-3">
@@ -32,7 +36,7 @@
            {% else %}
            <span class="public-account-avatar">{{ user_label[:1]|upper }}</span>
            {% endif %}
-            <span class="hidden lg:inline">Hi, {{ user_label.split(' ')[0] }}</span>
+            <span class="hidden lg:inline"><span data-lang-en>Hi,</span><span data-lang-tl>Kumusta,</span> {{ user_label.split(' ')[0] }}</span>
             <svg class="public-account-menu-icon lg:hidden" id="publicAccountMenuIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 7h16M4 12h16M4 17h16"></path></svg>
             <svg class="public-account-menu-icon hidden lg:hidden" id="publicAccountCloseIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M6 6l12 12M18 6 6 18"></path></svg>
             <svg class="public-account-chevron hidden lg:block" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 9 6 6 6-6"></path></svg>
@@ -42,17 +46,17 @@
               <p class="public-account-menu-name">{{ user_label }}</p>
               <p class="public-account-menu-email">{{ current_public_user.email }}</p>
             </div>
-            <a href="{{ url_for('account_profile') }}" class="public-account-menu-link" role="menuitem">Profile</a>
-            <a href="{{ url_for('account_settings') }}" class="public-account-menu-link" role="menuitem">Settings</a>
+            <a href="{{ url_for('account_profile') }}" class="public-account-menu-link" role="menuitem"><span data-lang-en>Profile</span><span data-lang-tl>Profile</span></a>
+            <a href="{{ url_for('account_settings') }}" class="public-account-menu-link" role="menuitem"><span data-lang-en>Settings</span><span data-lang-tl>Mga Setting</span></a>
             <div class="public-account-menu-divider"></div>
             <form method="post" action="{{ url_for('public_logout') }}">
               <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
-              <button type="submit" class="public-account-menu-link public-account-menu-link-danger" role="menuitem">Logout</button>
+              <button type="submit" class="public-account-menu-link public-account-menu-link-danger" role="menuitem"><span data-lang-en>Logout</span><span data-lang-tl>Mag-log out</span></button>
             </form>
           </div>
         </div>
         {% else %}
-        <button type="button" class="public-auth-entry-button" data-open-auth-modal="login">Sign In</button>
+        <button type="button" class="public-auth-entry-button" data-open-auth-modal="login"><span data-lang-en>Sign In</span><span data-lang-tl>Mag-sign in</span></button>
         {% endif %}
 
         {% if not current_public_user %}
@@ -65,25 +69,25 @@
     </div>
 
     <nav id="mobileMenu" class="lg:hidden py-4 space-y-4 border-t hidden bg-white/95 backdrop-blur-sm border-gray-200">
-       <a href="{{ url_for('index') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Home</a>
-       <a href="{{ url_for('digital_exhibits') }}" class="block transition-colors duration-300 {% if public_active_page == 'digital-exhibits' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Digital Exhibits</a>
-       <a href="{{ url_for('interactive') }}" class="block transition-colors duration-300 {% if public_active_page == 'interactive' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Interactive</a>
-       <a href="{{ url_for('trail_start') }}" class="block transition-colors duration-300 {% if public_active_page == 'heritage-trail' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Heritage Trail</a>
-       <a href="{{ url_for('community_participation') }}" class="block transition-colors duration-300 {% if public_active_page == 'community-participation' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Community Participation</a>
-       <a href="{{ url_for('support') }}" class="block transition-colors duration-300 {% if public_active_page == 'support' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}">Support</a>
+       <a href="{{ url_for('index') }}" class="block transition-colors duration-300 {% if public_active_page == 'home' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
+       <a href="{{ url_for('digital_exhibits') }}" class="block transition-colors duration-300 {% if public_active_page == 'digital-exhibits' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Digital Exhibits</span><span data-lang-tl>Mga Digital na Eksibit</span></a>
+       <a href="{{ url_for('interactive') }}" class="block transition-colors duration-300 {% if public_active_page == 'interactive' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Interactive</span><span data-lang-tl>Interaktibo</span></a>
+       <a href="{{ url_for('trail_start') }}" class="block transition-colors duration-300 {% if public_active_page == 'heritage-trail' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Heritage Trail</span><span data-lang-tl>Landas ng Pamana</span></a>
+       <a href="{{ url_for('community_participation') }}" class="block transition-colors duration-300 {% if public_active_page == 'community-participation' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Community Participation</span><span data-lang-tl>Pakikilahok ng Komunidad</span></a>
+       <a href="{{ url_for('support') }}" class="block transition-colors duration-300 {% if public_active_page == 'support' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Support</span><span data-lang-tl>Suporta</span></a>
       <div class="pt-3 border-t border-stone-200 space-y-3">
         {% if current_public_user %}
         <div class="space-y-2">
-          <p class="text-amber-800 font-semibold">My Account</p>
-          <a href="{{ url_for('account_profile') }}" class="block pl-4 text-gray-700 hover:text-amber-800">Profile</a>
-          <a href="{{ url_for('account_settings') }}" class="block pl-4 text-gray-700 hover:text-amber-800">Settings</a>
+          <p class="text-amber-800 font-semibold"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></p>
+          <a href="{{ url_for('account_profile') }}" class="block pl-4 text-gray-700 hover:text-amber-800"><span data-lang-en>Profile</span><span data-lang-tl>Profile</span></a>
+          <a href="{{ url_for('account_settings') }}" class="block pl-4 text-gray-700 hover:text-amber-800"><span data-lang-en>Settings</span><span data-lang-tl>Mga Setting</span></a>
         </div>
         <form method="post" action="{{ url_for('public_logout') }}">
           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
-          <button type="submit" class="block text-left text-red-700 font-semibold">Logout</button>
+          <button type="submit" class="block text-left text-red-700 font-semibold"><span data-lang-en>Logout</span><span data-lang-tl>Mag-log out</span></button>
         </form>
         {% else %}
-         <button type="button" class="public-auth-entry-button w-full justify-center" data-open-auth-modal="login">Sign In</button>
+         <button type="button" class="public-auth-entry-button w-full justify-center" data-open-auth-modal="login"><span data-lang-en>Sign In</span><span data-lang-tl>Mag-sign in</span></button>
          {% endif %}
        </div>
      </nav>

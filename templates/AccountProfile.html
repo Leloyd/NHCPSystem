@@ -24,9 +24,9 @@
         <!-- Breadcrumb -->
         <div class="flex justify-start mb-4">
           <nav class="flex items-center gap-2 text-xs text-[#9a8060]">
-            <a href="/" class="hover:text-[#b8963e] transition-colors">Home</a>
+            <a href="/" class="hover:text-[#b8963e] transition-colors"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
             <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
-            <span class="text-[#b8963e]">My Account</span>
+            <span class="text-[#b8963e]"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></span>
           </nav>
         </div>
 
@@ -40,9 +40,9 @@
             <div class="flex h-16 w-16 sm:h-20 sm:w-20 flex-none items-center justify-center rounded-2xl text-2xl sm:text-3xl font-semibold text-stone-950 shadow-lg" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
             {% endif %}
             <div class="min-w-0">
-              <p class="text-[11px] uppercase tracking-[0.28em] text-amber-200/80">Welcome back</p>
+              <p class="text-[11px] uppercase tracking-[0.28em] text-amber-200/80"><span data-lang-en>Welcome back</span><span data-lang-tl>Maligayang pagbabalik</span></p>
               <h1 class="mt-2 text-2xl sm:text-4xl font-serif leading-tight truncate">{{ _name }}</h1>
-              <p class="mt-2 max-w-2xl text-sm sm:text-base leading-relaxed text-stone-300">Your bookmarks, bookings, submissions, and feedback — all in one place.</p>
+              <p class="mt-2 max-w-2xl text-sm sm:text-base leading-relaxed text-stone-300"><span data-lang-en>Your bookmarks, bookings, submissions, and feedback — all in one place.</span><span data-lang-tl>Ang iyong mga bookmark, booking, pagsusumite, at puna — nasa iisang lugar.</span></p>
             </div>
           </div>
         </section>
@@ -70,7 +70,7 @@
                   <i data-lucide="mail" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
                   <span class="min-w-0 break-words text-stone-600">{{ current_public_user.email }}</span>
                   {% if current_public_user.email_verified_at %}
-                  <span class="ml-auto inline-flex flex-none items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700">Verified</span>
+                  <span class="ml-auto inline-flex flex-none items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700"><span data-lang-en>Verified</span><span data-lang-tl>Beripikado</span></span>
                   {% endif %}
                 </div>
                 {% if _location %}
@@ -88,14 +88,14 @@
                 {% if current_public_user.created_at %}
                 <div class="flex items-start gap-2.5">
                   <i data-lucide="calendar" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
-                  <span class="text-stone-600">Joined {{ current_public_user.created_at[:10] }}</span>
+                  <span class="text-stone-600"><span data-lang-en>Joined</span><span data-lang-tl>Sumali noong</span> {{ current_public_user.created_at[:10] }}</span>
                 </div>
                 {% endif %}
               </div>
 
               {% if _roles %}
               <div class="mt-5 border-t border-stone-100 pt-4">
-                <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Roles</p>
+                <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400"><span data-lang-en>Roles</span><span data-lang-tl>Mga Tungkulin</span></p>
                 <div class="flex flex-wrap gap-1.5">
                   {% for role in _roles %}
                   <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{{ role }}</span>
@@ -107,22 +107,22 @@
 
             <!-- Quick actions -->
             <div class="rounded-3xl border border-amber-200/70 bg-white p-4 shadow-sm">
-              <p class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400">Quick actions</p>
+              <p class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400"><span data-lang-en>Quick actions</span><span data-lang-tl>Mabilis na mga aksyon</span></p>
               <nav class="grid gap-1">
                 <a href="{{ url_for('account_settings') }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
-                  <i data-lucide="settings" class="h-4 w-4 text-amber-700"></i> Account Settings
+                  <i data-lucide="settings" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Account Settings</span><span data-lang-tl>Mga Setting ng Account</span>
                 </a>
                 <a href="/online-gallery" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
-                  <i data-lucide="images" class="h-4 w-4 text-amber-700"></i> Browse Online Gallery
+                  <i data-lucide="images" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Browse Online Gallery</span><span data-lang-tl>Tingnan ang Online Gallery</span>
                 </a>
                 <a href="/virtual-tour" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
-                  <i data-lucide="compass" class="h-4 w-4 text-amber-700"></i> Start the Virtual Tour
+                  <i data-lucide="compass" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Start the Virtual Tour</span><span data-lang-tl>Simulan ang Virtual Tour</span>
                 </a>
                 <a href="/community-participation" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
-                  <i data-lucide="users" class="h-4 w-4 text-amber-700"></i> Community &amp; Bookings
+                  <i data-lucide="users" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Community &amp; Bookings</span><span data-lang-tl>Komunidad at mga Booking</span>
                 </a>
                 <a href="/support" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
-                  <i data-lucide="life-buoy" class="h-4 w-4 text-amber-700"></i> Support &amp; Governance
+                  <i data-lucide="life-buoy" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Support &amp; Governance</span><span data-lang-tl>Suporta at Pamamahala</span>
                 </a>
               </nav>
             </div>
@@ -133,10 +133,10 @@
             <!-- Stats -->
             <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
               {% set _stats = [
-                {'label': 'Bookmarks', 'value': account_dashboard.bookmarked_items|length, 'icon': 'bookmark'},
-                {'label': 'Tour Bookings', 'value': account_dashboard.tour_bookings|length, 'icon': 'calendar-check'},
-                {'label': 'Submissions', 'value': account_dashboard.participation_submissions|length, 'icon': 'file-text'},
-                {'label': 'Feedback', 'value': account_dashboard.visitor_feedback|length, 'icon': 'star'}
+                {'label_en': 'Bookmarks', 'label_tl': 'Mga Bookmark', 'value': account_dashboard.bookmarked_items|length, 'icon': 'bookmark'},
+                {'label_en': 'Tour Bookings', 'label_tl': 'Mga Booking sa Tour', 'value': account_dashboard.tour_bookings|length, 'icon': 'calendar-check'},
+                {'label_en': 'Submissions', 'label_tl': 'Mga Pagsusumite', 'value': account_dashboard.participation_submissions|length, 'icon': 'file-text'},
+                {'label_en': 'Feedback', 'label_tl': 'Puna', 'value': account_dashboard.visitor_feedback|length, 'icon': 'star'}
               ] %}
               {% for stat in _stats %}
               <article class="rounded-2xl border border-amber-200/70 bg-white px-4 py-4 shadow-sm">
@@ -144,7 +144,7 @@
                   <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><i data-lucide="{{ stat.icon }}" class="h-4 w-4"></i></span>
                   <span class="text-2xl font-bold text-stone-900">{{ stat.value }}</span>
                 </div>
-                <p class="mt-2 text-xs font-medium text-stone-500">{{ stat.label }}</p>
+                <p class="mt-2 text-xs font-medium text-stone-500"><span data-lang-en>{{ stat.label_en }}</span><span data-lang-tl>{{ stat.label_tl }}</span></p>
               </article>
               {% endfor %}
             </section>
@@ -155,22 +155,22 @@
               <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
                 <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
                   <i data-lucide="bookmark" class="h-4 w-4 text-amber-700"></i>
-                  <h2 class="text-lg font-serif text-stone-900">My Bookmarks</h2>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>My Bookmarks</span><span data-lang-tl>Aking mga Bookmark</span></h2>
                   <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.bookmarked_items|length }}</span>
                 </div>
                 <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
                   {% if account_dashboard.bookmarked_items %}
                     {% for item in account_dashboard.bookmarked_items %}
                     <a href="/online-gallery/details?item={{ item.id }}" class="block rounded-2xl border border-stone-200 p-4 transition-colors hover:border-amber-400 hover:bg-amber-50/50">
-                      <p class="text-[11px] uppercase tracking-[0.16em] text-amber-700">{{ item.category_tl or item.category }}</p>
-                      <h3 class="mt-1.5 font-semibold text-stone-900">{{ item.title_tl or item.title }}</h3>
-                      <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-2">{{ item.short_caption_tl or item.short_caption }}</p>
+                      <p class="text-[11px] uppercase tracking-[0.16em] text-amber-700"><span data-lang-en>{{ item.category_en or item.category or item.category_tl }}</span><span data-lang-tl>{{ item.category_tl or item.category or item.category_en }}</span></p>
+                      <h3 class="mt-1.5 font-semibold text-stone-900"><span data-lang-en>{{ item.title_en or item.title or item.title_tl }}</span><span data-lang-tl>{{ item.title_tl or item.title or item.title_en }}</span></h3>
+                      <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-2"><span data-lang-en>{{ item.short_caption_en or item.short_caption or item.short_caption_tl }}</span><span data-lang-tl>{{ item.short_caption_tl or item.short_caption or item.short_caption_en }}</span></p>
                     </a>
                     {% endfor %}
                   {% else %}
                     <div class="flex flex-col items-center justify-center py-8 text-center">
                       <i data-lucide="bookmark" class="h-7 w-7 text-stone-300"></i>
-                      <p class="mt-2 text-sm text-stone-500">You have not bookmarked any artifacts yet.</p>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>You have not bookmarked any artifacts yet.</span><span data-lang-tl>Wala ka pang naka-bookmark na artifact.</span></p>
                     </div>
                   {% endif %}
                 </div>
@@ -180,7 +180,7 @@
               <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
                 <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
                   <i data-lucide="calendar-check" class="h-4 w-4 text-amber-700"></i>
-                  <h2 class="text-lg font-serif text-stone-900">My Tour Bookings</h2>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>My Tour Bookings</span><span data-lang-tl>Aking mga Booking sa Tour</span></h2>
                   <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.tour_bookings|length }}</span>
                 </div>
                 <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
@@ -191,12 +191,12 @@
                         <div class="min-w-0">
                           <h3 class="font-semibold text-stone-900">{{ booking.display_title }}</h3>
                           <p class="mt-1 text-sm text-stone-600">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p>
-                          <p class="mt-1 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} visitors</p>
+                          <p class="mt-1 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} <span data-lang-en>visitors</span><span data-lang-tl>bisita</span></p>
                           {% if booking.rescheduled_display_date %}
-                          <p class="mt-1 text-sm text-stone-600">Rescheduled: {{ booking.rescheduled_display_date }}</p>
+                          <p class="mt-1 text-sm text-stone-600"><span data-lang-en>Rescheduled:</span><span data-lang-tl>Inilipat ng iskedyul:</span> {{ booking.rescheduled_display_date }}</p>
                           {% endif %}
                           {% if booking.decision_reason %}
-                          <p class="mt-1 text-sm text-stone-500">Reason: {{ booking.decision_reason }}</p>
+                          <p class="mt-1 text-sm text-stone-500"><span data-lang-en>Reason:</span><span data-lang-tl>Dahilan:</span> {{ booking.decision_reason }}</p>
                           {% endif %}
                         </div>
                         <span class="inline-flex flex-none rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'confirmed' %}bg-green-100 text-green-800{% elif booking.status == 'cancelled' %}bg-red-100 text-red-700{% elif booking.status == 'rescheduled' %}bg-blue-100 text-blue-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
@@ -206,7 +206,7 @@
                   {% else %}
                     <div class="flex flex-col items-center justify-center py-8 text-center">
                       <i data-lucide="calendar-x" class="h-7 w-7 text-stone-300"></i>
-                      <p class="mt-2 text-sm text-stone-500">No booking requests yet.</p>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>No booking requests yet.</span><span data-lang-tl>Wala pang kahilingan para sa booking.</span></p>
                     </div>
                   {% endif %}
                 </div>
@@ -216,7 +216,7 @@
               <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
                 <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
                   <i data-lucide="file-text" class="h-4 w-4 text-amber-700"></i>
-                  <h2 class="text-lg font-serif text-stone-900">Participation History</h2>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>Participation History</span><span data-lang-tl>Kasaysayan ng Pakikilahok</span></h2>
                   <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.participation_submissions|length }}</span>
                 </div>
                 <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
@@ -236,7 +236,7 @@
                   {% else %}
                     <div class="flex flex-col items-center justify-center py-8 text-center">
                       <i data-lucide="file-text" class="h-7 w-7 text-stone-300"></i>
-                      <p class="mt-2 text-sm text-stone-500">No participation submissions yet.</p>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>No participation submissions yet.</span><span data-lang-tl>Wala pang pagsusumite para sa pakikilahok.</span></p>
                     </div>
                   {% endif %}
                 </div>
@@ -246,7 +246,7 @@
               <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
                 <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
                   <i data-lucide="star" class="h-4 w-4 text-amber-700"></i>
-                  <h2 class="text-lg font-serif text-stone-900">Visitor Feedback</h2>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>Visitor Feedback</span><span data-lang-tl>Puna ng Bisita</span></h2>
                   <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.visitor_feedback|length }}</span>
                 </div>
                 <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
@@ -265,7 +265,7 @@
                   {% else %}
                     <div class="flex flex-col items-center justify-center py-8 text-center">
                       <i data-lucide="star" class="h-7 w-7 text-stone-300"></i>
-                      <p class="mt-2 text-sm text-stone-500">No visitor feedback submitted yet.</p>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>No visitor feedback submitted yet.</span><span data-lang-tl>Wala pang naisumiteng puna ng bisita.</span></p>
                     </div>
                   {% endif %}
                 </div>

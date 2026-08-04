@@ -18,9 +18,9 @@
         <div class="container mx-auto px-4">
           <div class="ogd-detail-topbar__inner">
             <nav class="ogd-breadcrumb" aria-label="Breadcrumb">
-              <a href="/">Home</a>
+              <a href="/"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
               <span aria-hidden="true">/</span>
-              <a href="{{ url_for('community_participation') }}">Community Participation</a>
+              <a href="{{ url_for('community_participation') }}"><span data-lang-en>Community Participation</span><span data-lang-tl>Pakikilahok ng Komunidad</span></a>
               <span aria-hidden="true">/</span>
               <span aria-current="page">{{ highlight_item.title }}</span>
             </nav>
@@ -63,13 +63,13 @@
                     {% if highlight_item.image_url %}
                     <span class="ogd-detail-media__hint">
                       <i data-lucide="maximize-2" aria-hidden="true"></i>
-                      <span>Click to expand</span>
+                      <span><span data-lang-en>Click to expand</span><span data-lang-tl>I-click upang palakihin</span></span>
                     </span>
                     {% endif %}
                   </button>
 
                   <span class="ogd-detail-media__badge{% if highlight_item.is_featured %} bg-stone-900 text-white{% endif %}">
-                    {% if highlight_item.is_featured %}Featured{% else %}{{ highlight_item.category }}{% endif %}
+                    {% if highlight_item.is_featured %}<span data-lang-en>Featured</span><span data-lang-tl>Tampok</span>{% else %}{{ highlight_item.category }}{% endif %}
                   </span>
                   {% if highlight_item.image_count > 1 %}
                   <button type="button" class="ogd-detail-gallery-arrow is-previous" data-highlight-gallery-previous aria-label="Previous image">
@@ -85,7 +85,7 @@
             </div>
 
             <div class="ogd-detail-content">
-              <p class="ogd-detail-counter">{% if highlight_item.is_featured %}Featured Community Highlight{% else %}Community Highlight{% endif %}</p>
+              <p class="ogd-detail-counter">{% if highlight_item.is_featured %}<span data-lang-en>Featured Community Highlight</span><span data-lang-tl>Tampok na Highlight ng Komunidad</span>{% else %}<span data-lang-en>Community Highlight</span><span data-lang-tl>Highlight ng Komunidad</span>{% endif %}</p>
               <h1 class="ogd-detail-title font-serif">{{ highlight_item.title }}</h1>
 
               <div class="ogd-detail-meta-row">
@@ -94,7 +94,7 @@
               </div>
 
               <section class="ogd-detail-section-card">
-                <h2 class="ogd-detail-section-card__title">Overview</h2>
+                <h2 class="ogd-detail-section-card__title"><span data-lang-en>Overview</span><span data-lang-tl>Pangkalahatang-ideya</span></h2>
                 <p class="ogd-detail-description">
                   <span data-lang-en>{{ highlight_item.short_description }}</span>
                   <span data-lang-tl>{{ highlight_item.short_description_tl or highlight_item.short_description }}</span>
@@ -102,7 +102,7 @@
               </section>
 
               <section class="ogd-detail-section-card">
-                <h2 class="ogd-detail-section-card__title">Full Description</h2>
+                <h2 class="ogd-detail-section-card__title"><span data-lang-en>Full Description</span><span data-lang-tl>Buong Paglalarawan</span></h2>
                 <p class="ogd-detail-description">
                   <span data-lang-en>{{ highlight_item.long_description }}</span>
                   <span data-lang-tl>{{ highlight_item.long_description_tl or highlight_item.long_description }}</span>
@@ -110,14 +110,14 @@
               </section>
 
               <section class="ogd-detail-facts">
-                <h2 class="ogd-detail-section-card__title">Highlight Details</h2>
+                <h2 class="ogd-detail-section-card__title"><span data-lang-en>Highlight Details</span><span data-lang-tl>Mga Detalye ng Highlight</span></h2>
                 <div class="ogd-detail-facts__list">
                   <div class="ogd-detail-fact">
                     <div class="ogd-detail-fact__icon">
                       <i data-lucide="calendar-days" aria-hidden="true"></i>
                     </div>
                     <div class="ogd-detail-fact__content">
-                      <p class="ogd-detail-fact__label">Event Date</p>
+                      <p class="ogd-detail-fact__label"><span data-lang-en>Event Date</span><span data-lang-tl>Petsa ng Kaganapan</span></p>
                       <p class="ogd-detail-fact__value">{{ highlight_item.display_date }}</p>
                     </div>
                   </div>
@@ -126,7 +126,7 @@
                       <i data-lucide="tag" aria-hidden="true"></i>
                     </div>
                     <div class="ogd-detail-fact__content">
-                      <p class="ogd-detail-fact__label">Category</p>
+                      <p class="ogd-detail-fact__label"><span data-lang-en>Category</span><span data-lang-tl>Kategorya</span></p>
                       <p class="ogd-detail-fact__value">{{ highlight_item.category }}</p>
                     </div>
                   </div>
@@ -135,7 +135,7 @@
                       <i data-lucide="clock-3" aria-hidden="true"></i>
                     </div>
                     <div class="ogd-detail-fact__content">
-                      <p class="ogd-detail-fact__label">Estimated Read Time</p>
+                      <p class="ogd-detail-fact__label"><span data-lang-en>Estimated Read Time</span><span data-lang-tl>Tinatayang Oras ng Pagbasa</span></p>
                       <p class="ogd-detail-fact__value">{{ highlight_item.estimated_read_label }}</p>
                     </div>
                   </div>
@@ -144,8 +144,8 @@
                       <i data-lucide="star" aria-hidden="true"></i>
                     </div>
                     <div class="ogd-detail-fact__content">
-                      <p class="ogd-detail-fact__label">Placement</p>
-                      <p class="ogd-detail-fact__value">{% if highlight_item.is_featured %}Featured highlight{% else %}Standard highlight{% endif %}</p>
+                      <p class="ogd-detail-fact__label"><span data-lang-en>Placement</span><span data-lang-tl>Pagkakalagay</span></p>
+                      <p class="ogd-detail-fact__value">{% if highlight_item.is_featured %}<span data-lang-en>Featured highlight</span><span data-lang-tl>Tampok na highlight</span>{% else %}<span data-lang-en>Standard highlight</span><span data-lang-tl>Karaniwang highlight</span>{% endif %}</p>
                     </div>
                   </div>
                 </div>
@@ -154,7 +154,7 @@
               <div class="ogd-detail-back-row">
                 <a href="{{ url_for('community_participation') }}" class="ogd-detail-back-button">
                   <i data-lucide="arrow-left" aria-hidden="true"></i>
-                  <span>Back to Community Participation</span>
+                  <span><span data-lang-en>Back to Community Participation</span><span data-lang-tl>Bumalik sa Pakikilahok ng Komunidad</span></span>
                 </a>
               </div>
             </div>
@@ -164,10 +164,10 @@
           <section class="ogd-related-section">
             <div class="ogd-related-header">
               <div>
-                <span class="ogd-related-header__kicker">You May Also Like</span>
-                <h2 class="ogd-related-header__title font-serif">More Community Highlights</h2>
+                <span class="ogd-related-header__kicker"><span data-lang-en>You May Also Like</span><span data-lang-tl>Maaaring Magustuhan Mo Rin</span></span>
+                <h2 class="ogd-related-header__title font-serif"><span data-lang-en>More Community Highlights</span><span data-lang-tl>Higit Pang Highlight ng Komunidad</span></h2>
               </div>
-              <a href="{{ url_for('community_participation') }}" class="ogd-related-header__link">View All</a>
+              <a href="{{ url_for('community_participation') }}" class="ogd-related-header__link"><span data-lang-en>View All</span><span data-lang-tl>Tingnan Lahat</span></a>
             </div>
 
             <div class="ogd-related-grid">
@@ -197,7 +197,7 @@
                   </div>
 
                   <a href="{{ related_item.detail_url }}" class="ogd-artifact-card__action">
-                    <span>Read More</span>
+                    <span><span data-lang-en>Read More</span><span data-lang-tl>Magbasa Pa</span></span>
                     <i data-lucide="arrow-right" aria-hidden="true"></i>
                   </a>
                 </div>

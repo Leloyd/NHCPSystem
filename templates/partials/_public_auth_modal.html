@@ -14,21 +14,21 @@
       <section class="public-auth-panel" data-auth-view="login">
         <div class="public-auth-heading">
           <div class="public-auth-heading-icon">🏛️</div>
-          <h2 id="publicAuthTitle" class="public-auth-title">Welcome Back</h2>
-          <p class="public-auth-subtitle">Continue your digital heritage experience.</p>
+          <h2 id="publicAuthTitle" class="public-auth-title"><span data-lang-en>Welcome Back</span><span data-lang-tl>Maligayang Pagbabalik</span></h2>
+          <p class="public-auth-subtitle"><span data-lang-en>Continue your digital heritage experience.</span><span data-lang-tl>Ipagpatuloy ang iyong digital na karanasan sa pamana.</span></p>
         </div>
 
         <button type="button" class="public-auth-social" data-auth-google>
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"></path><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"></path><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"></path><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"></path></svg>
-          Continue with Google
+          <span data-lang-en>Continue with Google</span><span data-lang-tl>Magpatuloy gamit ang Google</span>
         </button>
 
-        <div class="public-auth-divider"><span>or</span></div>
+        <div class="public-auth-divider"><span><span data-lang-en>or</span><span data-lang-tl>o</span></span></div>
 
         <form id="publicAuthLoginForm" class="public-auth-form" novalidate>
           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
           <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
-          <label class="public-auth-label" for="publicAuthLoginIdentifier">Email address</label>
+          <label class="public-auth-label" for="publicAuthLoginIdentifier"><span data-lang-en>Email address</span><span data-lang-tl>Email address</span></label>
           <div class="public-auth-input-wrap">
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
@@ -36,7 +36,7 @@
             <input id="publicAuthLoginIdentifier" class="public-auth-input" type="email" name="identifier" placeholder="you@example.com" maxlength="160" required />
           </div>
 
-          <label class="public-auth-label" for="publicAuthLoginPassword">Password</label>
+          <label class="public-auth-label" for="publicAuthLoginPassword"><span data-lang-en>Password</span><span data-lang-tl>Kontrasenyas</span></label>
           <div class="public-auth-input-wrap">
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V8a5 5 0 0 1 10 0v3"></path></svg>
@@ -50,31 +50,31 @@
 
           <p class="public-auth-message hidden" data-auth-message="login"></p>
 
-          <button type="button" class="public-auth-inline-link" data-auth-view-target="forgot">Forgot Password?</button>
-          <button type="submit" class="public-auth-submit">Login</button>
+          <button type="button" class="public-auth-inline-link" data-auth-view-target="forgot"><span data-lang-en>Forgot Password?</span><span data-lang-tl>Nakalimutan ang Kontrasenyas?</span></button>
+          <button type="submit" class="public-auth-submit"><span data-lang-en>Login</span><span data-lang-tl>Mag-login</span></button>
         </form>
 
-        <p class="public-auth-footer-text">Don't have an account? <button type="button" class="public-auth-footer-link" data-auth-view-target="signup">Sign up</button></p>
+        <p class="public-auth-footer-text"><span data-lang-en>Don't have an account?</span><span data-lang-tl>Wala ka pang account?</span> <button type="button" class="public-auth-footer-link" data-auth-view-target="signup"><span data-lang-en>Sign up</span><span data-lang-tl>Mag-sign up</span></button></p>
       </section>
 
       <section class="public-auth-panel hidden" data-auth-view="signup">
         <div class="public-auth-heading">
           <div class="public-auth-heading-icon">✨</div>
-          <h2 class="public-auth-title">Create Your Account</h2>
-          <p class="public-auth-subtitle">Join the digital heritage experience.</p>
+          <h2 class="public-auth-title"><span data-lang-en>Create Your Account</span><span data-lang-tl>Gumawa ng Iyong Account</span></h2>
+          <p class="public-auth-subtitle"><span data-lang-en>Join the digital heritage experience.</span><span data-lang-tl>Sumali sa digital na karanasan sa pamana.</span></p>
         </div>
 
         <button type="button" class="public-auth-social" data-auth-google>
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"></path><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"></path><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"></path><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"></path></svg>
-          Continue with Google
+          <span data-lang-en>Continue with Google</span><span data-lang-tl>Magpatuloy gamit ang Google</span>
         </button>
 
-        <div class="public-auth-divider"><span>or</span></div>
+        <div class="public-auth-divider"><span><span data-lang-en>or</span><span data-lang-tl>o</span></span></div>
 
         <form id="publicAuthSignupForm" class="public-auth-form" novalidate>
           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
           <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
-          <label class="public-auth-label" for="publicAuthSignupEmail">Email address <span class="public-auth-required">*</span></label>
+          <label class="public-auth-label" for="publicAuthSignupEmail"><span data-lang-en>Email address</span><span data-lang-tl>Email address</span> <span class="public-auth-required">*</span></label>
           <div class="public-auth-input-wrap">
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
@@ -82,7 +82,7 @@
             <input id="publicAuthSignupEmail" class="public-auth-input" type="email" name="email" placeholder="you@example.com" maxlength="160" required />
           </div>
 
-          <label class="public-auth-label" for="publicAuthSignupPassword">Password <span class="public-auth-required">*</span></label>
+          <label class="public-auth-label" for="publicAuthSignupPassword"><span data-lang-en>Password</span><span data-lang-tl>Kontrasenyas</span> <span class="public-auth-required">*</span></label>
           <div class="public-auth-input-wrap">
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V8a5 5 0 0 1 10 0v3"></path></svg>
@@ -94,7 +94,7 @@
             </button>
           </div>
 
-          <label class="public-auth-label" for="publicAuthSignupConfirm">Confirm Password</label>
+          <label class="public-auth-label" for="publicAuthSignupConfirm"><span data-lang-en>Confirm Password</span><span data-lang-tl>Kumpirmahin ang Kontrasenyas</span></label>
           <div class="public-auth-input-wrap">
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><rect x="3" y="11" width="18" height="10" rx="2"></rect><path stroke-linecap="round" stroke-linejoin="round" d="M7 11V8a5 5 0 0 1 10 0v3"></path></svg>
@@ -106,25 +106,25 @@
             </button>
           </div>
 
-          <p class="public-auth-hint">A six-digit verification code will be sent to your email.</p>
+          <p class="public-auth-hint"><span data-lang-en>A six-digit verification code will be sent to your email.</span><span data-lang-tl>Magpapadala ng anim na digit na verification code sa iyong email.</span></p>
           <p class="public-auth-message hidden" data-auth-message="signup"></p>
-          <button type="submit" class="public-auth-submit">Sign Up</button>
+          <button type="submit" class="public-auth-submit"><span data-lang-en>Sign Up</span><span data-lang-tl>Mag-sign Up</span></button>
         </form>
 
-        <p class="public-auth-footer-text">Already have an account? <button type="button" class="public-auth-footer-link" data-auth-view-target="login">Login</button></p>
+        <p class="public-auth-footer-text"><span data-lang-en>Already have an account?</span><span data-lang-tl>May account ka na?</span> <button type="button" class="public-auth-footer-link" data-auth-view-target="login"><span data-lang-en>Login</span><span data-lang-tl>Mag-login</span></button></p>
       </section>
 
       <section class="public-auth-panel hidden" data-auth-view="forgot">
         <div class="public-auth-heading">
           <div class="public-auth-heading-icon">🔒</div>
-          <h2 class="public-auth-title">Reset Your Password</h2>
-          <p class="public-auth-subtitle">Enter your email and we'll send you a reset link.</p>
+          <h2 class="public-auth-title"><span data-lang-en>Reset Your Password</span><span data-lang-tl>I-reset ang Iyong Kontrasenyas</span></h2>
+          <p class="public-auth-subtitle"><span data-lang-en>Enter your email and we'll send you a reset link.</span><span data-lang-tl>Ilagay ang iyong email at padadalhan ka namin ng reset link.</span></p>
         </div>
 
         <form id="publicAuthForgotForm" class="public-auth-form" novalidate>
           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
           <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
-          <label class="public-auth-label" for="publicAuthForgotEmail">Email address</label>
+          <label class="public-auth-label" for="publicAuthForgotEmail"><span data-lang-en>Email address</span><span data-lang-tl>Email address</span></label>
           <div class="public-auth-input-wrap">
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
@@ -132,36 +132,36 @@
             <input id="publicAuthForgotEmail" class="public-auth-input" type="email" name="email" placeholder="you@example.com" maxlength="160" required />
           </div>
           <p class="public-auth-message hidden" data-auth-message="forgot"></p>
-          <button type="submit" class="public-auth-submit">Send Reset Link</button>
+          <button type="submit" class="public-auth-submit"><span data-lang-en>Send Reset Link</span><span data-lang-tl>Ipadala ang Reset Link</span></button>
         </form>
 
-        <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login">Back to Login</button>
+        <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login"><span data-lang-en>Back to Login</span><span data-lang-tl>Bumalik sa Login</span></button>
       </section>
 
       <section class="public-auth-panel hidden" data-auth-view="forgot-success">
         <div class="public-auth-status-icon public-auth-status-icon-success">✓</div>
-        <h2 class="public-auth-title public-auth-title-center">Check Your Inbox</h2>
-        <p class="public-auth-subtitle public-auth-subtitle-center">Password reset link sent to <strong data-auth-email-display="forgot-success"></strong>. Please check your inbox.</p>
-        <button type="button" class="public-auth-submit" data-auth-view-target="login">Back to Login</button>
+        <h2 class="public-auth-title public-auth-title-center"><span data-lang-en>Check Your Inbox</span><span data-lang-tl>Tingnan ang Iyong Inbox</span></h2>
+        <p class="public-auth-subtitle public-auth-subtitle-center"><span data-lang-en>Password reset link sent to</span><span data-lang-tl>Naipadala ang password reset link sa</span> <strong data-auth-email-display="forgot-success"></strong>. <span data-lang-en>Please check your inbox.</span><span data-lang-tl>Pakitingnan ang iyong inbox.</span></p>
+        <button type="button" class="public-auth-submit" data-auth-view-target="login"><span data-lang-en>Back to Login</span><span data-lang-tl>Bumalik sa Login</span></button>
       </section>
 
       <section class="public-auth-panel hidden" data-auth-view="verify">
         <div class="public-auth-status-icon">✉️</div>
-        <h2 class="public-auth-title public-auth-title-center">Verify Your Email</h2>
-        <p class="public-auth-subtitle public-auth-subtitle-center">Enter the six-digit code sent to <strong data-auth-email-display="verify"></strong>. The code expires in 10 minutes.</p>
+        <h2 class="public-auth-title public-auth-title-center"><span data-lang-en>Verify Your Email</span><span data-lang-tl>Beripikahin ang Iyong Email</span></h2>
+        <p class="public-auth-subtitle public-auth-subtitle-center"><span data-lang-en>Enter the six-digit code sent to</span><span data-lang-tl>Ilagay ang anim na digit na code na ipinadala sa</span> <strong data-auth-email-display="verify"></strong>. <span data-lang-en>The code expires in 10 minutes.</span><span data-lang-tl>Mag-e-expire ang code pagkalipas ng 10 minuto.</span></p>
         <form id="publicAuthVerifyForm" class="public-auth-form" novalidate>
           <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
           <input type="hidden" name="next" value="{{ auth_modal_next_url }}" />
           <input type="hidden" name="email" value="" data-auth-verify-email />
-          <label class="public-auth-label" for="publicAuthVerificationCode">Verification code</label>
+          <label class="public-auth-label" for="publicAuthVerificationCode"><span data-lang-en>Verification code</span><span data-lang-tl>Verification code</span></label>
           <input id="publicAuthVerificationCode" class="public-auth-input public-auth-otp-input" type="text" name="verification_code" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{6}" minlength="6" maxlength="6" placeholder="000000" required />
           <p class="public-auth-message hidden" data-auth-message="verify"></p>
-          <button type="submit" class="public-auth-submit">Verify Email</button>
+          <button type="submit" class="public-auth-submit"><span data-lang-en>Verify Email</span><span data-lang-tl>Beripikahin ang Email</span></button>
         </form>
-        <button type="button" class="public-auth-secondary" data-auth-resend>Resend Code</button>
+        <button type="button" class="public-auth-secondary" data-auth-resend><span data-lang-en>Resend Code</span><span data-lang-tl>Ipadalang Muli ang Code</span></button>
         <div class="public-auth-stack-links">
-          <button type="button" class="public-auth-inline-link" data-auth-use-another-email>Use another email</button>
-          <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login">Back to Login</button>
+          <button type="button" class="public-auth-inline-link" data-auth-use-another-email><span data-lang-en>Use another email</span><span data-lang-tl>Gumamit ng ibang email</span></button>
+          <button type="button" class="public-auth-inline-link public-auth-back-link" data-auth-view-target="login"><span data-lang-en>Back to Login</span><span data-lang-tl>Bumalik sa Login</span></button>
         </div>
       </section>
     </div>
