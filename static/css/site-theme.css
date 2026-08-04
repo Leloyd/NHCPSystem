@@ -61,6 +61,22 @@ html[data-theme="dark"] .support-faq-tab,
 html[data-theme="dark"] .support-results-card { background: #211a10; color: #f3ece0; border-color: rgba(201, 168, 76, 0.24); }
 html[data-theme="dark"] .support-faq-answer { color: #c4b494; }
 html[data-theme="dark"] .support-faq-item { border-color: rgba(201, 168, 76, 0.16); }
+html[data-theme="dark"] .support-policy-card {
+  background: #1a140c;
+  border-color: rgba(201, 168, 76, 0.28);
+}
+html[data-theme="dark"] .support-policy-icon {
+  background: rgba(201, 168, 76, 0.1);
+  border-color: rgba(201, 168, 76, 0.34);
+  color: #e6cf8a;
+}
+html[data-theme="dark"] .support-policy-tag {
+  background: #2a2114 !important;
+  border: 1px solid rgba(201, 168, 76, 0.38);
+  color: #e6cf8a !important;
+}
+html[data-theme="dark"] .support-policy-footer { border-color: rgba(201, 168, 76, 0.22); }
+html[data-theme="dark"] .support-policy-link { color: #e6cf8a; }
 
 /* Community participation white cards */
 html[data-theme="dark"] .participation-card,
@@ -502,6 +518,22 @@ html[data-contrast="on"] .collection-page .ogd-artifact-card__action:focus-visib
   color: #000 !important;
   border-color: #facc15 !important;
 }
+
+/* Support governance cards and their five legal-framework labels. */
+html[data-contrast="on"] .support-policy-card {
+  background: #000 !important;
+  border-color: #facc15 !important;
+  box-shadow: none !important;
+}
+html[data-contrast="on"] .support-policy-icon,
+html[data-contrast="on"] .support-policy-tag {
+  background: #000 !important;
+  border: 2px solid #facc15 !important;
+  color: #facc15 !important;
+}
+html[data-contrast="on"] .support-policy-icon *,
+html[data-contrast="on"] .support-policy-tag * { color: #facc15 !important; }
+html[data-contrast="on"] .support-policy-footer { border-color: #facc15 !important; }
 
 /* ---- Page shells + sections to solid black ------------------------------- */
 html[data-contrast="on"] .dx-page,
