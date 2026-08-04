@@ -345,6 +345,13 @@ html[data-theme="dark"] .collection-page .ogd-detail-fact__icon {
   color: var(--collection-gold) !important;
   border-color: var(--collection-gold-border) !important;
 }
+html[data-theme="dark"] .collection-page .ogd-detail-category-pill,
+html[data-theme="dark"] .collection-page .ogd-detail-media__badge,
+html[data-theme="dark"] .collection-page .ogd-artifact-card__badge {
+  background: #2a2114 !important;
+  color: #e6cf8a !important;
+  border: 1px solid rgba(201, 168, 76, 0.38) !important;
+}
 html[data-theme="dark"] .collection-page .ogd-detail-media__frame--viewer {
   background: radial-gradient(circle at top, #302718 0%, #211a10 52%, #141009 100%) !important;
 }
