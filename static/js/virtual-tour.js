@@ -5196,6 +5196,8 @@
             exitButton: vrExitButton,
             interactionElement: viewerContainer,
             activeRootClass: "tour-vr-active",
+            infoInitialZoom: 3,
+            infoMaxZoom: 3.5,
             translate: getTourViewCopy,
             notify: showTourViewNotice,
           });

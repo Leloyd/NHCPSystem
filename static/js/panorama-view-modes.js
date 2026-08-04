@@ -40,6 +40,12 @@ export function createPanoramaViewModes(options) {
     ? options.translate
     : function (english) { return english; };
   const activeRootClass = options.activeRootClass || "panorama-vr-active";
+  const infoInitialZoom = Number.isFinite(Number(options.infoInitialZoom))
+    ? Math.max(0.65, Number(options.infoInitialZoom))
+    : 2;
+  const infoMaxZoom = Number.isFinite(Number(options.infoMaxZoom))
+    ? Math.max(infoInitialZoom, Number(options.infoMaxZoom))
+    : 3;
 
   const gyro = {
     enabled: false,
@@ -742,7 +748,7 @@ export function createPanoramaViewModes(options) {
     // that real 360 position, and looking back reveals it again.
     group.position.copy(hotspotPosition(hotspot.pitch, hotspot.yaw, 6.4));
     group.lookAt(0, 0, 0);
-    group.scale.setScalar(2);
+    group.scale.setScalar(infoInitialZoom);
     vr.infoCard = group;
     vr.infoTarget = hotspot;
     vr.infoSourceRecord = sourceRecord || null;
@@ -750,7 +756,7 @@ export function createPanoramaViewModes(options) {
     vr.infoMode = "image";
     vr.infoLanguage = hotspot.language === "en" ? "en" : "tl";
     vr.infoSubtitlesOpen = false;
-    vr.infoZoom = 2;
+    vr.infoZoom = infoInitialZoom;
     vr.infoImageHotspotsVisible = true;
     vr.infoDetail = null;
     vr.infoLanguageControl = null;
@@ -836,7 +842,7 @@ export function createPanoramaViewModes(options) {
       vr.infoCard.scale.setScalar(vr.infoZoom);
     });
     addVrInfoControl("+", 0.72, -0.58, function () {
-      vr.infoZoom = Math.min(3, vr.infoZoom + 0.2);
+      vr.infoZoom = Math.min(infoMaxZoom, vr.infoZoom + 0.2);
       vr.infoCard.scale.setScalar(vr.infoZoom);
     });
     addVrInfoControl("×", 0.84, 0.58, function () {
@@ -859,18 +865,30 @@ export function createPanoramaViewModes(options) {
     }
     if (record.hotspot.type === "scene") {
       const source = record.hotspot.source || {};
+      const viewer = getViewer();
       const targetPitch = Number(
         record.hotspot.targetPitch ?? source.targetPitch,
       );
       const targetYaw = Number(
         record.hotspot.targetYaw ?? source.targetYaw,
       );
-      vr.pendingSceneView = Number.isFinite(targetPitch) || Number.isFinite(targetYaw)
-        ? {
-            pitch: Number.isFinite(targetPitch) ? targetPitch : null,
-            yaw: Number.isFinite(targetYaw) ? targetYaw : null,
-          }
-        : null;
+      let currentPitch = null;
+      let currentYaw = null;
+      try {
+        currentPitch = Number(viewer && viewer.getPitch());
+        currentYaw = Number(viewer && viewer.getYaw());
+      } catch {
+        // The captured gaze below remains sufficient for native WebXR.
+      }
+      vr.pendingSceneView = {
+        pitch: Number.isFinite(targetPitch) ? targetPitch : null,
+        yaw: Number.isFinite(targetYaw) ? targetYaw : null,
+        currentPitch: Number.isFinite(currentPitch) ? currentPitch : null,
+        currentYaw: Number.isFinite(currentYaw) ? currentYaw : null,
+        gazeDirection: vr.lastGazeDirection.lengthSq() > 0
+          ? vr.lastGazeDirection.clone().normalize()
+          : null,
+      };
     }
     if (record.hotspot.type !== "scene") {
       showVrInfoCard(record.hotspot, record);
@@ -1310,8 +1328,10 @@ export function createPanoramaViewModes(options) {
     const targetYaw = ((rawYaw % 360) + 540) % 360 - 180;
 
     if (vr.mode === "native" && vr.worldRoot) {
-      const gaze = vr.lastGazeDirection.lengthSq() > 0
-        ? vr.lastGazeDirection.clone().normalize()
+      const gaze = target.gazeDirection && target.gazeDirection.lengthSq() > 0
+        ? target.gazeDirection.clone().normalize()
+        : vr.lastGazeDirection.lengthSq() > 0
+          ? vr.lastGazeDirection.clone().normalize()
         : new THREE.Vector3(0, 0, -1);
       const gazePitch = Math.asin(Math.max(-1, Math.min(1, gaze.y)));
       const gazeYaw = Math.atan2(gaze.x, -gaze.z);
@@ -1331,22 +1351,34 @@ export function createPanoramaViewModes(options) {
     if (vr.worldRoot) {
       vr.worldRoot.quaternion.identity();
     }
+    // Cardboard VR keeps the phone's live vertical look angle through a scene
+    // change. The destination yaw still controls the intended walking
+    // direction, but looking down / up no longer snaps back to level.
+    const preservedPitch = target.currentPitch !== null
+      && Number.isFinite(Number(target.currentPitch))
+      ? Math.max(-85, Math.min(85, Number(target.currentPitch)))
+      : targetPitch;
+    const destinationYaw = Number.isFinite(targetYaw)
+      ? targetYaw
+      : target.currentYaw !== null && Number.isFinite(Number(target.currentYaw))
+        ? ((Number(target.currentYaw) % 360) + 540) % 360 - 180
+        : fallbackYaw;
     try {
-      viewer.setYaw(targetYaw, false);
-      viewer.setPitch(targetPitch, false);
+      viewer.setYaw(destinationYaw, false);
+      viewer.setPitch(preservedPitch, false);
     } catch {
       // The underlying viewer may still be completing its scene transition.
     }
     if (gyro.enabled && gyro.hasReading) {
-      gyro.yawOffset = targetYaw - (-gyro.yaw);
-      gyro.pitchOffset = targetPitch - gyro.pitch;
+      gyro.yawOffset = destinationYaw - (-gyro.yaw);
+      gyro.pitchOffset = preservedPitch - gyro.pitch;
       gyro.needsSync = false;
     } else {
       gyro.needsSync = true;
     }
     if (vr.camera) {
-      vr.camera.rotation.x = THREE.MathUtils.degToRad(targetPitch);
-      vr.camera.rotation.y = THREE.MathUtils.degToRad(-targetYaw);
+      vr.camera.rotation.x = THREE.MathUtils.degToRad(preservedPitch);
+      vr.camera.rotation.y = THREE.MathUtils.degToRad(-destinationYaw);
       vr.camera.rotation.z = 0;
     }
   }
@@ -1819,7 +1851,12 @@ export function createPanoramaViewModes(options) {
 
   return {
     syncScene: function () {
-      gyro.needsSync = true;
+      // Outside VR, a new panorama should establish a fresh gyro baseline.
+      // During VR, keep the existing physical-phone baseline so scene changes
+      // cannot recenter a visitor who is looking up or down.
+      if (!vr.mode) {
+        gyro.needsSync = true;
+      }
       if (vr.mode) {
         window.setTimeout(refreshVrWorld, 40);
       }
