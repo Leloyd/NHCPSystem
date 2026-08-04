@@ -54,6 +54,7 @@ export function createPanoramaViewModes(options) {
     dragging: false,
     yaw: 0,
     pitch: 0,
+    roll: 0,
     yawOffset: 0,
     pitchOffset: 0,
     rafId: 0,
@@ -1067,6 +1068,7 @@ export function createPanoramaViewModes(options) {
 
     gyro.yaw = THREE.MathUtils.radToDeg(orientationEuler.y);
     gyro.pitch = THREE.MathUtils.radToDeg(orientationEuler.x);
+    gyro.roll = THREE.MathUtils.radToDeg(orientationEuler.z);
     if (!gyro.rafId) {
       gyro.rafId = window.requestAnimationFrame(applyGyroReading);
     }
@@ -1431,7 +1433,9 @@ export function createPanoramaViewModes(options) {
     if (vr.camera) {
       vr.camera.rotation.x = THREE.MathUtils.degToRad(preservedPitch);
       vr.camera.rotation.y = THREE.MathUtils.degToRad(-destinationYaw);
-      vr.camera.rotation.z = 0;
+      vr.camera.rotation.z = gyro.hasReading
+        ? THREE.MathUtils.degToRad(gyro.roll)
+        : vr.camera.rotation.z;
     }
     vr.sceneAnchorPitch = targetPitch;
     vr.sceneAnchorYaw = targetYaw;
@@ -1504,7 +1508,12 @@ export function createPanoramaViewModes(options) {
     } catch {
       // Keep the most recent pose.
     }
-    vr.camera.rotation.z = 0;
+    // DeviceOrientation includes the phone's sideways head tilt. Keep that
+    // roll in the stereo camera instead of leveling the horizon on every
+    // frame, so it also survives a panorama scene transition.
+    vr.camera.rotation.z = gyro.hasReading
+      ? THREE.MathUtils.degToRad(gyro.roll)
+      : 0;
     vr.camera.updateWorldMatrix(true, false);
     if (vr.infoModelRoot) {
       vr.infoModelRoot.rotation.y = (Number(now) || performance.now()) * 0.00028;
