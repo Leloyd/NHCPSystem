@@ -100,6 +100,10 @@ export function createPanoramaViewModes(options) {
     infoDetail: null,
     infoLanguageControl: null,
     pendingSceneView: null,
+    sceneAnchorPitch: null,
+    sceneAnchorYaw: null,
+    referenceGazePitch: null,
+    referenceGazeYaw: null,
     lastGazeDirection: new THREE.Vector3(0, 0, -1),
   };
 
@@ -880,11 +884,25 @@ export function createPanoramaViewModes(options) {
       } catch {
         // The captured gaze below remains sufficient for native WebXR.
       }
+      const anchorPitch = vr.sceneAnchorPitch !== null
+        && Number.isFinite(Number(vr.sceneAnchorPitch))
+        ? Number(vr.sceneAnchorPitch)
+        : currentPitch;
+      const anchorYaw = vr.sceneAnchorYaw !== null
+        && Number.isFinite(Number(vr.sceneAnchorYaw))
+        ? Number(vr.sceneAnchorYaw)
+        : currentYaw;
+      const pitchOffset = Number.isFinite(currentPitch) && Number.isFinite(anchorPitch)
+        ? currentPitch - anchorPitch
+        : 0;
+      const yawOffset = Number.isFinite(currentYaw) && Number.isFinite(anchorYaw)
+        ? ((currentYaw - anchorYaw + 540) % 360) - 180
+        : 0;
       vr.pendingSceneView = {
         pitch: Number.isFinite(targetPitch) ? targetPitch : null,
         yaw: Number.isFinite(targetYaw) ? targetYaw : null,
-        currentPitch: Number.isFinite(currentPitch) ? currentPitch : null,
-        currentYaw: Number.isFinite(currentYaw) ? currentYaw : null,
+        pitchOffset,
+        yawOffset,
         gazeDirection: vr.lastGazeDirection.lengthSq() > 0
           ? vr.lastGazeDirection.clone().normalize()
           : null,
@@ -907,6 +925,14 @@ export function createPanoramaViewModes(options) {
     }
     camera.getWorldDirection(gazeDirection);
     vr.lastGazeDirection.copy(gazeDirection);
+    if (vr.mode === "native" && vr.referenceGazePitch === null) {
+      vr.referenceGazePitch = THREE.MathUtils.radToDeg(
+        Math.asin(Math.max(-1, Math.min(1, gazeDirection.y))),
+      );
+      vr.referenceGazeYaw = THREE.MathUtils.radToDeg(
+        Math.atan2(gazeDirection.x, -gazeDirection.z),
+      );
+    }
     if (!selectableTargets.length) {
       vr.gazeTarget = null;
       vr.gazeSince = 0;
@@ -1191,6 +1217,10 @@ export function createPanoramaViewModes(options) {
     vr.material = null;
     vr.texture = null;
     vr.pendingSceneView = null;
+    vr.sceneAnchorPitch = null;
+    vr.sceneAnchorYaw = null;
+    vr.referenceGazePitch = null;
+    vr.referenceGazeYaw = null;
     vr.lastGazeDirection.set(0, 0, -1);
     vr.width = 0;
     vr.height = 0;
@@ -1244,10 +1274,16 @@ export function createPanoramaViewModes(options) {
     scene.add(camera);
     const viewer = getViewer();
     try {
-      camera.rotation.x = THREE.MathUtils.degToRad(viewer.getPitch());
-      camera.rotation.y = THREE.MathUtils.degToRad(-viewer.getYaw());
+      const initialPitch = Number(viewer.getPitch()) || 0;
+      const initialYaw = Number(viewer.getYaw()) || 0;
+      camera.rotation.x = THREE.MathUtils.degToRad(initialPitch);
+      camera.rotation.y = THREE.MathUtils.degToRad(-initialYaw);
+      vr.sceneAnchorPitch = initialPitch;
+      vr.sceneAnchorYaw = initialYaw;
     } catch {
       // Keep a neutral starting view.
+      vr.sceneAnchorPitch = 0;
+      vr.sceneAnchorYaw = 0;
     }
 
     const geometry = new THREE.SphereGeometry(12, 72, 48);
@@ -1335,9 +1371,26 @@ export function createPanoramaViewModes(options) {
         : new THREE.Vector3(0, 0, -1);
       const gazePitch = Math.asin(Math.max(-1, Math.min(1, gaze.y)));
       const gazeYaw = Math.atan2(gaze.x, -gaze.z);
+      const gazePitchDegrees = THREE.MathUtils.radToDeg(gazePitch);
+      const gazeYawDegrees = THREE.MathUtils.radToDeg(gazeYaw);
+      const referencePitch = vr.referenceGazePitch !== null
+        && Number.isFinite(Number(vr.referenceGazePitch))
+        ? Number(vr.referenceGazePitch)
+        : gazePitchDegrees;
+      const referenceYaw = vr.referenceGazeYaw !== null
+        && Number.isFinite(Number(vr.referenceGazeYaw))
+        ? Number(vr.referenceGazeYaw)
+        : gazeYawDegrees;
+      const headPitchOffset = gazePitchDegrees - referencePitch;
+      const headYawOffset = ((gazeYawDegrees - referenceYaw + 540) % 360) - 180;
+      const preservedTargetPitch = Math.max(
+        -85,
+        Math.min(85, targetPitch + headPitchOffset),
+      );
+      const preservedTargetYaw = ((targetYaw + headYawOffset + 540) % 360) - 180;
       sceneTargetEuler.set(
-        THREE.MathUtils.degToRad(targetPitch),
-        THREE.MathUtils.degToRad(-targetYaw),
+        THREE.MathUtils.degToRad(preservedTargetPitch),
+        THREE.MathUtils.degToRad(-preservedTargetYaw),
         0,
         "YXZ",
       );
@@ -1351,18 +1404,17 @@ export function createPanoramaViewModes(options) {
     if (vr.worldRoot) {
       vr.worldRoot.quaternion.identity();
     }
-    // Cardboard VR keeps the phone's live vertical look angle through a scene
-    // change. The destination yaw still controls the intended walking
-    // direction, but looking down / up no longer snaps back to level.
-    const preservedPitch = target.currentPitch !== null
-      && Number.isFinite(Number(target.currentPitch))
-      ? Math.max(-85, Math.min(85, Number(target.currentPitch)))
-      : targetPitch;
-    const destinationYaw = Number.isFinite(targetYaw)
-      ? targetYaw
-      : target.currentYaw !== null && Number.isFinite(Number(target.currentYaw))
-        ? ((Number(target.currentYaw) % 360) + 540) % 360 - 180
-        : fallbackYaw;
+    // These offsets exist only inside Cardboard VR. The authored target pitch
+    // and yaw remain the destination center, while the visitor's current head
+    // movement relative to the previous scene is carried into the new one.
+    const pitchOffset = Number.isFinite(Number(target.pitchOffset))
+      ? Number(target.pitchOffset)
+      : 0;
+    const yawOffset = Number.isFinite(Number(target.yawOffset))
+      ? Number(target.yawOffset)
+      : 0;
+    const preservedPitch = Math.max(-85, Math.min(85, targetPitch + pitchOffset));
+    const destinationYaw = ((targetYaw + yawOffset + 540) % 360) - 180;
     try {
       viewer.setYaw(destinationYaw, false);
       viewer.setPitch(preservedPitch, false);
@@ -1381,6 +1433,8 @@ export function createPanoramaViewModes(options) {
       vr.camera.rotation.y = THREE.MathUtils.degToRad(-destinationYaw);
       vr.camera.rotation.z = 0;
     }
+    vr.sceneAnchorPitch = targetPitch;
+    vr.sceneAnchorYaw = targetYaw;
   }
 
   function refreshVrWorld() {
