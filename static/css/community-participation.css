@@ -383,6 +383,11 @@
   background: rgba(255, 255, 255, 0.8) !important;
 }
 
+.selected-date-event {
+  width: 100%;
+  text-align: left;
+}
+
 .event-legend-item {
   display: flex;
   align-items: center;

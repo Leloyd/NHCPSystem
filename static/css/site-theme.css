@@ -998,3 +998,131 @@ html[data-contrast="on"] .modal-container .bg-blue-50 * {
   .participation-modal-close { top: 0.75rem; right: 0.75rem; }
   .participation-modal-body { padding: 1rem; }
 }
+
+/* ========================================================================== 
+   COMMUNITY BOOKING CALENDAR — complete interactive dark/contrast states
+   ========================================================================== */
+
+html[data-theme="dark"] .calendar-header {
+  background: linear-gradient(135deg, #2d2416, #20180d) !important;
+  border-bottom: 1px solid rgba(201, 168, 76, 0.34) !important;
+}
+html[data-theme="dark"] .calendar-month-title { color: #f1d98e !important; }
+html[data-theme="dark"] .calendar-days-header,
+html[data-theme="dark"] .calendar-grid { background: #211a10 !important; }
+html[data-theme="dark"] .calendar-days-header { border-color: rgba(201, 168, 76, 0.2) !important; }
+html[data-theme="dark"] .calendar-day:hover { background: rgba(201, 168, 76, 0.12) !important; }
+html[data-theme="dark"] .calendar-day.today { border-color: #d4af6a !important; }
+html[data-theme="dark"] .calendar-day.today .calendar-day-number { color: #f1d98e !important; }
+html[data-theme="dark"] .calendar-day.selected,
+html[data-theme="dark"] .calendar-day.selected:hover {
+  background: #d4af6a !important;
+  border-color: #f0d996 !important;
+  box-shadow: inset 0 0 0 1px rgba(28, 18, 8, 0.2) !important;
+}
+html[data-theme="dark"] .calendar-day.selected .calendar-day-number { color: #1c1208 !important; }
+html[data-theme="dark"] .calendar-day.selected .calendar-event-dot { background: #1c1208 !important; }
+
+html[data-theme="dark"] .selected-date-panel {
+  background: #211a10 !important;
+  border-color: rgba(201, 168, 76, 0.34) !important;
+  box-shadow: 0 18px 45px rgba(0, 0, 0, 0.28) !important;
+}
+html[data-theme="dark"] .selected-date-title,
+html[data-theme="dark"] .selected-date-event-title { color: #f3ece0 !important; }
+html[data-theme="dark"] .selected-date-empty,
+html[data-theme="dark"] .selected-date-event-meta { color: #b6a684 !important; }
+html[data-theme="dark"] .selected-date-close {
+  color: #e6cf8a !important;
+  border: 1px solid transparent;
+}
+html[data-theme="dark"] .selected-date-close:hover,
+html[data-theme="dark"] .selected-date-close:focus-visible {
+  background: rgba(201, 168, 76, 0.14) !important;
+  border-color: rgba(201, 168, 76, 0.4) !important;
+}
+html[data-theme="dark"] .selected-date-event {
+  background: #1a140c !important;
+  border-color: rgba(201, 168, 76, 0.2) !important;
+}
+html[data-theme="dark"] .selected-date-event:hover,
+html[data-theme="dark"] .selected-date-event:focus-visible {
+  background: #2a2114 !important;
+  border-color: #c9a84c !important;
+}
+
+html[data-theme="dark"] .event-detail-header,
+html[data-theme="dark"] .event-detail-body { background: #211a10 !important; }
+html[data-theme="dark"] .event-detail-header { border-bottom: 1px solid rgba(201, 168, 76, 0.22) !important; }
+html[data-theme="dark"] .event-detail-title,
+html[data-theme="dark"] .event-detail-fact-value { color: #f3ece0 !important; }
+html[data-theme="dark"] .event-detail-description,
+html[data-theme="dark"] .event-detail-fact-label { color: #b6a684 !important; }
+html[data-theme="dark"] .event-detail-category,
+html[data-theme="dark"] .event-detail-fact-icon {
+  background: #171109 !important;
+  color: #e6cf8a !important;
+  border: 1px solid rgba(201, 168, 76, 0.34) !important;
+}
+html[data-theme="dark"] .event-detail-category *,
+html[data-theme="dark"] .event-detail-fact-icon * { color: #e6cf8a !important; }
+html[data-theme="dark"] .event-detail-close {
+  background: #171109 !important;
+  color: #e6cf8a !important;
+  border: 1px solid rgba(201, 168, 76, 0.34) !important;
+}
+
+html[data-contrast="on"] .calendar-header,
+html[data-contrast="on"] .calendar-days-header,
+html[data-contrast="on"] .calendar-grid,
+html[data-contrast="on"] .selected-date-panel,
+html[data-contrast="on"] .selected-date-event,
+html[data-contrast="on"] .event-detail-header,
+html[data-contrast="on"] .event-detail-body {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .calendar-header,
+html[data-contrast="on"] .calendar-days-header { border-bottom: 2px solid #facc15 !important; }
+html[data-contrast="on"] .calendar-month-title { color: #facc15 !important; }
+html[data-contrast="on"] .calendar-day:hover { background: #202000 !important; }
+html[data-contrast="on"] .calendar-day.today { border: 2px solid #facc15 !important; }
+html[data-contrast="on"] .calendar-day.today .calendar-day-number { color: #facc15 !important; }
+html[data-contrast="on"] .calendar-day.selected,
+html[data-contrast="on"] .calendar-day.selected:hover {
+  background: #facc15 !important;
+  color: #000 !important;
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .calendar-day.selected .calendar-day-number,
+html[data-contrast="on"] .calendar-day.selected * { color: #000 !important; }
+html[data-contrast="on"] .calendar-day.selected .calendar-event-dot { background: #000 !important; }
+html[data-contrast="on"] .selected-date-panel,
+html[data-contrast="on"] .modal-container { border: 2px solid #facc15 !important; }
+html[data-contrast="on"] .selected-date-title,
+html[data-contrast="on"] .selected-date-event-title,
+html[data-contrast="on"] .event-detail-title,
+html[data-contrast="on"] .event-detail-fact-value { color: #fff !important; }
+html[data-contrast="on"] .selected-date-empty,
+html[data-contrast="on"] .selected-date-event-meta,
+html[data-contrast="on"] .event-detail-description,
+html[data-contrast="on"] .event-detail-fact-label { color: #fff !important; }
+html[data-contrast="on"] .selected-date-close,
+html[data-contrast="on"] .event-detail-close,
+html[data-contrast="on"] .event-detail-category,
+html[data-contrast="on"] .event-detail-fact-icon {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .selected-date-close *,
+html[data-contrast="on"] .event-detail-close *,
+html[data-contrast="on"] .event-detail-category *,
+html[data-contrast="on"] .event-detail-fact-icon * { color: #facc15 !important; }
+html[data-contrast="on"] .selected-date-event:hover,
+html[data-contrast="on"] .selected-date-event:focus-visible {
+  background: #202000 !important;
+  outline: 3px solid #facc15 !important;
+  outline-offset: 2px;
+}

@@ -294,26 +294,26 @@ function renderSelectedDateEvents() {
 
   if (dateEvents.length === 0) {
     container.innerHTML = `
-      <div class="bg-white rounded-2xl border border-gray-200 p-5">
+      <div class="selected-date-panel bg-white rounded-2xl border border-gray-200 p-5">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-blue-900" style="font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1rem;">
+          <h4 class="selected-date-title text-blue-900" style="font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1rem;">
             ${formatDateDisplay(selectedDate)}
           </h4>
-          <button class="text-gray-400 hover:text-gray-600" onclick="selectedDate = null; renderCalendar(); document.getElementById('selectedDateEvents').classList.add('hidden');">
+          <button type="button" class="selected-date-close text-gray-400 hover:text-gray-600" aria-label="Close selected date information" onclick="selectedDate = null; renderCalendar(); document.getElementById('selectedDateEvents').classList.add('hidden');">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
-        <p class="text-gray-400 text-sm">No events scheduled for this date.</p>
+        <p class="selected-date-empty text-gray-400 text-sm">No events scheduled for this date.</p>
       </div>
     `;
   } else {
     container.innerHTML = `
-      <div class="bg-white rounded-2xl border border-gray-200 p-5">
+      <div class="selected-date-panel bg-white rounded-2xl border border-gray-200 p-5">
         <div class="flex items-center justify-between mb-4">
-          <h4 class="text-blue-900" style="font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1rem;">
+          <h4 class="selected-date-title text-blue-900" style="font-family: 'Playfair Display', serif; font-weight: 600; font-size: 1rem;">
             ${formatDateDisplay(selectedDate)}
           </h4>
-          <button class="text-gray-400 hover:text-gray-600" onclick="selectedDate = null; renderCalendar(); document.getElementById('selectedDateEvents').classList.add('hidden');">
+          <button type="button" class="selected-date-close text-gray-400 hover:text-gray-600" aria-label="Close selected date information" onclick="selectedDate = null; renderCalendar(); document.getElementById('selectedDateEvents').classList.add('hidden');">
             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
           </button>
         </div>
@@ -321,15 +321,15 @@ function renderSelectedDateEvents() {
           ${dateEvents.map(ev => {
             const cfg = getCategoryConfig(ev.category);
             return `
-              <div class="flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-blue-200 cursor-pointer transition-all" onclick="openEventModal(${ev.id})">
+              <button type="button" class="selected-date-event flex items-start gap-3 p-3 rounded-xl border border-gray-100 hover:border-blue-200 cursor-pointer transition-all" onclick="openEventModal(${ev.id})">
                 <div class="w-9 h-9 rounded-lg flex items-center justify-center flex-shrink-0" style="background: ${cfg.bg};">
                   <svg class="w-4 h-4" style="color: ${cfg.color};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 <div>
-                  <p class="text-blue-900 text-sm font-medium">${ev.title}</p>
-                  <p class="text-gray-400 text-xs mt-0.5">${ev.time} · ${ev.location}</p>
+                  <p class="selected-date-event-title text-blue-900 text-sm font-medium">${ev.title}</p>
+                  <p class="selected-date-event-meta text-gray-400 text-xs mt-0.5">${ev.time} · ${ev.location}</p>
                 </div>
-              </div>
+              </button>
             `;
           }).join('')}
         </div>
@@ -392,54 +392,54 @@ function openEventModal(eventId) {
   const content = document.getElementById('eventModalContent');
 
   content.innerHTML = `
-    <div class="px-6 py-5 relative" style="background: linear-gradient(135deg, ${cfg.dot}22, ${cfg.dot}08);">
+    <div class="event-detail-header px-6 py-5 relative" style="background: linear-gradient(135deg, ${cfg.dot}22, ${cfg.dot}08);">
       <div class="flex items-start gap-3">
         <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0 mt-0.5" style="background: ${cfg.bg};">
           <svg class="w-5 h-5" style="color: ${cfg.color};" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
         </div>
         <div class="flex-1">
-          <span class="text-xs px-2.5 py-0.5 rounded-full mb-1.5 inline-block" style="background: ${cfg.bg}; color: ${cfg.color}; font-weight: 600;">
+          <span class="event-detail-category text-xs px-2.5 py-0.5 rounded-full mb-1.5 inline-block" style="background: ${cfg.bg}; color: ${cfg.color}; font-weight: 600;">
             ${cfg.label}
           </span>
-          <h3 class="text-blue-900" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.15rem; line-height: 1.3;">
+          <h3 id="eventModalTitle" class="event-detail-title text-blue-900" style="font-family: 'Playfair Display', serif; font-weight: 700; font-size: 1.15rem; line-height: 1.3;">
             ${selectedEvent.title}
           </h3>
         </div>
-        <button onclick="closeEventModal()" class="w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white/60 transition-colors flex-shrink-0">
+        <button type="button" onclick="closeEventModal()" class="event-detail-close w-8 h-8 rounded-lg flex items-center justify-center text-gray-400 hover:text-gray-600 hover:bg-white/60 transition-colors flex-shrink-0" aria-label="Close booking information">
           <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
         </button>
       </div>
     </div>
 
-    <div class="px-6 py-5 space-y-4">
-      <p class="text-gray-600 text-sm leading-relaxed">${selectedEvent.description}</p>
+    <div class="event-detail-body px-6 py-5 space-y-4">
+      <p class="event-detail-description text-gray-600 text-sm leading-relaxed">${selectedEvent.description}</p>
 
       <div class="space-y-2.5">
         <div class="flex items-center gap-3 text-sm">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
+          <div class="event-detail-fact-icon w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
             <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           </div>
           <div>
-            <p class="text-gray-400 text-xs uppercase tracking-wider">Date</p>
-            <p class="text-gray-700 text-sm font-medium">${formatDateDisplay(selectedEvent.date)}</p>
+            <p class="event-detail-fact-label text-gray-400 text-xs uppercase tracking-wider">Date</p>
+            <p class="event-detail-fact-value text-gray-700 text-sm font-medium">${formatDateDisplay(selectedEvent.date)}</p>
           </div>
         </div>
         <div class="flex items-center gap-3 text-sm">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
+          <div class="event-detail-fact-icon w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
             <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
           </div>
           <div>
-            <p class="text-gray-400 text-xs uppercase tracking-wider">Time</p>
-            <p class="text-gray-700 text-sm font-medium">${selectedEvent.time}</p>
+            <p class="event-detail-fact-label text-gray-400 text-xs uppercase tracking-wider">Time</p>
+            <p class="event-detail-fact-value text-gray-700 text-sm font-medium">${selectedEvent.time}</p>
           </div>
         </div>
         <div class="flex items-center gap-3 text-sm">
-          <div class="w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
+          <div class="event-detail-fact-icon w-8 h-8 rounded-lg flex items-center justify-center bg-blue-50">
             <svg class="w-4 h-4 text-blue-900" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
           </div>
           <div>
-            <p class="text-gray-400 text-xs uppercase tracking-wider">Location</p>
-            <p class="text-gray-700 text-sm font-medium">${selectedEvent.location}</p>
+            <p class="event-detail-fact-label text-gray-400 text-xs uppercase tracking-wider">Location</p>
+            <p class="event-detail-fact-value text-gray-700 text-sm font-medium">${selectedEvent.location}</p>
           </div>
         </div>
       </div>
@@ -447,10 +447,14 @@ function openEventModal(eventId) {
   `;
 
   modal.style.display = 'flex';
+  modal.setAttribute('aria-hidden', 'false');
+  content.focus();
 }
 
 function closeEventModal() {
-  document.getElementById('eventModal').style.display = 'none';
+  const modal = document.getElementById('eventModal');
+  modal.style.display = 'none';
+  modal.setAttribute('aria-hidden', 'true');
   selectedEvent = null;
 }
 
