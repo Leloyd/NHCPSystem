@@ -1126,3 +1126,37 @@ html[data-contrast="on"] .selected-date-event:focus-visible {
   outline: 3px solid #facc15 !important;
   outline-offset: 2px;
 }
+
+/* Browser autofill paints populated fields pale blue unless its internal
+   color is overridden. Keep saved/account-provided values in the active
+   Heritage theme, including Institution / Organization. */
+html[data-theme="dark"] .form-input:-webkit-autofill,
+html[data-theme="dark"] .form-input:-webkit-autofill:hover,
+html[data-theme="dark"] .form-input:-webkit-autofill:focus,
+html[data-theme="dark"] .form-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #f3ece0 !important;
+  caret-color: #f3ece0 !important;
+  -webkit-box-shadow: 0 0 0 1000px #2a2114 inset !important;
+  box-shadow: 0 0 0 1000px #2a2114 inset !important;
+  border-color: rgba(201, 168, 76, 0.34) !important;
+}
+html[data-theme="dark"] .form-input:autofill {
+  background: #2a2114 !important;
+  color: #f3ece0 !important;
+}
+
+html[data-contrast="on"] .form-input:-webkit-autofill,
+html[data-contrast="on"] .form-input:-webkit-autofill:hover,
+html[data-contrast="on"] .form-input:-webkit-autofill:focus,
+html[data-contrast="on"] .form-input:-webkit-autofill:active {
+  -webkit-text-fill-color: #fff !important;
+  caret-color: #fff !important;
+  -webkit-box-shadow: 0 0 0 1000px #000 inset !important;
+  box-shadow: 0 0 0 1000px #000 inset !important;
+  border: 2px solid #facc15 !important;
+}
+html[data-contrast="on"] .form-input:autofill {
+  background: #000 !important;
+  color: #fff !important;
+  border-color: #facc15 !important;
+}
