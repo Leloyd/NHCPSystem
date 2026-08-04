@@ -8,7 +8,6 @@ from werkzeug.utils import secure_filename
 from supabase_client import get_supabase_client
 
 DEFAULT_MEDIA_BUCKET = "nhcp-media"
-EXHIBITS_STORAGE_PREFIX = "exhibits"
 ONLINE_GALLERY_STORAGE_PREFIX = "online-gallery"
 EDU_RESOURCES_STORAGE_PREFIX = "edu-resources"
 ALLOWED_IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png"}

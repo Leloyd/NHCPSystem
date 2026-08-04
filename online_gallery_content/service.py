@@ -7,7 +7,6 @@ from typing import Any
 
 from flask import current_app, render_template, session, url_for
 
-from exhibits_content.service import resolve_local_upload_image_url
 from online_gallery_repository import (
     get_online_gallery_item_by_id,
     list_active_online_gallery_categories,
@@ -61,6 +60,22 @@ ONLINE_GALLERY_DEFAULT_CATEGORY_SLUGS = {
     "kasaysayan-history": "Kasaysayan",
     "materyales-materials": "Materyales",
 }
+
+
+def resolve_local_upload_image_url(upload_dir: Path, upload_folder_name: str, image_filename: Any) -> str | None:
+    """Resolve a legacy local upload without depending on the retired exhibits module."""
+    safe_filename = Path(str(image_filename or "")).name.strip()
+    if not safe_filename:
+        return None
+
+    candidate_path = (upload_dir / safe_filename).resolve()
+    if upload_dir not in candidate_path.parents and candidate_path != upload_dir:
+        return None
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return None
+
+    endpoint = f"{upload_folder_name[:-1]}_uploaded_image" if upload_folder_name.endswith("s") else f"{upload_folder_name}_uploaded_image"
+    return url_for(endpoint, filename=safe_filename)
 
 
 def resolve_online_gallery_asset_url(filename: Any) -> str | None:
