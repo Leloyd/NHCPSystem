@@ -4,32 +4,23 @@ from typing import Any, Callable
 
 from flask import redirect, render_template, request, session, url_for
 
-from community_events_repository import create_community_event, list_all_community_events, update_community_event
 from community_highlights_repository import clear_featured_community_highlights, create_community_highlight, list_all_community_highlights, update_community_highlight
 from supabase_client import is_supabase_configured
 
 from .service import (
-    COMMUNITY_EVENT_CATEGORIES,
-    COMMUNITY_EVENT_STATUS_OPTIONS,
     COMMUNITY_HIGHLIGHT_MAX_IMAGES,
     COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES,
     COMMUNITY_HIGHLIGHTS_UPLOAD_DIR,
     COMMUNITY_HIGHLIGHT_CATEGORIES,
     COMMUNITY_HIGHLIGHT_STATUS_OPTIONS,
-    build_community_event_form_state,
     build_community_highlight_form_state,
-    get_community_events_status_message,
     get_community_highlights_status_message,
-    load_admin_community_event,
-    load_admin_community_events,
     load_admin_community_highlight,
     load_admin_community_highlights,
     load_news_community_highlights,
-    load_published_community_event,
     load_published_community_highlight,
     normalize_community_highlight_image_filenames,
     render_admin_community_highlight_form,
-    render_admin_event_form,
 )
 
 VALID_COMMUNITY_HIGHLIGHT_FILTERS = {"all", "active", "draft", "archived"}
@@ -81,16 +72,6 @@ def _build_unique_community_highlight_slug(title: str, *, current_id: int | None
         fallback="community-highlight",
         current_id=current_id,
         list_items=list_all_community_highlights,
-        slugify_text=slugify_text,
-    )
-
-
-def _build_unique_community_event_slug(title: str, *, current_id: int | None, slugify_text: Callable[[str, str], str]) -> str:
-    return _build_unique_slug(
-        title,
-        fallback="community-event",
-        current_id=current_id,
-        list_items=list_all_community_events,
         slugify_text=slugify_text,
     )
 
@@ -209,47 +190,6 @@ def _build_community_highlight_form_payload(
     return payload, new_image_filenames, removed_image_filenames
 
 
-def _build_community_event_form_payload(form, files, *, current_item, normalize_checkbox, validate_event_date, save_uploaded_image, slugify_text):
-    title = str(form.get("title") or "").strip()
-    category = str(form.get("category") or "").strip()
-    status = str(form.get("status") or "draft").strip().lower()
-    event_time = str(form.get("event_time") or "").strip()
-    location = str(form.get("location") or "").strip()
-    short_description = str(form.get("short_description") or "").strip()
-
-    if len(title) < 3:
-        raise ValueError("Title must be at least 3 characters.")
-    if category not in COMMUNITY_EVENT_CATEGORIES:
-        raise ValueError("Please choose a valid category.")
-    if status not in COMMUNITY_EVENT_STATUS_OPTIONS:
-        raise ValueError("Please choose a valid publishing status.")
-    if len(event_time) < 3:
-        raise ValueError("Time must be at least 3 characters.")
-    if len(location) < 3:
-        raise ValueError("Location must be at least 3 characters.")
-    if len(short_description) < 12:
-        raise ValueError("Details must be at least 12 characters.")
-
-    payload = {
-        "title": title,
-        "slug": _build_unique_community_event_slug(
-            title,
-            current_id=current_item.get("id") if current_item else None,
-            slugify_text=slugify_text,
-        ),
-        "category": category,
-        "status": status,
-        "event_date": validate_event_date(form.get("event_date")),
-        "event_time": event_time,
-        "location": location,
-        "short_description": short_description,
-        "long_description": short_description,
-        "is_published": status == "active",
-    }
-
-    return payload, None
-
-
 def register_community_content_routes(
     app,
     *,
@@ -259,7 +199,6 @@ def register_community_content_routes(
     is_admin_csrf_valid,
     admin_session_user_key: str,
     admin_username: str,
-    public_login_required,
     normalize_checkbox,
     validate_event_date,
     save_uploaded_image,
@@ -569,14 +508,6 @@ def register_community_content_routes(
             highlight_item=highlight_item,
             related_highlights=related_highlights,
         )
-
-    @app.route("/community-events/<slug>")
-    @public_login_required
-    def community_event_detail(slug):
-        event_item = load_published_community_event(slug)
-        if event_item is None:
-            return redirect(url_for("community_participation"))
-        return render_template("CommunityEventDetail.html", event_item=event_item)
 
     @app.route("/news")
     def news():

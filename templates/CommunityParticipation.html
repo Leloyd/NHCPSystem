@@ -589,7 +589,7 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script id="communityParticipationData" type="application/json">{{ {'highlights': community_highlights_items or [], 'events': community_events_items or []}|tojson }}</script>
+    <script id="communityParticipationData" type="application/json">{{ {'highlights': community_highlights_items or [], 'events': community_calendar_items or []}|tojson }}</script>
     <script id="communityParticipationAuthData" type="application/json">{{ {'isAuthenticated': current_public_user is not none, 'loginUrl': url_for('public_login', next=url_for('community_participation'))}|tojson }}</script>
     <script>
       window.communityParticipationAuth = JSON.parse(document.getElementById('communityParticipationAuthData').textContent || '{}');

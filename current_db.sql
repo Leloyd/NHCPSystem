@@ -97,21 +97,6 @@ CREATE TABLE public.tour_bookings (
   CONSTRAINT tour_bookings_pkey PRIMARY KEY (id),
   CONSTRAINT tour_bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
 );
-CREATE TABLE public.community_events (
-  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
-  title text NOT NULL,
-  slug text NOT NULL UNIQUE,
-  category text NOT NULL CHECK (category = ANY (ARRAY['Booked Tour (former Orientation)'::text, 'Community Gathering'::text, 'Student Activity'::text, 'Heritage Session'::text, 'Workshop'::text])),
-  event_date date NOT NULL,
-  event_time text NOT NULL,
-  location text NOT NULL,
-  short_description text NOT NULL,
-  status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),
-  is_published boolean NOT NULL DEFAULT true,
-  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
-  CONSTRAINT community_events_pkey PRIMARY KEY (id)
-);
 CREATE TABLE public.community_highlights (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   title text NOT NULL,

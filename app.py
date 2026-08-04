@@ -1278,7 +1278,6 @@ register_community_content_routes(
     is_admin_csrf_valid=_is_admin_csrf_valid,
     admin_session_user_key=ADMIN_SESSION_USER_KEY,
     admin_username=ADMIN_DEFAULT_USERNAME,
-    public_login_required=_public_login_required,
     normalize_checkbox=_normalize_checkbox,
     validate_event_date=_validate_event_date,
     save_uploaded_image=_save_uploaded_image,
@@ -1598,11 +1597,11 @@ def participation():
 @app.route("/community-participation")
 def community_participation():
     community_highlights_items = load_news_community_highlights(limit=24)
-    community_events_items = load_public_tour_bookings(limit=90)
+    community_calendar_items = load_public_tour_bookings(limit=90)
     return render_template(
         "CommunityParticipation.html",
         community_highlights_items=community_highlights_items,
-        community_events_items=community_events_items,
+        community_calendar_items=community_calendar_items,
     )
 
 
