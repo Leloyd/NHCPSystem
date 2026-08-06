@@ -999,7 +999,7 @@ html[data-contrast="on"] .modal-container .bg-blue-50 * {
   .participation-modal-body { padding: 1rem; }
 }
 
-/* ========================================================================== 
+/* ==========================================================================
    COMMUNITY BOOKING CALENDAR — complete interactive dark/contrast states
    ========================================================================== */
 
@@ -1159,4 +1159,95 @@ html[data-contrast="on"] .form-input:autofill {
   background: #000 !important;
   color: #fff !important;
   border-color: #facc15 !important;
+}
+
+/* ==========================================================================
+   ACCOUNT PROFILE — complete dark/high-contrast text and badge coverage
+   ========================================================================== */
+
+html[data-theme="dark"] .ap-page .ap-breadcrumb,
+html[data-theme="dark"] .ap-page .text-stone-700 {
+  color: #d8c9a6 !important;
+}
+html[data-theme="dark"] .ap-page .ap-breadcrumb-current,
+html[data-theme="dark"] .ap-page .ap-profile-hero__eyebrow {
+  color: #e6cf8a !important;
+}
+html[data-theme="dark"] .ap-page .text-stone-300,
+html[data-theme="dark"] .ap-page .text-stone-400 {
+  color: #c8b99d !important;
+}
+html[data-theme="dark"] .ap-page .border-amber-200 {
+  border-color: rgba(201, 168, 76, 0.34) !important;
+}
+html[data-theme="dark"] .ap-page .hover\:bg-amber-50:hover,
+html[data-theme="dark"] .ap-page .hover\:bg-amber-50\/50:hover {
+  background: rgba(201, 168, 76, 0.12) !important;
+}
+html[data-theme="dark"] .ap-page .bg-green-100 {
+  background: rgba(34, 197, 94, 0.14) !important;
+}
+html[data-theme="dark"] .ap-page .text-green-700,
+html[data-theme="dark"] .ap-page .text-green-800 {
+  color: #86efac !important;
+}
+html[data-theme="dark"] .ap-page .bg-red-100 {
+  background: rgba(239, 68, 68, 0.14) !important;
+}
+html[data-theme="dark"] .ap-page .text-red-700 {
+  color: #fca5a5 !important;
+}
+html[data-theme="dark"] .ap-page .bg-blue-100 {
+  background: rgba(59, 130, 246, 0.15) !important;
+}
+html[data-theme="dark"] .ap-page .text-blue-800 {
+  color: #93c5fd !important;
+}
+html[data-theme="dark"] .ap-page .ap-avatar-fallback,
+html[data-theme="dark"] .ap-page .ap-keeper-cta,
+html[data-theme="dark"] .ap-page .ap-keeper-cta * {
+  color: #171109 !important;
+}
+
+html[data-contrast="on"] .ap-page .ap-profile-hero,
+html[data-contrast="on"] .ap-page .ap-keeper-card {
+  background: #000 !important;
+  border: 2px solid #facc15 !important;
+  box-shadow: none !important;
+}
+html[data-contrast="on"] .ap-page .ap-breadcrumb,
+html[data-contrast="on"] .ap-page .ap-breadcrumb a {
+  color: #fff !important;
+}
+html[data-contrast="on"] .ap-page .ap-breadcrumb-current,
+html[data-contrast="on"] .ap-page .ap-profile-hero__eyebrow,
+html[data-contrast="on"] .ap-page .ap-keeper-card .text-amber-200,
+html[data-contrast="on"] .ap-page .ap-keeper-card .text-amber-300,
+html[data-contrast="on"] .ap-page .ap-keeper-card .text-amber-200\/80 {
+  color: #facc15 !important;
+}
+html[data-contrast="on"] .ap-page .ap-avatar-fallback,
+html[data-contrast="on"] .ap-page .ap-keeper-cta,
+html[data-contrast="on"] .ap-page .ap-keeper-cta * {
+  background: #facc15 !important;
+  color: #000 !important;
+  border-color: #facc15 !important;
+}
+html[data-contrast="on"] .ap-page .bg-green-100,
+html[data-contrast="on"] .ap-page .bg-red-100,
+html[data-contrast="on"] .ap-page .bg-blue-100,
+html[data-contrast="on"] .ap-page .bg-stone-100 {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 1px solid #facc15 !important;
+}
+html[data-contrast="on"] .ap-page .bg-green-100 *,
+html[data-contrast="on"] .ap-page .bg-red-100 *,
+html[data-contrast="on"] .ap-page .bg-blue-100 *,
+html[data-contrast="on"] .ap-page .bg-stone-100 * {
+  color: #facc15 !important;
+}
+html[data-contrast="on"] .ap-page .hover\:bg-amber-50:hover,
+html[data-contrast="on"] .ap-page .hover\:bg-amber-50\/50:hover {
+  background: #202000 !important;
 }
