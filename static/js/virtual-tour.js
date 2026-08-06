@@ -72,6 +72,7 @@
   const bangaTagalogAudioSrc = app ? app.dataset.bangaTagalogAudioSrc : "";
   const bangaEnglishAudioSrc = app ? app.dataset.bangaEnglishAudioSrc : "";
   const jarImageSrc = app ? app.dataset.jarImageSrc : "";
+  const jarGlbSrc = app ? app.dataset.jarGlbSrc : "";
   const jarTagalogAudioSrc = app ? app.dataset.jarTagalogAudioSrc : "";
   const jarEnglishAudioSrc = app ? app.dataset.jarEnglishAudioSrc : "";
   const insideChapelImageAssets = {
@@ -2538,6 +2539,8 @@
             windowHotspotId: "museum2-jar-marker-window",
             imageSrc: jarImageSrc,
             imageAlt: "Jar",
+            glbSrc: jarGlbSrc,
+            glbAlt: "Maitum burial jar 3D model",
             audioByLanguage: {
               tl: jarTagalogAudioSrc,
               en: jarEnglishAudioSrc,

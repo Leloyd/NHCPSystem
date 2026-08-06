@@ -153,6 +153,18 @@
         yOffset: -0.001,
       },
     },
+    jar: {
+      targetSize: 0.8,
+      scaleMultiplier: 2,
+      position: [0, 0.6, 0],
+      solvedPosition: [0, 0, 0],
+      rotation: [0, -90, 0],
+      occluder: {
+        enabled: true,
+        sizeMultiplier: 1.15,
+        yOffset: 0.001,
+      },
+    },
     pagpag: {
       targetSize: 0.8,
       scaleMultiplier: 2,
