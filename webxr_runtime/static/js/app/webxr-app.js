@@ -9,6 +9,8 @@ import { UiController } from './ui-controller.js';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 
 const DEFAULT_BG = 0x0f1114;
+const IS_IOS_DEVICE = /iPad|iPhone|iPod/i.test(navigator.userAgent || '')
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const CROSSHAIR_NDC = new THREE.Vector2(0, 0);
 const HOTSPOT_FALLBACK_DISTANCE = 5.0;
 const DOOR_INTERACTION_MAX_DISTANCE = 2.35;
@@ -392,8 +394,8 @@ export class WebXRApp {
     this.interactionSystem = null;
     this.activeXrReferenceSpaceType = null;
 
-    // "VR Box" (Cardboard) mode: gyro look + side-by-side stereo rendering,
-    // for phones without WebXR (every iOS browser). No XR session involved.
+    // "VR Box" (Cardboard) mode: gyro look + side-by-side stereo rendering
+    // for compatible non-iOS phones without WebXR. No XR session involved.
     this.cardboard = {
       active: false,
       stereo: null,
@@ -459,12 +461,12 @@ export class WebXRApp {
     this.uiController.setMobileControlsVisible(true);
     this.uiController.setFullscreenState(Boolean(document.fullscreenElement));
 
-    // Gyro "magic window" + VR Box (Cardboard stereo) are the fallbacks for
-    // phones without WebXR (every iOS browser). Offered where sensors exist.
+    // Gyro remains available on supported phones. The split-screen Cardboard
+    // fallback is intentionally unavailable on iOS, where VR is unsupported.
     const gyroCapable = typeof window.DeviceOrientationEvent !== 'undefined'
       && (this.mobileMode || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
     this.uiController.setGyroVisible(gyroCapable);
-    this.uiController.setCardboardVisible(gyroCapable);
+    this.uiController.setCardboardVisible(gyroCapable && !IS_IOS_DEVICE);
   }
 
   _createDefaultHeritageMissionState() {
@@ -1018,13 +1020,19 @@ export class WebXRApp {
     if (!this.playerController) {
       return;
     }
+    if (IS_IOS_DEVICE) {
+      this.uiController.showError(
+        'VR mode is not supported on iPhone. You can continue in the normal 3D view or use the Gyro button to look around.',
+        6500,
+      );
+      return;
+    }
     if (this.cardboard.active) {
       this._exitCardboard();
       return;
     }
 
-    // Gyro drives the head look; enabling it here also runs the iOS motion
-    // permission prompt inside this tap.
+    // Gyro drives the head look for compatible Cardboard devices.
     try {
       await this.playerController.setGyroEnabled(true);
       this.uiController.setGyroState(true);
@@ -1069,19 +1077,14 @@ export class WebXRApp {
     element.addEventListener('touchend', this.cardboard.onTouchEnd, { passive: true });
 
     const portrait = window.innerHeight > window.innerWidth;
-    const isStandalone = Boolean(window.navigator.standalone)
-      || Boolean(window.matchMedia?.('(display-mode: standalone)')?.matches);
     let hint = `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Touch & hold = walk · double-tap = exit.`;
-    if (!gotFullscreen && !isStandalone) {
-      // iPhone WebKit only fullscreens <video>; a Home-Screen launch is the
-      // one way Apple allows a truly full screen page.
-      hint += ' Tip: for full screen on iPhone, use Share → Add to Home Screen and open from there.';
+    if (!gotFullscreen) {
+      hint += ' Your browser kept the page windowed; landscape mode is recommended.';
     }
     this.uiController.showError(hint, gotFullscreen ? 6000 : 9000);
   }
 
-  /* Try every fullscreen mechanism a browser might offer. Returns true when
-     one of them took; false on iPhone WebKit, where none exists for pages. */
+  /* Try every fullscreen mechanism a browser might offer. */
   async _requestBestFullscreen() {
     const root = document.documentElement;
     try {
@@ -1828,6 +1831,14 @@ export class WebXRApp {
         const showUnsupportedModeMessage = (sessionMode) => {
           if (sessionMode === XR_SESSION_MODE_AR) {
             this.uiController.showError('AR needs Chrome on Android (with Google Play Services for AR). On iPhone, use the artifact 3D viewers’ AR button instead.', 4500);
+            return;
+          }
+
+          if (IS_IOS_DEVICE) {
+            this.uiController.showError(
+              'VR mode is not supported on iPhone. You can continue in the normal 3D view or use the Gyro button to look around.',
+              6500,
+            );
             return;
           }
 

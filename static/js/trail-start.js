@@ -882,8 +882,10 @@ zoomOutBtn?.addEventListener('click', () => zoomBy(10));
    Pannellum's built-in VR control:
    - Gyro maps DeviceOrientation to the active Pannellum view.
    - VR uses native WebXR immersive-vr where a headset/browser supports it.
-   - Phones without immersive-vr use a split-screen Cardboard renderer driven
-     by the same gyro look. -------------------------------------------------- */
+   - Compatible non-iOS phones without immersive-vr use a split-screen
+     Cardboard renderer driven by the same gyro look. ----------------------- */
+const isTrailIOSDevice = /iPad|iPhone|iPod/i.test(navigator.userAgent || '')
+  || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
 const trailGyro = {
   enabled: false,
   hasReading: false,
@@ -2305,6 +2307,17 @@ vrBtn?.addEventListener('click', () => {
     requestTrailVrExit();
     return;
   }
+  if (isTrailIOSDevice) {
+    showTrailViewNotice(
+      localizedViewCopy('VR mode is not supported on iPhone', 'Hindi sinusuportahan ang VR mode sa iPhone'),
+      localizedViewCopy(
+        'You can continue in the normal 360° view or use the Gyro button to look around.',
+        'Maaari kang magpatuloy sa karaniwang 360° view o gamitin ang Gyro button upang tumingin sa paligid.',
+      ),
+      6500,
+    );
+    return;
+  }
   if (trailVr.nativeSupported && navigator.xr) {
     void enterTrailNativeVr();
     return;
@@ -2369,15 +2382,16 @@ if (gyroBtn) {
   gyroBtn.setAttribute('aria-disabled', String(!sensorCapable));
 }
 if (vrBtn) {
-  vrBtn.disabled = !sensorCapable;
-  vrBtn.setAttribute('aria-disabled', String(!sensorCapable));
+  const initialVrAvailable = isTrailIOSDevice || sensorCapable;
+  vrBtn.disabled = !initialVrAvailable;
+  vrBtn.setAttribute('aria-disabled', String(!initialVrAvailable));
 }
 if (navigator.xr && typeof navigator.xr.isSessionSupported === 'function') {
   navigator.xr.isSessionSupported('immersive-vr').then((supported) => {
     trailVr.nativeSupported = Boolean(supported);
     trailVr.nativeChecked = true;
     if (vrBtn) {
-      const available = trailVr.nativeSupported || sensorCapable;
+      const available = isTrailIOSDevice || trailVr.nativeSupported || sensorCapable;
       vrBtn.disabled = !available;
       vrBtn.setAttribute('aria-disabled', String(!available));
     }

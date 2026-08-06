@@ -5,7 +5,7 @@ import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
  * Shared 360 viewing modes for a Pannellum viewer:
  * - device-orientation "magic window"
  * - native WebXR immersive-vr
- * - gyro-driven, split-screen VR Box fallback
+ * - gyro-driven, split-screen VR Box fallback on compatible non-iOS phones
  */
 export function createPanoramaViewModes(options) {
   const getViewer = options.getViewer;
@@ -39,6 +39,8 @@ export function createPanoramaViewModes(options) {
   const translate = typeof options.translate === "function"
     ? options.translate
     : function (english) { return english; };
+  const isIOSDevice = /iPad|iPhone|iPod/i.test(navigator.userAgent || "")
+    || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
   const activeRootClass = options.activeRootClass || "panorama-vr-active";
   const infoInitialZoom = Number.isFinite(Number(options.infoInitialZoom))
     ? Math.max(0.65, Number(options.infoInitialZoom))
@@ -1812,6 +1814,17 @@ export function createPanoramaViewModes(options) {
       requestVrExit();
       return;
     }
+    if (isIOSDevice) {
+      notify(
+        tr("VR mode is not supported on iPhone", "Hindi sinusuportahan ang VR mode sa iPhone"),
+        tr(
+          "You can continue in the normal 360° view or use the Gyro button to look around.",
+          "Maaari kang magpatuloy sa karaniwang 360° view o gamitin ang Gyro button upang tumingin sa paligid.",
+        ),
+        6500,
+      );
+      return;
+    }
     if (vr.nativeSupported && navigator.xr) {
       void enterNativeVr();
       return;
@@ -1897,13 +1910,14 @@ export function createPanoramaViewModes(options) {
     );
   gyroButton.disabled = !sensorCapable;
   gyroButton.setAttribute("aria-disabled", String(!sensorCapable));
-  vrButton.disabled = !sensorCapable;
-  vrButton.setAttribute("aria-disabled", String(!sensorCapable));
+  const initialVrAvailable = isIOSDevice || sensorCapable;
+  vrButton.disabled = !initialVrAvailable;
+  vrButton.setAttribute("aria-disabled", String(!initialVrAvailable));
 
   if (navigator.xr && typeof navigator.xr.isSessionSupported === "function") {
     navigator.xr.isSessionSupported("immersive-vr").then(function (supported) {
       vr.nativeSupported = Boolean(supported);
-      const available = vr.nativeSupported || sensorCapable;
+      const available = isIOSDevice || vr.nativeSupported || sensorCapable;
       vrButton.disabled = !available;
       vrButton.setAttribute("aria-disabled", String(!available));
     }).catch(function () {
