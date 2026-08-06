@@ -250,7 +250,7 @@
     {
       "id": "church-front",
       "title": "Front Chapel",
-      "category": "Church",
+      "category": "Chapel",
       "x": 2509,
       "y": 1661,
       "panorama": {
@@ -273,7 +273,7 @@
     {
       "id": "church",
       "title": "Chapel",
-      "category": "Church",
+      "category": "Chapel",
       "x": 2695,
       "y": 1952,
       "panorama": {

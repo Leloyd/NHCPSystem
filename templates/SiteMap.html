@@ -26,7 +26,20 @@
       <div id="panoramaMap" class="site-map-canvas site-map-panorama" role="region" aria-label="360 aerial panorama of the Nagcarlan Underground Cemetery" aria-hidden="true"></div>
 
       <div id="mapInfoOverlay" class="map-info-overlay" hidden aria-live="polite">
-        <div id="mapInfoCard" class="map-info-card">
+        <svg id="mapInfoConnector" class="map-info-connector" aria-hidden="true" focusable="false" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="mapInfoConnectorGold" x1="0" y1="0" x2="1" y2="0">
+              <stop offset="0" stop-color="#faf7f2"></stop>
+              <stop offset="0.42" stop-color="#d4af6a"></stop>
+              <stop offset="1" stop-color="#b8923a"></stop>
+            </linearGradient>
+          </defs>
+          <path id="mapInfoConnectorShadow" class="map-info-connector__shadow"></path>
+          <path id="mapInfoConnectorPath" class="map-info-connector__path"></path>
+          <circle id="mapInfoConnectorOrigin" class="map-info-connector__origin" r="5"></circle>
+          <circle id="mapInfoConnectorEnd" class="map-info-connector__end" r="3"></circle>
+        </svg>
+        <div id="mapInfoCard" class="map-info-card" role="dialog" aria-modal="false" aria-labelledby="mapInfoTitle">
           <button id="mapInfoClose" class="map-info-card__close" type="button" aria-label="Close location information">&times;</button>
           <p id="mapInfoRoute" class="map-info-card__route">Hotspot Information</p>
           <h3 id="mapInfoTitle" class="map-info-card__title font-serif">Select a hotspot</h3>
@@ -34,6 +47,15 @@
           <div id="mapInfoMedia" class="map-info-card__media" hidden></div>
           <p id="mapInfoSummary" class="map-info-card__summary">Tap a marker to view information directly on the map.</p>
           <div id="mapInfoLinks" class="map-info-card__links" hidden></div>
+          <div class="map-info-card__journey" aria-label="Browse site locations">
+            <button id="mapInfoPrevious" class="map-info-card__journey-button" type="button" aria-label="Previous location">
+              <span aria-hidden="true">&larr;</span><span id="mapInfoPreviousLabel">Previous</span>
+            </button>
+            <span id="mapInfoProgress" class="map-info-card__progress" aria-live="off">1 / 1</span>
+            <button id="mapInfoNext" class="map-info-card__journey-button" type="button" aria-label="Next location">
+              <span id="mapInfoNextLabel">Next</span><span aria-hidden="true">&rarr;</span>
+            </button>
+          </div>
         </div>
       </div>
 

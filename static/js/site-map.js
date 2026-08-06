@@ -82,6 +82,13 @@
     church: "Kapilya",
     "underground-crypts": "Mga Libingan sa Ilalim ng Lupa",
   };
+  var TAGALOG_CATEGORY = {
+    Access: "Daanan",
+    Landmark: "Palatandaan",
+    "Visitor Zone": "Lugar ng Bisita",
+    Tombs: "Mga Puntod",
+    Chapel: "Kapilya",
+  };
 
   var state = {
     map: null,
@@ -120,6 +127,8 @@
     viewSwitching: false,
     transitionTimer: 0,
     controlRevealTimer: 0,
+    infoConnectorRafId: 0,
+    infoConnectorStopId: "",
     reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
 
@@ -143,6 +152,11 @@
     viewTransitionText: document.getElementById("mapViewTransitionText"),
     mapInfoOverlay: document.getElementById("mapInfoOverlay"),
     mapInfoCard: document.getElementById("mapInfoCard"),
+    mapInfoConnector: document.getElementById("mapInfoConnector"),
+    mapInfoConnectorShadow: document.getElementById("mapInfoConnectorShadow"),
+    mapInfoConnectorPath: document.getElementById("mapInfoConnectorPath"),
+    mapInfoConnectorOrigin: document.getElementById("mapInfoConnectorOrigin"),
+    mapInfoConnectorEnd: document.getElementById("mapInfoConnectorEnd"),
     mapInfoClose: document.getElementById("mapInfoClose"),
     mapInfoRoute: document.getElementById("mapInfoRoute"),
     mapInfoTitle: document.getElementById("mapInfoTitle"),
@@ -150,6 +164,11 @@
     stopMedia: document.getElementById("mapInfoMedia"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
     stopLinks: document.getElementById("mapInfoLinks"),
+    mapInfoPrevious: document.getElementById("mapInfoPrevious"),
+    mapInfoPreviousLabel: document.getElementById("mapInfoPreviousLabel"),
+    mapInfoProgress: document.getElementById("mapInfoProgress"),
+    mapInfoNext: document.getElementById("mapInfoNext"),
+    mapInfoNextLabel: document.getElementById("mapInfoNextLabel"),
   };
 
   if (!elements.mapRoot || !window.L) {
@@ -1229,12 +1248,236 @@
     elements.stopLinks.hidden = !elements.stopLinks.childElementCount;
   }
 
+  function renderJourneyControls(stop) {
+    var visibleStops = getVisibleStops();
+    var currentIndex = visibleStops.findIndex(function (item) {
+      return stop && item.id === stop.id;
+    });
+    var total = visibleStops.length;
+    var isTagalog = getCurrentLanguage() === "tl";
+    var hasJourney = currentIndex >= 0 && total > 0;
+
+    if (elements.mapInfoRoute) {
+      elements.mapInfoRoute.hidden = !hasJourney;
+      elements.mapInfoRoute.textContent = hasJourney
+        ? (isTagalog ? "Lokasyon " : "Location ") + (currentIndex + 1) + (isTagalog ? " sa " : " of ") + total
+        : "";
+    }
+
+    if (elements.mapInfoMeta) {
+      var category = stop ? String(stop.category || "Heritage Site") : "";
+      var localizedCategory = isTagalog ? (TAGALOG_CATEGORY[category] || category) : category;
+      var viewLabel = is360ViewActive()
+        ? (isTagalog ? "360° Tanawin" : "360° Aerial View")
+        : (isTagalog ? "Aerial Map" : "Aerial Map");
+      elements.mapInfoMeta.hidden = !hasJourney;
+      elements.mapInfoMeta.textContent = hasJourney ? localizedCategory + " · " + viewLabel : "";
+    }
+
+    if (elements.mapInfoProgress) {
+      elements.mapInfoProgress.textContent = hasJourney ? (currentIndex + 1) + " / " + total : "0 / 0";
+    }
+    if (elements.mapInfoPreviousLabel) {
+      elements.mapInfoPreviousLabel.textContent = isTagalog ? "Nakaraan" : "Previous";
+    }
+    if (elements.mapInfoNextLabel) {
+      elements.mapInfoNextLabel.textContent = isTagalog ? "Susunod" : "Next";
+    }
+
+    [elements.mapInfoPrevious, elements.mapInfoNext].forEach(function (button) {
+      if (!button) {
+        return;
+      }
+      button.disabled = total < 2;
+      button.setAttribute("aria-disabled", total < 2 ? "true" : "false");
+    });
+
+    if (hasJourney && total > 1) {
+      var previousStop = visibleStops[(currentIndex - 1 + total) % total];
+      var nextStop = visibleStops[(currentIndex + 1) % total];
+      if (elements.mapInfoPrevious) {
+        elements.mapInfoPrevious.setAttribute(
+          "aria-label",
+          (isTagalog ? "Nakaraang lokasyon: " : "Previous location: ") + getLocalizedTitle(previousStop),
+        );
+      }
+      if (elements.mapInfoNext) {
+        elements.mapInfoNext.setAttribute(
+          "aria-label",
+          (isTagalog ? "Susunod na lokasyon: " : "Next location: ") + getLocalizedTitle(nextStop),
+        );
+      }
+    }
+  }
+
+  function navigateMapInfo(direction) {
+    var visibleStops = getVisibleStops();
+    if (visibleStops.length < 2) {
+      return;
+    }
+
+    var currentIndex = visibleStops.findIndex(function (item) {
+      return item.id === state.stopId;
+    });
+    var startIndex = currentIndex >= 0 ? currentIndex : 0;
+    var nextIndex = (startIndex + direction + visibleStops.length) % visibleStops.length;
+    var target = visibleStops[nextIndex];
+
+    setActiveStop(target.id, !is360ViewActive());
+    if (is360ViewActive()) {
+      focusPanoramaOnStop(target);
+    }
+  }
+
+  function hideMapInfoConnector() {
+    if (state.infoConnectorRafId) {
+      window.cancelAnimationFrame(state.infoConnectorRafId);
+      state.infoConnectorRafId = 0;
+    }
+    state.infoConnectorStopId = "";
+    if (elements.mapInfoConnector) {
+      elements.mapInfoConnector.classList.remove("is-visible");
+    }
+    if (elements.mapInfoConnectorPath) {
+      elements.mapInfoConnectorPath.classList.remove("is-drawing");
+      elements.mapInfoConnectorPath.removeAttribute("d");
+    }
+    if (elements.mapInfoConnectorShadow) {
+      elements.mapInfoConnectorShadow.removeAttribute("d");
+    }
+  }
+
+  function getInfoHotspotPoint(stop, overlayRect) {
+    if (!stop || !overlayRect) {
+      return null;
+    }
+
+    if (is360ViewActive()) {
+      cachePanoramaHotspotNodes();
+      var panoramaNode = state.panoramaHotspotNodesById[stop.id];
+      if (!panoramaNode) {
+        return null;
+      }
+      var panoramaRect = panoramaNode.getBoundingClientRect();
+      return {
+        x: panoramaRect.left + panoramaRect.width * 0.5 - overlayRect.left,
+        y: panoramaRect.top + panoramaRect.height * 0.5 - overlayRect.top,
+      };
+    }
+
+    if (!state.map || !elements.mapRoot) {
+      return null;
+    }
+    var markerPoint = state.map.latLngToContainerPoint([stop.y, stop.x]);
+    var mapRect = elements.mapRoot.getBoundingClientRect();
+    return {
+      x: mapRect.left + markerPoint.x - overlayRect.left,
+      y: mapRect.top + markerPoint.y - overlayRect.top,
+    };
+  }
+
+  function getNearestCardEdgePoint(point, cardRect, overlayRect) {
+    var left = cardRect.left - overlayRect.left;
+    var right = cardRect.right - overlayRect.left;
+    var top = cardRect.top - overlayRect.top;
+    var bottom = cardRect.bottom - overlayRect.top;
+    var candidates = [
+      { x: Math.max(left + 18, Math.min(point.x, right - 18)), y: top },
+      { x: Math.max(left + 18, Math.min(point.x, right - 18)), y: bottom },
+      { x: left, y: Math.max(top + 18, Math.min(point.y, bottom - 18)) },
+      { x: right, y: Math.max(top + 18, Math.min(point.y, bottom - 18)) },
+    ];
+
+    candidates.sort(function (a, b) {
+      var distanceA = Math.pow(a.x - point.x, 2) + Math.pow(a.y - point.y, 2);
+      var distanceB = Math.pow(b.x - point.x, 2) + Math.pow(b.y - point.y, 2);
+      return distanceA - distanceB;
+    });
+    return candidates[0];
+  }
+
+  function updateMapInfoConnector(stop) {
+    if (
+      !stop
+      || !elements.mapInfoOverlay
+      || elements.mapInfoOverlay.hidden
+      || !elements.mapInfoCard
+      || !elements.mapInfoConnector
+      || !elements.mapInfoConnectorPath
+      || !elements.mapInfoConnectorShadow
+    ) {
+      hideMapInfoConnector();
+      return;
+    }
+
+    var overlayRect = elements.mapInfoOverlay.getBoundingClientRect();
+    var cardRect = elements.mapInfoCard.getBoundingClientRect();
+    var start = getInfoHotspotPoint(stop, overlayRect);
+    if (!start || !overlayRect.width || !overlayRect.height || !cardRect.width || !cardRect.height) {
+      elements.mapInfoConnector.classList.remove("is-visible");
+      return;
+    }
+
+    var end = getNearestCardEdgePoint(start, cardRect, overlayRect);
+    var dx = end.x - start.x;
+    var dy = end.y - start.y;
+    var distance = Math.max(1, Math.sqrt(dx * dx + dy * dy));
+    var curve = Math.min(28, Math.max(8, distance * 0.08));
+    var curveDirection = start.x <= end.x ? 1 : -1;
+    var controlX = (start.x + end.x) * 0.5 + (-dy / distance) * curve * curveDirection;
+    var controlY = (start.y + end.y) * 0.5 + (dx / distance) * curve * curveDirection;
+    var pathData = "M " + start.x.toFixed(2) + " " + start.y.toFixed(2)
+      + " Q " + controlX.toFixed(2) + " " + controlY.toFixed(2)
+      + " " + end.x.toFixed(2) + " " + end.y.toFixed(2);
+    var isNewConnection = state.infoConnectorStopId !== stop.id;
+
+    elements.mapInfoConnector.setAttribute("viewBox", "0 0 " + overlayRect.width + " " + overlayRect.height);
+    elements.mapInfoConnectorPath.setAttribute("d", pathData);
+    elements.mapInfoConnectorShadow.setAttribute("d", pathData);
+    if (elements.mapInfoConnectorOrigin) {
+      elements.mapInfoConnectorOrigin.setAttribute("cx", start.x.toFixed(2));
+      elements.mapInfoConnectorOrigin.setAttribute("cy", start.y.toFixed(2));
+    }
+    if (elements.mapInfoConnectorEnd) {
+      elements.mapInfoConnectorEnd.setAttribute("cx", end.x.toFixed(2));
+      elements.mapInfoConnectorEnd.setAttribute("cy", end.y.toFixed(2));
+    }
+
+    elements.mapInfoConnector.classList.add("is-visible");
+    if (isNewConnection && !state.reduceMotion) {
+      var pathLength = Math.max(1, elements.mapInfoConnectorPath.getTotalLength());
+      elements.mapInfoConnectorPath.style.setProperty("--map-connector-length", pathLength);
+      elements.mapInfoConnectorPath.classList.remove("is-drawing");
+      void elements.mapInfoConnectorPath.getBoundingClientRect();
+      elements.mapInfoConnectorPath.classList.add("is-drawing");
+    }
+    state.infoConnectorStopId = stop.id;
+
+    if (is360ViewActive() && state.infoStopId === stop.id) {
+      state.infoConnectorRafId = window.requestAnimationFrame(function () {
+        state.infoConnectorRafId = 0;
+        updateMapInfoConnector(stop);
+      });
+    }
+  }
+
+  function scheduleMapInfoConnector(stop) {
+    if (state.infoConnectorRafId) {
+      window.cancelAnimationFrame(state.infoConnectorRafId);
+    }
+    state.infoConnectorRafId = window.requestAnimationFrame(function () {
+      state.infoConnectorRafId = 0;
+      updateMapInfoConnector(stop);
+    });
+  }
+
   function hideMapInfoOverlay() {
     if (elements.mapInfoOverlay) {
       elements.mapInfoOverlay.hidden = true;
     }
 
     stopHotspotAudio();
+    hideMapInfoConnector();
     state.infoStopId = "";
   }
 
@@ -1332,6 +1575,8 @@
       elements.mapInfoCard.style.left = "50%";
       elements.mapInfoCard.style.top = "12px";
       elements.mapInfoCard.style.transform = "translateX(-50%)";
+      elements.mapInfoCard.dataset.placement = "top";
+      scheduleMapInfoConnector(stop);
 
       return;
     }
@@ -1353,22 +1598,55 @@
 
     var cardWidth = elements.mapInfoCard.offsetWidth || Math.min(320, Math.max(220, mapWidth - 24));
     var cardHeight = elements.mapInfoCard.offsetHeight || 140;
-    var gap = 22;
+    var gap = 68;
+    var padding = 14;
+    var maxLeft = Math.max(padding, mapWidth - cardWidth - padding);
+    var bottomClearance = mapWidth <= 640 ? 80 : 92;
+    var maxTop = Math.max(padding, mapHeight - cardHeight - bottomClearance);
     var cardLeft = markerPoint.x - cardWidth * 0.5;
-    var minLeft = 12;
-    var maxLeft = Math.max(minLeft, mapWidth - cardWidth - 12);
+    var cardTop = markerPoint.y - cardHeight * 0.5;
+    var placement = "bottom";
 
-    cardLeft = Math.max(minLeft, Math.min(cardLeft, maxLeft));
+    if (mapWidth <= 640) {
+      elements.mapInfoCard.style.left = "50%";
+      elements.mapInfoCard.style.top = "auto";
+      elements.mapInfoCard.style.transform = "translateX(-50%)";
+      elements.mapInfoCard.dataset.placement = "bottom";
+      scheduleMapInfoConnector(stop);
+      return;
+    }
 
-    var cardTop = markerPoint.y + gap;
-    var minTop = 12;
-    var maxTop = Math.max(minTop, mapHeight - cardHeight - 12);
+    var canPlaceRight = markerPoint.x + gap + cardWidth <= mapWidth - padding;
+    var canPlaceLeft = markerPoint.x - gap - cardWidth >= padding;
+    var preferRight = markerPoint.x <= mapWidth * 0.5;
 
-    cardTop = Math.max(minTop, Math.min(cardTop, maxTop));
+    if ((preferRight && canPlaceRight) || !canPlaceLeft) {
+      cardLeft = markerPoint.x + gap;
+      placement = "right";
+    } else {
+      cardLeft = markerPoint.x - gap - cardWidth;
+      placement = "left";
+    }
+
+    if (!canPlaceRight && !canPlaceLeft) {
+      cardLeft = markerPoint.x - cardWidth * 0.5;
+      if (markerPoint.y + gap + cardHeight <= mapHeight - bottomClearance) {
+        cardTop = markerPoint.y + gap;
+        placement = "bottom";
+      } else {
+        cardTop = markerPoint.y - gap - cardHeight;
+        placement = "top";
+      }
+    }
+
+    cardLeft = Math.max(padding, Math.min(cardLeft, maxLeft));
+    cardTop = Math.max(padding, Math.min(cardTop, maxTop));
 
     elements.mapInfoCard.style.left = cardLeft + "px";
     elements.mapInfoCard.style.top = cardTop + "px";
     elements.mapInfoCard.style.transform = "";
+    elements.mapInfoCard.dataset.placement = placement;
+    scheduleMapInfoConnector(stop);
   }
 
   function renderMapInfo(stop) {
@@ -1381,15 +1659,20 @@
       return;
     }
 
-    elements.mapInfoRoute.textContent = "";
-    elements.mapInfoRoute.hidden = true;
+    var previousStopId = elements.mapInfoCard ? elements.mapInfoCard.dataset.stopId || "" : "";
     elements.mapInfoTitle.textContent = getLocalizedTitle(stop);
-    elements.mapInfoMeta.textContent = "";
-    elements.mapInfoMeta.hidden = true;
     renderMedia(stop);
     elements.mapInfoSummary.textContent = getLocalizedDescription(stop);
     renderLinks(stop);
+    renderJourneyControls(stop);
     playHotspotAudio(stop);
+
+    if (elements.mapInfoCard && previousStopId !== stop.id) {
+      elements.mapInfoCard.dataset.stopId = stop.id;
+      elements.mapInfoCard.classList.remove("is-entering");
+      void elements.mapInfoCard.offsetWidth;
+      elements.mapInfoCard.classList.add("is-entering");
+    }
 
     positionMapInfoOverlay(stop);
   }
@@ -1463,6 +1746,18 @@
       });
     }
 
+    if (elements.mapInfoPrevious) {
+      elements.mapInfoPrevious.addEventListener("click", function () {
+        navigateMapInfo(-1);
+      });
+    }
+
+    if (elements.mapInfoNext) {
+      elements.mapInfoNext.addEventListener("click", function () {
+        navigateMapInfo(1);
+      });
+    }
+
     if (elements.languageBtn) {
       elements.languageBtn.addEventListener("click", function () {
         state.language = getCurrentLanguage() === "en" ? "tl" : "en";
@@ -1520,6 +1815,19 @@
         });
       });
     }
+
+    window.addEventListener("resize", function () {
+      var activeStop = state.infoStopId ? state.hotspotsById[state.infoStopId] || null : null;
+      if (activeStop) {
+        positionMapInfoOverlay(activeStop);
+      }
+    });
+
+    window.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && state.infoStopId) {
+        clearActiveSelection();
+      }
+    });
   }
 
   function init() {
