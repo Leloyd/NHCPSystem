@@ -15,12 +15,20 @@ const DEFAULT_MAX_POSITIVE_X = 2.5;
 const DEFAULT_MAX_POSITIVE_Z = 2.5;
 
 export class CollisionSystem {
-  constructor({ scene, debugEnabled = false, walkBoundary = null, maxPositiveClamp = null, floorRegions = null }) {
+  constructor({
+    scene,
+    debugEnabled = false,
+    walkBoundary = null,
+    maxPositiveClamp = null,
+    floorRegions = null,
+    boundsClampEnabled = true,
+  }) {
     this.scene = scene;
     this.debugEnabled = Boolean(debugEnabled);
     this.walkBoundary = this._normalizeWalkBoundary(walkBoundary);
     this.maxPositiveClamp = this._normalizeMaxPositiveClamp(maxPositiveClamp);
     this.floorRegions = this._normalizeFloorRegions(floorRegions);
+    this.boundsClampEnabled = Boolean(boundsClampEnabled);
 
     this.colliders = [];
     this.fallbackBounds = new THREE.Box3(
@@ -235,11 +243,13 @@ export class CollisionSystem {
     const minZ = this.fallbackBounds.min.z + radius;
     const maxZ = Math.min(this.fallbackBounds.max.z - radius, this.maxPositiveClamp.z);
 
-    if (Number.isFinite(minX) && Number.isFinite(maxX)) {
-      this._tempCorrectedFeet.x = THREE.MathUtils.clamp(this._tempCorrectedFeet.x, minX, maxX);
-    }
-    if (Number.isFinite(minZ) && Number.isFinite(maxZ)) {
-      this._tempCorrectedFeet.z = THREE.MathUtils.clamp(this._tempCorrectedFeet.z, minZ, maxZ);
+    if (this.boundsClampEnabled) {
+      if (Number.isFinite(minX) && Number.isFinite(maxX)) {
+        this._tempCorrectedFeet.x = THREE.MathUtils.clamp(this._tempCorrectedFeet.x, minX, maxX);
+      }
+      if (Number.isFinite(minZ) && Number.isFinite(maxZ)) {
+        this._tempCorrectedFeet.z = THREE.MathUtils.clamp(this._tempCorrectedFeet.z, minZ, maxZ);
+      }
     }
 
     this._applyWalkBoundaryClamp(this._tempCorrectedFeet);

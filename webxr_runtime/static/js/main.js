@@ -16,6 +16,8 @@ function getRefs() {
     interactionPanel: document.getElementById('interaction-panel'),
     interactionName: document.getElementById('interaction-name'),
     interactionMeta: document.getElementById('interaction-meta'),
+    positionDebugPanel: document.getElementById('position-debug-panel'),
+    positionDebugValue: document.getElementById('position-debug-value'),
     mobileControls: document.getElementById('mobile-controls'),
     moveStickZone: document.getElementById('move-stick-zone'),
     moveStickThumb: document.getElementById('move-stick-thumb'),

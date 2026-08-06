@@ -142,4 +142,14 @@ export class UiController {
   hideInteraction() {
     this.refs.interactionPanel?.classList.add('hidden');
   }
+
+  setPositionDebugVisible(visible) {
+    this.refs.positionDebugPanel?.classList.toggle('hidden', !visible);
+  }
+
+  setPositionDebugValue(value) {
+    if (this.refs.positionDebugValue) {
+      this.refs.positionDebugValue.textContent = value;
+    }
+  }
 }
