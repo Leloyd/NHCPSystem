@@ -14,6 +14,7 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/trail-start.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper.css') }}" />
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <!-- Leaflet powers Stop 4's pan/zoom map of the archipelago -->
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
@@ -228,7 +229,7 @@
           Nasa bungad ka na ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Lumingon-lingon sa tanawin mula sa itaas — ang pabilog na pader, ang kapilya, ang mga daanang ginugol ng mga siglo. Kapag handa ka na, gagabayan kita sa sampung hinto, mula sa tarangkahan hanggang sa mga kripta sa ilalim.
         </p>
         <div class="trailx__actions">
-          <a class="trailx__begin" data-trail-begin href="#stop-1">
+          <a class="trailx__begin" data-trail-begin href="{{ url_for('trail_start') }}">
             <span data-lang-en>Begin the Trail</span>
             <span data-lang-tl>Simulan ang Landas</span>
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
@@ -732,7 +733,7 @@
               Maaari mo na itong buksan ngayon upang subukan — ngunit mas maganda talaga ito onsite, kung saan naghihintay ang mga scan marker sa tabi ng bawat eksibit sa museo.
             </p>
             <div class="trailx__actions">
-              <a class="trailx__begin" href="{{ url_for('ar_content_detection') }}?from=stop3">
+              <a class="trailx__begin" href="{{ url_for('ar_content_detection') }}?from=trail">
                 <span data-lang-en>Open the AR Scanner</span>
                 <span data-lang-tl>Buksan ang AR Scanner</span>
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 8V5a2 2 0 012-2h3M16 3h3a2 2 0 012 2v3M21 16v3a2 2 0 01-2 2h-3M8 21H5a2 2 0 01-2-2v-3M7 12h10"/></svg>
@@ -2030,6 +2031,15 @@
     <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
     <script src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>
     <script src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
+    <script id="heritageKeeperConfig" type="application/json">{{ {
+      'authenticated': public_user_authenticated,
+      'csrfToken': public_csrf_token,
+      'progressUrl': url_for('heritage_keeper_progress_api'),
+      'awardUrl': url_for('heritage_keeper_award_fragment'),
+      'rewardUrl': url_for('heritage_keeper_page'),
+      'loginUrl': url_for('public_login', next=request.path)
+    } | tojson }}</script>
+    <script src="{{ url_for('static', filename='js/heritage-keeper-progress.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/trail-start.js') }}"></script>
   </body>
 </html>

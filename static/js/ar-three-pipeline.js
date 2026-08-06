@@ -1841,9 +1841,20 @@
     }
 
     try {
-      if (new URLSearchParams(window.location.search).get("from") === "stop3") {
-        backButton.setAttribute("href", "/trail#stop-3");
+      if (new URLSearchParams(window.location.search).get("from") === "trail") {
+        backButton.setAttribute("href", "/trail");
         backButton.setAttribute("aria-label", "Back to Heritage Trail Stop 3");
+        backButton.addEventListener("click", function (event) {
+          try {
+            var referrer = document.referrer ? new URL(document.referrer) : null;
+            if (referrer && referrer.origin === window.location.origin && referrer.pathname === "/trail") {
+              event.preventDefault();
+              window.history.back();
+            }
+          } catch (error) {
+            return;
+          }
+        });
       }
     } catch (error) {
       return;
@@ -2691,6 +2702,12 @@
       if (entry.puzzleSolved) {
         if (visible) {
           anySolvedVisible = entry;
+          if (!entry.heritageKeeperAwardRequested) {
+            entry.heritageKeeperAwardRequested = true;
+            if (window.NHCPHeritageKeeper && typeof window.NHCPHeritageKeeper.award === "function") {
+              window.NHCPHeritageKeeper.award("ar", entry.key);
+            }
+          }
         }
         return;
       }

@@ -26,6 +26,7 @@ from public_users_repository import (
     get_public_user_by_password_reset_token_hash,
     update_public_user,
 )
+from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
 from supabase_client import is_supabase_configured
 from supabase_storage import delete_public_image, upload_public_image
 from user_bookmarks_repository import create_user_bookmark, delete_user_bookmark, get_user_bookmark
@@ -1108,6 +1109,53 @@ def register_user_account_routes(
             "AccountProfile.html",
             account_dashboard=dashboard,
         )
+
+    @app.route("/account/heritage-keeper")
+    @public_login_required
+    def heritage_keeper_page():
+        current_user = get_current_public_user()
+        if not current_user:
+            return redirect(url_for("public_login", next=request.path))
+        if not _user_completed_onboarding(current_user):
+            return redirect(url_for("public_account_setup", next=request.path))
+        progress = load_heritage_keeper_progress(int(current_user.get("id")))
+        return render_template("HeritageKeeper.html", heritage_keeper=progress)
+
+    @app.route("/api/account/heritage-keeper/progress")
+    def heritage_keeper_progress_api():
+        current_user = get_current_public_user()
+        if not current_user:
+            return jsonify({
+                "ok": False,
+                "login_required": True,
+                "login_url": url_for("public_login", next=request.referrer or url_for("heritage_keeper_page")),
+            }), 401
+        return jsonify({"ok": True, "progress": load_heritage_keeper_progress(int(current_user.get("id")))})
+
+    @app.route("/api/account/heritage-keeper/fragments", methods=["POST"])
+    def heritage_keeper_award_fragment():
+        current_user = get_current_public_user()
+        if not current_user or session.get(public_session_authenticated_key) is not True:
+            return jsonify({
+                "ok": False,
+                "login_required": True,
+                "login_url": url_for("public_login", next=request.referrer or url_for("account_profile")),
+            }), 401
+        if not is_public_csrf_valid(request.headers.get("X-CSRF-Token")):
+            return jsonify({"ok": False, "error": "Invalid request."}), 400
+        payload = request.get_json(silent=True) or {}
+        try:
+            result = record_heritage_keeper_fragment(
+                int(current_user.get("id")),
+                str(payload.get("source") or ""),
+                str(payload.get("item_key") or ""),
+            )
+            return jsonify({"ok": True, **result})
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
+        except Exception as exc:
+            app.logger.exception("Failed to record Heritage Keeper progress: %s", exc)
+            return jsonify({"ok": False, "error": "Progress could not be saved right now."}), 500
 
     @app.route("/account/settings", methods=["GET", "POST"])
     def account_settings():

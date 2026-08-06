@@ -11,6 +11,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;1,400&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/ar.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper.css') }}" />
 
     <!-- Deferred so the branded loader can render while the AR libraries arrive. -->
     <script defer src="https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js"></script>
@@ -20,6 +21,15 @@
     <script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
     <script defer src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>
+    <script id="heritageKeeperConfig" type="application/json">{{ {
+      'authenticated': public_user_authenticated,
+      'csrfToken': public_csrf_token,
+      'progressUrl': url_for('heritage_keeper_progress_api'),
+      'awardUrl': url_for('heritage_keeper_award_fragment'),
+      'rewardUrl': url_for('heritage_keeper_page'),
+      'loginUrl': url_for('public_login', next=request.path)
+    } | tojson }}</script>
+    <script defer src="{{ url_for('static', filename='js/heritage-keeper-progress.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/ar-three-pipeline.js') }}"></script>
   </head>
   <body class="ar-body" data-ar-analytics-endpoint="{{ analytics_endpoint }}">

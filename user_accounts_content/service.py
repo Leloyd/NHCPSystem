@@ -3,6 +3,7 @@ from __future__ import annotations
 from typing import Any
 
 from edu_resources_content import load_public_edu_resources
+from heritage_keeper_content import empty_heritage_keeper_progress, load_heritage_keeper_progress
 from online_gallery_content import load_public_online_gallery_items
 from participation_submissions_repository import list_participation_submissions_for_user
 from supabase_client import SupabaseConfigError, is_supabase_configured
@@ -38,6 +39,7 @@ def load_user_account_dashboard(user_id: int) -> dict[str, Any]:
         "tour_bookings": [],
         "participation_submissions": [],
         "visitor_feedback": [],
+        "heritage_keeper": empty_heritage_keeper_progress(),
     }
     if not is_supabase_configured():
         return dashboard
@@ -58,4 +60,5 @@ def load_user_account_dashboard(user_id: int) -> dict[str, Any]:
         dashboard["visitor_feedback"] = []
 
     dashboard["protected_edu_resources_count"] = len(load_public_edu_resources())
+    dashboard["heritage_keeper"] = load_heritage_keeper_progress(user_id)
     return dashboard

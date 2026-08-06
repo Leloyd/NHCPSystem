@@ -65,6 +65,24 @@ CREATE TABLE public.user_bookmarks (
   CONSTRAINT user_bookmarks_pkey PRIMARY KEY (id),
   CONSTRAINT user_bookmarks_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
 );
+CREATE TABLE public.heritage_keeper_events (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  source text NOT NULL CHECK (source = ANY (ARRAY['trail'::text, 'ar'::text])),
+  item_key text NOT NULL CHECK (char_length(item_key) >= 2 AND char_length(item_key) <= 64),
+  completed_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT heritage_keeper_events_pkey PRIMARY KEY (id),
+  CONSTRAINT heritage_keeper_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT heritage_keeper_events_user_fragment_key UNIQUE (user_id, source, item_key)
+);
+CREATE TABLE public.heritage_keeper_awards (
+  user_id bigint NOT NULL,
+  certificate_code text NOT NULL UNIQUE,
+  unlocked_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT heritage_keeper_awards_pkey PRIMARY KEY (user_id),
+  CONSTRAINT heritage_keeper_awards_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT heritage_keeper_awards_certificate_code_check CHECK (certificate_code ~ '^NHCP-HK-[A-F0-9]{10}$')
+);
 CREATE TABLE public.tour_bookings (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   user_id bigint NOT NULL,

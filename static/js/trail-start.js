@@ -298,11 +298,17 @@ let currentScene = 'aerial';
 let transitioning = false; // true during the Begin pan + scene crossfade
 let scrollYaw = 0;         // scroll-linked yaw offset while reading Stop 1
 
-/* Refreshing while reading a stop keeps you in that stop: entering one stamps
-   #stop-N on the URL, and on load that hash restores the stop directly (its
-   360 as the first scene, no intro). */
-const hashStopNum = (window.location.hash.match(/stop-(\d+)/) || [])[1];
-const wantsStop = hashStopNum ? `stop${hashStopNum}` : null;
+/* Stop progress stays in this tab's browser-history state rather than in a
+   user-editable #stop-N URL. Refresh still restores the current stop, and the
+   browser Back button still walks backward through the journey. */
+const trailHistoryUrl = `${window.location.pathname}${window.location.search}`;
+const savedHistoryStop = history.state && typeof history.state.trailStop === 'string'
+  ? history.state.trailStop
+  : '';
+const wantsStop = /^stop(?:10|[1-9])$/.test(savedHistoryStop) ? savedHistoryStop : null;
+if (window.location.hash) {
+  try { history.replaceState(history.state || null, '', trailHistoryUrl); } catch { /* ignore */ }
+}
 
 /* Per-stop story engines + the scroller currently on screen. */
 const storyApis = {};
@@ -796,24 +802,24 @@ const SCENE_HFOV = {
 // Per-stop config: which 360 the stop opens on, its entry view, and the hash
 // that restores the stop on refresh. The scroll-lean follows the stop's scene.
 const STOP_CONF = {
-  stop1: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-1' },
-  stop2: { scene: 'middleGMuseum', pitch: M2.pitch, yaw: M2.yaw, hfov: M2.hfov, hash: '#stop-2' },
-  stop3: { scene: 'insideMuseum', pitch: M3.pitch, yaw: M3.yaw, hfov: M3.hfov, hash: '#stop-3' },
+  stop1: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov },
+  stop2: { scene: 'middleGMuseum', pitch: M2.pitch, yaw: M2.yaw, hfov: M2.hfov },
+  stop3: { scene: 'insideMuseum', pitch: M3.pitch, yaw: M3.yaw, hfov: M3.hfov },
   // The checkpoint plays over the deepest museum hall — the artifacts the
   // games ask about are on the walls all around.
-  stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100, hash: '#stop-4' },
+  stop4: { scene: 'museum3', pitch: -12, yaw: 170, hfov: 100 },
   // The grounds: begin outside the front gate, then enter the courtyard.
-  stop5: { scene: 'stop5FrontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-5' },
+  stop5: { scene: 'stop5FrontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov },
   // Front of the chapel + the tomb rows on either side.
-  stop6: { scene: 'frontChurch', pitch: 0, yaw: -10, hfov: 100, hash: '#stop-6' },
+  stop6: { scene: 'frontChurch', pitch: 0, yaw: -10, hfov: 100 },
   // Inside the chapel.
-  stop7: { scene: 'insideChurch', pitch: 0, yaw: -24, hfov: 100, hash: '#stop-7' },
+  stop7: { scene: 'insideChurch', pitch: 0, yaw: -24, hfov: 100 },
   // The underground crypts.
-  stop8: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-8' },
+  stop8: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100 },
   // The Memory Tunnel plays over the same crypts as Stop 8.
-  stop9: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100, hash: '#stop-9' },
+  stop9: { scene: 'underground1', pitch: 0, yaw: -20, hfov: 100 },
   // Back at the front gate, where the trail began.
-  stop10: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov, hash: '#stop-10' },
+  stop10: { scene: 'frontGate', pitch: FG.pitch, yaw: FG.yaw, hfov: FG.hfov },
 };
 
 // Departure views: before travelling to the next stop, the current 360 turns
@@ -2408,12 +2414,15 @@ function enterStop(stopId, opts) {
   if (!conf || state.mode === stopId) return;
   if (stopId !== 'stop4') memoryApi.stopAudio?.();
   state.mode = stopId;
+  if (window.NHCPHeritageKeeper && typeof window.NHCPHeritageKeeper.award === 'function') {
+    window.NHCPHeritageKeeper.award('trail', stopId);
+  }
   if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
     window.NHCPAnalytics.track(
       'heritage_trail_stop_viewed',
       'heritage-trail',
       stopId,
-      { title: conf.hash || stopId },
+      { title: stopId },
       { onceKey: `heritage-trail-stop:${stopId}` }
     );
   }
@@ -2427,8 +2436,8 @@ function enterStop(stopId, opts) {
   // moved the pointer.
   const hist = (opts && opts.history) || 'push';
   try {
-    if (hist === 'push') history.pushState({ trailStop: stopId }, '', conf.hash);
-    else if (hist === 'replace') history.replaceState({ trailStop: stopId }, '', conf.hash);
+    if (hist === 'push') history.pushState({ trailStop: stopId }, '', trailHistoryUrl);
+    else if (hist === 'replace') history.replaceState({ trailStop: stopId }, '', trailHistoryUrl);
   } catch { /* ignore */ }
   charApi.reenter?.();                       // Ana glides in from the side again
   window.setTimeout(() => charApi.playGesture?.('greet'), 1000);
@@ -2470,14 +2479,21 @@ function returnToIntro() {
   narrate({ speakIt: false });               // reseed the intro bubble
 }
 
-/* Browser / phone Back + Forward: map the URL hash back to a stop (or the
-   intro when the hash clears). */
-window.addEventListener('popstate', () => {
-  const num = (window.location.hash.match(/stop-(\d+)/) || [])[1];
-  const target = num ? `stop${num}` : 'intro';
+/* Browser / phone Back + Forward: restore the private history state without
+   exposing a changeable stop number in the address bar. */
+window.addEventListener('popstate', (event) => {
+  const storedStop = event.state && typeof event.state.trailStop === 'string'
+    ? event.state.trailStop
+    : '';
+  const target = STOP_CONF[storedStop] ? storedStop : 'intro';
   if (target === state.mode) return;
   if (target === 'intro') returnToIntro();
   else if (STOP_CONF[target]) jumpToStop(target);
+});
+
+window.addEventListener('hashchange', () => {
+  if (!window.location.hash) return;
+  try { history.replaceState(history.state || null, '', trailHistoryUrl); } catch { /* ignore */ }
 });
 
 /* Stop → stop: the guide slides out, the current 360 turns to face the path

@@ -1,0 +1,112 @@
+:root {
+  --hk-gold: #d4af6a;
+  --hk-gold-deep: #b8923a;
+  --hk-ink: #1c1208;
+  --hk-cream: #faf7f2;
+}
+
+.hk-progress-chip {
+  position: fixed;
+  z-index: 2147482000;
+  top: max(0.75rem, env(safe-area-inset-top));
+  left: max(0.75rem, env(safe-area-inset-left));
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  min-height: 2.65rem;
+  max-width: min(18rem, calc(100vw - 1.5rem));
+  padding: 0.45rem 0.8rem 0.45rem 0.5rem;
+  color: var(--hk-cream);
+  background: rgba(13, 10, 4, 0.9);
+  border: 1px solid rgba(212, 175, 106, 0.7);
+  border-radius: 999px;
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font: 600 0.72rem/1.15 Inter, system-ui, sans-serif;
+  text-decoration: none;
+}
+
+.hk-progress-chip__seal {
+  display: grid;
+  place-items: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  flex: 0 0 auto;
+  color: var(--hk-ink);
+  background: linear-gradient(145deg, #f0d28e, var(--hk-gold-deep));
+  border-radius: 50%;
+  font-family: "Playfair Display", Georgia, serif;
+  font-size: 0.82rem;
+  box-shadow: inset 0 0 0 2px rgba(255, 250, 226, 0.28);
+}
+
+.hk-progress-chip__copy { min-width: 0; }
+.hk-progress-chip__title { display: block; white-space: nowrap; }
+.hk-progress-chip__count { display: block; margin-top: 0.1rem; color: var(--hk-gold); font-size: 0.65rem; font-weight: 500; }
+
+.hk-toast {
+  position: fixed;
+  z-index: 2147483000;
+  left: 50%;
+  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1rem 1.1rem;
+  color: var(--hk-cream);
+  background: rgba(28, 18, 8, 0.96);
+  border: 1px solid var(--hk-gold-deep);
+  border-radius: 1rem;
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
+  transform: translate(-50%, 1rem);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 180ms ease, transform 180ms ease;
+  font: 500 0.85rem/1.45 Inter, system-ui, sans-serif;
+}
+
+.hk-toast.is-visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
+.hk-toast strong { display: block; color: var(--hk-gold); font-family: "Playfair Display", Georgia, serif; font-size: 1rem; }
+.hk-toast p { margin: 0.3rem 0 0; }
+.hk-toast a { color: #f5d98e; font-weight: 700; }
+
+.hk-unlock-modal[hidden] { display: none !important; }
+.hk-unlock-modal {
+  position: fixed;
+  z-index: 2147483600;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 1.25rem;
+  background: rgba(8, 5, 2, 0.82);
+  backdrop-filter: blur(8px);
+}
+
+.hk-unlock-modal__card {
+  position: relative;
+  width: min(31rem, 100%);
+  padding: 2rem;
+  color: var(--hk-ink);
+  text-align: center;
+  background: var(--hk-cream);
+  border: 1px solid var(--hk-gold);
+  border-radius: 1.5rem;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+}
+
+.hk-unlock-modal__medal { margin: 0 auto 1rem; display: grid; place-items: center; width: 5rem; height: 5rem; border-radius: 50%; color: var(--hk-ink); background: radial-gradient(circle at 35% 30%, #f9e4a9, var(--hk-gold-deep)); font: 700 1.35rem "Playfair Display", Georgia, serif; }
+.hk-unlock-modal h2 { margin: 0; font: 600 clamp(1.55rem, 5vw, 2.25rem)/1.1 "Playfair Display", Georgia, serif; }
+.hk-unlock-modal p { margin: 0.75rem auto 0; max-width: 25rem; font: 400 0.9rem/1.55 Inter, system-ui, sans-serif; }
+.hk-unlock-modal__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.65rem; margin-top: 1.25rem; }
+.hk-unlock-modal__actions a,
+.hk-unlock-modal__actions button { min-height: 2.75rem; padding: 0.7rem 1rem; border: 1px solid var(--hk-gold-deep); border-radius: 999px; font: 700 0.78rem Inter, sans-serif; cursor: pointer; }
+.hk-unlock-modal__actions a { color: var(--hk-cream); background: var(--hk-ink); text-decoration: none; }
+.hk-unlock-modal__actions button { color: var(--hk-ink); background: transparent; }
+
+@media (max-width: 520px) {
+  .hk-progress-chip__title { display: none; }
+  .hk-progress-chip { padding-right: 0.65rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hk-toast { transition: none; }
+}
