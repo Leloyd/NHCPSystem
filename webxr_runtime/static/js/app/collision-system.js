@@ -360,7 +360,6 @@ export class CollisionSystem {
         return {
           start: new THREE.Vector2(startX, startZ),
           end: new THREE.Vector2(endX, endZ),
-          thickness: Math.max(0, Number(segment[2]) || 0),
         };
       })
       .filter(Boolean);
@@ -498,27 +497,29 @@ export class CollisionSystem {
     const epsilon = 1e-4;
 
     for (const segment of this.walkBoundarySegments) {
-      const { start, end, thickness: clearance } = segment;
+      const { start, end } = segment;
       const movementX = feetPosition.x - previousFeetPosition.x;
       const movementZ = feetPosition.z - previousFeetPosition.z;
       const edgeX = end.x - start.x;
       const edgeZ = end.y - start.y;
-      const edgeLengthSq = edgeX * edgeX + edgeZ * edgeZ;
-      const edgeLength = Math.sqrt(edgeLengthSq);
+      const denominator = movementX * edgeZ - movementZ * edgeX;
 
-      if (edgeLength <= 1e-8) {
+      if (Math.abs(denominator) <= 1e-10) {
         continue;
       }
 
-      const denominator = movementX * edgeZ - movementZ * edgeX;
-      let crossedSegment = false;
+      const offsetX = start.x - previousFeetPosition.x;
+      const offsetZ = start.y - previousFeetPosition.z;
+      const movementT = (offsetX * edgeZ - offsetZ * edgeX) / denominator;
+      const edgeT = (offsetX * movementZ - offsetZ * movementX) / denominator;
 
-      if (Math.abs(denominator) > 1e-10) {
-        const offsetX = start.x - previousFeetPosition.x;
-        const offsetZ = start.y - previousFeetPosition.z;
-        const movementT = (offsetX * edgeZ - offsetZ * edgeX) / denominator;
-        const edgeT = (offsetX * movementZ - offsetZ * movementX) / denominator;
-        crossedSegment = movementT >= 0 && movementT <= 1 && edgeT >= 0 && edgeT <= 1;
+      if (movementT < 0 || movementT > 1 || edgeT < 0 || edgeT > 1) {
+        continue;
+      }
+
+      const edgeLength = Math.hypot(edgeX, edgeZ);
+      if (edgeLength <= 1e-8) {
+        continue;
       }
 
       const normalX = -edgeZ / edgeLength;
@@ -527,61 +528,15 @@ export class CollisionSystem {
         (previousFeetPosition.x - start.x) * normalX
         + (previousFeetPosition.z - start.y) * normalZ;
       const side = previousDistance < 0 ? -1 : 1;
-
-      if (crossedSegment) {
-        const projectedT = THREE.MathUtils.clamp(
-          ((feetPosition.x - start.x) * edgeX + (feetPosition.z - start.y) * edgeZ)
-            / edgeLengthSq,
-          0,
-          1,
-        );
-
-        feetPosition.x = start.x + edgeX * projectedT + normalX * side * epsilon;
-        feetPosition.z = start.y + edgeZ * projectedT + normalZ * side * epsilon;
-      }
-
-      if (clearance <= 0) {
-        continue;
-      }
-
-      const closestT = THREE.MathUtils.clamp(
+      const projectedT = THREE.MathUtils.clamp(
         ((feetPosition.x - start.x) * edgeX + (feetPosition.z - start.y) * edgeZ)
-          / edgeLengthSq,
+          / (edgeLength * edgeLength),
         0,
         1,
       );
-      const closestX = start.x + edgeX * closestT;
-      const closestZ = start.y + edgeZ * closestT;
-      const distanceX = feetPosition.x - closestX;
-      const distanceZ = feetPosition.z - closestZ;
-      const distanceSq = distanceX * distanceX + distanceZ * distanceZ;
 
-      if (distanceSq >= clearance * clearance) {
-        continue;
-      }
-
-      const previousClosestT = THREE.MathUtils.clamp(
-        ((previousFeetPosition.x - start.x) * edgeX
-          + (previousFeetPosition.z - start.y) * edgeZ) / edgeLengthSq,
-        0,
-        1,
-      );
-      const previousClosestX = start.x + edgeX * previousClosestT;
-      const previousClosestZ = start.y + edgeZ * previousClosestT;
-      let pushX = previousFeetPosition.x - previousClosestX;
-      let pushZ = previousFeetPosition.z - previousClosestZ;
-      const pushLength = Math.hypot(pushX, pushZ);
-
-      if (pushLength > 1e-8) {
-        pushX /= pushLength;
-        pushZ /= pushLength;
-      } else {
-        pushX = normalX * side;
-        pushZ = normalZ * side;
-      }
-
-      feetPosition.x = closestX + pushX * clearance;
-      feetPosition.z = closestZ + pushZ * clearance;
+      feetPosition.x = start.x + edgeX * projectedT + normalX * side * epsilon;
+      feetPosition.z = start.y + edgeZ * projectedT + normalZ * side * epsilon;
     }
   }
 
