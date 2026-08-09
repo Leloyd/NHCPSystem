@@ -36,9 +36,12 @@
 
       {% set trail_fragments = heritage_keeper.fragments[:heritage_keeper.trail_required] %}
       {% set ar_fragments = heritage_keeper.fragments[heritage_keeper.trail_required:] %}
-      <header class="hk-masthead">
+      <header class="hk-masthead{% if heritage_keeper.unlocked %} is-complete{% endif %}">
         <div class="hk-masthead__copy">
-          <p class="hk-kicker"><span data-lang-en>Personal collection record</span><span data-lang-tl>Tala ng personal na koleksiyon</span></p>
+          <div class="hk-masthead__heading-line">
+            <p class="hk-kicker"><span data-lang-en>Personal collection record</span><span data-lang-tl>Tala ng personal na koleksiyon</span></p>
+            <span class="hk-masthead__state"><span aria-hidden="true">{{ '●' if heritage_keeper.unlocked else '○' }}</span><span data-lang-en>{{ 'Restoration complete' if heritage_keeper.unlocked else 'Restoration in progress' }}</span><span data-lang-tl>{{ 'Kumpleto ang pagpapanumbalik' if heritage_keeper.unlocked else 'Isinasagawa ang pagpapanumbalik' }}</span></span>
+          </div>
           <h1><span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></h1>
           <p class="hk-masthead__lead">
             <span data-lang-en>The master seal records both restoration journeys. Complete all ten Heritage Trail stops and restore every registered AR artifact to reveal it in full.</span>
@@ -98,7 +101,7 @@
         </div>
       </header>
 
-      <section class="hk-recovery" aria-labelledby="arRecoveryTitle">
+      <section class="hk-recovery hk-recovery--ar" aria-labelledby="arRecoveryTitle" data-plate="I">
         <div class="hk-recovery__layout">
           <div class="hk-recovery__copy">
             <p class="hk-section-label"><span data-lang-en>Restoration plate I</span><span data-lang-tl>Plaka ng pagpapanumbalik I</span></p>
@@ -142,7 +145,7 @@
         </div>
       </section>
 
-      <section class="hk-recovery hk-recovery--trail" aria-labelledby="trailRecoveryTitle">
+      <section class="hk-recovery hk-recovery--trail" aria-labelledby="trailRecoveryTitle" data-plate="II">
         <div class="hk-recovery__layout">
           <div class="hk-recovery__copy">
             <p class="hk-section-label"><span data-lang-en>Restoration plate II</span><span data-lang-tl>Plaka ng pagpapanumbalik II</span></p>
@@ -245,8 +248,8 @@
         </div>
 
         <div class="hk-actions">
-          <a class="hk-action" href="/trail"><span data-lang-en>Continue the Heritage Trail</span><span data-lang-tl>Ipagpatuloy ang Heritage Trail</span></a>
-          <a class="hk-action hk-action--secondary" href="/ar-content-detection"><span data-lang-en>Restore AR Artifacts</span><span data-lang-tl>Magbalik ng AR Artifacts</span></a>
+          <a class="hk-action" href="/trail"><span data-lang-en>Continue the Heritage Trail</span><span data-lang-tl>Ipagpatuloy ang Heritage Trail</span><span aria-hidden="true">→</span></a>
+          <a class="hk-action hk-action--secondary" href="/ar-content-detection"><span data-lang-en>Restore AR Artifacts</span><span data-lang-tl>Magbalik ng AR Artifacts</span><span aria-hidden="true">→</span></a>
         </div>
       </section>
 
