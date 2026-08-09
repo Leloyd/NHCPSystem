@@ -36,7 +36,7 @@ def get_heritage_keeper_award(user_id: int) -> dict[str, Any] | None:
     response = (
         get_supabase_client()
         .table(HERITAGE_KEEPER_AWARDS_TABLE)
-        .select("user_id, certificate_code, unlocked_at")
+        .select("user_id, unlocked_at")
         .eq("user_id", int(user_id))
         .limit(1)
         .execute()
@@ -45,11 +45,11 @@ def get_heritage_keeper_award(user_id: int) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
-def create_heritage_keeper_award(user_id: int, certificate_code: str) -> dict[str, Any]:
+def create_heritage_keeper_award(user_id: int) -> dict[str, Any]:
     response = (
         get_supabase_client()
         .table(HERITAGE_KEEPER_AWARDS_TABLE)
-        .insert({"user_id": int(user_id), "certificate_code": certificate_code})
+        .insert({"user_id": int(user_id)})
         .execute()
     )
     rows = list(response.data or [])

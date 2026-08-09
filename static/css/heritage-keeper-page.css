@@ -199,10 +199,10 @@
   aspect-ratio: 1;
   min-height: 0;
   margin: 0;
-  background: radial-gradient(circle at 50% 42%, #382313, #160d06 72%);
+  background: transparent;
   border: 0;
-  border-radius: 50%;
-  box-shadow: inset 0 0 4rem rgba(0, 0, 0, 0.62), 0 1rem 2.2rem rgba(70, 43, 14, 0.2);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .hk-recovery__viewer .hk-fragment-tray::before { display: none; }
@@ -230,14 +230,10 @@
   cursor: grab;
   touch-action: none;
   color: #f7ecd7;
-  background:
-    linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px),
-    linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px),
-    radial-gradient(circle at 50% 42%, #382313, #160d06 72%);
-  background-size: 4rem 4rem, 4rem 4rem, auto;
+  background: transparent;
   border: 0;
   outline: 0;
-  box-shadow: inset 0 0 4rem rgba(0, 0, 0, 0.56);
+  box-shadow: none;
 }
 
 .hk-masthead__seal {
@@ -249,10 +245,10 @@
   aspect-ratio: 1;
   min-height: 0;
   margin: 0;
-  background: radial-gradient(circle at 50% 42%, #382313, #160d06 72%);
+  background: transparent;
   border: 0;
-  border-radius: 50%;
-  box-shadow: inset 0 0 4rem rgba(0, 0, 0, 0.62), 0 1.25rem 2.8rem rgba(0, 0, 0, 0.28);
+  border-radius: 0;
+  box-shadow: none;
 }
 
 .hk-masthead .hk-fragment-tray::before { display: none; }
@@ -287,9 +283,6 @@
 .hk-fragment-tray__spinner { width: 2.4rem; height: 2.4rem; border: 2px solid rgba(212, 175, 106, 0.18); border-top-color: var(--hk-gold-light); border-radius: 50%; animation: hk-fragment-spin 900ms linear infinite; }
 .hk-fragment-tray__error { color: #fff1e5; }
 @keyframes hk-fragment-spin { to { transform: rotate(360deg); } }
-
-.hk-fragment-tray--empty { display: grid; place-items: center; align-content: center; cursor: default; text-align: center; }
-.hk-fragment-tray--empty::before { display: none; }
 
 .hk-register__columns { display: grid; grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.25fr); gap: 1.4rem; margin-top: 1.75rem; }
 .hk-ledger { border-top: 2px solid var(--hk-ink); border-bottom: 1px solid var(--hk-rule); }
@@ -336,8 +329,7 @@ html[data-theme="dark"] .hk-action--secondary:hover { background: #2c1d0f; }
 html[data-contrast="on"] .hk-page,
 html[data-contrast="on"] .hk-masthead,
 html[data-contrast="on"] .hk-recovery,
-html[data-contrast="on"] .hk-register,
-html[data-contrast="on"] .hk-fragment-tray { color: #fff !important; background: #000 !important; }
+html[data-contrast="on"] .hk-register { color: #fff !important; background: #000 !important; }
 html[data-contrast="on"] .hk-page__crumb,
 html[data-contrast="on"] .hk-masthead__lead,
 html[data-contrast="on"] .hk-recovery__heading > p,

@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import secrets
 from typing import Any
 
 from heritage_keeper_repository import (
@@ -87,7 +86,6 @@ def empty_heritage_keeper_progress() -> dict[str, Any]:
         "trail_complete": False,
         "ar_complete": False,
         "unlocked": False,
-        "certificate_code": "",
         "unlocked_at": "",
         "fragments": fragments,
     }
@@ -147,7 +145,6 @@ def _build_progress(events: list[dict[str, Any]], award: dict[str, Any] | None) 
         "trail_complete": trail_complete,
         "ar_complete": ar_complete,
         "unlocked": bool(award) and trail_complete and ar_complete,
-        "certificate_code": str((award or {}).get("certificate_code") or ""),
         "unlocked_at": str((award or {}).get("unlocked_at") or ""),
         "fragments": fragments,
     })
@@ -193,9 +190,8 @@ def record_heritage_keeper_fragment(user_id: int, source: str, item_key: str) ->
     progress = _build_progress(events_after, award_before)
     award_just_unlocked = False
     if progress["trail_complete"] and progress["ar_complete"] and not award_before:
-        certificate_code = "NHCP-HK-" + secrets.token_hex(5).upper()
         try:
-            create_heritage_keeper_award(user_id, certificate_code)
+            create_heritage_keeper_award(user_id)
             award_just_unlocked = True
         except Exception:
             pass

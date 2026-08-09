@@ -77,11 +77,9 @@ CREATE TABLE public.heritage_keeper_events (
 );
 CREATE TABLE public.heritage_keeper_awards (
   user_id bigint NOT NULL,
-  certificate_code text NOT NULL UNIQUE,
   unlocked_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT heritage_keeper_awards_pkey PRIMARY KEY (user_id),
-  CONSTRAINT heritage_keeper_awards_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
-  CONSTRAINT heritage_keeper_awards_certificate_code_check CHECK (certificate_code ~ '^NHCP-HK-[A-F0-9]{10}$')
+  CONSTRAINT heritage_keeper_awards_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE
 );
 CREATE TABLE public.tour_bookings (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

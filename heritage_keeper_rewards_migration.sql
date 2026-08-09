@@ -1,4 +1,4 @@
--- Heritage Keeper progression and certificate award.
+-- Heritage Keeper progression and completion award.
 -- Run this migration once in the Supabase SQL Editor.
 
 begin;
@@ -17,10 +17,7 @@ create index if not exists heritage_keeper_events_user_completed_idx
 
 create table if not exists public.heritage_keeper_awards (
   user_id bigint primary key references public.public_users(id) on delete cascade,
-  certificate_code text not null unique,
-  unlocked_at timestamp with time zone not null default timezone('utc'::text, now()),
-  constraint heritage_keeper_awards_certificate_code_check
-    check (certificate_code ~ '^NHCP-HK-[A-F0-9]{10}$')
+  unlocked_at timestamp with time zone not null default timezone('utc'::text, now())
 );
 
 alter table public.heritage_keeper_events enable row level security;
