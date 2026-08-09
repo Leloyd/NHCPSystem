@@ -125,7 +125,7 @@ const CHURCH_HOTSPOT_MARKERS = [
   },
   {
     id: 'hotspot-5',
-    position: [-4.40, 2.00, -0.19],
+    position: [-4.10, 2.50, -0.19],
     color: 0x8fd3ff,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
