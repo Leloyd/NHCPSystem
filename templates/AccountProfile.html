@@ -4,16 +4,11 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>My Account | Museo ng Libingan sa Ilalim ng Lupa</title>
-    <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" />
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Playfair+Display:wght@500;600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     {% include 'partials/_site_prefs_head.html' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/account-profile.css') }}" />
   </head>
-  <body class="ap-page">
+  <body class="ap-page min-h-screen bg-[#f7f1e4] text-stone-900">
     {% set public_active_page = '' %}
     {% include 'partials/_public_top_nav.html' %}
 
@@ -23,196 +18,276 @@
     {% set _roles_clean = (current_public_user.profile_roles or '') | replace('[',' ') | replace(']',' ') | replace('"',' ') | replace("'", ' ') %}
     {% set _roles = _roles_clean.split(',') | map('trim') | select | list %}
     {% set _location = [current_public_user.city_text, current_public_user.province_text, current_public_user.country_text] | select | join(', ') %}
-    {% set _hk = account_dashboard.heritage_keeper %}
 
-    <main class="ap-page__main">
-      <nav class="ap-breadcrumb" aria-label="Breadcrumb">
-        <a href="{{ url_for('index') }}"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
-        <span aria-hidden="true">&gt;</span>
-        <span class="ap-breadcrumb__current" aria-current="page"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></span>
-      </nav>
-
-      <header class="ap-masthead">
-        {% if current_public_user_avatar %}
-        <img class="ap-portrait" src="{{ current_public_user_avatar }}" alt="Your profile picture" referrerpolicy="no-referrer" />
-        {% else %}
-        <div class="ap-portrait" aria-hidden="true">{{ _initials }}</div>
-        {% endif %}
-        <div class="ap-masthead__copy">
-          <p class="ap-eyebrow"><span data-lang-en>Personal museum record</span><span data-lang-tl>Personal na tala sa museo</span></p>
-          <h1>{{ _name }}</h1>
-          <p class="ap-masthead__description">
-            <span data-lang-en>Your saved heritage materials, museum services, participation records, and learning progress.</span>
-            <span data-lang-tl>Ang iyong mga naka-save na materyal, serbisyo ng museo, tala ng pakikilahok, at progreso sa pagkatuto.</span>
-          </p>
+    <main class="pt-24 sm:pt-28 pb-14 px-4">
+      <div class="max-w-7xl mx-auto">
+        <!-- Breadcrumb -->
+        <div class="flex justify-start mb-4">
+          <nav class="ap-breadcrumb flex items-center gap-2 text-xs text-[#9a8060]">
+            <a href="/" class="hover:text-[#b8963e] transition-colors"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
+            <span class="ap-breadcrumb-current text-[#b8963e]"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></span>
+          </nav>
         </div>
-        <div class="ap-member-since">
-          <span data-lang-en>Member since</span><span data-lang-tl>Miyembro mula</span>
-          <strong>{{ current_public_user.created_at[:10] if current_public_user.created_at else '—' }}</strong>
-        </div>
-        <span class="ap-masthead__stamp" aria-hidden="true"><span data-lang-en>Visitor record</span><span data-lang-tl>Tala ng bisita</span></span>
-      </header>
 
-      <div class="ap-layout">
-        <aside class="ap-sidebar">
-          <div class="ap-sidebar__sticky">
-            <section class="ap-card" aria-labelledby="accountRecordHeading">
-              <header class="ap-card__heading">
-                <i data-lucide="book-open" aria-hidden="true"></i>
-                <h2 id="accountRecordHeading"><span data-lang-en>Account record</span><span data-lang-tl>Tala ng account</span></h2>
-              </header>
+        <!-- Hero -->
+        <section class="ap-profile-hero relative overflow-hidden rounded-3xl px-6 py-7 sm:px-9 sm:py-9 text-white shadow-lg" style="background: linear-gradient(135deg, #2c1a0e 0%, #1a1008 55%, #3d2b1f 100%);">
+          <div class="absolute -top-16 -right-10 h-52 w-52 rounded-full opacity-20 blur-3xl" style="background:#c9a84c;"></div>
+          <div class="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:gap-6">
+            {% if current_public_user_avatar %}
+            <img src="{{ current_public_user_avatar }}" alt="Your profile picture" referrerpolicy="no-referrer" class="h-16 w-16 sm:h-20 sm:w-20 flex-none rounded-2xl object-cover shadow-lg ring-2 ring-white/20" />
+            {% else %}
+            <div class="ap-avatar-fallback flex h-16 w-16 sm:h-20 sm:w-20 flex-none items-center justify-center rounded-2xl text-2xl sm:text-3xl font-semibold text-stone-950 shadow-lg" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
+            {% endif %}
+            <div class="min-w-0">
+              <p class="ap-profile-hero__eyebrow text-[11px] uppercase tracking-[0.28em] text-amber-200/80"><span data-lang-en>Welcome back</span><span data-lang-tl>Maligayang pagbabalik</span></p>
+              <h1 class="mt-2 text-2xl sm:text-4xl font-serif leading-tight truncate">{{ _name }}</h1>
+              <p class="mt-2 max-w-2xl text-sm sm:text-base leading-relaxed text-stone-300"><span data-lang-en>Your bookmarks, bookings, submissions, and feedback — all in one place.</span><span data-lang-tl>Ang iyong mga bookmark, booking, pagsusumite, at puna — nasa iisang lugar.</span></p>
+            </div>
+          </div>
+        </section>
 
-              <div class="ap-identity">
+        <!-- Sidebar + content -->
+        <div class="mt-6 grid gap-6 lg:grid-cols-[19rem_minmax(0,1fr)]">
+          <!-- ============ Sidebar ============ -->
+          <aside class="space-y-4 self-start lg:sticky lg:top-24">
+            <!-- Profile card -->
+            <div class="rounded-3xl border border-amber-200/70 bg-white p-6 shadow-sm">
+              <div class="flex items-center gap-3">
                 {% if current_public_user_avatar %}
-                <img class="ap-portrait" src="{{ current_public_user_avatar }}" alt="Your profile picture" referrerpolicy="no-referrer" />
+                <img src="{{ current_public_user_avatar }}" alt="Your profile picture" referrerpolicy="no-referrer" class="h-12 w-12 flex-none rounded-2xl object-cover" />
                 {% else %}
-                <div class="ap-portrait" aria-hidden="true">{{ _initials }}</div>
+                <div class="ap-avatar-fallback flex h-12 w-12 flex-none items-center justify-center rounded-2xl text-lg font-semibold text-stone-950" style="background: linear-gradient(135deg, #b8963e, #c9a84c);">{{ _initials }}</div>
                 {% endif %}
                 <div class="min-w-0">
-                  <p class="ap-identity__name">{{ _name }}</p>
-                  <p class="ap-identity__username">@{{ current_public_user.username }}</p>
+                  <p class="truncate font-semibold text-stone-900">{{ _name }}</p>
+                  <p class="truncate text-sm text-stone-500">@{{ current_public_user.username }}</p>
                 </div>
               </div>
 
-              <div class="ap-details">
-                <div class="ap-details__row">
-                  <i data-lucide="mail" aria-hidden="true"></i>
-                  <div>
-                    <p>{{ current_public_user.email }}</p>
-                    {% if current_public_user.email_verified_at %}<span class="ap-verified"><span data-lang-en>Verified email</span><span data-lang-tl>Beripikadong email</span></span>{% endif %}
-                  </div>
+              <div class="mt-5 space-y-3 text-sm">
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="mail" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="min-w-0 break-words text-stone-600">{{ current_public_user.email }}</span>
+                  {% if current_public_user.email_verified_at %}
+                  <span class="ml-auto inline-flex flex-none items-center rounded-full bg-green-100 px-2 py-0.5 text-[10px] font-semibold text-green-700"><span data-lang-en>Verified</span><span data-lang-tl>Beripikado</span></span>
+                  {% endif %}
                 </div>
                 {% if _location %}
-                <div class="ap-details__row"><i data-lucide="map-pin" aria-hidden="true"></i><p>{{ _location }}</p></div>
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="map-pin" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="text-stone-600">{{ _location }}</span>
+                </div>
                 {% endif %}
                 {% if current_public_user.organization %}
-                <div class="ap-details__row"><i data-lucide="building-2" aria-hidden="true"></i><p>{{ current_public_user.organization }}</p></div>
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="building-2" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="text-stone-600">{{ current_public_user.organization }}</span>
+                </div>
+                {% endif %}
+                {% if current_public_user.created_at %}
+                <div class="flex items-start gap-2.5">
+                  <i data-lucide="calendar" class="mt-0.5 h-4 w-4 flex-none text-amber-700"></i>
+                  <span class="text-stone-600"><span data-lang-en>Joined</span><span data-lang-tl>Sumali noong</span> {{ current_public_user.created_at[:10] }}</span>
+                </div>
                 {% endif %}
               </div>
 
               {% if _roles %}
-              <div class="ap-roles">
-                <p class="ap-roles__label"><span data-lang-en>Profile roles</span><span data-lang-tl>Mga tungkulin</span></p>
-                <div class="ap-roles__list">
-                  {% for role in _roles %}<span class="ap-role">{{ role }}</span>{% endfor %}
+              <div class="mt-5 border-t border-stone-100 pt-4">
+                <p class="mb-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400"><span data-lang-en>Roles</span><span data-lang-tl>Mga Tungkulin</span></p>
+                <div class="flex flex-wrap gap-1.5">
+                  {% for role in _roles %}
+                  <span class="inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800">{{ role }}</span>
+                  {% endfor %}
                 </div>
               </div>
               {% endif %}
-            </section>
+            </div>
 
-            <section class="ap-card" aria-labelledby="quickLinksHeading">
-              <header class="ap-card__heading">
-                <i data-lucide="compass" aria-hidden="true"></i>
-                <h2 id="quickLinksHeading"><span data-lang-en>Useful links</span><span data-lang-tl>Mga kapaki-pakinabang na link</span></h2>
-              </header>
-              <nav class="ap-quick-nav">
-                <a href="{{ url_for('account_settings') }}"><i data-lucide="settings" aria-hidden="true"></i><span><span data-lang-en>Account Settings</span><span data-lang-tl>Mga Setting ng Account</span></span><span class="ap-quick-nav__arrow" aria-hidden="true">›</span></a>
-                <a href="/online-gallery"><i data-lucide="images" aria-hidden="true"></i><span><span data-lang-en>Online Gallery</span><span data-lang-tl>Online Gallery</span></span><span class="ap-quick-nav__arrow" aria-hidden="true">›</span></a>
-                <a href="/virtual-tour"><i data-lucide="map" aria-hidden="true"></i><span><span data-lang-en>360° Virtual Tour</span><span data-lang-tl>360° Virtual Tour</span></span><span class="ap-quick-nav__arrow" aria-hidden="true">›</span></a>
-                <a href="/community-participation"><i data-lucide="calendar-days" aria-hidden="true"></i><span><span data-lang-en>Community &amp; Bookings</span><span data-lang-tl>Komunidad at mga Booking</span></span><span class="ap-quick-nav__arrow" aria-hidden="true">›</span></a>
-                <a href="/support"><i data-lucide="circle-help" aria-hidden="true"></i><span><span data-lang-en>Support</span><span data-lang-tl>Suporta</span></span><span class="ap-quick-nav__arrow" aria-hidden="true">›</span></a>
+            <!-- Quick actions -->
+            <div class="rounded-3xl border border-amber-200/70 bg-white p-4 shadow-sm">
+              <p class="mb-2 px-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-stone-400"><span data-lang-en>Quick actions</span><span data-lang-tl>Mabilis na mga aksyon</span></p>
+              <nav class="grid gap-1">
+                <a href="{{ url_for('account_settings') }}" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="settings" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Account Settings</span><span data-lang-tl>Mga Setting ng Account</span>
+                </a>
+                <a href="/online-gallery" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="images" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Browse Online Gallery</span><span data-lang-tl>Tingnan ang Online Gallery</span>
+                </a>
+                <a href="/virtual-tour" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="compass" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Start the Virtual Tour</span><span data-lang-tl>Simulan ang Virtual Tour</span>
+                </a>
+                <a href="/community-participation" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="users" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Community &amp; Bookings</span><span data-lang-tl>Komunidad at mga Booking</span>
+                </a>
+                <a href="/support" class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium text-stone-700 transition-colors hover:bg-amber-50 hover:text-amber-800">
+                  <i data-lucide="life-buoy" class="h-4 w-4 text-amber-700"></i> <span data-lang-en>Support &amp; Governance</span><span data-lang-tl>Suporta at Pamamahala</span>
+                </a>
               </nav>
+            </div>
+          </aside>
+
+          <!-- ============ Main content ============ -->
+          <div class="space-y-6">
+            <!-- Stats -->
+            <section class="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {% set _stats = [
+                {'label_en': 'Bookmarks', 'label_tl': 'Mga Bookmark', 'value': account_dashboard.bookmarked_items|length, 'icon': 'bookmark'},
+                {'label_en': 'Tour Bookings', 'label_tl': 'Mga Booking sa Tour', 'value': account_dashboard.tour_bookings|length, 'icon': 'calendar-check'},
+                {'label_en': 'Submissions', 'label_tl': 'Mga Pagsusumite', 'value': account_dashboard.participation_submissions|length, 'icon': 'file-text'},
+                {'label_en': 'Feedback', 'label_tl': 'Puna', 'value': account_dashboard.visitor_feedback|length, 'icon': 'star'}
+              ] %}
+              {% for stat in _stats %}
+              <article class="rounded-2xl border border-amber-200/70 bg-white px-4 py-4 shadow-sm">
+                <div class="flex items-center justify-between">
+                  <span class="flex h-8 w-8 items-center justify-center rounded-lg bg-amber-100 text-amber-700"><i data-lucide="{{ stat.icon }}" class="h-4 w-4"></i></span>
+                  <span class="text-2xl font-bold text-stone-900">{{ stat.value }}</span>
+                </div>
+                <p class="mt-2 text-xs font-medium text-stone-500"><span data-lang-en>{{ stat.label_en }}</span><span data-lang-tl>{{ stat.label_tl }}</span></p>
+              </article>
+              {% endfor %}
             </section>
-          </div>
-        </aside>
 
-        <div class="ap-content">
-          <section class="ap-summary" aria-label="Account activity summary">
-            {% set _stats = [
-              {'label_en': 'Bookmarks', 'label_tl': 'Mga Bookmark', 'value': account_dashboard.bookmarked_items|length},
-              {'label_en': 'Tour Bookings', 'label_tl': 'Mga Booking sa Tour', 'value': account_dashboard.tour_bookings|length},
-              {'label_en': 'Submissions', 'label_tl': 'Mga Pagsusumite', 'value': account_dashboard.participation_submissions|length},
-              {'label_en': 'Feedback', 'label_tl': 'Mga Puna', 'value': account_dashboard.visitor_feedback|length}
-            ] %}
-            {% for stat in _stats %}
-            <div class="ap-summary__item">
-              <p class="ap-summary__value">{{ stat.value }}</p>
-              <p class="ap-summary__label"><span data-lang-en>{{ stat.label_en }}</span><span data-lang-tl>{{ stat.label_tl }}</span></p>
-            </div>
-            {% endfor %}
-          </section>
-
-          <section class="ap-keeper" aria-labelledby="keeperSummaryHeading">
-            <div class="ap-keeper__seal" aria-hidden="true">HK</div>
-            <div>
-              <p class="ap-section-label"><span data-lang-en>Account achievement</span><span data-lang-tl>Gantimpala sa account</span></p>
-              <h2 id="keeperSummaryHeading"><span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></h2>
-              <p class="ap-keeper__copy"><span data-lang-en>Recover the 10 Heritage Trail pieces and restore every registered AR artifact.</span><span data-lang-tl>Kunin ang 10 bahagi ng Heritage Trail at ibalik ang lahat ng nakatalang AR artifact.</span></p>
-              <div class="ap-keeper__progress" role="progressbar" aria-valuemin="0" aria-valuemax="{{ _hk.total_required }}" aria-valuenow="{{ _hk.total_count }}" aria-label="Heritage Keeper progress"><span style="width:{{ _hk.percentage }}%"></span></div>
-              <p class="ap-keeper__count">{{ _hk.total_count }} / {{ _hk.total_required }} <span data-lang-en>fragments recovered</span><span data-lang-tl>bahaging nakuha</span></p>
-            </div>
-            <a class="ap-button" href="{{ url_for('heritage_keeper_page') }}"><span data-lang-en>{{ 'View Certificate' if _hk.unlocked else 'View Progress' }}</span><span data-lang-tl>{{ 'Tingnan ang Sertipiko' if _hk.unlocked else 'Tingnan ang Progreso' }}</span></a>
-          </section>
-
-          <div class="ap-record-grid">
-            <section class="ap-record-section" aria-labelledby="bookmarksHeading">
-              <header class="ap-record-section__head"><i data-lucide="bookmark" aria-hidden="true"></i><h2 id="bookmarksHeading"><span data-lang-en>My Bookmarks</span><span data-lang-tl>Aking mga Bookmark</span></h2><span class="ap-record-section__count">{{ account_dashboard.bookmarked_items|length }}</span></header>
-              <div class="ap-record-section__body">
-                {% if account_dashboard.bookmarked_items %}
-                  {% for item in account_dashboard.bookmarked_items %}
-                  <a class="ap-entry" href="/online-gallery/details?item={{ item.id }}">
-                    <p class="ap-entry__kicker"><span data-lang-en>{{ item.category_en or item.category or item.category_tl }}</span><span data-lang-tl>{{ item.category_tl or item.category or item.category_en }}</span></p>
-                    <h3><span data-lang-en>{{ item.title_en or item.title or item.title_tl }}</span><span data-lang-tl>{{ item.title_tl or item.title or item.title_en }}</span></h3>
-                    <p class="ap-entry__copy"><span data-lang-en>{{ item.short_caption_en or item.short_caption or item.short_caption_tl }}</span><span data-lang-tl>{{ item.short_caption_tl or item.short_caption or item.short_caption_en }}</span></p>
-                  </a>
-                  {% endfor %}
-                {% else %}
-                <div class="ap-empty"><i data-lucide="bookmark" aria-hidden="true"></i><p><span data-lang-en>You have not bookmarked any artifacts yet.</span><span data-lang-tl>Wala ka pang naka-bookmark na artifact.</span></p></div>
-                {% endif %}
+            {% set _hk = account_dashboard.heritage_keeper %}
+            <section class="ap-keeper-card overflow-hidden rounded-3xl border border-amber-400/60 text-white shadow-lg" style="background:linear-gradient(135deg,#0d0a04,#2b1a0b 68%,#4b3217)">
+              <div class="grid items-center gap-6 p-5 sm:grid-cols-[auto_minmax(0,1fr)_auto] sm:p-6">
+                <div class="grid h-20 w-20 grid-cols-4 overflow-hidden rounded-full border-2 border-amber-400 bg-stone-950 p-1 shadow-xl" aria-hidden="true">
+                  {% for fragment in _hk.fragments %}<span class="border border-amber-900/40 {% if fragment.earned %}bg-amber-400{% else %}bg-stone-800{% endif %}"></span>{% endfor %}
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-[0.2em] text-amber-300"><span data-lang-en>Account Achievement</span><span data-lang-tl>Gantimpala sa Account</span></p>
+                  <h2 class="mt-1 font-serif text-2xl text-white"><span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></h2>
+                  {% if _hk.unlocked %}<span class="mt-2 inline-flex rounded-full border border-amber-300/60 bg-amber-300/15 px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.13em] text-amber-200"><span data-lang-en>Award earned</span><span data-lang-tl>Nakamit ang gantimpala</span></span>{% endif %}
+                  <p class="mt-2 text-sm leading-relaxed text-stone-300"><span data-lang-en>Recover the museum seal through the 10-stop Heritage Trail and complete every registered AR artifact restoration.</span><span data-lang-tl>Buuin ang selyo ng museo sa 10 hintuan ng Heritage Trail at kumpletuhin ang lahat ng nakatalang AR artifact restoration.</span></p>
+                  <div class="mt-3 h-2 overflow-hidden rounded-full bg-white/10"><span class="block h-full rounded-full bg-amber-400" style="width:{{ _hk.percentage }}%"></span></div>
+                  <p class="mt-1.5 text-xs font-semibold text-amber-200">{{ _hk.total_count }} / {{ _hk.total_required }} <span data-lang-en>fragments</span><span data-lang-tl>bahagi</span></p>
+                </div>
+                <a href="{{ url_for('heritage_keeper_page') }}" class="ap-keeper-cta inline-flex min-h-11 items-center justify-center rounded-full border border-amber-400 bg-amber-400 px-5 text-sm font-bold text-stone-950 transition hover:bg-amber-300"><span data-lang-en>{{ 'View Certificate' if _hk.unlocked else 'View Progress' }}</span><span data-lang-tl>{{ 'Tingnan ang Sertipiko' if _hk.unlocked else 'Tingnan ang Progreso' }}</span></a>
               </div>
             </section>
 
-            <section class="ap-record-section" aria-labelledby="bookingsHeading">
-              <header class="ap-record-section__head"><i data-lucide="calendar-check" aria-hidden="true"></i><h2 id="bookingsHeading"><span data-lang-en>Tour Bookings</span><span data-lang-tl>Mga Booking sa Tour</span></h2><span class="ap-record-section__count">{{ account_dashboard.tour_bookings|length }}</span></header>
-              <div class="ap-record-section__body">
-                {% if account_dashboard.tour_bookings %}
-                  {% for booking in account_dashboard.tour_bookings %}
-                  <article class="ap-entry">
-                    <div class="ap-entry__top">
-                      <div><h3>{{ booking.display_title }}</h3><p class="ap-entry__line">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p></div>
-                      <span class="ap-status {% if booking.status == 'confirmed' %}is-confirmed{% elif booking.status == 'cancelled' %}is-cancelled{% elif booking.status == 'rescheduled' %}is-rescheduled{% endif %}">{{ booking.status_label }}</span>
+            <!-- Content grid -->
+            <section class="grid gap-6 xl:grid-cols-2">
+              <!-- Bookmarks -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="bookmark" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>My Bookmarks</span><span data-lang-tl>Aking mga Bookmark</span></h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.bookmarked_items|length }}</span>
+                </div>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.bookmarked_items %}
+                    {% for item in account_dashboard.bookmarked_items %}
+                    <a href="/online-gallery/details?item={{ item.id }}" class="block rounded-2xl border border-stone-200 p-4 transition-colors hover:border-amber-400 hover:bg-amber-50/50">
+                      <p class="text-[11px] uppercase tracking-[0.16em] text-amber-700"><span data-lang-en>{{ item.category_en or item.category or item.category_tl }}</span><span data-lang-tl>{{ item.category_tl or item.category or item.category_en }}</span></p>
+                      <h3 class="mt-1.5 font-semibold text-stone-900"><span data-lang-en>{{ item.title_en or item.title or item.title_tl }}</span><span data-lang-tl>{{ item.title_tl or item.title or item.title_en }}</span></h3>
+                      <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-2"><span data-lang-en>{{ item.short_caption_en or item.short_caption or item.short_caption_tl }}</span><span data-lang-tl>{{ item.short_caption_tl or item.short_caption or item.short_caption_en }}</span></p>
+                    </a>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="bookmark" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>You have not bookmarked any artifacts yet.</span><span data-lang-tl>Wala ka pang naka-bookmark na artifact.</span></p>
                     </div>
-                    <p class="ap-entry__line">{{ booking.booking_type_label }} · {{ booking.group_size }} <span data-lang-en>visitors</span><span data-lang-tl>bisita</span></p>
-                    {% if booking.rescheduled_display_date %}<p class="ap-entry__line"><span data-lang-en>Rescheduled:</span><span data-lang-tl>Inilipat:</span> {{ booking.rescheduled_display_date }}</p>{% endif %}
-                    {% if booking.decision_reason %}<p class="ap-entry__line"><span data-lang-en>Reason:</span><span data-lang-tl>Dahilan:</span> {{ booking.decision_reason }}</p>{% endif %}
-                  </article>
-                  {% endfor %}
-                {% else %}
-                <div class="ap-empty"><i data-lucide="calendar-x" aria-hidden="true"></i><p><span data-lang-en>No booking requests yet.</span><span data-lang-tl>Wala pang kahilingan para sa booking.</span></p></div>
-                {% endif %}
-              </div>
-            </section>
+                  {% endif %}
+                </div>
+              </article>
 
-            <section class="ap-record-section" aria-labelledby="participationHeading">
-              <header class="ap-record-section__head"><i data-lucide="file-text" aria-hidden="true"></i><h2 id="participationHeading"><span data-lang-en>Participation History</span><span data-lang-tl>Kasaysayan ng Pakikilahok</span></h2><span class="ap-record-section__count">{{ account_dashboard.participation_submissions|length }}</span></header>
-              <div class="ap-record-section__body">
-                {% if account_dashboard.participation_submissions %}
-                  {% for submission in account_dashboard.participation_submissions %}
-                  <article class="ap-entry">
-                    <div class="ap-entry__top"><div><p class="ap-entry__kicker">{{ submission.submission_type|replace('_', ' ') }}</p><h3>{{ submission.title }}</h3></div><span class="ap-status">{{ submission.status|replace('_', ' ') }}</span></div>
-                    <p class="ap-entry__copy">{{ submission.description or submission.story_content }}</p>
-                  </article>
-                  {% endfor %}
-                {% else %}
-                <div class="ap-empty"><i data-lucide="file-text" aria-hidden="true"></i><p><span data-lang-en>No participation submissions yet.</span><span data-lang-tl>Wala pang pagsusumite para sa pakikilahok.</span></p></div>
-                {% endif %}
-              </div>
-            </section>
+              <!-- Tour Bookings -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="calendar-check" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>My Tour Bookings</span><span data-lang-tl>Aking mga Booking sa Tour</span></h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.tour_bookings|length }}</span>
+                </div>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.tour_bookings %}
+                    {% for booking in account_dashboard.tour_bookings %}
+                    <div class="rounded-2xl border border-stone-200 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <h3 class="font-semibold text-stone-900">{{ booking.display_title }}</h3>
+                          <p class="mt-1 text-sm text-stone-600">{{ booking.display_date }}{% if booking.time %} · {{ booking.time }}{% endif %}</p>
+                          <p class="mt-1 text-sm text-stone-600">{{ booking.booking_type_label }} · {{ booking.group_size }} <span data-lang-en>visitors</span><span data-lang-tl>bisita</span></p>
+                          {% if booking.rescheduled_display_date %}
+                          <p class="mt-1 text-sm text-stone-600"><span data-lang-en>Rescheduled:</span><span data-lang-tl>Inilipat ng iskedyul:</span> {{ booking.rescheduled_display_date }}</p>
+                          {% endif %}
+                          {% if booking.decision_reason %}
+                          <p class="mt-1 text-sm text-stone-500"><span data-lang-en>Reason:</span><span data-lang-tl>Dahilan:</span> {{ booking.decision_reason }}</p>
+                          {% endif %}
+                        </div>
+                        <span class="inline-flex flex-none rounded-full px-3 py-1 text-xs font-semibold {% if booking.status == 'confirmed' %}bg-green-100 text-green-800{% elif booking.status == 'cancelled' %}bg-red-100 text-red-700{% elif booking.status == 'rescheduled' %}bg-blue-100 text-blue-800{% else %}bg-amber-100 text-amber-800{% endif %}">{{ booking.status_label }}</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="calendar-x" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>No booking requests yet.</span><span data-lang-tl>Wala pang kahilingan para sa booking.</span></p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
 
-            <section class="ap-record-section" aria-labelledby="feedbackHeading">
-              <header class="ap-record-section__head"><i data-lucide="star" aria-hidden="true"></i><h2 id="feedbackHeading"><span data-lang-en>Visitor Feedback</span><span data-lang-tl>Puna ng Bisita</span></h2><span class="ap-record-section__count">{{ account_dashboard.visitor_feedback|length }}</span></header>
-              <div class="ap-record-section__body">
-                {% if account_dashboard.visitor_feedback %}
-                  {% for feedback in account_dashboard.visitor_feedback %}
-                  <article class="ap-entry">
-                    <div class="ap-entry__top"><h3>{{ feedback.visit_type|replace('-', ' ')|title }} · {{ feedback.rating }}/5</h3><span class="ap-status">{{ feedback.status|title }}</span></div>
-                    <p class="ap-entry__copy">{{ feedback.comments }}</p>
-                  </article>
-                  {% endfor %}
-                {% else %}
-                <div class="ap-empty"><i data-lucide="star" aria-hidden="true"></i><p><span data-lang-en>No visitor feedback submitted yet.</span><span data-lang-tl>Wala pang naisumiteng puna ng bisita.</span></p></div>
-                {% endif %}
-              </div>
+              <!-- Participation -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="file-text" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>Participation History</span><span data-lang-tl>Kasaysayan ng Pakikilahok</span></h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.participation_submissions|length }}</span>
+                </div>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.participation_submissions %}
+                    {% for submission in account_dashboard.participation_submissions %}
+                    <div class="rounded-2xl border border-stone-200 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <p class="text-[11px] uppercase tracking-[0.16em] text-amber-700">{{ submission.submission_type|replace('_', ' ') }}</p>
+                          <h3 class="mt-1.5 font-semibold text-stone-900">{{ submission.title }}</h3>
+                          <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-2">{{ submission.description or submission.story_content }}</p>
+                        </div>
+                        <span class="inline-flex flex-none rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700">{{ submission.status|replace('_', ' ') }}</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="file-text" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>No participation submissions yet.</span><span data-lang-tl>Wala pang pagsusumite para sa pakikilahok.</span></p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
+
+              <!-- Feedback -->
+              <article class="flex flex-col overflow-hidden rounded-3xl border border-amber-200/70 bg-white shadow-sm">
+                <div class="flex items-center gap-2.5 border-b border-stone-100 px-5 py-4">
+                  <i data-lucide="star" class="h-4 w-4 text-amber-700"></i>
+                  <h2 class="text-lg font-serif text-stone-900"><span data-lang-en>Visitor Feedback</span><span data-lang-tl>Puna ng Bisita</span></h2>
+                  <span class="ml-auto rounded-full bg-stone-100 px-2.5 py-0.5 text-xs font-semibold text-stone-600">{{ account_dashboard.visitor_feedback|length }}</span>
+                </div>
+                <div class="max-h-[22rem] space-y-3 overflow-y-auto p-4">
+                  {% if account_dashboard.visitor_feedback %}
+                    {% for feedback in account_dashboard.visitor_feedback %}
+                    <div class="rounded-2xl border border-stone-200 p-4">
+                      <div class="flex items-start justify-between gap-3">
+                        <div class="min-w-0">
+                          <h3 class="font-semibold text-stone-900">{{ feedback.visit_type|replace('-', ' ')|title }} · {{ feedback.rating }}/5</h3>
+                          <p class="mt-1.5 text-sm leading-relaxed text-stone-600 line-clamp-3">{{ feedback.comments }}</p>
+                        </div>
+                        <span class="inline-flex flex-none rounded-full bg-stone-100 px-3 py-1 text-xs font-semibold text-stone-700">{{ feedback.status|title }}</span>
+                      </div>
+                    </div>
+                    {% endfor %}
+                  {% else %}
+                    <div class="flex flex-col items-center justify-center py-8 text-center">
+                      <i data-lucide="star" class="h-7 w-7 text-stone-300"></i>
+                      <p class="mt-2 text-sm text-stone-500"><span data-lang-en>No visitor feedback submitted yet.</span><span data-lang-tl>Wala pang naisumiteng puna ng bisita.</span></p>
+                    </div>
+                  {% endif %}
+                </div>
+              </article>
             </section>
           </div>
         </div>
@@ -221,7 +296,11 @@
 
     {% include 'partials/_site_accessibility_fab.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script>if (window.lucide) window.lucide.createIcons();</script>
+    <script>
+      if (window.lucide) {
+        lucide.createIcons();
+      }
+    </script>
     {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>
