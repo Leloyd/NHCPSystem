@@ -191,7 +191,7 @@
 }
 
 .hk-recovery__viewer {
-  width: min(100%, 24rem);
+  width: min(100%, 20rem);
   justify-self: center;
 }
 
@@ -237,7 +237,7 @@
 }
 
 .hk-masthead__seal {
-  width: min(100%, 30rem);
+  width: min(100%, 22rem);
   justify-self: center;
 }
 
@@ -354,13 +354,13 @@ html[data-contrast="on"] .hk-action { color: #000 !important; background: #ffdf0
 
 @media (max-width: 820px) {
   .hk-masthead { grid-template-columns: 1fr; }
-  .hk-masthead__seal { width: min(100%, 25rem); }
+  .hk-masthead__seal { width: min(82vw, 21rem, 100%); }
   .hk-masthead__progress { grid-template-columns: 1fr; }
   .hk-tally { display: flex; align-items: baseline; gap: 0.35rem; min-width: 0; padding: 0 0 1.3rem; border-right: 0; border-bottom: 1px solid rgba(212, 175, 106, 0.32); }
   .hk-tally__label { margin: 0 0 0 0.65rem; }
   .hk-register__columns { grid-template-columns: 1fr; }
   .hk-recovery__layout { grid-template-columns: 1fr; }
-  .hk-recovery__viewer { width: min(100%, 25rem); }
+  .hk-recovery__viewer { width: min(82vw, 19rem, 100%); }
 }
 
 @media (max-width: 560px) {

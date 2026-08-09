@@ -63,6 +63,10 @@ viewers.forEach((viewer) => {
     let pointerY = 0;
     let ready = false;
     let frameId = 0;
+    let fittedModelSize = null;
+
+    const cameraDistance = 4.6;
+    const modelFrameFill = showsWholeModel ? 0.74 : 0.78;
 
     function cloneMaterial(material) {
       const next = material.clone();
@@ -85,19 +89,28 @@ viewers.forEach((viewer) => {
       });
     }
 
+    function applyResponsiveModelFit() {
+      if (!fittedModelSize) return;
+
+      const verticalView = 2 * cameraDistance * Math.tan(THREE.MathUtils.degToRad(camera.fov * 0.5));
+      const horizontalView = verticalView * camera.aspect;
+      const availableDiameter = Math.min(verticalView, horizontalView) * modelFrameFill;
+      const modelDiameter = Math.max(fittedModelSize.x, fittedModelSize.y, fittedModelSize.z, 0.001);
+
+      displayRoot.scale.setScalar(availableDiameter / modelDiameter);
+    }
+
     function fitFragmentsToView(modelRoot, completeBounds) {
       displayRoot.position.set(0, 0, 0);
       displayRoot.scale.setScalar(1);
       displayRoot.updateMatrixWorld(true);
 
       const center = completeBounds.getCenter(new THREE.Vector3());
-      const size = completeBounds.getSize(new THREE.Vector3());
-      const largest = Math.max(size.x, size.y, size.z, 0.001);
-
       modelRoot.position.sub(center);
-      displayRoot.scale.setScalar(2.6 / largest);
-      camera.position.set(0, 0, 4.6);
+      fittedModelSize = completeBounds.getSize(new THREE.Vector3());
+      camera.position.set(0, 0, cameraDistance);
       camera.lookAt(0, 0, 0);
+      applyResponsiveModelFit();
     }
 
     function resizeRenderer() {
@@ -107,6 +120,7 @@ viewers.forEach((viewer) => {
       renderer.setSize(width, height, false);
       camera.aspect = width / height;
       camera.updateProjectionMatrix();
+      applyResponsiveModelFit();
     }
 
     function renderFrame(time) {
