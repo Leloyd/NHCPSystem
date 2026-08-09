@@ -17,8 +17,15 @@ const HOTSPOT_HELPER_COLOR = 0xffd54a;
 const HOTSPOT_HELPER_RADIUS = 0.07;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
 const MUSEUM_ZIP_NAME = 'museum.zip';
-// Museum has no hand-tuned hotspots yet; keep it empty so church markers don't leak in.
-const MUSEUM_HOTSPOT_MARKERS = [];
+const MUSEUM_HOTSPOT_MARKERS = [
+  {
+    id: 'go-to-church',
+    position: [0.67, 1.00, 0.00],
+    color: 0x8fd3ff,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+];
 // Museum is a splat-only capture (no .glb collision meshes), so these bounds
 // retain its floor height while the calibrated open segments limit travel.
 // ?spawn=x,y,z overrides the start position live for quick calibration.
@@ -2046,6 +2053,14 @@ export class WebXRApp {
       this._transferToMuseum();
     });
 
+    this.interactionRegistry.register('go-to-church', () => {
+      this._transferToChurch();
+    });
+
+    this.interactionRegistry.register('go-back-to-church', () => {
+      this._transferToChurch();
+    });
+
     this.interactionRegistry.register('altar', (context) => {
       console.log('[interaction] altar selected', context);
     });
@@ -2418,7 +2433,10 @@ export class WebXRApp {
     const activeHotspots = this._getActiveHotspotMarkers();
 
     for (const hotspot of activeHotspots) {
-      const interactionName = hotspot.id === 'go-back-to-church' || hotspot.id === 'go-to-museum'
+      const isScenePortal = hotspot.id === 'go-back-to-church'
+        || hotspot.id === 'go-to-church'
+        || hotspot.id === 'go-to-museum';
+      const interactionName = isScenePortal
         ? hotspot.id
         : (HOTSPOT_TABLES[hotspot.id] ? hotspot.id : null);
       const { root } = this._buildHotspotMarker({
@@ -2843,17 +2861,14 @@ export class WebXRApp {
   }
 
   _transferToChurch(spawnOverride = null) {
-    if (!this._isUndergroundScene()) {
+    if (!this._isUndergroundScene() && !this._isMuseumScene()) {
       return;
     }
 
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.delete('zip');
+    const nextUrl = new URL('/3d-environment/church', window.location.origin);
 
     if (Array.isArray(spawnOverride) && spawnOverride.length === 3) {
       nextUrl.searchParams.set('spawn', spawnOverride.join(','));
-    } else {
-      nextUrl.searchParams.delete('spawn');
     }
 
     window.location.assign(nextUrl.toString());
