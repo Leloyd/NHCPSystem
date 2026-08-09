@@ -6,6 +6,7 @@ const UP = new THREE.Vector3(0, 1, 0);
 const FORWARD = new THREE.Vector3();
 const RIGHT = new THREE.Vector3();
 const DESIRED_MOVE = new THREE.Vector3();
+const PREVIOUS_FEET_POSITION = new THREE.Vector3();
 const XR_LOCAL_OFFSET = new THREE.Vector3();
 
 // Scratch objects for the gyro "magic window" math (no per-frame allocation).
@@ -529,10 +530,12 @@ export class PlayerController {
 
     this.velocity.y -= this.settings.gravity * deltaSeconds;
 
+    PREVIOUS_FEET_POSITION.copy(this.rig.position);
     this.rig.position.addScaledVector(this.velocity, deltaSeconds);
 
     const collisionResult = collisionSystem.resolveCapsule({
       feetPosition: this.rig.position,
+      previousFeetPosition: PREVIOUS_FEET_POSITION,
       capsuleHeight: this.settings.height,
       capsuleRadius: this.settings.radius,
       velocity: this.velocity,

@@ -19,6 +19,7 @@ export class CollisionSystem {
     scene,
     debugEnabled = false,
     walkBoundary = null,
+    walkBoundaryClosed = true,
     maxPositiveClamp = null,
     floorRegions = null,
     boundsClampEnabled = true,
@@ -26,6 +27,7 @@ export class CollisionSystem {
     this.scene = scene;
     this.debugEnabled = Boolean(debugEnabled);
     this.walkBoundary = this._normalizeWalkBoundary(walkBoundary);
+    this.walkBoundaryClosed = walkBoundaryClosed !== false;
     this.maxPositiveClamp = this._normalizeMaxPositiveClamp(maxPositiveClamp);
     this.floorRegions = this._normalizeFloorRegions(floorRegions);
     this.boundsClampEnabled = Boolean(boundsClampEnabled);
@@ -168,7 +170,14 @@ export class CollisionSystem {
     };
   }
 
-  resolveCapsule({ feetPosition, capsuleHeight, capsuleRadius, velocity, deltaSeconds }) {
+  resolveCapsule({
+    feetPosition,
+    previousFeetPosition = null,
+    capsuleHeight,
+    capsuleRadius,
+    velocity,
+    deltaSeconds,
+  }) {
     const radius = Math.max(0.05, Number(capsuleRadius));
     const topOffset = Math.max(radius + 0.05, Number(capsuleHeight) - radius);
 
@@ -252,7 +261,7 @@ export class CollisionSystem {
       }
     }
 
-    this._applyWalkBoundaryClamp(this._tempCorrectedFeet);
+    this._applyWalkBoundaryClamp(this._tempCorrectedFeet, previousFeetPosition);
 
     const floorY = this._getFloorYAtPosition(this._tempCorrectedFeet);
     if (Number.isFinite(floorY) && this._tempCorrectedFeet.y < floorY) {
@@ -401,8 +410,13 @@ export class CollisionSystem {
     return inside;
   }
 
-  _applyWalkBoundaryClamp(feetPosition) {
+  _applyWalkBoundaryClamp(feetPosition, previousFeetPosition = null) {
     if (!this.walkBoundary) {
+      return;
+    }
+
+    if (!this.walkBoundaryClosed) {
+      this._applyOpenWalkBoundaryClamp(feetPosition, previousFeetPosition);
       return;
     }
 
@@ -446,6 +460,58 @@ export class CollisionSystem {
 
     feetPosition.x = closestX;
     feetPosition.z = closestZ;
+  }
+
+  _applyOpenWalkBoundaryClamp(feetPosition, previousFeetPosition) {
+    if (!previousFeetPosition || this.walkBoundary.length < 2) {
+      return;
+    }
+
+    const epsilon = 1e-4;
+
+    for (let index = 0; index < this.walkBoundary.length - 1; index += 1) {
+      const start = this.walkBoundary[index];
+      const end = this.walkBoundary[index + 1];
+      const movementX = feetPosition.x - previousFeetPosition.x;
+      const movementZ = feetPosition.z - previousFeetPosition.z;
+      const edgeX = end.x - start.x;
+      const edgeZ = end.y - start.y;
+      const denominator = movementX * edgeZ - movementZ * edgeX;
+
+      if (Math.abs(denominator) <= 1e-10) {
+        continue;
+      }
+
+      const offsetX = start.x - previousFeetPosition.x;
+      const offsetZ = start.y - previousFeetPosition.z;
+      const movementT = (offsetX * edgeZ - offsetZ * edgeX) / denominator;
+      const edgeT = (offsetX * movementZ - offsetZ * movementX) / denominator;
+
+      if (movementT < 0 || movementT > 1 || edgeT < 0 || edgeT > 1) {
+        continue;
+      }
+
+      const edgeLength = Math.hypot(edgeX, edgeZ);
+      if (edgeLength <= 1e-8) {
+        continue;
+      }
+
+      const normalX = -edgeZ / edgeLength;
+      const normalZ = edgeX / edgeLength;
+      const previousDistance =
+        (previousFeetPosition.x - start.x) * normalX
+        + (previousFeetPosition.z - start.y) * normalZ;
+      const side = previousDistance < 0 ? -1 : 1;
+      const projectedT = THREE.MathUtils.clamp(
+        ((feetPosition.x - start.x) * edgeX + (feetPosition.z - start.y) * edgeZ)
+          / (edgeLength * edgeLength),
+        0,
+        1,
+      );
+
+      feetPosition.x = start.x + edgeX * projectedT + normalX * side * epsilon;
+      feetPosition.z = start.y + edgeZ * projectedT + normalZ * side * epsilon;
+    }
   }
 
   _clearColliders() {

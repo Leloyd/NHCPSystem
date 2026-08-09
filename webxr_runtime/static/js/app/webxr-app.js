@@ -2722,6 +2722,7 @@ export class WebXRApp {
         : this._isMuseumScene()
           ? MUSEUM_WALK_BOUNDARY
           : null,
+      walkBoundaryClosed: !this._isMuseumScene(),
       maxPositiveClamp,
       floorRegions: this._isUndergroundScene() ? UNDERGROUND_FLOOR_REGIONS : null,
       boundsClampEnabled: !this._isMuseumScene(),
