@@ -20,7 +20,6 @@ export class CollisionSystem {
     debugEnabled = false,
     walkBoundary = null,
     walkBoundarySegments = null,
-    walkBoundaryThickness = 0,
     maxPositiveClamp = null,
     floorRegions = null,
     boundsClampEnabled = true,
@@ -29,7 +28,6 @@ export class CollisionSystem {
     this.debugEnabled = Boolean(debugEnabled);
     this.walkBoundary = this._normalizeWalkBoundary(walkBoundary);
     this.walkBoundarySegments = this._normalizeWalkBoundarySegments(walkBoundarySegments);
-    this.walkBoundaryThickness = Math.max(0, Number(walkBoundaryThickness) || 0);
     this.maxPositiveClamp = this._normalizeMaxPositiveClamp(maxPositiveClamp);
     this.floorRegions = this._normalizeFloorRegions(floorRegions);
     this.boundsClampEnabled = Boolean(boundsClampEnabled);
@@ -362,6 +360,7 @@ export class CollisionSystem {
         return {
           start: new THREE.Vector2(startX, startZ),
           end: new THREE.Vector2(endX, endZ),
+          thickness: Math.max(0, Number(segment[2]) || 0),
         };
       })
       .filter(Boolean);
@@ -497,10 +496,9 @@ export class CollisionSystem {
     }
 
     const epsilon = 1e-4;
-    const clearance = this.walkBoundaryThickness;
 
     for (const segment of this.walkBoundarySegments) {
-      const { start, end } = segment;
+      const { start, end, thickness: clearance } = segment;
       const movementX = feetPosition.x - previousFeetPosition.x;
       const movementZ = feetPosition.z - previousFeetPosition.z;
       const edgeX = end.x - start.x;

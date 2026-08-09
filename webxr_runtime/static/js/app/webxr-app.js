@@ -52,8 +52,11 @@ const MUSEUM_WALK_BOUNDARY_PATH = [
 ];
 const MUSEUM_WALK_BOUNDARY_SEGMENTS = MUSEUM_WALK_BOUNDARY_PATH
   .slice(1)
-  .map((end, index) => [MUSEUM_WALK_BOUNDARY_PATH[index], end]);
-const MUSEUM_WALK_BOUNDARY_THICKNESS = 0.10;
+  .map((end, index) => [
+    MUSEUM_WALK_BOUNDARY_PATH[index],
+    end,
+    index === 11 || index === 12 ? 0.10 : 0,
+  ]);
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];
@@ -2739,7 +2742,6 @@ export class WebXRApp {
       debugEnabled: Boolean(this.metadata.debug?.collision),
       walkBoundary: this._isUndergroundScene() ? UNDERGROUND_WALK_BOUNDARY : null,
       walkBoundarySegments: this._isMuseumScene() ? MUSEUM_WALK_BOUNDARY_SEGMENTS : null,
-      walkBoundaryThickness: this._isMuseumScene() ? MUSEUM_WALK_BOUNDARY_THICKNESS : 0,
       maxPositiveClamp,
       floorRegions: this._isUndergroundScene() ? UNDERGROUND_FLOOR_REGIONS : null,
       boundsClampEnabled: !this._isMuseumScene(),
