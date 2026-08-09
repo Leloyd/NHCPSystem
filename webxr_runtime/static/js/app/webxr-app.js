@@ -436,6 +436,7 @@ export class WebXRApp {
 
       await this._loadSparkRuntime();
       await this._loadSceneAssets();
+      this._createHotspotMarkers();
       this._setupGameplaySystems();
 
       this.uiController.completeLoading('Scene ready.');
