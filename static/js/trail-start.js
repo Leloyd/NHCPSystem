@@ -6601,9 +6601,16 @@ function setupStory(el) {
     if (el === activeStoryEl) {
       if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
       scrollYaw = progress * 26;
-      if (state.mode === stopId && progress >= 0.96) recordTrailStopCompletion(stopId);
     }
     setStep(Math.floor(Math.min(STEPS - 1e-4, progress * STEPS)));
+    // A stop is complete once its final meaningful chapter is being viewed.
+    // Requiring the absolute end of the synthetic scroll track made visitors
+    // keep scrolling after the visible content had already finished (most
+    // noticeably after Stop 10's Farewell). Activity-gated final chapters in
+    // Stops 4 and 9 remain protected by their existing scroll locks above.
+    if (el === activeStoryEl && state.mode === stopId && step === STEPS - 1) {
+      recordTrailStopCompletion(stopId);
+    }
   }, { passive: true });
 
   // Touch/drag inside the story cancels any in-flight glide so it never fights.
