@@ -104,7 +104,7 @@ const UNDERGROUND_WALK_BOUNDARY = [
 const CHURCH_HOTSPOT_MARKERS = [
   {
     id: 'go-to-museum',
-    position: [-4.20, 1.50, -0.19],
+    position: [-4.20, 1.00, -0.19],
     color: 0x8fd3ff,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
