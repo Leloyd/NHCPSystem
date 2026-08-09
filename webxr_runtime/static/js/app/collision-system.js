@@ -19,7 +19,7 @@ export class CollisionSystem {
     scene,
     debugEnabled = false,
     walkBoundary = null,
-    walkBoundaryClosed = true,
+    walkBoundarySegments = null,
     maxPositiveClamp = null,
     floorRegions = null,
     boundsClampEnabled = true,
@@ -27,7 +27,7 @@ export class CollisionSystem {
     this.scene = scene;
     this.debugEnabled = Boolean(debugEnabled);
     this.walkBoundary = this._normalizeWalkBoundary(walkBoundary);
-    this.walkBoundaryClosed = walkBoundaryClosed !== false;
+    this.walkBoundarySegments = this._normalizeWalkBoundarySegments(walkBoundarySegments);
     this.maxPositiveClamp = this._normalizeMaxPositiveClamp(maxPositiveClamp);
     this.floorRegions = this._normalizeFloorRegions(floorRegions);
     this.boundsClampEnabled = Boolean(boundsClampEnabled);
@@ -338,6 +338,33 @@ export class CollisionSystem {
     return normalized.length >= 3 ? normalized : null;
   }
 
+  _normalizeWalkBoundarySegments(segments) {
+    if (!Array.isArray(segments)) {
+      return [];
+    }
+
+    return segments
+      .map((segment) => {
+        if (!Array.isArray(segment) || segment.length < 2) {
+          return null;
+        }
+
+        const startX = Number(segment[0]?.[0]);
+        const startZ = Number(segment[0]?.[1]);
+        const endX = Number(segment[1]?.[0]);
+        const endZ = Number(segment[1]?.[1]);
+        if (![startX, startZ, endX, endZ].every(Number.isFinite)) {
+          return null;
+        }
+
+        return {
+          start: new THREE.Vector2(startX, startZ),
+          end: new THREE.Vector2(endX, endZ),
+        };
+      })
+      .filter(Boolean);
+  }
+
   _normalizeFloorRegions(floorRegions) {
     if (!Array.isArray(floorRegions) || floorRegions.length === 0) {
       return [];
@@ -411,12 +438,12 @@ export class CollisionSystem {
   }
 
   _applyWalkBoundaryClamp(feetPosition, previousFeetPosition = null) {
-    if (!this.walkBoundary) {
+    if (this.walkBoundarySegments.length > 0) {
+      this._applyWalkBoundarySegmentsClamp(feetPosition, previousFeetPosition);
       return;
     }
 
-    if (!this.walkBoundaryClosed) {
-      this._applyOpenWalkBoundaryClamp(feetPosition, previousFeetPosition);
+    if (!this.walkBoundary) {
       return;
     }
 
@@ -462,16 +489,15 @@ export class CollisionSystem {
     feetPosition.z = closestZ;
   }
 
-  _applyOpenWalkBoundaryClamp(feetPosition, previousFeetPosition) {
-    if (!previousFeetPosition || this.walkBoundary.length < 2) {
+  _applyWalkBoundarySegmentsClamp(feetPosition, previousFeetPosition) {
+    if (!previousFeetPosition) {
       return;
     }
 
     const epsilon = 1e-4;
 
-    for (let index = 0; index < this.walkBoundary.length - 1; index += 1) {
-      const start = this.walkBoundary[index];
-      const end = this.walkBoundary[index + 1];
+    for (const segment of this.walkBoundarySegments) {
+      const { start, end } = segment;
       const movementX = feetPosition.x - previousFeetPosition.x;
       const movementZ = feetPosition.z - previousFeetPosition.z;
       const edgeX = end.x - start.x;

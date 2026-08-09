@@ -22,17 +22,22 @@ const MUSEUM_ZIP_NAME = 'museum.zip';
 // Museum has no hand-tuned hotspots yet; keep it empty so church markers don't leak in.
 const MUSEUM_HOTSPOT_MARKERS = [];
 // Museum is a splat-only capture (no .glb collision meshes), so these bounds
-// retain its floor height while the calibrated polygon limits horizontal travel.
+// retain its floor height while the calibrated open segments limit travel.
 // ?spawn=x,y,z overrides the start position live for quick calibration.
 const MUSEUM_SPAWN_POINT = [0.5, 0.0, 0.07];
 const MUSEUM_SPAWN_YAW = Math.PI / 2; // Face toward negative X.
 const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -21], max: [4, 5, 5] };
-const MUSEUM_WALK_BOUNDARY = [
-  [0.67, -0.35],
-  [0.67, 0.90],
-  [-0.55, 0.90],
-  [-0.55, -0.45],
-  [-0.65, -0.45],
+const MUSEUM_WALK_BOUNDARY_SEGMENTS = [
+  [[0.67, -0.35], [0.67, 0.90]],
+  [[0.67, 0.90], [-0.55, 0.90]],
+  [[-0.55, 0.90], [-0.55, -0.45]],
+  [[-0.55, -0.45], [-1.00, -0.50]],
+  [[-1.00, -0.50], [-1.13, 1.41]],
+  [[-1.13, 1.50], [-0.30, 1.50]],
+  [[-0.30, 1.50], [0.24, 2.10]],
+  [[0.24, 2.10], [0.24, 3.14]],
+  [[0.24, 3.14], [-0.25, 3.81]],
+  [[-0.25, 3.81], [-0.98, 3.81]],
 ];
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
@@ -2717,12 +2722,8 @@ export class WebXRApp {
     this.collisionSystem = new CollisionSystem({
       scene: this.scene,
       debugEnabled: Boolean(this.metadata.debug?.collision),
-      walkBoundary: this._isUndergroundScene()
-        ? UNDERGROUND_WALK_BOUNDARY
-        : this._isMuseumScene()
-          ? MUSEUM_WALK_BOUNDARY
-          : null,
-      walkBoundaryClosed: !this._isMuseumScene(),
+      walkBoundary: this._isUndergroundScene() ? UNDERGROUND_WALK_BOUNDARY : null,
+      walkBoundarySegments: this._isMuseumScene() ? MUSEUM_WALK_BOUNDARY_SEGMENTS : null,
       maxPositiveClamp,
       floorRegions: this._isUndergroundScene() ? UNDERGROUND_FLOOR_REGIONS : null,
       boundsClampEnabled: !this._isMuseumScene(),
