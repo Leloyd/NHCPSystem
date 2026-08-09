@@ -118,34 +118,6 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     radius: 0.07,
     interactionMaxDistance: DOOR_INTERACTION_MAX_DISTANCE,
   },
-  {
-    id: 'evidence-revolution',
-    position: [0.75, 0.34, -1.45],
-    color: 0xd4af6a,
-    radius: 0.075,
-    interactionMaxDistance: 2.2,
-  },
-  {
-    id: 'evidence-biak-na-bato',
-    position: [-0.72, 0.34, -3.75],
-    color: 0xd4af6a,
-    radius: 0.075,
-    interactionMaxDistance: 2.2,
-  },
-  {
-    id: 'evidence-world-war-ii',
-    position: [-2.35, 0.34, 0.25],
-    color: 0xd4af6a,
-    radius: 0.075,
-    interactionMaxDistance: 2.2,
-  },
-  {
-    id: 'evidence-guerrillas',
-    position: [0.62, 0.34, -4.62],
-    color: 0xd4af6a,
-    radius: 0.075,
-    interactionMaxDistance: 2.2,
-  },
 ];
 const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
