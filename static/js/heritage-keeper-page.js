@@ -1,14 +1,14 @@
 import * as THREE from "three";
 import { GLTFLoader } from "three/addons/loaders/GLTFLoader.js";
 
-const viewer = document.querySelector("[data-hk-fragment-viewer]");
+const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
+const viewers = document.querySelectorAll("[data-hk-fragment-viewer]");
 
-if (viewer) {
+viewers.forEach((viewer) => {
   const canvas = viewer.querySelector("[data-hk-fragment-canvas]");
   const loading = viewer.querySelector("[data-hk-fragment-loading]");
   const help = viewer.querySelector("[data-hk-fragment-help]");
   const errorMessage = viewer.querySelector("[data-hk-fragment-error]");
-  const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)");
   let earnedFragments = [];
 
   try {
@@ -213,4 +213,4 @@ if (viewer) {
       renderer.dispose();
     }, { once: true });
   }
-}
+});

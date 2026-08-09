@@ -35,6 +35,7 @@
       </nav>
 
       {% set trail_fragments = heritage_keeper.fragments[:heritage_keeper.trail_required] %}
+      {% set ar_fragments = heritage_keeper.fragments[heritage_keeper.trail_required:] %}
       <header class="hk-masthead">
         <div class="hk-masthead__copy">
           <p class="hk-kicker"><span data-lang-en>Personal collection record</span><span data-lang-tl>Tala ng personal na koleksiyon</span></p>
@@ -108,6 +109,61 @@
           </div>
         </div>
       </header>
+
+      <section class="hk-recovery" aria-labelledby="arRecoveryTitle">
+        <div class="hk-recovery__layout">
+          <div class="hk-recovery__copy">
+            <p class="hk-section-label"><span data-lang-en>Restoration plate II</span><span data-lang-tl>Plaka ng pagpapanumbalik II</span></p>
+            <h2 id="arRecoveryTitle"><span data-lang-en>AR Restoration Seal</span><span data-lang-tl>Selyo ng AR Restoration</span></h2>
+            <p>
+              <span data-lang-en>Each registered marker holds one fitted part of this seal. Restore an artifact in AR Content Detection to return its fragment to the exact place it belongs.</span>
+              <span data-lang-tl>Ang bawat nakatalang marker ay may isang akmang bahagi ng selyong ito. Ibalik ang isang artifact sa AR Content Detection upang mailagay ang bahagi nito sa eksaktong puwesto.</span>
+            </p>
+            <div class="hk-recovery__count" aria-label="{{ heritage_keeper.ar_count }} of {{ heritage_keeper.ar_required }} AR seal fragments recovered">
+              <strong>{{ heritage_keeper.ar_count }}</strong>
+              <span><span data-lang-en>of {{ heritage_keeper.ar_required }} pieces restored</span><span data-lang-tl>sa {{ heritage_keeper.ar_required }} bahagi ang naibalik</span></span>
+            </div>
+            <div class="hk-recovery__track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ heritage_keeper.ar_required }}" aria-valuenow="{{ heritage_keeper.ar_count }}" aria-label="AR Restoration seal progress">
+              <span style="width: {{ (heritage_keeper.ar_count / heritage_keeper.ar_required * 100)|round }}%"></span>
+            </div>
+          </div>
+
+          <div class="hk-recovery__viewer">
+            {% if heritage_keeper.ar_count > 0 %}
+            <figure
+              class="hk-fragment-tray"
+              tabindex="0"
+              role="img"
+              data-hk-fragment-viewer
+              data-model-url="/Seal/AR-seal-fragments.glb"
+              data-earned-fragments="{{ ar_fragments | map(attribute='earned') | list | tojson | forceescape }}"
+              aria-label="{{ heritage_keeper.ar_count }} of {{ heritage_keeper.ar_required }} AR Restoration seal fragments recovered"
+            >
+              <canvas class="hk-fragment-tray__canvas" data-hk-fragment-canvas aria-hidden="true"></canvas>
+              <div class="hk-fragment-tray__loading" data-hk-fragment-loading role="status" aria-live="polite">
+                <span class="hk-fragment-tray__spinner" aria-hidden="true"></span>
+                <span data-lang-en>Returning the restored AR pieces...</span>
+                <span data-lang-tl>Ibinabalik ang mga naayos na bahagi mula sa AR...</span>
+              </div>
+              <p class="hk-fragment-tray__help" data-hk-fragment-help hidden>
+                <span data-lang-en>Drag to inspect the fitted pieces</span>
+                <span data-lang-tl>I-drag upang siyasatin ang mga akmang bahagi</span>
+              </p>
+              <p class="hk-fragment-tray__error" data-hk-fragment-error hidden>
+                <span data-lang-en>The AR seal fragments could not be displayed. Reload the page and try again.</span>
+                <span data-lang-tl>Hindi maipakita ang mga bahagi ng AR seal. I-reload ang pahina at subukang muli.</span>
+              </p>
+            </figure>
+            {% else %}
+            <div class="hk-fragment-tray hk-fragment-tray--empty">
+              <span class="hk-fragment-tray__empty-mark" aria-hidden="true">II</span>
+              <strong><span data-lang-en>No AR fragments restored</span><span data-lang-tl>Wala pang naibalik na bahagi mula sa AR</span></strong>
+              <p><span data-lang-en>Your first fitted piece will appear after you restore a registered AR artifact.</span><span data-lang-tl>Lalabas ang unang akmang bahagi matapos mong maibalik ang isang nakatalang AR artifact.</span></p>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </section>
 
       <section class="hk-register" aria-labelledby="fragmentRegisterTitle">
         <div class="hk-register__heading">

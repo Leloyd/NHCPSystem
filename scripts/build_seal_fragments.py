@@ -1,12 +1,15 @@
-"""Build the Heritage Trail seal as 10 fitted, separately addressable pieces.
+"""Build a seal as fitted, separately addressable pieces.
 
 Run with Blender, not the system Python:
     blender --background --python scripts/build_seal_fragments.py -- \
       public/Seal/Seal.glb public/Seal/Seal-fragments.glb
 
+    blender --background --python scripts/build_seal_fragments.py -- \
+      public/Seal/AR-seal.glb public/Seal/AR-seal-fragments.glb 21 ar
+
 The output keeps all fragments in their assembled positions and shares the
 source material/textures. This lets the browser reveal, hide, or animate each
-piece without loading ten copies of the same texture maps.
+piece without loading separate copies of the same texture maps.
 """
 
 from __future__ import annotations
@@ -20,24 +23,68 @@ import bpy
 from mathutils import Vector
 
 
-ROW_PIECES = (4, 3, 3)
-PIECE_COUNT = sum(ROW_PIECES)
+DEFAULT_ROW_PIECES = (4, 3, 3)
+ROW_LAYOUTS = {
+    10: DEFAULT_ROW_PIECES,
+    # A rounder five-row distribution keeps all 21 AR pieces visibly fitted
+    # across the seal instead of laying them out as an obvious square grid.
+    21: (3, 5, 5, 5, 3),
+}
 FRAGMENT_PREFIX = "Seal_Fragment_"
 
 # Deterministic offsets keep the pieces irregular while preserving a balanced
 # distribution across the medallion.
-SEED_JITTER = (
+TRAIL_SEED_JITTER = (
     (-0.10, 0.05), (0.08, -0.07), (-0.06, 0.09), (0.07, -0.04),
     (0.06, -0.08), (-0.09, 0.06), (0.10, -0.03), (-0.05, 0.08),
     (-0.07, 0.09), (0.05, -0.06),
 )
 
 
-def command_arguments() -> tuple[Path, Path]:
+def command_arguments() -> tuple[Path, Path, int, str]:
     args = sys.argv[sys.argv.index("--") + 1 :] if "--" in sys.argv else []
-    if len(args) != 2:
-        raise SystemExit("Expected input and output GLB paths after --")
-    return Path(args[0]).resolve(), Path(args[1]).resolve()
+    if len(args) < 2 or len(args) > 4:
+        raise SystemExit(
+            "Expected input/output GLB paths and optional piece count/source after --"
+        )
+
+    piece_count = int(args[2]) if len(args) >= 3 else 10
+    fragment_source = str(args[3]).strip().lower() if len(args) >= 4 else "trail"
+    if piece_count < 2:
+        raise SystemExit("Piece count must be at least 2.")
+    if not fragment_source:
+        raise SystemExit("Fragment source cannot be empty.")
+
+    return (
+        Path(args[0]).resolve(),
+        Path(args[1]).resolve(),
+        piece_count,
+        fragment_source,
+    )
+
+
+def row_layout(piece_count: int) -> tuple[int, ...]:
+    configured = ROW_LAYOUTS.get(piece_count)
+    if configured:
+        return configured
+
+    # Generic fallback for future seals: distribute pieces over near-square
+    # rows while guaranteeing that the requested count is preserved.
+    row_count = max(2, round(piece_count ** 0.5))
+    base = piece_count // row_count
+    remainder = piece_count % row_count
+    return tuple(base + (1 if index < remainder else 0) for index in range(row_count))
+
+
+def seed_jitter(piece_count: int, seed_index: int) -> tuple[float, float]:
+    if piece_count == 10:
+        return TRAIL_SEED_JITTER[seed_index]
+
+    # Stable pseudo-random offsets: rerunning the build produces the exact
+    # same fitted pieces, which keeps marker-to-piece ownership consistent.
+    jitter_u = (((seed_index * 37 + 5) % 17) - 8) / 100
+    jitter_v = (((seed_index * 29 + 3) % 19) - 9) / 100
+    return jitter_u, jitter_v
 
 
 def reset_scene() -> None:
@@ -105,6 +152,8 @@ def clip_half_plane(
 
 def build_voronoi_cells(
     bounds: tuple[float, float, float, float],
+    row_pieces: tuple[int, ...],
+    piece_count: int,
 ) -> tuple[list[tuple[float, float]], list[list[tuple[float, float]]]]:
     min_u, max_u, min_v, max_v = bounds
     width = max_u - min_u
@@ -112,10 +161,10 @@ def build_voronoi_cells(
     seeds: list[tuple[float, float]] = []
 
     seed_index = 0
-    row_count = len(ROW_PIECES)
-    for row, pieces_in_row in enumerate(ROW_PIECES):
+    row_count = len(row_pieces)
+    for row, pieces_in_row in enumerate(row_pieces):
         for column in range(pieces_in_row):
-            jitter_u, jitter_v = SEED_JITTER[seed_index]
+            jitter_u, jitter_v = seed_jitter(piece_count, seed_index)
             u = min_u + ((column + 0.5 + jitter_u) / pieces_in_row) * width
             v = min_v + ((row + 0.5 + jitter_v) / row_count) * height
             seeds.append((u, v))
@@ -143,7 +192,11 @@ def build_voronoi_cells(
     return seeds, cells
 
 
-def create_fragments(source: bpy.types.Object) -> tuple[list[bpy.types.Object], dict]:
+def create_fragments(
+    source: bpy.types.Object,
+    piece_count: int,
+    fragment_source: str,
+) -> tuple[list[bpy.types.Object], dict]:
     minimum, maximum = world_bounds(source)
     extents = [maximum[index] - minimum[index] for index in range(3)]
     depth_axis = min(range(3), key=lambda index: extents[index])
@@ -157,12 +210,13 @@ def create_fragments(source: bpy.types.Object) -> tuple[list[bpy.types.Object], 
         minimum[plane_axes[1]] - padding_v,
         maximum[plane_axes[1]] + padding_v,
     )
-    seeds, cells = build_voronoi_cells(plane_bounds)
+    row_pieces = row_layout(piece_count)
+    seeds, cells = build_voronoi_cells(plane_bounds, row_pieces, piece_count)
 
     # Assign every original polygon to its closest irregular-grid seed. Unlike
     # a boolean intersection, this retains every source triangle and all of its
     # UV data—even when an AI-generated GLB is not a clean manifold solid.
-    polygon_assignments: list[list[int]] = [[] for _ in range(PIECE_COUNT)]
+    polygon_assignments: list[list[int]] = [[] for _ in range(piece_count)]
     for polygon in source.data.polygons:
         center = polygon.center
         u = center[plane_axes[0]]
@@ -202,7 +256,7 @@ def create_fragments(source: bpy.types.Object) -> tuple[list[bpy.types.Object], 
             raise RuntimeError(f"Fragment {piece_index} is empty after partitioning.")
 
         fragment["fragment_index"] = piece_index
-        fragment["fragment_source"] = "trail"
+        fragment["fragment_source"] = fragment_source
         fragment["assembled"] = True
         fragments.append(fragment)
 
@@ -229,7 +283,7 @@ def create_fragments(source: bpy.types.Object) -> tuple[list[bpy.types.Object], 
 
     metadata = {
         "pieceCount": len(fragments),
-        "layout": "irregular-voronoi-4-3-3",
+        "layout": "irregular-voronoi-" + "-".join(str(value) for value in row_pieces),
         "partitionMethod": "source-triangle-centroid",
         "assembledByDefault": True,
         "depthAxisInBlender": depth_axis,
@@ -263,12 +317,12 @@ def write_manifest(path: Path, metadata: dict) -> None:
 
 
 def main() -> None:
-    input_path, output_path = command_arguments()
+    input_path, output_path, piece_count, fragment_source = command_arguments()
     if not input_path.is_file():
         raise FileNotFoundError(input_path)
     reset_scene()
     source = import_source(input_path)
-    fragments, metadata = create_fragments(source)
+    fragments, metadata = create_fragments(source, piece_count, fragment_source)
     export_fragments(output_path, fragments)
     write_manifest(output_path, metadata)
     print(
