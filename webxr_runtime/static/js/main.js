@@ -18,6 +18,8 @@ function getRefs() {
     interactionMeta: document.getElementById('interaction-meta'),
     positionDebugPanel: document.getElementById('position-debug-panel'),
     positionDebugValue: document.getElementById('position-debug-value'),
+    positionDebugCopy: document.getElementById('position-debug-copy'),
+    positionDebugCopyLabel: document.getElementById('position-debug-copy-label'),
     mobileControls: document.getElementById('mobile-controls'),
     moveStickZone: document.getElementById('move-stick-zone'),
     moveStickThumb: document.getElementById('move-stick-thumb'),

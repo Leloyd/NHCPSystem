@@ -4,6 +4,7 @@ export class UiController {
     this.onBackRequested = null;
     this.onFullscreenToggled = null;
     this.errorResetTimer = null;
+    this.positionCopyResetTimer = null;
   }
 
   bindHandlers({ onBackRequested, onFullscreenToggled, onGyroToggled, onCardboardToggled }) {
@@ -26,6 +27,10 @@ export class UiController {
 
     this.refs.cardboardButton?.addEventListener('click', () => {
       this.onCardboardToggled?.();
+    });
+
+    this.refs.positionDebugCopy?.addEventListener('click', () => {
+      this.copyPositionDebugValue();
     });
   }
 
@@ -151,5 +156,59 @@ export class UiController {
     if (this.refs.positionDebugValue) {
       this.refs.positionDebugValue.textContent = value;
     }
+  }
+
+  async copyPositionDebugValue() {
+    const value = this.refs.positionDebugValue?.textContent?.trim();
+    if (!value || !this.refs.positionDebugCopy) {
+      return;
+    }
+
+    try {
+      if (navigator.clipboard?.writeText && window.isSecureContext) {
+        await navigator.clipboard.writeText(value);
+      } else {
+        const helper = document.createElement('textarea');
+        helper.value = value;
+        helper.setAttribute('readonly', '');
+        helper.style.position = 'fixed';
+        helper.style.opacity = '0';
+        let copied = false;
+        try {
+          document.body.appendChild(helper);
+          helper.select();
+          copied = document.execCommand('copy');
+        } finally {
+          helper.remove();
+        }
+        if (!copied) {
+          throw new Error('Copy command was rejected.');
+        }
+      }
+
+      this.setPositionCopyFeedback('Copied', true);
+    } catch (error) {
+      console.warn('Unable to copy player coordinates.', error);
+      this.setPositionCopyFeedback('Copy failed', false);
+    }
+  }
+
+  setPositionCopyFeedback(message, succeeded) {
+    if (this.positionCopyResetTimer) {
+      window.clearTimeout(this.positionCopyResetTimer);
+    }
+
+    if (this.refs.positionDebugCopyLabel) {
+      this.refs.positionDebugCopyLabel.textContent = message;
+    }
+    this.refs.positionDebugCopy?.classList.toggle('is-copied', Boolean(succeeded));
+
+    this.positionCopyResetTimer = window.setTimeout(() => {
+      if (this.refs.positionDebugCopyLabel) {
+        this.refs.positionDebugCopyLabel.textContent = 'Copy';
+      }
+      this.refs.positionDebugCopy?.classList.remove('is-copied');
+      this.positionCopyResetTimer = null;
+    }, 1800);
   }
 }

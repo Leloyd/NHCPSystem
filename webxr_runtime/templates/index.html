@@ -40,7 +40,16 @@
     <aside id="position-debug-panel" class="position-debug-panel hidden" aria-label="Museum player coordinates">
       <span class="position-debug-panel__label">Player coordinates</span>
       <output id="position-debug-value" class="position-debug-panel__value">[0.00, 0.00, 0.00]</output>
-      <span class="position-debug-panel__hint">X, Y, Z</span>
+      <div class="position-debug-panel__footer">
+        <span class="position-debug-panel__hint">X, Y, Z</span>
+        <button id="position-debug-copy" class="position-debug-panel__copy" type="button" aria-label="Copy player coordinates">
+          <svg viewBox="0 0 24 24" aria-hidden="true">
+            <rect x="8" y="8" width="11" height="11" rx="2"></rect>
+            <path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"></path>
+          </svg>
+          <span id="position-debug-copy-label" aria-live="polite">Copy</span>
+        </button>
+      </div>
     </aside>
 
     <section id="mobile-controls" class="tour-control-dock" aria-label="Movement and navigation controls">
