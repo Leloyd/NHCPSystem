@@ -2923,8 +2923,11 @@ export class WebXRApp {
       return;
     }
 
-    const nextUrl = new URL(window.location.href);
-    nextUrl.searchParams.delete('spawn');
+    // Build from the neutral environment route instead of the current URL.
+    // When Church was entered from Museum, the current path is
+    // /3d-environment/church; keeping that path causes its explicit scene name
+    // to override ?zip=underground.zip and reload Church instead.
+    const nextUrl = new URL('/3d-environment', window.location.origin);
     nextUrl.searchParams.set('zip', UNDERGROUND_ZIP_NAME);
     window.location.assign(nextUrl.toString());
   }
