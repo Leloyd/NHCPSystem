@@ -119,6 +119,209 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     interactionMaxDistance: DOOR_INTERACTION_MAX_DISTANCE,
   },
 ];
+const MUSEUM_ARTIFACT_POSITION = [-1.51, 0.19, 6.22];
+const MUSEUM_ARTIFACT_TOGGLE_POSITION = [-1.63, 0.75, 5.06];
+const MUSEUM_ARTIFACT_INTERACTION_MAX_DISTANCE = 2.6;
+const MUSEUM_ARTIFACT_DISPLAY_SIZE = 0.58;
+const MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE = 0.75;
+const MUSEUM_ARTIFACT_AUDIO_FAR_DISTANCE = 5.5;
+const MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME = 0.06;
+const MUSEUM_ARTIFACTS = [
+  {
+    id: 'alay',
+    title: { tl: 'Alay, Atang, Halad', en: 'Alay, Atang, Halad' },
+    modelUrl: '/AR-Artifacts/Alay/Alay-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Alay/ALAY, ATANG, HALAD.mp3',
+      en: '/360Hotspots/Alay/ALAY, ATANG, HALAD(English).mp3',
+    },
+  },
+  {
+    id: 'antuk',
+    title: { tl: 'Antuk at Ulahing', en: 'Antuk and Ulahing' },
+    modelUrl: '/AR-Artifacts/Antuk/Antuk-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Antuk/ANTUK AT ULAHING NG MGA ATA-MANOBO.mp3',
+      en: '/360Hotspots/Antuk/ANTUK AND ULAHING OF THE ATA-MANOBO.mp3',
+    },
+  },
+  {
+    id: 'bagongon',
+    title: { tl: 'Bagongon ng mga Ilokano', en: 'Bagongon of the Ilocano' },
+    modelUrl: '/AR-Artifacts/Bagongon/Bagongon-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Bagongon/BAGONGON NG MGA ILOKANO.mp3',
+      en: '/360Hotspots/Bagongon/BAGONGON OF THE ILOCANO.mp3',
+    },
+  },
+  {
+    id: 'bogwa',
+    title: { tl: 'Bogwa ng mga Ifugao', en: 'Bogwa of the Ifugao' },
+    modelUrl: '/AR-Artifacts/Bogwa/Bogwa-512(10k).glb',
+    rotation: [0, -130, 0],
+    audio: {
+      tl: '/360Hotspots/Bogwa/BOGWA NG MGA IFUGAO.mp3',
+      en: '/360Hotspots/Bogwa/BOGWA OF THE IFUGAO.mp3',
+    },
+  },
+  {
+    id: 'kagamitan',
+    title: { tl: 'Kagamitan ng mga Yumao sa Batanes', en: 'Belongings of the Dead in Batanes' },
+    modelUrl: '/AR-Artifacts/Kagamitan/Kagamitan-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Kagamitan/MGA KAGAMITAN NG MGA YUMAO SA BATANES.mp3',
+      en: '/360Hotspots/Kagamitan/BELONGINGS OF THE DEAD IN BATANES.mp3',
+    },
+  },
+  {
+    id: 'luksa',
+    title: { tl: 'Mga Taga-luksa', en: 'The Mourners' },
+    modelUrl: '/AR-Artifacts/Luksa/Luksa-512(10k).glb',
+    rotation: [0, -180, 0],
+    audio: {
+      tl: '/360Hotspots/Luksa/ANG MGA TAGA-LUKSA SA BUROL NG MGA FILIPINONG-TSINO.mp3',
+      en: '/360Hotspots/Luksa/THE MOURNERS IN FILIPINO-CHINESE BURIAL.mp3',
+    },
+  },
+  {
+    id: 'pagpag',
+    title: { tl: 'Ang Pagpag', en: 'The Custom of Pagpag' },
+    modelUrl: '/AR-Artifacts/Pagpag/Pagpag-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Pagpag/ANG PAGPAG.mp3',
+      en: '/360Hotspots/Pagpag/THE CUSTOM OF PAGPAG.mp3',
+    },
+  },
+  {
+    id: 'pagtubas',
+    title: { tl: 'Pagtubas ng mga Waray', en: 'Pagtubas of the Waray' },
+    modelUrl: '/AR-Artifacts/Pagtubas/Pagtubas-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Pagtubas/PAGTUBAS NG MGA WARAY.mp3',
+      en: '/360Hotspots/Pagtubas/PAGTUBAS OF THE WARAY.mp3',
+    },
+  },
+  {
+    id: 'pahimakas',
+    title: { tl: 'Pahimakas ni Julio Nakpil', en: 'Julio Nakpil\'s Pahimakas' },
+    modelUrl: '/AR-Artifacts/Pahimakas/Pahimakas-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Pahimakas/PAHIMAKAS AT IBA PANG MARCHA FUNEBRE NI NAKPIL.mp3',
+      en: '/360Hotspots/Pahimakas/NAKPIL_S PAHIMAKAS AND OTHER FUNERAL MARCHES.mp3',
+    },
+  },
+  {
+    id: 'pahiwatig',
+    title: { tl: 'Mga Pahiwatig ng Kamatayan', en: 'Omens of Death' },
+    modelUrl: '/AR-Artifacts/Pahiwatig/Pahiwating.glb',
+    rotation: [0, -120, 0],
+    audio: {
+      tl: '/360Hotspots/Pahiwatig/MGA PAHIWATIG NG KAMATAYAN.mp3',
+      en: '/360Hotspots/Pahiwatig/OMENS OF DEATH.mp3',
+    },
+  },
+  {
+    id: 'recuerdos',
+    title: { tl: 'Recuerdos de Patay', en: 'Recuerdos de Patay' },
+    modelUrl: '/AR-Artifacts/Recuerdos/Recuerdos-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Recuerdos/RECUERDOS DE PATAY.mp3',
+      en: '/360Hotspots/Recuerdos/RECUERDOS DE PATAY(English).mp3',
+    },
+  },
+  {
+    id: 'sabwag',
+    title: { tl: 'Sabwag ng mga Bikolnon', en: 'Sabwag of the Bikolnon' },
+    modelUrl: '/AR-Artifacts/Sabwag/Sabwag-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Sabwag/SABWAG NG MGA BIKOLNON.mp3',
+      en: '/360Hotspots/Sabwag/SABWAG OF THE BIKOLNON.mp3',
+    },
+  },
+  {
+    id: 'sisiw',
+    title: { tl: 'Sisiw ng Budhi', en: 'Hatchling of Conscience' },
+    modelUrl: '/AR-Artifacts/Sisiw/Sisiw-512(10k).glb',
+    rotation: [0, 0, 0],
+    audio: {
+      tl: '/360Hotspots/Sisiw/SISIW NG BUDHI.mp3',
+      en: '/360Hotspots/Sisiw/HATCHLING OF CONSCIENCE.mp3',
+    },
+  },
+  {
+    id: 'tausug-1',
+    subtitleKey: 'tausug',
+    title: { tl: 'Paglilibing ng mga Tausug I', en: 'Tausug Burial Practices I' },
+    modelUrl: '/AR-Artifacts/Tausug/Tausug1-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Tausug/KAUGALIAN SA PAGLILIBING NG MGA TAUSUG.mp3',
+      en: '/360Hotspots/Tausug/TAUSUG BURIAL PRACTICES.mp3',
+    },
+  },
+  {
+    id: 'tausug-2',
+    subtitleKey: 'tausug',
+    title: { tl: 'Paglilibing ng mga Tausug II', en: 'Tausug Burial Practices II' },
+    modelUrl: '/AR-Artifacts/Tausug/Tausug2-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Tausug/KAUGALIAN SA PAGLILIBING NG MGA TAUSUG.mp3',
+      en: '/360Hotspots/Tausug/TAUSUG BURIAL PRACTICES.mp3',
+    },
+  },
+  {
+    id: 'tausug-3',
+    subtitleKey: 'tausug',
+    title: { tl: 'Paglilibing ng mga Tausug III', en: 'Tausug Burial Practices III' },
+    modelUrl: '/AR-Artifacts/Tausug/Tausug3-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Tausug/KAUGALIAN SA PAGLILIBING NG MGA TAUSUG.mp3',
+      en: '/360Hotspots/Tausug/TAUSUG BURIAL PRACTICES.mp3',
+    },
+  },
+  {
+    id: 'tausug-4',
+    subtitleKey: 'tausug',
+    title: { tl: 'Paglilibing ng mga Tausug IV', en: 'Tausug Burial Practices IV' },
+    modelUrl: '/AR-Artifacts/Tausug/Tausug4-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Tausug/KAUGALIAN SA PAGLILIBING NG MGA TAUSUG.mp3',
+      en: '/360Hotspots/Tausug/TAUSUG BURIAL PRACTICES.mp3',
+    },
+  },
+  {
+    id: 'tboli',
+    title: { tl: 'Ang Kaluluwa ng mga T\'boli', en: 'The T\'boli Soul' },
+    modelUrl: "/AR-Artifacts/Tboli/T'boli-512(10k).glb",
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Tboli/ANG KALULUWA NG MGA T_BOLI.mp3',
+      en: '/360Hotspots/Tboli/THE T_BOLI SOUL.mp3',
+    },
+  },
+  {
+    id: 'tsapang',
+    title: { tl: 'Tsapang Itim ng Pagluluksa', en: 'Black Mourning Pins' },
+    modelUrl: '/AR-Artifacts/Tsapang/Tsapang-512(10k).glb',
+    rotation: [0, -90, 0],
+    audio: {
+      tl: '/360Hotspots/Tsapang/TSAPANG ITIM NG PAGLULUKSA.mp3',
+      en: '/360Hotspots/Tsapang/BLACK MOURNING PINS.mp3',
+    },
+  },
+];
 const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
@@ -267,6 +470,25 @@ export class WebXRApp {
     this.xrHotspotTableDetail = null;
     this.xrHotspotTablePinsVisible = true;
     this.xrHotspotTableSourceMarker = null;
+    this.museumArtifactStation = {
+      root: null,
+      modelPivot: null,
+      currentModel: null,
+      controlsRoot: null,
+      titleSprite: null,
+      subtitleSprite: null,
+      toggleSprite: null,
+      languageSprite: null,
+      subtitleToggleSprite: null,
+      index: 0,
+      isOpen: false,
+      subtitlesOn: false,
+      language: 'tl',
+      audio: null,
+      loadToken: 0,
+      modelCache: new Map(),
+      elapsed: 0,
+    };
 
     this.sparkRenderer = null;
     this.SplatMeshCtor = null;
@@ -319,6 +541,7 @@ export class WebXRApp {
       await this._loadSceneAssets();
       this._createHotspotMarkers();
       this._setupGameplaySystems();
+      this._setupMuseumArtifactStation();
 
       this.uiController.completeLoading('Scene ready.');
 
@@ -2033,6 +2256,26 @@ export class WebXRApp {
       this._transferToChurch();
     });
 
+    this.interactionRegistry.register('museum-artifact-toggle', () => {
+      this._setMuseumArtifactStationOpen(!this.museumArtifactStation.isOpen);
+    });
+
+    this.interactionRegistry.register('museum-artifact-prev', () => {
+      this._stepMuseumArtifact(-1);
+    });
+
+    this.interactionRegistry.register('museum-artifact-next', () => {
+      this._stepMuseumArtifact(1);
+    });
+
+    this.interactionRegistry.register('museum-artifact-language', () => {
+      this._toggleMuseumArtifactLanguage();
+    });
+
+    this.interactionRegistry.register('museum-artifact-subtitles', () => {
+      this._toggleMuseumArtifactSubtitles();
+    });
+
     this.interactionRegistry.register('altar', (context) => {
       console.log('[interaction] altar selected', context);
     });
@@ -2382,6 +2625,518 @@ export class WebXRApp {
     texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
     return texture;
+  }
+
+  _createMuseumArtifactControlTexture(label, active = false) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+
+    context.clearRect(0, 0, 256, 256);
+    const halo = context.createRadialGradient(128, 128, 72, 128, 128, 124);
+    halo.addColorStop(0, active ? 'rgba(212, 175, 106, 0.26)' : 'rgba(212, 175, 106, 0.14)');
+    halo.addColorStop(1, 'rgba(212, 175, 106, 0)');
+    context.fillStyle = halo;
+    context.fillRect(0, 0, 256, 256);
+
+    context.beginPath();
+    context.arc(128, 128, 96, 0, Math.PI * 2);
+    context.fillStyle = active ? 'rgba(212, 175, 106, 0.98)' : 'rgba(13, 10, 4, 0.96)';
+    context.fill();
+    context.lineWidth = 10;
+    context.strokeStyle = active ? '#faf7f2' : '#d4af6a';
+    context.stroke();
+
+    const normalizedLabel = String(label || '').trim();
+    context.fillStyle = active ? '#1c1208' : '#faf7f2';
+    context.font = normalizedLabel.length > 3
+      ? '700 38px Inter, Arial, sans-serif'
+      : normalizedLabel.length > 2
+        ? '800 54px Inter, Arial, sans-serif'
+        : '800 92px Inter, Arial, sans-serif';
+    context.textAlign = 'center';
+    context.textBaseline = 'middle';
+    context.fillText(normalizedLabel, 128, 132);
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  _wrapMuseumArtifactText(context, text, maxWidth) {
+    const lines = [];
+    const paragraphs = String(text || '').split(/\n+/);
+    for (const paragraph of paragraphs) {
+      const words = paragraph.trim().split(/\s+/).filter(Boolean);
+      if (!words.length) {
+        if (lines.length && lines[lines.length - 1] !== '') {
+          lines.push('');
+        }
+        continue;
+      }
+      let line = words.shift();
+      for (const word of words) {
+        const candidate = `${line} ${word}`;
+        if (context.measureText(candidate).width <= maxWidth) {
+          line = candidate;
+        } else {
+          lines.push(line);
+          line = word;
+        }
+      }
+      lines.push(line);
+    }
+    return lines;
+  }
+
+  _createMuseumArtifactTextTexture(text, { subtitle = false } = {}) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = subtitle ? 512 : 180;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    if (subtitle) {
+      context.beginPath();
+      if (typeof context.roundRect === 'function') {
+        context.roundRect(12, 12, canvas.width - 24, canvas.height - 24, 32);
+      } else {
+        context.rect(12, 12, canvas.width - 24, canvas.height - 24);
+      }
+      context.fillStyle = 'rgba(13, 10, 4, 0.93)';
+      context.fill();
+      context.lineWidth = 5;
+      context.strokeStyle = 'rgba(212, 175, 106, 0.92)';
+      context.stroke();
+    }
+
+    let fontSize = subtitle ? 40 : 72;
+    const maxLines = subtitle ? 11 : 2;
+    const maxWidth = canvas.width - (subtitle ? 96 : 48);
+    let lines = [];
+    do {
+      context.font = `${subtitle ? 500 : 700} ${fontSize}px ${subtitle ? 'Georgia' : 'Georgia'}, serif`;
+      lines = this._wrapMuseumArtifactText(context, text, maxWidth);
+      if (lines.length <= maxLines || fontSize <= (subtitle ? 27 : 52)) {
+        break;
+      }
+      fontSize -= 2;
+    } while (fontSize > 20);
+
+    const lineHeight = fontSize * (subtitle ? 1.28 : 1.12);
+    const contentHeight = Math.max(1, lines.length) * lineHeight;
+    let y = (canvas.height - contentHeight) * 0.5 + lineHeight * 0.72;
+    context.fillStyle = subtitle ? '#faf7f2' : '#d4af6a';
+    context.textAlign = 'center';
+    context.textBaseline = 'alphabetic';
+    lines.slice(0, maxLines).forEach((line) => {
+      context.fillText(line, canvas.width * 0.5, y);
+      y += lineHeight;
+    });
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  _createMuseumArtifactSprite({ texture, position, scale, interactionName = '' }) {
+    if (!texture) {
+      return null;
+    }
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    }));
+    sprite.position.set(position[0], position[1], position[2]);
+    sprite.scale.set(scale[0], scale[1], 1);
+    sprite.renderOrder = 60;
+    if (interactionName) {
+      sprite.userData.isMuseumArtifactPickable = true;
+      sprite.userData.interaction = {
+        name: interactionName,
+        suppressPanel: true,
+        maxDistance: MUSEUM_ARTIFACT_INTERACTION_MAX_DISTANCE,
+        metadata: { type: 'museum-artifact-control' },
+      };
+      this.pickableMeshes.push(sprite);
+    }
+    return sprite;
+  }
+
+  _replaceMuseumArtifactSpriteTexture(sprite, texture) {
+    if (!sprite || !texture) {
+      return;
+    }
+    const oldTexture = sprite.material?.map || null;
+    const materials = new Set([sprite.material]);
+    const selected = this.interactionSystem?.selected;
+    if (selected?.mesh === sprite && selected.originalMaterial) {
+      materials.add(selected.originalMaterial);
+    }
+    materials.forEach((material) => {
+      material.map = texture;
+      material.needsUpdate = true;
+    });
+    if (oldTexture && oldTexture !== texture) {
+      oldTexture.dispose?.();
+    }
+  }
+
+  _setupMuseumArtifactStation() {
+    if (!this._isMuseumScene() || this.museumArtifactStation.root) {
+      return;
+    }
+
+    const station = this.museumArtifactStation;
+    const root = new THREE.Group();
+    root.name = 'museum-floating-artifact-station';
+    root.position.set(...MUSEUM_ARTIFACT_POSITION);
+    root.visible = false;
+
+    const modelPivot = new THREE.Group();
+    modelPivot.name = 'museum-floating-artifact-model';
+    root.add(modelPivot);
+
+    const controlsRoot = new THREE.Group();
+    controlsRoot.name = 'museum-floating-artifact-controls';
+    root.add(controlsRoot);
+
+    const previous = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactControlTexture('‹'),
+      position: [-0.48, 0.34, 0],
+      scale: [0.21, 0.21],
+      interactionName: 'museum-artifact-prev',
+    });
+    const next = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactControlTexture('›'),
+      position: [0.48, 0.34, 0],
+      scale: [0.21, 0.21],
+      interactionName: 'museum-artifact-next',
+    });
+    controlsRoot.add(previous, next);
+
+    const titleSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(''),
+      position: [0, 0.78, 0],
+      scale: [0.92, 0.16],
+    });
+    const subtitleSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
+      position: [0, 1.18, 0],
+      scale: [1.3, 0.65],
+    });
+    subtitleSprite.visible = false;
+    root.add(titleSprite, subtitleSprite);
+
+    const toggleSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactControlTexture('OPEN'),
+      position: MUSEUM_ARTIFACT_TOGGLE_POSITION,
+      scale: [0.25, 0.25],
+      interactionName: 'museum-artifact-toggle',
+    });
+    const languageSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactControlTexture('TL'),
+      position: [MUSEUM_ARTIFACT_TOGGLE_POSITION[0] - 0.29, MUSEUM_ARTIFACT_TOGGLE_POSITION[1], MUSEUM_ARTIFACT_TOGGLE_POSITION[2]],
+      scale: [0.21, 0.21],
+      interactionName: 'museum-artifact-language',
+    });
+    const subtitleToggleSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactControlTexture('CC'),
+      position: [MUSEUM_ARTIFACT_TOGGLE_POSITION[0] + 0.29, MUSEUM_ARTIFACT_TOGGLE_POSITION[1], MUSEUM_ARTIFACT_TOGGLE_POSITION[2]],
+      scale: [0.21, 0.21],
+      interactionName: 'museum-artifact-subtitles',
+    });
+    languageSprite.visible = false;
+    subtitleToggleSprite.visible = false;
+
+    this.scene.add(root, toggleSprite, languageSprite, subtitleToggleSprite);
+    station.root = root;
+    station.modelPivot = modelPivot;
+    station.controlsRoot = controlsRoot;
+    station.titleSprite = titleSprite;
+    station.subtitleSprite = subtitleSprite;
+    station.toggleSprite = toggleSprite;
+    station.languageSprite = languageSprite;
+    station.subtitleToggleSprite = subtitleToggleSprite;
+
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audio.playsInline = true;
+    station.audio = audio;
+    this._refreshMuseumArtifactPresentation();
+  }
+
+  _setMuseumArtifactStationOpen(open) {
+    if (!this._isMuseumScene() || !this.museumArtifactStation.root) {
+      return;
+    }
+    const station = this.museumArtifactStation;
+    station.isOpen = Boolean(open);
+    station.root.visible = station.isOpen;
+    station.languageSprite.visible = station.isOpen;
+    station.subtitleToggleSprite.visible = station.isOpen;
+    this._replaceMuseumArtifactSpriteTexture(
+      station.toggleSprite,
+      this._createMuseumArtifactControlTexture(station.isOpen ? 'CLOSE' : 'OPEN', station.isOpen),
+    );
+
+    if (!station.isOpen) {
+      this._stopMuseumArtifactNarration();
+      return;
+    }
+    this._refreshMuseumArtifactPresentation();
+    void this._showMuseumArtifact(station.index, { playNarration: true });
+  }
+
+  _stepMuseumArtifact(direction) {
+    const station = this.museumArtifactStation;
+    if (!station.isOpen || !MUSEUM_ARTIFACTS.length) {
+      return;
+    }
+    const nextIndex = (station.index + direction + MUSEUM_ARTIFACTS.length) % MUSEUM_ARTIFACTS.length;
+    void this._showMuseumArtifact(nextIndex, { playNarration: true });
+  }
+
+  _toggleMuseumArtifactLanguage() {
+    const station = this.museumArtifactStation;
+    if (!station.isOpen) {
+      return;
+    }
+    station.language = station.language === 'tl' ? 'en' : 'tl';
+    this._refreshMuseumArtifactPresentation();
+    this._playMuseumArtifactNarration();
+  }
+
+  _toggleMuseumArtifactSubtitles() {
+    const station = this.museumArtifactStation;
+    if (!station.isOpen) {
+      return;
+    }
+    station.subtitlesOn = !station.subtitlesOn;
+    this._refreshMuseumArtifactPresentation();
+  }
+
+  _getCurrentMuseumArtifact() {
+    return MUSEUM_ARTIFACTS[this.museumArtifactStation.index] || null;
+  }
+
+  async _showMuseumArtifact(index, { playNarration = false } = {}) {
+    const station = this.museumArtifactStation;
+    if (!station.root || !station.isOpen || !MUSEUM_ARTIFACTS.length) {
+      return;
+    }
+
+    station.index = (index + MUSEUM_ARTIFACTS.length) % MUSEUM_ARTIFACTS.length;
+    const artifact = this._getCurrentMuseumArtifact();
+    const loadToken = ++station.loadToken;
+    this._stopMuseumArtifactNarration();
+    this._refreshMuseumArtifactPresentation({ loading: true });
+
+    try {
+      let modelPromise = station.modelCache.get(artifact.id);
+      if (!modelPromise) {
+        modelPromise = this._loadAndNormalizeMuseumArtifact(artifact);
+        station.modelCache.set(artifact.id, modelPromise);
+      }
+      const model = await modelPromise;
+      if (loadToken !== station.loadToken || !station.isOpen) {
+        return;
+      }
+
+      if (station.currentModel && station.currentModel.parent === station.modelPivot) {
+        station.modelPivot.remove(station.currentModel);
+      }
+      station.currentModel = model;
+      station.modelPivot.add(model);
+      station.modelPivot.rotation.y = 0;
+      this._refreshMuseumArtifactPresentation();
+      if (playNarration) {
+        this._playMuseumArtifactNarration();
+      }
+    } catch (error) {
+      station.modelCache.delete(artifact.id);
+      console.warn(`[museum artifact] Could not load ${artifact.modelUrl}`, error);
+      if (loadToken === station.loadToken) {
+        this._refreshMuseumArtifactPresentation({ unavailable: true });
+        this.uiController.showError('This artifact could not be loaded. Use an arrow to try another artifact.', 3200);
+      }
+    }
+  }
+
+  async _loadAndNormalizeMuseumArtifact(artifact) {
+    const gltf = await this.gltfLoader.loadAsync(artifact.modelUrl);
+    const content = gltf.scene || gltf.scenes?.[0];
+    if (!content) {
+      throw new Error('The GLB contains no displayable scene.');
+    }
+
+    const degrees = artifact.rotation || [0, 0, 0];
+    content.rotation.set(
+      THREE.MathUtils.degToRad(degrees[0] || 0),
+      THREE.MathUtils.degToRad(degrees[1] || 0),
+      THREE.MathUtils.degToRad(degrees[2] || 0),
+    );
+    content.traverse((child) => {
+      if (!child.isMesh) {
+        return;
+      }
+      child.frustumCulled = false;
+      child.castShadow = false;
+      child.receiveShadow = false;
+      const materials = Array.isArray(child.material) ? child.material : [child.material];
+      materials.forEach((material) => {
+        if (material?.map) {
+          material.map.colorSpace = THREE.SRGBColorSpace;
+          material.map.needsUpdate = true;
+        }
+      });
+    });
+
+    content.updateMatrixWorld(true);
+    let bounds = new THREE.Box3().setFromObject(content);
+    const size = new THREE.Vector3();
+    bounds.getSize(size);
+    const largestDimension = Math.max(size.x, size.y, size.z);
+    if (!Number.isFinite(largestDimension) || largestDimension <= 0) {
+      throw new Error('The GLB has invalid bounds.');
+    }
+    const scale = MUSEUM_ARTIFACT_DISPLAY_SIZE / largestDimension;
+    content.scale.multiplyScalar(scale);
+    content.updateMatrixWorld(true);
+
+    bounds = new THREE.Box3().setFromObject(content);
+    const center = new THREE.Vector3();
+    bounds.getCenter(center);
+    content.position.x -= center.x;
+    content.position.y -= bounds.min.y;
+    content.position.z -= center.z;
+
+    const normalized = new THREE.Group();
+    normalized.name = `museum-artifact-${artifact.id}`;
+    normalized.add(content);
+    return normalized;
+  }
+
+  _refreshMuseumArtifactPresentation({ loading = false, unavailable = false } = {}) {
+    const station = this.museumArtifactStation;
+    const artifact = this._getCurrentMuseumArtifact();
+    if (!station.root || !artifact) {
+      return;
+    }
+
+    const language = station.language === 'en' ? 'en' : 'tl';
+    let title = artifact.title?.[language] || artifact.title?.en || artifact.id;
+    if (loading) {
+      title = language === 'tl' ? `${title} · Inihahanda…` : `${title} · Loading…`;
+    } else if (unavailable) {
+      title = language === 'tl' ? `${title} · Hindi mabuksan` : `${title} · Unavailable`;
+    }
+    this._replaceMuseumArtifactSpriteTexture(
+      station.titleSprite,
+      this._createMuseumArtifactTextTexture(title),
+    );
+    this._replaceMuseumArtifactSpriteTexture(
+      station.languageSprite,
+      this._createMuseumArtifactControlTexture(language.toUpperCase(), true),
+    );
+    this._replaceMuseumArtifactSpriteTexture(
+      station.subtitleToggleSprite,
+      this._createMuseumArtifactControlTexture('CC', station.subtitlesOn),
+    );
+
+    const subtitleKey = artifact.subtitleKey || artifact.id;
+    const subtitleRecord = window.NHCP_ARTIFACT_SUBTITLES?.[subtitleKey] || null;
+    const subtitleText = subtitleRecord?.[language] || '';
+    if (subtitleText) {
+      this._replaceMuseumArtifactSpriteTexture(
+        station.subtitleSprite,
+        this._createMuseumArtifactTextTexture(subtitleText, { subtitle: true }),
+      );
+    }
+    station.subtitleSprite.visible = Boolean(station.isOpen && station.subtitlesOn && subtitleText);
+  }
+
+  _playMuseumArtifactNarration() {
+    const station = this.museumArtifactStation;
+    const artifact = this._getCurrentMuseumArtifact();
+    if (!station.isOpen || !station.audio || !artifact) {
+      return;
+    }
+    const language = station.language === 'en' ? 'en' : 'tl';
+    const source = artifact.audio?.[language] || artifact.audio?.tl || artifact.audio?.en || '';
+    if (!source) {
+      return;
+    }
+    station.audio.pause();
+    station.audio.src = source;
+    station.audio.currentTime = 0;
+    this._updateMuseumArtifactAudioVolume();
+    const playing = station.audio.play();
+    if (playing?.catch) {
+      playing.catch((error) => {
+        console.warn('[museum artifact] Narration could not autoplay.', error);
+      });
+    }
+  }
+
+  _stopMuseumArtifactNarration() {
+    const audio = this.museumArtifactStation.audio;
+    if (!audio) {
+      return;
+    }
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  _updateMuseumArtifactAudioVolume() {
+    const station = this.museumArtifactStation;
+    if (!station.audio || !this.playerRig) {
+      return;
+    }
+    const distance = Math.hypot(
+      this.playerRig.position.x - MUSEUM_ARTIFACT_POSITION[0],
+      this.playerRig.position.z - MUSEUM_ARTIFACT_POSITION[2],
+    );
+    const normalized = THREE.MathUtils.clamp(
+      (distance - MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE)
+        / (MUSEUM_ARTIFACT_AUDIO_FAR_DISTANCE - MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE),
+      0,
+      1,
+    );
+    const eased = (1 - normalized) * (1 - normalized);
+    station.audio.volume = MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME
+      + (1 - MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME) * eased;
+  }
+
+  _updateMuseumArtifactStation(dt) {
+    const station = this.museumArtifactStation;
+    if (!station.root || !station.isOpen) {
+      return;
+    }
+    station.elapsed += dt;
+    if (station.modelPivot) {
+      station.modelPivot.position.y = Math.sin(station.elapsed * 1.15) * 0.025;
+      station.modelPivot.rotation.y += dt * 0.22;
+    }
+    this._updateMuseumArtifactAudioVolume();
   }
 
   _buildHotspotMarker({
@@ -2953,6 +3708,8 @@ export class WebXRApp {
       this.playerController.update(dt, this.collisionSystem);
       this._updatePositionDebugValue();
     }
+
+    this._updateMuseumArtifactStation(dt);
 
     if (this.cardboard.active && !this.renderer.xr.isPresenting) {
       this._renderCardboardStereo();
