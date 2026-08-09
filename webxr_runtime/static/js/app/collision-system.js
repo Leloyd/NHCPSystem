@@ -20,6 +20,7 @@ export class CollisionSystem {
     debugEnabled = false,
     walkBoundary = null,
     walkBoundarySegments = null,
+    walkBoundaryThickness = 0,
     maxPositiveClamp = null,
     floorRegions = null,
     boundsClampEnabled = true,
@@ -28,6 +29,7 @@ export class CollisionSystem {
     this.debugEnabled = Boolean(debugEnabled);
     this.walkBoundary = this._normalizeWalkBoundary(walkBoundary);
     this.walkBoundarySegments = this._normalizeWalkBoundarySegments(walkBoundarySegments);
+    this.walkBoundaryThickness = Math.max(0, Number(walkBoundaryThickness) || 0);
     this.maxPositiveClamp = this._normalizeMaxPositiveClamp(maxPositiveClamp);
     this.floorRegions = this._normalizeFloorRegions(floorRegions);
     this.boundsClampEnabled = Boolean(boundsClampEnabled);
@@ -495,6 +497,7 @@ export class CollisionSystem {
     }
 
     const epsilon = 1e-4;
+    const clearance = this.walkBoundaryThickness;
 
     for (const segment of this.walkBoundarySegments) {
       const { start, end } = segment;
@@ -502,24 +505,22 @@ export class CollisionSystem {
       const movementZ = feetPosition.z - previousFeetPosition.z;
       const edgeX = end.x - start.x;
       const edgeZ = end.y - start.y;
-      const denominator = movementX * edgeZ - movementZ * edgeX;
+      const edgeLengthSq = edgeX * edgeX + edgeZ * edgeZ;
+      const edgeLength = Math.sqrt(edgeLengthSq);
 
-      if (Math.abs(denominator) <= 1e-10) {
-        continue;
-      }
-
-      const offsetX = start.x - previousFeetPosition.x;
-      const offsetZ = start.y - previousFeetPosition.z;
-      const movementT = (offsetX * edgeZ - offsetZ * edgeX) / denominator;
-      const edgeT = (offsetX * movementZ - offsetZ * movementX) / denominator;
-
-      if (movementT < 0 || movementT > 1 || edgeT < 0 || edgeT > 1) {
-        continue;
-      }
-
-      const edgeLength = Math.hypot(edgeX, edgeZ);
       if (edgeLength <= 1e-8) {
         continue;
+      }
+
+      const denominator = movementX * edgeZ - movementZ * edgeX;
+      let crossedSegment = false;
+
+      if (Math.abs(denominator) > 1e-10) {
+        const offsetX = start.x - previousFeetPosition.x;
+        const offsetZ = start.y - previousFeetPosition.z;
+        const movementT = (offsetX * edgeZ - offsetZ * edgeX) / denominator;
+        const edgeT = (offsetX * movementZ - offsetZ * movementX) / denominator;
+        crossedSegment = movementT >= 0 && movementT <= 1 && edgeT >= 0 && edgeT <= 1;
       }
 
       const normalX = -edgeZ / edgeLength;
@@ -528,15 +529,61 @@ export class CollisionSystem {
         (previousFeetPosition.x - start.x) * normalX
         + (previousFeetPosition.z - start.y) * normalZ;
       const side = previousDistance < 0 ? -1 : 1;
-      const projectedT = THREE.MathUtils.clamp(
+
+      if (crossedSegment) {
+        const projectedT = THREE.MathUtils.clamp(
+          ((feetPosition.x - start.x) * edgeX + (feetPosition.z - start.y) * edgeZ)
+            / edgeLengthSq,
+          0,
+          1,
+        );
+
+        feetPosition.x = start.x + edgeX * projectedT + normalX * side * epsilon;
+        feetPosition.z = start.y + edgeZ * projectedT + normalZ * side * epsilon;
+      }
+
+      if (clearance <= 0) {
+        continue;
+      }
+
+      const closestT = THREE.MathUtils.clamp(
         ((feetPosition.x - start.x) * edgeX + (feetPosition.z - start.y) * edgeZ)
-          / (edgeLength * edgeLength),
+          / edgeLengthSq,
         0,
         1,
       );
+      const closestX = start.x + edgeX * closestT;
+      const closestZ = start.y + edgeZ * closestT;
+      const distanceX = feetPosition.x - closestX;
+      const distanceZ = feetPosition.z - closestZ;
+      const distanceSq = distanceX * distanceX + distanceZ * distanceZ;
 
-      feetPosition.x = start.x + edgeX * projectedT + normalX * side * epsilon;
-      feetPosition.z = start.y + edgeZ * projectedT + normalZ * side * epsilon;
+      if (distanceSq >= clearance * clearance) {
+        continue;
+      }
+
+      const previousClosestT = THREE.MathUtils.clamp(
+        ((previousFeetPosition.x - start.x) * edgeX
+          + (previousFeetPosition.z - start.y) * edgeZ) / edgeLengthSq,
+        0,
+        1,
+      );
+      const previousClosestX = start.x + edgeX * previousClosestT;
+      const previousClosestZ = start.y + edgeZ * previousClosestT;
+      let pushX = previousFeetPosition.x - previousClosestX;
+      let pushZ = previousFeetPosition.z - previousClosestZ;
+      const pushLength = Math.hypot(pushX, pushZ);
+
+      if (pushLength > 1e-8) {
+        pushX /= pushLength;
+        pushZ /= pushLength;
+      } else {
+        pushX = normalX * side;
+        pushZ = normalZ * side;
+      }
+
+      feetPosition.x = closestX + pushX * clearance;
+      feetPosition.z = closestZ + pushZ * clearance;
     }
   }
 
