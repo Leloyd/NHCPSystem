@@ -1,4 +1,4 @@
-"""Build the Heritage Keeper seal as 16 fitted, separately addressable pieces.
+"""Build the Heritage Trail seal as 10 fitted, separately addressable pieces.
 
 Run with Blender, not the system Python:
     blender --background --python scripts/build_seal_fragments.py -- \
@@ -6,7 +6,7 @@ Run with Blender, not the system Python:
 
 The output keeps all fragments in their assembled positions and shares the
 source material/textures. This lets the browser reveal, hide, or animate each
-piece without loading sixteen copies of the same texture maps.
+piece without loading ten copies of the same texture maps.
 """
 
 from __future__ import annotations
@@ -20,17 +20,16 @@ import bpy
 from mathutils import Vector
 
 
-PIECE_COUNT = 16
-GRID_SIZE = 4
+ROW_PIECES = (4, 3, 3)
+PIECE_COUNT = sum(ROW_PIECES)
 FRAGMENT_PREFIX = "Seal_Fragment_"
 
 # Deterministic offsets keep the pieces irregular while preserving a balanced
-# four-by-four distribution across the medallion.
+# distribution across the medallion.
 SEED_JITTER = (
     (-0.10, 0.05), (0.08, -0.07), (-0.06, 0.09), (0.07, -0.04),
     (0.06, -0.08), (-0.09, 0.06), (0.10, -0.03), (-0.05, 0.08),
-    (-0.07, 0.09), (0.05, -0.06), (-0.08, 0.04), (0.09, -0.08),
-    (0.08, -0.05), (-0.06, 0.08), (0.04, -0.09), (-0.09, 0.05),
+    (-0.07, 0.09), (0.05, -0.06),
 )
 
 
@@ -112,12 +111,15 @@ def build_voronoi_cells(
     height = max_v - min_v
     seeds: list[tuple[float, float]] = []
 
-    for row in range(GRID_SIZE):
-        for column in range(GRID_SIZE):
-            jitter_u, jitter_v = SEED_JITTER[row * GRID_SIZE + column]
-            u = min_u + ((column + 0.5 + jitter_u) / GRID_SIZE) * width
-            v = min_v + ((row + 0.5 + jitter_v) / GRID_SIZE) * height
+    seed_index = 0
+    row_count = len(ROW_PIECES)
+    for row, pieces_in_row in enumerate(ROW_PIECES):
+        for column in range(pieces_in_row):
+            jitter_u, jitter_v = SEED_JITTER[seed_index]
+            u = min_u + ((column + 0.5 + jitter_u) / pieces_in_row) * width
+            v = min_v + ((row + 0.5 + jitter_v) / row_count) * height
             seeds.append((u, v))
+            seed_index += 1
 
     cells: list[list[tuple[float, float]]] = []
     for seed_index, seed in enumerate(seeds):
@@ -200,7 +202,7 @@ def create_fragments(source: bpy.types.Object) -> tuple[list[bpy.types.Object], 
             raise RuntimeError(f"Fragment {piece_index} is empty after partitioning.")
 
         fragment["fragment_index"] = piece_index
-        fragment["fragment_source"] = "trail" if piece_index <= 10 else "ar"
+        fragment["fragment_source"] = "trail"
         fragment["assembled"] = True
         fragments.append(fragment)
 
@@ -227,7 +229,7 @@ def create_fragments(source: bpy.types.Object) -> tuple[list[bpy.types.Object], 
 
     metadata = {
         "pieceCount": len(fragments),
-        "layout": "irregular-voronoi-4x4",
+        "layout": "irregular-voronoi-4-3-3",
         "partitionMethod": "source-triangle-centroid",
         "assembledByDefault": True,
         "depthAxisInBlender": depth_axis,

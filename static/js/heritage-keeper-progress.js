@@ -18,7 +18,7 @@
   chip.className = "hk-progress-chip";
   chip.href = authenticated ? config.rewardUrl : config.loginUrl;
   chip.setAttribute("aria-label", authenticated ? "Open Heritage Keeper progress" : "Sign in to save Heritage Keeper fragments");
-  chip.innerHTML = '<span class="hk-progress-chip__seal" aria-hidden="true">HK</span><span class="hk-progress-chip__copy"><span class="hk-progress-chip__title">Heritage Keeper</span><span class="hk-progress-chip__count">' + (authenticated ? "0 / 16 · Fragments / Bahagi" : "Sign in / Mag-sign in") + "</span></span>";
+  chip.innerHTML = '<span class="hk-progress-chip__seal" aria-hidden="true">HK</span><span class="hk-progress-chip__copy"><span class="hk-progress-chip__title">Heritage Keeper</span><span class="hk-progress-chip__count">' + (authenticated ? "Loading progress / Kinukuha ang progreso" : "Sign in / Mag-sign in") + "</span></span>";
   document.body.appendChild(chip);
 
   var countElement = chip.querySelector(".hk-progress-chip__count");
@@ -37,7 +37,7 @@
 
   function updateProgress(progress) {
     if (!progress || !countElement) return;
-    countElement.textContent = String(progress.total_count || 0) + " / " + String(progress.total_required || 16) + " · Fragments / Bahagi";
+    countElement.textContent = String(progress.total_count || 0) + " / " + String(progress.total_required || 0) + " · Fragments / Bahagi";
     chip.classList.toggle("is-complete", Boolean(progress.unlocked));
   }
 
@@ -46,7 +46,7 @@
     modal.className = "hk-unlock-modal";
     modal.setAttribute("role", "dialog");
     modal.setAttribute("aria-modal", "true");
-    modal.innerHTML = '<div class="hk-unlock-modal__card"><div class="hk-unlock-modal__medal">HK</div><h2>Heritage Keeper Unlocked</h2><p>You completed the Heritage Trail and restored six cultural artifacts. Your bilingual certificate is ready.</p><p>Nakumpleto mo ang Heritage Trail at naibalik ang anim na artifact. Handa na ang iyong sertipiko.</p><div class="hk-unlock-modal__actions"><a href="' + config.rewardUrl + '">View award / Tingnan ang gantimpala</a><button type="button">Continue / Magpatuloy</button></div></div>';
+    modal.innerHTML = '<div class="hk-unlock-modal__card"><div class="hk-unlock-modal__medal">HK</div><h2>Heritage Keeper Unlocked</h2><p>You completed the Heritage Trail and restored every registered AR cultural artifact. Your bilingual certificate is ready.</p><p>Nakumpleto mo ang Heritage Trail at naibalik ang lahat ng nakatalang AR cultural artifact. Handa na ang iyong sertipiko.</p><div class="hk-unlock-modal__actions"><a href="' + config.rewardUrl + '">View award / Tingnan ang gantimpala</a><button type="button">Continue / Magpatuloy</button></div></div>';
     modal.querySelector("button").addEventListener("click", function () { modal.remove(); });
     modal.addEventListener("click", function (event) { if (event.target === modal) modal.remove(); });
     document.body.appendChild(modal);

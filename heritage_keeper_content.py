@@ -50,7 +50,8 @@ AR_ARTIFACTS = {
 }
 
 TRAIL_REQUIRED = len(TRAIL_FRAGMENTS)
-AR_REQUIRED = 6
+AR_KEY_ORDER = list(AR_ARTIFACTS)
+AR_REQUIRED = len(AR_KEY_ORDER)
 TOTAL_REQUIRED = TRAIL_REQUIRED + AR_REQUIRED
 VALID_TRAIL_KEYS = {item[0] for item in TRAIL_FRAGMENTS}
 TRAIL_KEY_ORDER = [item[0] for item in TRAIL_FRAGMENTS]
@@ -66,12 +67,12 @@ def empty_heritage_keeper_progress() -> dict[str, Any]:
         {
             "number": TRAIL_REQUIRED + index + 1,
             "source": "ar",
-            "key": "",
-            "label_en": "Restored artifact",
-            "label_tl": "Naibalik na artifact",
+            "key": key,
+            "label_en": AR_ARTIFACTS[key][0],
+            "label_tl": AR_ARTIFACTS[key][1],
             "earned": False,
         }
-        for index in range(AR_REQUIRED)
+        for index, key in enumerate(AR_KEY_ORDER)
     )
     return {
         "available": is_supabase_configured(),
@@ -120,30 +121,32 @@ def _build_progress(events: list[dict[str, Any]], award: dict[str, Any] | None) 
             "label_tl": label_tl,
             "earned": key in trail_keys,
         })
-    for index in range(AR_REQUIRED):
-        key = ar_keys[index] if index < len(ar_keys) else ""
-        labels = AR_ARTIFACTS.get(key, ("Restored artifact", "Naibalik na artifact"))
+    earned_ar_keys = set(ar_keys)
+    for index, key in enumerate(AR_KEY_ORDER):
+        labels = AR_ARTIFACTS[key]
         fragments.append({
             "number": TRAIL_REQUIRED + index + 1,
             "source": "ar",
             "key": key,
             "label_en": labels[0],
             "label_tl": labels[1],
-            "earned": bool(key),
+            "earned": key in earned_ar_keys,
         })
 
     trail_count = len(trail_keys)
-    ar_count = min(len(ar_keys), AR_REQUIRED)
+    ar_count = len(earned_ar_keys)
     total_count = trail_count + ar_count
+    trail_complete = trail_count >= TRAIL_REQUIRED
+    ar_complete = ar_count >= AR_REQUIRED
     progress.update({
         "trail_count": trail_count,
         "ar_count": ar_count,
         "ar_total_restored": len(ar_keys),
         "total_count": total_count,
         "percentage": round((total_count / TOTAL_REQUIRED) * 100),
-        "trail_complete": trail_count >= TRAIL_REQUIRED,
-        "ar_complete": ar_count >= AR_REQUIRED,
-        "unlocked": bool(award),
+        "trail_complete": trail_complete,
+        "ar_complete": ar_complete,
+        "unlocked": bool(award) and trail_complete and ar_complete,
         "certificate_code": str((award or {}).get("certificate_code") or ""),
         "unlocked_at": str((award or {}).get("unlocked_at") or ""),
         "fragments": fragments,
@@ -186,6 +189,7 @@ def record_heritage_keeper_fragment(user_id: int, source: str, item_key: str) ->
 
     events_after = list_heritage_keeper_events(user_id)
     award_before = get_heritage_keeper_award(user_id)
+    progress_before = _build_progress(events_before, award_before)
     progress = _build_progress(events_after, award_before)
     award_just_unlocked = False
     if progress["trail_complete"] and progress["ar_complete"] and not award_before:
@@ -196,6 +200,10 @@ def record_heritage_keeper_fragment(user_id: int, source: str, item_key: str) ->
         except Exception:
             pass
         progress = _build_progress(events_after, get_heritage_keeper_award(user_id))
+    elif progress["trail_complete"] and progress["ar_complete"]:
+        award_just_unlocked = not (
+            progress_before["trail_complete"] and progress_before["ar_complete"]
+        )
 
     return {
         "new_fragment": newly_awarded,

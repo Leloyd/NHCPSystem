@@ -84,44 +84,18 @@ if (viewer) {
       });
     }
 
-    function arrangeRecoveredFragments(nodes) {
-      const count = nodes.length;
-      const columns = Math.min(4, Math.max(1, Math.ceil(Math.sqrt(count * 1.3))));
-      const rows = Math.ceil(count / columns);
-      const jitterX = [-0.05, 0.06, -0.025, 0.045, 0.02, -0.055, 0.04, -0.03];
-      const jitterY = [0.04, -0.035, 0.055, -0.02, -0.05, 0.025, -0.03, 0.045];
-
-      nodes.forEach((node, displayIndex) => {
-        const column = displayIndex % columns;
-        const row = Math.floor(displayIndex / columns);
-        const fragmentIndex = node.userData.heritageFragmentIndex;
-        const x = (column - (columns - 1) / 2) * 0.55 + jitterX[fragmentIndex % jitterX.length];
-        const y = ((rows - 1) / 2 - row) * 0.5 + jitterY[fragmentIndex % jitterY.length];
-
-        node.position.set(x, y, (displayIndex % 3) * 0.035);
-        node.rotation.set(
-          THREE.MathUtils.degToRad(((fragmentIndex * 7) % 17) - 8),
-          THREE.MathUtils.degToRad(((fragmentIndex * 11) % 23) - 11),
-          THREE.MathUtils.degToRad(((fragmentIndex * 19) % 31) - 15)
-        );
-        node.scale.setScalar(1.06);
-        fragmentGroup.add(node);
-      });
-    }
-
-    function fitFragmentsToView() {
+    function fitFragmentsToView(modelRoot, completeBounds) {
       displayRoot.position.set(0, 0, 0);
       displayRoot.scale.setScalar(1);
       displayRoot.updateMatrixWorld(true);
 
-      const bounds = new THREE.Box3().setFromObject(displayRoot);
-      const center = bounds.getCenter(new THREE.Vector3());
-      const size = bounds.getSize(new THREE.Vector3());
+      const center = completeBounds.getCenter(new THREE.Vector3());
+      const size = completeBounds.getSize(new THREE.Vector3());
       const largest = Math.max(size.x, size.y, size.z, 0.001);
 
-      fragmentGroup.position.sub(center);
-      displayRoot.scale.setScalar(2.75 / largest);
-      camera.position.set(0, 0, 4.9);
+      modelRoot.position.sub(center);
+      displayRoot.scale.setScalar(2.6 / largest);
+      camera.position.set(0, 0, 4.6);
       camera.lookAt(0, 0, 0);
     }
 
@@ -196,6 +170,8 @@ if (viewer) {
     loader.load(
       viewer.dataset.modelUrl,
       (gltf) => {
+        gltf.scene.updateMatrixWorld(true);
+        const completeBounds = new THREE.Box3().setFromObject(gltf.scene);
         const recoveredNodes = [];
         gltf.scene.children.slice().forEach((node) => {
           const match = String(node.name || "").match(/Seal_Fragment_(\d+)/i);
@@ -217,8 +193,8 @@ if (viewer) {
         }
 
         recoveredNodes.sort((left, right) => left.userData.heritageFragmentIndex - right.userData.heritageFragmentIndex);
-        arrangeRecoveredFragments(recoveredNodes);
-        fitFragmentsToView();
+        fragmentGroup.add(gltf.scene);
+        fitFragmentsToView(gltf.scene, completeBounds);
         ready = true;
         viewer.classList.add("is-ready");
         if (loading) loading.hidden = true;
