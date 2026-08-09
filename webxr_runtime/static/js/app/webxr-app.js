@@ -24,8 +24,8 @@ const MUSEUM_HOTSPOT_MARKERS = [];
 // Museum is a splat-only capture (no .glb collision meshes), so these bounds
 // retain its floor height. Horizontal movement is intentionally left unclamped.
 // ?spawn=x,y,z overrides the start position live for quick calibration.
-const MUSEUM_SPAWN_POINT = [-8.42, 0.0, -2.24];
-const MUSEUM_SPAWN_YAW = Math.PI; // Face toward increasing Z.
+const MUSEUM_SPAWN_POINT = [0.5, 0.0, 0.07];
+const MUSEUM_SPAWN_YAW = Math.PI / 2; // Face toward negative X.
 const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -21], max: [4, 5, 5] };
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
