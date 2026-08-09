@@ -2408,15 +2408,28 @@ if (navigator.xr && typeof navigator.xr.isSessionSupported === 'function') {
 updateTrailViewButtons();
 
 /* --- Stop entry / transitions ------------------------------------------------ */
+const recordedTrailStopsThisVisit = new Set();
+
+function recordTrailStopCompletion(stopId) {
+  if (!/^stop(?:10|[1-9])$/.test(stopId) || recordedTrailStopsThisVisit.has(stopId)) return null;
+  if (!window.NHCPHeritageKeeper || typeof window.NHCPHeritageKeeper.award !== 'function') return null;
+
+  recordedTrailStopsThisVisit.add(stopId);
+  return Promise.resolve(window.NHCPHeritageKeeper.award('trail', stopId)).then((result) => {
+    if (!result) recordedTrailStopsThisVisit.delete(stopId);
+    return result;
+  }).catch(() => {
+    recordedTrailStopsThisVisit.delete(stopId);
+    return null;
+  });
+}
+
 function enterStop(stopId, opts) {
   transitioning = false;
   const conf = STOP_CONF[stopId];
   if (!conf || state.mode === stopId) return;
   if (stopId !== 'stop4') memoryApi.stopAudio?.();
   state.mode = stopId;
-  if (window.NHCPHeritageKeeper && typeof window.NHCPHeritageKeeper.award === 'function') {
-    window.NHCPHeritageKeeper.award('trail', stopId);
-  }
   if (window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
     window.NHCPAnalytics.track(
       'heritage_trail_stop_viewed',
@@ -2502,6 +2515,7 @@ window.addEventListener('hashchange', () => {
 function transitionToStop(stopId) {
   const conf = STOP_CONF[stopId];
   if (!conf || state.mode === stopId || root.getAttribute('data-phase') === 'depart') return;
+  recordTrailStopCompletion(state.mode);
   stopSpeaking();
   if (stopId !== 'stop4') memoryApi.stopAudio?.();
   if (!viewer) { enterStop(stopId); return; }
@@ -6587,6 +6601,7 @@ function setupStory(el) {
     if (el === activeStoryEl) {
       if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
       scrollYaw = progress * 26;
+      if (state.mode === stopId && progress >= 0.96) recordTrailStopCompletion(stopId);
     }
     setStep(Math.floor(Math.min(STEPS - 1e-4, progress * STEPS)));
   }, { passive: true });

@@ -2857,6 +2857,20 @@ button.trailx__begin { cursor: pointer; font-family: "Inter", sans-serif; }
 /* Trail's-end calls to action (Stop 10) — allow the two links to wrap. */
 .trailx__actions--end { flex-wrap: wrap; align-items: center; gap: 1rem 1.4rem; }
 
+.trailx__actions--end .trailx__begin--keeper {
+  flex-basis: 100%;
+  width: fit-content;
+  border-color: rgba(239, 205, 126, 0.78);
+  background: linear-gradient(135deg, #d4af6a, #ad8231);
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.28), inset 0 1px rgba(255, 250, 226, 0.32);
+}
+
+@media (max-width: 560px) {
+  .trailx__actions--end { align-items: stretch; }
+  .trailx__actions--end .trailx__begin,
+  .trailx__actions--end .trailx__cancel { width: 100%; justify-content: center; }
+}
+
 /* "View Documents" buttons (Stops 5 and 8) */
 .trailx__docbtn {
   display: inline-flex;

@@ -1926,6 +1926,31 @@
               Mula sa tarangkahan hanggang sa mga kripta sa ilalim, nakita mo kung paano nananatiling buhay ang pananampalataya, kasaysayan, at gunita sa isang maliit na pook na ito. Ang pamanang ito ay sa ating lahat — at lumalago ito kapag nakikibahagi ka. Magbahagi ng kuwento, mag-iwan ng puna, o dalawin kami nang personal sa Nagcarlan.
             </p>
             <div class="trailx__actions trailx__actions--end">
+              {% if public_user_authenticated %}
+              <a
+                class="trailx__begin trailx__begin--keeper"
+                href="{{ url_for('heritage_keeper_page') }}"
+                data-hk-award-link
+                data-hk-source="trail"
+                data-hk-key="stop10"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 19 6v5.6c0 4.2-2.8 7.4-7 8.9-4.2-1.5-7-4.7-7-8.9V6l7-2.5Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m8.7 12.1 2.1 2.1 4.5-4.7"></path></svg>
+                <span data-lang-en>View Your Completed Stops</span>
+                <span data-lang-tl>Tingnan ang Nakumpletong mga Hinto</span>
+              </a>
+              {% else %}
+              <a
+                class="trailx__begin trailx__begin--keeper"
+                href="{{ url_for('public_login', next=request.path) }}"
+                data-hk-award-link
+                data-hk-source="trail"
+                data-hk-key="stop10"
+              >
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 3.5 19 6v5.6c0 4.2-2.8 7.4-7 8.9-4.2-1.5-7-4.7-7-8.9V6l7-2.5Z"></path><path stroke-linecap="round" stroke-linejoin="round" d="M9.3 12h5.4M12 9.3v5.4"></path></svg>
+                <span data-lang-en>Sign In to Record Your 10 Stops</span>
+                <span data-lang-tl>Mag-sign in upang Itala ang 10 Hinto</span>
+              </a>
+              {% endif %}
               <a class="trailx__begin" href="{{ url_for('community_participation') }}">
                 <span data-lang-en>Join the Community</span>
                 <span data-lang-tl>Sumali sa Komunidad</span>
@@ -2032,6 +2057,8 @@
     <script src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>
     <script src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
     <script id="heritageKeeperConfig" type="application/json">{{ {
+      'source': 'trail',
+      'total': 10,
       'authenticated': public_user_authenticated,
       'csrfToken': public_csrf_token,
       'progressUrl': url_for('heritage_keeper_progress_api'),

@@ -5,108 +5,165 @@
   --hk-cream: #faf7f2;
 }
 
-.hk-progress-chip {
+.hk-progress-capsule {
   position: fixed;
   z-index: 2147482000;
   top: max(0.75rem, env(safe-area-inset-top));
   left: max(0.75rem, env(safe-area-inset-left));
-  display: inline-flex;
+  display: flex;
+  width: 2.8rem;
+  height: 2.8rem;
   align-items: center;
-  gap: 0.55rem;
-  min-height: 2.65rem;
-  max-width: min(18rem, calc(100vw - 1.5rem));
-  padding: 0.45rem 0.8rem 0.45rem 0.5rem;
+  overflow: hidden;
   color: var(--hk-cream);
-  background: rgba(13, 10, 4, 0.9);
-  border: 1px solid rgba(212, 175, 106, 0.7);
+  background: rgba(13, 10, 4, 0.94);
+  border: 1px solid rgba(212, 175, 106, 0.78);
   border-radius: 999px;
-  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.3);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  font: 600 0.72rem/1.15 Inter, system-ui, sans-serif;
-  text-decoration: none;
-}
-
-.hk-progress-chip__seal {
-  display: grid;
-  place-items: center;
-  width: 1.75rem;
-  height: 1.75rem;
-  flex: 0 0 auto;
-  color: var(--hk-ink);
-  background: linear-gradient(145deg, #f0d28e, var(--hk-gold-deep));
-  border-radius: 50%;
-  font-family: "Playfair Display", Georgia, serif;
-  font-size: 0.82rem;
-  box-shadow: inset 0 0 0 2px rgba(255, 250, 226, 0.28);
-}
-
-.hk-progress-chip__copy { min-width: 0; }
-.hk-progress-chip__title { display: block; white-space: nowrap; }
-.hk-progress-chip__count { display: block; margin-top: 0.1rem; color: var(--hk-gold); font-size: 0.65rem; font-weight: 500; }
-
-.hk-toast {
-  position: fixed;
-  z-index: 2147483000;
-  left: 50%;
-  bottom: max(5.5rem, calc(env(safe-area-inset-bottom) + 4.5rem));
-  width: min(28rem, calc(100vw - 2rem));
-  padding: 1rem 1.1rem;
-  color: var(--hk-cream);
-  background: rgba(28, 18, 8, 0.96);
-  border: 1px solid var(--hk-gold-deep);
-  border-radius: 1rem;
-  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.4);
-  transform: translate(-50%, 1rem);
+  box-shadow: 0 0.8rem 2.4rem rgba(0, 0, 0, 0.34);
   opacity: 0;
   pointer-events: none;
-  transition: opacity 180ms ease, transform 180ms ease;
-  font: 500 0.85rem/1.45 Inter, system-ui, sans-serif;
+  transform: translate3d(-0.45rem, 0, 0) scale(0.84);
+  transform-origin: left center;
+  transition:
+    width 460ms cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 180ms ease,
+    transform 360ms cubic-bezier(0.22, 1, 0.36, 1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  font: 700 0.7rem/1 Inter, system-ui, sans-serif;
 }
 
-.hk-toast.is-visible { opacity: 1; transform: translate(-50%, 0); pointer-events: auto; }
-.hk-toast strong { display: block; color: var(--hk-gold); font-family: "Playfair Display", Georgia, serif; font-size: 1rem; }
-.hk-toast p { margin: 0.3rem 0 0; }
-.hk-toast a { color: #f5d98e; font-weight: 700; }
+.hk-progress-capsule.is-visible {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+}
 
-.hk-unlock-modal[hidden] { display: none !important; }
+.hk-progress-capsule.is-expanded { width: 8.9rem; }
+
+.hk-progress-capsule__icon {
+  position: relative;
+  display: grid;
+  width: 2.7rem;
+  height: 2.7rem;
+  place-items: center;
+  flex: 0 0 2.7rem;
+  color: #2a1b0c;
+  background: radial-gradient(circle at 36% 30%, #f5dda2, var(--hk-gold-deep));
+  border: 0.18rem solid rgba(13, 10, 4, 0.86);
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 1px rgba(255, 249, 220, 0.38);
+}
+
+.hk-progress-capsule__icon svg {
+  position: absolute;
+  width: 1.22rem;
+  height: 1.22rem;
+  transition: opacity 180ms ease, transform 280ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.hk-progress-capsule__fragment { opacity: 1; transform: rotate(-12deg) scale(1); }
+.hk-progress-capsule__check { opacity: 0; transform: scale(0.45); }
+.hk-progress-capsule.is-checked .hk-progress-capsule__fragment { opacity: 0; transform: rotate(12deg) scale(0.45); }
+.hk-progress-capsule.is-checked .hk-progress-capsule__check { opacity: 1; transform: scale(1); }
+
+.hk-progress-capsule__count {
+  display: block;
+  min-width: 5.75rem;
+  padding: 0 0.75rem 0 0.35rem;
+  color: #f2d795;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+}
+
+html.hk-modal-open,
+body.hk-modal-open { overflow: hidden !important; }
+
 .hk-unlock-modal {
   position: fixed;
   z-index: 2147483600;
   inset: 0;
   display: grid;
   place-items: center;
-  padding: 1.25rem;
-  background: rgba(8, 5, 2, 0.82);
+  padding: max(1rem, env(safe-area-inset-top)) max(1rem, env(safe-area-inset-right)) max(1rem, env(safe-area-inset-bottom)) max(1rem, env(safe-area-inset-left));
+  overflow-y: auto;
+  background: rgba(8, 5, 2, 0.86);
   backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
 }
 
 .hk-unlock-modal__card {
   position: relative;
   width: min(31rem, 100%);
-  padding: 2rem;
+  padding: clamp(1.45rem, 5vw, 2.35rem);
   color: var(--hk-ink);
   text-align: center;
-  background: var(--hk-cream);
+  background:
+    linear-gradient(rgba(117, 83, 35, 0.06) 1px, transparent 1px) 0 0 / 100% 1.8rem,
+    var(--hk-cream);
   border: 1px solid var(--hk-gold);
-  border-radius: 1.5rem;
-  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.5);
+  border-radius: 0.45rem;
+  box-shadow: 0 1.5rem 4rem rgba(0, 0, 0, 0.52);
 }
 
-.hk-unlock-modal__medal { margin: 0 auto 1rem; display: grid; place-items: center; width: 5rem; height: 5rem; border-radius: 50%; color: var(--hk-ink); background: radial-gradient(circle at 35% 30%, #f9e4a9, var(--hk-gold-deep)); font: 700 1.35rem "Playfair Display", Georgia, serif; }
-.hk-unlock-modal h2 { margin: 0; font: 600 clamp(1.55rem, 5vw, 2.25rem)/1.1 "Playfair Display", Georgia, serif; }
-.hk-unlock-modal p { margin: 0.75rem auto 0; max-width: 25rem; font: 400 0.9rem/1.55 Inter, system-ui, sans-serif; }
-.hk-unlock-modal__actions { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.65rem; margin-top: 1.25rem; }
+.hk-unlock-modal__card::before {
+  content: "";
+  position: absolute;
+  inset: 0.48rem;
+  border: 1px solid rgba(184, 146, 58, 0.35);
+  pointer-events: none;
+}
+
+.hk-unlock-modal__close {
+  position: absolute;
+  z-index: 1;
+  top: 0.75rem;
+  right: 0.75rem;
+  display: grid;
+  width: 2.25rem;
+  height: 2.25rem;
+  place-items: center;
+  color: var(--hk-ink);
+  background: #f4e8cc;
+  border: 1px solid var(--hk-gold-deep);
+  border-radius: 50%;
+  font: 400 1.35rem/1 Inter, sans-serif;
+  cursor: pointer;
+}
+
+.hk-unlock-modal__medal {
+  position: relative;
+  display: grid;
+  width: 5.2rem;
+  height: 5.2rem;
+  place-items: center;
+  margin: 0 auto 1rem;
+  color: var(--hk-ink);
+  background: radial-gradient(circle at 35% 30%, #f9e4a9, var(--hk-gold-deep));
+  border: 0.3rem double #7e5a20;
+  border-radius: 50%;
+  font: 700 1.15rem "Playfair Display", Georgia, serif;
+  box-shadow: 0 0 0 0.38rem rgba(184, 146, 58, 0.12);
+}
+
+.hk-unlock-modal__medal span { transform: translateY(-0.03rem); }
+.hk-unlock-modal__eyebrow { margin: 0 0 0.55rem !important; color: #8a631e; font-size: 0.62rem !important; font-weight: 700 !important; letter-spacing: 0.14em; text-transform: uppercase; }
+.hk-unlock-modal h2 { margin: 0; font: 600 clamp(1.55rem, 5vw, 2.25rem)/1.08 "Playfair Display", Georgia, serif; }
+.hk-unlock-modal p { position: relative; margin: 0.75rem auto 0; max-width: 25rem; font: 400 0.86rem/1.6 Inter, system-ui, sans-serif; }
+.hk-unlock-modal__note { padding-top: 0.75rem; color: #684a17; border-top: 1px solid rgba(117, 83, 35, 0.3); font-weight: 700 !important; }
+.hk-unlock-modal__actions { position: relative; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.65rem; margin-top: 1.35rem; }
 .hk-unlock-modal__actions a,
-.hk-unlock-modal__actions button { min-height: 2.75rem; padding: 0.7rem 1rem; border: 1px solid var(--hk-gold-deep); border-radius: 999px; font: 700 0.78rem Inter, sans-serif; cursor: pointer; }
+.hk-unlock-modal__actions button { min-height: 2.75rem; padding: 0.7rem 1rem; border: 1px solid var(--hk-gold-deep); border-radius: 999px; font: 700 0.75rem Inter, sans-serif; cursor: pointer; }
 .hk-unlock-modal__actions a { color: var(--hk-cream); background: var(--hk-ink); text-decoration: none; }
 .hk-unlock-modal__actions button { color: var(--hk-ink); background: transparent; }
 
-@media (max-width: 520px) {
-  .hk-progress-chip__title { display: none; }
-  .hk-progress-chip { padding-right: 0.65rem; }
+@media (max-width: 420px) {
+  .hk-progress-capsule { top: max(0.55rem, env(safe-area-inset-top)); left: max(0.55rem, env(safe-area-inset-left)); }
+  .hk-unlock-modal__actions { display: grid; }
+  .hk-unlock-modal__actions a,
+  .hk-unlock-modal__actions button { width: 100%; }
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .hk-toast { transition: none; }
+  .hk-progress-capsule,
+  .hk-progress-capsule__icon svg { transition: none !important; }
 }

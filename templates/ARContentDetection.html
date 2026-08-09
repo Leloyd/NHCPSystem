@@ -22,6 +22,7 @@
     <script defer src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>
     <script id="heritageKeeperConfig" type="application/json">{{ {
+      'source': 'ar',
       'authenticated': public_user_authenticated,
       'csrfToken': public_csrf_token,
       'progressUrl': url_for('heritage_keeper_progress_api'),
