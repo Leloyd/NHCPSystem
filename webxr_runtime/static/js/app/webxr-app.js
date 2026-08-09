@@ -32,6 +32,7 @@ const MUSEUM_WALK_BOUNDARY = [
   [0.67, 0.90],
   [-0.55, 0.90],
   [-0.55, -0.45],
+  [-0.65, -0.45],
 ];
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
