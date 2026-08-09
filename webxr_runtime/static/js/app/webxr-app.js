@@ -96,36 +96,8 @@ const UNDERGROUND_WALK_BOUNDARY = [
 ];
 const CHURCH_HOTSPOT_MARKERS = [
   {
-    id: 'hotspot-1',
-    position: [-2.494, 0.343, -2.280],
-    color: 0x8fd3ff,
-    radius: 0.07,
-    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
-  },
-  {
-    id: 'hotspot-2',
-    position: [-2.504, 0.345, -1.342],
-    color: 0x8fd3ff,
-    radius: 0.07,
-    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
-  },
-  {
-    id: 'hotspot-3',
-    position: [-2.619, 0.334, 1.068],
-    color: 0x8fd3ff,
-    radius: 0.07,
-    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
-  },
-  {
-    id: 'hotspot-4',
-    position: [-2.641, 0.339, 2.063],
-    color: 0x8fd3ff,
-    radius: 0.07,
-    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
-  },
-  {
-    id: 'hotspot-5',
-    position: [-4.10, 2.50, -0.19],
+    id: 'go-to-museum',
+    position: [-4.20, 1.50, -0.19],
     color: 0x8fd3ff,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
@@ -169,78 +141,9 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
   },
 ];
 const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
-const TABLE_AUDIO_BASE = '/audio/360VT/TableAudio/';
-const tableAudio = (tl, en) => ({
-  tl: tl ? `${TABLE_AUDIO_BASE}${tl}` : '',
-  en: en ? `${TABLE_AUDIO_BASE}${en}` : '',
-});
-const CHURCH_HOTSPOT_TABLES = {
-  // Physical marker assignment:
-  // hotspot-1 = Materials I, hotspot-2 = Wood / structural elements,
-  // hotspot-3 = Details I, hotspot-4 = Details II.
-  'hotspot-3': {
-    title: { en: 'Architectural Details I', tl: 'Mga Detalye ng Arkitektura I' },
-    imageUrl: `${TABLE_IMAGE_BASE}Art1-RightTable.png`,
-    imageAlt: 'Art1 Right Table',
-    hotspots: [
-      { id: 'art1-right-table-1', x: 27.20, y: 52.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/AzulejosTile.png`, title: 'Azulejos Tile', audio: tableAudio('Azulejos-T.mp3', 'Azulejos-E.mp3') },
-      { id: 'art1-right-table-2', x: 48.46, y: 29.74, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/RightWindow.png`, title: 'Right Window', audio: tableAudio('Right Window(T).mp3', 'Right Window.mp3') },
-      { id: 'art1-right-table-3', x: 47.90, y: 56.52, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/ChapelCeiling.png`, title: 'Chapel Ceiling', audio: tableAudio('Chapel Ceiling(T).mp3', 'Chapel Ceiling.mp3') },
-      { id: 'art1-right-table-4', x: 69.59, y: 30.90, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/PigmentAboveNiche.png`, title: 'Pigment Above Niche', audio: tableAudio('Pigment Above Niche(T).mp3', 'Pigment Above Niche.mp3') },
-      { id: 'art1-right-table-5', x: 69.45, y: 56.29, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/BasReliefNiche.png`, title: 'Bas-Relief Niche', audio: tableAudio('Bas Relief Niche(T).mp3', 'Bas Relief Niche.mp3') },
-    ],
-  },
-  'hotspot-4': {
-    title: { en: 'Architectural Details II', tl: 'Mga Detalye ng Arkitektura II' },
-    imageUrl: `${TABLE_IMAGE_BASE}Art2-RightTable.png`,
-    imageAlt: 'Art2 Right Table',
-    hotspots: [
-      { id: 'art2-right-table-1', x: 29.44, y: 18.22, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/InteriorWall.png`, title: 'Interior Wall', audio: tableAudio('Interior Wall, Chapel(T).mp3', 'Interior Wall, Chapel.mp3') },
-      { id: 'art2-right-table-2', x: 29.58, y: 38.40, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Flooring.png`, title: 'Flooring', audio: tableAudio('Flooring, Crypt(T).mp3', 'Flooring, Crypt.mp3') },
-      { id: 'art2-right-table-3', x: 29.58, y: 56.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Pilaster.png`, title: 'Pilaster', audio: tableAudio('Pilaster (T).mp3', 'Pilaster.mp3') },
-      { id: 'art2-right-table-4', x: 29.02, y: 73.96, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/PerimeterWall.png`, title: 'Perimeter Wall', audio: tableAudio('Perimeter Wall(T).mp3', 'Perimeter Wall.mp3') },
-      { id: 'art2-right-table-5', x: 40.49, y: 19.73, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Pigments.png`, title: 'Pigments', audio: tableAudio('Mga Kulay Pigments.mp3', 'Mga Kulay Pigments(E).mp3') },
-      { id: 'art2-right-table-6', x: 40.49, y: 73.21, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Artist_sMarterials.png`, title: "Artist's Materials", audio: tableAudio('Mga Kagamitan sa Pagdisenyo.mp3', 'Mga Kagamitan sa Pagdisenyo(E).mp3') },
-      { id: 'art2-right-table-7', x: 70.56, y: 36.89, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/CoralPowder.png`, title: 'Coral Powder', audio: tableAudio('Pulbos na Koral.mp3', 'Pulbos na Koral(E).mp3') },
-      { id: 'art2-right-table-8', x: 80.92, y: 37.64, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/AdobePowder.png`, title: 'Adobe Powder', audio: tableAudio('Pulbos na Adobe.mp3', 'Pulbos na Adobe(E).mp3') },
-      { id: 'art2-right-table-9', x: 91.55, y: 38.40, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/BrickPowder.png`, title: 'Brick Powder', audio: tableAudio('Pulbos na Ladrilyo.mp3', 'Pulbos na Ladrilyo(E).mp3') },
-      { id: 'art2-right-table-10', x: 73.92, y: 70.43, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Lime.png`, title: 'Lime', audio: tableAudio('Apog.mp3', 'Apog(E).mp3') },
-      { id: 'art2-right-table-11', x: 85.53, y: 70.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Sand.png`, title: 'Sand', audio: tableAudio('Buhangin.mp3', 'Buhangin(E).mp3') },
-    ],
-  },
-  'hotspot-1': {
-    title: { en: 'Construction Materials I', tl: 'Mga Materyales sa Konstruksyon I' },
-    imageUrl: `${TABLE_IMAGE_BASE}Art1-LeftTable.png`,
-    imageAlt: 'Art1 Left Table',
-    hotspots: [
-      { id: 'art1-left-table-1', x: 14.40, y: 28.76, imageUrl: `${TABLE_IMAGE_BASE}Artifact/ApogAdobe.png`, title: 'Lime Putty and Adobe Powder', audio: tableAudio('ApogAdobe-T.mp3', 'ApogAdobe-E.mp3') },
-      { id: 'art1-left-table-2', x: 13.70, y: 50.00, imageUrl: `${TABLE_IMAGE_BASE}Artifact/LimeSand.png`, title: 'Lime Putty and Sand', audio: tableAudio('ApogSand-T.mp3', 'ApogSand-E.mp3') },
-      { id: 'art1-left-table-3', x: 13.28, y: 71.24, imageUrl: `${TABLE_IMAGE_BASE}Artifact/LimeCoral.png`, title: 'Lime Putty and Coral Powder', audio: tableAudio('ApogCoral-T.mp3', 'ApogCoral-E.mp3') },
-      { id: 'art1-left-table-4', x: 58.74, y: 39.13, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Limestone.png`, title: 'Limestone', audio: tableAudio('Batong-Apog-T.mp3', 'Batong-Apog-E.mp3') },
-      { id: 'art1-left-table-5', x: 58.46, y: 78.82, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Brick.png`, title: 'Brick', audio: tableAudio('Ladrilyo-T.mp3', 'Ladrilyo-E.mp3') },
-      { id: 'art1-left-table-6', x: 84.62, y: 78.06, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Adobe.png`, title: 'Adobe', audio: tableAudio('Adobe-T.mp3', 'Adobe-E.mp3') },
-      { id: 'art1-left-table-7', x: 83.79, y: 36.35, imageUrl: `${TABLE_IMAGE_BASE}Artifact/CoralStone.png`, title: 'Coral Stone', audio: tableAudio('CoralStone-T.mp3', 'CoralStone-E.mp3') },
-    ],
-  },
-  'hotspot-2': {
-    title: { en: 'Wood and Structural Elements', tl: 'Kahoy at mga Elementong Istruktural' },
-    imageUrl: `${TABLE_IMAGE_BASE}Art2-LeftTable.png`,
-    imageAlt: 'Art2 Left Table',
-    hotspots: [
-      { id: 'art2-left-table-1', x: 23.77, y: 21.26, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/molave.png`, title: 'Molave', audio: tableAudio('Molave-T.mp3', 'Molave-E.mp3') },
-      { id: 'art2-left-table-2', x: 23.28, y: 48.22, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Narra.png`, title: 'Narra', audio: tableAudio('Narra-T.mp3', 'Narra-E.mp3') },
-      { id: 'art2-left-table-3', x: 23.42, y: 75.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/KatongMatsing.png`, title: 'Katong Matsing', audio: tableAudio('Katong-Matsing-T.mp3', 'Katong-Matsing-E.mp3') },
-      { id: 'art2-left-table-4', x: 45.66, y: 32.45, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Kamagong.png`, title: 'Kamagong', audio: tableAudio('Kamagong-T.mp3', 'Kamagong-E.mp3') },
-      { id: 'art2-left-table-5', x: 45.80, y: 66.28, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Yakal.png`, title: 'Yakal', audio: tableAudio('Yakal-T.mp3', 'Yakal-E.mp3') },
-      { id: 'art2-left-table-6', x: 62.31, y: 55.60, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/BatikulingWHR.png`, title: 'Batikuling WHR', audio: tableAudio('Batikuling-T.mp3', 'Batikuling-E.mp3') },
-      { id: 'art2-left-table-7', x: 74.76, y: 53.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Headrest.png`, title: 'Headrest', audio: tableAudio('Headrest-T.mp3', 'Headrest-E.mp3') },
-      { id: 'art2-left-table-8', x: 75.46, y: 87.14, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/IronNail.png`, title: 'Iron Nail', audio: tableAudio('IronNail-T.mp3', 'IronNail-E.mp3') },
-    ],
-  },
-};
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
-const HERITAGE_MISSION_CHAPEL_IDS = ['hotspot-1', 'hotspot-2', 'hotspot-3', 'hotspot-4'];
+const HERITAGE_MISSION_CHAPEL_IDS = [];
 const HERITAGE_MISSION_TIMELINE = [
   'evidence-revolution',
   'evidence-biak-na-bato',
@@ -298,7 +201,6 @@ const HERITAGE_MISSION_EVIDENCE_TABLES = Object.fromEntries(
   }]),
 );
 const HOTSPOT_TABLES = {
-  ...CHURCH_HOTSPOT_TABLES,
   ...HERITAGE_MISSION_EVIDENCE_TABLES,
 };
 const HOTSPOT_FLOATING_LABEL_IMAGES = Object.fromEntries(
@@ -788,7 +690,7 @@ export class WebXRApp {
 
   _renderChapelMission() {
     const cards = HERITAGE_MISSION_CHAPEL_IDS.map((id) => {
-      const table = CHURCH_HOTSPOT_TABLES[id];
+      const table = HOTSPOT_TABLES[id];
       const complete = this.heritageMission.chapelEvidence.includes(id);
       return `<li class="${complete ? 'is-collected' : ''}"><i>${complete ? '✓' : '○'}</i><span>${table.title[this.heritageMission.language] || table.title.en}</span></li>`;
     }).join('');
@@ -859,7 +761,7 @@ export class WebXRApp {
 
   _renderMuseumCuration() {
     const chapelOptions = HERITAGE_MISSION_CHAPEL_IDS.map((id) => {
-      const table = CHURCH_HOTSPOT_TABLES[id];
+      const table = HOTSPOT_TABLES[id];
       const selected = this.heritageMission.curatedChapel === id;
       return `<button type="button" class="heritage-mission__curation-card ${selected ? 'is-selected' : ''}" data-mission-action="curate-chapel" data-mission-id="${id}" aria-pressed="${selected}"><i>${selected ? '✓' : '+'}</i><span>${table.title[this.heritageMission.language] || table.title.en}</span></button>`;
     }).join('');
@@ -2140,6 +2042,10 @@ export class WebXRApp {
       this._transferToUnderground();
     });
 
+    this.interactionRegistry.register('go-to-museum', () => {
+      this._transferToMuseum();
+    });
+
     this.interactionRegistry.register('altar', (context) => {
       console.log('[interaction] altar selected', context);
     });
@@ -2512,7 +2418,7 @@ export class WebXRApp {
     const activeHotspots = this._getActiveHotspotMarkers();
 
     for (const hotspot of activeHotspots) {
-      const interactionName = hotspot.id === 'go-back-to-church'
+      const interactionName = hotspot.id === 'go-back-to-church' || hotspot.id === 'go-to-museum'
         ? hotspot.id
         : (HOTSPOT_TABLES[hotspot.id] ? hotspot.id : null);
       const { root } = this._buildHotspotMarker({
@@ -2962,6 +2868,14 @@ export class WebXRApp {
     nextUrl.searchParams.delete('spawn');
     nextUrl.searchParams.set('zip', UNDERGROUND_ZIP_NAME);
     window.location.assign(nextUrl.toString());
+  }
+
+  _transferToMuseum() {
+    if (this._isMuseumScene()) {
+      return;
+    }
+
+    window.location.assign('/3d-environment/museum');
   }
 
   _onGlobalKeyDown(event) {
