@@ -330,6 +330,7 @@ export class WebXRApp {
     this.requestedScene = String(this.container?.dataset?.webxrScene || '').trim().toLowerCase() || null;
     this.requestedZipOverride = this._readZipOverrideFromUrl();
     this.requestedSpawnOverride = this._readSpawnOverrideFromUrl();
+    this.hotspotDebugRequested = new URLSearchParams(window.location.search).get('hotspotDebug') === '1';
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(DEFAULT_BG);
@@ -396,6 +397,7 @@ export class WebXRApp {
     this.interactionSystem = null;
     this.activeXrReferenceSpaceType = null;
     this.lastPositionDebugValue = '';
+    this.hotspotDebugActive = false;
 
     // "VR Box" (Cardboard) mode: gyro look + side-by-side stereo rendering
     // for compatible non-iOS phones without WebXR. No XR session involved.
@@ -409,6 +411,7 @@ export class WebXRApp {
 
     this.boundResize = this.onResize.bind(this);
     this.boundFullscreenChange = this._onFullscreenChange.bind(this);
+    this.boundGlobalKeyDown = this._onGlobalKeyDown.bind(this);
   }
 
   async init() {
@@ -435,6 +438,7 @@ export class WebXRApp {
       this.uiController.completeLoading('Scene ready.');
 
       window.addEventListener('resize', this.boundResize);
+      window.addEventListener('keydown', this.boundGlobalKeyDown);
       document.addEventListener('fullscreenchange', this.boundFullscreenChange);
       this.onResize();
 
@@ -470,6 +474,15 @@ export class WebXRApp {
       && (this.mobileMode || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
     this.uiController.setGyroVisible(gyroCapable);
     this.uiController.setCardboardVisible(gyroCapable && !IS_IOS_DEVICE);
+
+    this.refs.positionDebugCopy?.addEventListener('click', () => {
+      if (this.hotspotDebugActive) {
+        const value = this.refs.positionDebugValue?.textContent?.trim();
+        if (value && value.startsWith('[')) {
+          console.info(`[churchHotspotDebug] position: ${value}`);
+        }
+      }
+    });
   }
 
   _createDefaultHeritageMissionState() {
@@ -2781,7 +2794,24 @@ export class WebXRApp {
       spawnYaw = 0;
     }
     this.camera.rotation.set(0, spawnYaw, 0);
-    this.uiController.setPositionDebugVisible(this._isMuseumScene());
+    this.hotspotDebugActive = this.hotspotDebugRequested
+      && !this._isMuseumScene()
+      && !this._isUndergroundScene();
+    this.refs.hotspotDebugReticle?.classList.toggle('hidden', !this.hotspotDebugActive);
+    this.uiController.setPositionDebugVisible(this._isMuseumScene() || this.hotspotDebugActive);
+    if (this.hotspotDebugActive) {
+      this.uiController.setPositionDebugMode({
+        label: 'Church hotspot helper',
+        hint: 'Aim at a surface · press H or Copy',
+        ariaLabel: 'Church hotspot coordinates',
+      });
+    } else {
+      this.uiController.setPositionDebugMode({
+        label: 'Player coordinates',
+        hint: 'X, Y, Z',
+        ariaLabel: 'Museum player coordinates',
+      });
+    }
     this._updatePositionDebugValue(true);
 
     this.interactionSystem?.dispose?.();
@@ -2798,6 +2828,22 @@ export class WebXRApp {
   }
 
   _updatePositionDebugValue(force = false) {
+    if (this.hotspotDebugActive) {
+      const position = this._getCrosshairHitPoint(false);
+      const value = position
+        ? `[${position.x.toFixed(3)}, ${position.y.toFixed(3)}, ${position.z.toFixed(3)}]`
+        : 'Aim at a surface';
+      this.uiController.setPositionDebugCopyEnabled(Boolean(position));
+
+      if (!force && value === this.lastPositionDebugValue) {
+        return;
+      }
+
+      this.lastPositionDebugValue = value;
+      this.uiController.setPositionDebugValue(value);
+      return;
+    }
+
     if (!this._isMuseumScene() || !this.playerRig) {
       return;
     }
@@ -2809,6 +2855,7 @@ export class WebXRApp {
     }
 
     this.lastPositionDebugValue = value;
+    this.uiController.setPositionDebugCopyEnabled(true);
     this.uiController.setPositionDebugValue(value);
   }
 
@@ -2942,7 +2989,7 @@ export class WebXRApp {
       return;
     }
 
-    if (event.code !== 'KeyH' || event.repeat) {
+    if (event.code !== 'KeyH' || event.repeat || !this.hotspotDebugActive) {
       return;
     }
 
@@ -2950,13 +2997,14 @@ export class WebXRApp {
   }
 
   async _copyCurrentPositionAsHotspot() {
-    const position = this._getCrosshairHitPoint();
+    const position = this._getCrosshairHitPoint(false);
     if (!position) {
       this.uiController.setHotspotHelperHint('No surface under crosshair. Aim at the scene and press H again.', 2600);
       return;
     }
 
     const hotspot = `[${position.x.toFixed(3)}, ${position.y.toFixed(3)}, ${position.z.toFixed(3)}]`;
+    this.uiController.setPositionDebugValue(hotspot);
 
     try {
       if (!navigator.clipboard?.writeText) {
@@ -2964,13 +3012,14 @@ export class WebXRApp {
       }
 
       await navigator.clipboard.writeText(hotspot);
+      console.info(`[churchHotspotDebug] position: ${hotspot}`);
       this.uiController.setHotspotHelperHint(`Copied hotspot: ${hotspot}`, 2400);
     } catch {
       this.uiController.setHotspotHelperHint(`Hotspot: ${hotspot} (copy manually)`, 3000);
     }
   }
 
-  _getCrosshairHitPoint() {
+  _getCrosshairHitPoint(allowFallback = true) {
     if (!this.camera) {
       return null;
     }
@@ -2992,6 +3041,10 @@ export class WebXRApp {
     if (allHits.length > 0) {
       allHits.sort((left, right) => left.distance - right.distance);
       return allHits[0].point.clone();
+    }
+
+    if (!allowFallback) {
+      return null;
     }
 
     return this.hotspotRaycaster.ray.origin

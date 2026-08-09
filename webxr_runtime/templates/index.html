@@ -37,11 +37,13 @@
       <pre id="interaction-meta"></pre>
     </aside>
 
+    <div id="hotspot-debug-reticle" class="hotspot-debug-reticle hidden" aria-hidden="true"></div>
+
     <aside id="position-debug-panel" class="position-debug-panel hidden" aria-label="Museum player coordinates">
-      <span class="position-debug-panel__label">Player coordinates</span>
+      <span id="position-debug-label" class="position-debug-panel__label">Player coordinates</span>
       <output id="position-debug-value" class="position-debug-panel__value">[0.00, 0.00, 0.00]</output>
       <div class="position-debug-panel__footer">
-        <span class="position-debug-panel__hint">X, Y, Z</span>
+        <span id="position-debug-hint" class="position-debug-panel__hint">X, Y, Z</span>
         <button id="position-debug-copy" class="position-debug-panel__copy" type="button" aria-label="Copy player coordinates">
           <svg viewBox="0 0 24 24" aria-hidden="true">
             <rect x="8" y="8" width="11" height="11" rx="2"></rect>

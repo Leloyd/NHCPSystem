@@ -152,10 +152,39 @@ export class UiController {
     this.refs.positionDebugPanel?.classList.toggle('hidden', !visible);
   }
 
+  setPositionDebugMode({ label, hint, ariaLabel, copyLabel = 'Copy' }) {
+    if (this.refs.positionDebugLabel) {
+      this.refs.positionDebugLabel.textContent = label;
+    }
+    if (this.refs.positionDebugHint) {
+      this.refs.positionDebugHint.textContent = hint;
+    }
+    if (this.refs.positionDebugPanel && ariaLabel) {
+      this.refs.positionDebugPanel.setAttribute('aria-label', ariaLabel);
+    }
+    if (this.refs.positionDebugCopy && ariaLabel) {
+      this.refs.positionDebugCopy.setAttribute('aria-label', `Copy ${ariaLabel.toLowerCase()}`);
+    }
+    if (this.refs.positionDebugCopyLabel) {
+      this.refs.positionDebugCopyLabel.textContent = copyLabel;
+    }
+  }
+
+  setPositionDebugCopyEnabled(enabled) {
+    if (this.refs.positionDebugCopy) {
+      this.refs.positionDebugCopy.disabled = !enabled;
+      this.refs.positionDebugCopy.setAttribute('aria-disabled', enabled ? 'false' : 'true');
+    }
+  }
+
   setPositionDebugValue(value) {
     if (this.refs.positionDebugValue) {
       this.refs.positionDebugValue.textContent = value;
     }
+  }
+
+  setHotspotHelperHint(message, duration = 2200) {
+    this.showError(message, duration);
   }
 
   async copyPositionDebugValue() {
