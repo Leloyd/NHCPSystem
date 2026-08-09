@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Heritage Keeper Award | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <title>Heritage Keeper | Museo ng Libingan sa Ilalim ng Lupa</title>
     <link rel="icon" type="image/jpeg" href="{{ url_for('static', filename='images/UndergroundLogo.jpg') }}" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -26,74 +26,165 @@
     {% include 'partials/_public_top_nav.html' %}
 
     <main class="hk-page__main">
-      <nav class="hk-page__crumb"><a href="{{ url_for('account_profile') }}"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></a> &nbsp;/&nbsp; <span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></nav>
+      <nav class="hk-page__crumb" aria-label="Breadcrumb">
+        <a href="{{ url_for('account_profile') }}"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></a>
+        <span aria-hidden="true">/</span>
+        <span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span>
+      </nav>
 
-      <section class="hk-page__hero">
-        <div>
-          <p class="hk-page__eyebrow"><span data-lang-en>Account Achievement</span><span data-lang-tl>Gantimpala sa Account</span></p>
-          <h1><span data-lang-en>Heritage<br />Keeper</span><span data-lang-tl>Tagapangalaga<br />ng Pamana</span></h1>
-          <p class="hk-page__lead"><span data-lang-en>Every visited Trail stop and restored AR artifact reveals part of a single museum seal. Complete both journeys to preserve the whole story.</span><span data-lang-tl>Bawat napuntahang hintuan at naibalik na AR artifact ay nagbubunyag ng bahagi ng selyo ng museo. Kumpletuhin ang dalawang paglalakbay upang mabuo ang kuwento.</span></p>
-          <span class="hk-page__status">{{ heritage_keeper.total_count }} / {{ heritage_keeper.total_required }} &nbsp; <span data-lang-en>fragments revealed</span><span data-lang-tl>bahaging nabuksan</span></span>
+      <header class="hk-masthead">
+        <div class="hk-masthead__copy">
+          <p class="hk-kicker"><span data-lang-en>Personal collection record</span><span data-lang-tl>Tala ng personal na koleksiyon</span></p>
+          <h1><span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></h1>
+          <p class="hk-masthead__lead">
+            <span data-lang-en>Recover fragments by completing the Heritage Trail and restoring cultural artifacts through AR. Each recovered piece records a part of your museum journey.</span>
+            <span data-lang-tl>Mangalap ng mga bahagi sa pagkumpleto ng Heritage Trail at pagpapanumbalik ng mga artifact sa AR. Bawat nakuhang bahagi ay tala ng iyong paglalakbay sa museo.</span>
+          </p>
+        </div>
 
-          <div class="hk-progress">
-            <div class="hk-progress__item">
-              <div class="hk-progress__line"><span>Heritage Trail</span><strong>{{ heritage_keeper.trail_count }}/{{ heritage_keeper.trail_required }}</strong></div>
-              <div class="hk-progress__track"><span style="width: {{ (heritage_keeper.trail_count / heritage_keeper.trail_required * 100)|round }}%"></span></div>
+        <div class="hk-tally" aria-label="{{ heritage_keeper.total_count }} of {{ heritage_keeper.total_required }} fragments recovered">
+          <span class="hk-tally__number">{{ heritage_keeper.total_count }}</span>
+          <span class="hk-tally__total">/ {{ heritage_keeper.total_required }}</span>
+          <span class="hk-tally__label"><span data-lang-en>fragments recovered</span><span data-lang-tl>bahaging nakuha</span></span>
+        </div>
+
+        <div class="hk-journeys">
+          <div class="hk-journey">
+            <div class="hk-journey__line">
+              <span>Heritage Trail</span>
+              <strong>{{ heritage_keeper.trail_count }} / {{ heritage_keeper.trail_required }}</strong>
             </div>
-            <div class="hk-progress__item">
-              <div class="hk-progress__line"><span>AR Restoration</span><strong>{{ heritage_keeper.ar_count }}/{{ heritage_keeper.ar_required }}</strong></div>
-              <div class="hk-progress__track"><span style="width: {{ (heritage_keeper.ar_count / heritage_keeper.ar_required * 100)|round }}%"></span></div>
+            <div class="hk-journey__track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ heritage_keeper.trail_required }}" aria-valuenow="{{ heritage_keeper.trail_count }}" aria-label="Heritage Trail fragments">
+              <span style="width: {{ (heritage_keeper.trail_count / heritage_keeper.trail_required * 100)|round }}%"></span>
+            </div>
+          </div>
+          <div class="hk-journey">
+            <div class="hk-journey__line">
+              <span>AR Restoration</span>
+              <strong>{{ heritage_keeper.ar_count }} / {{ heritage_keeper.ar_required }}</strong>
+            </div>
+            <div class="hk-journey__track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ heritage_keeper.ar_required }}" aria-valuenow="{{ heritage_keeper.ar_count }}" aria-label="AR Restoration fragments">
+              <span style="width: {{ (heritage_keeper.ar_count / heritage_keeper.ar_required * 100)|round }}%"></span>
             </div>
           </div>
         </div>
+      </header>
 
+      <section class="hk-recovery" aria-labelledby="recoveredFragmentsTitle">
+        <div class="hk-recovery__heading">
+          <p class="hk-section-label"><span data-lang-en>Recovered collection</span><span data-lang-tl>Nakuhang koleksiyon</span></p>
+          <h2 id="recoveredFragmentsTitle"><span data-lang-en>Your recovered seal fragments</span><span data-lang-tl>Iyong mga nakuhang bahagi ng selyo</span></h2>
+          <p>
+            <span data-lang-en>Only the pieces you have earned are placed in this collection tray. The complete seal is not shown in advance.</span>
+            <span data-lang-tl>Tanging mga bahaging iyong nakuha ang inilalagay sa lalagyang ito. Hindi ipinakikita nang maaga ang kabuuang selyo.</span>
+          </p>
+        </div>
+
+        {% if heritage_keeper.total_count > 0 %}
         <figure
-          class="hk-seal"
+          class="hk-fragment-tray"
+          tabindex="0"
           role="img"
-          data-hk-seal-viewer
+          data-hk-fragment-viewer
           data-model-url="/Seal/Seal-fragments.glb"
           data-earned-fragments="{{ heritage_keeper.fragments | map(attribute='earned') | list | tojson | forceescape }}"
-          aria-label="Heritage Keeper 3D seal with {{ heritage_keeper.total_count }} of {{ heritage_keeper.total_required }} fragments revealed"
+          aria-label="{{ heritage_keeper.total_count }} recovered three-dimensional seal fragments"
         >
-          <canvas class="hk-seal__canvas" data-hk-seal-canvas aria-hidden="true"></canvas>
-          <div class="hk-seal__halo" aria-hidden="true"></div>
-          <div class="hk-seal__loading" data-hk-seal-loading role="status" aria-live="polite">
-            <span class="hk-seal__spinner" aria-hidden="true"></span>
-            <span data-lang-en>Preparing your heritage seal…</span>
-            <span data-lang-tl>Inihahanda ang iyong selyo ng pamana…</span>
+          <canvas class="hk-fragment-tray__canvas" data-hk-fragment-canvas aria-hidden="true"></canvas>
+          <div class="hk-fragment-tray__loading" data-hk-fragment-loading role="status" aria-live="polite">
+            <span class="hk-fragment-tray__spinner" aria-hidden="true"></span>
+            <span data-lang-en>Cataloguing recovered fragments...</span>
+            <span data-lang-tl>Itinatala ang mga nakuhang bahagi...</span>
           </div>
-          <p class="hk-seal__help" data-hk-seal-help hidden>
-            <span data-lang-en>Drag to inspect the seal</span>
-            <span data-lang-tl>I-drag upang siyasatin ang selyo</span>
+          <p class="hk-fragment-tray__help" data-hk-fragment-help hidden>
+            <span data-lang-en>Drag to inspect the recovered pieces</span>
+            <span data-lang-tl>I-drag upang siyasatin ang mga nakuhang bahagi</span>
           </p>
-          <p class="hk-seal__error" data-hk-seal-error hidden>
-            <span data-lang-en>The 3D seal could not be displayed. Reload the page and try again.</span>
-            <span data-lang-tl>Hindi maipakita ang 3D na selyo. I-reload ang pahina at subukang muli.</span>
+          <p class="hk-fragment-tray__error" data-hk-fragment-error hidden>
+            <span data-lang-en>The recovered fragments could not be displayed. Reload the page and try again.</span>
+            <span data-lang-tl>Hindi maipakita ang mga nakuhang bahagi. I-reload ang pahina at subukang muli.</span>
           </p>
         </figure>
+        {% else %}
+        <div class="hk-fragment-tray hk-fragment-tray--empty">
+          <span class="hk-fragment-tray__empty-mark" aria-hidden="true">I</span>
+          <strong><span data-lang-en>No fragments recovered yet</span><span data-lang-tl>Wala pang nakukuhang bahagi</span></strong>
+          <p><span data-lang-en>Begin at the Heritage Trail to recover your first piece.</span><span data-lang-tl>Magsimula sa Heritage Trail upang makuha ang iyong unang bahagi.</span></p>
+        </div>
+        {% endif %}
       </section>
 
-      <section class="hk-section">
-        <div class="hk-section__head">
-          <div><h2><span data-lang-en>Your Heritage Fragments</span><span data-lang-tl>Iyong mga Bahagi ng Pamana</span></h2><p><span data-lang-en>The first ten come from the Trail; the final six come from different restored AR artifacts.</span><span data-lang-tl>Ang unang sampu ay mula sa Trail; ang huling anim ay mula sa magkakaibang naibalik na AR artifact.</span></p></div>
+      <section class="hk-register" aria-labelledby="fragmentRegisterTitle">
+        <div class="hk-register__heading">
+          <p class="hk-section-label"><span data-lang-en>Collection register</span><span data-lang-tl>Talaan ng koleksiyon</span></p>
+          <h2 id="fragmentRegisterTitle"><span data-lang-en>Fragment recovery record</span><span data-lang-tl>Tala ng mga nakuhang bahagi</span></h2>
         </div>
-        <div class="hk-fragment-list">
-          {% for fragment in heritage_keeper.fragments %}
-          <article class="hk-fragment-card{% if fragment.earned %} is-earned{% endif %}">
-            <span class="hk-fragment-card__number">{{ fragment.number }}</span>
-            <strong>{% if fragment.earned %}<span data-lang-en>{{ fragment.label_en }}</span><span data-lang-tl>{{ fragment.label_tl }}</span>{% else %}<span data-lang-en>Undiscovered fragment</span><span data-lang-tl>Hindi pa natutuklasang bahagi</span>{% endif %}</strong>
-            <small>{{ 'Heritage Trail' if fragment.source == 'trail' else 'AR Restoration' }}</small>
-          </article>
-          {% endfor %}
+
+        <div class="hk-register__columns">
+          <section class="hk-ledger" aria-labelledby="trailLedgerTitle">
+            <header class="hk-ledger__head">
+              <div>
+                <span class="hk-ledger__roman">I</span>
+                <h3 id="trailLedgerTitle">Heritage Trail</h3>
+              </div>
+              <strong>{{ heritage_keeper.trail_count }} / {{ heritage_keeper.trail_required }}</strong>
+            </header>
+            <ol class="hk-ledger__list">
+              {% for fragment in heritage_keeper.fragments[:heritage_keeper.trail_required] %}
+              <li class="{% if fragment.earned %}is-earned{% endif %}">
+                <span class="hk-ledger__number">{{ '%02d'|format(fragment.number) }}</span>
+                <span class="hk-ledger__name">
+                  {% if fragment.earned %}
+                  <span data-lang-en>{{ fragment.label_en }}</span><span data-lang-tl>{{ fragment.label_tl }}</span>
+                  {% else %}
+                  <span data-lang-en>Awaiting discovery</span><span data-lang-tl>Hindi pa natutuklasan</span>
+                  {% endif %}
+                </span>
+                <span class="hk-ledger__status"><span data-lang-en>{{ 'Recovered' if fragment.earned else 'Locked' }}</span><span data-lang-tl>{{ 'Nakuha' if fragment.earned else 'Naka-lock' }}</span></span>
+              </li>
+              {% endfor %}
+            </ol>
+          </section>
+
+          <section class="hk-ledger" aria-labelledby="arLedgerTitle">
+            <header class="hk-ledger__head">
+              <div>
+                <span class="hk-ledger__roman">II</span>
+                <h3 id="arLedgerTitle">AR Restoration</h3>
+              </div>
+              <strong>{{ heritage_keeper.ar_count }} / {{ heritage_keeper.ar_required }}</strong>
+            </header>
+            <ol class="hk-ledger__list">
+              {% for fragment in heritage_keeper.fragments[heritage_keeper.trail_required:] %}
+              <li class="{% if fragment.earned %}is-earned{% endif %}">
+                <span class="hk-ledger__number">{{ '%02d'|format(fragment.number) }}</span>
+                <span class="hk-ledger__name">
+                  {% if fragment.earned %}
+                  <span data-lang-en>{{ fragment.label_en }}</span><span data-lang-tl>{{ fragment.label_tl }}</span>
+                  {% else %}
+                  <span data-lang-en>Awaiting restoration</span><span data-lang-tl>Hindi pa naibabalik</span>
+                  {% endif %}
+                </span>
+                <span class="hk-ledger__status"><span data-lang-en>{{ 'Recovered' if fragment.earned else 'Locked' }}</span><span data-lang-tl>{{ 'Nakuha' if fragment.earned else 'Naka-lock' }}</span></span>
+              </li>
+              {% endfor %}
+            </ol>
+          </section>
         </div>
+
         <div class="hk-actions">
-          <a class="hk-action" href="/trail"><span data-lang-en>Continue the Trail</span><span data-lang-tl>Ipagpatuloy ang Trail</span></a>
-          <a class="hk-action hk-action--light" href="/ar-content-detection"><span data-lang-en>Restore AR Artifacts</span><span data-lang-tl>Magbalik ng AR Artifacts</span></a>
+          <a class="hk-action" href="/trail"><span data-lang-en>Continue the Heritage Trail</span><span data-lang-tl>Ipagpatuloy ang Heritage Trail</span></a>
+          <a class="hk-action hk-action--secondary" href="/ar-content-detection"><span data-lang-en>Restore AR Artifacts</span><span data-lang-tl>Magbalik ng AR Artifacts</span></a>
         </div>
       </section>
 
-      <section class="hk-section">
-        <div class="hk-section__head"><div><h2><span data-lang-en>Keeper Certificate</span><span data-lang-tl>Sertipiko ng Tagapangalaga</span></h2><p><span data-lang-en>Unlocked only after both learning journeys are complete.</span><span data-lang-tl>Mabubuksan lamang kapag kumpleto na ang dalawang paglalakbay.</span></p></div></div>
+      <section class="hk-certificate-panel" aria-labelledby="keeperCertificateTitle">
+        <div class="hk-certificate-panel__heading">
+          <p class="hk-section-label"><span data-lang-en>Final recognition</span><span data-lang-tl>Pangwakas na pagkilala</span></p>
+          <h2 id="keeperCertificateTitle"><span data-lang-en>Keeper Certificate</span><span data-lang-tl>Sertipiko ng Tagapangalaga</span></h2>
+          <p><span data-lang-en>Issued after both learning journeys are completed.</span><span data-lang-tl>Igagawad matapos makumpleto ang dalawang paglalakbay sa pagkatuto.</span></p>
+        </div>
+
         {% if heritage_keeper.unlocked %}
         <article class="hk-certificate" id="heritageKeeperCertificate">
           <div class="hk-certificate__mark">NHCP</div>
@@ -101,11 +192,14 @@
           <h3><span data-lang-en>Heritage Keeper Certificate</span><span data-lang-tl>Sertipiko ng Tagapangalaga ng Pamana</span></h3>
           <p class="hk-certificate__name">{{ current_public_user.full_name }}</p>
           <p class="hk-certificate__copy"><span data-lang-en>is recognized for completing the Heritage Trail and restoring six cultural artifacts, demonstrating care, curiosity, and commitment to preserving the memory of the Nagcarlan Underground Cemetery.</span><span data-lang-tl>ay kinikilala sa pagkumpleto ng Heritage Trail at pagpapanumbalik ng anim na artifact, bilang pagpapakita ng malasakit, pag-uusisa, at pangakong pangalagaan ang alaala ng Libingan sa Ilalim ng Lupa ng Nagcarlan.</span></p>
-          <p class="hk-certificate__code">{{ heritage_keeper.certificate_code }}{% if heritage_keeper.unlocked_at %} &nbsp;·&nbsp; {{ heritage_keeper.unlocked_at[:10] }}{% endif %}</p>
+          <p class="hk-certificate__code">{{ heritage_keeper.certificate_code }}{% if heritage_keeper.unlocked_at %} &nbsp;&middot;&nbsp; {{ heritage_keeper.unlocked_at[:10] }}{% endif %}</p>
         </article>
         <div class="hk-actions"><button class="hk-action" type="button" onclick="window.print()"><span data-lang-en>Print Certificate</span><span data-lang-tl>I-print ang Sertipiko</span></button></div>
         {% else %}
-        <div class="hk-certificate-lock"><strong><span data-lang-en>{{ heritage_keeper.total_required - heritage_keeper.total_count }} fragments remain.</span><span data-lang-tl>{{ heritage_keeper.total_required - heritage_keeper.total_count }} bahagi pa ang natitira.</span></strong><br /><span data-lang-en>Your name and unique verification code will appear here after completion.</span><span data-lang-tl>Lalabas dito ang iyong pangalan at natatanging verification code kapag nakumpleto na.</span></div>
+        <div class="hk-certificate-lock">
+          <span class="hk-certificate-lock__number">{{ heritage_keeper.total_required - heritage_keeper.total_count }}</span>
+          <div><strong><span data-lang-en>fragments remain</span><span data-lang-tl>bahagi pa ang natitira</span></strong><p><span data-lang-en>Your name and verification code will appear here after completion.</span><span data-lang-tl>Lalabas dito ang iyong pangalan at verification code kapag nakumpleto na.</span></p></div>
+        </div>
         {% endif %}
       </section>
     </main>
