@@ -1635,5 +1635,18 @@ def public_file(filename):
     return send_from_directory(str(public_dir), filename)
 
 
+# Vercel publishes files from public/ at the website root. This mirror keeps
+# that same root-style Seal URL available while running Flask locally.
+@app.route("/Seal/<path:filename>")
+def public_seal_file(filename):
+    seal_dir = PROJECT_ROOT / "public" / "Seal"
+    candidate_path = _resolve_safe_path(seal_dir, filename)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid seal file path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"Seal file not found: {filename}"}), 404
+    return send_from_directory(str(seal_dir), filename)
+
+
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=int(os.getenv("PORT", "5000")), debug=not IS_PRODUCTION)

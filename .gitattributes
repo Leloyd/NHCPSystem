@@ -17,6 +17,8 @@ public/AK-animation/* -filter -diff -merge -text
 public/AK-animation/**/* -filter -diff -merge -text
 public/audio/* -filter -diff -merge -text
 public/audio/**/* -filter -diff -merge -text
+public/Seal/* -filter -diff -merge -text
+public/Seal/**/* -filter -diff -merge -text
 static/AR-Artifacts/* -filter -diff -merge -text
 static/AR-Artifacts/**/* -filter -diff -merge -text
 static/AK-animation/* -filter -diff -merge -text

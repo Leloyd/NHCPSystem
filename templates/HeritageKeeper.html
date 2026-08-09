@@ -51,7 +51,7 @@
           class="hk-seal"
           role="img"
           data-hk-seal-viewer
-          data-model-url="{{ url_for('public_file', filename='Seal/Seal-fragments.glb') }}"
+          data-model-url="/Seal/Seal-fragments.glb"
           data-earned-fragments="{{ heritage_keeper.fragments | map(attribute='earned') | list | tojson | forceescape }}"
           aria-label="Heritage Keeper 3D seal with {{ heritage_keeper.total_count }} of {{ heritage_keeper.total_required }} fragments revealed"
         >
