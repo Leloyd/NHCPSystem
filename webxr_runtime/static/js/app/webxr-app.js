@@ -55,7 +55,7 @@ const MUSEUM_WALK_BOUNDARY_SEGMENTS = MUSEUM_WALK_BOUNDARY_PATH
   .map((end, index) => [
     MUSEUM_WALK_BOUNDARY_PATH[index],
     end,
-    index === 12 ? 0.10 : 0,
+    index === 11 || index === 12 ? 0.10 : 0,
   ]);
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
