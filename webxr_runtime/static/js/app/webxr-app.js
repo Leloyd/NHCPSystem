@@ -104,7 +104,7 @@ const UNDERGROUND_WALK_BOUNDARY = [
 const CHURCH_HOTSPOT_MARKERS = [
   {
     id: 'go-to-museum',
-    position: [-4.20, 1.00, -0.19],
+    position: [-4.20, 0.50, -0.19],
     color: 0x8fd3ff,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
@@ -2349,6 +2349,69 @@ export class WebXRApp {
     return this._getActiveHotspotMarkers().find((hotspot) => hotspot.id === hotspotId) ?? null;
   }
 
+  _createHotspotIconTexture(color) {
+    const canvas = document.createElement('canvas');
+    canvas.width = 256;
+    canvas.height = 256;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+
+    const accent = new THREE.Color(color).getStyle();
+    const center = 128;
+    const radius = 94;
+
+    context.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Soft outer halo keeps the portal legible against both bright splats and
+    // dark interiors without giving it any three-dimensional volume.
+    const halo = context.createRadialGradient(center, center, 68, center, center, 122);
+    halo.addColorStop(0, 'rgba(212, 175, 106, 0.18)');
+    halo.addColorStop(0.72, 'rgba(212, 175, 106, 0.08)');
+    halo.addColorStop(1, 'rgba(212, 175, 106, 0)');
+    context.fillStyle = halo;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+
+    context.beginPath();
+    context.arc(center, center, radius, 0, Math.PI * 2);
+    context.fillStyle = 'rgba(13, 10, 4, 0.94)';
+    context.fill();
+
+    context.lineWidth = 12;
+    context.strokeStyle = accent;
+    context.stroke();
+
+    context.beginPath();
+    context.arc(center, center, radius - 17, 0, Math.PI * 2);
+    context.lineWidth = 3;
+    context.strokeStyle = 'rgba(250, 247, 242, 0.28)';
+    context.stroke();
+
+    // Forward arrow icon. Rounded strokes keep it clear at small sizes and
+    // match the restrained heritage control language used across the system.
+    context.beginPath();
+    context.moveTo(78, 128);
+    context.lineTo(170, 128);
+    context.moveTo(137, 94);
+    context.lineTo(171, 128);
+    context.lineTo(137, 162);
+    context.lineWidth = 18;
+    context.lineCap = 'round';
+    context.lineJoin = 'round';
+    context.strokeStyle = '#faf7f2';
+    context.stroke();
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.needsUpdate = true;
+    return texture;
+  }
+
   _buildHotspotMarker({
     id,
     position,
@@ -2367,40 +2430,23 @@ export class WebXRApp {
       : new THREE.Vector3(position[0], position[1], position[2]);
     root.position.copy(markerPosition);
 
-    const ring = new THREE.Mesh(
-      new THREE.TorusGeometry(radius * 1.1, radius * 0.13, 12, 48),
-      new THREE.MeshBasicMaterial({
-        color,
-        transparent: true,
-        opacity: 0.58,
-        depthTest: false,
-        depthWrite: false,
-      }),
-    );
-    ring.position.y = 0.02;
-    ring.rotation.x = Math.PI / 2;
-    ring.renderOrder = 5;
-
-    const orb = new THREE.Mesh(
-      new THREE.SphereGeometry(radius * 0.42, 14, 14),
-      new THREE.MeshStandardMaterial({
+    const iconTexture = this._createHotspotIconTexture(color);
+    const icon = new THREE.Sprite(
+      new THREE.SpriteMaterial({
+        map: iconTexture,
         color: 0xffffff,
-        emissive: color,
-        emissiveIntensity: 0.48,
-        roughness: 0.52,
-        metalness: 0.0,
+        transparent: true,
         depthTest: false,
         depthWrite: false,
+        toneMapped: false,
       }),
     );
-    orb.position.y = radius * 0.55;
-    orb.castShadow = false;
-    orb.receiveShadow = false;
-    orb.renderOrder = 6;
+    const iconSize = Math.max(radius * 2.8, 0.2);
+    icon.scale.set(iconSize, iconSize, 1);
+    icon.renderOrder = 6;
 
     if (interactionName) {
-      ring.name = `${interactionName}-ring`;
-      orb.name = `${interactionName}-orb`;
+      icon.name = `${interactionName}-icon`;
 
       const interaction = {
         name: interactionName,
@@ -2409,17 +2455,15 @@ export class WebXRApp {
         metadata,
       };
 
-      ring.userData.interaction = interaction;
-      orb.userData.interaction = interaction;
-      ring.userData.isHotspotPickable = true;
-      orb.userData.isHotspotPickable = true;
+      icon.userData.interaction = interaction;
+      icon.userData.isHotspotPickable = true;
 
-      this.pickableMeshes.push(ring, orb);
+      this.pickableMeshes.push(icon);
     }
 
-    root.add(ring, orb);
+    root.add(icon);
 
-    return { root, ring, orb };
+    return { root, icon };
   }
 
   _createHotspotMarkers() {
