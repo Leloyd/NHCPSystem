@@ -22,7 +22,6 @@ function getRefs() {
     positionDebugHint: document.getElementById('position-debug-hint'),
     positionDebugCopy: document.getElementById('position-debug-copy'),
     positionDebugCopyLabel: document.getElementById('position-debug-copy-label'),
-    hotspotDebugReticle: document.getElementById('hotspot-debug-reticle'),
     mobileControls: document.getElementById('mobile-controls'),
     moveStickZone: document.getElementById('move-stick-zone'),
     moveStickThumb: document.getElementById('move-stick-thumb'),

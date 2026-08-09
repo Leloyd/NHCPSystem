@@ -11,8 +11,6 @@ import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 const DEFAULT_BG = 0x0f1114;
 const IS_IOS_DEVICE = /iPad|iPhone|iPod/i.test(navigator.userAgent || '')
   || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
-const CROSSHAIR_NDC = new THREE.Vector2(0, 0);
-const HOTSPOT_FALLBACK_DISTANCE = 5.0;
 const DOOR_INTERACTION_MAX_DISTANCE = 2.35;
 const HOTSPOT_INTERACTION_MAX_DISTANCE = 1.85;
 const HOTSPOT_HELPER_COLOR = 0xffd54a;
@@ -346,8 +344,6 @@ export class WebXRApp {
     this.renderer.outputColorSpace = THREE.SRGBColorSpace;
 
     this.clock = new THREE.Clock();
-    this.hotspotRaycaster = new THREE.Raycaster();
-    this.hotspotRaycaster.firstHitOnly = true;
     this.labelProjection = new THREE.Vector3();
 
     this.playerRig = new THREE.Group();
@@ -2797,13 +2793,12 @@ export class WebXRApp {
     this.hotspotDebugActive = this.hotspotDebugRequested
       && !this._isMuseumScene()
       && !this._isUndergroundScene();
-    this.refs.hotspotDebugReticle?.classList.toggle('hidden', !this.hotspotDebugActive);
     this.uiController.setPositionDebugVisible(this._isMuseumScene() || this.hotspotDebugActive);
     if (this.hotspotDebugActive) {
       this.uiController.setPositionDebugMode({
-        label: 'Church hotspot helper',
-        hint: 'Aim at a surface · press H or Copy',
-        ariaLabel: 'Church hotspot coordinates',
+        label: 'Church player coordinates',
+        hint: 'X, Y, Z',
+        ariaLabel: 'Church player coordinates',
       });
     } else {
       this.uiController.setPositionDebugMode({
@@ -2828,23 +2823,7 @@ export class WebXRApp {
   }
 
   _updatePositionDebugValue(force = false) {
-    if (this.hotspotDebugActive) {
-      const position = this._getCrosshairHitPoint(false);
-      const value = position
-        ? `[${position.x.toFixed(3)}, ${position.y.toFixed(3)}, ${position.z.toFixed(3)}]`
-        : 'Aim at a surface';
-      this.uiController.setPositionDebugCopyEnabled(Boolean(position));
-
-      if (!force && value === this.lastPositionDebugValue) {
-        return;
-      }
-
-      this.lastPositionDebugValue = value;
-      this.uiController.setPositionDebugValue(value);
-      return;
-    }
-
-    if (!this._isMuseumScene() || !this.playerRig) {
+    if ((!this._isMuseumScene() && !this.hotspotDebugActive) || !this.playerRig) {
       return;
     }
 
@@ -2989,67 +2968,6 @@ export class WebXRApp {
       return;
     }
 
-    if (event.code !== 'KeyH' || event.repeat || !this.hotspotDebugActive) {
-      return;
-    }
-
-    void this._copyCurrentPositionAsHotspot();
-  }
-
-  async _copyCurrentPositionAsHotspot() {
-    const position = this._getCrosshairHitPoint(false);
-    if (!position) {
-      this.uiController.setHotspotHelperHint('No surface under crosshair. Aim at the scene and press H again.', 2600);
-      return;
-    }
-
-    const hotspot = `[${position.x.toFixed(3)}, ${position.y.toFixed(3)}, ${position.z.toFixed(3)}]`;
-    this.uiController.setPositionDebugValue(hotspot);
-
-    try {
-      if (!navigator.clipboard?.writeText) {
-        throw new Error('clipboard-unavailable');
-      }
-
-      await navigator.clipboard.writeText(hotspot);
-      console.info(`[churchHotspotDebug] position: ${hotspot}`);
-      this.uiController.setHotspotHelperHint(`Copied hotspot: ${hotspot}`, 2400);
-    } catch {
-      this.uiController.setHotspotHelperHint(`Hotspot: ${hotspot} (copy manually)`, 3000);
-    }
-  }
-
-  _getCrosshairHitPoint(allowFallback = true) {
-    if (!this.camera) {
-      return null;
-    }
-
-    this.hotspotRaycaster.setFromCamera(CROSSHAIR_NDC, this.camera);
-
-    const allHits = [];
-
-    const roots = this.meshEntries.map((entry) => entry.root).filter(Boolean);
-    if (roots.length > 0) {
-      allHits.push(...this.hotspotRaycaster.intersectObjects(roots, true));
-    }
-
-    const splatRoots = this.splatEntries.map((entry) => entry.object).filter(Boolean);
-    if (splatRoots.length > 0) {
-      allHits.push(...this.hotspotRaycaster.intersectObjects(splatRoots, true));
-    }
-
-    if (allHits.length > 0) {
-      allHits.sort((left, right) => left.distance - right.distance);
-      return allHits[0].point.clone();
-    }
-
-    if (!allowFallback) {
-      return null;
-    }
-
-    return this.hotspotRaycaster.ray.origin
-      .clone()
-      .addScaledVector(this.hotspotRaycaster.ray.direction, HOTSPOT_FALLBACK_DISTANCE);
   }
 
   applyQuality(value) {
