@@ -89,6 +89,12 @@
       }
       .as-input-text:focus, .as-select:focus { outline: none; border-color: var(--as-gold); box-shadow: 0 0 0 3px rgba(201, 168, 76, 0.18); }
       .as-input-text:disabled, .as-select:disabled { background: #f3ede1; color: #9a8a6d; cursor: not-allowed; }
+      .as-username-field { position: relative; }
+      .as-username-prefix {
+        position: absolute; left: 1rem; top: 50%; z-index: 1; transform: translateY(-50%);
+        color: var(--as-gold-2); font-weight: 700; pointer-events: none;
+      }
+      .as-input-text--username { padding-left: 2.15rem; }
       .as-hint { margin-top: 0.6rem; font-size: 0.8rem; line-height: 1.5; color: var(--as-muted); }
 
       /* Option cards (use case) */
@@ -228,8 +234,8 @@
               <div id="accountSetupProgressBar" class="as-progress-bar" style="width: 25%;"></div>
             </div>
 
-            <h2 id="accountSetupStepTitle" class="as-title">What should we call you?</h2>
-            <p id="accountSetupStepDescription" class="as-desc">Start with your name so your profile feels personal from the first screen.</p>
+            <h2 id="accountSetupStepTitle" class="as-title">Confirm your account name</h2>
+            <p id="accountSetupStepDescription" class="as-desc">Review the suggested name and username before continuing. You may change either one.</p>
 
             {% if error_message %}
             <div id="accountSetupServerError" class="as-alert">{{ error_message }}</div>
@@ -241,11 +247,18 @@
 
           <div class="as-body">
             <div class="as-body-inner">
-              <!-- Step 0 · Name -->
-              <section data-setup-step="0" data-step-title="What should we call you?" data-step-description="Start with your name so your profile feels personal from the first screen." class="as-step">
+              <!-- Step 0 · Name and username confirmation -->
+              <section data-setup-step="0" data-step-title="Confirm your account name" data-step-description="Review the suggested name and username before continuing. You may change either one." class="as-step">
                 <label for="setupFullName" class="as-field-label">Full Name <span class="as-req">*</span></label>
                 <input id="setupFullName" name="full_name" type="text" required maxlength="160" value="{{ request.form.get('full_name', current_public_user.full_name or '') }}" class="as-input-text" placeholder="Enter your full name" />
                 <p class="as-hint">Use the name you want to see on your NHCP account.</p>
+
+                <label for="setupUsername" class="as-field-label" style="margin-top:1.15rem;">Username <span class="as-req">*</span></label>
+                <div class="as-username-field">
+                  <span class="as-username-prefix" aria-hidden="true">@</span>
+                  <input id="setupUsername" name="username" type="text" required minlength="3" maxlength="32" autocomplete="username" autocapitalize="none" spellcheck="false" value="{{ request.form.get('username', current_public_user.username or '') }}" class="as-input-text as-input-text--username" placeholder="Choose a username" pattern="[a-z0-9._-]{3,32}" />
+                </div>
+                <p class="as-hint">A username was suggested from your email address. Confirm it or choose another using lowercase letters, numbers, periods, underscores, or hyphens.</p>
               </section>
 
               <!-- Step 1 · Use case -->

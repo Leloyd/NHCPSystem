@@ -25,6 +25,7 @@
   var serverError = document.getElementById("accountSetupServerError");
 
   var fullNameInput = document.getElementById("setupFullName");
+  var usernameInput = document.getElementById("setupUsername");
   var countrySelect = document.getElementById("setupCountrySelect");
   var provinceSelect = document.getElementById("setupProvinceSelect");
   var citySelect = document.getElementById("setupCitySelect");
@@ -296,6 +297,17 @@
         }
         return false;
       }
+      var username = String(usernameInput ? usernameInput.value || "" : "").trim().toLowerCase();
+      if (!/^[a-z0-9._-]{3,32}$/.test(username)) {
+        showClientError("Choose a username with 3 to 32 lowercase letters, numbers, periods, underscores, or hyphens.");
+        if (usernameInput) {
+          usernameInput.focus();
+        }
+        return false;
+      }
+      if (usernameInput) {
+        usernameInput.value = username;
+      }
       return true;
     }
 
@@ -368,25 +380,9 @@
   }
 
   function getInitialStep() {
-    if (config.hasServerError) {
-      var configuredStep = Number(config.stepIndex);
-      if (!Number.isNaN(configuredStep) && configuredStep >= 0 && configuredStep < steps.length) {
-        return configuredStep;
-      }
-    }
-    var fullNameValue = String(fullNameInput ? fullNameInput.value || "" : "").trim();
-    if (fullNameValue.length < 3) {
-      return 0;
-    }
-    if (!getSelectedUseCase()) {
-      return 1;
-    }
-    if (!getSelectedRoles().length) {
-      return 2;
-    }
-    var locationValues = syncHiddenLocationValues();
-    if (!locationValues.country || !locationValues.province || !locationValues.city) {
-      return 3;
+    var configuredStep = Number(config.stepIndex);
+    if (!Number.isNaN(configuredStep) && configuredStep >= 0 && configuredStep < steps.length) {
+      return configuredStep;
     }
     return 0;
   }

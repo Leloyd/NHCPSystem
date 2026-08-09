@@ -441,8 +441,9 @@ def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str]:
     }, email
 
 
-def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]:
+def _validate_onboarding_payload(form, role_values: list[str], current_user_id: int) -> dict[str, Any]:
     full_name = str(form.get("full_name") or "").strip()
+    username = str(form.get("username") or "").strip().lower()
     website_use_case = str(form.get("website_use_case") or "").strip()
     country_text = str(form.get("country_text") or "").strip()
     province_text = str(form.get("province_text") or "").strip()
@@ -450,6 +451,11 @@ def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]
 
     if len(full_name) < 3 or len(full_name) > 160:
         raise ValueError("Full name must be between 3 and 160 characters.")
+    if not USERNAME_PATTERN.fullmatch(username):
+        raise ValueError("Username must be 3 to 32 characters and use only lowercase letters, numbers, periods, underscores, or hyphens.")
+    existing_username_user = get_public_user_auth_by_username(username)
+    if existing_username_user and int(existing_username_user.get("id") or 0) != int(current_user_id):
+        raise ValueError("That username is already in use. Please choose another one.")
     if len(website_use_case) < 3 or len(website_use_case) > 160:
         raise ValueError("Please select how you plan to use the website.")
     if not role_values:
@@ -466,6 +472,7 @@ def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]
     now = _utcnow().isoformat()
     return {
         "full_name": full_name,
+        "username": username,
         "website_use_case": website_use_case,
         "profile_roles": _serialize_role_values(role_values),
         "location_text": location_text,
@@ -479,12 +486,13 @@ def _validate_onboarding_payload(form, role_values: list[str]) -> dict[str, Any]
 
 def _resolve_onboarding_step_index(form, role_values: list[str]) -> int:
     full_name = str(form.get("full_name") or "").strip()
+    username = str(form.get("username") or "").strip().lower()
     website_use_case = str(form.get("website_use_case") or "").strip()
     country_text = str(form.get("country_text") or "").strip()
     province_text = str(form.get("province_text") or "").strip()
     city_text = str(form.get("city_text") or "").strip()
 
-    if len(full_name) < 3:
+    if len(full_name) < 3 or len(full_name) > 160 or not USERNAME_PATTERN.fullmatch(username):
         return 0
     if len(website_use_case) < 3:
         return 1
@@ -978,11 +986,13 @@ def register_user_account_routes(
                 error_message = "Invalid request."
             else:
                 try:
-                    payload = _validate_onboarding_payload(request.form, role_values)
+                    payload = _validate_onboarding_payload(request.form, role_values, int(current_user.get("id")))
                     update_public_user(int(current_user.get("id")), payload)
                     return redirect(next_url)
                 except ValueError as exc:
                     error_message = str(exc)
+                    if "username" in error_message.lower() or "full name" in error_message.lower():
+                        step_index = 0
                 except Exception as exc:
                     app.logger.exception("Failed to complete onboarding for user %s: %s", current_user.get("id"), exc)
                     error_message = "Could not save your profile right now."
