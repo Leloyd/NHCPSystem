@@ -12,6 +12,14 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     {% include 'partials/_site_prefs_head.html' %}
     <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper-page.css') }}" />
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "/webxr/static/vendor/three/three.module.js",
+          "three/addons/": "/webxr/static/vendor/three/examples/jsm/"
+        }
+      }
+    </script>
   </head>
   <body class="hk-page">
     {% set public_active_page = '' %}
@@ -39,30 +47,30 @@
           </div>
         </div>
 
-        <svg class="hk-seal" viewBox="0 0 400 400" role="img" aria-label="Heritage Keeper seal with earned fragments revealed">
-          <defs>
-            <g id="hkArtwork">
-              <circle cx="200" cy="200" r="192" fill="#130d06" stroke="#d4af6a" stroke-width="7" />
-              <circle cx="200" cy="200" r="174" fill="none" stroke="#8f6a2d" stroke-width="2" />
-              <path d="M78 212h244" stroke="#d4af6a" stroke-width="3" />
-              <path d="M116 201v-69h168v69M101 201h198M129 132l71-57 71 57M200 75V42M187 54h26" fill="none" stroke="#e4c477" stroke-width="8" stroke-linecap="round" stroke-linejoin="round" />
-              <path d="M142 201v-51h27v51M187 201v-51h26v51M231 201v-51h27v51" fill="none" stroke="#b8923a" stroke-width="7" />
-              <path d="M102 325c5-65 44-103 98-103s93 38 98 103M130 325c4-44 30-73 70-73s66 29 70 73" fill="none" stroke="#e4c477" stroke-width="9" />
-              <path d="M162 326v-28h76v28M176 326v-14h48v14" fill="none" stroke="#9f7734" stroke-width="7" />
-              <circle cx="85" cy="270" r="5" fill="#d4af6a"/><circle cx="315" cy="270" r="5" fill="#d4af6a"/>
-              <path d="M58 176c-9 55 2 110 36 154M342 176c9 55-2 110-36 154" fill="none" stroke="#8f6a2d" stroke-width="3" />
-            </g>
-            {% for fragment in heritage_keeper.fragments %}
-            <clipPath id="hkClip{{ loop.index0 }}"><rect x="{{ (loop.index0 % 4) * 100 }}" y="{{ (loop.index0 // 4) * 100 }}" width="100" height="100" /></clipPath>
-            {% endfor %}
-          </defs>
-          <use href="#hkArtwork" class="hk-seal__ghost" />
-          {% for fragment in heritage_keeper.fragments %}
-          <g class="hk-seal__fragment{% if fragment.earned %} is-earned{% endif %}" style="--piece:{{ loop.index0 }}" clip-path="url(#hkClip{{ loop.index0 }})"><use href="#hkArtwork" /></g>
-          {% endfor %}
-          {% for row in range(1, 4) %}<path class="hk-seal__grid" d="M0 {{ row * 100 }}H400" />{% endfor %}
-          {% for col in range(1, 4) %}<path class="hk-seal__grid" d="M{{ col * 100 }} 0V400" />{% endfor %}
-        </svg>
+        <figure
+          class="hk-seal"
+          role="img"
+          data-hk-seal-viewer
+          data-model-url="{{ url_for('public_file', filename='Seal/Seal-fragments.glb') }}"
+          data-earned-fragments="{{ heritage_keeper.fragments | map(attribute='earned') | list | tojson | forceescape }}"
+          aria-label="Heritage Keeper 3D seal with {{ heritage_keeper.total_count }} of {{ heritage_keeper.total_required }} fragments revealed"
+        >
+          <canvas class="hk-seal__canvas" data-hk-seal-canvas aria-hidden="true"></canvas>
+          <div class="hk-seal__halo" aria-hidden="true"></div>
+          <div class="hk-seal__loading" data-hk-seal-loading role="status" aria-live="polite">
+            <span class="hk-seal__spinner" aria-hidden="true"></span>
+            <span data-lang-en>Preparing your heritage seal…</span>
+            <span data-lang-tl>Inihahanda ang iyong selyo ng pamana…</span>
+          </div>
+          <p class="hk-seal__help" data-hk-seal-help hidden>
+            <span data-lang-en>Drag to inspect the seal</span>
+            <span data-lang-tl>I-drag upang siyasatin ang selyo</span>
+          </p>
+          <p class="hk-seal__error" data-hk-seal-error hidden>
+            <span data-lang-en>The 3D seal could not be displayed. Reload the page and try again.</span>
+            <span data-lang-tl>Hindi maipakita ang 3D na selyo. I-reload ang pahina at subukang muli.</span>
+          </p>
+        </figure>
       </section>
 
       <section class="hk-section">
@@ -104,5 +112,6 @@
 
     {% include 'partials/_site_accessibility_fab.html' %}
     {% include 'partials/_site_prefs_foot.html' %}
+    <script type="module" src="{{ url_for('static', filename='js/heritage-keeper-page.js') }}"></script>
   </body>
 </html>
