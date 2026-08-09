@@ -1418,6 +1418,17 @@
       );
     }
 
+    // Keep the active scanner language available to interface components
+    // outside this pipeline, including the Heritage Keeper completion dialog.
+    // The attribute changes only when the visitor actually changes language.
+    var interfaceLanguage = runtime.audioLanguage === "en" ? "en" : "tl";
+    if (document.documentElement.getAttribute("data-ar-language") !== interfaceLanguage) {
+      document.documentElement.setAttribute("data-ar-language", interfaceLanguage);
+      window.dispatchEvent(new CustomEvent("nhcp-ar-language-change", {
+        detail: { language: interfaceLanguage }
+      }));
+    }
+
     if (subtitlesButton) {
       subtitlesButton.classList.toggle("is-active", runtime.subtitlesOn);
       subtitlesButton.setAttribute("aria-pressed", runtime.subtitlesOn ? "true" : "false");

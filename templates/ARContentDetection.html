@@ -28,7 +28,8 @@
       'progressUrl': url_for('heritage_keeper_progress_api'),
       'awardUrl': url_for('heritage_keeper_award_fragment'),
       'rewardUrl': url_for('heritage_keeper_page'),
-      'loginUrl': url_for('public_login', next=request.path)
+      'loginUrl': url_for('public_login', next=request.path),
+      'sealUrl': '/Seal/AR-seal.glb'
     } | tojson }}</script>
     <script defer src="{{ url_for('static', filename='js/heritage-keeper-progress.js') }}"></script>
     <script defer src="{{ url_for('static', filename='js/ar-three-pipeline.js') }}"></script>
