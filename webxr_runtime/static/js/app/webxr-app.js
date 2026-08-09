@@ -27,18 +27,22 @@ const MUSEUM_HOTSPOT_MARKERS = [];
 const MUSEUM_SPAWN_POINT = [0.5, 0.0, 0.07];
 const MUSEUM_SPAWN_YAW = Math.PI / 2; // Face toward negative X.
 const MUSEUM_FALLBACK_BOUNDS = { min: [-13, 0, -21], max: [4, 5, 5] };
-const MUSEUM_WALK_BOUNDARY_SEGMENTS = [
-  [[0.67, -0.35], [0.67, 0.90]],
-  [[0.67, 0.90], [-0.55, 0.90]],
-  [[-0.55, 0.90], [-0.55, -0.45]],
-  [[-0.55, -0.45], [-1.00, -0.50]],
-  [[-1.00, -0.50], [-1.00, 1.50]],
-  [[-1.00, 1.50], [-0.30, 1.50]],
-  [[-0.30, 1.50], [0.24, 2.10]],
-  [[0.24, 2.10], [0.24, 3.14]],
-  [[0.24, 3.14], [-0.25, 3.81]],
-  [[-0.25, 3.81], [-0.98, 3.81]],
+const MUSEUM_WALK_BOUNDARY_PATH = [
+  [0.67, -0.35],
+  [0.67, 0.90],
+  [-0.55, 0.90],
+  [-0.55, -0.45],
+  [-1.00, -0.50],
+  [-1.00, 1.50],
+  [-0.30, 1.50],
+  [0.24, 2.10],
+  [0.24, 3.14],
+  [-0.25, 3.81],
+  [-0.98, 3.81],
 ];
+const MUSEUM_WALK_BOUNDARY_SEGMENTS = MUSEUM_WALK_BOUNDARY_PATH
+  .slice(1)
+  .map((end, index) => [MUSEUM_WALK_BOUNDARY_PATH[index], end]);
 const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];

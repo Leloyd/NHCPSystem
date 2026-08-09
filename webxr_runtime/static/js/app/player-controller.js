@@ -471,6 +471,11 @@ export class PlayerController {
     const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
     const isVrPresenting = sessionMode === XR_SESSION_MODE_VR;
 
+    // Capture the feet before any input source moves the rig. In particular,
+    // physical WebXR head movement is folded into the rig below and must not
+    // be able to bypass calibrated boundary segments.
+    PREVIOUS_FEET_POSITION.copy(this.rig.position);
+
     this._updateGyroLook();
 
     this._readXrMoveAxes(sessionMode);
@@ -530,7 +535,6 @@ export class PlayerController {
 
     this.velocity.y -= this.settings.gravity * deltaSeconds;
 
-    PREVIOUS_FEET_POSITION.copy(this.rig.position);
     this.rig.position.addScaledVector(this.velocity, deltaSeconds);
 
     const collisionResult = collisionSystem.resolveCapsule({
