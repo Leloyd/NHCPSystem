@@ -9,6 +9,7 @@ viewers.forEach((viewer) => {
   const loading = viewer.querySelector("[data-hk-fragment-loading]");
   const help = viewer.querySelector("[data-hk-fragment-help]");
   const errorMessage = viewer.querySelector("[data-hk-fragment-error]");
+  const showsWholeModel = viewer.hasAttribute("data-hk-whole-model-viewer");
   let earnedFragments = [];
 
   try {
@@ -172,6 +173,18 @@ viewers.forEach((viewer) => {
       (gltf) => {
         gltf.scene.updateMatrixWorld(true);
         const completeBounds = new THREE.Box3().setFromObject(gltf.scene);
+
+        if (showsWholeModel) {
+          prepareFragment(gltf.scene, 0);
+          fragmentGroup.add(gltf.scene);
+          fitFragmentsToView(gltf.scene, completeBounds);
+          ready = true;
+          viewer.classList.add("is-ready");
+          if (loading) loading.hidden = true;
+          if (help) help.hidden = false;
+          return;
+        }
+
         const recoveredNodes = [];
         gltf.scene.children.slice().forEach((node) => {
           const match = String(node.name || "").match(/Seal_Fragment_(\d+)/i);

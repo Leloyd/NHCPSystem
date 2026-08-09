@@ -2,7 +2,7 @@
 
 Run with Blender, not the system Python:
     blender --background --python scripts/build_seal_fragments.py -- \
-      public/Seal/Seal.glb public/Seal/Seal-fragments.glb
+      public/Seal/Stop-seal.glb public/Seal/Stop-seal-fragments.glb 10 trail
 
     blender --background --python scripts/build_seal_fragments.py -- \
       public/Seal/AR-seal.glb public/Seal/AR-seal-fragments.glb 21 ar
