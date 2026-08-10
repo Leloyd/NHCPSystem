@@ -368,16 +368,6 @@ body {
 .story__viewport[data-lang="tl"] [data-lang-en] { display: none !important; }
 .story__viewport:not([data-lang="tl"]) [data-lang-tl] { display: none !important; }
 
-/* The About chapters show their narration as on-screen text — the subtitle
-   bubble would duplicate it, so it stays hidden across all three. */
-.story__viewport[data-chapter="about1"] .story__bubble,
-.story__viewport[data-chapter="about2"] .story__bubble,
-.story__viewport[data-chapter="about3"] .story__bubble {
-  opacity: 0;
-  visibility: hidden;
-  pointer-events: none;
-}
-
 /* Padre Vicente Velloc portrait: framed reveal near Ana while she names him. */
 .story__father {
   position: absolute;
@@ -1079,12 +1069,6 @@ body.is-trail-exit #publicNavHeader {
   .story__bubble.is-expanded::after { content: "⌃"; }
   /* Subtitles hidden → give their reserved space back to the chapter text. */
   .story__viewport[data-subtitles="off"] .story-chapter { padding-bottom: 5rem; }
-  /* The Heritage Overview chapters (about1–3) are their own narration and show
-     NO subtitle bubble, so toggling subtitles must never reflow them — keep
-     their bottom padding constant in both subtitle states. */
-  .story-chapter[data-chapter="about1"],
-  .story-chapter[data-chapter="about2"],
-  .story-chapter[data-chapter="about3"] { padding-bottom: 5rem; }
   .story__dots { right: 0.6rem; gap: 0.6rem; }
   .story__dot { width: 8px; height: 8px; }
   .story__dot::after { display: none; }

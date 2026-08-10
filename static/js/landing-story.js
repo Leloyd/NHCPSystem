@@ -20,10 +20,10 @@ const SCRIPT = {
     en: "This place is a living testament to history. Built in 1845, its underground crypt shows the ingenuity of our ancestors. Today it stands proudly as a National Historical Landmark.",
     tl: "Ang lugar na ito ay buhay na patunay ng kasaysayan. Itinayo noong 1845, ipinapakita ng silong nitong libingan ang talino ng ating mga ninuno. Ngayon, ipinagmamalaki itong Pambansang Makasaysayang Palatandaan.",
   },
-  // About · I: the narration IS the on-screen text (subtitle hidden there).
+  // About · I: the narration mirrors the on-screen heritage text.
   about1: {
     en: "THE NAGCARLAN Underground Cemetery, built in 1845 under Fray Vicente Velloc, stands as a historic landmark that served as a burial site, a revolutionary meeting place, and a hideout of guerillas. Declared a National Historical Landmark on 24 October 1981, it continues to embody Nagcarlan's faith, history, and collective memory.",
-    tl: "ANG LIBINGAN sa Ilalim ng Lupa ng Nagcarlan, itinayo sa patnubay ni Padre Vicente Velloc nong 1845, ay isang makasaysayang palatandaan na nagsilbing libingan, tagpuan ng mga rebolusyonaryo, at taguan ng mga gerilya noong panahon ng digmaan. Idineklarang Pambansang Palatandaang Pangkasaysayan noong 24 Oktubre 1981, patuloy nitong kinakatawan ang pananampalataya, kasaysayan, at kabuuang gunita ng Nagcarlan.",
+    tl: "ANG LIBINGAN sa Ilalim ng Lupa ng Nagcarlan, itinayo sa patnubay ni Padre Vicente Velloc noong 1845, ay isang makasaysayang palatandaan na nagsilbing libingan, tagpuan ng mga rebolusyonaryo, at taguan ng mga gerilya noong panahon ng digmaan. Idineklarang Pambansang Palatandaang Pangkasaysayan noong 24 Oktubre 1981, patuloy nitong kinakatawan ang pananampalataya, kasaysayan, at kabuuang gunita ng Nagcarlan.",
   },
   about2: {
     en: "Look closely at the gravestones. Many bear Catholic inscriptions — R.I.P., D.E.P., and D.O.M. — prayers for the departed. Among ordinary Filipinos, you will often find S.L.N., Sumalangit Nawa — may their soul ascend to heaven.",
@@ -86,6 +86,7 @@ const canvasWrap = story?.querySelector('[data-story-canvas]');
 const chapters = story ? Array.from(story.querySelectorAll('.story-chapter')) : [];
 const bubbleText = story?.querySelector('[data-story-bubble-text]');
 const bubbleWrap = story?.querySelector('.story__bubble');
+const bubbleEyebrow = story?.querySelector('.story__bubble-eyebrow');
 const dotsWrap = story?.querySelector('[data-story-dots]');
 const hint = story?.querySelector('[data-story-hint]');
 const fatherEl = story?.querySelector('[data-story-father]');
@@ -668,7 +669,7 @@ function resetAboutScene(key) {
 }
 
 /* Character offset just past "…Fray Vicente Velloc" (EN) or
-   "…Padre Vicente Velloc nong 1845" (TL) in the current narration. */
+   "…Padre Vicente Velloc noong 1845" (TL) in the current narration. */
 function aboutCuePos() {
   const entry = SCRIPT.about1;
   const text = (entry && (entry[state.lang] || entry.en)) || '';
@@ -809,7 +810,9 @@ function setLang(lang) {
   state.lang = lang;
   localStorage.setItem('anaGuideLang', lang);
   viewport?.setAttribute('data-lang', lang); // swaps bilingual on-page content
+  document.documentElement.lang = lang === 'tl' ? 'fil' : 'en';
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
+  if (bubbleEyebrow) bubbleEyebrow.textContent = lang === 'tl' ? 'Sabi ni Ana Kalang' : 'Ana Kalang says';
   refreshChapterFit(); // the other language may run longer/shorter
   narrateChapter(state.chapter, { speakIt: state.unlocked });
 }
@@ -889,10 +892,12 @@ function setupAutoSpeakKickstart() {
 function wireControls() {
   viewport?.setAttribute('data-playing', 'false');
   viewport?.setAttribute('data-lang', state.lang);
+  document.documentElement.lang = state.lang === 'tl' ? 'fil' : 'en';
   setMuted(state.muted);
   setSubtitles(state.subtitles);
   setTextSize(state.textSize);
   if (langBtn) langBtn.textContent = state.lang === 'tl' ? 'TL' : 'EN';
+  if (bubbleEyebrow) bubbleEyebrow.textContent = state.lang === 'tl' ? 'Sabi ni Ana Kalang' : 'Ana Kalang says';
 
   playBtn?.addEventListener('click', () => {
     unlockAudio();
