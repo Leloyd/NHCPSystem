@@ -577,6 +577,7 @@ body.ogd-high-contrast-page .public-account-menu-header {
 
 .public-auth-close {
   position: absolute;
+  z-index: 5;
   top: 1.25rem;
   right: 1.25rem;
   display: inline-flex;
@@ -588,6 +589,10 @@ body.ogd-high-contrast-page .public-account-menu-header {
   border-radius: 999px;
   background: transparent;
   color: #7d6b54;
+  cursor: pointer;
+  pointer-events: auto;
+  touch-action: manipulation;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .public-auth-close svg {
@@ -913,6 +918,8 @@ body.ogd-high-contrast-page .public-account-menu-header {
   .public-auth-close {
     top: 0.85rem;
     right: 0.85rem;
+    width: 2.75rem;
+    height: 2.75rem;
   }
 
   .public-auth-entry-button {

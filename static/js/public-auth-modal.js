@@ -35,6 +35,17 @@
   var body = document.body;
   var currentView = config.defaultView || modal.getAttribute("data-auth-default-view") || "login";
   var pendingEmail = "";
+  var lastFocusedElement = null;
+
+  function getFocusableElements() {
+    return Array.prototype.slice.call(
+      modal.querySelectorAll(
+        'button:not([disabled]):not([aria-disabled="true"]), a[href], input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+      )
+    ).filter(function (element) {
+      return !element.closest(".hidden") && element.offsetParent !== null;
+    });
+  }
 
   function setEmailDisplays(value) {
     emailDisplays.forEach(function (node) {
@@ -86,6 +97,7 @@
   }
 
   function openModal(view) {
+    lastFocusedElement = document.activeElement && document.activeElement !== body ? document.activeElement : null;
     if (view) {
       switchView(view);
     }
@@ -95,9 +107,14 @@
     window.requestAnimationFrame(function () {
       modal.classList.add("is-visible");
     });
-    if (dialog) {
-      dialog.focus();
-    }
+    window.setTimeout(function () {
+      var focusable = getFocusableElements();
+      if (focusable.length) {
+        focusable[0].focus({ preventScroll: true });
+      } else if (dialog) {
+        dialog.focus({ preventScroll: true });
+      }
+    }, 0);
   }
 
   function closeModal() {
@@ -107,6 +124,10 @@
     window.setTimeout(function () {
       if (modal.getAttribute("aria-hidden") === "true") {
         modal.classList.add("hidden");
+        if (lastFocusedElement && document.contains(lastFocusedElement)) {
+          lastFocusedElement.focus({ preventScroll: true });
+        }
+        lastFocusedElement = null;
       }
     }, 180);
   }
@@ -313,7 +334,9 @@
   });
 
   closeButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
       closeModal();
     });
   });
@@ -339,8 +362,30 @@
   });
 
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && modal.getAttribute("aria-hidden") === "false") {
+    if (modal.getAttribute("aria-hidden") !== "false") {
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
       closeModal();
+      return;
+    }
+    if (event.key === "Tab") {
+      var focusable = getFocusableElements();
+      if (!focusable.length) {
+        event.preventDefault();
+        if (dialog) dialog.focus();
+        return;
+      }
+      var first = focusable[0];
+      var last = focusable[focusable.length - 1];
+      if (event.shiftKey && document.activeElement === first) {
+        event.preventDefault();
+        last.focus();
+      } else if (!event.shiftKey && document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
     }
   });
 

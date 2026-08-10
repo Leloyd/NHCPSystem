@@ -144,13 +144,16 @@ PUBLIC_LOGIN_LOCKOUT_SECONDS = max(30, int(os.getenv("PUBLIC_LOGIN_LOCKOUT_SECON
 PUBLIC_SIGNUP_RATE_WINDOW_SECONDS = max(60, int(os.getenv("PUBLIC_SIGNUP_RATE_WINDOW_SECONDS", "1800")))
 PUBLIC_SIGNUP_MAX_ATTEMPTS = max(2, int(os.getenv("PUBLIC_SIGNUP_MAX_ATTEMPTS", "4")))
 PUBLIC_SIGNUP_LOCKOUT_SECONDS = max(30, int(os.getenv("PUBLIC_SIGNUP_LOCKOUT_SECONDS", "1800")))
+PUBLIC_PASSWORD_RESET_RATE_WINDOW_SECONDS = max(60, int(os.getenv("PUBLIC_PASSWORD_RESET_RATE_WINDOW_SECONDS", "900")))
+PUBLIC_PASSWORD_RESET_MAX_ATTEMPTS = max(2, int(os.getenv("PUBLIC_PASSWORD_RESET_MAX_ATTEMPTS", "5")))
+PUBLIC_PASSWORD_RESET_LOCKOUT_SECONDS = max(30, int(os.getenv("PUBLIC_PASSWORD_RESET_LOCKOUT_SECONDS", "900")))
 PUBLIC_ACTION_RATE_WINDOW_SECONDS = max(10, int(os.getenv("PUBLIC_ACTION_RATE_WINDOW_SECONDS", "300")))
 PUBLIC_ACTION_MAX_ATTEMPTS = max(1, int(os.getenv("PUBLIC_ACTION_MAX_ATTEMPTS", "8")))
 TRUST_PROXY_HEADERS = _bool_env("TRUST_PROXY_HEADERS", False)
 
 _ADMIN_LOGIN_ATTEMPTS = {}
 _ADMIN_LOGIN_ATTEMPTS_LOCK = threading.Lock()
-_PUBLIC_AUTH_ATTEMPTS = {"login": {}, "signup": {}}
+_PUBLIC_AUTH_ATTEMPTS = {"login": {}, "signup": {}, "password-reset": {}}
 _PUBLIC_AUTH_ATTEMPTS_LOCK = threading.Lock()
 _PUBLIC_ACTION_ATTEMPTS = {}
 _PUBLIC_ACTION_ATTEMPTS_LOCK = threading.Lock()
@@ -1079,8 +1082,15 @@ def inject_public_auth_context():
 
 
 def _get_public_auth_config(kind):
-    if str(kind or "").strip().lower() == "signup":
+    normalized_kind = str(kind or "").strip().lower()
+    if normalized_kind == "signup":
         return PUBLIC_SIGNUP_RATE_WINDOW_SECONDS, PUBLIC_SIGNUP_MAX_ATTEMPTS, PUBLIC_SIGNUP_LOCKOUT_SECONDS
+    if normalized_kind == "password-reset":
+        return (
+            PUBLIC_PASSWORD_RESET_RATE_WINDOW_SECONDS,
+            PUBLIC_PASSWORD_RESET_MAX_ATTEMPTS,
+            PUBLIC_PASSWORD_RESET_LOCKOUT_SECONDS,
+        )
     return PUBLIC_LOGIN_RATE_WINDOW_SECONDS, PUBLIC_LOGIN_MAX_ATTEMPTS, PUBLIC_LOGIN_LOCKOUT_SECONDS
 
 

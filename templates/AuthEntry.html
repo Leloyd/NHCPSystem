@@ -3,9 +3,11 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
     <title>{{ auth_page_title }}</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="min-h-screen bg-stone-950 text-stone-100">
     {% set public_active_page = '' %}
@@ -20,6 +22,8 @@
       </div>
     </main>
 
+    {% include 'partials/_site_accessibility_fab.html' %}
+    {% include 'partials/_site_prefs_foot.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
   </body>

@@ -35,6 +35,7 @@ from .emailer import (
     PublicAuthEmailError,
     is_public_auth_email_configured,
     send_public_account_verification_email,
+    send_public_password_changed_email,
     send_public_password_reset_email,
     send_public_security_code_email,
 )
@@ -71,6 +72,8 @@ SECURITY_CODE_RESEND_COOLDOWN = timedelta(seconds=60)
 SECURITY_CODE_MAX_ATTEMPTS = 5
 SECURITY_SETUP_SESSION_KEY = "public_security_password_setup"
 PASSWORD_RESET_LIFETIME = timedelta(hours=1)
+PASSWORD_RESET_SUCCESS_LIFETIME = timedelta(minutes=10)
+PASSWORD_RESET_SUCCESS_SESSION_KEY = "public_password_reset_success"
 
 AVATAR_UPLOAD_FOLDER = "avatars"
 DELETE_ACCOUNT_CONFIRM_PHRASE = "confirm delete"
@@ -106,7 +109,22 @@ def _is_safe_next_url(raw_value: Any) -> bool:
     if not target:
         return False
     parsed = urlsplit(target)
-    return not parsed.scheme and not parsed.netloc and target.startswith("/")
+    if parsed.scheme or parsed.netloc or not target.startswith("/") or target.startswith("//"):
+        return False
+
+    # Never return a signed-in visitor to an authentication or one-time-token
+    # URL. A consumed reset link would otherwise appear as an expired page.
+    normalized_path = (parsed.path or "/").rstrip("/") or "/"
+    blocked_paths = {
+        "/login",
+        "/signup",
+        "/reset-password",
+        "/reset-password/success",
+        "/verify-email",
+        "/auth/google",
+        "/auth/google/callback",
+    }
+    return normalized_path not in blocked_paths and not normalized_path.startswith("/api/auth/")
 
 
 def _resolve_safe_next_url(raw_value: Any, default_endpoint: str) -> str:
@@ -581,6 +599,7 @@ def register_user_account_routes(
             auth_page_title=page_title,
             auth_default_view=default_view,
             next_url=next_url,
+            auth_next_url=next_url,
             csrf_token=ensure_public_csrf_token(),
             auth_status_message=status_message,
             auth_error_message=error_message,
@@ -698,6 +717,7 @@ def register_user_account_routes(
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Could not sign you in with Google right now.")
 
         set_public_user_session(int(user.get("id")))
+        session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
         if not _user_completed_onboarding(user):
             return redirect(url_for("public_account_setup", next=next_url))
         return redirect(next_url)
@@ -754,6 +774,7 @@ def register_user_account_routes(
         clear_public_auth_failures("login", client_ip)
         update_public_user(int(user.get("id")), {"last_login_at": _utcnow().isoformat()})
         set_public_user_session(int(user.get("id")))
+        session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
         if not _user_completed_onboarding(user):
             return jsonify({"ok": True, "redirect_url": url_for("public_account_setup", next=next_url)})
         return jsonify({"ok": True, "redirect_url": next_url})
@@ -1018,9 +1039,18 @@ def register_user_account_routes(
         if not is_public_csrf_valid(request.form.get("csrf_token")):
             return jsonify({"ok": False, "error": "Invalid request."}), 400
 
+        client_ip = get_client_ip()
+        is_limited, retry_after = is_public_auth_rate_limited("password-reset", client_ip)
+        if is_limited:
+            return jsonify({"ok": False, "error": f"Too many password reset requests. Try again in {retry_after} seconds."}), 429
+
         email = _normalize_login_identifier(request.form.get("email"))
         if not EMAIL_PATTERN.match(email):
             return jsonify({"ok": False, "error": "Please provide a valid email address."}), 400
+
+        # Count every valid request while keeping the response independent of
+        # whether an account exists, which avoids exposing registered emails.
+        record_public_auth_failure("password-reset", client_ip)
 
         try:
             user = get_public_user_auth_by_email(email)
@@ -1038,17 +1068,18 @@ def register_user_account_routes(
             return jsonify({"ok": True, "email": email})
         except PublicAuthEmailError as exc:
             app.logger.exception("Failed to send password reset email: %s", exc)
-            return jsonify({"ok": False, "error": str(exc)}), 500
+            # Preserve the same public response for registered and unregistered
+            # addresses; delivery details stay in server logs.
+            return jsonify({"ok": True, "email": email})
         except Exception as exc:
             app.logger.exception("Failed to start password reset for %s: %s", email, exc)
-            return jsonify({"ok": False, "error": "Could not send the reset email right now."}), 500
+            return jsonify({"ok": True, "email": email})
 
     @app.route("/reset-password", methods=["GET", "POST"])
     def public_reset_password():
         next_url = _resolve_safe_next_url(request.values.get("next"), "index")
         raw_token = str(request.values.get("token") or "").strip()
         error_message = None
-        success_message = None
         token_user = None
         token_valid = False
         if raw_token:
@@ -1066,11 +1097,11 @@ def register_user_account_routes(
                 else:
                     password = str(request.form.get("password") or "")
                     confirm_password = str(request.form.get("confirm_password") or "")
-                    if len(password) < 8 or len(password) > 128:
-                        error_message = "Password must be between 8 and 128 characters."
-                    elif password != confirm_password:
-                        error_message = "Passwords do not match."
-                    else:
+                    try:
+                        _validate_new_password(password, confirm_password)
+                    except ValueError as exc:
+                        error_message = str(exc)
+                    if not error_message:
                         try:
                             update_public_user(
                                 int(token_user.get("id")),
@@ -1082,22 +1113,76 @@ def register_user_account_routes(
                                     "updated_at": _utcnow().isoformat(),
                                 },
                             )
-                            success_message = "Your password has been updated. You can sign in now."
+                            # Do not auto-login after a credential reset. End any
+                            # current browser session, rotate CSRF state, then use
+                            # a token-free confirmation page before sign-in.
+                            clear_public_user_session()
+                            clear_public_auth_failures("login", get_client_ip())
+                            session[PASSWORD_RESET_SUCCESS_SESSION_KEY] = {
+                                "next_url": next_url,
+                                "expires_at": (_utcnow() + PASSWORD_RESET_SUCCESS_LIFETIME).isoformat(),
+                            }
+                            try:
+                                send_public_password_changed_email(to_email=str(token_user.get("email") or ""))
+                            except Exception as notification_error:
+                                app.logger.warning(
+                                    "Password changed for user %s but its confirmation email could not be sent: %s",
+                                    token_user.get("id"),
+                                    notification_error,
+                                )
+                            response = redirect(url_for("public_reset_password_success"), code=303)
+                            response.headers["Cache-Control"] = "no-store, max-age=0"
+                            response.headers["Pragma"] = "no-cache"
+                            response.headers["Referrer-Policy"] = "no-referrer"
+                            return response
                         except Exception as exc:
                             app.logger.exception("Failed to reset password for user %s: %s", token_user.get("id"), exc)
                             error_message = "Could not reset your password right now."
 
-        if success_message:
-            return _render_auth_entry(default_view="login", next_url=next_url, page_title="Sign In | Museo ng Libingan sa Ilalim ng Lupa", status_message=success_message)
-
-        return render_template(
-            "ResetPassword.html",
-            next_url=next_url,
-            csrf_token=ensure_public_csrf_token(),
-            token=raw_token,
-            token_valid=token_valid,
-            error_message=error_message,
+        response = app.make_response(
+            render_template(
+                "ResetPassword.html",
+                next_url=next_url,
+                auth_next_url=next_url,
+                csrf_token=ensure_public_csrf_token(),
+                token=raw_token,
+                token_valid=token_valid,
+                reset_success=False,
+                error_message=error_message,
+            )
         )
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+        return response
+
+    @app.route("/reset-password/success", methods=["GET"])
+    def public_reset_password_success():
+        state = session.get(PASSWORD_RESET_SUCCESS_SESSION_KEY)
+        if not isinstance(state, dict) or _is_expired(state.get("expires_at")):
+            session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
+            return redirect(url_for("public_login"))
+
+        next_url = _resolve_safe_next_url(state.get("next_url"), "index")
+        response = app.make_response(
+            render_template(
+                "ResetPassword.html",
+                next_url=next_url,
+                auth_next_url=next_url,
+                csrf_token=ensure_public_csrf_token(),
+                token="",
+                token_valid=False,
+                reset_success=True,
+                login_url=url_for("public_login", next=next_url),
+                error_message=None,
+            )
+        )
+        response.headers["Cache-Control"] = "no-store, max-age=0"
+        response.headers["Pragma"] = "no-cache"
+        response.headers["Referrer-Policy"] = "no-referrer"
+        response.headers["X-Robots-Tag"] = "noindex, nofollow"
+        return response
 
     @app.route("/logout", methods=["POST"])
     def public_logout():
