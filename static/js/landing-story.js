@@ -113,12 +113,18 @@ const textSizeBtn = story?.querySelector('[data-story-textsize]');
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mobileQuery = window.matchMedia('(max-width: 768px)');
 
+const savedSiteLanguage = localStorage.getItem('nhcp-lang');
+const savedStoryLanguage = localStorage.getItem('anaGuideLang');
+const initialLanguage = savedSiteLanguage === 'tl' || savedSiteLanguage === 'en'
+  ? savedSiteLanguage
+  : (savedStoryLanguage === 'tl' ? 'tl' : 'en');
+
 /* --- State ------------------------------------------------------------------ */
 const state = {
   chapter: -1,
   localProgress: 0, // 0..1 within the current chapter's scroll segment
   visible: true,
-  lang: localStorage.getItem('anaGuideLang') === 'tl' ? 'tl' : 'en',
+  lang: initialLanguage,
   muted: localStorage.getItem('anaGuideMuted') === 'true',
   subtitles: localStorage.getItem('anaGuideSubs') !== 'off',
   textSize: Math.min(3, Math.max(1, parseInt(localStorage.getItem('anaGuideTextSize') || '1', 10) || 1)),
@@ -809,8 +815,13 @@ function setMuted(isMuted) {
 function setLang(lang) {
   state.lang = lang;
   localStorage.setItem('anaGuideLang', lang);
+  localStorage.setItem('nhcp-lang', lang);
   viewport?.setAttribute('data-lang', lang); // swaps bilingual on-page content
-  document.documentElement.lang = lang === 'tl' ? 'fil' : 'en';
+  // The public navigation also contains bilingual spans, and its shared CSS
+  // reads the language from <html>. Keeping both roots synchronized prevents
+  // the page-level rule and the story-level rule from hiding both languages.
+  document.documentElement.setAttribute('data-lang', lang);
+  document.documentElement.lang = lang === 'tl' ? 'tl' : 'en';
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
   if (bubbleEyebrow) bubbleEyebrow.textContent = lang === 'tl' ? 'Sabi ni Ana Kalang' : 'Ana Kalang says';
   refreshChapterFit(); // the other language may run longer/shorter
@@ -892,7 +903,8 @@ function setupAutoSpeakKickstart() {
 function wireControls() {
   viewport?.setAttribute('data-playing', 'false');
   viewport?.setAttribute('data-lang', state.lang);
-  document.documentElement.lang = state.lang === 'tl' ? 'fil' : 'en';
+  document.documentElement.setAttribute('data-lang', state.lang);
+  document.documentElement.lang = state.lang === 'tl' ? 'tl' : 'en';
   setMuted(state.muted);
   setSubtitles(state.subtitles);
   setTextSize(state.textSize);

@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -45,7 +45,7 @@
         data-about3-videos="/videos/GateView.mp4,/videos/UnderGroundStairs.mp4,/videos/UnderGroundGrave2.mp4,/videos/UndergroundCrypts.mp4"
         aria-label="Guided tour of the museum by Ana Kalang"
       >
-        <div class="story__viewport" data-story-viewport data-model-side="right" data-chapter="hero" data-muted="false" data-playing="false">
+        <div class="story__viewport" data-story-viewport data-model-side="right" data-chapter="hero" data-lang="en" data-muted="false" data-playing="false">
           <!-- Background layers: default + per-chapter crossfades -->
           <div class="story__bg" data-bg="default" style="background-image: url('/images/UndergroundBG.png');"></div>
           <div class="story__bg" data-bg="testament" style="background-image: url('{{ url_for('static', filename='images/living-testament.jpg') }}');"></div>
@@ -97,38 +97,53 @@
             <article class="story-chapter" data-chapter="hero" data-side="left" data-title="Welcome">
               <div class="story-label">
                 <span class="story-label__line"></span>
-                <span class="story-label__text">National Historical Landmark</span>
+                <span class="story-label__text">
+                  <span data-lang-en>National Historical Landmark</span>
+                  <span data-lang-tl>Pambansang Palatandaang Pangkasaysayan</span>
+                </span>
               </div>
               <h1>
                 Museo ng Libingan<br />
                 <em>sa Ilalim ng Lupa ng Nagcarlan</em>
               </h1>
-              <p class="story-hero-sub text-white/60 text-sm tracking-[0.25em] uppercase" style="font-family: 'Inter', sans-serif;">Nagcarlan Underground Cemetery</p>
+              <p class="story-hero-sub text-white/60 text-sm tracking-[0.25em] uppercase" style="font-family: 'Inter', sans-serif;">
+                <span data-lang-en>Nagcarlan Underground Cemetery</span>
+                <span data-lang-tl>Libingan sa Ilalim ng Lupa ng Nagcarlan</span>
+              </p>
               <div class="story-hero-divider" aria-hidden="true"></div>
               <p class="story-copy story-hero-tagline" style="max-width: 34rem;">
-                Discover the unique architectural and cultural heritage of the Philippines' only underground cemetery, a National Historical Landmark.
+                <span data-lang-en>Discover the unique architectural and cultural heritage of the Philippines' only underground cemetery, a National Historical Landmark.</span>
+                <span data-lang-tl>Tuklasin ang natatanging pamanang arkitektural at kultural ng tanging libingan sa ilalim ng lupa sa Pilipinas, isang Pambansang Palatandaang Pangkasaysayan.</span>
               </p>
               <div>
                 <a href="{{ url_for('trail_start') }}" class="story-cta">
-                  <span>Start Heritage Trail</span>
+                  <span data-lang-en>Start Heritage Trail</span>
+                  <span data-lang-tl>Simulan ang Landas ng Pamana</span>
                   <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                 </a>
               </div>
-              <p class="story-hero-footnote text-white/35 text-xs tracking-wider" style="font-family: 'Inter', sans-serif;">Nagcarlan, Laguna · Philippines</p>
+              <p class="story-hero-footnote text-white/35 text-xs tracking-wider" style="font-family: 'Inter', sans-serif;">
+                <span data-lang-en>Nagcarlan, Laguna · Philippines</span>
+                <span data-lang-tl>Nagcarlan, Laguna · Pilipinas</span>
+              </p>
             </article>
 
             <!-- Chapter 2 · A Living Testament -->
             <article class="story-chapter" data-chapter="testament" data-side="right" data-title="Testament">
               <div class="story-label">
                 <span class="story-label__line"></span>
-                <span class="story-label__text">Living Testament to History</span>
+                <span class="story-label__text">
+                  <span data-lang-en>Living Testament to History</span>
+                  <span data-lang-tl>Buhay na Patunay ng Kasaysayan</span>
+                </span>
               </div>
               <h2>
-                A Living Testament<br />
-                <em>to History</em>
+                <span data-lang-en>A Living Testament<br /><em>to History</em></span>
+                <span data-lang-tl>Buhay na Patunay<br /><em>ng Kasaysayan</em></span>
               </h2>
               <p class="story-copy">
-                The Nagcarlan Underground Cemetery is a unique colonial-era structure built in 1845. This architectural marvel features an underground crypt, showcasing the ingenuity and craftsmanship of our ancestors. Today, it stands as a National Historical Landmark and a proud symbol of Filipino heritage.
+                <span data-lang-en>The Nagcarlan Underground Cemetery is a unique colonial-era structure built in 1845. This architectural marvel features an underground crypt, showcasing the ingenuity and craftsmanship of our ancestors. Today, it stands as a National Historical Landmark and a proud symbol of Filipino heritage.</span>
+                <span data-lang-tl>Ang Libingan sa Ilalim ng Lupa ng Nagcarlan ay isang natatanging istruktura mula sa panahon ng kolonyal na itinayo noong 1845. Tampok sa kahanga-hangang arkitekturang ito ang isang kripta sa ilalim ng lupa, na nagpapakita ng talino at kahusayan sa paggawa ng ating mga ninuno. Ngayon, kinikilala ito bilang isang Pambansang Palatandaang Pangkasaysayan at ipinagmamalaking sagisag ng pamanang Pilipino.</span>
               </p>
               <div class="story-chapter__scroll">
                 <div class="story-stat">
@@ -136,8 +151,8 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
                   </div>
                   <div>
-                    <h4>National Landmark</h4>
-                    <p>Declared a National Historical Landmark, preserving centuries of heritage</p>
+                    <h4><span data-lang-en>National Landmark</span><span data-lang-tl>Pambansang Palatandaan</span></h4>
+                    <p><span data-lang-en>Declared a National Historical Landmark, preserving centuries of heritage</span><span data-lang-tl>Idineklarang Pambansang Palatandaang Pangkasaysayan upang mapangalagaan ang maraming siglo ng pamana</span></p>
                   </div>
                 </div>
                 <div class="story-stat">
@@ -145,8 +160,8 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                   </div>
                   <div>
-                    <h4>Est. 1845</h4>
-                    <p>Nearly two centuries of history preserved for future generations</p>
+                    <h4><span data-lang-en>Est. 1845</span><span data-lang-tl>Itinatag noong 1845</span></h4>
+                    <p><span data-lang-en>Nearly two centuries of history preserved for future generations</span><span data-lang-tl>Halos dalawang siglo ng kasaysayang pinangangalagaan para sa mga susunod na salinlahi</span></p>
                   </div>
                 </div>
                 <div class="story-stat">
@@ -154,8 +169,8 @@
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.915c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.914a1 1 0 00.951-.69l1.519-4.674z"></path></svg>
                   </div>
                   <div>
-                    <h4>Cultural Heritage</h4>
-                    <p>A testament to Filipino ingenuity and colonial-era architecture</p>
+                    <h4><span data-lang-en>Cultural Heritage</span><span data-lang-tl>Pamanang Kultural</span></h4>
+                    <p><span data-lang-en>A testament to Filipino ingenuity and colonial-era architecture</span><span data-lang-tl>Patunay ng talinong Pilipino at arkitektura mula sa panahon ng kolonyal</span></p>
                   </div>
                 </div>
               </div>
@@ -436,11 +451,11 @@
 
           <!-- Guide controls -->
           <div class="story__guidebar">
-            <div class="story__nameplate">Ana Kalang<span>Guardian of Nagcarlan</span></div>
+            <div class="story__nameplate">Ana Kalang<span><span data-lang-en>Guardian of Nagcarlan</span><span data-lang-tl>Tagapag-ingat ng Nagcarlan</span></span></div>
             <button class="story-btn story-btn--primary" type="button" data-story-play aria-pressed="false" aria-label="Play narration">
               <svg class="story-ico--play" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M5 3l14 9-14 9V3z"/></svg>
               <svg class="story-ico--pause" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M6 4h4v16H6zM14 4h4v16h-4z"/></svg>
-              <span>Listen</span>
+              <span data-lang-en>Listen</span><span data-lang-tl>Makinig</span>
             </button>
             <button class="story-btn" type="button" data-story-mute aria-pressed="false" aria-label="Mute narration">
               <svg class="story-ico--sound-on" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path d="M11 5L6 9H2v6h4l5 4V5z"/><path d="M15.5 8.5a5 5 0 010 7M18.5 5.5a9 9 0 010 13"/></svg>
@@ -469,7 +484,7 @@
           <nav class="story__dots" data-story-dots aria-label="Story chapters"></nav>
 
           <!-- Scroll hint -->
-          <div class="story__hint" data-story-hint>Scroll</div>
+          <div class="story__hint" data-story-hint><span data-lang-en>Scroll</span><span data-lang-tl>Mag-scroll</span></div>
         </div>
       </section>
       <!-- ============================ End Ana Kalang Story ============================ -->
