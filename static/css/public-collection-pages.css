@@ -333,6 +333,120 @@
   border-color: var(--collection-gold-border);
 }
 
+/* Educational resource previews ---------------------------------------- */
+
+.collection-page--resources .edu-resource-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.collection-page--resources .edu-resource-preview--image img {
+  width: 100%;
+  height: 100%;
+  display: block;
+  object-fit: cover;
+}
+
+.collection-page--resources .edu-resource-preview--fallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.collection-page--resources .edu-resource-preview--document {
+  background: #e9e1d3;
+}
+
+.collection-page--resources .edu-resource-preview--document iframe {
+  width: 100%;
+  height: 100%;
+  display: block;
+  border: 0;
+  background: #ffffff;
+  pointer-events: none;
+}
+
+.collection-page--resources .edu-resource-preview__shield {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+}
+
+.collection-page--resources .ogd-list-item__media.edu-resource-preview {
+  display: block;
+  width: 6rem;
+  height: 6rem;
+  flex: 0 0 6rem;
+  padding: 0;
+}
+
+.collection-page--resources .edu-resource-document-viewer {
+  width: 100%;
+  min-height: clamp(28rem, 70vh, 52rem);
+  display: flex;
+  flex-direction: column;
+  background: #1a140d;
+}
+
+.collection-page--resources .edu-resource-document-viewer iframe {
+  width: 100%;
+  min-height: clamp(25rem, 64vh, 48rem);
+  flex: 1 1 auto;
+  display: block;
+  border: 0;
+  background: #ffffff;
+}
+
+.collection-page--resources .edu-resource-document-viewer__help {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.55rem;
+  margin: 0;
+  padding: 0.8rem 1rem;
+  color: #f7ead0;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  text-align: center;
+}
+
+.collection-page--resources .edu-resource-document-viewer__help svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.collection-page--resources .ogd-detail-media__frame--viewer {
+  aspect-ratio: auto;
+  overflow: visible;
+}
+
+.collection-page--resources .ogd-detail-media__hint {
+  border: 1px solid rgba(184, 148, 90, 0.42);
+  cursor: zoom-in;
+}
+
+.collection-page--resources .ogd-detail-media.is-zoomed .ogd-detail-media__image {
+  transform: scale(1.8);
+  cursor: zoom-out;
+}
+
+.collection-page--resources .ogd-detail-description {
+  white-space: pre-line;
+}
+
+html.ogd-dark-mode .collection-page--resources .edu-resource-document-viewer,
+html.ogd-high-contrast .collection-page--resources .edu-resource-document-viewer {
+  border-color: var(--collection-gold-border);
+  background: #000000;
+}
+
+html.ogd-high-contrast .collection-page--resources .edu-resource-document-viewer__help {
+  color: #ffeb3b !important;
+}
+
 /* Accessibility ---------------------------------------------------------- */
 
 html.ogd-high-contrast .collection-page,
@@ -444,6 +558,20 @@ html.ogd-high-contrast .collection-page .collection-pill {
 
   .collection-page .ogd-results-section {
     padding-block: 1.75rem 4.25rem;
+  }
+
+  .collection-page--resources .edu-resource-document-viewer {
+    min-height: 70vh;
+  }
+
+  .collection-page--resources .edu-resource-document-viewer iframe {
+    min-height: 64vh;
+  }
+
+  .collection-page--resources .ogd-list-item__media.edu-resource-preview {
+    width: 100%;
+    height: 12rem;
+    flex-basis: 12rem;
   }
 }
 

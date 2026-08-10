@@ -18,7 +18,7 @@ EDU_RESOURCES_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "edu-resources
 EDU_RESOURCES_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
 EDU_RESOURCE_CATEGORIES = (
     "PPT",
-    "Books",
+    "Story",
     "DOCS",
     "PDF",
 )
@@ -29,7 +29,7 @@ EDU_RESOURCE_STATUS_OPTIONS = (
 )
 EDU_RESOURCE_CATEGORY_META = {
     "PPT": {"icon": "file-text", "gradient": "linear-gradient(135deg, #8b5cf6, #5b21b6)", "format": "PPT"},
-    "Books": {"icon": "book-open", "gradient": "linear-gradient(135deg, #f59e0b, #92400e)", "format": "BOOK"},
+    "Story": {"icon": "book-heart", "gradient": "linear-gradient(135deg, #9a6a35, #3d2615)", "format": "STORY"},
     "DOCS": {"icon": "file-text", "gradient": "linear-gradient(135deg, #14b8a6, #0f766e)", "format": "DOCX"},
     "PDF": {"icon": "file-text", "gradient": "linear-gradient(135deg, #ef4444, #b91c1c)", "format": "PDF"},
 }
@@ -46,13 +46,18 @@ def resolve_edu_resource_url(file_name: Any) -> str | None:
 def prepare_edu_resource_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared = dict(item or {})
     raw_category = str(prepared.get("category") or EDU_RESOURCE_CATEGORIES[0]).strip()
+    # Older rows used Books for community stories. Keep them visible while the
+    # accompanying migration changes the stored category to Story.
+    if raw_category == "Books":
+        raw_category = "Story"
     category = raw_category if raw_category in EDU_RESOURCE_CATEGORIES else EDU_RESOURCE_CATEGORIES[0]
     raw_status = str(prepared.get("status") or "").strip().lower()
     status = raw_status if raw_status in EDU_RESOURCE_STATUS_OPTIONS else ("active" if prepared.get("is_published") else "draft")
     meta = EDU_RESOURCE_CATEGORY_META.get(category, EDU_RESOURCE_CATEGORY_META[EDU_RESOURCE_CATEGORIES[0]])
     prepared["category"] = category
     prepared["status"] = status
-    prepared["is_book"] = category == "Books"
+    prepared["is_story"] = category == "Story"
+    prepared["is_book"] = False
     prepared["cover_image_url"] = resolve_edu_resource_url(prepared.get("cover_image_filename"))
     prepared["file_url"] = resolve_edu_resource_url(prepared.get("file_filename"))
     prepared["icon"] = meta["icon"]
@@ -65,8 +70,8 @@ def prepare_edu_resource_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared["subject_topic"] = str(prepared.get("subject_topic") or "").strip()
     prepared["description"] = str(prepared.get("description") or "").strip()
     prepared["full_text"] = str(prepared.get("full_text") or prepared.get("description") or "").strip()
-    prepared["metadata_label"] = "Author" if category == "Books" else "Educator / Source"
-    prepared["metadata_value"] = prepared["author"] if category == "Books" else prepared["educator_name"]
+    prepared["metadata_label"] = "Contributor" if category == "Story" else "Educator / Source"
+    prepared["metadata_value"] = prepared["author"] if category == "Story" else prepared["educator_name"]
     return prepared
 
 

@@ -7,6 +7,7 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/digital-exhibits-gallery.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/public-collection-pages.css') }}" />
     {% include 'partials/_site_prefs_head.html' %}
   </head>
   <body class="collection-page collection-page--resources min-h-screen bg-stone-50 text-gray-900 ogd-accessible-page">
@@ -42,14 +43,14 @@
           <div class="ogd-detail-layout">
             <div class="ogd-detail-media-column">
               <div class="ogd-detail-media-sticky">
-                <button id="detailZoomToggle" class="ogd-detail-media" type="button" aria-label="I-click para i-zoom in" aria-pressed="false">
+                <div id="detailMediaShell" class="ogd-detail-media">
                   <div id="detailImage" class="ogd-detail-media__frame"></div>
                   <span id="detailImageBadge" class="ogd-detail-media__badge"></span>
-                  <span class="ogd-detail-media__hint">
+                  <button id="detailZoomToggle" class="ogd-detail-media__hint" type="button" aria-label="I-click para i-zoom in" aria-pressed="false">
                     <i data-lucide="zoom-in" aria-hidden="true"></i>
                     <span id="detailZoomHintText">I-click para i-zoom in</span>
-                  </span>
-                </button>
+                  </button>
+                </div>
               </div>
             </div>
 

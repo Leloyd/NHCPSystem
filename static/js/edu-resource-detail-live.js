@@ -23,6 +23,7 @@
   const categoryPillEl = document.getElementById("detailCategoryPill");
   const imageEl = document.getElementById("detailImage");
   const imageBadgeEl = document.getElementById("detailImageBadge");
+  const mediaShellEl = document.getElementById("detailMediaShell");
   const zoomToggleEl = document.getElementById("detailZoomToggle");
   const zoomHintTextEl = document.getElementById("detailZoomHintText");
   const descEl = document.getElementById("detailDesc");
@@ -68,12 +69,14 @@
       relatedLink: "View All",
       viewDetails: "Learn More",
       download: "Download Resource",
+      documentPreview: "Use the viewer controls to move between pages or slides.",
       itemCounter: "Resource {current} of {total}",
       itemUnavailable: "No resources available",
       unavailable: "Unavailable",
       returnMessage: "Please return to the Edu Resources page.",
       category: "Category",
       author: "Author",
+      contributor: "Contributor",
       year: "Year",
       source: "Educator / Source",
       gradeLevel: "Grade Level",
@@ -100,12 +103,14 @@
       relatedLink: "Tingnan Lahat",
       viewDetails: "Tingnan Pa",
       download: "I-download ang Resource",
+      documentPreview: "Gamitin ang mga control ng viewer upang lumipat ng pahina o slide.",
       itemCounter: "Resource {current} ng {total}",
       itemUnavailable: "Walang available na resource",
       unavailable: "Hindi available",
       returnMessage: "Mangyaring bumalik sa pahina ng Edu Resources.",
       category: "Kategorya",
       author: "Awtor",
+      contributor: "Nag-ambag",
       year: "Taon",
       source: "Educator / Source",
       gradeLevel: "Baitang",
@@ -157,25 +162,51 @@
   }
 
   function buildImageMarkup(item) {
-    if (item.is_book && item.cover_image_url) {
-      return `<img src="${escapeHtml(item.cover_image_url)}" alt="${escapeHtml(item.title)}" style="width:100%;height:100%;object-fit:cover;" loading="eager" />`;
+    if (item.is_story && item.cover_image_url) {
+      return `<img class="ogd-detail-media__image" src="${escapeHtml(item.cover_image_url)}" alt="${escapeHtml(item.title)}" loading="eager" />`;
+    }
+
+    if (!item.is_story && item.file_url) {
+      const viewerUrl = item.category === "PDF"
+        ? `${item.file_url}#page=1&view=FitH`
+        : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(item.file_url)}`;
+      return `
+        <div class="edu-resource-document-viewer">
+          <iframe src="${escapeHtml(viewerUrl)}" title="${escapeHtml(item.title)}" loading="eager" allowfullscreen></iframe>
+          <p class="edu-resource-document-viewer__help"><i data-lucide="gallery-horizontal-end" aria-hidden="true"></i>${escapeHtml(getStrings().documentPreview)}</p>
+        </div>
+      `;
     }
 
     return `
-      <div class="w-full h-full flex items-center justify-center text-white" style="background:${escapeHtml(item.gradient || 'linear-gradient(135deg, #1e3a5f, #0f172a)')};">
+      <div class="ogd-detail-media__fallback" style="background:${escapeHtml(item.gradient || 'linear-gradient(135deg, #1e3a5f, #0f172a)')};">
         <div class="text-center p-6">
-          <i data-lucide="${escapeHtml(item.icon || 'file-text')}" class="w-16 h-16 mx-auto mb-3"></i>
-          <p class="font-semibold text-base">${escapeHtml(item.category || getStrings().fallbackCategory)}</p>
+          <i data-lucide="${escapeHtml(item.is_story ? 'book-heart' : (item.icon || 'file-text'))}" class="w-16 h-16 mx-auto mb-3"></i>
+          <p class="font-semibold text-base">${escapeHtml(item.is_story ? "Story" : (item.category || getStrings().fallbackCategory))}</p>
         </div>
       </div>
     `;
   }
 
   function getMetaText(item) {
-    if (item.is_book) {
+    if (item.is_story) {
       return [item.author, item.year, item.category].filter(Boolean).join(" • ");
     }
     return [item.educator_name, item.grade_level, item.subject_topic, item.format].filter(Boolean).join(" • ");
+  }
+
+  function buildRelatedMediaMarkup(item) {
+    if (item.is_story && item.cover_image_url) {
+      return `<img class="ogd-artifact-card__image" src="${escapeHtml(item.cover_image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" />`;
+    }
+    return `
+      <div class="ogd-artifact-card__fallback" style="background:${escapeHtml(item.gradient || 'linear-gradient(135deg, #1e3a5f, #0f172a)')};">
+        <div class="text-center p-4 text-white">
+          <i data-lucide="${escapeHtml(item.is_story ? 'book-heart' : (item.icon || 'file-text'))}" class="w-12 h-12 mx-auto mb-2"></i>
+          <p class="font-semibold text-sm">${escapeHtml(item.is_story ? "Story" : (item.category || getStrings().fallbackCategory))}</p>
+        </div>
+      </div>
+    `;
   }
 
   function buildRelatedCard(item) {
@@ -183,7 +214,7 @@
     return `
       <article class="ogd-artifact-card">
         <a href="/edu-resources/details?item=${item.id}" class="ogd-artifact-card__media" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(item.title)}">
-          ${buildImageMarkup(item)}
+          ${buildRelatedMediaMarkup(item)}
         </a>
         <div class="ogd-artifact-card__body">
           <h3 class="ogd-artifact-card__title font-serif">${escapeHtml(item.title)}</h3>
@@ -220,8 +251,8 @@
     isZoomed = !!nextValue;
     if (zoomToggleEl) {
       zoomToggleEl.setAttribute("aria-pressed", isZoomed ? "true" : "false");
-      zoomToggleEl.classList.toggle("is-zoomed", isZoomed);
     }
+    if (mediaShellEl) mediaShellEl.classList.toggle("is-zoomed", isZoomed);
     if (zoomHintTextEl) {
       zoomHintTextEl.textContent = isZoomed ? getStrings().zoomOut : getStrings().zoomIn;
     }
@@ -299,6 +330,15 @@
     if (imageEl) imageEl.innerHTML = buildImageMarkup(item);
     if (imageBadgeEl) imageBadgeEl.textContent = category;
     if (descEl) descEl.textContent = detailText;
+    const canZoomImage = Boolean(item.is_story && item.cover_image_url);
+    if (zoomToggleEl) {
+      zoomToggleEl.hidden = !canZoomImage;
+      zoomToggleEl.disabled = !canZoomImage;
+    }
+    if (imageEl) {
+      imageEl.classList.toggle("ogd-detail-media__frame--viewer", Boolean(!item.is_story && item.file_url));
+      imageEl.classList.toggle("ogd-detail-media__frame--image", canZoomImage);
+    }
 
     if (tagsEl && tagsSectionEl) {
       tagsEl.innerHTML = "";
@@ -311,10 +351,10 @@
     }
 
     if (factsEl) {
-      factsEl.innerHTML = item.is_book
+      factsEl.innerHTML = item.is_story
         ? [
             buildFactItem("tag", strings.category, category),
-            buildFactItem("book-open", strings.author, item.author || strings.metadataUnavailable),
+            buildFactItem("user", strings.contributor, item.author || strings.metadataUnavailable),
             buildFactItem("calendar", strings.year, item.year || strings.metadataUnavailable),
           ].join("")
         : [
@@ -342,10 +382,11 @@
     }
 
     if (downloadRowEl && downloadLinkEl) {
-      const hasDownload = !item.is_book && normalizeText(item.file_url);
+      const hasDownload = !item.is_story && normalizeText(item.file_url);
       downloadRowEl.hidden = !hasDownload;
       if (hasDownload) {
         downloadLinkEl.href = item.file_url;
+        downloadLinkEl.setAttribute("download", "");
       }
     }
 
@@ -374,6 +415,40 @@
   if (zoomToggleEl) {
     zoomToggleEl.addEventListener("click", () => {
       setZoomState(!isZoomed);
+    });
+  }
+
+  if (downloadLinkEl) {
+    downloadLinkEl.addEventListener("click", async (event) => {
+      const item = items[activeIndex];
+      if (!item || !item.file_url) {
+        return;
+      }
+      event.preventDefault();
+      const fallbackUrl = item.file_url;
+      try {
+        const response = await fetch(fallbackUrl, { credentials: "omit" });
+        if (!response.ok) {
+          throw new Error(`Download failed with HTTP ${response.status}`);
+        }
+        const blob = await response.blob();
+        const objectUrl = URL.createObjectURL(blob);
+        const extensionMatch = String(item.file_filename || fallbackUrl).match(/\.(pdf|docx?|pptx?)(?:$|[?#])/i);
+        const safeTitle = String(item.title || "educational-resource")
+          .replace(/[<>:"/\\|?*\x00-\x1F]/g, "-")
+          .replace(/\s+/g, " ")
+          .trim() || "educational-resource";
+        const temporaryLink = document.createElement("a");
+        temporaryLink.href = objectUrl;
+        temporaryLink.download = `${safeTitle}.${extensionMatch ? extensionMatch[1].toLowerCase() : "file"}`;
+        document.body.appendChild(temporaryLink);
+        temporaryLink.click();
+        temporaryLink.remove();
+        window.setTimeout(() => URL.revokeObjectURL(objectUrl), 1000);
+      } catch (error) {
+        console.warn("Direct download was unavailable; opening the resource file instead.", error);
+        window.open(fallbackUrl, "_blank", "noopener,noreferrer");
+      }
     });
   }
 

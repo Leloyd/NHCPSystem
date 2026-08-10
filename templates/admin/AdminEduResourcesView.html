@@ -92,16 +92,16 @@
             <div class="admin-highlight-view-layout">
               <div class="admin-highlight-view-media-column">
                 <figure class="admin-highlight-view-media admin-edu-view-media">
-                  {% if resource_item.is_book and resource_item.cover_image_url %}
-                  <img src="{{ resource_item.cover_image_url }}" alt="Cover of {{ resource_item.title }}" />
+                  {% if resource_item.is_story and resource_item.cover_image_url %}
+                  <img src="{{ resource_item.cover_image_url }}" alt="Image for {{ resource_item.title }}" />
                   {% else %}
                   <div class="admin-highlight-view-media-fallback admin-edu-view-document">
                     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Zm-5 8h6v2H9Zm0 4h6v2H9Z"></path></svg></span>
                     <strong>{{ resource_item.format }}</strong>
-                    <small>{% if resource_item.is_book %}No book cover available{% else %}{{ resource_item.file_filename or 'No resource file uploaded' }}{% endif %}</small>
+                    <small>{% if resource_item.is_story %}No story image attached{% else %}{{ resource_item.file_filename or 'No resource file uploaded' }}{% endif %}</small>
                   </div>
                   {% endif %}
-                  <figcaption><span>{{ resource_item.category }}</span><span>{{ resource_item.year if resource_item.is_book else resource_item.grade_level }}</span></figcaption>
+                  <figcaption><span>{{ resource_item.category }}</span><span>{{ resource_item.year if resource_item.is_story else resource_item.grade_level }}</span></figcaption>
                 </figure>
 
                 {% if resource_item.file_url %}
@@ -130,9 +130,9 @@
                 <h1>{{ resource_item.title }}</h1>
                 <div class="admin-highlight-view-meta">
                   <span>{{ resource_item.category }}</span>
-                  {% if resource_item.is_book and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
-                  {% if not resource_item.is_book and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
-                  {% if not resource_item.is_book and resource_item.subject_topic %}<span>{{ resource_item.subject_topic }}</span>{% endif %}
+                  {% if resource_item.is_story and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
+                  {% if not resource_item.is_story and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
+                  {% if not resource_item.is_story and resource_item.subject_topic %}<span>{{ resource_item.subject_topic }}</span>{% endif %}
                 </div>
 
                 <section class="admin-highlight-view-section">
@@ -145,10 +145,10 @@
                   <dl>
                     <div><dt>Publication status</dt><dd>{{ resource_item.status|title }}</dd></div>
                     <div><dt>Category</dt><dd>{{ resource_item.category }}</dd></div>
-                    {% if resource_item.is_book %}
-                    <div><dt>Author</dt><dd>{{ resource_item.author or 'Not provided' }}</dd></div>
+                    {% if resource_item.is_story %}
+                    <div><dt>Contributor</dt><dd>{{ resource_item.author or 'Not provided' }}</dd></div>
                     <div><dt>Year</dt><dd>{{ resource_item.year or 'Not provided' }}</dd></div>
-                    <div><dt>Cover image</dt><dd>{% if resource_item.cover_image_filename %}Image attached{% else %}No image attached{% endif %}</dd></div>
+                    <div><dt>Story image</dt><dd>{% if resource_item.cover_image_filename %}Image attached{% else %}No image attached{% endif %}</dd></div>
                     {% else %}
                     <div><dt>Educator / source</dt><dd>{{ resource_item.educator_name or 'Not provided' }}</dd></div>
                     <div><dt>Grade level</dt><dd>{{ resource_item.grade_level or 'Not provided' }}</dd></div>

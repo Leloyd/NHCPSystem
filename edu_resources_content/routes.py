@@ -137,11 +137,9 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
             f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
         )
 
-    if category == "Books":
-        if len(author) < 2:
-            raise ValueError("Author must be at least 2 characters.")
-        if len(year_label) < 4:
-            raise ValueError("Year must be at least 4 characters.")
+    if category == "Story":
+        if author and len(author) < 2:
+            raise ValueError("Contributor name must be at least 2 characters when provided.")
         payload["author"] = author
         payload["year_label"] = year_label
 
@@ -150,8 +148,6 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
             payload["cover_image_filename"] = new_cover_image_filename
         elif current_item and current_item.get("cover_image_filename"):
             payload["cover_image_filename"] = current_item.get("cover_image_filename")
-        else:
-            raise ValueError("Please upload a book cover image.")
     else:
         if len(educator_name) < 2:
             raise ValueError("Educator name / source must be at least 2 characters.")
@@ -346,9 +342,9 @@ def register_edu_resources_routes(
                 delete_local_image(previous_file_filename, EDU_RESOURCES_UPLOAD_DIR)
             if new_cover_image_filename and previous_cover_image_filename and previous_cover_image_filename != new_cover_image_filename:
                 delete_local_image(previous_cover_image_filename, EDU_RESOURCES_UPLOAD_DIR)
-            if payload.get("category") == "Books" and previous_file_filename:
+            if payload.get("category") == "Story" and previous_file_filename:
                 delete_local_image(previous_file_filename, EDU_RESOURCES_UPLOAD_DIR)
-            if payload.get("category") != "Books" and previous_cover_image_filename:
+            if payload.get("category") != "Story" and previous_cover_image_filename:
                 delete_local_image(previous_cover_image_filename, EDU_RESOURCES_UPLOAD_DIR)
         except ValueError as exc:
             if new_file_filename:

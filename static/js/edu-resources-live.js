@@ -42,7 +42,7 @@
   const i18n = {
     english: {
       headerKicker: "Learning Materials",
-      headerCopy: "Browse books, presentations, documents, and PDF materials prepared for classroom and heritage learning use.",
+      headerCopy: "Browse community stories, presentations, documents, and PDF materials prepared for classroom and heritage learning use.",
       searchLabel: "Search learning resources",
       searchPlaceholder: "Search by title, author, educator, grade level, or topic...",
       searchClearLabel: "Clear search",
@@ -71,7 +71,7 @@
     },
     filipino: {
       headerKicker: "Mga Materyal sa Pagkatuto",
-      headerCopy: "Tuklasin ang mga aklat, presentasyon, dokumento, at PDF material na inihanda para sa klase at heritage learning.",
+      headerCopy: "Tuklasin ang mga kuwentong pangkomunidad, presentasyon, dokumento, at PDF material na inihanda para sa klase at heritage learning.",
       searchLabel: "Maghanap ng mga materyal sa pagkatuto",
       searchPlaceholder: "Maghanap ayon sa pamagat, awtor, educator, baitang, o paksa...",
       searchClearLabel: "I-clear ang paghahanap",
@@ -207,22 +207,34 @@
   }
 
   function buildMediaMarkup(item, sizeClass) {
-    if (item.is_book && item.cover_image_url) {
-      return `<div class="${sizeClass}"><img src="${escapeHtml(item.cover_image_url)}" alt="${escapeHtml(item.title)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" /></div>`;
+    if (item.is_story && item.cover_image_url) {
+      return `<div class="${sizeClass} edu-resource-preview edu-resource-preview--image"><img src="${escapeHtml(item.cover_image_url)}" alt="${escapeHtml(item.title)}" loading="lazy" /></div>`;
+    }
+
+    if (!item.is_story && item.file_url) {
+      const viewerUrl = item.category === "PDF"
+        ? `${item.file_url}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH`
+        : `https://view.officeapps.live.com/op/embed.aspx?src=${encodeURIComponent(item.file_url)}`;
+      return `
+        <div class="${sizeClass} edu-resource-preview edu-resource-preview--document" aria-hidden="true">
+          <iframe src="${escapeHtml(viewerUrl)}" title="" loading="lazy" tabindex="-1"></iframe>
+          <span class="edu-resource-preview__shield"></span>
+        </div>
+      `;
     }
 
     return `
-      <div class="${sizeClass}" style="background:${escapeHtml(item.gradient || 'linear-gradient(135deg, #1e3a5f, #0f172a)')}; display:flex; align-items:center; justify-content:center;">
+      <div class="${sizeClass} edu-resource-preview edu-resource-preview--fallback" style="background:${escapeHtml(item.gradient || 'linear-gradient(135deg, #1e3a5f, #0f172a)')};">
         <div class="text-center p-4 text-white">
-          <i data-lucide="${escapeHtml(item.icon || 'file-text')}" class="w-12 h-12 mx-auto mb-2"></i>
-          <p class="font-semibold text-sm">${escapeHtml(item.category || getStrings().fallbackCategory)}</p>
+          <i data-lucide="${escapeHtml(item.is_story ? 'book-heart' : (item.icon || 'file-text'))}" class="w-12 h-12 mx-auto mb-2"></i>
+          <p class="font-semibold text-sm">${escapeHtml(item.is_story ? "Story" : (item.category || getStrings().fallbackCategory))}</p>
         </div>
       </div>
     `;
   }
 
   function getMetaText(item) {
-    if (item.is_book) {
+    if (item.is_story) {
       return [item.author, item.year, item.category].filter(Boolean).join(" • ");
     }
     return [item.educator_name, item.grade_level, item.subject_topic, item.format].filter(Boolean).join(" • ");
@@ -257,9 +269,7 @@
     return `
       <article class="ogd-list-item-wrap">
         <a href="/edu-resources/details?item=${item.id}" class="ogd-list-item" aria-label="${escapeHtml(strings.viewDetails)}: ${escapeHtml(item.title)}">
-          <div class="ogd-list-item__media" style="background:${escapeHtml(item.gradient || 'linear-gradient(135deg, #1e3a5f, #0f172a)')}; display:flex; align-items:center; justify-content:center; overflow:hidden;">
-            ${item.is_book && item.cover_image_url ? `<img src="${escapeHtml(item.cover_image_url)}" alt="${escapeHtml(item.title)}" style="width:100%;height:100%;object-fit:cover;" loading="lazy" />` : `<i data-lucide="${escapeHtml(item.icon || 'file-text')}" class="w-8 h-8 text-white" aria-hidden="true"></i>`}
-          </div>
+          ${buildMediaMarkup(item, "ogd-list-item__media")}
           <div class="ogd-list-item__content">
             <div class="ogd-list-item__head">
               <h2 class="ogd-list-item__title font-serif">${escapeHtml(item.title)}</h2>

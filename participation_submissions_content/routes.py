@@ -132,7 +132,7 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
         payload.update(
             {
                 "title": title,
-                "resource_category": "Books",
+                "resource_category": "Story",
                 "story_category": story_category,
                 "description": build_submission_excerpt(story_content),
                 "story_content": story_content,

@@ -38,9 +38,9 @@
   var uploadMeter = editor.querySelector("[data-edu-editor-upload-meter]");
   var uploadMeterBar = editor.querySelector("[data-edu-editor-upload-meter-bar]");
   var groups = {
-    bookMeta: editor.querySelector('[data-resource-field="book_meta"]'),
+    storyMeta: editor.querySelector('[data-resource-field="story_meta"]'),
     materialMeta: editor.querySelector('[data-resource-field="material_meta"]'),
-    bookUpload: editor.querySelector('[data-resource-field="book_upload"]'),
+    storyUpload: editor.querySelector('[data-resource-field="story_upload"]'),
     materialUpload: editor.querySelector('[data-resource-field="material_upload"]'),
   };
   var acceptByCategory = {
@@ -164,11 +164,11 @@
   }
 
   function updateContext() {
-    var isBook = categorySelect && categorySelect.value === "Books";
-    var value = isBook
+    var isStory = categorySelect && categorySelect.value === "Story";
+    var value = isStory
       ? normalize(authorInput && authorInput.value) ||
         normalize(yearInput && yearInput.value) ||
-        "Book resource"
+        "Community story"
       : normalize(gradeInput && gradeInput.value) ||
         normalize(topicInput && topicInput.value) ||
         "Learning material";
@@ -182,20 +182,20 @@
       return;
     }
     var category = normalize(categorySelect.value) || "PPT";
-    var isBook = category === "Books";
-    setGroupVisibility(groups.bookMeta, isBook);
-    setGroupVisibility(groups.bookUpload, isBook);
-    setGroupVisibility(groups.materialMeta, !isBook);
-    setGroupVisibility(groups.materialUpload, !isBook);
+    var isStory = category === "Story";
+    setGroupVisibility(groups.storyMeta, isStory);
+    setGroupVisibility(groups.storyUpload, isStory);
+    setGroupVisibility(groups.materialMeta, !isStory);
+    setGroupVisibility(groups.materialUpload, !isStory);
 
     if (fileInput) {
       fileInput.setAttribute("accept", acceptByCategory[category] || "");
     }
     if (formatOutput) {
-      formatOutput.textContent = isBook ? "BOOK" : category;
+      formatOutput.textContent = isStory ? "STORY" : category;
     }
     if (kindOutput) {
-      kindOutput.textContent = isBook ? "Book resource" : "Downloadable file";
+      kindOutput.textContent = isStory ? "Community story" : "Downloadable file";
     }
     if (uploadHelp && !hasPersistedFile && !getSelectedFile(fileInput)) {
       uploadHelp.textContent =
@@ -209,7 +209,7 @@
       output.textContent = category;
     });
 
-    if (isBook) {
+    if (isStory) {
       if (getSelectedFile(coverInput) && coverObjectUrl) {
         if (coverPreview) {
           coverPreview.src = coverObjectUrl;
@@ -298,7 +298,7 @@
       hasSelectedCover = hasPersistedCover;
       resetCoverPreview();
       updateUploadBudget();
-      showFeedback("The book cover must be a JPG or PNG file.", true);
+      showFeedback("The story image must be a JPG or PNG file.", true);
       return;
     }
     if (rejectUploadOverBudget(coverInput)) {
@@ -316,7 +316,7 @@
       documentPreview.hidden = true;
     }
     hasSelectedCover = true;
-    showFeedback("Book cover preview updated to " + file.name + ".", false);
+    showFeedback("Story image preview updated to " + file.name + ".", false);
   }
 
   function handleFileSelection() {
@@ -345,17 +345,12 @@
 
   function validateEditor(event) {
     var category = normalize(categorySelect && categorySelect.value);
-    var isBook = category === "Books";
+    var isStory = category === "Story";
     var requirements = [
       { field: titleInput, min: 3, message: "Title must be at least 3 characters." },
       { field: descriptionInput, min: 12, message: "Description must be at least 12 characters." },
     ];
-    if (isBook) {
-      requirements.push(
-        { field: authorInput, min: 2, message: "Author must be at least 2 characters." },
-        { field: yearInput, min: 4, message: "Year must be at least 4 characters." }
-      );
-    } else {
+    if (!isStory) {
       requirements.push(
         { field: educatorInput, min: 2, message: "Educator name or source must be at least 2 characters." },
         { field: gradeInput, min: 2, message: "Grade level must be at least 2 characters." },
@@ -383,14 +378,12 @@
       return;
     }
 
-    if ((isBook && !hasSelectedCover) || (!isBook && !hasSelectedFile)) {
+    if (!isStory && !hasSelectedFile) {
       event.preventDefault();
       event.stopImmediatePropagation();
-      var missingMessage = isBook
-        ? "Please upload a book cover before saving."
-        : "Please upload the resource file before saving.";
+      var missingMessage = "Please upload the resource file before saving.";
       showFeedback(missingMessage, true);
-      (isBook ? coverInput : fileInput).focus();
+      fileInput.focus();
       return;
     }
 

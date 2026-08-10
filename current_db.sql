@@ -179,7 +179,7 @@ CREATE TABLE public.edu_resources (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   title text NOT NULL,
   slug text NOT NULL UNIQUE,
-  category text NOT NULL CHECK (category = ANY (ARRAY['PPT'::text, 'Books'::text, 'DOCS'::text, 'PDF'::text])),
+  category text NOT NULL CHECK (category = ANY (ARRAY['PPT'::text, 'Story'::text, 'DOCS'::text, 'PDF'::text])),
   educator_name text NOT NULL DEFAULT ''::text,
   grade_level text NOT NULL DEFAULT ''::text,
   subject_topic text NOT NULL DEFAULT ''::text,

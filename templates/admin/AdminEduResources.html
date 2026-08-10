@@ -87,15 +87,15 @@
                 data-edu-search="{{ (resource_item.title ~ ' ' ~ resource_item.description ~ ' ' ~ resource_item.category ~ ' ' ~ resource_item.author ~ ' ' ~ resource_item.year ~ ' ' ~ resource_item.educator_name ~ ' ' ~ resource_item.grade_level ~ ' ' ~ resource_item.subject_topic)|lower }}"
               >
                 <figure class="admin-gallery-card-media admin-edu-card-media is-{{ resource_item.category|lower }}">
-                  {% if resource_item.is_book and resource_item.cover_image_url %}
-                  <img src="{{ resource_item.cover_image_url }}" alt="Cover of {{ resource_item.title }}" loading="lazy" />
+                  {% if resource_item.is_story and resource_item.cover_image_url %}
+                  <img src="{{ resource_item.cover_image_url }}" alt="Image for {{ resource_item.title }}" loading="lazy" />
                   {% else %}
                   <span class="admin-edu-document-preview" aria-hidden="true">
                     <span class="admin-edu-document-sheet">
                       <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Zm-5 8h6v2H9Zm0 4h6v2H9Z"></path></svg>
                       <strong>{{ resource_item.format }}</strong>
                     </span>
-                    <small>{% if resource_item.is_book %}Book cover pending{% else %}{{ resource_item.file_filename or 'Resource file pending' }}{% endif %}</small>
+                    <small>{% if resource_item.is_story %}Story image optional{% else %}{{ resource_item.file_filename or 'Resource file pending' }}{% endif %}</small>
                   </span>
                   {% endif %}
 
@@ -104,7 +104,7 @@
                       {{ resource_item.status|title }}
                     </span>
                     <span class="admin-gallery-model-badge admin-edu-format-badge">
-                      {% if resource_item.is_book %}
+                      {% if resource_item.is_story %}
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h6a3 3 0 0 1 2 1 3 3 0 0 1 2-1h6v17h-6a3 3 0 0 0-2 1 3 3 0 0 0-2-1H4Zm2 2v13h4a5 5 0 0 1 1 .1V6a1 1 0 0 0-1-1Zm7 1v12.1a5 5 0 0 1 1-.1h4V5h-4a1 1 0 0 0-1 1Z"></path></svg>
                       {% else %}
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Z"></path></svg>
@@ -117,8 +117,8 @@
                 <div class="admin-gallery-card-body">
                   <div class="admin-gallery-card-meta">
                     <span>{{ resource_item.category }}</span>
-                    {% if resource_item.is_book and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
-                    {% if not resource_item.is_book and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
+                    {% if resource_item.is_story and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
+                    {% if not resource_item.is_story and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
                   </div>
 
                   <h3>{{ resource_item.title }}</h3>
@@ -127,9 +127,9 @@
                   <div class="admin-gallery-card-assets admin-edu-card-assets">
                     <span>
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a5 5 0 1 1 0 10 5 5 0 0 1 0-10Zm0 2a3 3 0 1 0 0 6 3 3 0 0 0 0-6ZM3 22a9 9 0 0 1 18 0h-2a7 7 0 0 0-14 0Z"></path></svg>
-                      {{ resource_item.author if resource_item.is_book else resource_item.educator_name }}
+                      {{ resource_item.author if resource_item.is_story else resource_item.educator_name }}
                     </span>
-                    {% if not resource_item.is_book and resource_item.subject_topic %}
+                    {% if not resource_item.is_story and resource_item.subject_topic %}
                     <span>
                       <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v4H3Zm2 6h14v10H5Zm2 2v6h10v-6Z"></path></svg>
                       {{ resource_item.subject_topic }}

@@ -30,7 +30,7 @@ PARTICIPATION_SUBMISSION_STATUS_OPTIONS = (
 )
 EDU_RESOURCE_CATEGORY_META = {
     "PPT": {"icon": "file-text", "gradient": "linear-gradient(135deg, #8b5cf6, #5b21b6)", "format": "PPT"},
-    "Books": {"icon": "book-open", "gradient": "linear-gradient(135deg, #f59e0b, #92400e)", "format": "BOOK"},
+    "Story": {"icon": "book-heart", "gradient": "linear-gradient(135deg, #9a6a35, #3d2615)", "format": "STORY"},
     "DOCS": {"icon": "file-text", "gradient": "linear-gradient(135deg, #14b8a6, #0f766e)", "format": "DOCX"},
     "PDF": {"icon": "file-text", "gradient": "linear-gradient(135deg, #ef4444, #b91c1c)", "format": "PDF"},
 }
@@ -68,7 +68,9 @@ def prepare_participation_submission_item(item: dict[str, Any] | None) -> dict[s
     submission_type = str(prepared.get("submission_type") or PARTICIPATION_SUBMISSION_TYPES[0]).strip()
     status = str(prepared.get("status") or "pending_verification").strip().lower()
     is_private = bool(prepared.get("is_private"))
-    resource_category = str(prepared.get("resource_category") or "").strip() or ("Books" if submission_type == "story_submit" else "")
+    resource_category = str(prepared.get("resource_category") or "").strip() or ("Story" if submission_type == "story_submit" else "")
+    if resource_category == "Books":
+        resource_category = "Story"
     title = str(prepared.get("title") or "").strip()
     submitter_name = str(prepared.get("submitter_name") or "").strip()
     submitter_email = str(prepared.get("submitter_email") or "").strip().lower()
@@ -163,7 +165,7 @@ def load_public_approved_participation_submission_resources() -> list[dict[str, 
     resources = []
     for item in items:
         prepared = prepare_participation_submission_item(item)
-        category = prepared.get("resource_category") or ("Books" if prepared.get("submission_type") == "story_submit" else "DOCS")
+        category = prepared.get("resource_category") or ("Story" if prepared.get("submission_type") == "story_submit" else "DOCS")
         meta = EDU_RESOURCE_CATEGORY_META.get(category, EDU_RESOURCE_CATEGORY_META["DOCS"])
         contributor_name = "" if prepared.get("is_private") else prepared.get("submitter_name")
         full_text = prepared.get("story_content") or prepared.get("description")
@@ -173,20 +175,21 @@ def load_public_approved_participation_submission_resources() -> list[dict[str, 
                 "title": prepared.get("title"),
                 "category": category,
                 "status": "active",
-                "is_book": category == "Books",
+                "is_story": category == "Story",
+                "is_book": False,
                 "cover_image_url": prepared.get("photo_url"),
                 "file_url": prepared.get("resource_file_url"),
                 "icon": meta["icon"],
                 "gradient": meta["gradient"],
                 "format": meta["format"],
-                "author": contributor_name if category == "Books" else "",
+                "author": contributor_name if category == "Story" else "",
                 "year": "",
-                "educator_name": contributor_name if category != "Books" else "",
+                "educator_name": contributor_name if category != "Story" else "",
                 "grade_level": prepared.get("grade_level") or "",
                 "subject_topic": prepared.get("subject_topic") or prepared.get("story_category") or "",
                 "description": build_submission_excerpt(full_text),
                 "full_text": full_text,
-                "metadata_label": "Author" if category == "Books" else "Educator / Source",
+                "metadata_label": "Contributor" if category == "Story" else "Educator / Source",
                 "metadata_value": contributor_name,
                 "created_at": prepared.get("created_at"),
                 "updated_at": prepared.get("updated_at"),
