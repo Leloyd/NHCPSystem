@@ -56,9 +56,10 @@ body {
 
 /* History eras: the further back in time, the deeper the sepia — color
    gradually returns as the visitor travels toward the present. */
-.story__viewport[data-chapter="era1845"] .story__bg { filter: sepia(0.85) contrast(1.06) brightness(0.78); }
-.story__viewport[data-chapter="era1896"] .story__bg { filter: sepia(0.62) contrast(1.04) brightness(0.84); }
-.story__viewport[data-chapter="era1981"] .story__bg { filter: sepia(0.32) saturate(0.75) brightness(0.92); }
+.story__viewport[data-chapter="era1845"] .story__bg { -webkit-filter: sepia(0.85) contrast(1.06) brightness(0.78); filter: sepia(0.85) contrast(1.06) brightness(0.78); }
+.story__viewport[data-chapter="era1896"] .story__bg { -webkit-filter: sepia(0.62) contrast(1.04) brightness(0.84); filter: sepia(0.62) contrast(1.04) brightness(0.84); }
+.story__viewport[data-chapter="era1981"] .story__bg { -webkit-filter: sepia(0.32) saturate(0.75) brightness(0.92); filter: sepia(0.32) saturate(0.75) brightness(0.92); }
+.story__viewport[data-chapter="eraToday"] .story__bg { -webkit-filter: none; filter: none; }
 .story__bg[data-bg="default"] { opacity: 1; }
 .story__viewport[data-chapter="testament"] .story__bg[data-bg="testament"],
 .story__viewport[data-chapter="about1"] .story__bg[data-bg="about1"],
@@ -583,6 +584,18 @@ body {
      same breathing room to the controls below and the info above. */
   .story__viewport[data-subtitles="off"] .story__timeline { bottom: calc(4.7rem + env(safe-area-inset-bottom, 0px)); }
   .story__viewport[data-subtitles="off"] .story-chapter.story-chapter--era { padding-bottom: 7.8rem; }
+
+  /* Mobile Safari / Chrome can keep the opacity values from the flicker
+     animation when the chapter changes. Keep the moving grain, but let each
+     era own a fixed strength so the image visibly returns to full colour as
+     the visitor reaches the present. */
+  .story__viewport[data-chapter^="era"] .story__vintage {
+    animation: story-grain 0.65s steps(3) infinite;
+  }
+  .story__viewport[data-chapter="era1845"] .story__vintage { opacity: 0.5; }
+  .story__viewport[data-chapter="era1896"] .story__vintage { opacity: 0.36; }
+  .story__viewport[data-chapter="era1981"] .story__vintage { opacity: 0.22; }
+  .story__viewport[data-chapter="eraToday"] .story__vintage { opacity: 0.08; }
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -1239,6 +1252,17 @@ body.is-trail-exit #publicNavHeader {
   .story-card:nth-child(2),
   .story-card:nth-child(4) { grid-column: 1 / -1; } /* Location, Contact */
   .story-chapter--wide { width: auto; }
+}
+
+/* Heritage Overview I–III already place the complete bilingual narration in
+   their chapter panels. Never duplicate it in Ana's subtitle bubble, even if
+   the visitor leaves CC enabled for the chapters before and after them. */
+.story__viewport[data-chapter="about1"] .story__bubble,
+.story__viewport[data-chapter="about2"] .story__bubble,
+.story__viewport[data-chapter="about3"] .story__bubble {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
 }
 
 /* Reduced motion -------------------------------------------------------------- */
