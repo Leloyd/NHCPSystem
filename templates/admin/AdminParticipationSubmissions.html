@@ -88,6 +88,21 @@
                 <figure class="admin-gallery-card-media admin-submission-card-media is-{{ submission_item.submission_type }}">
                   {% if submission_item.photo_url %}
                   <img src="{{ submission_item.photo_url }}" alt="Submitted image for {{ submission_item.title }}" loading="lazy" />
+                  {% elif submission_item.resource_preview_url %}
+                  <div class="admin-submission-document-preview is-{{ submission_item.resource_preview_kind }}">
+                    <iframe
+                      src="{{ submission_item.resource_preview_url }}"
+                      title="Document preview for {{ submission_item.title }}"
+                      loading="lazy"
+                      tabindex="-1"
+                      aria-hidden="true"
+                    ></iframe>
+                    <span class="admin-submission-document-preview-shield" aria-hidden="true"></span>
+                    <span class="admin-submission-document-preview-label" aria-hidden="true">
+                      <svg viewBox="0 0 24 24"><path d="M6 2h9l5 5v15H6a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2Zm8 2H6v16h12V8h-4Z"></path></svg>
+                      {{ submission_item.resource_category }} preview
+                    </span>
+                  </div>
                   {% else %}
                   <span class="admin-submission-card-placeholder" aria-hidden="true">
                     {% if submission_item.submission_type == 'teacher_corner' %}

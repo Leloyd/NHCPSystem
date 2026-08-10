@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from datetime import datetime
 from pathlib import Path
+from urllib.parse import quote
 from typing import Any
 
 from flask import current_app, render_template, session
@@ -91,6 +92,16 @@ def prepare_participation_submission_item(item: dict[str, Any] | None) -> dict[s
     prepared["preview_text"] = preview_text
     prepared["resource_file_url"] = resolve_participation_submission_url(prepared.get("resource_file_filename"))
     prepared["photo_url"] = resolve_participation_submission_url(prepared.get("photo_filename"))
+    prepared["resource_preview_kind"] = ""
+    prepared["resource_preview_url"] = ""
+    if prepared["resource_file_url"] and resource_category in {"PDF", "DOCS", "PPT"}:
+        prepared["resource_preview_kind"] = "pdf" if resource_category == "PDF" else "office"
+        prepared["resource_preview_url"] = (
+            f'{prepared["resource_file_url"]}#page=1&toolbar=0&navpanes=0&scrollbar=0&view=FitH'
+            if resource_category == "PDF"
+            else "https://view.officeapps.live.com/op/embed.aspx?src="
+            + quote(prepared["resource_file_url"], safe="")
+        )
     prepared["submission_type_label"] = "Teacher Corner" if submission_type == "teacher_corner" else "Story Submit"
     prepared["story_category"] = str(prepared.get("story_category") or "").strip()
     prepared["contributor_display"] = "Hidden by privacy request" if is_private and status == "active" else (submitter_name or "Anonymous")

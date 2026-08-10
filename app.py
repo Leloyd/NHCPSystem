@@ -952,6 +952,7 @@ def _set_security_headers(response):
             "style-src 'self' 'unsafe-inline'; "
             f"connect-src {ADMIN_ASSET_SOURCES}; "
             f"media-src {ADMIN_ASSET_SOURCES}; "
+            f"frame-src {ADMIN_ASSET_SOURCES} https://view.officeapps.live.com; "
             "worker-src 'self' blob:; "
             "font-src 'self'; "
             "base-uri 'self'; "
