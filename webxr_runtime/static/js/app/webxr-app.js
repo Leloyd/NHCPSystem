@@ -707,8 +707,10 @@ const CHURCH_HISTORY_RECORD_TABLES = Object.fromEntries(
   }]),
 );
 const UNDERGROUND_MEMORY_STORAGE_KEY = 'nhcpUndergroundMemoryV1';
-const UNDERGROUND_MEMORY_WALL_POSITION = [2.56, 0.62, 0];
-const UNDERGROUND_MEMORY_LAMPS_POSITION = [0.02, 1.00, 2.10];
+// Keep the completed Memory Wall action directly below its 4/4 progress
+// display. The progress display is raised so the OPEN control never covers it.
+const UNDERGROUND_MEMORY_WALL_POSITION = [0.02, 1.00, 2.10];
+const UNDERGROUND_MEMORY_LAMPS_POSITION = [0.02, 1.35, 2.10];
 const HERITAGE_MISSION_CHAPEL_IDS = [];
 const HERITAGE_MISSION_TIMELINE = [
   'evidence-revolution',
