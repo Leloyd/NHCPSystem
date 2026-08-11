@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-spark-xr-2';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-spark-xr-4';
 
 function getRefs() {
   return {

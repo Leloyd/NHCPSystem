@@ -509,6 +509,15 @@ export class WebXRApp {
     this.phoneVrGazeSystem = null;
     this.activeXrReferenceSpaceType = null;
     this.activeXrSessionMode = null;
+    this.xrLoadingPanel = null;
+    this.xrLoadingPanelStartedAt = 0;
+    this.xrFrameSubmitted = false;
+    this.xrRenderFailure = null;
+    this.xrPreviousSparkBudget = null;
+    this.xrPreviousSparkVisibility = null;
+    this.xrSplatRevealIndex = 0;
+    this.xrSplatRevealStartedAt = 0;
+    this.xrSplatsFullyRevealedAt = 0;
     this.lastPositionDebugValue = '';
     this.hotspotDebugActive = false;
 
@@ -1755,7 +1764,7 @@ export class WebXRApp {
     // budget and present a black compositor layer. This does not change the
     // normal-screen quality preset.
     try {
-      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.5 : 0.85);
+      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.38 : 0.85);
     } catch (error) {
       console.warn('[xr] framebuffer scale could not be configured', error);
     }
@@ -1878,11 +1887,16 @@ export class WebXRApp {
           throw lastError || new Error('VR session request failed.');
         };
 
-        const getReferenceSpaceCandidates = (sessionMode) => (
-          sessionMode === XR_SESSION_MODE_VR
-            ? ['local-floor']
-            : ['local-floor', 'local']
-        );
+        const getReferenceSpaceCandidates = (sessionMode) => {
+          if (sessionMode === XR_SESSION_MODE_VR && this.mobileMode) {
+            // Google VR/Cardboard-class runtimes are most consistent with the
+            // core `local` space. The player rig applies its own eye height
+            // after the first XR pose is available.
+            return ['local', 'local-floor'];
+          }
+
+          return ['local-floor', 'local'];
+        };
 
         const bindSessionWithReferenceSpaceFallback = async (session, sessionMode) => {
           const candidates = getReferenceSpaceCandidates(sessionMode);
@@ -2106,6 +2120,51 @@ export class WebXRApp {
       this.uiController.setMobileControlsVisible(true);
       this.playerController?.levelHorizon();
       this.gazeTeleportSystem?.reset();
+
+      this.xrFrameSubmitted = false;
+      this.xrRenderFailure = null;
+      this.xrLoadingPanelStartedAt = performance.now();
+      this._setXrLoadingPanel('Preparing the 3D Environment\u2026', true);
+
+      // Submit a lightweight Three.js frame before any SPZ draw calls. Native
+      // phone VR compositors can otherwise enter immersive mode while a large
+      // first stereo splat frame is still compiling/allocating, which appears
+      // as an indefinitely black Google VR screen.
+      if (mode === XR_SESSION_MODE_VR) {
+        this.xrSplatRevealIndex = 0;
+        this.xrSplatRevealStartedAt = this.xrLoadingPanelStartedAt + 700;
+        this.xrSplatsFullyRevealedAt = 0;
+        for (const entry of this.splatEntries) {
+          if (entry?.object) {
+            entry.object.visible = false;
+          }
+        }
+      } else {
+        this.xrSplatRevealIndex = this.splatEntries.length;
+        this.xrSplatRevealStartedAt = 0;
+        this.xrSplatsFullyRevealedAt = this.xrLoadingPanelStartedAt;
+      }
+
+      if (mode === XR_SESSION_MODE_VR && this.sparkRenderer) {
+        this.xrPreviousSparkBudget = {
+          lodSplatCount: this.sparkRenderer.lodSplatCount,
+          lodSplatScale: this.sparkRenderer.lodSplatScale,
+          lodRenderScale: this.sparkRenderer.lodRenderScale,
+        };
+        this.xrPreviousSparkVisibility = this.sparkRenderer.visible;
+        this.sparkRenderer.visible = false;
+        if (typeof this.sparkRenderer.clearSplats === 'function') {
+          this.sparkRenderer.clearSplats();
+        }
+
+        // Cardboard-class phones have a substantially smaller stereo GPU
+        // budget than a standalone headset. Keep the normal-screen scene at
+        // its authored quality, but use a conservative aggregate splat count
+        // while the immersive session is active.
+        this.sparkRenderer.lodSplatCount = this.mobileMode ? 220000 : 500000;
+        this.sparkRenderer.lodSplatScale = 1;
+        this.sparkRenderer.lodRenderScale = this.mobileMode ? 2.5 : 1.5;
+      }
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
@@ -2114,7 +2173,169 @@ export class WebXRApp {
       this.playerController?.restoreAfterXrSession();
       this.gazeTeleportSystem?.reset();
       this.uiController.setMobileControlsVisible(true);
+      this._setXrLoadingPanel('', false);
+      this.xrFrameSubmitted = false;
+      this.xrRenderFailure = null;
+
+      for (const entry of this.splatEntries) {
+        if (entry?.object) {
+          entry.object.visible = true;
+        }
+      }
+      this.xrSplatRevealIndex = 0;
+      this.xrSplatRevealStartedAt = 0;
+      this.xrSplatsFullyRevealedAt = 0;
+
+      if (this.sparkRenderer && this.xrPreviousSparkBudget) {
+        this.sparkRenderer.lodSplatCount = this.xrPreviousSparkBudget.lodSplatCount;
+        this.sparkRenderer.lodSplatScale = this.xrPreviousSparkBudget.lodSplatScale;
+        this.sparkRenderer.lodRenderScale = this.xrPreviousSparkBudget.lodRenderScale;
+      }
+      if (this.sparkRenderer && this.xrPreviousSparkVisibility !== null) {
+        this.sparkRenderer.visible = this.xrPreviousSparkVisibility;
+      }
+      this.xrPreviousSparkBudget = null;
+      this.xrPreviousSparkVisibility = null;
     });
+  }
+
+  _createXrLoadingPanel() {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024;
+    canvas.height = 320;
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return null;
+    }
+
+    const texture = new THREE.CanvasTexture(canvas);
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = false;
+    texture.minFilter = THREE.LinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+      map: texture,
+      transparent: true,
+      depthTest: false,
+      depthWrite: false,
+      toneMapped: false,
+    }));
+    sprite.name = 'xr-loading-panel';
+    sprite.visible = false;
+    sprite.renderOrder = 20000;
+    sprite.frustumCulled = false;
+    sprite.userData.canvas = canvas;
+    sprite.userData.context = context;
+    sprite.scale.set(1.55, 0.485, 1);
+    this.scene.add(sprite);
+    return sprite;
+  }
+
+  _setXrLoadingPanel(message, visible) {
+    if (!this.xrLoadingPanel) {
+      this.xrLoadingPanel = this._createXrLoadingPanel();
+    }
+    const panel = this.xrLoadingPanel;
+    if (!panel) {
+      return;
+    }
+
+    panel.visible = Boolean(visible);
+    if (!visible) {
+      return;
+    }
+
+    const context = panel.userData.context;
+    const canvas = panel.userData.canvas;
+    context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = 'rgba(17, 12, 6, 0.94)';
+    context.beginPath();
+    if (typeof context.roundRect === 'function') {
+      context.roundRect(8, 8, canvas.width - 16, canvas.height - 16, 42);
+    } else {
+      // Older Android WebViews used by some Google VR shells do not expose
+      // CanvasRenderingContext2D.roundRect(). A plain rectangle keeps the XR
+      // sessionstart handler from failing before the first immersive frame.
+      context.rect(8, 8, canvas.width - 16, canvas.height - 16);
+    }
+    context.fill();
+    context.lineWidth = 9;
+    context.strokeStyle = '#d4af6a';
+    context.stroke();
+    context.fillStyle = '#f7ead0';
+    context.textAlign = 'center';
+    context.font = "600 48px 'Inter', sans-serif";
+    context.fillText('Museo ng Libingan sa Ilalim ng Lupa ng Nagcarlan', canvas.width / 2, 126);
+    context.fillStyle = '#d4af6a';
+    context.font = "500 38px 'Inter', sans-serif";
+    context.fillText(String(message || 'Preparing the 3D Environment\u2026'), canvas.width / 2, 210);
+    panel.material.map.needsUpdate = true;
+  }
+
+  _updateXrLoadingPanel() {
+    const panel = this.xrLoadingPanel;
+    if (!panel?.visible || !this.renderer.xr.isPresenting) {
+      return;
+    }
+
+    const xrCamera = this.renderer.xr.getCamera(this.camera);
+    const eyeCameras = Array.isArray(xrCamera?.cameras) ? xrCamera.cameras : [];
+    const viewCamera = eyeCameras[0] || xrCamera || this.camera;
+    viewCamera.updateWorldMatrix(true, false);
+
+    const origin = new THREE.Vector3();
+    const direction = new THREE.Vector3();
+    viewCamera.getWorldPosition(origin);
+    viewCamera.getWorldDirection(direction).normalize();
+    panel.position.copy(origin).addScaledVector(direction, 1.45);
+
+    const now = performance.now();
+    const elapsed = now - this.xrLoadingPanelStartedAt;
+    const environmentSettled = this.splatEntries.length === 0
+      ? elapsed >= 900
+      : this.xrSplatsFullyRevealedAt > 0 && now - this.xrSplatsFullyRevealedAt >= 1100;
+    if (this.xrFrameSubmitted && environmentSettled && !this.xrRenderFailure) {
+      panel.visible = false;
+    }
+  }
+
+  _updateXrSplatWarmup() {
+    if (
+      !this.renderer.xr.isPresenting
+      || this.activeXrSessionMode !== XR_SESSION_MODE_VR
+      || this.splatEntries.length === 0
+      || this.xrSplatsFullyRevealedAt
+    ) {
+      return;
+    }
+
+    const now = performance.now();
+    if (!this.xrFrameSubmitted || now < this.xrSplatRevealStartedAt) {
+      return;
+    }
+
+    if (this.sparkRenderer && this.sparkRenderer.visible === false) {
+      this.sparkRenderer.visible = this.xrPreviousSparkVisibility !== false;
+    }
+
+    // Reveal one SPZ per submitted frame (and no faster than 240 ms) so scene
+    // shader compilation and GPU uploads are spread across several frames.
+    const expectedIndex = Math.min(
+      this.splatEntries.length,
+      1 + Math.floor((now - this.xrSplatRevealStartedAt) / 240),
+    );
+    while (this.xrSplatRevealIndex < expectedIndex) {
+      const entry = this.splatEntries[this.xrSplatRevealIndex];
+      if (entry?.object) {
+        entry.object.visible = true;
+      }
+      this.xrSplatRevealIndex += 1;
+    }
+
+    if (this.xrSplatRevealIndex >= this.splatEntries.length) {
+      this.xrSplatsFullyRevealedAt = now;
+    }
   }
 
   _registerInteractions() {
@@ -3648,16 +3869,47 @@ export class WebXRApp {
   _animate() {
     const dt = Math.min(0.05, this.clock.getDelta());
 
-    if (this.playerController && this.collisionSystem) {
-      this.playerController.update(dt, this.collisionSystem);
-      this._updatePositionDebugValue();
+    // Submit the immersive frame before running optional interaction and
+    // collision systems. On some Android WebXR runtimes, an exception in a
+    // controller-free helper before renderer.render() leaves Google's native
+    // VR shell open with a permanently black layer.
+    if (this.renderer.xr.isPresenting) {
+      try {
+        this._updateXrSplatWarmup();
+        this._updateXrLoadingPanel();
+        this.renderer.render(this.scene, this.camera);
+        this.xrFrameSubmitted = true;
+      } catch (error) {
+        console.error('[xr] immersive frame render failed', error);
+        this.xrRenderFailure = error;
+        this._setXrLoadingPanel('Unable to render this VR scene.', true);
+      }
     }
 
-    this.phoneVrGazeSystem?.update(dt);
-    this.gazeTeleportSystem?.update(dt);
+    if (this.playerController && this.collisionSystem) {
+      try {
+        this.playerController.update(dt, this.collisionSystem);
+        this._updatePositionDebugValue();
+      } catch (error) {
+        console.error('[xr] player update failed', error);
+      }
+    }
 
-    this._updateMuseumArtifactStation(dt);
+    try {
+      this.phoneVrGazeSystem?.update(dt);
+      this.gazeTeleportSystem?.update(dt);
+    } catch (error) {
+      console.error('[xr] gaze update failed', error);
+    }
 
-    this.renderer.render(this.scene, this.camera);
+    try {
+      this._updateMuseumArtifactStation(dt);
+    } catch (error) {
+      console.error('[xr] artifact station update failed', error);
+    }
+
+    if (!this.renderer.xr.isPresenting) {
+      this.renderer.render(this.scene, this.camera);
+    }
   }
 }
