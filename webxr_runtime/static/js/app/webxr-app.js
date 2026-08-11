@@ -57,6 +57,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       {
         id: 'jar',
         title: { tl: 'Mga Banga ng Maitum', en: 'The Maitum Jars' },
+        modelUrl: '/AR-Artifacts/Maitum/Maitum-10k.glb',
         rotation: [0, -90, 0],
         disableTilt: true,
         audio: {
@@ -75,6 +76,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       {
         id: 'banga',
         title: { tl: 'Banga ng Manunggul', en: 'The Manunggul Jar' },
+        modelUrl: '/AR-Artifacts/Banga/Banga-512(10k).glb',
         rotation: [0, 0, 0],
         disableTilt: true,
         audio: {
@@ -90,6 +92,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       {
         id: 'balanghay',
         title: { tl: 'Ang Balanghay', en: 'The Balanghay' },
+        modelUrl: '/AR-Artifacts/Balanghay/Balanghay-512(10K).glb',
         rotation: [0, 0, 0],
         audio: {
           tl: '/360Hotspots/Balanghay/ANG BALANGHAY.mp3',
@@ -105,6 +108,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       {
         id: 'kabaong',
         title: { tl: 'Mga Nakabiting Kabaong ng Sagada', en: 'The Hanging Coffins of Sagada' },
+        modelUrl: '/AR-Artifacts/Kabaong/Kabaong-512(10k).glb',
         rotation: [0, 0, 0],
         audio: {
           tl: '/360Hotspots/Kabaong/ANG MGA NAKABITING KABAONG NG SAGADA.mp3',
@@ -120,6 +124,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       {
         id: 'uloh',
         title: { tl: 'Tradisyunal na Ulóh ng mga Ifugao', en: 'Traditional Ulóh of the Ifugao' },
+        modelUrl: '/AR-Artifacts/Uloh/Uloh-512(10k).glb',
         rotation: [0, -90, 0],
         audio: {
           tl: '/360Hotspots/Uloh/TRADISYUNAL NA ULÓH NG MGA IFUGAO.mp3',
