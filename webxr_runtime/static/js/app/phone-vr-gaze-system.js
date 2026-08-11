@@ -29,8 +29,11 @@ export class PhoneVrGazeSystem {
 
     this.raycaster = new THREE.Raycaster();
     this.raycaster.firstHitOnly = true;
-    this.xrReticle = this._createXrReticle();
-    this.scene.add(this.xrReticle);
+    this.eyeOrigins = [new THREE.Vector3(), new THREE.Vector3()];
+    this.eyeDirections = [new THREE.Vector3(), new THREE.Vector3()];
+    this.activeEyeCount = 0;
+    this.xrReticles = this._createXrReticles();
+    this.xrReticles.forEach((reticle) => this.scene.add(reticle));
 
     this.targetObject = null;
     this.blockedObject = null;
@@ -39,7 +42,7 @@ export class PhoneVrGazeSystem {
     this.reticleProgress = 0;
   }
 
-  _createXrReticle() {
+  _createXrReticles() {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
     canvas.height = 256;
@@ -78,7 +81,7 @@ export class PhoneVrGazeSystem {
     texture.minFilter = THREE.LinearFilter;
     texture.magFilter = THREE.LinearFilter;
 
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+    const material = new THREE.SpriteMaterial({
       map: texture,
       color: BASE_COLOR,
       transparent: true,
@@ -86,13 +89,22 @@ export class PhoneVrGazeSystem {
       depthTest: false,
       depthWrite: false,
       toneMapped: false,
-    }));
-    sprite.name = 'phone-webxr-gaze-reticle';
-    sprite.visible = false;
-    sprite.scale.set(XR_RETICLE_SIZE, XR_RETICLE_SIZE, 1);
-    sprite.renderOrder = 10002;
-    sprite.frustumCulled = false;
-    return sprite;
+    });
+
+    // Three.js reserves layer 1 for the left XR eye and layer 2 for the
+    // right. A separate reticle on each eye layer keeps the circle at the
+    // exact optical center of both Cardboard views instead of projecting one
+    // shared world sprite slightly off-center in stereo.
+    return [1, 2].map((eyeLayer, index) => {
+      const sprite = new THREE.Sprite(material);
+      sprite.name = `phone-webxr-gaze-reticle-${index === 0 ? 'left' : 'right'}`;
+      sprite.layers.set(eyeLayer);
+      sprite.visible = false;
+      sprite.scale.set(XR_RETICLE_SIZE, XR_RETICLE_SIZE, 1);
+      sprite.renderOrder = 10002;
+      sprite.frustumCulled = false;
+      return sprite;
+    });
   }
 
   _getInteractionHit() {
@@ -130,31 +142,61 @@ export class PhoneVrGazeSystem {
       const eyeCameras = Array.isArray(xrCamera?.cameras) ? xrCamera.cameras : [];
 
       if (eyeCameras.length > 0) {
+        const cameraParent = this.camera.parent;
+        cameraParent?.updateMatrixWorld(true);
         VIEW_ORIGIN.set(0, 0, 0);
         VIEW_DIRECTION.set(0, 0, 0);
-        eyeCameras.forEach((eyeCamera) => {
-          eyeCamera.updateWorldMatrix(true, false);
-          eyeCamera.getWorldPosition(EYE_POSITION);
+        this.activeEyeCount = Math.min(eyeCameras.length, this.xrReticles.length);
+        eyeCameras.slice(0, this.activeEyeCount).forEach((eyeCamera, index) => {
+          // WebXRManager's eye cameras are held in an ArrayCamera but are not
+          // parented to the application's player rig. Calling the ordinary
+          // Object3D.updateWorldMatrix() here therefore drops the rig transform.
+          // Reproduce WebXRManager.updateCamera() explicitly so the gaze pose
+          // retains the authored spawn position, heading, and locomotion.
+          if (cameraParent) {
+            eyeCamera.matrixWorld.multiplyMatrices(cameraParent.matrixWorld, eyeCamera.matrix);
+          } else {
+            eyeCamera.matrixWorld.copy(eyeCamera.matrix);
+          }
+          eyeCamera.matrixWorldInverse.copy(eyeCamera.matrixWorld).invert();
+          // Object3D.getWorldPosition() calls updateWorldMatrix() internally,
+          // which would discard the manually applied rig transform again.
+          EYE_POSITION.setFromMatrixPosition(eyeCamera.matrixWorld);
           // WebXR eye cameras commonly use asymmetric projection matrices.
           // Derive the ray through the rendered center of each eye instead of
           // assuming the camera's local -Z axis is also its visual center.
           EYE_PROJECTION_CENTER.set(0, 0, 0.5).unproject(eyeCamera);
           EYE_DIRECTION.copy(EYE_PROJECTION_CENTER).sub(EYE_POSITION).normalize();
+          this.eyeOrigins[index].copy(EYE_POSITION);
+          this.eyeDirections[index].copy(EYE_DIRECTION);
           VIEW_ORIGIN.add(EYE_POSITION);
           VIEW_DIRECTION.add(EYE_DIRECTION);
         });
-        VIEW_ORIGIN.multiplyScalar(1 / eyeCameras.length);
+        VIEW_ORIGIN.multiplyScalar(1 / this.activeEyeCount);
         VIEW_DIRECTION.normalize();
       } else {
-        xrCamera.updateWorldMatrix(true, false);
-        xrCamera.getWorldPosition(VIEW_ORIGIN);
+        const cameraParent = this.camera.parent;
+        cameraParent?.updateMatrixWorld(true);
+        if (cameraParent) {
+          xrCamera.matrixWorld.multiplyMatrices(cameraParent.matrixWorld, xrCamera.matrix);
+        } else {
+          xrCamera.matrixWorld.copy(xrCamera.matrix);
+        }
+        xrCamera.matrixWorldInverse.copy(xrCamera.matrixWorld).invert();
+        VIEW_ORIGIN.setFromMatrixPosition(xrCamera.matrixWorld);
         EYE_PROJECTION_CENTER.set(0, 0, 0.5).unproject(xrCamera);
         VIEW_DIRECTION.copy(EYE_PROJECTION_CENTER).sub(VIEW_ORIGIN).normalize();
+        this.activeEyeCount = 1;
+        this.eyeOrigins[0].copy(VIEW_ORIGIN);
+        this.eyeDirections[0].copy(VIEW_DIRECTION);
       }
     } else {
       this.camera.updateWorldMatrix(true, false);
       this.camera.getWorldPosition(VIEW_ORIGIN);
       this.camera.getWorldDirection(VIEW_DIRECTION).normalize();
+      this.activeEyeCount = 1;
+      this.eyeOrigins[0].copy(VIEW_ORIGIN);
+      this.eyeDirections[0].copy(VIEW_DIRECTION);
     }
 
     this.raycaster.ray.origin.copy(VIEW_ORIGIN);
@@ -186,14 +228,24 @@ export class PhoneVrGazeSystem {
   _updateReticle(progress = 0) {
     const normalizedProgress = THREE.MathUtils.clamp(progress, 0, 1);
     const scale = XR_RETICLE_SIZE * (1 + normalizedProgress * 0.22);
-    this.xrReticle.visible = true;
-    this.xrReticle.position.copy(VIEW_ORIGIN).addScaledVector(VIEW_DIRECTION, RETICLE_DISTANCE);
-    this.xrReticle.scale.set(scale, scale, 1);
-    this.xrReticle.material.color.copy(BASE_COLOR).lerp(READY_COLOR, normalizedProgress);
+    this.xrReticles.forEach((reticle, index) => {
+      reticle.visible = index < this.activeEyeCount;
+      if (!reticle.visible) {
+        return;
+      }
+      reticle.position
+        .copy(this.eyeOrigins[index])
+        .addScaledVector(this.eyeDirections[index], RETICLE_DISTANCE);
+      reticle.scale.set(scale, scale, 1);
+      reticle.material.color.copy(BASE_COLOR).lerp(READY_COLOR, normalizedProgress);
+    });
   }
 
   reset() {
-    this.xrReticle.visible = false;
+    this.xrReticles.forEach((reticle) => {
+      reticle.visible = false;
+    });
+    this.activeEyeCount = 0;
     this.targetObject = null;
     this.blockedObject = null;
     this.dwellSeconds = 0;
@@ -208,7 +260,9 @@ export class PhoneVrGazeSystem {
    */
   prepareForRender() {
     if (!this.isActive()) {
-      this.xrReticle.visible = false;
+      this.xrReticles.forEach((reticle) => {
+        reticle.visible = false;
+      });
       return;
     }
 
@@ -273,8 +327,9 @@ export class PhoneVrGazeSystem {
   }
 
   dispose() {
-    this.scene.remove(this.xrReticle);
-    this.xrReticle.material?.map?.dispose?.();
-    this.xrReticle.material?.dispose?.();
+    const material = this.xrReticles[0]?.material;
+    this.xrReticles.forEach((reticle) => this.scene.remove(reticle));
+    material?.map?.dispose?.();
+    material?.dispose?.();
   }
 }

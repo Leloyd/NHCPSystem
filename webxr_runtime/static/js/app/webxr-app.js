@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-6';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-7';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js?v=20260811-spark-xr-2';
