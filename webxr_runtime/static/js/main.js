@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-church-record-audio-5';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-underground-record-viewer-6';
 
 function getRefs() {
   return {
