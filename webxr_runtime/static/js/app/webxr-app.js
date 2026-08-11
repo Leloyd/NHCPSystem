@@ -657,8 +657,12 @@ const HOTSPOT_TABLES = {
   ...CHURCH_HOTSPOT_TABLES,
   ...HERITAGE_MISSION_EVIDENCE_TABLES,
 };
+// Chapel table images belong inside the spatial viewer and must remain hidden
+// until their OPEN marker is selected. Only mission evidence keeps the older
+// floating preview-label treatment.
 const HOTSPOT_FLOATING_LABEL_IMAGES = Object.fromEntries(
-  Object.entries(HOTSPOT_TABLES).map(([id, table]) => [id, table.imageUrl]),
+  Object.entries(HERITAGE_MISSION_EVIDENCE_TABLES)
+    .map(([id, table]) => [id, table.imageUrl]),
 );
 const QUALITY_PRESETS = {
   auto: {
@@ -755,6 +759,7 @@ export class WebXRApp {
     this.xrHotspotTableDetail = null;
     this.xrHotspotTablePinsVisible = true;
     this.xrHotspotTableSourceMarker = null;
+    this.xrHotspotTableBillboardTarget = new THREE.Vector3();
     this.museumArtifactStation = {
       root: null,
       modelPivot: null,
@@ -1884,7 +1889,10 @@ export class WebXRApp {
     if (!table || !imageUrl) {
       return;
     }
-    if (this.renderer.xr.isPresenting) {
+    // The four chapel tables use the same world-space viewer with mouse,
+    // touch, or VR gaze. This keeps the image and its numbered detail pins in
+    // the 3D environment instead of opening a flat browser overlay.
+    if (CHURCH_HOTSPOT_TABLES[hotspotId] || this.renderer.xr.isPresenting) {
       this._showXrHotspotTable(hotspotId);
       return;
     }
@@ -2152,29 +2160,6 @@ export class WebXRApp {
       viewerRoot.position.copy(cameraPosition).addScaledVector(cameraDirection, 1.75);
       viewerRoot.lookAt(cameraPosition);
     }
-
-    const border = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.94, 1.44),
-      new THREE.MeshBasicMaterial({
-        color: 0xd4af6a,
-        depthTest: false,
-        depthWrite: false,
-      }),
-    );
-    border.renderOrder = 45;
-    viewerRoot.add(border);
-
-    const panel = new THREE.Mesh(
-      new THREE.PlaneGeometry(1.88, 1.38),
-      new THREE.MeshBasicMaterial({
-        color: 0x1c1208,
-        depthTest: false,
-        depthWrite: false,
-      }),
-    );
-    panel.position.z = 0.012;
-    panel.renderOrder = 46;
-    viewerRoot.add(panel);
 
     this.xrHotspotTableViewer = viewerRoot;
     this.scene.add(viewerRoot);
@@ -2848,6 +2833,17 @@ export class WebXRApp {
     if (this.xrFrameSubmitted && environmentSettled && !this.xrRenderFailure) {
       panel.visible = false;
     }
+  }
+
+  _updateXrHotspotTableViewer() {
+    const viewerRoot = this.xrHotspotTableViewer;
+    if (!viewerRoot || !this.camera) {
+      return;
+    }
+
+    this.camera.getWorldPosition(this.xrHotspotTableBillboardTarget);
+    this.xrHotspotTableBillboardTarget.y = viewerRoot.position.y;
+    viewerRoot.lookAt(this.xrHotspotTableBillboardTarget);
   }
 
   _updateXrSplatWarmup() {
@@ -4698,14 +4694,16 @@ export class WebXRApp {
   }
 
   _createFloatingHotspotLabel(anchor, hotspotId, imageUrl, radius = 0.07) {
+    const table = HOTSPOT_TABLES[hotspotId];
+    const accessibleTitle = table?.title?.en || table?.imageAlt || 'heritage image';
     const element = document.createElement('div');
     element.className = 'hotspot-floating-label hotspot-floating-label-image-wrap';
 
     const trigger = document.createElement('button');
     trigger.type = 'button';
     trigger.className = 'hotspot-floating-label-link';
-    trigger.setAttribute('aria-label', `Open image for ${hotspotId}`);
-    trigger.title = `Open image for ${hotspotId}`;
+    trigger.setAttribute('aria-label', `Open ${accessibleTitle}`);
+    trigger.title = `Open ${accessibleTitle}`;
     trigger.addEventListener('click', (event) => {
       event.preventDefault();
       event.stopPropagation();
@@ -4725,7 +4723,7 @@ export class WebXRApp {
     const image = document.createElement('img');
     image.className = 'hotspot-floating-label-image';
     image.src = imageUrl;
-    image.alt = `${hotspotId} preview`;
+    image.alt = accessibleTitle;
     image.decoding = 'async';
     trigger.appendChild(image);
     element.appendChild(trigger);
@@ -5911,6 +5909,7 @@ export class WebXRApp {
     try {
       this._updateMuseumArtifactStation(dt);
       this._updateMuseumContentViewer(dt);
+      this._updateXrHotspotTableViewer();
     } catch (error) {
       console.error('[xr] museum exhibit update failed', error);
     }
