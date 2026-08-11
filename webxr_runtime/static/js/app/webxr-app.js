@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { CardboardGazeSystem } from './cardboard-gaze-system.js?v=2';
+import { CardboardGazeSystem } from './cardboard-gaze-system.js?v=3';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js';
@@ -2668,6 +2668,23 @@ export class WebXRApp {
     return !hasLocomotionController;
   }
 
+  _shouldUsePhoneVrGazeInteraction() {
+    if (!this.mobileMode) {
+      return false;
+    }
+
+    if (this.cardboard.active) {
+      return true;
+    }
+
+    const session = this.renderer.xr.getSession?.();
+    return Boolean(
+      this.renderer.xr.isPresenting
+      && session
+      && session.mode === XR_SESSION_MODE_VR,
+    );
+  }
+
   _createMuseumArtifactControlTexture(label, active = false) {
     const canvas = document.createElement('canvas');
     canvas.width = 256;
@@ -3583,11 +3600,12 @@ export class WebXRApp {
     this.cardboardGazeSystem = new CardboardGazeSystem({
       scene: this.scene,
       camera: this.camera,
+      renderer: this.renderer,
       registry: this.interactionRegistry,
       uiController: this.uiController,
       getPickables: () => this.pickableMeshes,
       getPlayerPosition: () => this.playerRig.position,
-      isActive: () => this.cardboard.active,
+      isActive: () => this._shouldUsePhoneVrGazeInteraction(),
     });
     this.uiController.hideInteraction();
   }
