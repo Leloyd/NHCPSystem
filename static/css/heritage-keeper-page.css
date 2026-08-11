@@ -76,8 +76,8 @@
 }
 
 .hk-masthead > * { position: relative; z-index: 1; }
-.hk-masthead:not(.is-complete) .hk-masthead__copy { grid-column: 1 / -1; max-width: 50rem; }
-.hk-masthead:not(.is-complete) .hk-masthead__seal { display: none; }
+.hk-masthead:not(.has-seal-progress) .hk-masthead__copy { grid-column: 1 / -1; max-width: 50rem; }
+.hk-masthead:not(.has-seal-progress) .hk-masthead__seal { display: none; }
 .hk-masthead__seal:empty { display: none; }
 
 .hk-masthead__heading-line { display: flex; align-items: center; flex-wrap: wrap; gap: 0.75rem 1.2rem; }
@@ -137,11 +137,20 @@
   pointer-events: none;
 }
 
+/* Keep each Roman plate number on the same side as its restored seal. */
+.hk-recovery--ar::after,
+.hk-recovery--webxr::after {
+  right: auto;
+  left: clamp(1rem, 3vw, 2rem);
+}
+
 .hk-recovery__layout { position: relative; z-index: 1; display: grid; grid-template-columns: minmax(17rem, 21rem) minmax(0, 1fr); align-items: center; gap: clamp(2rem, 7vw, 6rem); }
 .hk-recovery--ar .hk-recovery__viewer { grid-column: 1; grid-row: 1; }
 .hk-recovery--ar .hk-recovery__copy { grid-column: 2; grid-row: 1; }
 .hk-recovery--trail .hk-recovery__copy { grid-column: 1; }
 .hk-recovery--trail .hk-recovery__viewer { grid-column: 2; grid-row: 1; }
+.hk-recovery--webxr .hk-recovery__viewer { grid-column: 1; grid-row: 1; }
+.hk-recovery--webxr .hk-recovery__copy { grid-column: 2; grid-row: 1; }
 
 .hk-recovery__copy { max-width: 39rem; }
 .hk-recovery h2,
@@ -280,11 +289,15 @@ html[data-contrast="on"] .hk-action { color: #000 !important; background: #ffdf0
   .hk-recovery--ar .hk-recovery__viewer,
   .hk-recovery--ar .hk-recovery__copy,
   .hk-recovery--trail .hk-recovery__viewer,
-  .hk-recovery--trail .hk-recovery__copy { grid-column: 1; }
+  .hk-recovery--trail .hk-recovery__copy,
+  .hk-recovery--webxr .hk-recovery__viewer,
+  .hk-recovery--webxr .hk-recovery__copy { grid-column: 1; }
   .hk-recovery--ar .hk-recovery__copy,
-  .hk-recovery--trail .hk-recovery__copy { grid-row: 1; }
+  .hk-recovery--trail .hk-recovery__copy,
+  .hk-recovery--webxr .hk-recovery__copy { grid-row: 1; }
   .hk-recovery--ar .hk-recovery__viewer,
-  .hk-recovery--trail .hk-recovery__viewer { grid-row: 2; width: min(76vw, 18rem, 100%); }
+  .hk-recovery--trail .hk-recovery__viewer,
+  .hk-recovery--webxr .hk-recovery__viewer { grid-row: 2; width: min(76vw, 18rem, 100%); }
   .hk-register__columns { grid-template-columns: 1fr; }
 }
 

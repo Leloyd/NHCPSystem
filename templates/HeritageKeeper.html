@@ -11,7 +11,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,600&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,600&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     {% include 'partials/_site_prefs_head.html' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper-page.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper-page.css') }}?v=20260812-plate-layout-3" />
     <script type="importmap">
       {
         "imports": {
@@ -38,7 +38,7 @@
       {% set ar_fragment_end = heritage_keeper.trail_required + heritage_keeper.ar_required %}
       {% set ar_fragments = heritage_keeper.fragments[heritage_keeper.trail_required:ar_fragment_end] %}
       {% set webxr_fragments = heritage_keeper.fragments[ar_fragment_end:] %}
-      <header class="hk-masthead{% if heritage_keeper.unlocked %} is-complete{% endif %}">
+      <header class="hk-masthead{% if heritage_keeper.master_piece_count > 0 %} has-seal-progress{% endif %}{% if heritage_keeper.unlocked %} is-complete{% endif %}">
         <div class="hk-masthead__copy">
           <div class="hk-masthead__heading-line">
             <p class="hk-kicker"><span data-lang-en>Personal collection record</span><span data-lang-tl>Tala ng personal na koleksiyon</span></p>
@@ -320,6 +320,6 @@
     <script>if (window.lucide) window.lucide.createIcons();</script>
     {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/heritage-keeper-page.js') }}?v=20260812-progressive-seals-2"></script>
+    <script type="module" src="{{ url_for('static', filename='js/heritage-keeper-page.js') }}?v=20260812-progressive-seals-3"></script>
   </body>
 </html>
