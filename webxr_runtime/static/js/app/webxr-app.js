@@ -61,7 +61,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-manunggul': {
     position: [-2.30, 1.00, 1.82],
-    displayPosition: [-2.60, 1.00, 1.85],
+    displayPosition: [-2.30, 1.00, 1.85],
     controlsAlongZ: true,
     entries: [
       {

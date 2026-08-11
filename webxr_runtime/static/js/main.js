@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-restored-jar-positions-12';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-jar-position-adjustment-13';
 
 function getRefs() {
   return {
