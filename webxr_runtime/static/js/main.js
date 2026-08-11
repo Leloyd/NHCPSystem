@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-vr-gaze-blocking-1';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-artifact-tilt-1';
 
 function getRefs() {
   return {

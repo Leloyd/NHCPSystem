@@ -125,6 +125,7 @@ const MUSEUM_ARTIFACT_POSITION = [-1.64, 1.00, 6.22];
 const MUSEUM_ARTIFACT_TOGGLE_POSITION = [-1.63, 0.75, 5.06];
 const MUSEUM_ARTIFACT_INTERACTION_MAX_DISTANCE = 2.6;
 const MUSEUM_ARTIFACT_DISPLAY_SIZE = 1.16;
+const MUSEUM_ARTIFACT_FORWARD_TILT = THREE.MathUtils.degToRad(-8);
 const MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE = 0.75;
 const MUSEUM_ARTIFACT_AUDIO_FAR_DISTANCE = 5.5;
 const MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME = 0.06;
@@ -3022,6 +3023,7 @@ export class WebXRApp {
 
     const modelPivot = new THREE.Group();
     modelPivot.name = 'museum-floating-artifact-model';
+    modelPivot.rotation.x = MUSEUM_ARTIFACT_FORWARD_TILT;
     root.add(modelPivot);
 
     const controlsRoot = new THREE.Group();
@@ -3219,6 +3221,7 @@ export class WebXRApp {
       station.currentModel = model;
       station.modelPivot.add(model);
       // Present the opposite side first, then continue the slow exhibit spin.
+      station.modelPivot.rotation.x = MUSEUM_ARTIFACT_FORWARD_TILT;
       station.modelPivot.rotation.y = Math.PI;
       this._refreshMuseumArtifactPresentation();
       if (playNarration) {
