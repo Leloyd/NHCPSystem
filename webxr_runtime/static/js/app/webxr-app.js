@@ -1887,16 +1887,7 @@ export class WebXRApp {
           throw lastError || new Error('VR session request failed.');
         };
 
-        const getReferenceSpaceCandidates = (sessionMode) => {
-          if (sessionMode === XR_SESSION_MODE_VR && this.mobileMode) {
-            // Google VR/Cardboard-class runtimes are most consistent with the
-            // core `local` space. The player rig applies its own eye height
-            // after the first XR pose is available.
-            return ['local', 'local-floor'];
-          }
-
-          return ['local-floor', 'local'];
-        };
+        const getReferenceSpaceCandidates = () => ['local-floor', 'local'];
 
         const bindSessionWithReferenceSpaceFallback = async (session, sessionMode) => {
           const candidates = getReferenceSpaceCandidates(sessionMode);
@@ -2118,6 +2109,15 @@ export class WebXRApp {
       }
 
       this.uiController.setMobileControlsVisible(true);
+      if (mode === XR_SESSION_MODE_VR) {
+        // Three.js replaces the base camera orientation with the headset pose
+        // in immersive mode. Move the authored/current horizontal heading to
+        // the persistent player rig first so Church's spawn direction is not
+        // discarded when the native XR camera takes over.
+        this.playerRig.rotation.y += this.camera.rotation.y;
+        this.camera.rotation.y = 0;
+        this.playerRig.updateMatrixWorld(true);
+      }
       this.playerController?.levelHorizon();
       this.gazeTeleportSystem?.reset();
 
