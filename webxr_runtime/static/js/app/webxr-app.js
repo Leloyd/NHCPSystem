@@ -2126,6 +2126,14 @@ export class WebXRApp {
     if (!table || !this.scene || !this.camera) {
       return;
     }
+
+    // Selecting the same marker while its table is open turns the CLOSE
+    // marker back into OPEN and removes the spatial image.
+    if (this.xrHotspotTableViewer && this.xrHotspotTableId === hotspotId) {
+      this._disposeXrHotspotTableViewer();
+      return;
+    }
+
     this._disposeXrHotspotTableViewer();
     this.xrHotspotTableId = hotspotId;
     this.xrHotspotTableDetail = null;
