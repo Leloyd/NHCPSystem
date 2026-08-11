@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=1';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-native-vr-2';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js';
@@ -505,6 +505,7 @@ export class WebXRApp {
     this.gazeTeleportSystem = null;
     this.phoneVrGazeSystem = null;
     this.activeXrReferenceSpaceType = null;
+    this.activeXrSessionMode = null;
     this.lastPositionDebugValue = '';
     this.hotspotDebugActive = false;
 
@@ -1919,6 +1920,7 @@ export class WebXRApp {
             activeSession = null;
             activeButton = null;
             this.activeXrReferenceSpaceType = null;
+            this.activeXrSessionMode = null;
             resetButtons();
           };
 
@@ -1974,6 +1976,10 @@ export class WebXRApp {
               try {
                 const session = await requestSession();
                 pendingSession = session;
+                // XRSession keeps its requested mode internally, but the mode
+                // is not a public WebXR attribute. Retain the known mode here
+                // for rendering, movement, and interaction decisions.
+                this.activeXrSessionMode = sessionMode;
                 session.addEventListener('end', onSessionEnded);
 
                 const boundReferenceSpaceType = await bindSessionWithReferenceSpaceFallback(
@@ -2002,6 +2008,7 @@ export class WebXRApp {
 
                 console.warn('[xr] failed to start XR session', { sessionMode, error });
                 this.activeXrReferenceSpaceType = null;
+                this.activeXrSessionMode = null;
                 resetButtons();
                 this.uiController.setXrStatus(formatStartError(error));
               }
@@ -2062,7 +2069,7 @@ export class WebXRApp {
       });
 
     this.renderer.xr.addEventListener('sessionstart', () => {
-      const mode = this.renderer.xr.getSession()?.mode;
+      const mode = this.activeXrSessionMode;
       if (mode === XR_SESSION_MODE_AR) {
         this.uiController.clearError();
       } else if (mode === XR_SESSION_MODE_VR) {
@@ -2077,6 +2084,7 @@ export class WebXRApp {
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
+      this.activeXrSessionMode = null;
 
       this.playerController?.restoreAfterXrSession();
       this.gazeTeleportSystem?.reset();
@@ -2482,7 +2490,7 @@ export class WebXRApp {
     }
 
     const session = this.renderer.xr.getSession?.();
-    if (!session || session.mode !== XR_SESSION_MODE_VR) {
+    if (!session || this.activeXrSessionMode !== XR_SESSION_MODE_VR) {
       return false;
     }
 
@@ -2499,11 +2507,10 @@ export class WebXRApp {
       return false;
     }
 
-    const session = this.renderer.xr.getSession?.();
     return Boolean(
       this.renderer.xr.isPresenting
-      && session
-      && session.mode === XR_SESSION_MODE_VR,
+      && this.renderer.xr.getSession?.()
+      && this.activeXrSessionMode === XR_SESSION_MODE_VR,
     );
   }
 
@@ -3358,6 +3365,7 @@ export class WebXRApp {
       renderer: this.renderer,
       uiController: this.uiController,
       playerConfig: this.metadata.player,
+      getXrSessionMode: () => this.activeXrSessionMode,
       mobileMode: this.mobileMode,
       mobileRefs: {
         moveStickZone: this.refs.moveStickZone,
@@ -3417,6 +3425,7 @@ export class WebXRApp {
       registry: this.interactionRegistry,
       getPickables: () => this.pickableMeshes,
       getPlayerPosition: () => this.playerRig.position,
+      getXrSessionMode: () => this.activeXrSessionMode,
     });
     this.phoneVrGazeSystem?.dispose?.();
     this.phoneVrGazeSystem = new PhoneVrGazeSystem({

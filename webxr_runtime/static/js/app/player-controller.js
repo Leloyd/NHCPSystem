@@ -38,12 +38,15 @@ const KEY_MAP = {
 };
 
 export class PlayerController {
-  constructor({ camera, rig, renderer, uiController, playerConfig, mobileRefs, mobileMode }) {
+  constructor({ camera, rig, renderer, uiController, playerConfig, mobileRefs, mobileMode, getXrSessionMode }) {
     this.camera = camera;
     this.rig = rig;
     this.renderer = renderer;
     this.uiController = uiController;
     this.mobileMode = Boolean(mobileMode);
+    this.getXrSessionMode = typeof getXrSessionMode === 'function'
+      ? getXrSessionMode
+      : () => null;
 
     const moveSpeed = Number(playerConfig.move_speed ?? 4.0);
     const sprintSpeed = Number(playerConfig.sprint_speed ?? (moveSpeed * Number(playerConfig.sprint_multiplier ?? 1.55)));
@@ -566,7 +569,7 @@ export class PlayerController {
 
   update(deltaSeconds, collisionSystem) {
     const sessionMode = this.renderer.xr.isPresenting
-      ? this.renderer.xr.getSession?.()?.mode ?? null
+      ? this.getXrSessionMode()
       : null;
     const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
     const isVrPresenting = sessionMode === XR_SESSION_MODE_VR;

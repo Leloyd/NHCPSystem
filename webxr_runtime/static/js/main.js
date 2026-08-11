@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-native-vr-2';
 
 function getRefs() {
   return {

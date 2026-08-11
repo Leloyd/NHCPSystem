@@ -5,7 +5,7 @@ const VIEW_DIRECTION = new THREE.Vector3();
 const EYE_POSITION = new THREE.Vector3();
 const EYE_DIRECTION = new THREE.Vector3();
 const RETICLE_DISTANCE = 1.25;
-const XR_RETICLE_SIZE = 0.085;
+const XR_RETICLE_SIZE = 0.105;
 const DWELL_SECONDS = 1;
 const BASE_COLOR = new THREE.Color(0xf4d77f);
 const READY_COLOR = new THREE.Color(0x63e6a3);
@@ -44,14 +44,28 @@ export class PhoneVrGazeSystem {
     const context = canvas.getContext('2d');
     if (context) {
       context.clearRect(0, 0, 256, 256);
+
+      // A dark outline keeps the gaze circle visible against both bright
+      // controls and the dark Gaussian-splat environment.
       context.beginPath();
       context.arc(128, 128, 67, 0, Math.PI * 2);
-      context.lineWidth = 20;
+      context.lineWidth = 34;
+      context.strokeStyle = 'rgba(0, 0, 0, 0.88)';
+      context.stroke();
+
+      context.beginPath();
+      context.arc(128, 128, 67, 0, Math.PI * 2);
+      context.lineWidth = 18;
       context.strokeStyle = '#ffffff';
       context.stroke();
 
       context.beginPath();
-      context.arc(128, 128, 10, 0, Math.PI * 2);
+      context.arc(128, 128, 18, 0, Math.PI * 2);
+      context.fillStyle = 'rgba(0, 0, 0, 0.9)';
+      context.fill();
+
+      context.beginPath();
+      context.arc(128, 128, 9, 0, Math.PI * 2);
       context.fillStyle = '#ffffff';
       context.fill();
     }

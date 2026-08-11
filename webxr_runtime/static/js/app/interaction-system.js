@@ -16,6 +16,7 @@ export class InteractionSystem {
     getPickables,
     getPlayerPosition,
     pointerLockControls,
+    getXrSessionMode,
   }) {
     this.camera = camera;
     this.renderer = renderer;
@@ -25,6 +26,9 @@ export class InteractionSystem {
     this.getPickables = getPickables;
     this.getPlayerPosition = getPlayerPosition;
     this.pointerLockControls = pointerLockControls;
+    this.getXrSessionMode = typeof getXrSessionMode === 'function'
+      ? getXrSessionMode
+      : () => null;
 
     this.raycaster = new THREE.Raycaster();
     this.raycaster.firstHitOnly = true;
@@ -185,7 +189,7 @@ export class InteractionSystem {
   }
 
   _isArSessionPresenting() {
-    return this.renderer.xr.isPresenting && this.renderer.xr.getSession?.()?.mode === XR_SESSION_MODE_AR;
+    return this.renderer.xr.isPresenting && this.getXrSessionMode() === XR_SESSION_MODE_AR;
   }
 
   _hasRecentXrSelect() {
