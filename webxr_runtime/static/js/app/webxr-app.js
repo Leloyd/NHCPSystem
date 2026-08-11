@@ -24,13 +24,6 @@ const MUSEUM_CONTENT_INTERACTION_MAX_DISTANCE = 2.35;
 // Their larger shared carousel intentionally remains at its authored 2x scale.
 const MUSEUM_CONTENT_DISPLAY_SIZE = 0.58;
 const MUSEUM_CONTENT_FORWARD_TILT = THREE.MathUtils.degToRad(-12);
-// The current museum ZIP calls this capture modern-art-gallery-interior.spz.
-// Keep the requested museum-art-gallery-interior alias so a future corrected
-// export preserves the display-case behavior without another code change.
-const MUSEUM_DISPLAY_CASE_GLASS_SPLATS = Object.freeze([
-  'modern-art-gallery-interior.spz',
-  'museum-art-gallery-interior.spz',
-]);
 const MUSEUM_CONTENT_HOTSPOTS = {
   'museum-content-kabila': {
     position: [0.00, 1.00, 2.65],
@@ -50,9 +43,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-maitum': {
     position: [-2.30, 1.00, 3.24],
-    displayPosition: [-2.60, 0.50, 3.37],
+    displayPosition: [-2.60, 1.00, 3.37],
     controlsAlongZ: true,
-    transparentSplatFiles: MUSEUM_DISPLAY_CASE_GLASS_SPLATS,
     entries: [
       {
         id: 'jar',
@@ -69,9 +61,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-manunggul': {
     position: [-2.30, 1.00, 1.82],
-    displayPosition: [-2.60, 0.50, 1.85],
+    displayPosition: [-2.60, 1.00, 1.85],
     controlsAlongZ: true,
-    transparentSplatFiles: MUSEUM_DISPLAY_CASE_GLASS_SPLATS,
     entries: [
       {
         id: 'banga',
@@ -3704,7 +3695,6 @@ export class WebXRApp {
     root.lookAt(uprightLookTarget);
     root.userData.splatOccluded = false;
     root.userData.splatOcclusionMargin = 0.12;
-    root.userData.splatOcclusionIgnoreFiles = Array.from(content.transparentSplatFiles || []);
 
     const mediaRoot = new THREE.Group();
     mediaRoot.name = 'museum-content-media';
@@ -3752,12 +3742,6 @@ export class WebXRApp {
       scale: 0.16,
       name: 'museum-content-subtitles',
     });
-    [languageSprite, subtitleToggleSprite].forEach((control) => {
-      if (control) {
-        control.userData.splatOcclusionIgnoreFiles = Array.from(content.transparentSplatFiles || []);
-      }
-    });
-
     viewer.root = root;
     viewer.mediaRoot = mediaRoot;
     viewer.titleSprite = titleSprite;
@@ -3827,7 +3811,7 @@ export class WebXRApp {
     this._refreshMuseumContentPresentation();
   }
 
-  _configureMuseumContentDisplayMaterials(root, { renderThroughSplatDepth = false } = {}) {
+  _configureMuseumContentDisplayMaterials(root) {
     if (!root?.traverse) {
       return;
     }
@@ -3860,12 +3844,8 @@ export class WebXRApp {
           alphaTest: Number.isFinite(Number(material.alphaTest)) ? Number(material.alphaTest) : 0,
           side: material.side ?? THREE.FrontSide,
           vertexColors: Boolean(material.vertexColors),
-          // Maitum and Manunggul sit inside a case represented by a gallery
-          // splat. Their model color must remain visible after that captured
-          // glass has contributed its depth; other exhibit models retain
-          // ordinary scene depth behavior.
-          depthTest: !renderThroughSplatDepth,
-          depthWrite: renderThroughSplatDepth ? false : !material.transparent,
+          depthTest: true,
+          depthWrite: !material.transparent,
           toneMapped: false,
         });
         displayMaterial.name = `${material.name || 'artifact'}-museum-display`;
@@ -3902,10 +3882,7 @@ export class WebXRApp {
       if (entry.modelUrl) {
         media = await this._loadAndNormalizeMuseumArtifact(entry);
         media.scale.multiplyScalar(MUSEUM_CONTENT_DISPLAY_SIZE / MUSEUM_ARTIFACT_DISPLAY_SIZE);
-        const content = MUSEUM_CONTENT_HOTSPOTS[viewer.hotspotId];
-        this._configureMuseumContentDisplayMaterials(media, {
-          renderThroughSplatDepth: Boolean(content?.transparentSplatFiles?.length),
-        });
+        this._configureMuseumContentDisplayMaterials(media);
         media.userData.isMuseumContentModel = true;
       } else if (entry.imageUrl) {
         media = await this._loadMuseumContentImage(entry.imageUrl);
@@ -4243,10 +4220,6 @@ export class WebXRApp {
       });
 
       this.scene.add(root);
-      const museumContent = MUSEUM_CONTENT_HOTSPOTS[hotspot.id];
-      root.userData.splatOcclusionIgnoreFiles = Array.from(
-        museumContent?.transparentSplatFiles || [],
-      );
       this.hotspotMarkers.push(root);
 
       const labelImageUrl = HOTSPOT_FLOATING_LABEL_IMAGES[hotspot.id] || null;
@@ -4602,35 +4575,6 @@ export class WebXRApp {
     }
   }
 
-  _getSplatOccluderObjects(splatEntries, ignoredFileNames = []) {
-    const ignored = new Set(
-      Array.from(ignoredFileNames || [])
-        .map((value) => String(value || '').trim().replace(/\\/g, '/').split('/').pop().toLowerCase())
-        .filter(Boolean),
-    );
-
-    return Array.from(splatEntries || [])
-      .filter((entry) => {
-        if (!entry?.object?.visible || entry.object.isInitialized === false) {
-          return false;
-        }
-        if (ignored.size === 0) {
-          return true;
-        }
-        const candidates = [
-          entry.asset?.fileName,
-          entry.asset?.filename,
-          entry.asset?.relativePath,
-          entry.asset?.name,
-          entry.object?.name,
-        ]
-          .map((value) => String(value || '').trim().replace(/\\/g, '/').split('/').pop().toLowerCase())
-          .filter(Boolean);
-        return !candidates.some((candidate) => ignored.has(candidate));
-      })
-      .map((entry) => entry.object);
-  }
-
   _updateHotspotSplatOcclusion(now = performance.now(), force = false) {
     if (!this.camera || (this.hotspotMarkers.length === 0 && this.pickableMeshes.length === 0)) {
       return;
@@ -4643,7 +4587,9 @@ export class WebXRApp {
     }
     this.hotspotOcclusionLastCheckedAt = now;
 
-    const splatObjects = this._getSplatOccluderObjects(this.splatEntries);
+    const splatObjects = this.splatEntries
+      .map((entry) => entry?.object)
+      .filter((object) => object?.visible && object?.isInitialized !== false);
     if (splatObjects.length === 0) {
       this.hotspotMarkers.forEach((marker) => this._setHotspotSplatOccluded(marker, false));
       if (this.museumContentViewer?.root) {
@@ -4669,14 +4615,10 @@ export class WebXRApp {
 
       marker.getWorldPosition(this.hotspotOcclusionTarget);
       const margin = Number(marker.userData?.splatOcclusionMargin ?? 0.1);
-      const markerSplatObjects = this._getSplatOccluderObjects(
-        this.splatEntries,
-        marker.userData?.splatOcclusionIgnoreFiles,
-      );
       const occluded = this._testSplatOcclusionAtTarget(
         this.hotspotOcclusionTarget,
         margin,
-        markerSplatObjects,
+        splatObjects,
       );
       this._setHotspotSplatOccluded(marker, occluded);
     }
@@ -4685,14 +4627,10 @@ export class WebXRApp {
     if (museumContentRoot?.parent) {
       museumContentRoot.getWorldPosition(this.hotspotOcclusionTarget);
       const margin = Number(museumContentRoot.userData?.splatOcclusionMargin ?? 0.12);
-      const viewerSplatObjects = this._getSplatOccluderObjects(
-        this.splatEntries,
-        museumContentRoot.userData?.splatOcclusionIgnoreFiles,
-      );
       const occluded = this._testSplatOcclusionAtTarget(
         this.hotspotOcclusionTarget,
         margin,
-        viewerSplatObjects,
+        splatObjects,
       );
       museumContentRoot.userData.splatOccluded = occluded;
       museumContentRoot.visible = !occluded;
@@ -4717,14 +4655,10 @@ export class WebXRApp {
 
       object.getWorldPosition(this.hotspotOcclusionTarget);
       const margin = Number(object.userData?.splatOcclusionMargin ?? 0.08);
-      const objectSplatObjects = this._getSplatOccluderObjects(
-        this.splatEntries,
-        object.userData?.splatOcclusionIgnoreFiles,
-      );
       const occluded = this._testSplatOcclusionAtTarget(
         this.hotspotOcclusionTarget,
         margin,
-        objectSplatObjects,
+        splatObjects,
       );
       this._setPickableSplatOccluded(object, occluded);
     }
