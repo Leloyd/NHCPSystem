@@ -515,6 +515,8 @@ export class WebXRApp {
     this.xrRenderFailure = null;
     this.xrPreviousSparkBudget = null;
     this.xrPreviousSparkVisibility = null;
+    this.xrTargetSparkBudget = null;
+    this.xrQualityStage = 0;
     this.xrSplatRevealIndex = 0;
     this.xrSplatRevealStartedAt = 0;
     this.xrSplatsFullyRevealedAt = 0;
@@ -2017,7 +2019,7 @@ export class WebXRApp {
 
                 if (sessionMode === XR_SESSION_MODE_VR) {
                   try {
-                    this.renderer.xr.setFoveation(this.mobileMode ? 0.65 : 0.35);
+                    this.renderer.xr.setFoveation(this._getXrQualityProfile().foveation);
                   } catch (error) {
                     console.warn('[xr] foveation could not be configured', error);
                   }
@@ -2158,13 +2160,10 @@ export class WebXRApp {
           this.sparkRenderer.clearSplats();
         }
 
-        // Cardboard-class phones have a substantially smaller stereo GPU
-        // budget than a standalone headset. Keep the normal-screen scene at
-        // its authored quality, but use a conservative aggregate splat count
-        // while the immersive session is active.
-        this.sparkRenderer.lodSplatCount = this.mobileMode ? 220000 : 500000;
-        this.sparkRenderer.lodSplatScale = 1;
-        this.sparkRenderer.lodRenderScale = this.mobileMode ? 2.5 : 1.5;
+        // Start conservatively to guarantee that the native compositor gets
+        // valid frames. Once all SPZ files are visible, quality rises in two
+        // stages to the device-appropriate target below.
+        this._applyXrStartupQuality();
       }
     });
     this.renderer.xr.addEventListener('sessionend', () => {
@@ -2197,6 +2196,8 @@ export class WebXRApp {
       }
       this.xrPreviousSparkBudget = null;
       this.xrPreviousSparkVisibility = null;
+      this.xrTargetSparkBudget = null;
+      this.xrQualityStage = 0;
     });
   }
 
@@ -2344,6 +2345,88 @@ export class WebXRApp {
     if (this.xrSplatRevealIndex >= this.splatEntries.length) {
       this.xrSplatsFullyRevealedAt = now;
     }
+  }
+
+  _getXrQualityProfile() {
+    if (!this.mobileMode) {
+      return {
+        lodSplatCount: 900000,
+        lodSplatScale: 0.82,
+        lodRenderScale: 1.0,
+        foveation: 0.25,
+      };
+    }
+
+    const deviceMemory = Number(navigator.deviceMemory || 0);
+    if (deviceMemory > 0 && deviceMemory <= 4) {
+      return {
+        lodSplatCount: 360000,
+        lodSplatScale: 0.96,
+        lodRenderScale: 1.65,
+        foveation: 0.55,
+      };
+    }
+    if (deviceMemory >= 8) {
+      return {
+        lodSplatCount: 600000,
+        lodSplatScale: 0.78,
+        lodRenderScale: 1.2,
+        foveation: 0.4,
+      };
+    }
+    return {
+      lodSplatCount: 480000,
+      lodSplatScale: 0.86,
+      lodRenderScale: 1.4,
+      foveation: 0.46,
+    };
+  }
+
+  _applyXrStartupQuality() {
+    if (!this.sparkRenderer || this.activeXrSessionMode !== XR_SESSION_MODE_VR) {
+      return;
+    }
+    this.xrTargetSparkBudget = this._getXrQualityProfile();
+    this.xrQualityStage = 0;
+    this.sparkRenderer.lodSplatCount = this.mobileMode ? 220000 : 420000;
+    this.sparkRenderer.lodSplatScale = 1;
+    this.sparkRenderer.lodRenderScale = this.mobileMode ? 2.3 : 1.45;
+  }
+
+  _updateXrAdaptiveQuality() {
+    if (
+      !this.renderer.xr.isPresenting
+      || this.activeXrSessionMode !== XR_SESSION_MODE_VR
+      || !this.sparkRenderer
+      || !this.xrTargetSparkBudget
+      || !this.xrSplatsFullyRevealedAt
+    ) {
+      return;
+    }
+
+    const elapsed = performance.now() - this.xrSplatsFullyRevealedAt;
+    const nextStage = elapsed >= 2600 ? 2 : elapsed >= 900 ? 1 : 0;
+    if (nextStage <= this.xrQualityStage) {
+      return;
+    }
+
+    const target = this.xrTargetSparkBudget;
+    if (nextStage === 1) {
+      // First increase reduces visible softness without suddenly doubling the
+      // GPU workload on the frame that closes the loading panel.
+      this.sparkRenderer.lodSplatCount = Math.round(
+        (this.sparkRenderer.lodSplatCount + target.lodSplatCount) * 0.5,
+      );
+      this.sparkRenderer.lodSplatScale = (1 + target.lodSplatScale) * 0.5;
+      this.sparkRenderer.lodRenderScale = (
+        this.sparkRenderer.lodRenderScale + target.lodRenderScale
+      ) * 0.5;
+    } else {
+      this.sparkRenderer.lodSplatCount = target.lodSplatCount;
+      this.sparkRenderer.lodSplatScale = target.lodSplatScale;
+      this.sparkRenderer.lodRenderScale = target.lodRenderScale;
+    }
+    this.xrQualityStage = nextStage;
   }
 
   _registerInteractions() {
@@ -4062,6 +4145,7 @@ export class WebXRApp {
       if (this.sparkRenderer) {
         this.sparkRenderer.visible = false;
       }
+      this._applyXrStartupQuality();
     } else {
       this.xrSplatRevealIndex = this.splatEntries.length;
       this.xrSplatRevealStartedAt = 0;
@@ -4176,6 +4260,7 @@ export class WebXRApp {
 
       try {
         this._updateXrSplatWarmup();
+        this._updateXrAdaptiveQuality();
         this._updateXrLoadingPanel();
         this.renderer.render(this.scene, this.camera);
         this.xrFrameSubmitted = true;
