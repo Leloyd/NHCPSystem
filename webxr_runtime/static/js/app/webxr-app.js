@@ -297,28 +297,28 @@ const CHURCH_HOTSPOT_MARKERS = [
 const UNDERGROUND_HOTSPOT_MARKERS = [
   {
     id: 'evidence-revolution',
-    position: [0.92, 0.58, -1.42],
+    position: [-3.00, 1.00, 1.00],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
   {
     id: 'evidence-biak-na-bato',
-    position: [0.72, 0.58, -4.32],
+    position: [-0.16, 1.00, -5.10],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
   {
     id: 'evidence-world-war-ii',
-    position: [-0.86, 0.58, -4.48],
+    position: [-3.20, 1.00, 0.23],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
   {
     id: 'evidence-guerrillas',
-    position: [-2.52, 0.58, 0.28],
+    position: [-2.88, 0.00, -0.40],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
@@ -626,7 +626,7 @@ const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
 const UNDERGROUND_MEMORY_STORAGE_KEY = 'nhcpUndergroundMemoryV1';
 const UNDERGROUND_MEMORY_WALL_POSITION = [2.56, 0.62, 0];
-const UNDERGROUND_MEMORY_LAMPS_POSITION = [2.52, 1.48, 0];
+const UNDERGROUND_MEMORY_LAMPS_POSITION = [0.02, 1.00, 2.10];
 const HERITAGE_MISSION_CHAPEL_IDS = [];
 const HERITAGE_MISSION_TIMELINE = [
   'evidence-revolution',
