@@ -259,6 +259,27 @@ const UNDERGROUND_WALK_BOUNDARY = [
 ];
 const CHURCH_HOTSPOT_MARKERS = [
   {
+    id: 'church-record-pagkasira',
+    position: [-3.49, 1.00, -2.54],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'church-record-pransiskano',
+    position: [-4.03, 1.00, -2.08],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'church-record-pagsaayos',
+    position: [-4.03, 1.00, 1.65],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
     id: 'hotspot-1',
     position: [-2.494, 0.343, -2.280],
     color: 0xd4af6a,
@@ -624,6 +645,67 @@ const CHAPEL_CONSERVATION_FINDINGS = {
 };
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
+const CHURCH_HISTORY_STORAGE_KEY = 'nhcpChurchHistoricalRecordsV1';
+const CHURCH_HISTORY_RECORDS_POSITION = [1.65, 1.00, 0.05];
+const CHURCH_HISTORY_IDS = [
+  'church-record-pransiskano',
+  'church-record-pagkasira',
+  'church-record-pagsaayos',
+];
+const CHURCH_HISTORY_RECORDS = {
+  'church-record-pransiskano': {
+    year: '1571–1583',
+    title: { en: 'Nagcarlan and the Franciscan Missions', tl: 'Nagcarlan at ang mga Misyong Pransiskano' },
+    imageUrl: `${TABLE_IMAGE_BASE}Nagcarlan_And_The_Franciscan_Missions.png`,
+    imageAlt: 'Nagcarlan and the Franciscan missions',
+    text: {
+      en: 'Long before the tombs, the story began. The Spanish reached Nagcarlan in 1571 under Captain Juan de Salcedo. In 1578, the Franciscan missionaries Fray Juan de Plasencia and Fray Diego de Oropesa brought the Catholic faith. In 1583, Nagcarlan became a pueblo under Fray Tomas de Miranda.',
+      tl: 'Bago pa ang mga puntod, nagsimula na ang kuwento. Nakarating ang mga Kastila sa Nagcarlan noong 1571 sa pamumuno ni Kapitan Juan de Salcedo. Noong 1578, dinala ng mga Pransiskanong misyonerong sina Padre Juan de Plasencia at Padre Diego de Oropesa ang pananampalatayang Katoliko. Noong 1583, naging ganap na bayan ang Nagcarlan sa ilalim ni Padre Tomas de Miranda.',
+    },
+    audio: {
+      en: '/audio/trail/s5-history-en.mp3',
+      tl: '/audio/trail/s5-history-tl.mp3',
+    },
+  },
+  'church-record-pagkasira': {
+    year: '1900s–2000',
+    title: { en: 'Deterioration', tl: 'Pagkasira' },
+    imageUrl: `${TABLE_IMAGE_BASE}Deterioration.png`,
+    imageAlt: 'Deterioration of the Nagcarlan Underground Cemetery',
+    text: {
+      en: 'Yet time was not always kind. From the early twentieth century, after the Spanish era, all the way to the year 2000, this underground burial site suffered—worn down by the forces of nature that tested its very structure.',
+      tl: 'Ngunit hindi laging mabait ang panahon. Mula sa unang bahagi ng ikadalawampung siglo, matapos ang panahon ng mga Espanyol, hanggang sa taong 2000, nagdusa ang libingang ito sa ilalim ng lupa—inagnas ng puwersa ng kalikasan na sumubok sa mismong istruktura nito.',
+    },
+    audio: {
+      en: '/audio/trail/s6-deterioration-en.mp3',
+      tl: '/audio/trail/s6-deterioration-tl.mp3',
+    },
+  },
+  'church-record-pagsaayos': {
+    year: '1981–2024',
+    title: { en: 'Cycles of Restoration', tl: 'Mga Yugto ng Pagsasaayos' },
+    imageUrl: `${TABLE_IMAGE_BASE}Renovation.png`,
+    imageAlt: 'Restoration campaigns at the Nagcarlan Underground Cemetery',
+    text: {
+      en: 'On October 24, 1981, the National Historical Institute placed a historical marker here and took the site into its care. As the National Historical Commission of the Philippines, it restored the cemetery in 1982–1986, 2008, 2015–2016, and 2023–2024.',
+      tl: 'Noong ika-24 ng Oktubre 1981, naglagay rito ng panandang pangkasaysayan ang Pambansang Suriang Pangkasaysayan at isinailalim sa pangangalaga nito ang pook. Bilang Pambansang Komisyong Pangkasaysayan ng Pilipinas, isinaayos nito ang libingan noong 1982–1986, 2008, 2015–2016, at 2023–2024.',
+    },
+    audio: {
+      en: '/audio/trail/s6-renovations-en.mp3',
+      tl: '/audio/trail/s6-renovations-tl.mp3',
+    },
+  },
+};
+const CHURCH_HISTORY_RECORD_TABLES = Object.fromEntries(
+  Object.entries(CHURCH_HISTORY_RECORDS).map(([id, record]) => [id, {
+    title: record.title,
+    imageUrl: record.imageUrl,
+    imageAlt: record.imageAlt,
+    description: record.text,
+    audio: record.audio,
+    hotspots: [],
+  }]),
+);
 const UNDERGROUND_MEMORY_STORAGE_KEY = 'nhcpUndergroundMemoryV1';
 const UNDERGROUND_MEMORY_WALL_POSITION = [2.56, 0.62, 0];
 const UNDERGROUND_MEMORY_LAMPS_POSITION = [0.02, 1.00, 2.10];
@@ -704,6 +786,7 @@ const HERITAGE_MISSION_EVIDENCE_TABLES = Object.fromEntries(
 );
 const HOTSPOT_TABLES = {
   ...CHURCH_HOTSPOT_TABLES,
+  ...CHURCH_HISTORY_RECORD_TABLES,
   ...HERITAGE_MISSION_EVIDENCE_TABLES,
 };
 // Chapel table images belong inside the spatial viewer and must remain hidden
@@ -881,6 +964,11 @@ export class WebXRApp {
     this.chapelConservation = this._readChapelConservationState();
     this.chapelConservationOpen = false;
     this.chapelConservationToastTimer = 0;
+    this.churchHistory = this._readChurchHistoryState();
+    this.churchHistoryRecordsMarker = null;
+    this.churchHistoryRecordsRoot = null;
+    this.churchHistoryMotes = [];
+    this.churchHistoryElapsed = 0;
     this.undergroundMemory = this._readUndergroundMemoryState();
     this.undergroundMemoryLampsRoot = null;
     this.undergroundMemoryLampSprites = [];
@@ -916,6 +1004,7 @@ export class WebXRApp {
       await this._loadSparkRuntime();
       await this._loadSceneAssets();
       this._createHotspotMarkers();
+      this._setupChurchHistoryExperience();
       this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
@@ -1032,8 +1121,10 @@ export class WebXRApp {
     });
     conservationLanguage?.addEventListener('click', () => {
       this.chapelConservation.language = this.chapelConservation.language === 'tl' ? 'en' : 'tl';
+      this.churchHistory.language = this.chapelConservation.language;
       this.expandedHotspotLanguage = this.chapelConservation.language;
       this._saveChapelConservationState();
+      this._saveChurchHistoryState();
       this._renderChapelConservation();
     });
     conservationContent?.addEventListener('click', (event) => {
@@ -1106,9 +1197,12 @@ export class WebXRApp {
     const language = this.chapelConservation.language;
     const examined = new Set(this.chapelConservation.examined);
     const count = examined.size;
+    const collectedHistory = new Set(this.churchHistory.collected);
+    const historyCount = collectedHistory.size;
     if (conservationBadge) {
-      conservationBadge.textContent = this.chapelConservation.completed ? '✓' : `${count}/4`;
-      conservationBadge.classList.toggle('is-complete', this.chapelConservation.completed);
+      const allComplete = this.chapelConservation.completed && historyCount === CHURCH_HISTORY_IDS.length;
+      conservationBadge.textContent = allComplete ? '✓' : `${count + historyCount}/7`;
+      conservationBadge.classList.toggle('is-complete', allComplete);
     }
     if (this.refs.conservationLanguage) {
       this.refs.conservationLanguage.textContent = language === 'tl' ? 'TL' : 'EN';
@@ -1118,10 +1212,10 @@ export class WebXRApp {
       );
     }
     if (this.refs.conservationKicker) {
-      this.refs.conservationKicker.textContent = this._conservationText('Tala sa kapilya', 'Chapel field record');
+      this.refs.conservationKicker.textContent = this._conservationText('Mga materyal at kasaysayan', 'Materials and living history');
     }
     if (this.refs.conservationTitle) {
-      this.refs.conservationTitle.textContent = this._conservationText('Talaan ng Konserbasyon', 'Conservation Notebook');
+      this.refs.conservationTitle.textContent = this._conservationText('Mga Tala ng Kapilya', 'Chapel Records');
     }
 
     const stationRows = CHAPEL_CONSERVATION_STATIONS.map((id, index) => {
@@ -1132,6 +1226,18 @@ export class WebXRApp {
         <li class="conservation-station ${complete ? 'is-examined' : ''}">
           <span class="conservation-station__number">${complete ? '✓' : String(index + 1).padStart(2, '0')}</span>
           <div><strong>${table.title[language] || table.title.en}</strong><small>${complete ? finding : this._conservationText('Buksan ang mesa at siyasatin ang isang detalye.', 'Open the table and inspect one detail.')}</small></div>
+        </li>`;
+    }).join('');
+    const historyRows = CHURCH_HISTORY_IDS.map((id, index) => {
+      const record = CHURCH_HISTORY_RECORDS[id];
+      const complete = collectedHistory.has(id);
+      const title = record.title?.[language] || record.title?.en || '';
+      const description = record.text?.[language] || record.text?.en || '';
+      return `
+        <li class="conservation-station conservation-station--history ${complete ? 'is-examined' : ''}">
+          <span class="conservation-station__number">${complete ? '✓' : String(index + 1).padStart(2, '0')}</span>
+          <img src="${record.imageUrl}" alt="" loading="lazy" />
+          <div><strong>${title}</strong><small>${complete ? description : this._conservationText('Hanapin at buksan ang gintong tala sa kapilya.', 'Find and open its gold record inside the chapel.')}</small></div>
         </li>`;
     }).join('');
 
@@ -1166,6 +1272,14 @@ export class WebXRApp {
       <div class="conservation-notebook__progress"><span style="width:${count * 25}%"></span></div>
       <p class="conservation-notebook__count">${this._conservationText(`${count} sa 4 na tala ang nasuri`, `${count} of 4 records examined`)}</p>
       <ol class="conservation-stations">${stationRows}</ol>
+      <section class="conservation-history">
+        <span class="conservation-notebook__kicker">${this._conservationText('Buháy na mga tala', 'Living records')}</span>
+        <h3>${this._conservationText('Kasaysayan ng Kapilya', 'The Chapel Through Time')}</h3>
+        <p class="conservation-notebook__instruction">${this._conservationText('Hanapin ang Pagkasira, mga Misyong Pransiskano, at Pagsasaayos. Lalabas dito ang buong tala kapag natuklasan.', 'Find Deterioration, the Franciscan Missions, and Restoration. Each complete record will appear here after discovery.')}</p>
+        <div class="conservation-notebook__progress"><span style="width:${historyCount * (100 / CHURCH_HISTORY_IDS.length)}%"></span></div>
+        <p class="conservation-notebook__count">${this._conservationText(`${historyCount} sa 3 tala ng kasaysayan`, `${historyCount} of 3 historical records`)}</p>
+        <ol class="conservation-stations">${historyRows}</ol>
+      </section>
       ${closingSection}`;
   }
 
@@ -1230,6 +1344,276 @@ export class WebXRApp {
       });
     } catch (error) {
       console.warn('[conservation] Analytics event could not be recorded.', error);
+    }
+  }
+
+  _createDefaultChurchHistoryState() {
+    return {
+      version: 1,
+      language: 'tl',
+      subtitlesOn: true,
+      collected: [],
+    };
+  }
+
+  _readChurchHistoryState() {
+    const fallback = this._createDefaultChurchHistoryState();
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(CHURCH_HISTORY_STORAGE_KEY) || 'null');
+      if (!stored || stored.version !== fallback.version) {
+        return fallback;
+      }
+      return {
+        ...fallback,
+        ...stored,
+        language: stored.language === 'en' ? 'en' : 'tl',
+        subtitlesOn: stored.subtitlesOn !== false,
+        collected: Array.isArray(stored.collected)
+          ? stored.collected.filter((id) => CHURCH_HISTORY_IDS.includes(id))
+          : [],
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  _saveChurchHistoryState() {
+    try {
+      window.localStorage.setItem(CHURCH_HISTORY_STORAGE_KEY, JSON.stringify(this.churchHistory));
+    } catch {
+      // Progress persistence is optional; the records remain usable.
+    }
+    this._renderChapelConservation();
+    this._refreshChurchHistoryRecordsMarker();
+  }
+
+  _isChurchHistoryRecord(id) {
+    return CHURCH_HISTORY_IDS.includes(id);
+  }
+
+  _recordChurchHistory(id) {
+    if (!this._isChapelScene() || !this._isChurchHistoryRecord(id)) {
+      return;
+    }
+    if (this.churchHistory.collected.includes(id)) {
+      return;
+    }
+    this.churchHistory.collected.push(id);
+    this._saveChurchHistoryState();
+    try {
+      window.NHCPAnalytics?.track?.('church_history_record_discovered', {
+        target_id: id,
+        module: 'chapel-living-records',
+        progress: this.churchHistory.collected.length,
+        total: CHURCH_HISTORY_IDS.length,
+      });
+    } catch {
+      // Analytics must never interrupt the record experience.
+    }
+    if (this.churchHistory.collected.length === CHURCH_HISTORY_IDS.length) {
+      this.uiController.showNotice(
+        this.churchHistory.language === 'en'
+          ? 'All three chapel records are restored. Open Living Records to revisit the full story.'
+          : 'Nabuo na ang tatlong tala ng kapilya. Buksan ang Buháy na mga Tala upang balikan ang buong kuwento.',
+        5600,
+      );
+    }
+  }
+
+  _setupChurchHistoryExperience() {
+    this._disposeChurchHistoryExperience({ removeMarker: true });
+    if (!this._isChapelScene() || !this.scene || !this.camera) {
+      return;
+    }
+
+    CHURCH_HISTORY_IDS.forEach((id, stationIndex) => {
+      const marker = this.hotspotMarkers.find((item) => item.name === id);
+      if (!marker) {
+        return;
+      }
+      for (let moteIndex = 0; moteIndex < 3; moteIndex += 1) {
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xd4af6a,
+          transparent: true,
+          opacity: 0.42,
+          depthTest: false,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const mote = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), material);
+        mote.renderOrder = 5;
+        mote.userData.churchHistoryId = id;
+        mote.userData.phase = stationIndex * 1.9 + moteIndex * 2.2;
+        mote.userData.radius = 0.10 + moteIndex * 0.025;
+        marker.add(mote);
+        this.churchHistoryMotes.push(mote);
+      }
+    });
+
+    const { root: recordsMarker } = this._buildHotspotMarker({
+      id: 'church-history-records',
+      position: CHURCH_HISTORY_RECORDS_POSITION,
+      color: 0xd4af6a,
+      radius: 0.075,
+      iconType: 'open',
+      interactionName: 'church-history-records',
+      maxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+      metadata: { type: 'church-history-records' },
+    });
+    recordsMarker.userData.ignoreSplatOcclusion = true;
+    this.scene.add(recordsMarker);
+    this.hotspotMarkers.push(recordsMarker);
+    this.churchHistoryRecordsMarker = recordsMarker;
+    this._refreshChurchHistoryRecordsMarker();
+  }
+
+  _refreshChurchHistoryRecordsMarker() {
+    if (!this.churchHistoryRecordsMarker) {
+      return;
+    }
+    const icon = this.churchHistoryRecordsMarker.userData?.hotspotIcon;
+    if (!icon?.material || icon.userData.xrTableOpen) {
+      return;
+    }
+    const count = this.churchHistory.collected.length;
+    this._replaceMuseumArtifactSpriteTexture(
+      icon,
+      this._createMuseumArtifactControlTexture(`RECORDS ${count}/3`, count === 3),
+    );
+    icon.scale.setScalar(0.24);
+  }
+
+  _openChurchHistoryRecords() {
+    if (!this.churchHistoryRecordsMarker || !this.scene || !this.camera) {
+      return;
+    }
+    if (this.churchHistoryRecordsRoot) {
+      this._disposeChurchHistoryRecords();
+      return;
+    }
+
+    this._disposeXrHotspotTableViewer();
+    this._setXrTableHotspotOpenState(this.churchHistoryRecordsMarker, true);
+    const root = new THREE.Group();
+    root.name = 'church-history-records-viewer';
+    this.churchHistoryRecordsMarker.getWorldPosition(root.position);
+    root.position.y += 0.82;
+    const cameraPosition = new THREE.Vector3();
+    this.camera.getWorldPosition(cameraPosition);
+    cameraPosition.y = root.position.y;
+    root.lookAt(cameraPosition);
+
+    root.add(this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(
+        this.churchHistory.language === 'en' ? 'LIVING RECORDS' : 'BUHÁY NA MGA TALA',
+      ),
+      position: [0, 0.38, 0.06],
+      scale: [1.42, 0.18],
+    }));
+    const instruction = this.churchHistory.language === 'en'
+      ? `${this.churchHistory.collected.length}/3 records found. Select an illuminated record to revisit it.`
+      : `${this.churchHistory.collected.length}/3 tala ang natagpuan. Pumili ng nagliliwanag na tala upang balikan ito.`;
+    root.add(this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(instruction, { subtitle: true }),
+      position: [0, 0.13, 0.06],
+      scale: [1.52, 0.28],
+    }));
+
+    CHURCH_HISTORY_IDS.forEach((id, index) => {
+      const record = CHURCH_HISTORY_RECORDS[id];
+      const unlocked = this.churchHistory.collected.includes(id);
+      const label = unlocked ? record.year : '?';
+      const control = this._createXrTableControl({
+        parent: root,
+        label,
+        position: [(index - 1) * 0.43, -0.22, 0.09],
+        scale: 0.24,
+        name: unlocked ? 'church-history-record-select' : 'church-history-record-locked',
+        metadata: { recordId: id },
+      });
+      if (control && unlocked) {
+        control.material.map?.dispose?.();
+        control.material.map = this._createMuseumArtifactControlTexture(label, true);
+        control.material.needsUpdate = true;
+      }
+    });
+
+    this.scene.add(root);
+    this.churchHistoryRecordsRoot = root;
+  }
+
+  _disposeChurchHistoryRecords(options = {}) {
+    const root = this.churchHistoryRecordsRoot;
+    if (root) {
+      const removedPickables = new Set();
+      root.traverse((object) => {
+        if (object.userData?.isXrTablePickable) {
+          removedPickables.add(object);
+        }
+      });
+      this.pickableMeshes = this.pickableMeshes.filter((object) => !removedPickables.has(object));
+      root.parent?.remove(root);
+      this._disposeObject3DResources(root);
+    }
+    this.churchHistoryRecordsRoot = null;
+    if (options.restoreMarker !== false && this.churchHistoryRecordsMarker) {
+      this._setXrTableHotspotOpenState(this.churchHistoryRecordsMarker, false);
+      this._refreshChurchHistoryRecordsMarker();
+    }
+  }
+
+  _disposeChurchHistoryExperience(options = {}) {
+    this._disposeChurchHistoryRecords({ restoreMarker: false });
+    if (options.removeMarker !== false && this.churchHistoryRecordsMarker) {
+      const icon = this.churchHistoryRecordsMarker.userData?.hotspotIcon;
+      this.pickableMeshes = this.pickableMeshes.filter((object) => object !== icon);
+      this.churchHistoryRecordsMarker.parent?.remove(this.churchHistoryRecordsMarker);
+      this.hotspotMarkers = this.hotspotMarkers.filter(
+        (marker) => marker !== this.churchHistoryRecordsMarker,
+      );
+      this._disposeObject3DResources(this.churchHistoryRecordsMarker);
+    }
+    this.churchHistoryRecordsMarker = null;
+    this.churchHistoryMotes = [];
+  }
+
+  _updateChurchHistoryExperience(dt) {
+    if (!this._isChapelScene()) {
+      return;
+    }
+    this.churchHistoryElapsed += dt;
+    const elapsed = this.churchHistoryElapsed;
+    if (this.camera && this.churchHistoryRecordsRoot) {
+      this.camera.getWorldPosition(this.xrHotspotTableBillboardTarget);
+      this.xrHotspotTableBillboardTarget.y = this.churchHistoryRecordsRoot.position.y;
+      this.churchHistoryRecordsRoot.lookAt(this.xrHotspotTableBillboardTarget);
+    }
+    this.churchHistoryMotes.forEach((mote, index) => {
+      const collected = this.churchHistory.collected.includes(mote.userData.churchHistoryId);
+      mote.visible = !collected;
+      if (!mote.visible) {
+        return;
+      }
+      const phase = mote.userData.phase + elapsed * (0.72 + index * 0.018);
+      const radius = mote.userData.radius;
+      mote.position.set(
+        Math.cos(phase) * radius,
+        0.08 + Math.sin(phase * 1.4) * 0.07,
+        Math.sin(phase) * radius,
+      );
+      mote.material.opacity = 0.28 + (Math.sin(phase * 1.7) + 1) * 0.18;
+    });
+
+    if (
+      this.expandedHotspotAudio
+      && this.xrHotspotTableSourceMarker
+      && this._isChurchHistoryRecord(this.xrHotspotTableId)
+      && this.playerRig
+    ) {
+      this.xrHotspotTableSourceMarker.getWorldPosition(this.undergroundMemoryAudioPosition);
+      const distance = this.playerRig.position.distanceTo(this.undergroundMemoryAudioPosition);
+      const normalized = THREE.MathUtils.clamp((distance - 0.65) / 4.4, 0, 1);
+      this.expandedHotspotAudio.volume = 0.06 + 0.94 * (1 - normalized) * (1 - normalized);
     }
   }
 
@@ -2380,6 +2764,7 @@ export class WebXRApp {
     // the 3D environment instead of opening a flat browser overlay.
     if (
       CHURCH_HOTSPOT_TABLES[hotspotId]
+      || CHURCH_HISTORY_RECORD_TABLES[hotspotId]
       || HERITAGE_MISSION_EVIDENCE_TABLES[hotspotId]
       || this.renderer.xr.isPresenting
     ) {
@@ -2611,7 +2996,7 @@ export class WebXRApp {
     return sprite;
   }
 
-  _showXrHotspotTable(hotspotId) {
+  _showXrHotspotTable(hotspotId, sourceMarker = null) {
     const table = HOTSPOT_TABLES[hotspotId];
     if (!table || !this.scene || !this.camera) {
       return;
@@ -2624,12 +3009,16 @@ export class WebXRApp {
       return;
     }
 
+    if (this.churchHistoryRecordsRoot) {
+      this._disposeChurchHistoryRecords();
+    }
     this._disposeXrHotspotTableViewer();
     this.xrHotspotTableId = hotspotId;
     this.xrHotspotTableDetail = null;
     this.xrHotspotTablePinsVisible = true;
-    this.xrHotspotTableSourceMarker =
-      this.hotspotMarkers.find((marker) => marker.name === hotspotId) || null;
+    this.xrHotspotTableSourceMarker = sourceMarker
+      || this.hotspotMarkers.find((marker) => marker.name === hotspotId)
+      || null;
     if (this.xrHotspotTableSourceMarker) {
       this._setXrTableHotspotOpenState(this.xrHotspotTableSourceMarker, true);
     }
@@ -2637,6 +3026,10 @@ export class WebXRApp {
       this.expandedHotspotLanguage = this.undergroundMemory.language;
       this._recordUndergroundMemory(hotspotId);
       this._playExpandedHotspotAudio(HERITAGE_MISSION_EVIDENCE[hotspotId]?.audio);
+    } else if (this._isChurchHistoryRecord(hotspotId)) {
+      this.expandedHotspotLanguage = this.churchHistory.language;
+      this._recordChurchHistory(hotspotId);
+      this._playExpandedHotspotAudio(CHURCH_HISTORY_RECORDS[hotspotId]?.audio);
     }
     this._rebuildXrHotspotTableViewer();
   }
@@ -2661,7 +3054,10 @@ export class WebXRApp {
     if (!table || !this.scene || !this.camera) {
       return;
     }
-    const memory = HERITAGE_MISSION_EVIDENCE[this.xrHotspotTableId] || null;
+    const record = HERITAGE_MISSION_EVIDENCE[this.xrHotspotTableId]
+      || CHURCH_HISTORY_RECORDS[this.xrHotspotTableId]
+      || null;
+    const isUndergroundRecord = this._isUndergroundMemoryStation(this.xrHotspotTableId);
 
     const previousViewer = this.xrHotspotTableViewer;
     const previousPosition = previousViewer?.position?.clone() || null;
@@ -2698,20 +3094,23 @@ export class WebXRApp {
     this._createXrTableControl({
       parent: viewerRoot,
       label: this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN',
-      position: memory ? [0.72, -0.80, 0.09] : [-0.66, -0.56, 0.09],
+      position: record ? [0.72, -0.80, 0.09] : [-0.66, -0.56, 0.09],
       scale: 0.2,
       name: 'xr-table-language',
     });
 
-    if (memory) {
-      const title = memory.title?.[this.expandedHotspotLanguage] || memory.title?.en || '';
+    if (record) {
+      const title = record.title?.[this.expandedHotspotLanguage] || record.title?.en || '';
       viewerRoot.add(this._createMuseumArtifactSprite({
         texture: this._createMuseumArtifactTextTexture(title),
         position: [0, -0.16, 0.08],
         scale: [1.38, 0.16],
       }));
-      if (this.undergroundMemory.subtitlesOn) {
-        const description = memory.text?.[this.expandedHotspotLanguage] || memory.text?.en || '';
+      const subtitlesOn = isUndergroundRecord
+        ? this.undergroundMemory.subtitlesOn
+        : this.churchHistory.subtitlesOn;
+      if (subtitlesOn) {
+        const description = record.text?.[this.expandedHotspotLanguage] || record.text?.en || '';
         viewerRoot.add(this._createMuseumArtifactSprite({
           texture: this._createMuseumArtifactTextTexture(description, {
             subtitle: true,
@@ -2726,7 +3125,7 @@ export class WebXRApp {
         label: 'CC',
         position: [-0.72, -0.80, 0.09],
         scale: 0.2,
-        name: 'underground-memory-subtitles',
+        name: 'xr-record-subtitles',
       });
     }
 
@@ -2742,9 +3141,9 @@ export class WebXRApp {
       const sourceWidth = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
       const sourceHeight = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
       const aspect = sourceWidth / Math.max(1, sourceHeight);
-      let width = memory ? 1.34 : 1.68;
+      let width = record ? 1.34 : 1.68;
       let height = width / aspect;
-      const maximumHeight = memory ? 0.64 : 1.02;
+      const maximumHeight = record ? 0.64 : 1.02;
       if (height > maximumHeight) {
         height = maximumHeight;
         width = height * aspect;
@@ -2759,7 +3158,7 @@ export class WebXRApp {
           toneMapped: false,
         }),
       );
-      image.position.set(0, memory ? 0.27 : 0.08, 0.06);
+      image.position.set(0, record ? 0.27 : 0.08, 0.06);
       image.renderOrder = 49;
       viewerRoot.add(image);
 
@@ -2828,10 +3227,14 @@ export class WebXRApp {
     }
     this.xrHotspotTableViewer = null;
     if (restoreSource && this.xrHotspotTableSourceMarker) {
+      const sourceWasChurchRecords = this.xrHotspotTableSourceMarker === this.churchHistoryRecordsMarker;
       this._setXrTableHotspotOpenState(this.xrHotspotTableSourceMarker, false);
       this.xrHotspotTableSourceMarker = null;
       this.xrHotspotTableId = '';
       this.xrHotspotTableDetail = null;
+      if (sourceWasChurchRecords) {
+        this._refreshChurchHistoryRecordsMarker();
+      }
     }
     if (stopAudio) {
       this._stopExpandedHotspotAudio();
@@ -3592,6 +3995,18 @@ export class WebXRApp {
         this._rebuildXrHotspotTableViewer();
         return;
       }
+      if (this._isChurchHistoryRecord(this.xrHotspotTableId)) {
+        this.churchHistory.language = this.churchHistory.language === 'tl' ? 'en' : 'tl';
+        this.expandedHotspotLanguage = this.churchHistory.language;
+        this.chapelConservation.language = this.churchHistory.language;
+        this._saveChurchHistoryState();
+        this._saveChapelConservationState();
+        this._playExpandedHotspotAudio(
+          CHURCH_HISTORY_RECORDS[this.xrHotspotTableId]?.audio,
+        );
+        this._rebuildXrHotspotTableViewer();
+        return;
+      }
       this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
       this.chapelConservation.language = this.expandedHotspotLanguage;
       this._saveChapelConservationState();
@@ -3601,12 +4016,16 @@ export class WebXRApp {
       this._rebuildXrHotspotTableViewer();
       this._renderChapelConservation();
     });
-    this.interactionRegistry.register('underground-memory-subtitles', () => {
-      if (!this._isUndergroundMemoryStation(this.xrHotspotTableId)) {
+    this.interactionRegistry.register('xr-record-subtitles', () => {
+      if (this._isUndergroundMemoryStation(this.xrHotspotTableId)) {
+        this.undergroundMemory.subtitlesOn = !this.undergroundMemory.subtitlesOn;
+        this._saveUndergroundMemoryState();
+      } else if (this._isChurchHistoryRecord(this.xrHotspotTableId)) {
+        this.churchHistory.subtitlesOn = !this.churchHistory.subtitlesOn;
+        this._saveChurchHistoryState();
+      } else {
         return;
       }
-      this.undergroundMemory.subtitlesOn = !this.undergroundMemory.subtitlesOn;
-      this._saveUndergroundMemoryState();
       this._rebuildXrHotspotTableViewer();
     });
     this.interactionRegistry.register('xr-table-back', () => {
@@ -3637,6 +4056,25 @@ export class WebXRApp {
     });
     this.interactionRegistry.register('underground-memory-timeline', (context) => {
       this._selectUndergroundMemoryTimeline(String(context?.metadata?.memoryId || ''));
+    });
+    this.interactionRegistry.register('church-history-records', () => {
+      this._openChurchHistoryRecords();
+    });
+    this.interactionRegistry.register('church-history-record-select', (context) => {
+      const recordId = String(context?.metadata?.recordId || '');
+      if (!this.churchHistory.collected.includes(recordId)) {
+        return;
+      }
+      this._disposeChurchHistoryRecords();
+      this._showXrHotspotTable(recordId, this.churchHistoryRecordsMarker);
+    });
+    this.interactionRegistry.register('church-history-record-locked', () => {
+      this.uiController.showNotice(
+        this.churchHistory.language === 'en'
+          ? 'Find this record inside the chapel before opening it here.'
+          : 'Hanapin muna ang talang ito sa loob ng kapilya bago ito buksan dito.',
+        3000,
+      );
     });
   }
 
@@ -5238,7 +5676,7 @@ export class WebXRApp {
         : ((HOTSPOT_TABLES[hotspot.id] || MUSEUM_CONTENT_HOTSPOTS[hotspot.id])
           ? hotspot.id
           : null);
-      const iconType = (MUSEUM_CONTENT_HOTSPOTS[hotspot.id] || CHURCH_HOTSPOT_TABLES[hotspot.id])
+      const iconType = (MUSEUM_CONTENT_HOTSPOTS[hotspot.id] || HOTSPOT_TABLES[hotspot.id])
         ? 'open'
         : 'arrow';
       const { root } = this._buildHotspotMarker({
@@ -6238,6 +6676,7 @@ export class WebXRApp {
     this._hideExpandedHotspotImage();
     this._disposeMuseumContentViewer({ restoreSource: false });
     this._disposeMuseumArtifactStation();
+    this._disposeChurchHistoryExperience({ removeMarker: false });
     this._disposeUndergroundMemoryExperience({ removeMarker: false });
     this._clearFloatingHotspotLabels();
 
@@ -6378,6 +6817,7 @@ export class WebXRApp {
       // native XR layer is presenting can invalidate that layer on Android.
       await this._loadSceneAssets();
       this._createHotspotMarkers();
+      this._setupChurchHistoryExperience();
       this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
@@ -6508,6 +6948,7 @@ export class WebXRApp {
       this._updateMuseumArtifactStation(dt);
       this._updateMuseumContentViewer(dt);
       this._updateXrHotspotTableViewer();
+      this._updateChurchHistoryExperience(dt);
       this._updateUndergroundMemoryExperience(dt);
     } catch (error) {
       console.error('[xr] museum exhibit update failed', error);

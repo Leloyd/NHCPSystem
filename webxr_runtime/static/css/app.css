@@ -1387,6 +1387,36 @@ canvas {
   line-height: 1.45;
 }
 
+.conservation-history {
+  margin-top: 20px;
+  padding-top: 18px;
+  border-top: 1px solid rgba(105, 72, 31, 0.34);
+}
+
+.conservation-history > h3 {
+  margin-bottom: 8px;
+}
+
+.conservation-station--history {
+  grid-template-columns: 32px 64px minmax(0, 1fr);
+  align-items: center;
+}
+
+.conservation-station--history img {
+  display: block;
+  width: 64px;
+  height: 52px;
+  border: 1px solid rgba(112, 75, 29, 0.36);
+  border-radius: 7px;
+  object-fit: cover;
+  filter: sepia(0.12) saturate(0.88);
+}
+
+.conservation-station--history:not(.is-examined) img {
+  opacity: 0.38;
+  filter: sepia(0.55) grayscale(0.72);
+}
+
 .conservation-decision {
   margin-top: 15px;
   padding: 15px;
@@ -1467,6 +1497,15 @@ canvas {
   .conservation-notebook__content {
     max-height: calc(100dvh - 154px);
     padding: 14px;
+  }
+  .conservation-station--history {
+    grid-template-columns: 28px 52px minmax(0, 1fr);
+    gap: 8px;
+    padding-inline: 4px;
+  }
+  .conservation-station--history img {
+    width: 52px;
+    height: 46px;
   }
   .tour-control-dock__action--conservation .tour-control-dock__label { display: none; }
 }
