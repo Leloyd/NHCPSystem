@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-underground-memory-wall-1';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-webxr-inventory-1';
 
 function getRefs() {
   return {
@@ -30,6 +30,11 @@ function getRefs() {
     conservationClose: document.getElementById('conservation-close'),
     conservationContent: document.getElementById('conservation-content'),
     conservationToast: document.getElementById('conservation-toast'),
+    playerInfoButton: document.getElementById('player-info-button'),
+    playerInfoPanel: document.getElementById('player-info-panel'),
+    playerInfoClose: document.getElementById('player-info-close'),
+    playerInfoContent: document.getElementById('player-info-content'),
+    playerInventoryBadge: document.getElementById('player-inventory-badge'),
     mobileControls: document.getElementById('mobile-controls'),
     moveStickZone: document.getElementById('move-stick-zone'),
     moveStickThumb: document.getElementById('move-stick-thumb'),

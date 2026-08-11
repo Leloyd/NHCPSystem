@@ -34,6 +34,8 @@ from tour_bookings_content import load_admin_tour_bookings, load_public_tour_boo
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
 from user_management_content import load_admin_public_users, register_user_management_routes
 from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
+from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
+from webxr_progress_content import collect_webxr_item, deposit_webxr_record, load_webxr_player_progress
 
 try:
     from dotenv import load_dotenv
@@ -1519,6 +1521,93 @@ def three_d_environment_scene(scene_name):
         webxr_scene=normalized_scene,
         webxr_asset_version=WEBXR_ASSET_VERSION,
     )
+
+
+@app.route("/api/webxr/player-progress")
+def webxr_player_progress_api():
+    current_user = _get_current_public_user()
+    if not current_user:
+        return jsonify({
+            "ok": False,
+            "login_required": True,
+            "login_url": url_for("public_login", next=request.referrer or url_for("three_d_environment")),
+        }), 401
+    try:
+        user_id = int(current_user.get("id"))
+        keeper_progress = load_heritage_keeper_progress(user_id)
+        webxr_achievements = [
+            str(fragment.get("key") or "")
+            for fragment in keeper_progress.get("fragments", [])
+            if fragment.get("source") == "webxr" and fragment.get("earned")
+        ]
+        return jsonify({
+            "ok": True,
+            "progress": load_webxr_player_progress(user_id),
+            "webxr_achievements": webxr_achievements,
+        })
+    except Exception as exc:
+        app.logger.exception("Failed to load WebXR player progress: %s", exc)
+        return jsonify({"ok": False, "error": "Player progress could not be loaded."}), 500
+
+
+@app.route("/api/webxr/player-progress/collect", methods=["POST"])
+def webxr_collect_item_api():
+    current_user = _get_current_public_user()
+    if not current_user or session.get(PUBLIC_SESSION_KEY) is not True:
+        return jsonify({"ok": False, "login_required": True}), 401
+    if not _is_public_csrf_valid(request.headers.get("X-CSRF-Token")):
+        return jsonify({"ok": False, "error": "Invalid request."}), 400
+    payload = request.get_json(silent=True) or {}
+    try:
+        progress = collect_webxr_item(
+            int(current_user.get("id")),
+            str(payload.get("item_key") or ""),
+            str(payload.get("scene") or ""),
+        )
+        return jsonify({"ok": True, "progress": progress})
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    except Exception as exc:
+        app.logger.exception("Failed to save a WebXR collectible: %s", exc)
+        return jsonify({"ok": False, "error": "The recovered item could not be saved."}), 500
+
+
+@app.route("/api/webxr/player-progress/deposit", methods=["POST"])
+def webxr_deposit_record_api():
+    current_user = _get_current_public_user()
+    if not current_user or session.get(PUBLIC_SESSION_KEY) is not True:
+        return jsonify({"ok": False, "login_required": True}), 401
+    if not _is_public_csrf_valid(request.headers.get("X-CSRF-Token")):
+        return jsonify({"ok": False, "error": "Invalid request."}), 400
+    payload = request.get_json(silent=True) or {}
+    try:
+        progress = deposit_webxr_record(int(current_user.get("id")), str(payload.get("record_key") or ""))
+        return jsonify({"ok": True, "progress": progress})
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    except Exception as exc:
+        app.logger.exception("Failed to deposit WebXR record items: %s", exc)
+        return jsonify({"ok": False, "error": "The recovered materials could not be deposited."}), 500
+
+
+@app.route("/api/webxr/player-progress/achievement", methods=["POST"])
+def webxr_scene_achievement_api():
+    current_user = _get_current_public_user()
+    if not current_user or session.get(PUBLIC_SESSION_KEY) is not True:
+        return jsonify({"ok": False, "login_required": True}), 401
+    if not _is_public_csrf_valid(request.headers.get("X-CSRF-Token")):
+        return jsonify({"ok": False, "error": "Invalid request."}), 400
+    payload = request.get_json(silent=True) or {}
+    try:
+        result = record_heritage_keeper_fragment(
+            int(current_user.get("id")), "webxr", str(payload.get("scene") or ""),
+        )
+        return jsonify({"ok": True, **result})
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    except Exception as exc:
+        app.logger.exception("Failed to save WebXR scene achievement: %s", exc)
+        return jsonify({"ok": False, "error": "The environment achievement could not be saved."}), 500
 
 
 @app.route("/api/webxr/scene")

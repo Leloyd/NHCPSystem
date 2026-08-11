@@ -35,7 +35,9 @@
       </nav>
 
       {% set trail_fragments = heritage_keeper.fragments[:heritage_keeper.trail_required] %}
-      {% set ar_fragments = heritage_keeper.fragments[heritage_keeper.trail_required:] %}
+      {% set ar_fragment_end = heritage_keeper.trail_required + heritage_keeper.ar_required %}
+      {% set ar_fragments = heritage_keeper.fragments[heritage_keeper.trail_required:ar_fragment_end] %}
+      {% set webxr_fragments = heritage_keeper.fragments[ar_fragment_end:] %}
       <header class="hk-masthead{% if heritage_keeper.unlocked %} is-complete{% endif %}">
         <div class="hk-masthead__copy">
           <div class="hk-masthead__heading-line">
@@ -44,8 +46,8 @@
           </div>
           <h1><span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></h1>
           <p class="hk-masthead__lead">
-            <span data-lang-en>The master seal records both restoration journeys. Complete all ten Heritage Trail stops and restore every registered AR artifact to reveal it in full.</span>
-            <span data-lang-tl>Itinatala ng pangunahing selyo ang dalawang paglalakbay sa pagpapanumbalik. Kumpletuhin ang sampung Heritage Trail stop at ibalik ang lahat ng nakatalang AR artifact upang ganap itong makita.</span>
+            <span data-lang-en>The master seal records three restoration journeys: the Heritage Trail, AR artifact restoration, and exploration of the museum’s three connected 3D environments.</span>
+            <span data-lang-tl>Itinatala ng pangunahing selyo ang tatlong paglalakbay: ang Heritage Trail, AR artifact restoration, at paggalugad sa tatlong magkakaugnay na 3D environment ng museo.</span>
           </p>
         </div>
 
@@ -189,6 +191,44 @@
         </div>
       </section>
 
+      <section class="hk-recovery hk-recovery--webxr" aria-labelledby="webxrRecoveryTitle" data-plate="III">
+        <div class="hk-recovery__layout">
+          <div class="hk-recovery__copy">
+            <p class="hk-section-label"><span data-lang-en>Restoration plate III</span><span data-lang-tl>Plaka ng pagpapanumbalik III</span></p>
+            <h2 id="webxrRecoveryTitle"><span data-lang-en>3D Environment Seal</span><span data-lang-tl>Selyo ng 3D Environment</span></h2>
+            <p>
+              <span data-lang-en>One fitted piece belongs to each environment. Examine the museum collection, restore the chapel records, and recover the underground memories to assemble this three-part seal.</span>
+              <span data-lang-tl>May isang akmang bahagi para sa bawat environment. Siyasatin ang koleksiyon ng museo, buuin ang mga tala ng kapilya, at bawiin ang mga alaala sa ilalim ng lupa upang mabuo ang tatlong-bahaging selyo.</span>
+            </p>
+            <div class="hk-recovery__count" aria-label="{{ heritage_keeper.webxr_count }} of {{ heritage_keeper.webxr_required }} 3D Environment seal pieces recovered">
+              <strong>{{ heritage_keeper.webxr_count }}</strong>
+              <span><span data-lang-en>of {{ heritage_keeper.webxr_required }} pieces restored</span><span data-lang-tl>sa {{ heritage_keeper.webxr_required }} bahagi ang naibalik</span></span>
+            </div>
+            <div class="hk-recovery__track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ heritage_keeper.webxr_required }}" aria-valuenow="{{ heritage_keeper.webxr_count }}" aria-label="3D Environment seal progress">
+              <span style="width: {{ (heritage_keeper.webxr_count / heritage_keeper.webxr_required * 100)|round }}%"></span>
+            </div>
+          </div>
+          <div class="hk-recovery__viewer">
+            {% if heritage_keeper.webxr_count > 0 %}
+            <figure
+              class="hk-fragment-tray"
+              tabindex="0"
+              role="img"
+              data-hk-fragment-viewer
+              data-model-url="/Seal/3D-environment-seal.glb"
+              data-runtime-piece-count="3"
+              data-earned-fragments="{{ webxr_fragments | map(attribute='earned') | list | tojson | forceescape }}"
+              aria-label="{{ heritage_keeper.webxr_count }} of {{ heritage_keeper.webxr_required }} 3D Environment seal pieces recovered"
+            >
+              <canvas class="hk-fragment-tray__canvas" data-hk-fragment-canvas aria-hidden="true"></canvas>
+              <div class="hk-fragment-tray__loading" data-hk-fragment-loading role="status" aria-live="polite"><span class="hk-fragment-tray__spinner" aria-hidden="true"></span></div>
+              <p class="hk-fragment-tray__error" data-hk-fragment-error hidden><span data-lang-en>The 3D Environment seal pieces could not be displayed.</span><span data-lang-tl>Hindi maipakita ang mga bahagi ng 3D Environment seal.</span></p>
+            </figure>
+            {% endif %}
+          </div>
+        </div>
+      </section>
+
       <section class="hk-register" aria-labelledby="fragmentRegisterTitle">
         <div class="hk-register__heading">
           <p class="hk-section-label"><span data-lang-en>Collection register</span><span data-lang-tl>Talaan ng koleksiyon</span></p>
@@ -230,7 +270,7 @@
               <strong>{{ heritage_keeper.ar_count }} / {{ heritage_keeper.ar_required }}</strong>
             </header>
             <ol class="hk-ledger__list">
-              {% for fragment in heritage_keeper.fragments[heritage_keeper.trail_required:] %}
+              {% for fragment in ar_fragments %}
               <li class="{% if fragment.earned %}is-earned{% endif %}">
                 <span class="hk-ledger__number">{{ '%02d'|format(fragment.number) }}</span>
                 <span class="hk-ledger__name">
@@ -245,11 +285,28 @@
               {% endfor %}
             </ol>
           </section>
+
+          <section class="hk-ledger hk-ledger--webxr" aria-labelledby="webxrLedgerTitle">
+            <header class="hk-ledger__head">
+              <div><span class="hk-ledger__roman">III</span><h3 id="webxrLedgerTitle">3D Environments</h3></div>
+              <strong>{{ heritage_keeper.webxr_count }} / {{ heritage_keeper.webxr_required }}</strong>
+            </header>
+            <ol class="hk-ledger__list">
+              {% for fragment in webxr_fragments %}
+              <li class="{% if fragment.earned %}is-earned{% endif %}">
+                <span class="hk-ledger__number">{{ '%02d'|format(loop.index) }}</span>
+                <span class="hk-ledger__name">{% if fragment.earned %}<span data-lang-en>{{ fragment.label_en }}</span><span data-lang-tl>{{ fragment.label_tl }}</span>{% else %}<span data-lang-en>Awaiting exploration</span><span data-lang-tl>Hindi pa nagagalugad</span>{% endif %}</span>
+                <span class="hk-ledger__status"><span data-lang-en>{{ 'Recovered' if fragment.earned else 'Locked' }}</span><span data-lang-tl>{{ 'Nakuha' if fragment.earned else 'Naka-lock' }}</span></span>
+              </li>
+              {% endfor %}
+            </ol>
+          </section>
         </div>
 
         <div class="hk-actions">
           <a class="hk-action" href="/trail"><span data-lang-en>Continue the Heritage Trail</span><span data-lang-tl>Ipagpatuloy ang Heritage Trail</span><span aria-hidden="true">→</span></a>
           <a class="hk-action hk-action--secondary" href="/ar-content-detection"><span data-lang-en>Restore AR Artifacts</span><span data-lang-tl>Magbalik ng AR Artifacts</span><span aria-hidden="true">→</span></a>
+          <a class="hk-action hk-action--secondary" href="/3d-environment"><span data-lang-en>Explore the 3D Environments</span><span data-lang-tl>Galugarin ang mga 3D Environment</span><span aria-hidden="true">→</span></a>
         </div>
       </section>
 

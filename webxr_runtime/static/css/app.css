@@ -163,6 +163,99 @@ canvas {
   z-index: 90;
 }
 
+/* Read-only explorer journal. It stays outside immersive XR; the same state is
+   available there through gaze-enabled world markers and record controls. */
+.player-info-button {
+  position: fixed;
+  top: max(1rem, env(safe-area-inset-top));
+  right: max(1rem, env(safe-area-inset-right));
+  z-index: 82;
+  display: inline-flex;
+  align-items: center;
+  gap: .55rem;
+  min-height: 2.65rem;
+  padding: .55rem .9rem;
+  border: 1px solid rgba(212, 175, 106, .65);
+  border-radius: 999px;
+  color: #f5deb0;
+  background: rgba(13, 10, 7, .86);
+  font: 600 .74rem/1 Inter, sans-serif;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  backdrop-filter: blur(12px);
+}
+
+.player-info-button > span:first-child { font-size: 1rem; color: #d4af6a; }
+
+.player-info-panel {
+  position: fixed;
+  inset: 0 0 0 auto;
+  z-index: 90;
+  width: min(25rem, calc(100vw - 1.25rem));
+  height: 100dvh;
+  display: flex;
+  flex-direction: column;
+  color: #efe4d2;
+  background: linear-gradient(160deg, rgba(22, 16, 10, .985), rgba(7, 8, 8, .99));
+  border-left: 1px solid rgba(212, 175, 106, .42);
+  box-shadow: -1.5rem 0 4rem rgba(0, 0, 0, .52);
+  transition: transform .28s ease, opacity .2s ease;
+}
+
+.player-info-panel.hidden { display: flex !important; transform: translateX(105%); opacity: 0; pointer-events: none; }
+
+.player-info-panel__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: max(1.2rem, env(safe-area-inset-top)) 1.25rem 1rem;
+  border-bottom: 1px solid rgba(212, 175, 106, .22);
+}
+.player-info-panel__header small { color: #c7a25f; text-transform: uppercase; letter-spacing: .14em; }
+.player-info-panel__header h2 { margin: .25rem 0 0; font: 500 1.55rem/1.1 "Playfair Display", serif; }
+.player-info-panel__header button {
+  width: 2.4rem; height: 2.4rem; border-radius: 50%; border: 1px solid rgba(212, 175, 106, .45);
+  color: #f2dfbd; background: transparent; font-size: 1.35rem;
+}
+.player-info-panel__tabs { display: grid; grid-template-columns: repeat(3, 1fr); padding: .75rem; gap: .35rem; }
+.player-info-panel__tabs button {
+  padding: .7rem .35rem; border: 0; border-bottom: 2px solid transparent; color: #a99f91; background: transparent;
+  font: 600 .7rem/1 Inter, sans-serif; text-transform: uppercase; letter-spacing: .06em;
+}
+.player-info-panel__tabs button[aria-selected="true"] { color: #f1d592; border-color: #d4af6a; }
+.player-info-panel__tabs span { display: inline-grid; place-items: center; min-width: 1.15rem; height: 1.15rem; margin-left: .2rem; border-radius: 99px; background: #d4af6a; color: #171008; }
+.player-info-panel__content { overflow: auto; padding: .75rem 1.1rem max(2rem, env(safe-area-inset-bottom)); }
+.player-profile-card { display: grid; grid-template-columns: 3.5rem 1fr; gap: .9rem; padding: 1rem; border: 1px solid rgba(212, 175, 106, .24); background: rgba(255,255,255,.025); }
+.player-profile-card__seal { display: grid; place-items: center; aspect-ratio: 1; border: 1px solid #d4af6a; border-radius: 50%; color: #d4af6a; font: 700 .64rem Inter, sans-serif; }
+.player-profile-card h3 { margin: .12rem 0; font: 500 1.2rem "Playfair Display", serif; }
+.player-profile-card p, .player-profile-card small { margin: 0; color: #aba093; font-size: .78rem; overflow-wrap: anywhere; }
+.player-info-panel__login { display: block; margin-top: .8rem; padding: .8rem; text-align: center; border: 1px solid #d4af6a; color: #f1d592; text-decoration: none; }
+.player-achievement-list { display: grid; gap: .6rem; padding: 0; list-style: none; }
+.player-achievement-list li { display: grid; grid-template-columns: 1.8rem 1fr; gap: .7rem; padding: .85rem; border: 1px solid rgba(255,255,255,.09); opacity: .58; }
+.player-achievement-list li.is-earned { border-color: rgba(212,175,106,.55); opacity: 1; }
+.player-achievement-list li > span { color: #d4af6a; font-size: 1.2rem; }
+.player-achievement-list strong, .player-achievement-list small { display: block; }
+.player-achievement-list small { margin-top: .22rem; color: #aaa093; }
+.player-inventory-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem; }
+.player-inventory-grid figure { margin: 0; border: 1px solid rgba(212,175,106,.25); background: rgba(255,255,255,.025); }
+.player-inventory-grid img { width: 100%; aspect-ratio: 4/3; object-fit: cover; display: block; }
+.player-inventory-grid figcaption { padding: .65rem; }
+.player-inventory-grid strong, .player-inventory-grid small { display: block; }
+.player-inventory-grid strong { font: 500 .86rem/1.25 "Playfair Display", serif; }
+.player-inventory-grid small { margin-top: .2rem; color: #a99f91; font-size: .68rem; }
+.player-info-empty { padding: 2.8rem 1rem; text-align: center; color: #aaa093; }
+.player-info-empty > span { display: block; color: #d4af6a; font-size: 2.2rem; }
+.player-info-empty h3 { color: #eadfcf; font: 500 1.15rem "Playfair Display", serif; }
+
+@media (max-width: 600px) {
+  .player-info-button { top: max(.65rem, env(safe-area-inset-top)); right: max(.65rem, env(safe-area-inset-right)); }
+  .player-info-panel { width: min(23rem, calc(100vw - .65rem)); }
+  .player-inventory-grid { grid-template-columns: 1fr; }
+}
+
+body.is-xr-presenting .player-info-button,
+body.is-xr-presenting .player-info-panel { display: none !important; }
+
 .error-banner.is-notice {
   background: rgba(24, 20, 10, 0.94);
   border-color: rgba(212, 175, 106, 0.8);

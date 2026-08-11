@@ -48,13 +48,22 @@ AR_ARTIFACTS = {
     "tboli": ("T'boli Burial Tradition", "Tradisyong Panlibing ng T'boli"),
 }
 
+WEBXR_ENVIRONMENTS = {
+    "museum": ("Museum Gallery", "Galeriya ng Museo"),
+    "church": ("Chapel Investigation", "Pagsisiyasat sa Kapilya"),
+    "underground": ("Underground Memory", "Alaala sa Ilalim ng Lupa"),
+}
+
 TRAIL_REQUIRED = len(TRAIL_FRAGMENTS)
 AR_KEY_ORDER = list(AR_ARTIFACTS)
 AR_REQUIRED = len(AR_KEY_ORDER)
-TOTAL_REQUIRED = TRAIL_REQUIRED + AR_REQUIRED
+WEBXR_KEY_ORDER = list(WEBXR_ENVIRONMENTS)
+WEBXR_REQUIRED = len(WEBXR_KEY_ORDER)
+TOTAL_REQUIRED = TRAIL_REQUIRED + AR_REQUIRED + WEBXR_REQUIRED
 VALID_TRAIL_KEYS = {item[0] for item in TRAIL_FRAGMENTS}
 TRAIL_KEY_ORDER = [item[0] for item in TRAIL_FRAGMENTS]
 VALID_AR_KEYS = set(AR_ARTIFACTS)
+VALID_WEBXR_KEYS = set(WEBXR_ENVIRONMENTS)
 
 
 def empty_heritage_keeper_progress() -> dict[str, Any]:
@@ -73,6 +82,17 @@ def empty_heritage_keeper_progress() -> dict[str, Any]:
         }
         for index, key in enumerate(AR_KEY_ORDER)
     )
+    fragments.extend(
+        {
+            "number": TRAIL_REQUIRED + AR_REQUIRED + index + 1,
+            "source": "webxr",
+            "key": key,
+            "label_en": WEBXR_ENVIRONMENTS[key][0],
+            "label_tl": WEBXR_ENVIRONMENTS[key][1],
+            "earned": False,
+        }
+        for index, key in enumerate(WEBXR_KEY_ORDER)
+    )
     return {
         "available": is_supabase_configured(),
         "trail_count": 0,
@@ -80,11 +100,14 @@ def empty_heritage_keeper_progress() -> dict[str, Any]:
         "ar_count": 0,
         "ar_total_restored": 0,
         "ar_required": AR_REQUIRED,
+        "webxr_count": 0,
+        "webxr_required": WEBXR_REQUIRED,
         "total_count": 0,
         "total_required": TOTAL_REQUIRED,
         "percentage": 0,
         "trail_complete": False,
         "ar_complete": False,
+        "webxr_complete": False,
         "unlocked": False,
         "unlocked_at": "",
         "fragments": fragments,
@@ -130,21 +153,40 @@ def _build_progress(events: list[dict[str, Any]], award: dict[str, Any] | None) 
             "label_tl": labels[1],
             "earned": key in earned_ar_keys,
         })
+    webxr_keys = {
+        str(event.get("item_key") or "")
+        for event in events
+        if event.get("source") == "webxr" and event.get("item_key") in VALID_WEBXR_KEYS
+    }
+    for index, key in enumerate(WEBXR_KEY_ORDER):
+        labels = WEBXR_ENVIRONMENTS[key]
+        fragments.append({
+            "number": TRAIL_REQUIRED + AR_REQUIRED + index + 1,
+            "source": "webxr",
+            "key": key,
+            "label_en": labels[0],
+            "label_tl": labels[1],
+            "earned": key in webxr_keys,
+        })
 
     trail_count = len(trail_keys)
     ar_count = len(earned_ar_keys)
-    total_count = trail_count + ar_count
+    webxr_count = len(webxr_keys)
+    total_count = trail_count + ar_count + webxr_count
     trail_complete = trail_count >= TRAIL_REQUIRED
     ar_complete = ar_count >= AR_REQUIRED
+    webxr_complete = webxr_count >= WEBXR_REQUIRED
     progress.update({
         "trail_count": trail_count,
         "ar_count": ar_count,
         "ar_total_restored": len(ar_keys),
+        "webxr_count": webxr_count,
         "total_count": total_count,
         "percentage": round((total_count / TOTAL_REQUIRED) * 100),
         "trail_complete": trail_complete,
         "ar_complete": ar_complete,
-        "unlocked": bool(award) and trail_complete and ar_complete,
+        "webxr_complete": webxr_complete,
+        "unlocked": bool(award) and trail_complete and ar_complete and webxr_complete,
         "unlocked_at": str((award or {}).get("unlocked_at") or ""),
         "fragments": fragments,
     })
@@ -163,7 +205,12 @@ def load_heritage_keeper_progress(user_id: int) -> dict[str, Any]:
 def record_heritage_keeper_fragment(user_id: int, source: str, item_key: str) -> dict[str, Any]:
     normalized_source = str(source or "").strip().lower()
     normalized_key = str(item_key or "").strip().lower()
-    valid_keys = VALID_TRAIL_KEYS if normalized_source == "trail" else VALID_AR_KEYS if normalized_source == "ar" else set()
+    valid_keys = (
+        VALID_TRAIL_KEYS if normalized_source == "trail"
+        else VALID_AR_KEYS if normalized_source == "ar"
+        else VALID_WEBXR_KEYS if normalized_source == "webxr"
+        else set()
+    )
     if normalized_key not in valid_keys:
         raise ValueError("That Heritage Keeper fragment is not recognized.")
 
@@ -189,16 +236,18 @@ def record_heritage_keeper_fragment(user_id: int, source: str, item_key: str) ->
     progress_before = _build_progress(events_before, award_before)
     progress = _build_progress(events_after, award_before)
     award_just_unlocked = False
-    if progress["trail_complete"] and progress["ar_complete"] and not award_before:
+    if progress["trail_complete"] and progress["ar_complete"] and progress["webxr_complete"] and not award_before:
         try:
             create_heritage_keeper_award(user_id)
             award_just_unlocked = True
         except Exception:
             pass
         progress = _build_progress(events_after, get_heritage_keeper_award(user_id))
-    elif progress["trail_complete"] and progress["ar_complete"]:
+    elif progress["trail_complete"] and progress["ar_complete"] and progress["webxr_complete"]:
         award_just_unlocked = not (
-            progress_before["trail_complete"] and progress_before["ar_complete"]
+            progress_before["trail_complete"]
+            and progress_before["ar_complete"]
+            and progress_before["webxr_complete"]
         )
 
     return {

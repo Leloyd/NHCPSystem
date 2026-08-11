@@ -260,21 +260,21 @@ const UNDERGROUND_WALK_BOUNDARY = [
 const CHURCH_HOTSPOT_MARKERS = [
   {
     id: 'church-record-pagkasira',
-    position: [-3.49, 1.00, -2.54],
+    position: [-3.49, 0.50, -2.54],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
   {
     id: 'church-record-pransiskano',
-    position: [-4.03, 1.00, -2.08],
+    position: [-4.03, 0.50, -2.08],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
   {
     id: 'church-record-pagsaayos',
-    position: [-4.03, 1.00, 1.65],
+    position: [-4.03, 0.50, 1.65],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
@@ -646,7 +646,8 @@ const CHAPEL_CONSERVATION_FINDINGS = {
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
 const CHURCH_HISTORY_STORAGE_KEY = 'nhcpChurchHistoricalRecordsV1';
-const CHURCH_HISTORY_RECORDS_POSITION = [1.65, 1.00, 0.05];
+const CHURCH_HISTORY_RECORDS_POSITION = [1.65, 0.50, 0.05];
+const CHURCH_HISTORY_STATUS_POSITION = [1.65, 0.86, 0.05];
 const CHURCH_HISTORY_IDS = [
   'church-record-pransiskano',
   'church-record-pagkasira',
@@ -696,15 +697,58 @@ const CHURCH_HISTORY_RECORDS = {
     },
   },
 };
+const WEBXR_PLAYER_STORAGE_KEY = 'nhcpWebxrPlayerProgressV1';
+const WEBXR_RECORD_BY_HOTSPOT = {
+  'church-record-pransiskano': 'pransiskano',
+  'church-record-pagkasira': 'pagkasira',
+  'church-record-pagsaayos': 'pagsaayos',
+};
+const WEBXR_COLLECTIBLES = {
+  'franciscan-document-1': { record: 'pransiskano', title: { en: 'Franciscan document I', tl: 'Dokumentong Pransiskano I' }, asset: '/images/landing/Juan1.png', kind: 'document', scene: 'museum', position: [0.30, 0.52, 0.48] },
+  'franciscan-document-2': { record: 'pransiskano', title: { en: 'Franciscan document II', tl: 'Dokumentong Pransiskano II' }, asset: '/images/landing/Juan2.png', kind: 'document', scene: 'museum', position: [-1.98, 0.52, 6.72] },
+  'franciscan-document-3': { record: 'pransiskano', title: { en: 'Franciscan document III', tl: 'Dokumentong Pransiskano III' }, asset: '/images/landing/Juan3.png', kind: 'document', scene: 'church', position: [-3.35, 0.50, -1.02] },
+  'franciscan-document-4': { record: 'pransiskano', title: { en: 'Franciscan document IV', tl: 'Dokumentong Pransiskano IV' }, asset: '/images/landing/Juan4.png', kind: 'document', scene: 'underground', position: [0.18, 0.52, 1.18] },
+  'deterioration-1911': { record: 'pagkasira', title: { en: 'Chapel facade, 1911', tl: 'Harap ng kapilya, 1911' }, asset: '/images/heritage-albums/1911_2.png', kind: 'image', scene: 'museum', position: [-1.08, 0.52, 3.02] },
+  'deterioration-ceiling': { record: 'pagkasira', title: { en: 'Faded ceiling paint', tl: 'Kumupas na pintura ng kisame' }, asset: '/images/heritage-albums/1982_1.png', kind: 'image', scene: 'church', position: [-2.55, 0.50, 1.18] },
+  'deterioration-wood': { record: 'pagkasira', title: { en: 'Rotting historic wood', tl: 'Nabubulok na makasaysayang kahoy' }, asset: '/images/heritage-albums/1983_1.png', kind: 'image', scene: 'church', position: [-3.02, 0.50, -1.92] },
+  'deterioration-cracks': { record: 'pagkasira', title: { en: 'Cracks in the masonry', tl: 'Mga bitak sa masonriya' }, asset: '/images/heritage-albums/2000_7.png', kind: 'image', scene: 'underground', position: [-2.24, 0.52, -0.30] },
+  'restoration-first-campaign': { record: 'pagsaayos', title: { en: 'First restoration campaign', tl: 'Unang kampanya ng pagsasaayos' }, asset: '/images/heritage-albums/1982-1981_2.png', kind: 'image', scene: 'museum', position: [-2.38, 0.52, 0.42] },
+  'restoration-2008': { record: 'pagsaayos', title: { en: 'Chapel restoration, 2008', tl: 'Pagsasaayos ng kapilya, 2008' }, asset: '/images/heritage-albums/PebOk-2008_2.png', kind: 'image', scene: 'church', position: [-4.18, 0.50, 0.82] },
+  'restoration-2015': { record: 'pagsaayos', title: { en: 'Restoration campaign, 2015–2016', tl: 'Kampanya ng pagsasaayos, 2015–2016' }, asset: '/images/heritage-albums/PebOk-2015-2016_2.png', kind: 'image', scene: 'underground', position: [-0.18, 0.52, -5.02] },
+  'restoration-plaster': { record: 'pagsaayos', title: { en: 'Preparing compatible plaster', tl: 'Paghahanda ng angkop na palitada' }, asset: '/images/heritage-albums/PebOk-2015-2016_8.png', kind: 'image', scene: 'underground', position: [-2.92, 0.52, 0.92] },
+};
+// These materials are recovered through meaningful exhibit interactions,
+// rather than duplicated as free-standing pickup markers.
+const WEBXR_INTERACTION_COLLECTIBLES = new Set([
+  'franciscan-document-3',
+  'franciscan-document-4',
+  'deterioration-ceiling',
+  'restoration-first-campaign',
+  'restoration-2008',
+  'restoration-plaster',
+]);
 const CHURCH_HISTORY_RECORD_TABLES = Object.fromEntries(
-  Object.entries(CHURCH_HISTORY_RECORDS).map(([id, record]) => [id, {
-    title: record.title,
-    imageUrl: record.imageUrl,
-    imageAlt: record.imageAlt,
-    description: record.text,
-    audio: record.audio,
-    hotspots: [],
-  }]),
+  Object.entries(CHURCH_HISTORY_RECORDS).map(([id, record]) => {
+    const recordKey = WEBXR_RECORD_BY_HOTSPOT[id];
+    const recoveredMedia = Object.entries(WEBXR_COLLECTIBLES)
+      .filter(([, item]) => item.record === recordKey)
+      .map(([itemKey, item], index) => ({
+        id: `recovered-${itemKey}`,
+        x: 20 + index * 20,
+        y: 32,
+        imageUrl: item.asset,
+        title: item.title.en,
+        audio: null,
+      }));
+    return [id, {
+      title: record.title,
+      imageUrl: record.imageUrl,
+      imageAlt: record.imageAlt,
+      description: record.text,
+      audio: record.audio,
+      hotspots: recoveredMedia,
+    }];
+  }),
 );
 const UNDERGROUND_MEMORY_STORAGE_KEY = 'nhcpUndergroundMemoryV1';
 // Keep the completed Memory Wall action directly below its 4/4 progress
@@ -971,6 +1015,11 @@ export class WebXRApp {
     this.churchHistoryRecordsRoot = null;
     this.churchHistoryMotes = [];
     this.churchHistoryElapsed = 0;
+    this.webxrPlayerConfig = this._readWebxrPlayerConfig();
+    this.webxrPlayer = this._readWebxrPlayerState();
+    this.webxrPlayerActiveTab = 'profile';
+    this.webxrCollectibleMarkers = new Map();
+    this.churchHistoryStatusRoot = null;
     this.undergroundMemory = this._readUndergroundMemoryState();
     this.undergroundMemoryLampsRoot = null;
     this.undergroundMemoryLampSprites = [];
@@ -997,6 +1046,7 @@ export class WebXRApp {
 
       this.uiController.setLoadingProgress(0.05, 'Fetching scene metadata...');
       this.metadata = await this._fetchMetadata();
+      await this._setupWebxrPlayerProgress();
 
       this.uiController.clearError();
 
@@ -1006,6 +1056,7 @@ export class WebXRApp {
       await this._loadSparkRuntime();
       await this._loadSceneAssets();
       this._createHotspotMarkers();
+      this._setupWebxrCollectibles();
       this._setupChurchHistoryExperience();
       this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
@@ -1105,6 +1156,370 @@ export class WebXRApp {
 
   _conservationText(tl, en) {
     return this.chapelConservation.language === 'en' ? en : tl;
+  }
+
+  _readWebxrPlayerConfig() {
+    try {
+      return JSON.parse(document.getElementById('webxr-player-config')?.textContent || '{}');
+    } catch (error) {
+      console.warn('[WebXR player] Invalid page configuration.', error);
+      return {};
+    }
+  }
+
+  _createDefaultWebxrPlayerState() {
+    return { items: {}, achievements: [] };
+  }
+
+  _webxrPlayerStorageKey(guest = false) {
+    const userId = Number(this.webxrPlayerConfig?.userId || 0);
+    if (!guest && this.webxrPlayerConfig?.authenticated && userId > 0) {
+      return `${WEBXR_PLAYER_STORAGE_KEY}:user:${userId}`;
+    }
+    return `${WEBXR_PLAYER_STORAGE_KEY}:guest`;
+  }
+
+  _parseStoredWebxrPlayerState(key) {
+    const stored = JSON.parse(window.localStorage.getItem(key) || 'null');
+    return {
+      items: stored?.items && typeof stored.items === 'object' ? stored.items : {},
+      achievements: Array.isArray(stored?.achievements) ? stored.achievements : [],
+    };
+  }
+
+  _readWebxrPlayerState() {
+    try {
+      const state = this._parseStoredWebxrPlayerState(this._webxrPlayerStorageKey());
+      if (this.webxrPlayerConfig?.authenticated) {
+        const guest = this._parseStoredWebxrPlayerState(this._webxrPlayerStorageKey(true));
+        state.items = { ...guest.items, ...state.items };
+        state.achievements = Array.from(new Set([...guest.achievements, ...state.achievements]));
+      }
+      return state;
+    } catch (error) {
+      console.warn('[WebXR player] Could not read local progress.', error);
+      return this._createDefaultWebxrPlayerState();
+    }
+  }
+
+  _saveWebxrPlayerState() {
+    try {
+      window.localStorage.setItem(this._webxrPlayerStorageKey(), JSON.stringify(this.webxrPlayer));
+    } catch (error) {
+      console.warn('[WebXR player] Could not save local progress.', error);
+    }
+  }
+
+  async _setupWebxrPlayerProgress() {
+    const { playerInfoButton, playerInfoClose, playerInfoPanel } = this.refs;
+    if (!this.webxrPlayerUiBound) {
+      this.webxrPlayerUiBound = true;
+      playerInfoButton?.addEventListener('click', () => this._setWebxrPlayerPanelOpen(
+        playerInfoPanel?.classList.contains('hidden'),
+      ));
+      playerInfoClose?.addEventListener('click', () => this._setWebxrPlayerPanelOpen(false));
+      playerInfoPanel?.addEventListener('click', (event) => {
+        const tab = event.target?.closest?.('[data-player-tab]')?.dataset?.playerTab;
+        if (!tab) return;
+        this.webxrPlayerActiveTab = tab;
+        this._renderWebxrPlayerPanel();
+      });
+    }
+
+    if (this.webxrPlayerConfig.authenticated && this.webxrPlayerConfig.progressUrl) {
+      try {
+        const response = await fetch(this.webxrPlayerConfig.progressUrl, {
+          headers: { Accept: 'application/json' },
+          credentials: 'same-origin',
+        });
+        const payload = await response.json();
+        if (response.ok && payload?.progress?.items) {
+          payload.progress.items.forEach((item) => {
+            const localStatus = this.webxrPlayer.items[item.key]?.status;
+            this.webxrPlayer.items[item.key] = {
+              status: localStatus === 'deposited' || item.status === 'deposited' ? 'deposited' : 'inventory',
+              scene: item.acquired_scene,
+            };
+          });
+          if (Array.isArray(payload.webxr_achievements)) {
+            this.webxrPlayer.achievements = Array.from(new Set([
+              ...this.webxrPlayer.achievements,
+              ...payload.webxr_achievements.filter((scene) => ['museum', 'church', 'underground'].includes(scene)),
+            ]));
+          }
+          this._saveWebxrPlayerState();
+        }
+        await this._syncLocalWebxrItemsToAccount();
+      } catch (error) {
+        console.warn('[WebXR player] Account progress is temporarily unavailable.', error);
+      }
+    }
+    this.churchHistory.collected = CHURCH_HISTORY_IDS.filter((hotspotId) => {
+      const recordKey = WEBXR_RECORD_BY_HOTSPOT[hotspotId];
+      return this._webxrRecordProgress(recordKey).complete;
+    });
+    this._saveChurchHistoryState();
+    this._renderWebxrPlayerPanel();
+  }
+
+  async _syncLocalWebxrItemsToAccount() {
+    if (!this.webxrPlayerConfig.authenticated || !this.webxrPlayerConfig.collectUrl) return;
+    let syncFailed = false;
+    const localItems = Object.entries(this.webxrPlayer.items);
+    for (const [itemKey, state] of localItems) {
+      if (!WEBXR_COLLECTIBLES[itemKey]) continue;
+      try {
+        const response = await fetch(this.webxrPlayerConfig.collectUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '',
+          },
+          body: JSON.stringify({ item_key: itemKey, scene: state.scene || WEBXR_COLLECTIBLES[itemKey].scene }),
+        });
+        if (!response.ok) {
+          syncFailed = true;
+          break;
+        }
+      } catch {
+        syncFailed = true;
+        break;
+      }
+    }
+    if (!syncFailed && this.webxrPlayerConfig.depositUrl) {
+      for (const recordKey of ['pransiskano', 'pagkasira', 'pagsaayos']) {
+        if (!this._webxrRecordProgress(recordKey).complete) continue;
+        try {
+          const response = await fetch(this.webxrPlayerConfig.depositUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '',
+            },
+            body: JSON.stringify({ record_key: recordKey }),
+          });
+          if (!response.ok) {
+            syncFailed = true;
+            break;
+          }
+        } catch {
+          syncFailed = true;
+          break;
+        }
+      }
+    }
+    if (!syncFailed && this.webxrPlayerConfig.achievementUrl) {
+      for (const scene of this.webxrPlayer.achievements) {
+        try {
+          const response = await fetch(this.webxrPlayerConfig.achievementUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '',
+            },
+            body: JSON.stringify({ scene }),
+          });
+          if (!response.ok) {
+            syncFailed = true;
+            break;
+          }
+        } catch {
+          syncFailed = true;
+          break;
+        }
+      }
+    }
+    if (!syncFailed) {
+      try {
+        window.localStorage.removeItem(this._webxrPlayerStorageKey(true));
+      } catch {
+        // The signed-in copy has already been saved and remains authoritative.
+      }
+    }
+  }
+
+  _setWebxrPlayerPanelOpen(open) {
+    const visible = Boolean(open && !this.renderer.xr.isPresenting);
+    this.refs.playerInfoPanel?.classList.toggle('hidden', !visible);
+    this.refs.playerInfoPanel?.setAttribute('aria-hidden', String(!visible));
+    this.refs.playerInfoButton?.setAttribute('aria-expanded', String(visible));
+    if (visible) this._renderWebxrPlayerPanel();
+  }
+
+  _escapePlayerText(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, (character) => ({
+      '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;',
+    })[character]);
+  }
+
+  _renderWebxrPlayerPanel() {
+    const content = this.refs.playerInfoContent;
+    if (!content) return;
+    const inventory = Object.entries(this.webxrPlayer.items)
+      .filter(([, state]) => state.status !== 'deposited')
+      .map(([key]) => ({ key, ...WEBXR_COLLECTIBLES[key] }))
+      .filter((item) => item.asset);
+    if (this.refs.playerInventoryBadge) this.refs.playerInventoryBadge.textContent = String(inventory.length);
+    this.refs.playerInfoPanel?.querySelectorAll('[data-player-tab]').forEach((button) => {
+      button.setAttribute('aria-selected', String(button.dataset.playerTab === this.webxrPlayerActiveTab));
+    });
+
+    if (this.webxrPlayerActiveTab === 'profile') {
+      const name = this._escapePlayerText(this.webxrPlayerConfig.name || 'Guest explorer');
+      const email = this._escapePlayerText(this.webxrPlayerConfig.email || 'Progress is stored on this device');
+      content.innerHTML = `<section class="player-profile-card"><span class="player-profile-card__seal">NHCP</span><div><small>${this.webxrPlayerConfig.authenticated ? 'Signed-in explorer' : 'Guest explorer'}</small><h3>${name}</h3><p>${email}</p></div></section>`;
+      return;
+    }
+    if (this.webxrPlayerActiveTab === 'achievements') {
+      const achievements = ['museum', 'church', 'underground'].map((scene) => {
+        const complete = this.webxrPlayer.achievements.includes(scene);
+        const label = scene === 'museum' ? 'Museum Gallery Explorer' : scene === 'church' ? 'Chapel Record Keeper' : 'Underground Memory Keeper';
+        return `<li class="${complete ? 'is-earned' : ''}"><span>${complete ? '✓' : '○'}</span><div><strong>${label}</strong><small>${complete ? 'Recovered for Restoration Plate III' : 'Continue exploring this environment'}</small></div></li>`;
+      }).join('');
+      content.innerHTML = `<ol class="player-achievement-list">${achievements}</ol>`;
+      return;
+    }
+    content.innerHTML = inventory.length
+      ? `<div class="player-inventory-grid">${inventory.map((item) => `<figure><img src="${item.asset}" alt=""><figcaption><strong>${this._escapePlayerText(item.title?.en || item.key)}</strong><small>${item.kind === 'document' ? 'Historical document' : 'Historical photograph'}</small></figcaption></figure>`).join('')}</div>`
+      : '<div class="player-info-empty"><span>◇</span><h3>No recovered material yet</h3><p>Explore closely. A quiet gold marker identifies an image or document that can be recovered.</p></div>';
+  }
+
+  _activeEnvironmentKey() {
+    if (this._isMuseumScene()) return 'museum';
+    if (this._isUndergroundScene()) return 'underground';
+    return 'church';
+  }
+
+  _setupWebxrCollectibles() {
+    this.webxrCollectibleMarkers.clear();
+    const activeScene = this._activeEnvironmentKey();
+    Object.entries(WEBXR_COLLECTIBLES).forEach(([itemKey, item]) => {
+      if (
+        item.scene !== activeScene
+        || WEBXR_INTERACTION_COLLECTIBLES.has(itemKey)
+        || this.webxrPlayer.items[itemKey]
+      ) return;
+      const { root } = this._buildHotspotMarker({
+        id: `collectible-${itemKey}`,
+        position: item.position,
+        color: 0xe5c36d,
+        radius: 0.045,
+        iconType: 'open',
+        interactionName: 'webxr-collectible-pickup',
+        maxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+        metadata: { itemKey },
+      });
+      root.userData.isWebxrCollectible = true;
+      this.scene.add(root);
+      this.hotspotMarkers.push(root);
+      this.webxrCollectibleMarkers.set(itemKey, root);
+    });
+  }
+
+  async _collectWebxrItem(itemKey) {
+    const item = WEBXR_COLLECTIBLES[itemKey];
+    if (!item || this.webxrPlayer.items[itemKey]) return;
+    const scene = this._activeEnvironmentKey();
+    this.webxrPlayer.items[itemKey] = { status: 'inventory', scene };
+    this._saveWebxrPlayerState();
+    const marker = this.webxrCollectibleMarkers.get(itemKey);
+    if (marker) {
+      const icon = marker.userData?.hotspotIcon;
+      this.pickableMeshes = this.pickableMeshes.filter((object) => object !== icon);
+      this.hotspotMarkers = this.hotspotMarkers.filter((object) => object !== marker);
+      marker.parent?.remove(marker);
+      this._disposeObject3DResources(marker);
+      this.webxrCollectibleMarkers.delete(itemKey);
+    }
+    this._renderWebxrPlayerPanel();
+    this.uiController.showNotice(
+      this.chapelConservation.language === 'en'
+        ? `${item.title.en} was placed in your inventory.`
+        : `Inilagay sa iyong imbentaryo ang ${item.title.tl}.`,
+      3600,
+    );
+    if (this.webxrPlayerConfig.authenticated && this.webxrPlayerConfig.collectUrl) {
+      try {
+        await fetch(this.webxrPlayerConfig.collectUrl, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '' },
+          body: JSON.stringify({ item_key: itemKey, scene }),
+        });
+      } catch (error) {
+        console.warn('[WebXR player] Recovered item will remain on this device until synchronization succeeds.', error);
+      }
+    }
+    this._checkWebxrSceneAchievement(scene);
+  }
+
+  _webxrRecordProgress(recordKey) {
+    const keys = Object.entries(WEBXR_COLLECTIBLES).filter(([, item]) => item.record === recordKey).map(([key]) => key);
+    const deposited = keys.filter((key) => this.webxrPlayer.items[key]?.status === 'deposited').length;
+    const inventory = keys.filter((key) => this.webxrPlayer.items[key]?.status === 'inventory').length;
+    return { keys, deposited, inventory, required: keys.length, complete: deposited >= keys.length };
+  }
+
+  async _depositWebxrRecord(recordKey) {
+    const progress = this._webxrRecordProgress(recordKey);
+    if (!progress.inventory) {
+      this.uiController.showNotice(
+        this.churchHistory.language === 'en' ? 'No matching recovered material is in your inventory.' : 'Walang katugmang materyal sa iyong imbentaryo.',
+        3400,
+      );
+      return;
+    }
+    progress.keys.forEach((key) => {
+      if (this.webxrPlayer.items[key]?.status === 'inventory') this.webxrPlayer.items[key].status = 'deposited';
+    });
+    this._saveWebxrPlayerState();
+    if (this.webxrPlayerConfig.authenticated && this.webxrPlayerConfig.depositUrl) {
+      try {
+        await fetch(this.webxrPlayerConfig.depositUrl, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '' },
+          body: JSON.stringify({ record_key: recordKey }),
+        });
+      } catch (error) {
+        console.warn('[WebXR player] Deposit remains stored locally.', error);
+      }
+    }
+    const updated = this._webxrRecordProgress(recordKey);
+    const hotspotId = Object.keys(WEBXR_RECORD_BY_HOTSPOT).find((id) => WEBXR_RECORD_BY_HOTSPOT[id] === recordKey);
+    if (updated.complete && hotspotId) this._recordChurchHistory(hotspotId);
+    this._renderWebxrPlayerPanel();
+    this._refreshChurchHistoryRecordsMarker();
+    this._rebuildXrHotspotTableViewer();
+    if (updated.complete && hotspotId && this.xrHotspotTableId === hotspotId) {
+      this._playExpandedHotspotAudio(CHURCH_HISTORY_RECORDS[hotspotId]?.audio);
+    }
+    this._checkWebxrSceneAchievement('church');
+  }
+
+  async _checkWebxrSceneAchievement(scene = this._activeEnvironmentKey()) {
+    if (this.webxrPlayer.achievements.includes(scene)) return;
+    const sceneItems = Object.entries(WEBXR_COLLECTIBLES).filter(([, item]) => item.scene === scene).map(([key]) => key);
+    let complete = sceneItems.every((key) => Boolean(this.webxrPlayer.items[key]));
+    if (scene === 'church') complete = complete && CHURCH_HISTORY_IDS.every((id) => this.churchHistory.collected.includes(id));
+    if (scene === 'underground') complete = complete && this._isUndergroundMemoryEvidenceComplete();
+    if (!complete) return;
+    this.webxrPlayer.achievements.push(scene);
+    this._saveWebxrPlayerState();
+    this._renderWebxrPlayerPanel();
+    this.uiController.showNotice('3D Environment seal piece recovered. Open Heritage Keeper to view Restoration Plate III.', 5200);
+    if (this.webxrPlayerConfig.authenticated && this.webxrPlayerConfig.achievementUrl) {
+      try {
+        await fetch(this.webxrPlayerConfig.achievementUrl, {
+          method: 'POST', credentials: 'same-origin',
+          headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '' },
+          body: JSON.stringify({ scene }),
+        });
+      } catch (error) {
+        console.warn('[WebXR player] Achievement remains stored locally.', error);
+      }
+    }
   }
 
   _setupChapelConservation() {
@@ -1466,6 +1881,19 @@ export class WebXRApp {
     this.scene.add(recordsMarker);
     this.hotspotMarkers.push(recordsMarker);
     this.churchHistoryRecordsMarker = recordsMarker;
+    const statusRoot = new THREE.Group();
+    statusRoot.name = 'church-history-status';
+    statusRoot.position.fromArray(CHURCH_HISTORY_STATUS_POSITION);
+    const statusSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture('CHAPEL RECORDS 0/3', { subtitle: true }),
+      position: [0, 0, 0],
+      scale: [0.82, 0.13],
+    });
+    statusRoot.add(statusSprite);
+    statusRoot.userData.statusSprite = statusSprite;
+    statusRoot.userData.ignoreSplatOcclusion = true;
+    this.scene.add(statusRoot);
+    this.churchHistoryStatusRoot = statusRoot;
     this._refreshChurchHistoryRecordsMarker();
   }
 
@@ -1473,11 +1901,21 @@ export class WebXRApp {
     if (!this.churchHistoryRecordsMarker) {
       return;
     }
+    const count = this.churchHistory.collected.length;
+    const statusSprite = this.churchHistoryStatusRoot?.userData?.statusSprite;
+    if (statusSprite) {
+      const label = this.churchHistory.language === 'en'
+        ? `CHAPEL RECORDS ${count}/3`
+        : `MGA TALA NG KAPILYA ${count}/3`;
+      this._replaceMuseumArtifactSpriteTexture(
+        statusSprite,
+        this._createMuseumArtifactTextTexture(label, { subtitle: true }),
+      );
+    }
     const icon = this.churchHistoryRecordsMarker.userData?.hotspotIcon;
     if (!icon?.material || icon.userData.xrTableOpen) {
       return;
     }
-    const count = this.churchHistory.collected.length;
     this._replaceMuseumArtifactSpriteTexture(
       icon,
       this._createMuseumArtifactControlTexture(`RECORDS ${count}/3`, count === 3),
@@ -1576,6 +2014,11 @@ export class WebXRApp {
       this._disposeObject3DResources(this.churchHistoryRecordsMarker);
     }
     this.churchHistoryRecordsMarker = null;
+    if (this.churchHistoryStatusRoot) {
+      this.churchHistoryStatusRoot.parent?.remove(this.churchHistoryStatusRoot);
+      this._disposeObject3DResources(this.churchHistoryStatusRoot);
+    }
+    this.churchHistoryStatusRoot = null;
     this.churchHistoryMotes = [];
   }
 
@@ -3028,10 +3471,18 @@ export class WebXRApp {
       this.expandedHotspotLanguage = this.undergroundMemory.language;
       this._recordUndergroundMemory(hotspotId);
       this._playExpandedHotspotAudio(HERITAGE_MISSION_EVIDENCE[hotspotId]?.audio);
+      const recoveredByMemory = {
+        'evidence-revolution': 'franciscan-document-4',
+        'evidence-world-war-ii': 'restoration-plaster',
+      }[hotspotId];
+      if (recoveredByMemory) this._collectWebxrItem(recoveredByMemory);
     } else if (this._isChurchHistoryRecord(hotspotId)) {
       this.expandedHotspotLanguage = this.churchHistory.language;
-      this._recordChurchHistory(hotspotId);
-      this._playExpandedHotspotAudio(CHURCH_HISTORY_RECORDS[hotspotId]?.audio);
+      const recordKey = WEBXR_RECORD_BY_HOTSPOT[hotspotId];
+      if (this._webxrRecordProgress(recordKey).complete) {
+        this._recordChurchHistory(hotspotId);
+        this._playExpandedHotspotAudio(CHURCH_HISTORY_RECORDS[hotspotId]?.audio);
+      }
     }
     this._rebuildXrHotspotTableViewer();
   }
@@ -3060,6 +3511,10 @@ export class WebXRApp {
       || CHURCH_HISTORY_RECORDS[this.xrHotspotTableId]
       || null;
     const isUndergroundRecord = this._isUndergroundMemoryStation(this.xrHotspotTableId);
+    const isChurchRecord = this._isChurchHistoryRecord(this.xrHotspotTableId);
+    const churchRecordKey = WEBXR_RECORD_BY_HOTSPOT[this.xrHotspotTableId] || '';
+    const churchRecordProgress = isChurchRecord ? this._webxrRecordProgress(churchRecordKey) : null;
+    const churchRecordComplete = !isChurchRecord || Boolean(churchRecordProgress?.complete);
 
     const previousViewer = this.xrHotspotTableViewer;
     const previousPosition = previousViewer?.position?.clone() || null;
@@ -3111,8 +3566,13 @@ export class WebXRApp {
       const subtitlesOn = isUndergroundRecord
         ? this.undergroundMemory.subtitlesOn
         : this.churchHistory.subtitlesOn;
-      if (subtitlesOn) {
-        const description = record.text?.[this.expandedHotspotLanguage] || record.text?.en || '';
+      if (subtitlesOn || (isChurchRecord && !churchRecordComplete)) {
+        const missingText = this.expandedHotspotLanguage === 'en'
+          ? 'Historical images and documents are missing. Recover them across the museum, chapel, and underground chambers, then deposit the matching finds here.'
+          : 'Nawawala ang mga larawan at dokumentong pangkasaysayan. Hanapin ang mga ito sa museo, kapilya, at mga silid sa ilalim ng lupa, saka isauli rito ang mga natuklasang tumutugma sa talang ito.';
+        const description = churchRecordComplete
+          ? (record.text?.[this.expandedHotspotLanguage] || record.text?.en || '')
+          : missingText;
         viewerRoot.add(this._createMuseumArtifactSprite({
           texture: this._createMuseumArtifactTextTexture(description, {
             subtitle: true,
@@ -3129,10 +3589,45 @@ export class WebXRApp {
         scale: 0.2,
         name: 'xr-record-subtitles',
       });
+      if (isChurchRecord && !churchRecordComplete) {
+        this._createXrTableControl({
+          parent: viewerRoot,
+          label: this.expandedHotspotLanguage === 'en' ? 'DEPOSIT' : 'ISAULI',
+          position: [0, -0.80, 0.09],
+          scale: 0.23,
+          name: 'webxr-record-deposit',
+          metadata: { recordKey: churchRecordKey },
+        });
+        const recoveredLabel = this.expandedHotspotLanguage === 'en'
+          ? `${churchRecordProgress.deposited}/${churchRecordProgress.required} returned · ${churchRecordProgress.inventory} carried`
+          : `${churchRecordProgress.deposited}/${churchRecordProgress.required} naibalik · ${churchRecordProgress.inventory} dala`;
+        viewerRoot.add(this._createMuseumArtifactSprite({
+          texture: this._createMuseumArtifactTextTexture(recoveredLabel, { subtitle: true }),
+          position: [0, 0.08, 0.08],
+          scale: [1.28, 0.14],
+        }));
+        const track = new THREE.Mesh(
+          new THREE.PlaneGeometry(1.10, 0.035),
+          new THREE.MeshBasicMaterial({ color: 0x3a2a16, transparent: true, opacity: 0.95, depthTest: false, depthWrite: false }),
+        );
+        const fillRatio = churchRecordProgress.required ? churchRecordProgress.deposited / churchRecordProgress.required : 0;
+        const fill = new THREE.Mesh(
+          new THREE.PlaneGeometry(Math.max(0.001, 1.08 * fillRatio), 0.025),
+          new THREE.MeshBasicMaterial({ color: 0xd4af6a, depthTest: false, depthWrite: false }),
+        );
+        track.position.set(0, -0.03, 0.075);
+        fill.position.set(-0.54 + (1.08 * fillRatio) / 2, -0.03, 0.08);
+        track.renderOrder = 49;
+        fill.renderOrder = 50;
+        viewerRoot.add(track, fill);
+      }
     }
 
     const detail = this.xrHotspotTableDetail;
     const imageUrl = detail?.imageUrl || table.imageUrl;
+    if (isChurchRecord && !churchRecordComplete) {
+      return;
+    }
     const viewerAtBuild = viewerRoot;
     new THREE.TextureLoader().load(imageUrl, (texture) => {
       if (this.xrHotspotTableViewer !== viewerAtBuild) {
@@ -3926,6 +4421,7 @@ export class WebXRApp {
 
     this.interactionRegistry.register('museum-artifact-toggle', () => {
       this._setMuseumArtifactStationOpen(!this.museumArtifactStation.isOpen);
+      if (this.museumArtifactStation.isOpen) this._collectWebxrItem('restoration-first-campaign');
     });
 
     this.interactionRegistry.register('museum-artifact-prev', () => {
@@ -4003,9 +4499,14 @@ export class WebXRApp {
         this.chapelConservation.language = this.churchHistory.language;
         this._saveChurchHistoryState();
         this._saveChapelConservationState();
-        this._playExpandedHotspotAudio(
-          CHURCH_HISTORY_RECORDS[this.xrHotspotTableId]?.audio,
-        );
+        const recordKey = WEBXR_RECORD_BY_HOTSPOT[this.xrHotspotTableId] || '';
+        if (this._webxrRecordProgress(recordKey).complete) {
+          this._playExpandedHotspotAudio(
+            CHURCH_HISTORY_RECORDS[this.xrHotspotTableId]?.audio,
+          );
+        } else {
+          this._stopExpandedHotspotAudio();
+        }
         this._rebuildXrHotspotTableViewer();
         return;
       }
@@ -4049,6 +4550,12 @@ export class WebXRApp {
       }
       this.xrHotspotTableDetail = detail;
       this._recordChapelConservationEvidence(stationId, detailId);
+      const recoveredByStation = {
+        'hotspot-1': 'franciscan-document-3',
+        'hotspot-3': 'deterioration-ceiling',
+        'hotspot-4': 'restoration-2008',
+      }[stationId];
+      if (recoveredByStation) this._collectWebxrItem(recoveredByStation);
       this._playExpandedHotspotAudio(detail.audio);
       this._rebuildXrHotspotTableViewer();
     });
@@ -4077,6 +4584,12 @@ export class WebXRApp {
           : 'Hanapin muna ang talang ito sa loob ng kapilya bago ito buksan dito.',
         3000,
       );
+    });
+    this.interactionRegistry.register('webxr-collectible-pickup', (context) => {
+      this._collectWebxrItem(String(context?.metadata?.itemKey || ''));
+    });
+    this.interactionRegistry.register('webxr-record-deposit', (context) => {
+      this._depositWebxrRecord(String(context?.metadata?.recordKey || ''));
     });
   }
 
@@ -6819,6 +7332,7 @@ export class WebXRApp {
       // native XR layer is presenting can invalidate that layer on Android.
       await this._loadSceneAssets();
       this._createHotspotMarkers();
+      this._setupWebxrCollectibles();
       this._setupChurchHistoryExperience();
       this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();

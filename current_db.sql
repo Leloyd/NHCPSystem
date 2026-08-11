@@ -68,7 +68,7 @@ CREATE TABLE public.user_bookmarks (
 CREATE TABLE public.heritage_keeper_events (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   user_id bigint NOT NULL,
-  source text NOT NULL CHECK (source = ANY (ARRAY['trail'::text, 'ar'::text])),
+  source text NOT NULL CHECK (source = ANY (ARRAY['trail'::text, 'ar'::text, 'webxr'::text])),
   item_key text NOT NULL CHECK (char_length(item_key) >= 2 AND char_length(item_key) <= 64),
   completed_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT heritage_keeper_events_pkey PRIMARY KEY (id),
@@ -80,6 +80,18 @@ CREATE TABLE public.heritage_keeper_awards (
   unlocked_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT heritage_keeper_awards_pkey PRIMARY KEY (user_id),
   CONSTRAINT heritage_keeper_awards_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE
+);
+CREATE TABLE public.webxr_player_items (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  item_key text NOT NULL CHECK (char_length(item_key) >= 3 AND char_length(item_key) <= 80),
+  status text NOT NULL DEFAULT 'inventory'::text CHECK (status = ANY (ARRAY['inventory'::text, 'deposited'::text])),
+  acquired_scene text NOT NULL CHECK (acquired_scene = ANY (ARRAY['museum'::text, 'church'::text, 'underground'::text])),
+  acquired_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  deposited_at timestamp with time zone,
+  CONSTRAINT webxr_player_items_pkey PRIMARY KEY (id),
+  CONSTRAINT webxr_player_items_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT webxr_player_items_user_item_key UNIQUE (user_id, item_key)
 );
 CREATE TABLE public.tour_bookings (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

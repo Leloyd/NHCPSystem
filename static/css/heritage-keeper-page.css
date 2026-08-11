@@ -197,7 +197,7 @@
 }
 
 .hk-register__heading { display: flex; align-items: end; justify-content: space-between; gap: 1rem; padding-bottom: 1.2rem; border-bottom: 1px solid var(--hk-rule); }
-.hk-register__columns { display: grid; grid-template-columns: minmax(0,0.74fr) minmax(0,1.26fr); gap: 1.5rem; margin-top: 1.5rem; }
+.hk-register__columns { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 1.5rem; margin-top: 1.5rem; }
 
 .hk-ledger { min-width: 0; border-top: 2px solid #24170b; border-bottom: 1px solid var(--hk-rule); }
 .hk-ledger__head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.9rem 0; border-bottom: 1px solid var(--hk-rule); }

@@ -10,6 +10,7 @@ viewers.forEach((viewer) => {
   const help = viewer.querySelector("[data-hk-fragment-help]");
   const errorMessage = viewer.querySelector("[data-hk-fragment-error]");
   const showsWholeModel = viewer.hasAttribute("data-hk-whole-model-viewer");
+  const runtimePieceCount = Math.max(0, Number.parseInt(viewer.dataset.runtimePieceCount || "0", 10) || 0);
   let earnedFragments = [];
 
   try {
@@ -44,6 +45,7 @@ viewers.forEach((viewer) => {
     const fragmentGroup = new THREE.Group();
 
     renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.localClippingEnabled = runtimePieceCount > 0;
     renderer.setClearColor(0x000000, 0);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
 
@@ -64,6 +66,7 @@ viewers.forEach((viewer) => {
     let ready = false;
     let frameId = 0;
     let fittedModelSize = null;
+    const runtimeClippingPlanes = [];
 
     const cameraDistance = 4.6;
     const modelFrameFill = showsWholeModel ? 0.74 : 0.78;
@@ -130,6 +133,12 @@ viewers.forEach((viewer) => {
           : 0;
         displayRoot.rotation.x += (baseRotationX - displayRoot.rotation.x) * 0.08;
         displayRoot.rotation.y += (baseRotationY + idleTilt - displayRoot.rotation.y) * 0.08;
+        if (runtimeClippingPlanes.length) {
+          displayRoot.updateMatrixWorld(true);
+          runtimeClippingPlanes.forEach(({ base, world }) => {
+            world.copy(base).applyMatrix4(displayRoot.matrixWorld);
+          });
+        }
         renderer.render(scene, camera);
       }
       frameId = window.requestAnimationFrame(renderFrame);
@@ -187,6 +196,62 @@ viewers.forEach((viewer) => {
       (gltf) => {
         gltf.scene.updateMatrixWorld(true);
         const completeBounds = new THREE.Box3().setFromObject(gltf.scene);
+
+        if (runtimePieceCount > 0) {
+          const center = completeBounds.getCenter(new THREE.Vector3());
+          const size = completeBounds.getSize(new THREE.Vector3());
+          const minX = completeBounds.min.x - center.x;
+          const maxX = completeBounds.max.x - center.x;
+          const sliceWidth = Math.max(0.0001, (maxX - minX) / runtimePieceCount);
+
+          earnedFragments.slice(0, runtimePieceCount).forEach((earned, fragmentIndex) => {
+            if (!earned) return;
+
+            const clone = gltf.scene.clone(true);
+            clone.position.sub(center);
+            prepareFragment(clone, fragmentIndex);
+
+            const sliceMin = minX + sliceWidth * fragmentIndex;
+            const sliceMax = fragmentIndex === runtimePieceCount - 1
+              ? maxX
+              : minX + sliceWidth * (fragmentIndex + 1);
+            const leftBase = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sliceMin);
+            const rightBase = new THREE.Plane(new THREE.Vector3(-1, 0, 0), sliceMax);
+            const leftWorld = leftBase.clone();
+            const rightWorld = rightBase.clone();
+
+            clone.traverse((child) => {
+              if (!child.isMesh) return;
+              const materials = Array.isArray(child.material) ? child.material : [child.material];
+              materials.forEach((material) => {
+                material.clippingPlanes = [leftWorld, rightWorld];
+                material.clipIntersection = false;
+                material.needsUpdate = true;
+              });
+            });
+
+            runtimeClippingPlanes.push(
+              { base: leftBase, world: leftWorld },
+              { base: rightBase, world: rightWorld },
+            );
+            fragmentGroup.add(clone);
+          });
+
+          if (!fragmentGroup.children.length) {
+            showViewerError(new Error("No recovered runtime seal pieces were available."));
+            return;
+          }
+
+          fittedModelSize = size;
+          camera.position.set(0, 0, cameraDistance);
+          camera.lookAt(0, 0, 0);
+          applyResponsiveModelFit();
+          ready = true;
+          viewer.classList.add("is-ready");
+          if (loading) loading.hidden = true;
+          if (help) help.hidden = false;
+          return;
+        }
 
         if (showsWholeModel) {
           prepareFragment(gltf.scene, 0);
