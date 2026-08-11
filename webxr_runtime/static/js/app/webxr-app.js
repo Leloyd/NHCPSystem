@@ -1893,6 +1893,10 @@ export class WebXRApp {
     // touch, or VR gaze. This keeps the image and its numbered detail pins in
     // the 3D environment instead of opening a flat browser overlay.
     if (CHURCH_HOTSPOT_TABLES[hotspotId] || this.renderer.xr.isPresenting) {
+      if (this.xrHotspotTableViewer && this.xrHotspotTableId === hotspotId) {
+        this._disposeXrHotspotTableViewer();
+        return;
+      }
       this._showXrHotspotTable(hotspotId);
       return;
     }
@@ -2129,9 +2133,24 @@ export class WebXRApp {
     this.xrHotspotTableSourceMarker =
       this.hotspotMarkers.find((marker) => marker.name === hotspotId) || null;
     if (this.xrHotspotTableSourceMarker) {
-      this.xrHotspotTableSourceMarker.visible = false;
+      this._setXrTableHotspotOpenState(this.xrHotspotTableSourceMarker, true);
     }
     this._rebuildXrHotspotTableViewer();
+  }
+
+  _setXrTableHotspotOpenState(marker, isOpen) {
+    const icon = marker?.userData?.hotspotIcon;
+    if (!icon?.material) {
+      return;
+    }
+
+    this._replaceMuseumArtifactSpriteTexture(
+      icon,
+      this._createMuseumArtifactControlTexture(isOpen ? 'CLOSE' : 'OPEN', isOpen),
+    );
+    icon.scale.setScalar(isOpen ? 0.16 : 0.18);
+    icon.renderOrder = isOpen ? 62 : 6;
+    icon.userData.xrTableOpen = Boolean(isOpen);
   }
 
   _rebuildXrHotspotTableViewer() {
@@ -2150,6 +2169,14 @@ export class WebXRApp {
     if (previousPosition && previousQuaternion) {
       viewerRoot.position.copy(previousPosition);
       viewerRoot.quaternion.copy(previousQuaternion);
+    } else if (this.xrHotspotTableSourceMarker) {
+      const cameraPosition = new THREE.Vector3();
+      this.camera.getWorldPosition(cameraPosition);
+      this.xrHotspotTableSourceMarker.getWorldPosition(viewerRoot.position);
+      // Keep the opened table image directly above its OPEN/CLOSE marker.
+      viewerRoot.position.y += 0.86;
+      cameraPosition.y = viewerRoot.position.y;
+      viewerRoot.lookAt(cameraPosition);
     } else {
       const cameraPosition = new THREE.Vector3();
       const cameraDirection = new THREE.Vector3();
@@ -2164,13 +2191,6 @@ export class WebXRApp {
     this.xrHotspotTableViewer = viewerRoot;
     this.scene.add(viewerRoot);
 
-    this._createXrTableControl({
-      parent: viewerRoot,
-      label: '×',
-      position: [0.81, 0.58, 0.09],
-      scale: 0.2,
-      name: 'xr-table-close',
-    });
     this._createXrTableControl({
       parent: viewerRoot,
       label: this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN',
@@ -2275,7 +2295,7 @@ export class WebXRApp {
     }
     this.xrHotspotTableViewer = null;
     if (restoreSource && this.xrHotspotTableSourceMarker) {
-      this.xrHotspotTableSourceMarker.visible = true;
+      this._setXrTableHotspotOpenState(this.xrHotspotTableSourceMarker, false);
       this.xrHotspotTableSourceMarker = null;
       this.xrHotspotTableId = '';
       this.xrHotspotTableDetail = null;
@@ -3028,9 +3048,6 @@ export class WebXRApp {
       });
     });
 
-    this.interactionRegistry.register('xr-table-close', () => {
-      this._disposeXrHotspotTableViewer();
-    });
     this.interactionRegistry.register('xr-table-language', () => {
       this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
       this.chapelConservation.language = this.expandedHotspotLanguage;
