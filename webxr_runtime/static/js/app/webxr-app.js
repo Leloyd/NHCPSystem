@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
-import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-8';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-8';
+import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-9';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-9';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js?v=20260811-spark-xr-2';
@@ -2378,6 +2378,15 @@ export class WebXRApp {
     this.interactionRegistry.register('altar', (context) => {
       console.log('[interaction] altar selected', context);
     });
+
+    // The same table hotspots used by mouse/touch must open their spatial
+    // viewer when activated by a controller or the phone-VR dwell reticle.
+    // Registering them here keeps every input path on one action handler.
+    Object.entries(HOTSPOT_TABLES).forEach(([hotspotId, table]) => {
+      this.interactionRegistry.register(hotspotId, () => {
+        this._showExpandedHotspotImage(table.imageUrl, hotspotId);
+      });
+    });
   }
 
   async _fetchMetadata() {
@@ -2746,7 +2755,9 @@ export class WebXRApp {
     // A tracked controller with axes already has thumbstick locomotion. Gaze
     // teleport is reserved for controller-free phone viewers.
     const hasLocomotionController = Array.from(session.inputSources || []).some((source) => (
-      Number(source?.gamepad?.axes?.length || 0) >= 2
+      source?.targetRayMode === 'tracked-pointer'
+      && Boolean(source?.gripSpace)
+      && Number(source?.gamepad?.axes?.length || 0) >= 2
     ));
     return !hasLocomotionController;
   }
@@ -3906,9 +3917,18 @@ export class WebXRApp {
 
     try {
       this.phoneVrGazeSystem?.update(dt);
+    } catch (error) {
+      console.error('[xr] gaze interaction update failed', error);
+      // Do not leave movement permanently suppressed by stale target state.
+      if (this.phoneVrGazeSystem) {
+        this.phoneVrGazeSystem.hasTarget = false;
+      }
+    }
+
+    try {
       this.gazeTeleportSystem?.update(dt);
     } catch (error) {
-      console.error('[xr] gaze update failed', error);
+      console.error('[xr] gaze locomotion update failed', error);
     }
 
     try {

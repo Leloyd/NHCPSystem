@@ -117,7 +117,21 @@ export class PhoneVrGazeSystem {
       return null;
     }
 
-    const hits = this.raycaster.intersectObjects(pickables, false);
+    // Sprite.raycast() requires raycaster.camera. More importantly, feeding a
+    // manually-authored XR ray through Sprite.raycast() is unreliable because
+    // the two WebXR eyes use asymmetric projections. Keep exact ray tests for
+    // ordinary meshes and use the angular target test below for sprites. This
+    // also prevents one Sprite raycast exception from stopping both dwell
+    // interaction and gaze locomotion for the rest of the frame.
+    const meshPickables = pickables.filter((object) => object && !object.isSprite);
+    let hits = [];
+    if (meshPickables.length > 0) {
+      try {
+        hits = this.raycaster.intersectObjects(meshPickables, false);
+      } catch (error) {
+        console.warn('[xr] gaze mesh raycast failed; using angular targeting', error);
+      }
+    }
     const playerPosition = this.getPlayerPosition?.();
 
     for (const hit of hits) {
@@ -150,7 +164,12 @@ export class PhoneVrGazeSystem {
         continue;
       }
 
-      object.getWorldPosition(TARGET_WORLD_POSITION);
+      try {
+        object.getWorldPosition(TARGET_WORLD_POSITION);
+      } catch (error) {
+        console.warn('[xr] gaze target position could not be read', object?.name, error);
+        continue;
+      }
       TARGET_DIRECTION.copy(TARGET_WORLD_POSITION).sub(VIEW_ORIGIN);
       const distance = TARGET_DIRECTION.length();
       if (!Number.isFinite(distance) || distance < 1e-5) {
@@ -236,6 +255,7 @@ export class PhoneVrGazeSystem {
         });
         VIEW_ORIGIN.multiplyScalar(1 / this.activeEyeCount);
         VIEW_DIRECTION.normalize();
+        this.raycaster.camera = eyeCameras[0];
       } else {
         const cameraParent = this.camera.parent;
         cameraParent?.updateMatrixWorld(true);
@@ -251,6 +271,7 @@ export class PhoneVrGazeSystem {
         this.activeEyeCount = 1;
         this.eyeOrigins[0].copy(VIEW_ORIGIN);
         this.eyeDirections[0].copy(VIEW_DIRECTION);
+        this.raycaster.camera = xrCamera || this.camera;
       }
     } else {
       this.camera.updateWorldMatrix(true, false);
@@ -259,6 +280,7 @@ export class PhoneVrGazeSystem {
       this.activeEyeCount = 1;
       this.eyeOrigins[0].copy(VIEW_ORIGIN);
       this.eyeDirections[0].copy(VIEW_DIRECTION);
+      this.raycaster.camera = this.camera;
     }
 
     this.raycaster.ray.origin.copy(VIEW_ORIGIN);
