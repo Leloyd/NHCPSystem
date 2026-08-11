@@ -556,6 +556,11 @@ const MUSEUM_ARTIFACTS = [
     },
   },
 ];
+const MUSEUM_RECORDS_POSITION = [-0.05, 1.00, -1.61];
+const MUSEUM_REQUIRED_VIEW_KEYS = [
+  ...Object.keys(MUSEUM_CONTENT_HOTSPOTS),
+  ...MUSEUM_ARTIFACTS.map((artifact) => `museum-artifact-${artifact.id}`),
+];
 const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
 const TABLE_AUDIO_BASE = '/audio/360VT/TableAudio/';
 const tableAudio = (tl, en) => ({
@@ -1019,6 +1024,11 @@ export class WebXRApp {
     this.webxrPlayer = this._readWebxrPlayerState();
     this.webxrPlayerActiveTab = 'profile';
     this.webxrCollectibleMarkers = new Map();
+    this.webxrCollectibleReveal = null;
+    this.webxrCollectibleRevealTimer = 0;
+    this.museumRecordsMarker = null;
+    this.museumRecordsViewer = null;
+    this.museumRecordsOpen = false;
     this.churchHistoryStatusRoot = null;
     this.undergroundMemory = this._readUndergroundMemoryState();
     this.undergroundMemoryLampsRoot = null;
@@ -1057,11 +1067,13 @@ export class WebXRApp {
       await this._loadSceneAssets();
       this._createHotspotMarkers();
       this._setupWebxrCollectibles();
+      this._setupMuseumRecordsExperience();
       this._setupChurchHistoryExperience();
       this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
       this._updateChapelConservationUi();
+      void this._checkWebxrSceneAchievement();
 
       window.addEventListener('resize', this.boundResize);
       window.addEventListener('keydown', this.boundGlobalKeyDown);
@@ -1168,7 +1180,7 @@ export class WebXRApp {
   }
 
   _createDefaultWebxrPlayerState() {
-    return { items: {}, achievements: [] };
+    return { items: {}, achievements: [], museumViews: [] };
   }
 
   _webxrPlayerStorageKey(guest = false) {
@@ -1184,6 +1196,7 @@ export class WebXRApp {
     return {
       items: stored?.items && typeof stored.items === 'object' ? stored.items : {},
       achievements: Array.isArray(stored?.achievements) ? stored.achievements : [],
+      museumViews: Array.isArray(stored?.museumViews) ? stored.museumViews : [],
     };
   }
 
@@ -1194,6 +1207,7 @@ export class WebXRApp {
         const guest = this._parseStoredWebxrPlayerState(this._webxrPlayerStorageKey(true));
         state.items = { ...guest.items, ...state.items };
         state.achievements = Array.from(new Set([...guest.achievements, ...state.achievements]));
+        state.museumViews = Array.from(new Set([...guest.museumViews, ...state.museumViews]));
       }
       return state;
     } catch (error) {
@@ -1245,6 +1259,12 @@ export class WebXRApp {
             this.webxrPlayer.achievements = Array.from(new Set([
               ...this.webxrPlayer.achievements,
               ...payload.webxr_achievements.filter((scene) => ['museum', 'church', 'underground'].includes(scene)),
+            ]));
+          }
+          if (Array.isArray(payload.progress.museum_views)) {
+            this.webxrPlayer.museumViews = Array.from(new Set([
+              ...this.webxrPlayer.museumViews,
+              ...payload.progress.museum_views,
             ]));
           }
           this._saveWebxrPlayerState();
@@ -1299,6 +1319,30 @@ export class WebXRApp {
               'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '',
             },
             body: JSON.stringify({ record_key: recordKey }),
+          });
+          if (!response.ok) {
+            syncFailed = true;
+            break;
+          }
+        } catch {
+          syncFailed = true;
+          break;
+        }
+      }
+    }
+    // Persist the museum evidence before its environment award so the server
+    // never receives the completion fragment ahead of the viewed records.
+    if (!syncFailed && this.webxrPlayerConfig.museumViewUrl) {
+      for (const hotspotKey of this.webxrPlayer.museumViews) {
+        try {
+          const response = await fetch(this.webxrPlayerConfig.museumViewUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            headers: {
+              'Content-Type': 'application/json',
+              'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '',
+            },
+            body: JSON.stringify({ hotspot_key: hotspotKey }),
           });
           if (!response.ok) {
             syncFailed = true;
@@ -1407,16 +1451,171 @@ export class WebXRApp {
         position: item.position,
         color: 0xe5c36d,
         radius: 0.045,
-        iconType: 'open',
+        iconType: 'question',
         interactionName: 'webxr-collectible-pickup',
         maxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
         metadata: { itemKey },
       });
       root.userData.isWebxrCollectible = true;
+      root.userData.splatOccluded = true;
+      root.userData.splatOcclusionMargin = 0.1;
       this.scene.add(root);
       this.hotspotMarkers.push(root);
       this.webxrCollectibleMarkers.set(itemKey, root);
     });
+  }
+
+  _removeWebxrCollectibleMarker(itemKey) {
+    const marker = this.webxrCollectibleMarkers.get(itemKey);
+    if (!marker) return;
+    const icon = marker.userData?.hotspotIcon;
+    this.pickableMeshes = this.pickableMeshes.filter((object) => object !== icon);
+    this.hotspotMarkers = this.hotspotMarkers.filter((object) => object !== marker);
+    marker.parent?.remove(marker);
+    this._disposeObject3DResources(marker);
+    this.webxrCollectibleMarkers.delete(itemKey);
+  }
+
+  _revealWebxrCollectible(itemKey) {
+    const item = WEBXR_COLLECTIBLES[itemKey];
+    if (!item || this.webxrPlayer.items[itemKey]) return;
+    if (this.webxrCollectibleReveal) {
+      this._finishWebxrCollectibleReveal(true);
+    }
+
+    const marker = this.webxrCollectibleMarkers.get(itemKey);
+    if (marker) {
+      marker.visible = false;
+      const markerIcon = marker.userData?.hotspotIcon;
+      this.pickableMeshes = this.pickableMeshes.filter((object) => object !== markerIcon);
+    }
+
+    const root = new THREE.Group();
+    root.name = `webxr-found-${itemKey}`;
+    root.scale.setScalar(0.02);
+    root.userData.splatOccluded = false;
+
+    const backdrop = new THREE.Mesh(
+      new THREE.PlaneGeometry(0.94, 0.76),
+      new THREE.MeshBasicMaterial({
+        color: 0x120c04,
+        transparent: true,
+        opacity: 0.96,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    backdrop.position.z = -0.015;
+    backdrop.renderOrder = 100;
+    backdrop.userData.isMuseumArtifactPickable = true;
+    backdrop.userData.interaction = {
+      name: 'webxr-collectible-confirm',
+      suppressPanel: true,
+      maxDistance: 3,
+      metadata: { itemKey },
+    };
+    this.pickableMeshes.push(backdrop);
+    root.add(backdrop);
+
+    const language = this.chapelConservation.language === 'en' ? 'en' : 'tl';
+    const foundText = language === 'en'
+      ? `FOUND: ${item.title.en}`
+      : `NATAGPUAN: ${item.title.tl}`;
+    const foundLabel = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(foundText),
+      position: [0, -0.31, 0.02],
+      scale: [0.82, 0.15],
+    });
+    foundLabel.renderOrder = 103;
+    root.add(foundLabel);
+
+    this.scene.add(root);
+    this.webxrCollectibleReveal = {
+      itemKey,
+      root,
+      startedAt: performance.now(),
+      ready: false,
+      pickable: backdrop,
+    };
+
+    new THREE.TextureLoader().load(
+      item.asset,
+      (texture) => {
+        if (this.webxrCollectibleReveal?.itemKey !== itemKey) {
+          texture.dispose();
+          return;
+        }
+        texture.colorSpace = THREE.SRGBColorSpace;
+        const width = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
+        const height = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
+        const aspect = width / Math.max(1, height);
+        let planeWidth = 0.72;
+        let planeHeight = planeWidth / Math.max(0.1, aspect);
+        if (planeHeight > 0.52) {
+          planeHeight = 0.52;
+          planeWidth = planeHeight * aspect;
+        }
+        const image = new THREE.Mesh(
+          new THREE.PlaneGeometry(planeWidth, planeHeight),
+          new THREE.MeshBasicMaterial({
+            map: texture,
+            transparent: true,
+            depthTest: false,
+            depthWrite: false,
+            toneMapped: false,
+          }),
+        );
+        image.position.set(0, 0.06, 0.02);
+        image.renderOrder = 102;
+        image.userData.isMuseumArtifactPickable = true;
+        image.userData.interaction = backdrop.userData.interaction;
+        this.pickableMeshes.push(image);
+        root.add(image);
+        this.webxrCollectibleReveal.image = image;
+        this.webxrCollectibleReveal.ready = true;
+        window.clearTimeout(this.webxrCollectibleRevealTimer);
+        this.webxrCollectibleRevealTimer = window.setTimeout(() => {
+          this._finishWebxrCollectibleReveal(true);
+        }, 2000);
+      },
+      undefined,
+      () => this._finishWebxrCollectibleReveal(true),
+    );
+  }
+
+  _updateWebxrCollectibleReveal() {
+    const reveal = this.webxrCollectibleReveal;
+    if (!reveal?.root || !this.camera) return;
+    const activeCamera = this.renderer.xr.isPresenting
+      ? this.renderer.xr.getCamera(this.camera)
+      : this.camera;
+    const cameraPosition = new THREE.Vector3();
+    const cameraDirection = new THREE.Vector3();
+    const cameraQuaternion = new THREE.Quaternion();
+    activeCamera.getWorldPosition(cameraPosition);
+    activeCamera.getWorldDirection(cameraDirection);
+    activeCamera.getWorldQuaternion(cameraQuaternion);
+    reveal.root.position.copy(cameraPosition).addScaledVector(cameraDirection, 1.05);
+    reveal.root.quaternion.copy(cameraQuaternion);
+    const elapsed = Math.max(0, performance.now() - reveal.startedAt);
+    const targetScale = reveal.ready ? 1 : 0.72;
+    const scale = targetScale * (1 - Math.exp(-elapsed / 115));
+    reveal.root.scale.setScalar(Math.max(0.02, scale));
+  }
+
+  _finishWebxrCollectibleReveal(collect = true) {
+    const reveal = this.webxrCollectibleReveal;
+    if (!reveal) return;
+    window.clearTimeout(this.webxrCollectibleRevealTimer);
+    this.webxrCollectibleRevealTimer = 0;
+    this.pickableMeshes = this.pickableMeshes.filter((object) => (
+      object !== reveal.pickable && object !== reveal.image
+    ));
+    reveal.root?.parent?.remove(reveal.root);
+    this._disposeObject3DResources(reveal.root);
+    this.webxrCollectibleReveal = null;
+    if (collect) void this._collectWebxrItem(reveal.itemKey);
   }
 
   async _collectWebxrItem(itemKey) {
@@ -1425,22 +1624,8 @@ export class WebXRApp {
     const scene = this._activeEnvironmentKey();
     this.webxrPlayer.items[itemKey] = { status: 'inventory', scene };
     this._saveWebxrPlayerState();
-    const marker = this.webxrCollectibleMarkers.get(itemKey);
-    if (marker) {
-      const icon = marker.userData?.hotspotIcon;
-      this.pickableMeshes = this.pickableMeshes.filter((object) => object !== icon);
-      this.hotspotMarkers = this.hotspotMarkers.filter((object) => object !== marker);
-      marker.parent?.remove(marker);
-      this._disposeObject3DResources(marker);
-      this.webxrCollectibleMarkers.delete(itemKey);
-    }
+    this._removeWebxrCollectibleMarker(itemKey);
     this._renderWebxrPlayerPanel();
-    this.uiController.showNotice(
-      this.chapelConservation.language === 'en'
-        ? `${item.title.en} was placed in your inventory.`
-        : `Inilagay sa iyong imbentaryo ang ${item.title.tl}.`,
-      3600,
-    );
     if (this.webxrPlayerConfig.authenticated && this.webxrPlayerConfig.collectUrl) {
       try {
         await fetch(this.webxrPlayerConfig.collectUrl, {
@@ -1500,10 +1685,10 @@ export class WebXRApp {
 
   async _checkWebxrSceneAchievement(scene = this._activeEnvironmentKey()) {
     if (this.webxrPlayer.achievements.includes(scene)) return;
-    const sceneItems = Object.entries(WEBXR_COLLECTIBLES).filter(([, item]) => item.scene === scene).map(([key]) => key);
-    let complete = sceneItems.every((key) => Boolean(this.webxrPlayer.items[key]));
-    if (scene === 'church') complete = complete && CHURCH_HISTORY_IDS.every((id) => this.churchHistory.collected.includes(id));
-    if (scene === 'underground') complete = complete && this._isUndergroundMemoryEvidenceComplete();
+    let complete = false;
+    if (scene === 'museum') complete = this._museumViewProgress().complete;
+    if (scene === 'church') complete = CHURCH_HISTORY_IDS.every((id) => this.churchHistory.collected.includes(id));
+    if (scene === 'underground') complete = Boolean(this.undergroundMemory.completed);
     if (!complete) return;
     this.webxrPlayer.achievements.push(scene);
     this._saveWebxrPlayerState();
@@ -1520,6 +1705,167 @@ export class WebXRApp {
         console.warn('[WebXR player] Achievement remains stored locally.', error);
       }
     }
+  }
+
+  _museumViewProgress() {
+    const viewed = new Set(this.webxrPlayer.museumViews || []);
+    const count = MUSEUM_REQUIRED_VIEW_KEYS.filter((key) => viewed.has(key)).length;
+    return {
+      count,
+      required: MUSEUM_REQUIRED_VIEW_KEYS.length,
+      complete: count >= MUSEUM_REQUIRED_VIEW_KEYS.length,
+    };
+  }
+
+  async _recordMuseumView(hotspotKey) {
+    if (!MUSEUM_REQUIRED_VIEW_KEYS.includes(hotspotKey)) return;
+    if (!Array.isArray(this.webxrPlayer.museumViews)) this.webxrPlayer.museumViews = [];
+    if (this.webxrPlayer.museumViews.includes(hotspotKey)) return;
+    this.webxrPlayer.museumViews.push(hotspotKey);
+    this._saveWebxrPlayerState();
+    this._refreshMuseumRecordsExperience();
+    if (this.webxrPlayerConfig.authenticated && this.webxrPlayerConfig.museumViewUrl) {
+      try {
+        const response = await fetch(this.webxrPlayerConfig.museumViewUrl, {
+          method: 'POST',
+          credentials: 'same-origin',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-CSRF-Token': this.webxrPlayerConfig.csrfToken || '',
+          },
+          body: JSON.stringify({ hotspot_key: hotspotKey }),
+        });
+        if (!response.ok) {
+          throw new Error(`Museum progress request failed (${response.status}).`);
+        }
+      } catch (error) {
+        console.warn('[WebXR player] Museum viewing progress remains stored locally.', error);
+      }
+    }
+    this._checkWebxrSceneAchievement('museum');
+  }
+
+  _setupMuseumRecordsExperience() {
+    this._disposeMuseumRecordsExperience();
+    if (!this._isMuseumScene() || !this.scene) return;
+    const { root } = this._buildHotspotMarker({
+      id: 'museum-records',
+      position: MUSEUM_RECORDS_POSITION,
+      color: 0xd4af6a,
+      radius: 0.055,
+      iconType: 'open',
+      interactionName: 'museum-records',
+      maxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+      metadata: { type: 'museum-records' },
+    });
+    root.userData.splatOccluded = true;
+    root.userData.splatOcclusionMargin = 0.12;
+    this.scene.add(root);
+    this.hotspotMarkers.push(root);
+    this.museumRecordsMarker = root;
+    this.museumRecordsOpen = false;
+    this._refreshMuseumRecordsExperience();
+  }
+
+  _setMuseumRecordsOpen(open) {
+    if (!this.museumRecordsMarker) return;
+    this.museumRecordsOpen = Boolean(open);
+    const icon = this.museumRecordsMarker.userData?.hotspotIcon;
+    this._replaceMuseumArtifactSpriteTexture(
+      icon,
+      this._createMuseumArtifactControlTexture(this.museumRecordsOpen ? 'CLOSE' : 'OPEN', this.museumRecordsOpen),
+    );
+    this._refreshMuseumRecordsExperience();
+  }
+
+  _refreshMuseumRecordsExperience() {
+    if (!this.museumRecordsMarker) return;
+    if (this.museumRecordsViewer) {
+      this.museumRecordsViewer.parent?.remove(this.museumRecordsViewer);
+      this._disposeObject3DResources(this.museumRecordsViewer);
+      this.museumRecordsViewer = null;
+    }
+    const oldStatus = this.museumRecordsMarker.userData?.statusSprite;
+    if (oldStatus) {
+      oldStatus.parent?.remove(oldStatus);
+      this._disposeObject3DResources(oldStatus);
+    }
+    const progress = this._museumViewProgress();
+    const language = this.chapelConservation.language === 'en' ? 'en' : 'tl';
+    const status = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(
+        language === 'en'
+          ? `MUSEUM RECORD ${progress.count}/${progress.required}`
+          : `TALA NG MUSEO ${progress.count}/${progress.required}`,
+      ),
+      position: [0, 0.26, 0.01],
+      scale: [0.72, 0.13],
+    });
+    this.museumRecordsMarker.add(status);
+    this.museumRecordsMarker.userData.statusSprite = status;
+    if (!this.museumRecordsOpen) return;
+
+    const root = new THREE.Group();
+    root.name = 'museum-records-viewer';
+    root.position.fromArray(MUSEUM_RECORDS_POSITION);
+    root.position.y += 0.84;
+    const cameraPosition = new THREE.Vector3();
+    this.camera.getWorldPosition(cameraPosition);
+    cameraPosition.y = root.position.y;
+    root.lookAt(cameraPosition);
+    root.userData.splatOccluded = false;
+
+    const title = language === 'en' ? 'Museum Collection Record' : 'Tala ng Koleksiyon ng Museo';
+    const body = progress.complete
+      ? (language === 'en'
+        ? 'The museum record is complete. Every artifact and historical hotspot has been examined.'
+        : 'Kumpleto na ang tala ng museo. Nasiyasat na ang bawat artifact at makasaysayang hotspot.')
+      : (language === 'en'
+        ? `Examine every artifact and historical hotspot. ${progress.required - progress.count} entries remain.`
+        : `Siyasatin ang bawat artifact at makasaysayang hotspot. ${progress.required - progress.count} tala pa ang natitira.`);
+    root.add(this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(title),
+      position: [0, 0.24, 0.05],
+      scale: [1.34, 0.17],
+    }));
+    root.add(this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(body, { subtitle: true, contentFit: true }),
+      position: [0, -0.13, 0.05],
+      scale: [1.38, 0.48],
+    }));
+    const track = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.1, 0.045),
+      new THREE.MeshBasicMaterial({ color: 0x3a2a16, depthTest: false, depthWrite: false }),
+    );
+    const ratio = progress.required ? progress.count / progress.required : 0;
+    const fill = new THREE.Mesh(
+      new THREE.PlaneGeometry(Math.max(0.001, 1.08 * ratio), 0.03),
+      new THREE.MeshBasicMaterial({ color: 0xd4af6a, depthTest: false, depthWrite: false }),
+    );
+    track.position.set(0, -0.43, 0.04);
+    fill.position.set(-0.54 + (1.08 * ratio) / 2, -0.43, 0.05);
+    track.renderOrder = 61;
+    fill.renderOrder = 62;
+    root.add(track, fill);
+    this.scene.add(root);
+    this.museumRecordsViewer = root;
+  }
+
+  _disposeMuseumRecordsExperience() {
+    if (this.museumRecordsViewer) {
+      this.museumRecordsViewer.parent?.remove(this.museumRecordsViewer);
+      this._disposeObject3DResources(this.museumRecordsViewer);
+      this.museumRecordsViewer = null;
+    }
+    if (this.museumRecordsMarker) {
+      const icon = this.museumRecordsMarker.userData?.hotspotIcon;
+      this.pickableMeshes = this.pickableMeshes.filter((object) => object !== icon);
+      this.hotspotMarkers = this.hotspotMarkers.filter((object) => object !== this.museumRecordsMarker);
+      this.museumRecordsMarker.parent?.remove(this.museumRecordsMarker);
+      this._disposeObject3DResources(this.museumRecordsMarker);
+      this.museumRecordsMarker = null;
+    }
+    this.museumRecordsOpen = false;
   }
 
   _setupChapelConservation() {
@@ -2387,6 +2733,7 @@ export class WebXRApp {
     this._disposeUndergroundMemoryWall({ restoreMarker: false });
     this._openUndergroundMemoryWall();
     if (this.undergroundMemory.completed) {
+      this._checkWebxrSceneAchievement('underground');
       try {
         window.NHCPAnalytics?.track?.('learning_activity_completed', {
           target_id: 'echoes-beneath',
@@ -3475,7 +3822,7 @@ export class WebXRApp {
         'evidence-revolution': 'franciscan-document-4',
         'evidence-world-war-ii': 'restoration-plaster',
       }[hotspotId];
-      if (recoveredByMemory) this._collectWebxrItem(recoveredByMemory);
+      if (recoveredByMemory) this._revealWebxrCollectible(recoveredByMemory);
     } else if (this._isChurchHistoryRecord(hotspotId)) {
       this.expandedHotspotLanguage = this.churchHistory.language;
       const recordKey = WEBXR_RECORD_BY_HOTSPOT[hotspotId];
@@ -3515,6 +3862,7 @@ export class WebXRApp {
     const churchRecordKey = WEBXR_RECORD_BY_HOTSPOT[this.xrHotspotTableId] || '';
     const churchRecordProgress = isChurchRecord ? this._webxrRecordProgress(churchRecordKey) : null;
     const churchRecordComplete = !isChurchRecord || Boolean(churchRecordProgress?.complete);
+    const completedChurchRecord = isChurchRecord && churchRecordComplete;
 
     const previousViewer = this.xrHotspotTableViewer;
     const previousPosition = previousViewer?.position?.clone() || null;
@@ -3554,7 +3902,9 @@ export class WebXRApp {
     this._createXrTableControl({
       parent: viewerRoot,
       label: this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN',
-      position: record ? [0.72, -0.80, 0.09] : [-0.66, -0.56, 0.09],
+      position: completedChurchRecord
+        ? [-0.46, 0.56, 0.09]
+        : (record ? [0.72, -0.80, 0.09] : [-0.66, -0.56, 0.09]),
       scale: 0.2,
       name: 'xr-table-language',
     });
@@ -3563,7 +3913,7 @@ export class WebXRApp {
       const title = record.title?.[this.expandedHotspotLanguage] || record.title?.en || '';
       viewerRoot.add(this._createMuseumArtifactSprite({
         texture: this._createMuseumArtifactTextTexture(title),
-        position: [0, -0.16, 0.08],
+        position: [0, completedChurchRecord ? -0.30 : -0.16, 0.08],
         scale: [1.38, 0.16],
       }));
       const subtitlesOn = isUndergroundRecord
@@ -3581,17 +3931,26 @@ export class WebXRApp {
             subtitle: true,
             contentFit: true,
           }),
-          position: [0, -0.48, 0.08],
-          scale: [1.56, 0.42],
+          position: [0, completedChurchRecord ? -0.62 : -0.48, 0.08],
+          scale: [1.56, completedChurchRecord ? 0.36 : 0.42],
         }));
       }
       this._createXrTableControl({
         parent: viewerRoot,
         label: 'CC',
-        position: [-0.72, -0.80, 0.09],
+        position: completedChurchRecord ? [-0.72, 0.56, 0.09] : [-0.72, -0.80, 0.09],
         scale: 0.2,
         name: 'xr-record-subtitles',
       });
+      if (completedChurchRecord) {
+        this._createXrTableControl({
+          parent: viewerRoot,
+          label: 'X',
+          position: [0.72, 0.56, 0.09],
+          scale: 0.2,
+          name: 'xr-record-close',
+        });
+      }
       if (isChurchRecord && !churchRecordComplete) {
         this._createXrTableControl({
           parent: viewerRoot,
@@ -3643,7 +4002,7 @@ export class WebXRApp {
       const aspect = sourceWidth / Math.max(1, sourceHeight);
       let width = record ? 1.34 : 1.68;
       let height = width / aspect;
-      const maximumHeight = record ? 0.64 : 1.02;
+      const maximumHeight = completedChurchRecord ? 0.48 : (record ? 0.64 : 1.02);
       if (height > maximumHeight) {
         height = maximumHeight;
         width = height * aspect;
@@ -3658,7 +4017,7 @@ export class WebXRApp {
           toneMapped: false,
         }),
       );
-      image.position.set(0, record ? 0.27 : 0.08, 0.06);
+      image.position.set(0, completedChurchRecord ? 0.10 : (record ? 0.27 : 0.08), 0.06);
       image.renderOrder = 49;
       viewerRoot.add(image);
 
@@ -4424,7 +4783,7 @@ export class WebXRApp {
 
     this.interactionRegistry.register('museum-artifact-toggle', () => {
       this._setMuseumArtifactStationOpen(!this.museumArtifactStation.isOpen);
-      if (this.museumArtifactStation.isOpen) this._collectWebxrItem('restoration-first-campaign');
+      if (this.museumArtifactStation.isOpen) this._revealWebxrCollectible('restoration-first-campaign');
     });
 
     this.interactionRegistry.register('museum-artifact-prev', () => {
@@ -4558,7 +4917,7 @@ export class WebXRApp {
         'hotspot-3': 'deterioration-ceiling',
         'hotspot-4': 'restoration-2008',
       }[stationId];
-      if (recoveredByStation) this._collectWebxrItem(recoveredByStation);
+      if (recoveredByStation) this._revealWebxrCollectible(recoveredByStation);
       this._playExpandedHotspotAudio(detail.audio);
       this._rebuildXrHotspotTableViewer();
     });
@@ -4589,10 +4948,19 @@ export class WebXRApp {
       );
     });
     this.interactionRegistry.register('webxr-collectible-pickup', (context) => {
-      this._collectWebxrItem(String(context?.metadata?.itemKey || ''));
+      this._revealWebxrCollectible(String(context?.metadata?.itemKey || ''));
+    });
+    this.interactionRegistry.register('webxr-collectible-confirm', () => {
+      this._finishWebxrCollectibleReveal(true);
     });
     this.interactionRegistry.register('webxr-record-deposit', (context) => {
       this._depositWebxrRecord(String(context?.metadata?.recordKey || ''));
+    });
+    this.interactionRegistry.register('museum-records', () => {
+      this._setMuseumRecordsOpen(!this.museumRecordsOpen);
+    });
+    this.interactionRegistry.register('xr-record-close', () => {
+      this._disposeXrHotspotTableViewer();
     });
   }
 
@@ -5405,6 +5773,7 @@ export class WebXRApp {
       if (playNarration) {
         this._playMuseumArtifactNarration();
       }
+      void this._recordMuseumView(`museum-artifact-${artifact.id}`);
     } catch (error) {
       station.modelCache.delete(artifact.id);
       console.warn(`[museum artifact] Could not load ${artifact.modelUrl}`, error);
@@ -5871,6 +6240,7 @@ export class WebXRApp {
         viewer.mediaRoot.add(media);
       }
       this._refreshMuseumContentPresentation();
+      void this._recordMuseumView(viewer.hotspotId);
     } catch (error) {
       console.warn('[museum content] Could not load exhibit media.', entry?.id, error);
       if (loadToken === viewer.loadToken && viewer.isOpen) {
@@ -6131,8 +6501,8 @@ export class WebXRApp {
       : new THREE.Vector3(position[0], position[1], position[2]);
     root.position.copy(markerPosition);
 
-    const iconTexture = iconType === 'open'
-      ? this._createMuseumArtifactControlTexture('OPEN')
+    const iconTexture = iconType === 'open' || iconType === 'question'
+      ? this._createMuseumArtifactControlTexture(iconType === 'question' ? '?' : 'OPEN')
       : this._createHotspotIconTexture(color, iconType);
     const icon = new THREE.Sprite(
       new THREE.SpriteMaterial({
@@ -6144,8 +6514,8 @@ export class WebXRApp {
         toneMapped: false,
       }),
     );
-    const iconSize = iconType === 'open'
-      ? 0.18
+    const iconSize = iconType === 'open' || iconType === 'question'
+      ? (iconType === 'question' ? 0.13 : 0.18)
       : Math.max(radius * 2.8, 0.2);
     icon.scale.set(iconSize, iconSize, 1);
     icon.renderOrder = 6;
@@ -7194,6 +7564,8 @@ export class WebXRApp {
     this._hideExpandedHotspotImage();
     this._disposeMuseumContentViewer({ restoreSource: false });
     this._disposeMuseumArtifactStation();
+    this._finishWebxrCollectibleReveal(false);
+    this._disposeMuseumRecordsExperience();
     this._disposeChurchHistoryExperience({ removeMarker: false });
     this._disposeUndergroundMemoryExperience({ removeMarker: false });
     this._clearFloatingHotspotLabels();
@@ -7336,11 +7708,13 @@ export class WebXRApp {
       await this._loadSceneAssets();
       this._createHotspotMarkers();
       this._setupWebxrCollectibles();
+      this._setupMuseumRecordsExperience();
       this._setupChurchHistoryExperience();
       this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
       this._updateChapelConservationUi();
+      void this._checkWebxrSceneAchievement();
       this._prepareTransferredSceneForXr();
 
       if (historyUrl) {
@@ -7466,6 +7840,7 @@ export class WebXRApp {
     try {
       this._updateMuseumArtifactStation(dt);
       this._updateMuseumContentViewer(dt);
+      this._updateWebxrCollectibleReveal();
       this._updateXrHotspotTableViewer();
       this._updateChurchHistoryExperience(dt);
       this._updateUndergroundMemoryExperience(dt);

@@ -11,6 +11,7 @@ viewers.forEach((viewer) => {
   const errorMessage = viewer.querySelector("[data-hk-fragment-error]");
   const showsWholeModel = viewer.hasAttribute("data-hk-whole-model-viewer");
   const runtimePieceCount = Math.max(0, Number.parseInt(viewer.dataset.runtimePieceCount || "0", 10) || 0);
+  const runtimePieceLayout = viewer.dataset.runtimePieceLayout || "vertical";
   let earnedFragments = [];
 
   try {
@@ -211,12 +212,32 @@ viewers.forEach((viewer) => {
             clone.position.sub(center);
             prepareFragment(clone, fragmentIndex);
 
-            const sliceMin = minX + sliceWidth * fragmentIndex;
-            const sliceMax = fragmentIndex === runtimePieceCount - 1
-              ? maxX
-              : minX + sliceWidth * (fragmentIndex + 1);
-            const leftBase = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sliceMin);
-            const rightBase = new THREE.Plane(new THREE.Vector3(-1, 0, 0), sliceMax);
+            let leftBase;
+            let rightBase;
+            if (runtimePieceLayout === "radial") {
+              // Number clockwise from the upper section. For the three-part
+              // environment seal this maps museum to the upper piece, chapel
+              // to lower-left, and underground to lower-right.
+              const centerAngle = Math.PI * 0.5 + fragmentIndex * ((Math.PI * 2) / runtimePieceCount);
+              const halfAngle = Math.PI / runtimePieceCount;
+              const firstBoundary = centerAngle - halfAngle;
+              const secondBoundary = centerAngle + halfAngle;
+              leftBase = new THREE.Plane(
+                new THREE.Vector3(-Math.sin(firstBoundary), Math.cos(firstBoundary), 0),
+                0,
+              );
+              rightBase = new THREE.Plane(
+                new THREE.Vector3(Math.sin(secondBoundary), -Math.cos(secondBoundary), 0),
+                0,
+              );
+            } else {
+              const sliceMin = minX + sliceWidth * fragmentIndex;
+              const sliceMax = fragmentIndex === runtimePieceCount - 1
+                ? maxX
+                : minX + sliceWidth * (fragmentIndex + 1);
+              leftBase = new THREE.Plane(new THREE.Vector3(1, 0, 0), -sliceMin);
+              rightBase = new THREE.Plane(new THREE.Vector3(-1, 0, 0), sliceMax);
+            }
             const leftWorld = leftBase.clone();
             const rightWorld = rightBase.clone();
 

@@ -52,15 +52,17 @@
         </div>
 
         <div class="hk-masthead__seal">
-          {% if heritage_keeper.unlocked %}
+          {% if heritage_keeper.master_piece_count > 0 %}
           <figure
             class="hk-fragment-tray"
             tabindex="0"
             role="img"
             data-hk-fragment-viewer
-            data-hk-whole-model-viewer
             data-model-url="/Seal/Seal.glb"
-            aria-label="Completed Heritage Keeper master seal"
+            data-runtime-piece-count="{{ heritage_keeper.master_piece_required }}"
+            data-runtime-piece-layout="radial"
+            data-earned-fragments="{{ heritage_keeper.master_fragments | tojson | forceescape }}"
+            aria-label="{{ heritage_keeper.master_piece_count }} of {{ heritage_keeper.master_piece_required }} Heritage Keeper master seal pieces restored"
           >
             <canvas class="hk-fragment-tray__canvas" data-hk-fragment-canvas aria-hidden="true"></canvas>
             <div class="hk-fragment-tray__loading" data-hk-fragment-loading role="status" aria-live="polite" aria-label="Loading the master 3D seal">
@@ -217,6 +219,7 @@
               data-hk-fragment-viewer
               data-model-url="/Seal/3D-environment-seal.glb"
               data-runtime-piece-count="3"
+              data-runtime-piece-layout="radial"
               data-earned-fragments="{{ webxr_fragments | map(attribute='earned') | list | tojson | forceescape }}"
               aria-label="{{ heritage_keeper.webxr_count }} of {{ heritage_keeper.webxr_required }} 3D Environment seal pieces recovered"
             >
@@ -317,6 +320,6 @@
     <script>if (window.lucide) window.lucide.createIcons();</script>
     {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
-    <script type="module" src="{{ url_for('static', filename='js/heritage-keeper-page.js') }}"></script>
+    <script type="module" src="{{ url_for('static', filename='js/heritage-keeper-page.js') }}?v=20260812-progressive-seals-2"></script>
   </body>
 </html>

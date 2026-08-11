@@ -37,6 +37,7 @@
       'progressUrl': url_for('webxr_player_progress_api'),
       'collectUrl': url_for('webxr_collect_item_api'),
       'depositUrl': url_for('webxr_deposit_record_api'),
+      'museumViewUrl': url_for('webxr_museum_view_api'),
       'achievementUrl': url_for('webxr_scene_achievement_api'),
       'keeperUrl': url_for('heritage_keeper_page') if current_public_user else url_for('public_login', next=url_for('heritage_keeper_page')),
       'loginUrl': url_for('public_login', next=request.path)

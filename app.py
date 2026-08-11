@@ -35,7 +35,12 @@ from user_accounts_content import load_user_bookmarked_gallery_item_ids, registe
 from user_management_content import load_admin_public_users, register_user_management_routes
 from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
-from webxr_progress_content import collect_webxr_item, deposit_webxr_record, load_webxr_player_progress
+from webxr_progress_content import (
+    collect_webxr_item,
+    deposit_webxr_record,
+    load_webxr_player_progress,
+    record_webxr_museum_view,
+)
 
 try:
     from dotenv import load_dotenv
@@ -1588,6 +1593,26 @@ def webxr_deposit_record_api():
     except Exception as exc:
         app.logger.exception("Failed to deposit WebXR record items: %s", exc)
         return jsonify({"ok": False, "error": "The recovered materials could not be deposited."}), 500
+
+
+@app.route("/api/webxr/player-progress/museum-view", methods=["POST"])
+def webxr_museum_view_api():
+    current_user = _get_current_public_user()
+    if not current_user or session.get(PUBLIC_SESSION_KEY) is not True:
+        return jsonify({"ok": False, "login_required": True}), 401
+    if not _is_public_csrf_valid(request.headers.get("X-CSRF-Token")):
+        return jsonify({"ok": False, "error": "Invalid request."}), 400
+    payload = request.get_json(silent=True) or {}
+    try:
+        progress = record_webxr_museum_view(
+            int(current_user.get("id")), str(payload.get("hotspot_key") or ""),
+        )
+        return jsonify({"ok": True, "progress": progress})
+    except ValueError as exc:
+        return jsonify({"ok": False, "error": str(exc)}), 400
+    except Exception as exc:
+        app.logger.exception("Failed to save a viewed WebXR museum exhibit: %s", exc)
+        return jsonify({"ok": False, "error": "Museum progress could not be saved."}), 500
 
 
 @app.route("/api/webxr/player-progress/achievement", methods=["POST"])

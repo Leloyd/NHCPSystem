@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 from typing import Any
 
 from heritage_keeper_repository import (
@@ -60,6 +61,7 @@ AR_REQUIRED = len(AR_KEY_ORDER)
 WEBXR_KEY_ORDER = list(WEBXR_ENVIRONMENTS)
 WEBXR_REQUIRED = len(WEBXR_KEY_ORDER)
 TOTAL_REQUIRED = TRAIL_REQUIRED + AR_REQUIRED + WEBXR_REQUIRED
+MASTER_PIECE_REQUIRED = 12
 VALID_TRAIL_KEYS = {item[0] for item in TRAIL_FRAGMENTS}
 TRAIL_KEY_ORDER = [item[0] for item in TRAIL_FRAGMENTS]
 VALID_AR_KEYS = set(AR_ARTIFACTS)
@@ -105,6 +107,9 @@ def empty_heritage_keeper_progress() -> dict[str, Any]:
         "total_count": 0,
         "total_required": TOTAL_REQUIRED,
         "percentage": 0,
+        "master_piece_count": 0,
+        "master_piece_required": MASTER_PIECE_REQUIRED,
+        "master_fragments": [False] * MASTER_PIECE_REQUIRED,
         "trail_complete": False,
         "ar_complete": False,
         "webxr_complete": False,
@@ -176,6 +181,20 @@ def _build_progress(events: list[dict[str, Any]], award: dict[str, Any] | None) 
     trail_complete = trail_count >= TRAIL_REQUIRED
     ar_complete = ar_count >= AR_REQUIRED
     webxr_complete = webxr_count >= WEBXR_REQUIRED
+    all_plates_complete = trail_complete and ar_complete and webxr_complete
+    normalized_plate_progress = (
+        (trail_count / TRAIL_REQUIRED)
+        + (ar_count / AR_REQUIRED)
+        + (webxr_count / WEBXR_REQUIRED)
+    ) / 3
+    master_piece_count = (
+        MASTER_PIECE_REQUIRED
+        if all_plates_complete
+        else min(
+            MASTER_PIECE_REQUIRED - 1,
+            math.ceil(normalized_plate_progress * MASTER_PIECE_REQUIRED),
+        )
+    ) if total_count else 0
     progress.update({
         "trail_count": trail_count,
         "ar_count": ar_count,
@@ -183,6 +202,8 @@ def _build_progress(events: list[dict[str, Any]], award: dict[str, Any] | None) 
         "webxr_count": webxr_count,
         "total_count": total_count,
         "percentage": round((total_count / TOTAL_REQUIRED) * 100),
+        "master_piece_count": master_piece_count,
+        "master_fragments": [index < master_piece_count for index in range(MASTER_PIECE_REQUIRED)],
         "trail_complete": trail_complete,
         "ar_complete": ar_complete,
         "webxr_complete": webxr_complete,

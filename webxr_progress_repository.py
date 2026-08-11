@@ -7,6 +7,7 @@ from supabase_client import get_supabase_client
 
 
 WEBXR_PLAYER_ITEMS_TABLE = "webxr_player_items"
+WEBXR_MUSEUM_VIEWS_TABLE = "webxr_player_museum_views"
 
 
 def list_webxr_items(user_id: int) -> list[dict[str, Any]]:
@@ -56,3 +57,29 @@ def deposit_webxr_items(user_id: int, item_keys: list[str]) -> list[dict[str, An
         .execute()
     )
     return list(response.data or [])
+
+
+def list_webxr_museum_views(user_id: int) -> list[dict[str, Any]]:
+    response = (
+        get_supabase_client()
+        .table(WEBXR_MUSEUM_VIEWS_TABLE)
+        .select("hotspot_key, viewed_at")
+        .eq("user_id", int(user_id))
+        .order("viewed_at")
+        .execute()
+    )
+    return list(response.data or [])
+
+
+def upsert_webxr_museum_view(user_id: int, hotspot_key: str) -> dict[str, Any]:
+    response = (
+        get_supabase_client()
+        .table(WEBXR_MUSEUM_VIEWS_TABLE)
+        .upsert(
+            {"user_id": int(user_id), "hotspot_key": hotspot_key},
+            on_conflict="user_id,hotspot_key",
+        )
+        .execute()
+    )
+    rows = list(response.data or [])
+    return rows[0] if rows else {}

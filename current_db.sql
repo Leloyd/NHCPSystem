@@ -81,6 +81,15 @@ CREATE TABLE public.heritage_keeper_awards (
   CONSTRAINT heritage_keeper_awards_pkey PRIMARY KEY (user_id),
   CONSTRAINT heritage_keeper_awards_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE
 );
+CREATE TABLE public.webxr_player_museum_views (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  hotspot_key text NOT NULL CHECK (char_length(hotspot_key) >= 3 AND char_length(hotspot_key) <= 100),
+  viewed_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT webxr_player_museum_views_pkey PRIMARY KEY (id),
+  CONSTRAINT webxr_player_museum_views_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT webxr_player_museum_views_user_hotspot_key UNIQUE (user_id, hotspot_key)
+);
 CREATE TABLE public.webxr_player_items (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   user_id bigint NOT NULL,

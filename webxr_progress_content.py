@@ -2,7 +2,13 @@ from __future__ import annotations
 
 from typing import Any
 
-from webxr_progress_repository import deposit_webxr_items, list_webxr_items, upsert_webxr_item
+from webxr_progress_repository import (
+    deposit_webxr_items,
+    list_webxr_items,
+    list_webxr_museum_views,
+    upsert_webxr_item,
+    upsert_webxr_museum_view,
+)
 
 
 WEBXR_RECORDS = {
@@ -28,6 +34,27 @@ WEBXR_COLLECTIBLES: dict[str, dict[str, str]] = {
 
 VALID_WEBXR_SCENES = {"museum", "church", "underground"}
 
+MUSEUM_CONTENT_KEYS = {
+    "museum-content-kabila",
+    "museum-content-maitum",
+    "museum-content-manunggul",
+    "museum-content-balanghay",
+    "museum-content-kabaong",
+    "museum-content-uloh",
+    "museum-content-nagcarlan",
+    "museum-content-huling-taludtod",
+}
+
+MUSEUM_ARTIFACT_KEYS = {
+    "alay", "antuk", "bagongon", "bogwa", "kagamitan", "luksa", "pagpag",
+    "pagtubas", "pahimakas", "pahiwatig", "recuerdos", "sabwag", "sisiw",
+    "tausug-1", "tausug-2", "tausug-3", "tausug-4", "tboli", "tsapang",
+}
+
+VALID_MUSEUM_VIEW_KEYS = MUSEUM_CONTENT_KEYS | {
+    f"museum-artifact-{key}" for key in MUSEUM_ARTIFACT_KEYS
+}
+
 
 def _decorate_item(row: dict[str, Any]) -> dict[str, Any] | None:
     key = str(row.get("item_key") or "")
@@ -46,6 +73,12 @@ def _decorate_item(row: dict[str, Any]) -> dict[str, Any] | None:
 
 def load_webxr_player_progress(user_id: int) -> dict[str, Any]:
     rows = list_webxr_items(user_id)
+    try:
+        museum_view_rows = list_webxr_museum_views(user_id)
+    except Exception:
+        # Existing deployments can continue serving inventory progress until
+        # the museum-view migration has been applied.
+        museum_view_rows = []
     items = [item for item in (_decorate_item(row) for row in rows) if item]
     deposited = {record: 0 for record in WEBXR_RECORDS}
     inventory_count = 0
@@ -60,6 +93,12 @@ def load_webxr_player_progress(user_id: int) -> dict[str, Any]:
     }
     return {
         "items": items,
+        "museum_views": [
+            str(row.get("hotspot_key") or "")
+            for row in museum_view_rows
+            if str(row.get("hotspot_key") or "") in VALID_MUSEUM_VIEW_KEYS
+        ],
+        "museum_required": len(VALID_MUSEUM_VIEW_KEYS),
         "inventory_count": inventory_count,
         "records": {
             record: {
@@ -72,6 +111,14 @@ def load_webxr_player_progress(user_id: int) -> dict[str, Any]:
             for record, labels in WEBXR_RECORDS.items()
         },
     }
+
+
+def record_webxr_museum_view(user_id: int, hotspot_key: str) -> dict[str, Any]:
+    normalized_key = str(hotspot_key or "").strip().lower()
+    if normalized_key not in VALID_MUSEUM_VIEW_KEYS:
+        raise ValueError("That museum exhibit is not recognized.")
+    upsert_webxr_museum_view(user_id, normalized_key)
+    return load_webxr_player_progress(user_id)
 
 
 def collect_webxr_item(user_id: int, item_key: str, scene: str) -> dict[str, Any]:
