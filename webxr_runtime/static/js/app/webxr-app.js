@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
+import { GazeTeleportSystem } from './gaze-teleport-system.js';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js';
@@ -501,6 +502,7 @@ export class WebXRApp {
     this.playerController = null;
     this.collisionSystem = null;
     this.interactionSystem = null;
+    this.gazeTeleportSystem = null;
     this.activeXrReferenceSpaceType = null;
     this.lastPositionDebugValue = '';
     this.hotspotDebugActive = false;
@@ -1158,6 +1160,7 @@ export class WebXRApp {
 
     // Gyro drives the head look for compatible Cardboard devices.
     try {
+      this.playerController.levelHorizon({ syncGyro: false });
       await this.playerController.setGyroEnabled(true);
       this.uiController.setGyroState(true);
     } catch (error) {
@@ -1181,6 +1184,7 @@ export class WebXRApp {
 
     const gotFullscreen = await this._requestBestFullscreen();
     try { await window.screen?.orientation?.lock?.('landscape'); } catch { /* unsupported */ }
+    this.playerController.levelHorizon();
 
     // In the box the whole screen is the one button: hold = walk forward,
     // double-tap = leave VR Box mode.
@@ -1201,7 +1205,7 @@ export class WebXRApp {
     element.addEventListener('touchend', this.cardboard.onTouchEnd, { passive: true });
 
     const portrait = window.innerHeight > window.innerWidth;
-    let hint = `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Touch & hold = walk · double-tap = exit.`;
+    let hint = `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Look down and hold the gold floor target = move · touch & hold = walk · double-tap = exit.`;
     if (!gotFullscreen) {
       hint += ' Your browser kept the page windowed; landscape mode is recommended.';
     }
@@ -1245,7 +1249,9 @@ export class WebXRApp {
     if (this.playerController) {
       this.playerController.input.forward = false;
       this.playerController.suppressDragLook = false;
+      this.playerController.levelHorizon();
     }
+    this.gazeTeleportSystem?.reset();
     if (this.interactionSystem) {
       this.interactionSystem.suspended = false;
     }
@@ -1253,6 +1259,7 @@ export class WebXRApp {
     this.uiController.setCardboardState(false);
 
     try { window.screen?.orientation?.unlock?.(); } catch { /* unsupported */ }
+    window.setTimeout(() => this.playerController?.levelHorizon(), 120);
     if (document.fullscreenElement) {
       void document.exitFullscreen?.().catch(() => {});
     } else if (document.webkitFullscreenElement) {
@@ -1312,6 +1319,7 @@ export class WebXRApp {
 
   _onFullscreenChange() {
     this.uiController.setFullscreenState(Boolean(document.fullscreenElement));
+    this.playerController?.levelHorizon();
   }
 
   _setupExpandedHotspotOverlay() {
@@ -2231,10 +2239,14 @@ export class WebXRApp {
       }
 
       this.uiController.setMobileControlsVisible(true);
+      this.playerController?.levelHorizon();
+      this.gazeTeleportSystem?.reset();
     });
     this.renderer.xr.addEventListener('sessionend', () => {
       this.activeXrReferenceSpaceType = null;
 
+      this.playerController?.restoreAfterXrSession();
+      this.gazeTeleportSystem?.reset();
       this.uiController.setMobileControlsVisible(true);
     });
   }
@@ -2625,6 +2637,32 @@ export class WebXRApp {
     texture.magFilter = THREE.LinearFilter;
     texture.needsUpdate = true;
     return texture;
+  }
+
+  _shouldUsePhoneVrGazeTeleport() {
+    if (!this.mobileMode) {
+      return false;
+    }
+
+    if (this.cardboard.active) {
+      return true;
+    }
+
+    if (!this.renderer.xr.isPresenting) {
+      return false;
+    }
+
+    const session = this.renderer.xr.getSession?.();
+    if (!session || session.mode !== XR_SESSION_MODE_VR) {
+      return false;
+    }
+
+    // A tracked controller with axes already has thumbstick locomotion. Gaze
+    // teleport is reserved for controller-free phone viewers.
+    const hasLocomotionController = Array.from(session.inputSources || []).some((source) => (
+      Number(source?.gamepad?.axes?.length || 0) >= 2
+    ));
+    return !hasLocomotionController;
   }
 
   _createMuseumArtifactControlTexture(label, active = false) {
@@ -3487,6 +3525,17 @@ export class WebXRApp {
 
     this.playerController.setMobileMode(this.mobileMode);
 
+    this.gazeTeleportSystem?.dispose?.();
+    this.gazeTeleportSystem = new GazeTeleportSystem({
+      scene: this.scene,
+      camera: this.camera,
+      rig: this.playerRig,
+      renderer: this.renderer,
+      playerController: this.playerController,
+      collisionSystem: this.collisionSystem,
+      isActive: () => this._shouldUsePhoneVrGazeTeleport(),
+    });
+
     const spawnPoint = this._computeSpawnPoint();
     this.playerController.setFeetPosition(spawnPoint);
     let spawnYaw = -Math.PI / 2;
@@ -3713,6 +3762,8 @@ export class WebXRApp {
       this.playerController.update(dt, this.collisionSystem);
       this._updatePositionDebugValue();
     }
+
+    this.gazeTeleportSystem?.update(dt);
 
     this._updateMuseumArtifactStation(dt);
 

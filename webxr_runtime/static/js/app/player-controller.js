@@ -8,6 +8,10 @@ const RIGHT = new THREE.Vector3();
 const DESIRED_MOVE = new THREE.Vector3();
 const PREVIOUS_FEET_POSITION = new THREE.Vector3();
 const XR_LOCAL_OFFSET = new THREE.Vector3();
+const TELEPORT_START = new THREE.Vector3();
+const TELEPORT_CURRENT = new THREE.Vector3();
+const TELEPORT_REQUEST = new THREE.Vector3();
+const TELEPORT_VELOCITY = new THREE.Vector3();
 
 // Scratch objects for the gyro "magic window" math (no per-frame allocation).
 const GYRO_ZEE = new THREE.Vector3(0, 0, 1);
@@ -257,6 +261,7 @@ export class PlayerController {
       }
       this.gyro.enabled = false;
       this.gyro.hasReading = false;
+      this.levelHorizon();
       return true;
     }
 
@@ -425,6 +430,105 @@ export class PlayerController {
     this.rig.position.copy(position);
   }
 
+  levelHorizon({ syncGyro = true } = {}) {
+    // WebXR can leave its final tracked quaternion on the base camera. Drop
+    // that stale roll before returning to the normal or Cardboard view.
+    this.camera.rotation.order = 'YXZ';
+    this.camera.rotation.z = 0;
+
+    if (!this.renderer.xr.isPresenting) {
+      this.camera.position.set(0, this.settings.height, 0);
+    }
+
+    if (syncGyro && this.gyro.enabled) {
+      this.gyro.needsSync = true;
+    }
+  }
+
+  restoreAfterXrSession() {
+    this.velocity.set(0, 0, 0);
+    this.xrInput.x = 0;
+    this.xrInput.z = 0;
+    this.wasArPresenting = false;
+    this.wasVrPresenting = false;
+    this.xrPhysicalOffsetInitialized = false;
+    this.xrPhysicalOffsetBaseline.set(0, 0, 0);
+    this.levelHorizon();
+  }
+
+  resolveTeleportTarget(target, collisionSystem, output) {
+    if (!target || !collisionSystem || !output) {
+      return false;
+    }
+
+    TELEPORT_REQUEST.copy(target);
+    TELEPORT_VELOCITY.set(0, 0, 0);
+    const result = collisionSystem.resolveCapsule({
+      feetPosition: TELEPORT_REQUEST,
+      previousFeetPosition: this.rig.position,
+      capsuleHeight: this.settings.height,
+      capsuleRadius: this.settings.radius,
+      velocity: TELEPORT_VELOCITY,
+      deltaSeconds: 1 / 60,
+    });
+    output.copy(result.position);
+
+    const dx = output.x - this.rig.position.x;
+    const dz = output.z - this.rig.position.z;
+    return dx * dx + dz * dz >= 0.35 * 0.35;
+  }
+
+  teleportTo(target, collisionSystem) {
+    if (!target || !collisionSystem) {
+      return false;
+    }
+
+    TELEPORT_START.copy(this.rig.position);
+    TELEPORT_CURRENT.copy(TELEPORT_START);
+    const distance = Math.hypot(
+      target.x - TELEPORT_START.x,
+      target.z - TELEPORT_START.z,
+    );
+    const stepLength = Math.max(0.08, this.settings.radius * 0.38);
+    const steps = Math.max(1, Math.ceil(distance / stepLength));
+    TELEPORT_VELOCITY.set(0, 0, 0);
+
+    for (let index = 1; index <= steps; index += 1) {
+      TELEPORT_REQUEST.lerpVectors(TELEPORT_START, target, index / steps);
+      const result = collisionSystem.resolveCapsule({
+        feetPosition: TELEPORT_REQUEST,
+        previousFeetPosition: TELEPORT_CURRENT,
+        capsuleHeight: this.settings.height,
+        capsuleRadius: this.settings.radius,
+        velocity: TELEPORT_VELOCITY,
+        deltaSeconds: 1 / 60,
+      });
+
+      const correction = Math.hypot(
+        result.position.x - TELEPORT_REQUEST.x,
+        result.position.z - TELEPORT_REQUEST.z,
+      );
+      TELEPORT_CURRENT.copy(result.position);
+
+      // Stop at a wall or calibrated boundary instead of teleporting through.
+      if (correction > Math.max(0.075, this.settings.radius * 0.45)) {
+        break;
+      }
+    }
+
+    this.rig.position.copy(TELEPORT_CURRENT);
+    this.velocity.set(0, 0, 0);
+    this.xrInput.x = 0;
+    this.xrInput.z = 0;
+    this.xrPhysicalOffsetInitialized = false;
+    this.xrPhysicalOffsetBaseline.set(0, 0, 0);
+
+    return Math.hypot(
+      TELEPORT_CURRENT.x - TELEPORT_START.x,
+      TELEPORT_CURRENT.z - TELEPORT_START.z,
+    ) >= 0.2;
+  }
+
   _readXrMoveAxes(sessionMode = null) {
     this.xrInput.x = 0;
     this.xrInput.z = 0;
@@ -477,6 +581,11 @@ export class PlayerController {
     PREVIOUS_FEET_POSITION.copy(this.rig.position);
 
     this._updateGyroLook();
+
+    // Normal/mobile rendering should never inherit a rolled XR camera.
+    if (!this.renderer.xr.isPresenting) {
+      this.camera.rotation.z = 0;
+    }
 
     this._readXrMoveAxes(sessionMode);
 
