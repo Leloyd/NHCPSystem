@@ -3706,31 +3706,6 @@ export class WebXRApp {
     root.userData.splatOcclusionMargin = 0.12;
     root.userData.splatOcclusionIgnoreFiles = Array.from(content.transparentSplatFiles || []);
 
-    const border = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.08, 2.22),
-      new THREE.MeshBasicMaterial({
-        color: 0xd4af6a,
-        depthTest: false,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    );
-    border.renderOrder = 55;
-    root.add(border);
-
-    const panel = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.02, 2.16),
-      new THREE.MeshBasicMaterial({
-        color: 0x120c06,
-        depthTest: false,
-        depthWrite: false,
-        toneMapped: false,
-      }),
-    );
-    panel.position.z = 0.012;
-    panel.renderOrder = 56;
-    root.add(panel);
-
     const mediaRoot = new THREE.Group();
     mediaRoot.name = 'museum-content-media';
     mediaRoot.position.set(0, 0.34, 0.08);

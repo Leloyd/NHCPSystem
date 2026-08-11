@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-restored-museum-glbs-10';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-floating-museum-content-11';
 
 function getRefs() {
   return {
