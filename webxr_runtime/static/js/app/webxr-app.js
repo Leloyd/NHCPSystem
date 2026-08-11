@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-2';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-6';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js?v=20260811-spark-xr-2';
@@ -3874,6 +3874,14 @@ export class WebXRApp {
     // controller-free helper before renderer.render() leaves Google's native
     // VR shell open with a permanently black layer.
     if (this.renderer.xr.isPresenting) {
+      try {
+        // Use the pose for this WebXR frame so the controller-free gaze
+        // reticle remains centered while the user's head is moving.
+        this.phoneVrGazeSystem?.prepareForRender();
+      } catch (error) {
+        console.error('[xr] gaze reticle preparation failed', error);
+      }
+
       try {
         this._updateXrSplatWarmup();
         this._updateXrLoadingPanel();

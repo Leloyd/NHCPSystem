@@ -4,6 +4,7 @@ const VIEW_ORIGIN = new THREE.Vector3();
 const VIEW_DIRECTION = new THREE.Vector3();
 const EYE_POSITION = new THREE.Vector3();
 const EYE_DIRECTION = new THREE.Vector3();
+const EYE_PROJECTION_CENTER = new THREE.Vector3();
 const RETICLE_DISTANCE = 1.25;
 const XR_RETICLE_SIZE = 0.105;
 const DWELL_SECONDS = 1;
@@ -35,6 +36,7 @@ export class PhoneVrGazeSystem {
     this.blockedObject = null;
     this.dwellSeconds = 0;
     this.hasTarget = false;
+    this.reticleProgress = 0;
   }
 
   _createXrReticle() {
@@ -133,7 +135,11 @@ export class PhoneVrGazeSystem {
         eyeCameras.forEach((eyeCamera) => {
           eyeCamera.updateWorldMatrix(true, false);
           eyeCamera.getWorldPosition(EYE_POSITION);
-          eyeCamera.getWorldDirection(EYE_DIRECTION);
+          // WebXR eye cameras commonly use asymmetric projection matrices.
+          // Derive the ray through the rendered center of each eye instead of
+          // assuming the camera's local -Z axis is also its visual center.
+          EYE_PROJECTION_CENTER.set(0, 0, 0.5).unproject(eyeCamera);
+          EYE_DIRECTION.copy(EYE_PROJECTION_CENTER).sub(EYE_POSITION).normalize();
           VIEW_ORIGIN.add(EYE_POSITION);
           VIEW_DIRECTION.add(EYE_DIRECTION);
         });
@@ -142,7 +148,8 @@ export class PhoneVrGazeSystem {
       } else {
         xrCamera.updateWorldMatrix(true, false);
         xrCamera.getWorldPosition(VIEW_ORIGIN);
-        xrCamera.getWorldDirection(VIEW_DIRECTION).normalize();
+        EYE_PROJECTION_CENTER.set(0, 0, 0.5).unproject(xrCamera);
+        VIEW_DIRECTION.copy(EYE_PROJECTION_CENTER).sub(VIEW_ORIGIN).normalize();
       }
     } else {
       this.camera.updateWorldMatrix(true, false);
@@ -191,6 +198,22 @@ export class PhoneVrGazeSystem {
     this.blockedObject = null;
     this.dwellSeconds = 0;
     this.hasTarget = false;
+    this.reticleProgress = 0;
+  }
+
+  /**
+   * Synchronize the visible reticle with the WebXR pose that will be submitted
+   * in the current frame. Interaction processing remains in update() so a
+   * helper failure can never prevent the immersive scene from rendering.
+   */
+  prepareForRender() {
+    if (!this.isActive()) {
+      this.xrReticle.visible = false;
+      return;
+    }
+
+    this._updateViewRay();
+    this._updateReticle(this.reticleProgress);
   }
 
   update(deltaSeconds) {
@@ -201,7 +224,8 @@ export class PhoneVrGazeSystem {
 
     const dt = Math.max(0, Math.min(0.1, Number(deltaSeconds) || 0));
     this._updateViewRay();
-    this._updateReticle(0);
+    this.reticleProgress = 0;
+    this._updateReticle(this.reticleProgress);
 
     const hit = this._getInteractionHit();
     const object = hit?.object ?? null;
@@ -228,7 +252,8 @@ export class PhoneVrGazeSystem {
     }
 
     const progress = THREE.MathUtils.clamp(this.dwellSeconds / DWELL_SECONDS, 0, 1);
-    this._updateReticle(progress);
+    this.reticleProgress = progress;
+    this._updateReticle(this.reticleProgress);
     if (progress < 1) {
       return;
     }
