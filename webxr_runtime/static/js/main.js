@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-stable-splat-ui-16';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-maitum-position-17';
 
 function getRefs() {
   return {

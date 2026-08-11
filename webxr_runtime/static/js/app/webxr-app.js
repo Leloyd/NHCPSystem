@@ -48,7 +48,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-maitum': {
     position: [-2.30, 1.00, 3.24],
-    displayPosition: [-2.60, 1.00, 3.37],
+    displayPosition: [-2.30, 1.00, 3.37],
     controlsAlongZ: true,
     entries: [
       {
