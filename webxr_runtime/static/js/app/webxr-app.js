@@ -5963,16 +5963,25 @@ export class WebXRApp {
     this.hotspotDebugActive = this.hotspotDebugRequested
       && !this._isMuseumScene()
       && !this._isUndergroundScene();
-    this.uiController.setPositionDebugVisible(this._isMuseumScene() || this.hotspotDebugActive);
-    if (this.hotspotDebugActive) {
+    const coordinatePanelVisible = this._isChapelScene()
+      || this._isUndergroundScene()
+      || this._isMuseumScene();
+    this.uiController.setPositionDebugVisible(coordinatePanelVisible);
+    if (this._isChapelScene()) {
       this.uiController.setPositionDebugMode({
         label: 'Church player coordinates',
         hint: 'X, Y, Z',
         ariaLabel: 'Church player coordinates',
       });
+    } else if (this._isUndergroundScene()) {
+      this.uiController.setPositionDebugMode({
+        label: 'Underground player coordinates',
+        hint: 'X, Y, Z',
+        ariaLabel: 'Underground player coordinates',
+      });
     } else {
       this.uiController.setPositionDebugMode({
-        label: 'Player coordinates',
+        label: 'Museum player coordinates',
         hint: 'X, Y, Z',
         ariaLabel: 'Museum player coordinates',
       });
@@ -6007,7 +6016,14 @@ export class WebXRApp {
   }
 
   _updatePositionDebugValue(force = false) {
-    if ((!this._isMuseumScene() && !this.hotspotDebugActive) || !this.playerRig) {
+    if (
+      !this.playerRig
+      || (
+        !this._isChapelScene()
+        && !this._isUndergroundScene()
+        && !this._isMuseumScene()
+      )
+    ) {
       return;
     }
 
