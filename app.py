@@ -1,3 +1,4 @@
+import hashlib
 import hmac
 import os
 import re
@@ -43,6 +44,19 @@ except ModuleNotFoundError:  # pragma: no cover - optional in some environments
 PROJECT_ROOT = Path(__file__).resolve().parent
 WEBXR_BASE_DIR = (PROJECT_ROOT / "webxr_runtime").resolve()
 PUBLIC_AR_ARTIFACTS_DIR = (PROJECT_ROOT / "public" / "AR-Artifacts").resolve()
+
+
+def _build_webxr_asset_version():
+    """Create a stable cache key for the WebXR entry point and application module."""
+    digest = hashlib.sha256()
+    for relative_path in ("static/js/main.js", "static/js/app/webxr-app.js"):
+        asset_path = WEBXR_BASE_DIR / relative_path
+        if asset_path.exists() and asset_path.is_file():
+            digest.update(asset_path.read_bytes())
+    return digest.hexdigest()[:12]
+
+
+WEBXR_ASSET_VERSION = _build_webxr_asset_version()
 
 # Allowlisted WebXR scene archives. Public scene routes use stable names rather
 # than exposing archive filenames, and the legacy ZIP query remains available
@@ -1488,7 +1502,11 @@ def site_map():
 
 @app.route("/3d-environment")
 def three_d_environment():
-    return render_template("WebXREnvironment.html", webxr_scene="")
+    return render_template(
+        "WebXREnvironment.html",
+        webxr_scene="",
+        webxr_asset_version=WEBXR_ASSET_VERSION,
+    )
 
 
 @app.route("/3d-environment/<scene_name>")
@@ -1496,7 +1514,11 @@ def three_d_environment_scene(scene_name):
     normalized_scene = str(scene_name or "").strip().lower()
     if normalized_scene not in WEBXR_SCENE_PATHS:
         return jsonify({"error": f"Unknown WebXR scene: {scene_name}"}), 404
-    return render_template("WebXREnvironment.html", webxr_scene=normalized_scene)
+    return render_template(
+        "WebXREnvironment.html",
+        webxr_scene=normalized_scene,
+        webxr_asset_version=WEBXR_ASSET_VERSION,
+    )
 
 
 @app.route("/api/webxr/scene")

@@ -2890,6 +2890,10 @@ export class WebXRApp {
     }
     const station = this.museumArtifactStation;
     station.isOpen = Boolean(open);
+    // Reapply the authored world position whenever the station opens. This
+    // prevents a stale or externally mutated transform from leaving desktop
+    // viewers with the artifact pivot at ground level.
+    station.root.position.set(...MUSEUM_ARTIFACT_POSITION);
     station.root.visible = station.isOpen;
     station.languageSprite.visible = station.isOpen;
     station.subtitleToggleSprite.visible = station.isOpen;
