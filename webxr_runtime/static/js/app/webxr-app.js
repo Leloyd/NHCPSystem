@@ -2820,14 +2820,14 @@ export class WebXRApp {
     root.add(controlsRoot);
 
     const previous = this._createMuseumArtifactSprite({
-      texture: this._createMuseumArtifactControlTexture('‹'),
-      position: [-0.14, -0.35, 0],
+      texture: this._createMuseumArtifactControlTexture('←'),
+      position: [-0.90, 0.48, 0],
       scale: [0.21, 0.21],
       interactionName: 'museum-artifact-prev',
     });
     const next = this._createMuseumArtifactSprite({
-      texture: this._createMuseumArtifactControlTexture('›'),
-      position: [0.14, -0.35, 0],
+      texture: this._createMuseumArtifactControlTexture('→'),
+      position: [0.90, 0.48, 0],
       scale: [0.21, 0.21],
       interactionName: 'museum-artifact-next',
     });
@@ -2840,8 +2840,8 @@ export class WebXRApp {
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
-      position: [0, -0.70, 0],
-      scale: [1.3, 0.45],
+      position: [0, -0.58, 0],
+      scale: [1.65, 0.62],
     });
     subtitleSprite.visible = false;
     root.add(titleSprite, subtitleSprite);
@@ -2970,7 +2970,8 @@ export class WebXRApp {
       }
       station.currentModel = model;
       station.modelPivot.add(model);
-      station.modelPivot.rotation.y = 0;
+      // Present the opposite side first, then continue the slow exhibit spin.
+      station.modelPivot.rotation.y = Math.PI;
       this._refreshMuseumArtifactPresentation();
       if (playNarration) {
         this._playMuseumArtifactNarration();
