@@ -38,6 +38,9 @@
             {% if error_message %}
             <p class="admin-auth-error" role="alert">{{ error_message }}</p>
             {% endif %}
+            {% if success_message %}
+            <p class="admin-auth-success" role="status">{{ success_message }}</p>
+            {% endif %}
 
             <form class="admin-auth-form" method="post" novalidate>
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />

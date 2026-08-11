@@ -2733,6 +2733,164 @@
     refreshImageLibrary();
   }
 
+  function initAdminAccountSettings() {
+    var root = document.querySelector("[data-admin-settings]");
+    if (!root) {
+      return;
+    }
+
+    var forms = Array.prototype.slice.call(root.querySelectorAll("[data-admin-settings-form]"));
+    var toggles = root.querySelectorAll("[data-admin-password-toggle]");
+    var resultModal = document.querySelector("[data-admin-settings-result]");
+    var resultTitle = resultModal && resultModal.querySelector("[data-admin-settings-result-title]");
+    var resultMessage = resultModal && resultModal.querySelector("[data-admin-settings-result-message]");
+    var resultClose = resultModal && resultModal.querySelector("[data-admin-settings-result-close]");
+    var resultRedirect = "";
+    var resultTimer = 0;
+    var previousFocus = null;
+
+    function closeResult() {
+      if (!resultModal) {
+        return;
+      }
+
+      if (resultRedirect) {
+        window.location.assign(resultRedirect);
+        return;
+      }
+
+      resultModal.classList.remove("is-open");
+      resultModal.setAttribute("aria-hidden", "true");
+      document.body.classList.remove("admin-settings-result-open");
+      if (resultTimer) {
+        window.clearTimeout(resultTimer);
+      }
+      resultTimer = window.setTimeout(function () {
+        resultModal.hidden = true;
+        resultTimer = 0;
+      }, 180);
+
+      if (previousFocus && typeof previousFocus.focus === "function") {
+        previousFocus.focus();
+      }
+      previousFocus = null;
+    }
+
+    function showResult(payload) {
+      if (!resultModal || !resultTitle || !resultMessage || !resultClose) {
+        if (payload.redirect_url) {
+          window.location.assign(payload.redirect_url);
+          return;
+        }
+        window.alert(payload.message || payload.title || "The account action could not be completed.");
+        return;
+      }
+
+      if (resultTimer) {
+        window.clearTimeout(resultTimer);
+        resultTimer = 0;
+      }
+      previousFocus = document.activeElement;
+      resultRedirect = String(payload.redirect_url || "");
+      resultTitle.textContent = String(payload.title || (payload.ok ? "Account updated" : "Unable to save"));
+      resultMessage.textContent = String(payload.message || "");
+      resultClose.textContent = resultRedirect ? "Sign in again" : "Done";
+      resultModal.classList.toggle("is-error", !payload.ok);
+      resultModal.hidden = false;
+      resultModal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("admin-settings-result-open");
+
+      window.requestAnimationFrame(function () {
+        resultModal.classList.add("is-open");
+        resultClose.focus();
+      });
+    }
+
+    toggles.forEach(function (toggle) {
+      toggle.addEventListener("click", function () {
+        var targetId = toggle.getAttribute("aria-controls");
+        var input = targetId ? document.getElementById(targetId) : null;
+        if (!input) {
+          return;
+        }
+        var showing = input.type === "text";
+        input.type = showing ? "password" : "text";
+        toggle.textContent = showing ? "Show" : "Hide";
+        toggle.setAttribute("aria-pressed", showing ? "false" : "true");
+        toggle.setAttribute("aria-label", (showing ? "Show" : "Hide") + " password");
+      });
+    });
+
+    forms.forEach(function (form) {
+      form.addEventListener("submit", function (event) {
+        event.preventDefault();
+        var submitButtons = Array.prototype.slice.call(form.querySelectorAll('button[type="submit"]'));
+        submitButtons.forEach(function (button) {
+          button.disabled = true;
+        });
+
+        window.fetch(form.action || window.location.href, {
+          method: "POST",
+          body: new FormData(form),
+          credentials: "same-origin",
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        })
+          .then(function (response) {
+            var contentType = String(response.headers.get("content-type") || "");
+            if (contentType.indexOf("application/json") === -1) {
+              if (response.redirected && response.url) {
+                window.location.assign(response.url);
+                return null;
+              }
+              throw new Error("Unexpected server response.");
+            }
+            return response.json();
+          })
+          .then(function (payload) {
+            if (payload) {
+              showResult(payload);
+            }
+          })
+          .catch(function () {
+            showResult({
+              ok: false,
+              title: "Unable to save",
+              message: "The account request could not be completed. Check your connection and try again.",
+            });
+          })
+          .finally(function () {
+            submitButtons.forEach(function (button) {
+              button.disabled = false;
+            });
+          });
+      });
+    });
+
+    if (resultClose) {
+      resultClose.addEventListener("click", closeResult);
+    }
+    if (resultModal) {
+      resultModal.addEventListener("click", function (event) {
+        if (event.target === resultModal && !resultRedirect) {
+          closeResult();
+        }
+      });
+      resultModal.addEventListener("keydown", function (event) {
+        if (event.key === "Escape" && !resultRedirect) {
+          event.preventDefault();
+          closeResult();
+        }
+        if (event.key === "Tab" && resultClose) {
+          event.preventDefault();
+          resultClose.focus();
+        }
+      });
+    }
+  }
+
   function initDashboardUi() {
     var toggle = document.querySelector("[data-sidebar-toggle]");
     var overlay = document.querySelector("[data-sidebar-overlay]");
@@ -2778,6 +2936,7 @@
     initAdminFeedbackManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
+    initAdminAccountSettings();
     initAdminUserManagement();
     initAdminHighlightEditor();
     initAutoDismissAlerts();

@@ -11,10 +11,10 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 from flask import Flask, g, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
-from werkzeug.security import check_password_hash
+from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from admin_users_repository import get_active_admin_user_by_email
+from admin_users_repository import get_active_admin_user_by_email, touch_admin_account, update_admin_password
 from analytics_content import load_admin_analytics_dashboard, register_analytics_routes
 from community_content import load_news_community_highlights, register_community_content_routes
 from community_content.service import load_admin_community_highlights
@@ -150,6 +150,7 @@ ADMIN_LOGOUT_PATH = f"{ADMIN_ROUTE_PREFIX}/logout"
 
 ADMIN_SESSION_KEY = "admin_authenticated"
 ADMIN_SESSION_USER_KEY = "admin_email"
+ADMIN_SESSION_VERSION_KEY = "admin_account_version"
 ADMIN_CSRF_KEY = "admin_csrf"
 ADMIN_DEFAULT_USERNAME = "Administrator"
 PUBLIC_SESSION_KEY = "public_authenticated"
@@ -914,7 +915,7 @@ def _authenticate_admin_credentials(email, password):
 
     try:
         if check_password_hash(stored_password_hash, password):
-            return stored_email
+            return admin_user
     except (ValueError, TypeError):
         return False
 
@@ -940,7 +941,73 @@ def _is_admin_authenticated():
     if session.get(ADMIN_SESSION_KEY) is not True:
         return False
     session_email = _normalize_admin_email(session.get(ADMIN_SESSION_USER_KEY, ""))
-    return _is_valid_admin_email(session_email)
+    session_version = str(session.get(ADMIN_SESSION_VERSION_KEY, "") or "").strip()
+    if not _is_valid_admin_email(session_email) or not session_version:
+        return False
+
+    try:
+        admin_user = get_active_admin_user_by_email(session_email)
+    except Exception:  # noqa: BLE001
+        app.logger.exception("Failed to validate the active administrator session.")
+        return False
+
+    if not admin_user:
+        return False
+
+    current_version = str(admin_user.get("updated_at", "") or "").strip()
+    if not current_version or not hmac.compare_digest(session_version, current_version):
+        return False
+
+    g.admin_user = admin_user
+    return True
+
+
+ADMIN_COMMON_PASSWORDS = {
+    "administrator",
+    "admin123456789",
+    "changeme123456",
+    "letmein123456789",
+    "nhcpadministrator",
+    "password123456",
+    "qwerty123456789",
+}
+
+
+def _validate_new_admin_password(password, email):
+    candidate = str(password or "")
+    if len(candidate) < 15:
+        return "Use at least 15 characters for an administrator password."
+    if len(candidate) > 128:
+        return "The new password must not exceed 128 characters."
+    if not candidate.strip():
+        return "The new password cannot contain only spaces."
+
+    normalized_candidate = candidate.casefold()
+    compact_candidate = re.sub(r"[^a-z0-9]", "", normalized_candidate)
+    normalized_email = _normalize_admin_email(email)
+    email_local_part = normalized_email.split("@", 1)[0].casefold() if normalized_email else ""
+
+    if normalized_candidate in ADMIN_COMMON_PASSWORDS or compact_candidate in ADMIN_COMMON_PASSWORDS:
+        return "Choose a less common administrator password."
+    if normalized_candidate == normalized_email.casefold() or (
+        email_local_part and normalized_candidate == email_local_part
+    ):
+        return "The new password must not be the administrator email or account name."
+    return None
+
+
+def _admin_settings_response(*, ok, title, message, status_code=200, redirect_url=None):
+    payload = {
+        "ok": bool(ok),
+        "title": str(title),
+        "message": str(message),
+    }
+    if redirect_url:
+        payload["redirect_url"] = str(redirect_url)
+
+    if request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify(payload), status_code
+    return None
 
 
 def _admin_required(view_func):
@@ -999,6 +1066,11 @@ def admin_login():
 
     status_code = 200
     error_message = None
+    success_message = (
+        "Your administrator password was updated. Sign in with the new password."
+        if request.args.get("password_changed") == "1"
+        else None
+    )
 
     if request.method == "POST":
         if not _is_admin_auth_configured():
@@ -1018,17 +1090,32 @@ def admin_login():
                 password = str(request.form.get("password", ""))
 
                 if _is_valid_login_payload(email, password):
-                    authenticated_email = _authenticate_admin_credentials(email, password)
+                    authenticated_admin = _authenticate_admin_credentials(email, password)
 
-                    if authenticated_email is None:
+                    if authenticated_admin is None:
                         status_code = 503
                         error_message = "Login is temporarily unavailable."
-                    elif authenticated_email:
+                    elif authenticated_admin:
+                        authenticated_email = _normalize_admin_email(authenticated_admin.get("email", ""))
+                        account_version = str(authenticated_admin.get("updated_at", "") or "").strip()
+                        if not authenticated_email or not account_version:
+                            status_code = 503
+                            error_message = "Login is temporarily unavailable."
+                            csrf_token = _ensure_admin_csrf_token()
+                            return make_response(
+                                render_template(
+                                    "admin/AdminLogin.html",
+                                    csrf_token=csrf_token,
+                                    error_message=error_message,
+                                ),
+                                status_code,
+                            )
                         _clear_failed_logins(client_ip)
                         session.clear()
                         session.permanent = True
                         session[ADMIN_SESSION_KEY] = True
                         session[ADMIN_SESSION_USER_KEY] = authenticated_email
+                        session[ADMIN_SESSION_VERSION_KEY] = account_version
                         session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
                         return redirect(url_for("admin_dashboard"))
                     else:
@@ -1042,7 +1129,12 @@ def admin_login():
 
     csrf_token = _ensure_admin_csrf_token()
     response = make_response(
-        render_template("admin/AdminLogin.html", csrf_token=csrf_token, error_message=error_message),
+        render_template(
+            "admin/AdminLogin.html",
+            csrf_token=csrf_token,
+            error_message=error_message,
+            success_message=success_message,
+        ),
         status_code,
     )
     return response
@@ -1513,6 +1605,143 @@ def three_d_environment():
         "WebXREnvironment.html",
         webxr_scene="",
         webxr_asset_version=WEBXR_ASSET_VERSION,
+    )
+
+
+@app.route(f"{ADMIN_ROUTE_PREFIX}/account-settings", methods=["GET", "POST"])
+@_admin_required
+def admin_account_settings():
+    admin_user = getattr(g, "admin_user", None)
+    if not admin_user:
+        session.clear()
+        return redirect(url_for("admin_login"))
+
+    csrf_token = _ensure_admin_csrf_token()
+    admin_email = _normalize_admin_email(admin_user.get("email", ""))
+    admin_username = admin_email or ADMIN_DEFAULT_USERNAME
+    error_message = None
+    status_code = 200
+
+    if request.method == "POST":
+        if not _is_admin_csrf_valid(request.form.get("csrf_token")):
+            status_code = 400
+            error_message = "The security token is invalid or expired. Reload the page and try again."
+        else:
+            client_ip = _get_client_ip()
+            is_limited, retry_after_seconds = _is_login_rate_limited(client_ip)
+            if is_limited:
+                status_code = 429
+                error_message = f"Too many attempts. Try again in {retry_after_seconds} seconds."
+            else:
+                current_password = str(request.form.get("current_password", ""))
+                stored_password_hash = str(admin_user.get("password_hash", "") or "")
+                current_password_valid = False
+                try:
+                    current_password_valid = bool(
+                        current_password
+                        and len(current_password) <= 1024
+                        and stored_password_hash
+                        and check_password_hash(stored_password_hash, current_password)
+                    )
+                except (TypeError, ValueError):
+                    current_password_valid = False
+
+                if not current_password_valid:
+                    _record_failed_login(client_ip)
+                    status_code = 401
+                    error_message = "The current password is incorrect."
+                else:
+                    action = str(request.form.get("action", "change-password")).strip().lower()
+                    if action == "change-password":
+                        new_password = str(request.form.get("new_password", ""))
+                        confirm_password = str(request.form.get("confirm_password", ""))
+                        error_message = _validate_new_admin_password(new_password, admin_email)
+
+                        if not error_message and not hmac.compare_digest(new_password, confirm_password):
+                            error_message = "The new password and confirmation do not match."
+                        if not error_message:
+                            try:
+                                same_as_current = check_password_hash(stored_password_hash, new_password)
+                            except (TypeError, ValueError):
+                                same_as_current = False
+                            if same_as_current:
+                                error_message = "Choose a password that is different from the current password."
+
+                        if error_message:
+                            status_code = 400
+                        else:
+                            try:
+                                security_timestamp = datetime.utcnow().isoformat(timespec="microseconds") + "Z"
+                                update_admin_password(
+                                    int(admin_user["id"]),
+                                    generate_password_hash(new_password),
+                                    security_timestamp,
+                                )
+                            except Exception:  # noqa: BLE001
+                                app.logger.exception("Failed to update the administrator password.")
+                                status_code = 503
+                                error_message = "The password could not be updated. Please try again."
+                            else:
+                                _clear_failed_logins(client_ip)
+                                session.clear()
+                                ajax_response = _admin_settings_response(
+                                    ok=True,
+                                    title="Password updated",
+                                    message="Your password was changed and all administrator sessions were signed out. Sign in again to continue.",
+                                    redirect_url=url_for("admin_login"),
+                                )
+                                if ajax_response:
+                                    return ajax_response
+                                return redirect(url_for("admin_login", password_changed="1"))
+                    elif action == "sign-out-all":
+                        try:
+                            security_timestamp = datetime.utcnow().isoformat(timespec="microseconds") + "Z"
+                            touch_admin_account(int(admin_user["id"]), security_timestamp)
+                        except Exception:  # noqa: BLE001
+                            app.logger.exception("Failed to invalidate administrator sessions.")
+                            status_code = 503
+                            error_message = "Administrator sessions could not be ended. Please try again."
+                        else:
+                            _clear_failed_logins(client_ip)
+                            session.clear()
+                            ajax_response = _admin_settings_response(
+                                ok=True,
+                                title="Sessions ended",
+                                message="All administrator sessions were signed out successfully.",
+                                redirect_url=url_for("admin_login"),
+                            )
+                            if ajax_response:
+                                return ajax_response
+                            return redirect(url_for("admin_login"))
+                    else:
+                        status_code = 400
+                        error_message = "Unsupported account action."
+
+        ajax_response = _admin_settings_response(
+            ok=False,
+            title="Unable to save",
+            message=error_message or "The account change could not be completed.",
+            status_code=status_code,
+        )
+        if ajax_response:
+            return ajax_response
+
+    return (
+        render_template(
+            "admin/AdminAccountSettings.html",
+            csrf_token=csrf_token,
+            admin_username=admin_username,
+            admin_account={
+                "email": admin_email,
+                "initial": (admin_email[:1] or "A").upper(),
+                "status": "Active" if admin_user.get("is_active") else "Disabled",
+                "created_at": _format_dashboard_datetime(admin_user.get("created_at")),
+                "updated_at": _format_dashboard_datetime(admin_user.get("updated_at")),
+                "session_minutes": int(app.config["PERMANENT_SESSION_LIFETIME"].total_seconds() // 60),
+            },
+            error_message=error_message,
+        ),
+        status_code,
     )
 
 

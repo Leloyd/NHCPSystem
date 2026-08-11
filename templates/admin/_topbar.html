@@ -21,10 +21,10 @@
       <span class="admin-notification-dot"></span>
     </button>
 
-    <div class="admin-profile-pill">
+    <a href="{{ url_for('admin_account_settings') }}" class="admin-profile-pill" aria-label="Open administrator account settings">
       <span class="admin-profile-avatar">{{ (admin_username or 'A')[:1]|upper }}</span>
       <span class="admin-profile-name">{{ admin_username or 'Admin' }}</span>
-    </div>
+    </a>
     {% elif admin_topbar_tool_href and admin_topbar_tool_label %}
     <a href="{{ admin_topbar_tool_href }}" class="{{ admin_topbar_tool_class or 'admin-text-link' }}">{{ admin_topbar_tool_label }}</a>
     {% endif %}

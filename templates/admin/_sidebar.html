@@ -89,6 +89,15 @@
   </nav>
 
   <div class="admin-sidebar-account">
+    <a href="{{ url_for('admin_account_settings') }}" class="admin-nav-link admin-account-settings-link{% if admin_active_page == 'account-settings' %} is-active{% endif %}">
+      {% if admin_active_page == 'account-settings' %}
+      <span class="admin-nav-indicator" aria-hidden="true"></span>
+      {% endif %}
+      <span class="admin-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="M19.43 12.98a7.64 7.64 0 0 0 .05-.98 7.64 7.64 0 0 0-.05-.98l2.11-1.65-2-3.46-2.49 1a7.2 7.2 0 0 0-1.69-.98L15 3.27h-4l-.36 2.66a7.2 7.2 0 0 0-1.69.98l-2.49-1-2 3.46 2.11 1.65a7.64 7.64 0 0 0-.05.98 7.64 7.64 0 0 0 .05.98l-2.11 1.65 2 3.46 2.49-1a7.2 7.2 0 0 0 1.69.98L11 20.73h4l.36-2.66a7.2 7.2 0 0 0 1.69-.98l2.49 1 2-3.46ZM13 15.5a3.5 3.5 0 1 1 3.5-3.5 3.5 3.5 0 0 1-3.5 3.5Z"></path></svg>
+      </span>
+      <span>Account Settings</span>
+    </a>
     <form method="post" action="{{ url_for('admin_logout') }}" class="admin-logout-form">
       <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
       <button type="submit" class="admin-logout-button">
