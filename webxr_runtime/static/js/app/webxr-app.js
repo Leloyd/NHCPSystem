@@ -3,7 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-9';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-splat-interactions-1';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-vr-gaze-blocking-1';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js?v=20260811-splat-interactions-1';
 import { PlayerController } from './player-controller.js?v=20260811-vr-ui-quality-1';
@@ -3964,7 +3964,9 @@ export class WebXRApp {
       playerController: this.playerController,
       collisionSystem: this.collisionSystem,
       getViewRay: (origin, direction) => this.phoneVrGazeSystem?.copyViewRay(origin, direction) || false,
-      isActive: () => this._shouldUsePhoneVrGazeTeleport() && !this.phoneVrGazeSystem?.hasTarget,
+      isActive: () => this._shouldUsePhoneVrGazeTeleport()
+        && !this.phoneVrGazeSystem?.hasTarget
+        && !this.phoneVrGazeSystem?.hasForegroundBlocker,
     });
 
     const spawnPoint = this._computeSpawnPoint();
@@ -4023,6 +4025,7 @@ export class WebXRApp {
       registry: this.interactionRegistry,
       uiController: this.uiController,
       getPickables: () => this.pickableMeshes,
+      getBlockers: () => this._getPhoneVrGazeBlockers(),
       getPlayerPosition: () => this.playerRig.position,
       isOccluded: (object) => this._isPickableSplatOccluded(object),
       isActive: () => this._shouldUsePhoneVrGazeInteraction(),
@@ -4274,6 +4277,33 @@ export class WebXRApp {
 
     this.pickableMeshes = [];
     this.uiController.hideInteraction();
+  }
+
+  _getPhoneVrGazeBlockers() {
+    const blockers = new Set(this.pickableMeshes.filter(Boolean));
+    const addVisibleRenderables = (root) => {
+      if (!root) {
+        return;
+      }
+      root.traverse((object) => {
+        if ((object.isMesh || object.isSprite) && this._isObjectInVisibleHierarchy(object)) {
+          blockers.add(object);
+        }
+      });
+    };
+
+    // Once opened, these are spatial reading/viewing surfaces rather than
+    // floor targets. Include the model, title, subtitle, image panel, and all
+    // controls so gaze locomotion cannot activate through any of them.
+    if (this.museumArtifactStation?.isOpen) {
+      addVisibleRenderables(this.museumArtifactStation.root);
+      addVisibleRenderables(this.museumArtifactStation.languageSprite);
+      addVisibleRenderables(this.museumArtifactStation.subtitleToggleSprite);
+    }
+    addVisibleRenderables(this.museumArtifactStation?.toggleSprite);
+    addVisibleRenderables(this.xrHotspotTableViewer);
+
+    return [...blockers];
   }
 
   _prepareTransferredSceneForXr() {

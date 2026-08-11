@@ -7,11 +7,13 @@ const EYE_DIRECTION = new THREE.Vector3();
 const EYE_PROJECTION_CENTER = new THREE.Vector3();
 const TARGET_WORLD_POSITION = new THREE.Vector3();
 const TARGET_DIRECTION = new THREE.Vector3();
+const TARGET_WORLD_SCALE = new THREE.Vector3();
 const RETICLE_DISTANCE = 1.25;
 const XR_RETICLE_SIZE = 0.105;
 const DWELL_SECONDS = 1;
 const GAZE_TARGET_ANGLE_DEG = 6;
 const GAZE_UI_TARGET_ANGLE_DEG = 3;
+const GAZE_BLOCKER_ANGLE_DEG = 7;
 const BASE_COLOR = new THREE.Color(0xf4d77f);
 const READY_COLOR = new THREE.Color(0x63e6a3);
 
@@ -28,6 +30,7 @@ export class PhoneVrGazeSystem {
     registry,
     uiController,
     getPickables,
+    getBlockers,
     getPlayerPosition,
     isOccluded,
     isActive,
@@ -38,6 +41,7 @@ export class PhoneVrGazeSystem {
     this.registry = registry;
     this.uiController = uiController;
     this.getPickables = getPickables;
+    this.getBlockers = typeof getBlockers === 'function' ? getBlockers : () => [];
     this.getPlayerPosition = getPlayerPosition;
     this.isOccluded = typeof isOccluded === 'function' ? isOccluded : () => false;
     this.isActive = typeof isActive === 'function' ? isActive : () => false;
@@ -54,6 +58,7 @@ export class PhoneVrGazeSystem {
     this.blockedObject = null;
     this.dwellSeconds = 0;
     this.hasTarget = false;
+    this.hasForegroundBlocker = false;
     this.reticleProgress = 0;
   }
 
@@ -110,20 +115,60 @@ export class PhoneVrGazeSystem {
       toneMapped: false,
     });
 
-    // Three.js reserves layer 1 for the left XR eye and layer 2 for the
-    // right. A separate reticle on each eye layer keeps the circle at the
-    // exact optical center of both Cardboard views instead of projecting one
-    // shared world sprite slightly off-center in stereo.
-    return [1, 2].map((eyeLayer, index) => {
-      const sprite = new THREE.Sprite(material);
-      sprite.name = `phone-webxr-gaze-reticle-${index === 0 ? 'left' : 'right'}`;
-      sprite.layers.set(eyeLayer);
-      sprite.visible = false;
-      sprite.scale.set(XR_RETICLE_SIZE, XR_RETICLE_SIZE, 1);
-      sprite.renderOrder = 10002;
-      sprite.frustumCulled = false;
-      return sprite;
-    });
+    // Use one shared world-space convergence point rendered to both eyes.
+    // Two independent eye-layer sprites can look centered on each half of the
+    // phone but remain two separate points inside a Cardboard viewer. A shared
+    // point receives the headset's natural stereo disparity and fuses as one.
+    const sprite = new THREE.Sprite(material);
+    sprite.name = 'phone-webxr-gaze-reticle';
+    sprite.visible = false;
+    sprite.scale.set(XR_RETICLE_SIZE, XR_RETICLE_SIZE, 1);
+    sprite.renderOrder = 10002;
+    sprite.frustumCulled = false;
+    return [sprite];
+  }
+
+  _hasGazeForegroundBlocker() {
+    const blockers = [...new Set(this.getBlockers?.() ?? [])]
+      .filter((object) => object && this._isObjectVisible(object) && !this.isOccluded(object));
+    if (blockers.length === 0) {
+      return false;
+    }
+
+    const meshBlockers = blockers.filter((object) => !object.isSprite);
+    if (meshBlockers.length > 0) {
+      try {
+        const hits = this.raycaster.intersectObjects(meshBlockers, true);
+        if (hits.length > 0) {
+          return true;
+        }
+      } catch (error) {
+        console.warn('[xr] gaze blocker raycast failed', error);
+      }
+    }
+
+    for (const object of blockers) {
+      if (!object.isSprite) {
+        continue;
+      }
+      object.getWorldPosition(TARGET_WORLD_POSITION);
+      TARGET_DIRECTION.copy(TARGET_WORLD_POSITION).sub(VIEW_ORIGIN);
+      const distance = TARGET_DIRECTION.length();
+      if (!Number.isFinite(distance) || distance < 1e-5) {
+        continue;
+      }
+      TARGET_DIRECTION.multiplyScalar(1 / distance);
+      object.getWorldScale(TARGET_WORLD_SCALE);
+      const halfSize = Math.max(TARGET_WORLD_SCALE.x, TARGET_WORLD_SCALE.y) * 0.5;
+      const apparentHalfAngle = THREE.MathUtils.radToDeg(Math.atan2(halfSize, distance));
+      const blockerAngle = Math.max(GAZE_BLOCKER_ANGLE_DEG, apparentHalfAngle);
+      const angle = THREE.MathUtils.radToDeg(VIEW_DIRECTION.angleTo(TARGET_DIRECTION));
+      if (angle <= blockerAngle) {
+        return true;
+      }
+    }
+
+    return false;
   }
 
   _getInteractionHit() {
@@ -242,7 +287,7 @@ export class PhoneVrGazeSystem {
         cameraParent?.updateMatrixWorld(true);
         VIEW_ORIGIN.set(0, 0, 0);
         VIEW_DIRECTION.set(0, 0, 0);
-        this.activeEyeCount = Math.min(eyeCameras.length, this.xrReticles.length);
+        this.activeEyeCount = Math.min(eyeCameras.length, this.eyeOrigins.length);
         eyeCameras.slice(0, this.activeEyeCount).forEach((eyeCamera, index) => {
           // WebXRManager's eye cameras are held in an ArrayCamera but are not
           // parented to the application's player rig. Calling the ordinary
@@ -327,14 +372,11 @@ export class PhoneVrGazeSystem {
   _updateReticle(progress = 0) {
     const normalizedProgress = THREE.MathUtils.clamp(progress, 0, 1);
     const scale = XR_RETICLE_SIZE * (1 + normalizedProgress * 0.22);
-    this.xrReticles.forEach((reticle, index) => {
-      reticle.visible = index < this.activeEyeCount;
-      if (!reticle.visible) {
-        return;
-      }
+    this.xrReticles.forEach((reticle) => {
+      reticle.visible = this.activeEyeCount > 0;
       reticle.position
-        .copy(this.eyeOrigins[index])
-        .addScaledVector(this.eyeDirections[index], RETICLE_DISTANCE);
+        .copy(VIEW_ORIGIN)
+        .addScaledVector(VIEW_DIRECTION, RETICLE_DISTANCE);
       reticle.scale.set(scale, scale, 1);
       reticle.material.color.copy(BASE_COLOR).lerp(READY_COLOR, normalizedProgress);
     });
@@ -349,6 +391,7 @@ export class PhoneVrGazeSystem {
     this.blockedObject = null;
     this.dwellSeconds = 0;
     this.hasTarget = false;
+    this.hasForegroundBlocker = false;
     this.reticleProgress = 0;
   }
 
@@ -392,6 +435,7 @@ export class PhoneVrGazeSystem {
     const hit = this._getInteractionHit();
     const object = hit?.object ?? null;
     this.hasTarget = Boolean(object);
+    this.hasForegroundBlocker = this.hasTarget || this._hasGazeForegroundBlocker();
 
     if (this.blockedObject) {
       if (object === this.blockedObject) {
