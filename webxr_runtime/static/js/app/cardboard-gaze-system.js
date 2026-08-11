@@ -1,10 +1,6 @@
 import * as THREE from 'three';
 
 const CENTER = new THREE.Vector2(0, 0);
-const VIEW_ORIGIN = new THREE.Vector3();
-const VIEW_DIRECTION = new THREE.Vector3();
-const RETICLE_DISTANCE = 1.35;
-const RETICLE_SIZE = 0.052;
 const DWELL_SECONDS = 1;
 const BASE_COLOR = new THREE.Color(0xf4d77f);
 const READY_COLOR = new THREE.Color(0x63e6a3);
@@ -26,8 +22,7 @@ export class CardboardGazeSystem {
 
     this.raycaster = new THREE.Raycaster();
     this.raycaster.firstHitOnly = true;
-    this.reticle = this._createReticle();
-    this.scene.add(this.reticle);
+    this.reticle = this._createReticleOverlay();
 
     this.targetObject = null;
     this.blockedObject = null;
@@ -35,47 +30,62 @@ export class CardboardGazeSystem {
     this.hasTarget = false;
   }
 
-  _createReticle() {
-    const canvas = document.createElement('canvas');
-    canvas.width = 128;
-    canvas.height = 128;
-    const context = canvas.getContext('2d');
+  _createReticleOverlay() {
+    const root = document.createElement('div');
+    root.id = 'cardboard-gaze-reticles';
+    root.hidden = true;
+    root.setAttribute('aria-hidden', 'true');
+    root.style.cssText = [
+      'position:fixed',
+      'inset:0',
+      'z-index:2147483000',
+      'pointer-events:none',
+      'user-select:none',
+    ].join(';');
 
-    if (context) {
-      context.clearRect(0, 0, 128, 128);
-      context.beginPath();
-      context.arc(64, 64, 31, 0, Math.PI * 2);
-      context.lineWidth = 9;
-      context.strokeStyle = '#ffffff';
-      context.stroke();
+    const eyes = [25, 75].map((leftPercent) => {
+      const outer = document.createElement('div');
+      outer.style.cssText = [
+        'position:absolute',
+        `left:${leftPercent}%`,
+        'top:50%',
+        'width:34px',
+        'height:34px',
+        'border-radius:50%',
+        'transform:translate(-50%, -50%)',
+        'filter:drop-shadow(0 0 6px rgba(0,0,0,.9))',
+      ].join(';');
 
-      context.beginPath();
-      context.arc(64, 64, 5, 0, Math.PI * 2);
-      context.fillStyle = 'rgba(255, 255, 255, 0.72)';
-      context.fill();
-    }
+      const inner = document.createElement('div');
+      inner.style.cssText = [
+        'position:absolute',
+        'inset:5px',
+        'border:3px solid #f4d77f',
+        'border-radius:50%',
+        'background:rgba(10,7,2,.38)',
+        'box-sizing:border-box',
+      ].join(';');
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
+      const dot = document.createElement('span');
+      dot.style.cssText = [
+        'position:absolute',
+        'left:50%',
+        'top:50%',
+        'width:5px',
+        'height:5px',
+        'border-radius:50%',
+        'background:#f4d77f',
+        'transform:translate(-50%, -50%)',
+        'box-shadow:0 0 5px rgba(244,215,127,.9)',
+      ].join(';');
 
-    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
-      map: texture,
-      color: BASE_COLOR,
-      transparent: true,
-      opacity: 0.92,
-      depthTest: false,
-      depthWrite: false,
-      toneMapped: false,
-    }));
-    sprite.name = 'cardboard-gaze-reticle';
-    sprite.visible = false;
-    sprite.scale.set(RETICLE_SIZE, RETICLE_SIZE, 1);
-    sprite.renderOrder = 10002;
-    sprite.frustumCulled = false;
-    return sprite;
+      outer.append(inner, dot);
+      root.appendChild(outer);
+      return { outer, inner, dot };
+    });
+
+    document.body.appendChild(root);
+    return { root, eyes };
   }
 
   _getInteractionHit() {
@@ -131,21 +141,21 @@ export class CardboardGazeSystem {
   }
 
   _updateReticle(progress = 0) {
-    this.camera.updateWorldMatrix(true, false);
-    this.camera.getWorldPosition(VIEW_ORIGIN);
-    this.camera.getWorldDirection(VIEW_DIRECTION).normalize();
-    this.reticle.position.copy(VIEW_ORIGIN).addScaledVector(VIEW_DIRECTION, RETICLE_DISTANCE);
-
     const normalizedProgress = THREE.MathUtils.clamp(progress, 0, 1);
-    const pulse = 1 + normalizedProgress * 0.24;
-    this.reticle.scale.set(RETICLE_SIZE * pulse, RETICLE_SIZE * pulse, 1);
-    this.reticle.material.color.copy(BASE_COLOR).lerp(READY_COLOR, normalizedProgress);
-    this.reticle.material.opacity = 0.92 + normalizedProgress * 0.08;
-    this.reticle.visible = true;
+    const progressDegrees = Math.max(2, normalizedProgress * 360);
+    const color = BASE_COLOR.clone().lerp(READY_COLOR, normalizedProgress).getStyle();
+    this.reticle.root.hidden = false;
+    this.reticle.eyes.forEach(({ outer, inner, dot }) => {
+      outer.style.background = `conic-gradient(${color} ${progressDegrees}deg, rgba(244,215,127,.2) ${progressDegrees}deg)`;
+      outer.style.transform = `translate(-50%, -50%) scale(${1 + normalizedProgress * 0.16})`;
+      inner.style.borderColor = color;
+      dot.style.background = color;
+      dot.style.boxShadow = `0 0 ${5 + normalizedProgress * 4}px ${color}`;
+    });
   }
 
   reset() {
-    this.reticle.visible = false;
+    this.reticle.root.hidden = true;
     this.targetObject = null;
     this.blockedObject = null;
     this.dwellSeconds = 0;
@@ -206,8 +216,6 @@ export class CardboardGazeSystem {
   }
 
   dispose() {
-    this.scene.remove(this.reticle);
-    this.reticle.material?.map?.dispose?.();
-    this.reticle.material?.dispose?.();
+    this.reticle.root.remove();
   }
 }
