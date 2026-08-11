@@ -20,8 +20,10 @@ const HOTSPOT_HELPER_RADIUS = 0.07;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
 const MUSEUM_ZIP_NAME = 'museum.zip';
 const MUSEUM_CONTENT_INTERACTION_MAX_DISTANCE = 2.35;
-const MUSEUM_CONTENT_DISPLAY_SIZE = 0.88;
-const MUSEUM_CONTENT_FORWARD_TILT = THREE.MathUtils.degToRad(-8);
+// The individual museum hotspot artifacts use the original 1x exhibit size.
+// Their larger shared carousel intentionally remains at its authored 2x scale.
+const MUSEUM_CONTENT_DISPLAY_SIZE = 0.58;
+const MUSEUM_CONTENT_FORWARD_TILT = THREE.MathUtils.degToRad(-12);
 const MUSEUM_CONTENT_HOTSPOTS = {
   'museum-content-kabila': {
     position: [0.00, 1.00, 2.65],
@@ -3622,9 +3624,9 @@ export class WebXRApp {
     }
 
     const previousTexture = icon.material.map;
-    icon.material.map = this._createHotspotIconTexture(
-      markerConfig.color ?? HOTSPOT_HELPER_COLOR,
-      isOpen ? 'close' : 'open',
+    icon.material.map = this._createMuseumArtifactControlTexture(
+      isOpen ? 'CLOSE' : 'OPEN',
+      isOpen,
     );
     icon.material.needsUpdate = true;
     previousTexture?.dispose?.();
@@ -3632,7 +3634,10 @@ export class WebXRApp {
     icon.parent?.remove(icon);
     if (isOpen && viewerRoot) {
       viewerRoot.add(icon);
-      icon.position.set(0.94, -1.16, 0.16);
+      // Match the original floating exhibit: the control drops slightly and
+      // sits in front of the opened content instead of covering the artifact.
+      icon.position.set(0, -0.25, 1.16);
+      icon.scale.set(0.18, 0.18, 1);
       icon.renderOrder = 62;
       icon.userData.museumContentOpen = true;
       return;
@@ -3640,6 +3645,7 @@ export class WebXRApp {
 
     marker.add(icon);
     icon.position.set(0, 0, 0);
+    icon.scale.set(0.18, 0.18, 1);
     icon.renderOrder = 6;
     icon.userData.museumContentOpen = false;
   }
@@ -3675,7 +3681,7 @@ export class WebXRApp {
     root.userData.splatOcclusionMargin = 0.12;
 
     const border = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.24, 2.66),
+      new THREE.PlaneGeometry(2.08, 2.22),
       new THREE.MeshBasicMaterial({
         color: 0xd4af6a,
         depthTest: false,
@@ -3687,7 +3693,7 @@ export class WebXRApp {
     root.add(border);
 
     const panel = new THREE.Mesh(
-      new THREE.PlaneGeometry(2.18, 2.60),
+      new THREE.PlaneGeometry(2.02, 2.16),
       new THREE.MeshBasicMaterial({
         color: 0x120c06,
         depthTest: false,
@@ -3707,42 +3713,42 @@ export class WebXRApp {
 
     const titleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture(''),
-      position: [0, -0.10, 0.09],
-      scale: [1.60, 0.28],
+      position: [0, -0.12, 0.09],
+      scale: [0.92, 0.16],
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
       position: [0, -0.62, 0.09],
-      scale: [1.86, 0.68],
+      scale: [1.65, 0.62],
     });
     root.add(titleSprite, subtitleSprite);
 
     const previousSprite = this._createMuseumContentControl({
       parent: root,
       label: '←',
-      position: [-0.86, 0.34, 0.12],
-      scale: 0.20,
+      position: [-0.90, 0.48, 0.12],
+      scale: 0.18,
       name: 'museum-content-prev',
     });
     const nextSprite = this._createMuseumContentControl({
       parent: root,
       label: '→',
-      position: [0.86, 0.34, 0.12],
-      scale: 0.20,
+      position: [0.90, 0.48, 0.12],
+      scale: 0.18,
       name: 'museum-content-next',
     });
     const languageSprite = this._createMuseumContentControl({
       parent: root,
       label: viewer.language.toUpperCase(),
-      position: [-0.24, -1.15, 0.12],
-      scale: 0.20,
+      position: [-0.22, -0.94, 0.12],
+      scale: 0.18,
       name: 'museum-content-language',
     });
     const subtitleToggleSprite = this._createMuseumContentControl({
       parent: root,
       label: 'CC',
-      position: [0.24, -1.15, 0.12],
-      scale: 0.20,
+      position: [0.22, -0.94, 0.12],
+      scale: 0.18,
       name: 'museum-content-subtitles',
     });
 
@@ -3852,10 +3858,10 @@ export class WebXRApp {
           const width = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
           const height = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
           const aspect = width / Math.max(1, height);
-          let planeWidth = 1.34;
+          let planeWidth = 1.18;
           let planeHeight = planeWidth / Math.max(0.1, aspect);
-          if (planeHeight > 0.78) {
-            planeHeight = 0.78;
+          if (planeHeight > 0.72) {
+            planeHeight = 0.72;
             planeWidth = planeHeight * aspect;
           }
           const image = new THREE.Mesh(
@@ -3933,10 +3939,10 @@ export class WebXRApp {
     }
     if (entry.textOnly) {
       viewer.subtitleSprite.position.set(0, 0.04, 0.09);
-      viewer.subtitleSprite.scale.set(1.92, 1.58, 1);
+      viewer.subtitleSprite.scale.set(1.65, 1.28, 1);
     } else {
       viewer.subtitleSprite.position.set(0, -0.62, 0.09);
-      viewer.subtitleSprite.scale.set(1.86, 0.68, 1);
+      viewer.subtitleSprite.scale.set(1.65, 0.62, 1);
     }
     viewer.subtitleSprite.visible = Boolean(viewer.subtitlesOn && subtitleText);
     const showArrows = viewer.entries.length > 1;
@@ -4060,7 +4066,9 @@ export class WebXRApp {
       : new THREE.Vector3(position[0], position[1], position[2]);
     root.position.copy(markerPosition);
 
-    const iconTexture = this._createHotspotIconTexture(color, iconType);
+    const iconTexture = iconType === 'open'
+      ? this._createMuseumArtifactControlTexture('OPEN')
+      : this._createHotspotIconTexture(color, iconType);
     const icon = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: iconTexture,
@@ -4071,7 +4079,9 @@ export class WebXRApp {
         toneMapped: false,
       }),
     );
-    const iconSize = Math.max(radius * 2.8, 0.2);
+    const iconSize = iconType === 'open'
+      ? 0.18
+      : Math.max(radius * 2.8, 0.2);
     icon.scale.set(iconSize, iconSize, 1);
     icon.renderOrder = 6;
 
