@@ -2154,6 +2154,17 @@ export class WebXRApp {
     return CHURCH_HISTORY_IDS.includes(id);
   }
 
+  _isActiveCompletedChurchRecordViewer() {
+    const hotspotId = String(this.xrHotspotTableId || '');
+    const recordKey = WEBXR_RECORD_BY_HOTSPOT[hotspotId] || '';
+    return Boolean(
+      this.xrHotspotTableViewer
+      && this._isChurchHistoryRecord(hotspotId)
+      && recordKey
+      && this._webxrRecordProgress(recordKey).complete
+    );
+  }
+
   _recordChurchHistory(id) {
     if (!this._isChapelScene() || !this._isChurchHistoryRecord(id)) {
       return;
@@ -4945,7 +4956,13 @@ export class WebXRApp {
       this._rebuildXrHotspotTableViewer();
     });
     this.interactionRegistry.register('xr-table-back', () => {
-      this._stopExpandedHotspotAudio();
+      // Recovered images are nested inside the completed Chapel Record. Keep
+      // its narration running while returning from a nested image; only the
+      // record's main CLOSE action should end that narration. Mouse/touch and
+      // phone-VR gaze both use this same interaction handler.
+      if (!this._isActiveCompletedChurchRecordViewer()) {
+        this._stopExpandedHotspotAudio();
+      }
       this.xrHotspotTableDetail = null;
       this._rebuildXrHotspotTableViewer();
     });
@@ -4969,7 +4986,12 @@ export class WebXRApp {
         'hotspot-4': 'restoration-2008',
       }[stationId];
       if (recoveredByStation) this._revealWebxrCollectible(recoveredByStation);
-      this._playExpandedHotspotAudio(detail.audio);
+      // The Pagsasaayos, Pagkasira, and Pransiskano image pins are supporting
+      // material for one narrated record. Opening them must not replace the
+      // parent narration with a silent detail track.
+      if (!this._isActiveCompletedChurchRecordViewer()) {
+        this._playExpandedHotspotAudio(detail.audio);
+      }
       this._rebuildXrHotspotTableViewer();
     });
 
