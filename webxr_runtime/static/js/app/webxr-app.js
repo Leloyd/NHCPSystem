@@ -3,10 +3,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-native-vr-2';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-1';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
-import { PlayerController } from './player-controller.js';
+import { PlayerController } from './player-controller.js?v=20260811-spark-xr-1';
 import { UiController } from './ui-controller.js';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 
@@ -68,7 +68,7 @@ const MUSEUM_WALK_BOUNDARY_SEGMENTS = [
   [[0.34, -1.80], [0.34, -0.35]],
   [[0.34, -0.35], [0.67, -0.35]],
 ];
-const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV1';
+const WEBXR_PREFETCH_STORAGE_KEY = 'webxrSceneMetadataPrefetchV2';
 const WEBXR_PREFETCH_MAX_AGE_MS = 8 * 60 * 1000;
 const CHURCH_RETURN_SPAWN = [-3.7, -0.32, 2.5];
 const UNDERGROUND_SPAWN_POINT = [3.15, -0.47, 0.0];
@@ -1743,6 +1743,16 @@ export class WebXRApp {
       this.renderer.xr.setReferenceSpaceType('local');
     }
 
+    // A stereoscopic SPZ scene renders once per eye. Limit the XR framebuffer
+    // before a session begins so phone GPUs do not exhaust their render-target
+    // budget and present a black compositor layer. This does not change the
+    // normal-screen quality preset.
+    try {
+      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.75 : 0.9);
+    } catch (error) {
+      console.warn('[xr] framebuffer scale could not be configured', error);
+    }
+
     const xrApiAvailable = Boolean(navigator.xr);
 
     Promise.resolve(
@@ -1991,6 +2001,14 @@ export class WebXRApp {
                 activeButton = button;
                 this.activeXrReferenceSpaceType = boundReferenceSpaceType;
                 pendingSession = null;
+
+                if (sessionMode === XR_SESSION_MODE_VR) {
+                  try {
+                    this.renderer.xr.setFoveation(this.mobileMode ? 0.65 : 0.35);
+                  } catch (error) {
+                    console.warn('[xr] foveation could not be configured', error);
+                  }
+                }
 
                 setButtonsDisabled(true);
                 button.disabled = false;

@@ -5,9 +5,11 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const projectRoot = path.resolve(__dirname, '..');
+const repositoryRoot = path.resolve(projectRoot, '..');
 
 const nodeModules = path.join(projectRoot, 'node_modules');
 const vendorRoot = path.join(projectRoot, 'static', 'vendor');
+const publicWebxrVendorRoot = path.join(repositoryRoot, 'public', 'webxr', 'vendor');
 
 async function exists(target) {
   try {
@@ -82,7 +84,9 @@ async function main() {
   const bvhDst = path.join(vendorRoot, 'three-mesh-bvh', 'index.module.js');
   await copyRequired(bvhSrc, bvhDst);
 
-  const sparkDst = path.join(vendorRoot, 'spark', 'spark.module.min.js');
+  // Spark is several megabytes. Keep it in public/ so Vercel serves it from
+  // the static CDN rather than bundling it into the Python serverless function.
+  const sparkDst = path.join(publicWebxrVendorRoot, 'spark', 'spark.module.min.js');
   const sparkResult = await copySpark(sparkDst);
 
   console.log('[vendor:sync] copied three =>', threeDst);

@@ -1596,6 +1596,20 @@ def webxr_static_file(filename):
     return send_from_directory(str(webxr_static_dir), filename)
 
 
+# Vercel serves public/ at the site root. This local-development mirror keeps
+# the shared Spark renderer on the same /webxr/vendor URL without adding the
+# large module to the Python function bundle.
+@app.route("/webxr/vendor/<path:filename>")
+def webxr_public_vendor_file(filename):
+    webxr_vendor_dir = (PROJECT_ROOT / "public" / "webxr" / "vendor").resolve()
+    candidate_path = _resolve_safe_path(webxr_vendor_dir, filename)
+    if candidate_path is None:
+        return jsonify({"error": "Invalid WebXR vendor asset path"}), 400
+    if not candidate_path.exists() or not candidate_path.is_file():
+        return jsonify({"error": f"WebXR vendor asset not found: {filename}"}), 404
+    return send_from_directory(str(webxr_vendor_dir), filename, conditional=True, max_age=31536000)
+
+
 @app.route("/edu-resources")
 def edu_resources():
     return render_template("EduResources.html", edu_resources_items=load_public_edu_resources())

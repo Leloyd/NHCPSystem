@@ -7,7 +7,7 @@
     "postinstall": "npm run vendor:sync"
   },
   "dependencies": {
-    "@sparkjsdev/spark": "latest",
+    "@sparkjsdev/spark": "2.1.0",
     "three": "^0.180.0",
     "three-mesh-bvh": "^0.9.2"
   }

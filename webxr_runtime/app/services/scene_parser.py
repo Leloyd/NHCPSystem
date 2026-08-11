@@ -214,14 +214,11 @@ def _choose_primary_splat(splats: list[Path], extracted_dir: Path) -> Path | Non
 
 
 def _resolve_spark_module_url(extracted_dir: Path, runtime_prefix: str, config: dict) -> str:
-    preferred_names = ("spark.module.min.js", "spark.module.js")
-    for file_path in extracted_dir.rglob("*"):
-        if not file_path.is_file():
-            continue
-        if file_path.name.lower() in preferred_names:
-            rel = file_path.relative_to(extracted_dir).as_posix()
-            return f"{runtime_prefix}/{rel}"
-
+    # Scene exporters bundle their own Spark copy. Loading that copy made XR
+    # behavior depend on which ZIP was open and kept the environments on an
+    # obsolete renderer even after the shared runtime was updated. Assets stay
+    # scene-specific; rendering is intentionally supplied by one pinned build.
+    del extracted_dir, runtime_prefix
     return config["SPARK_FALLBACK_MODULE_URL"]
 
 

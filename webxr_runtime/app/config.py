@@ -41,7 +41,9 @@ class BaseConfig:
     EXTRACTED_DIR_NAME = "church_extracted"
     EXTRACT_STATE_FILE = "church_extract_state.json"
 
-    SPARK_FALLBACK_MODULE_URL = "/webxr/static/vendor/spark/spark.module.min.js"
+    # Keep one renderer version for every scene. Exported ZIPs may contain an
+    # older Spark build that lacks fixes used by the shared WebXR runtime.
+    SPARK_FALLBACK_MODULE_URL = "/webxr/vendor/spark/spark.module.min.js?v=2.1.0"
 
     PLAYER_SETTINGS = {
         "height": float(os.getenv("PLAYER_HEIGHT", "1.72")),
