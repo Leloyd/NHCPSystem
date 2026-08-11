@@ -11,7 +11,6 @@ function getRefs() {
     xrStatus: document.getElementById('xr-status'),
     fullscreenButton: document.getElementById('control-fullscreen-button'),
     gyroButton: document.getElementById('control-gyro-button'),
-    cardboardButton: document.getElementById('control-cardboard-button'),
     backButton: document.getElementById('control-back-button'),
     interactionPanel: document.getElementById('interaction-panel'),
     interactionName: document.getElementById('interaction-name'),

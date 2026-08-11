@@ -7,11 +7,10 @@ export class UiController {
     this.positionCopyResetTimer = null;
   }
 
-  bindHandlers({ onBackRequested, onFullscreenToggled, onGyroToggled, onCardboardToggled }) {
+  bindHandlers({ onBackRequested, onFullscreenToggled, onGyroToggled }) {
     this.onBackRequested = onBackRequested;
     this.onFullscreenToggled = onFullscreenToggled;
     this.onGyroToggled = onGyroToggled;
-    this.onCardboardToggled = onCardboardToggled;
 
     this.refs.backButton?.addEventListener('click', () => {
       this.onBackRequested?.();
@@ -23,10 +22,6 @@ export class UiController {
 
     this.refs.gyroButton?.addEventListener('click', () => {
       this.onGyroToggled?.();
-    });
-
-    this.refs.cardboardButton?.addEventListener('click', () => {
-      this.onCardboardToggled?.();
     });
 
     this.refs.positionDebugCopy?.addEventListener('click', () => {
@@ -46,20 +41,6 @@ export class UiController {
     }
     this.refs.gyroButton.classList.toggle('is-active', Boolean(active));
     this.refs.gyroButton.setAttribute('aria-pressed', active ? 'true' : 'false');
-  }
-
-  setCardboardVisible(visible) {
-    if (this.refs.cardboardButton) {
-      this.refs.cardboardButton.hidden = !visible;
-    }
-  }
-
-  setCardboardState(active) {
-    if (!this.refs.cardboardButton) {
-      return;
-    }
-    this.refs.cardboardButton.classList.toggle('is-active', Boolean(active));
-    this.refs.cardboardButton.setAttribute('aria-pressed', active ? 'true' : 'false');
   }
 
   setLoadingProgress(progress, label) {

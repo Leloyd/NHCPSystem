@@ -31,7 +31,6 @@ export class InteractionSystem {
 
     this.pointer = new THREE.Vector2();
     this.selected = null;
-    this.suspended = false; // true while VR Box (Cardboard) mode owns touches
     this.xrSession = null;
     this.lastXrSelectTimestamp = -Infinity;
 
@@ -66,10 +65,6 @@ export class InteractionSystem {
   }
 
   _onClick(event) {
-    if (this.suspended) {
-      return;
-    }
-
     if (this.renderer.xr.isPresenting && !this._isArSessionPresenting()) {
       return;
     }
@@ -82,10 +77,6 @@ export class InteractionSystem {
   }
 
   _onPointerUp(event) {
-    if (this.suspended) {
-      return;
-    }
-
     if (!event || event.pointerType === 'mouse') {
       return;
     }
@@ -102,10 +93,6 @@ export class InteractionSystem {
   }
 
   _onTouchEnd(event) {
-    if (this.suspended) {
-      return;
-    }
-
     if (this.renderer.xr.isPresenting && !this._isArSessionPresenting()) {
       return;
     }

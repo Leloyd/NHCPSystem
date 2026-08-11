@@ -91,10 +91,6 @@ export class PlayerController {
     this.xrPhysicalOffsetInitialized = false;
     this.xrPhysicalOffsetBaseline = new THREE.Vector3();
 
-    // While "VR Box" stereo mode is on, screen touches mean "walk", so the
-    // drag-look pointer handling must stand down.
-    this.suppressDragLook = false;
-
     // Gyro "magic window" look: point the phone to look around. Works on
     // browsers without WebXR (all iOS browsers) using DeviceOrientation.
     this.gyro = {
@@ -175,7 +171,7 @@ export class PlayerController {
     }
 
     const onPointerDown = (event) => {
-      if (this.renderer.xr.isPresenting || this.suppressDragLook) {
+      if (this.renderer.xr.isPresenting) {
         return;
       }
 
@@ -432,7 +428,7 @@ export class PlayerController {
 
   levelHorizon({ syncGyro = true } = {}) {
     // WebXR can leave its final tracked quaternion on the base camera. Drop
-    // that stale roll before returning to the normal or Cardboard view.
+    // that stale roll before returning to the normal view.
     this.camera.rotation.order = 'YXZ';
     this.camera.rotation.z = 0;
 
