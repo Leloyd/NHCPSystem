@@ -20,6 +20,11 @@ const HOTSPOT_HELPER_RADIUS = 0.07;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
 const MUSEUM_ZIP_NAME = 'museum.zip';
 const MUSEUM_CONTENT_INTERACTION_MAX_DISTANCE = 2.35;
+// Gaussian-splat ray hits can alternate at the feathered edge of a captured
+// wall as the headset pose changes by a few millimetres. Require the same
+// result twice before changing spatial UI visibility so controls do not flash
+// while preserving the rule that real walls conceal content behind them.
+const SPLAT_OCCLUSION_CONFIRMATION_CHECKS = 2;
 // The individual museum hotspot artifacts use the original 1x exhibit size.
 // Their larger shared carousel intentionally remains at its authored 2x scale.
 const MUSEUM_CONTENT_DISPLAY_SIZE = 0.58;
@@ -4505,6 +4510,45 @@ export class WebXRApp {
     }
   }
 
+  _commitStableSplatOcclusion(object, occluded, applyState, immediate = false) {
+    if (!object || typeof applyState !== 'function') {
+      return;
+    }
+
+    object.userData = object.userData || {};
+    const nextOccluded = Boolean(occluded);
+    const currentOccluded = Boolean(object.userData.splatOccluded);
+
+    if (immediate) {
+      delete object.userData.splatOcclusionPendingState;
+      delete object.userData.splatOcclusionPendingChecks;
+      applyState(nextOccluded);
+      return;
+    }
+
+    if (nextOccluded === currentOccluded) {
+      delete object.userData.splatOcclusionPendingState;
+      delete object.userData.splatOcclusionPendingChecks;
+      return;
+    }
+
+    if (object.userData.splatOcclusionPendingState !== nextOccluded) {
+      object.userData.splatOcclusionPendingState = nextOccluded;
+      object.userData.splatOcclusionPendingChecks = 1;
+      return;
+    }
+
+    const checks = Number(object.userData.splatOcclusionPendingChecks || 0) + 1;
+    object.userData.splatOcclusionPendingChecks = checks;
+    if (checks < SPLAT_OCCLUSION_CONFIRMATION_CHECKS) {
+      return;
+    }
+
+    delete object.userData.splatOcclusionPendingState;
+    delete object.userData.splatOcclusionPendingChecks;
+    applyState(nextOccluded);
+  }
+
   _isObjectInVisibleHierarchy(object) {
     let current = object;
     while (current) {
@@ -4618,14 +4662,34 @@ export class WebXRApp {
       .map((entry) => entry?.object)
       .filter((object) => object?.visible && object?.isInitialized !== false);
     if (splatObjects.length === 0) {
-      this.hotspotMarkers.forEach((marker) => this._setHotspotSplatOccluded(marker, false));
+      this.hotspotMarkers.forEach((marker) => {
+        this._commitStableSplatOcclusion(
+          marker,
+          false,
+          (occluded) => this._setHotspotSplatOccluded(marker, occluded),
+          true,
+        );
+      });
       if (this.museumContentViewer?.root) {
-        this.museumContentViewer.root.userData.splatOccluded = false;
-        this.museumContentViewer.root.visible = true;
+        const museumContentRoot = this.museumContentViewer.root;
+        this._commitStableSplatOcclusion(
+          museumContentRoot,
+          false,
+          (occluded) => {
+            museumContentRoot.userData.splatOccluded = occluded;
+            museumContentRoot.visible = !occluded;
+          },
+          true,
+        );
       }
       this.pickableMeshes.forEach((object) => {
         if (!object?.userData?.isHotspotPickable) {
-          this._setPickableSplatOccluded(object, false);
+          this._commitStableSplatOcclusion(
+            object,
+            false,
+            (occluded) => this._setPickableSplatOccluded(object, occluded),
+            true,
+          );
         }
       });
       return;
@@ -4647,7 +4711,12 @@ export class WebXRApp {
         margin,
         splatObjects,
       );
-      this._setHotspotSplatOccluded(marker, occluded);
+      this._commitStableSplatOcclusion(
+        marker,
+        occluded,
+        (stableOccluded) => this._setHotspotSplatOccluded(marker, stableOccluded),
+        force,
+      );
     }
 
     const museumContentRoot = this.museumContentViewer?.root;
@@ -4659,8 +4728,15 @@ export class WebXRApp {
         margin,
         splatObjects,
       );
-      museumContentRoot.userData.splatOccluded = occluded;
-      museumContentRoot.visible = !occluded;
+      this._commitStableSplatOcclusion(
+        museumContentRoot,
+        occluded,
+        (stableOccluded) => {
+          museumContentRoot.userData.splatOccluded = stableOccluded;
+          museumContentRoot.visible = !stableOccluded;
+        },
+        force,
+      );
     }
 
     // Table controls, museum artifact controls, door meshes, and future
@@ -4672,11 +4748,21 @@ export class WebXRApp {
         continue;
       }
       if (this._shouldKeepSpatialControlVisible(object)) {
-        this._setPickableSplatOccluded(object, false);
+        this._commitStableSplatOcclusion(
+          object,
+          false,
+          (occluded) => this._setPickableSplatOccluded(object, occluded),
+          true,
+        );
         continue;
       }
       if (!this._isObjectInVisibleHierarchy(object)) {
-        this._setPickableSplatOccluded(object, false);
+        this._commitStableSplatOcclusion(
+          object,
+          false,
+          (occluded) => this._setPickableSplatOccluded(object, occluded),
+          true,
+        );
         continue;
       }
 
@@ -4687,7 +4773,12 @@ export class WebXRApp {
         margin,
         splatObjects,
       );
-      this._setPickableSplatOccluded(object, occluded);
+      this._commitStableSplatOcclusion(
+        object,
+        occluded,
+        (stableOccluded) => this._setPickableSplatOccluded(object, stableOccluded),
+        force,
+      );
     }
   }
 

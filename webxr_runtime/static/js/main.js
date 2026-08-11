@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-door-gaze-portal-15';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-stable-splat-ui-16';
 
 function getRefs() {
   return {
