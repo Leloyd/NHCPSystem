@@ -3634,10 +3634,9 @@ export class WebXRApp {
     icon.parent?.remove(icon);
     if (isOpen && viewerRoot) {
       viewerRoot.add(icon);
-      // Match the original floating exhibit: the control drops slightly and
-      // sits in front of the opened content instead of covering the artifact.
-      icon.position.set(0, -0.25, 1.16);
-      icon.scale.set(0.18, 0.18, 1);
+      // CLOSE joins the compact control row directly beneath the title.
+      icon.position.set(-0.24, -0.33, 0.12);
+      icon.scale.set(0.16, 0.16, 1);
       icon.renderOrder = 62;
       icon.userData.museumContentOpen = true;
       return;
@@ -3718,8 +3717,8 @@ export class WebXRApp {
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
-      position: [0, -0.62, 0.09],
-      scale: [1.65, 0.62],
+      position: [0, -0.72, 0.09],
+      scale: [1.65, 0.54],
     });
     root.add(titleSprite, subtitleSprite);
 
@@ -3740,15 +3739,15 @@ export class WebXRApp {
     const languageSprite = this._createMuseumContentControl({
       parent: root,
       label: viewer.language.toUpperCase(),
-      position: [-0.22, -0.94, 0.12],
-      scale: 0.18,
+      position: [0.24, -0.33, 0.12],
+      scale: 0.16,
       name: 'museum-content-language',
     });
     const subtitleToggleSprite = this._createMuseumContentControl({
       parent: root,
       label: 'CC',
-      position: [0.22, -0.94, 0.12],
-      scale: 0.18,
+      position: [0, -0.33, 0.12],
+      scale: 0.16,
       name: 'museum-content-subtitles',
     });
 
@@ -3803,6 +3802,56 @@ export class WebXRApp {
     this._refreshMuseumContentPresentation();
   }
 
+  _configureMuseumContentDisplayMaterials(root) {
+    if (!root?.traverse) {
+      return;
+    }
+
+    root.traverse((object) => {
+      if (!object?.isMesh) {
+        return;
+      }
+
+      const sourceMaterials = Array.isArray(object.material)
+        ? object.material
+        : [object.material];
+      const displayMaterials = sourceMaterials.map((material) => {
+        if (!material) {
+          return material;
+        }
+
+        const map = material.map || material.emissiveMap || null;
+        if (map) {
+          map.colorSpace = THREE.SRGBColorSpace;
+          map.needsUpdate = true;
+        }
+
+        const displayMaterial = new THREE.MeshBasicMaterial({
+          color: material.color?.clone?.() || new THREE.Color(0xffffff),
+          map,
+          alphaMap: material.alphaMap || null,
+          transparent: Boolean(material.transparent) || Number(material.opacity) < 1,
+          opacity: Number.isFinite(Number(material.opacity)) ? Number(material.opacity) : 1,
+          alphaTest: Number.isFinite(Number(material.alphaTest)) ? Number(material.alphaTest) : 0,
+          side: material.side ?? THREE.FrontSide,
+          vertexColors: Boolean(material.vertexColors),
+          depthTest: true,
+          depthWrite: !material.transparent,
+          toneMapped: false,
+        });
+        displayMaterial.name = `${material.name || 'artifact'}-museum-display`;
+        return displayMaterial;
+      });
+
+      object.material = Array.isArray(object.material)
+        ? displayMaterials
+        : displayMaterials[0];
+      // Draw the colored GLB after the background panel while retaining the
+      // model's own depth relationships.
+      object.renderOrder = 58;
+    });
+  }
+
   async _showMuseumContentEntry(index, { playNarration = false } = {}) {
     const viewer = this.museumContentViewer;
     if (!viewer.isOpen || !viewer.mediaRoot || !viewer.entries.length) {
@@ -3824,6 +3873,7 @@ export class WebXRApp {
       if (entry.modelUrl) {
         media = await this._loadAndNormalizeMuseumArtifact(entry);
         media.scale.multiplyScalar(MUSEUM_CONTENT_DISPLAY_SIZE / MUSEUM_ARTIFACT_DISPLAY_SIZE);
+        this._configureMuseumContentDisplayMaterials(media);
         media.userData.isMuseumContentModel = true;
       } else if (entry.imageUrl) {
         media = await this._loadMuseumContentImage(entry.imageUrl);
@@ -3941,9 +3991,17 @@ export class WebXRApp {
       viewer.subtitleSprite.position.set(0, 0.04, 0.09);
       viewer.subtitleSprite.scale.set(1.65, 1.28, 1);
     } else {
-      viewer.subtitleSprite.position.set(0, -0.62, 0.09);
-      viewer.subtitleSprite.scale.set(1.65, 0.62, 1);
+      viewer.subtitleSprite.position.set(0, -0.72, 0.09);
+      viewer.subtitleSprite.scale.set(1.65, 0.54, 1);
     }
+
+    // Keep CLOSE, subtitles, and translation together. Kabila has no title,
+    // so its row moves below the text-only narration instead.
+    const controlY = entry.textOnly ? -0.82 : -0.33;
+    const hotspotIcon = viewer.sourceMarker?.userData?.hotspotIcon || null;
+    hotspotIcon?.position.set(-0.24, controlY, 0.12);
+    viewer.subtitleToggleSprite.position.set(0, controlY, 0.12);
+    viewer.languageSprite.position.set(0.24, controlY, 0.12);
     viewer.subtitleSprite.visible = Boolean(viewer.subtitlesOn && subtitleText);
     const showArrows = viewer.entries.length > 1;
     viewer.previousSprite.visible = showArrows;
