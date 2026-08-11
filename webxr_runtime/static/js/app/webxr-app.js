@@ -119,10 +119,10 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
     interactionMaxDistance: DOOR_INTERACTION_MAX_DISTANCE,
   },
 ];
-const MUSEUM_ARTIFACT_POSITION = [-1.64, 1.20, 6.22];
+const MUSEUM_ARTIFACT_POSITION = [-1.64, 1.00, 6.22];
 const MUSEUM_ARTIFACT_TOGGLE_POSITION = [-1.63, 0.75, 5.06];
 const MUSEUM_ARTIFACT_INTERACTION_MAX_DISTANCE = 2.6;
-const MUSEUM_ARTIFACT_DISPLAY_SIZE = 0.58;
+const MUSEUM_ARTIFACT_DISPLAY_SIZE = 1.16;
 const MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE = 0.75;
 const MUSEUM_ARTIFACT_AUDIO_FAR_DISTANCE = 5.5;
 const MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME = 0.06;
@@ -2821,13 +2821,13 @@ export class WebXRApp {
 
     const previous = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactControlTexture('‹'),
-      position: [-0.48, 0.34, 0],
+      position: [-0.14, -0.35, 0],
       scale: [0.21, 0.21],
       interactionName: 'museum-artifact-prev',
     });
     const next = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactControlTexture('›'),
-      position: [0.48, 0.34, 0],
+      position: [0.14, -0.35, 0],
       scale: [0.21, 0.21],
       interactionName: 'museum-artifact-next',
     });
@@ -2835,13 +2835,13 @@ export class WebXRApp {
 
     const titleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture(''),
-      position: [0, 0.78, 0],
+      position: [0, -0.12, 0],
       scale: [0.92, 0.16],
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
-      position: [0, 1.18, 0],
-      scale: [1.3, 0.65],
+      position: [0, -0.70, 0],
+      scale: [1.3, 0.45],
     });
     subtitleSprite.visible = false;
     root.add(titleSprite, subtitleSprite);
