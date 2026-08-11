@@ -339,7 +339,7 @@ const UNDERGROUND_HOTSPOT_MARKERS = [
   },
   {
     id: 'evidence-guerrillas',
-    position: [-2.88, 0.00, -0.40],
+    position: [-2.94, 1.00, -0.20],
     color: 0xd4af6a,
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
@@ -2410,7 +2410,10 @@ export class WebXRApp {
 
   _createDefaultUndergroundMemoryState() {
     return {
-      version: 1,
+      // Version 2 deliberately retires the earlier prototype's completed
+      // local state. From this version onward, a memory is collected only
+      // after its corresponding underground hotspot is opened.
+      version: 2,
       language: 'tl',
       subtitlesOn: true,
       collected: [],

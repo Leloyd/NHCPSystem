@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-completed-record-view-3';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-underground-memory-fix-4';
 
 function getRefs() {
   return {
