@@ -48,7 +48,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-maitum': {
     position: [-2.30, 1.00, 3.24],
-    displayPosition: [-2.30, 1.00, 3.37],
+    displayPosition: [-2.30, 0.75, 3.37],
+    subtitlePosition: [0, -0.50, 0.09],
     controlsAlongZ: true,
     entries: [
       {
@@ -66,7 +67,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-manunggul': {
     position: [-2.30, 1.00, 1.82],
-    displayPosition: [-2.30, 1.00, 1.85],
+    displayPosition: [-2.30, 0.75, 1.85],
+    subtitlePosition: [0, -0.50, 0.09],
     controlsAlongZ: true,
     entries: [
       {
@@ -595,6 +597,8 @@ export class WebXRApp {
     this.hotspotOcclusionOrigin = new THREE.Vector3();
     this.hotspotOcclusionTarget = new THREE.Vector3();
     this.hotspotOcclusionDirection = new THREE.Vector3();
+    this.hotspotOcclusionEyePosition = new THREE.Vector3();
+    this.hotspotOcclusionEyeMatrix = new THREE.Matrix4();
     this.hotspotOcclusionLastCheckedAt = 0;
     this.hotspotOcclusionIntervalMs = 140;
 
@@ -3717,7 +3721,9 @@ export class WebXRApp {
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture('', { subtitle: true, contentFit: true }),
-      position: [0, -0.72, 0.09],
+      position: Array.isArray(content.subtitlePosition)
+        ? content.subtitlePosition
+        : [0, -0.72, 0.09],
       scale: [1.65, 0.54],
     });
     root.add(titleSprite, subtitleSprite);
@@ -4479,17 +4485,41 @@ export class WebXRApp {
     if (this.renderer.xr.isPresenting) {
       const xrCamera = this.renderer.xr.getCamera?.(this.camera);
       const eyeCameras = Array.isArray(xrCamera?.cameras) ? xrCamera.cameras : [];
+      const cameraParent = this.camera.parent;
+      cameraParent?.updateMatrixWorld(true);
       if (eyeCameras.length > 0) {
         target.set(0, 0, 0);
         for (const eyeCamera of eyeCameras) {
-          eyeCamera.getWorldPosition(this.hotspotOcclusionTarget);
-          target.add(this.hotspotOcclusionTarget);
+          // WebXR eye cameras are stored under an ArrayCamera instead of the
+          // authored player rig. Apply the rig transform explicitly so the
+          // splat line-of-sight ray begins at the visitor's actual museum
+          // position rather than at the tracking-space origin.
+          if (cameraParent) {
+            this.hotspotOcclusionEyeMatrix.multiplyMatrices(
+              cameraParent.matrixWorld,
+              eyeCamera.matrix,
+            );
+            this.hotspotOcclusionEyePosition.setFromMatrixPosition(
+              this.hotspotOcclusionEyeMatrix,
+            );
+          } else {
+            eyeCamera.getWorldPosition(this.hotspotOcclusionEyePosition);
+          }
+          target.add(this.hotspotOcclusionEyePosition);
         }
         target.multiplyScalar(1 / eyeCameras.length);
         return true;
       }
       if (xrCamera) {
-        xrCamera.getWorldPosition(target);
+        if (cameraParent) {
+          this.hotspotOcclusionEyeMatrix.multiplyMatrices(
+            cameraParent.matrixWorld,
+            xrCamera.matrix,
+          );
+          target.setFromMatrixPosition(this.hotspotOcclusionEyeMatrix);
+        } else {
+          xrCamera.getWorldPosition(target);
+        }
         return true;
       }
     }

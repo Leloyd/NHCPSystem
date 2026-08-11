@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-maitum-position-17';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-xr-occlusion-pose-19';
 
 function getRefs() {
   return {
