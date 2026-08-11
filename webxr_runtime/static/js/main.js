@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-discovery-records-2';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-completed-record-view-3';
 
 function getRefs() {
   return {

@@ -3878,11 +3878,16 @@ export class WebXRApp {
       const cameraPosition = new THREE.Vector3();
       this.camera.getWorldPosition(cameraPosition);
       this.xrHotspotTableSourceMarker.getWorldPosition(viewerRoot.position);
-      // Incomplete Church records include a central Deposit/Isauli control.
-      // Raise that viewer slightly farther above the source marker so the
-      // deposit control never occupies the same world-space position as the
-      // marker's OPEN/CLOSE control.
-      viewerRoot.position.y += isChurchRecord && !churchRecordComplete ? 1.08 : 0.86;
+      // A completed Chapel Record replaces its OPEN marker and uses that exact
+      // world position as the centre of the restored historical image. Other
+      // viewers remain raised above their source marker as before.
+      if (!completedChurchRecord) {
+        // Incomplete Church records include a central Deposit/Isauli control.
+        // Raise that viewer slightly farther above the source marker so the
+        // deposit control never occupies the same world-space position as the
+        // marker's OPEN/CLOSE control.
+        viewerRoot.position.y += isChurchRecord && !churchRecordComplete ? 1.08 : 0.86;
+      }
       cameraPosition.y = viewerRoot.position.y;
       viewerRoot.lookAt(cameraPosition);
     } else {
@@ -3899,23 +3904,39 @@ export class WebXRApp {
     this.xrHotspotTableViewer = viewerRoot;
     this.scene.add(viewerRoot);
 
-    this._createXrTableControl({
+    // The completed record is closed through its dedicated upper-right X.
+    // Hide the source OPEN marker so it cannot overlap the enlarged image or
+    // act as a second close control while the record is being viewed.
+    if (completedChurchRecord && this.xrHotspotTableSourceMarker) {
+      this.xrHotspotTableSourceMarker.visible = false;
+    }
+
+    let completedLanguageControl = null;
+    let completedSubtitleControl = null;
+    let completedCloseControl = null;
+    let completedTitleSprite = null;
+    let completedDescriptionSprite = null;
+
+    const languageControl = this._createXrTableControl({
       parent: viewerRoot,
       label: this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN',
       position: completedChurchRecord
-        ? [-0.46, 0.56, 0.09]
+        ? [-2.18, 1.18, 0.09]
         : (record ? [0.72, -0.80, 0.09] : [-0.66, -0.56, 0.09]),
       scale: 0.2,
       name: 'xr-table-language',
     });
+    if (completedChurchRecord) completedLanguageControl = languageControl;
 
     if (record) {
       const title = record.title?.[this.expandedHotspotLanguage] || record.title?.en || '';
-      viewerRoot.add(this._createMuseumArtifactSprite({
+      const titleSprite = this._createMuseumArtifactSprite({
         texture: this._createMuseumArtifactTextTexture(title),
-        position: [0, completedChurchRecord ? -0.30 : -0.16, 0.08],
-        scale: [1.38, 0.16],
-      }));
+        position: [0, completedChurchRecord ? -1.18 : -0.16, 0.08],
+        scale: [completedChurchRecord ? 2.5 : 1.38, completedChurchRecord ? 0.22 : 0.16],
+      });
+      viewerRoot.add(titleSprite);
+      if (completedChurchRecord) completedTitleSprite = titleSprite;
       const subtitlesOn = isUndergroundRecord
         ? this.undergroundMemory.subtitlesOn
         : this.churchHistory.subtitlesOn;
@@ -3926,27 +3947,30 @@ export class WebXRApp {
         const description = churchRecordComplete
           ? (record.text?.[this.expandedHotspotLanguage] || record.text?.en || '')
           : missingText;
-        viewerRoot.add(this._createMuseumArtifactSprite({
+        const descriptionSprite = this._createMuseumArtifactSprite({
           texture: this._createMuseumArtifactTextTexture(description, {
             subtitle: true,
             contentFit: true,
           }),
-          position: [0, completedChurchRecord ? -0.62 : -0.48, 0.08],
-          scale: [1.56, completedChurchRecord ? 0.36 : 0.42],
-        }));
+          position: [0, completedChurchRecord ? -1.64 : -0.48, 0.08],
+          scale: [completedChurchRecord ? 4.4 : 1.56, completedChurchRecord ? 0.56 : 0.42],
+        });
+        viewerRoot.add(descriptionSprite);
+        if (completedChurchRecord) completedDescriptionSprite = descriptionSprite;
       }
-      this._createXrTableControl({
+      const subtitleControl = this._createXrTableControl({
         parent: viewerRoot,
         label: 'CC',
-        position: completedChurchRecord ? [-0.72, 0.56, 0.09] : [-0.72, -0.80, 0.09],
+        position: completedChurchRecord ? [-2.48, 1.18, 0.09] : [-0.72, -0.80, 0.09],
         scale: 0.2,
         name: 'xr-record-subtitles',
       });
+      if (completedChurchRecord) completedSubtitleControl = subtitleControl;
       if (completedChurchRecord) {
-        this._createXrTableControl({
+        completedCloseControl = this._createXrTableControl({
           parent: viewerRoot,
           label: 'X',
-          position: [0.72, 0.56, 0.09],
+          position: [2.48, 1.18, 0.09],
           scale: 0.2,
           name: 'xr-record-close',
         });
@@ -4000,9 +4024,11 @@ export class WebXRApp {
       const sourceWidth = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
       const sourceHeight = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
       const aspect = sourceWidth / Math.max(1, sourceHeight);
-      let width = record ? 1.34 : 1.68;
+      // Completed Chapel Records use a four-times-larger presentation than
+      // the former compact record card. The image remains aspect-correct.
+      let width = completedChurchRecord ? 5.36 : (record ? 1.34 : 1.68);
       let height = width / aspect;
-      const maximumHeight = completedChurchRecord ? 0.48 : (record ? 0.64 : 1.02);
+      const maximumHeight = completedChurchRecord ? 1.92 : (record ? 0.64 : 1.02);
       if (height > maximumHeight) {
         height = maximumHeight;
         width = height * aspect;
@@ -4017,9 +4043,30 @@ export class WebXRApp {
           toneMapped: false,
         }),
       );
-      image.position.set(0, completedChurchRecord ? 0.10 : (record ? 0.27 : 0.08), 0.06);
+      image.position.set(0, completedChurchRecord ? 0 : (record ? 0.27 : 0.08), 0.06);
       image.renderOrder = 49;
       viewerRoot.add(image);
+
+      if (completedChurchRecord) {
+        const halfWidth = width * 0.5;
+        const halfHeight = height * 0.5;
+        const controlY = halfHeight + 0.18;
+        const leftEdge = -halfWidth + 0.13;
+        const rightEdge = halfWidth - 0.13;
+
+        completedSubtitleControl?.position.set(leftEdge, controlY, 0.09);
+        completedLanguageControl?.position.set(leftEdge + 0.30, controlY, 0.09);
+        completedCloseControl?.position.set(rightEdge, controlY, 0.09);
+
+        if (completedTitleSprite) {
+          completedTitleSprite.position.set(0, -halfHeight - 0.20, 0.08);
+          completedTitleSprite.scale.set(Math.max(1.8, Math.min(4.2, width * 0.72)), 0.22, 1);
+        }
+        if (completedDescriptionSprite) {
+          completedDescriptionSprite.position.set(0, -halfHeight - 0.72, 0.08);
+          completedDescriptionSprite.scale.set(Math.max(2.6, Math.min(5.2, width * 1.02)), 0.56, 1);
+        }
+      }
 
       if (detail) {
         this._createXrTableControl({
@@ -4087,6 +4134,7 @@ export class WebXRApp {
     this.xrHotspotTableViewer = null;
     if (restoreSource && this.xrHotspotTableSourceMarker) {
       const sourceWasChurchRecords = this.xrHotspotTableSourceMarker === this.churchHistoryRecordsMarker;
+      this.xrHotspotTableSourceMarker.visible = true;
       this._setXrTableHotspotOpenState(this.xrHotspotTableSourceMarker, false);
       this.xrHotspotTableSourceMarker = null;
       this.xrHotspotTableId = '';
