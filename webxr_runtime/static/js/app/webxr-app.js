@@ -4031,7 +4031,7 @@ export class WebXRApp {
     viewer.audio.pause();
     viewer.audio.src = encodeURI(source);
     viewer.audio.currentTime = 0;
-    viewer.audio.volume = 1;
+    this._updateMuseumContentAudioVolume();
     const playing = viewer.audio.play();
     if (playing?.catch) {
       playing.catch((error) => {
@@ -4049,11 +4049,35 @@ export class WebXRApp {
     audio.currentTime = 0;
   }
 
+  _updateMuseumContentAudioVolume() {
+    const viewer = this.museumContentViewer;
+    if (!viewer.audio || !viewer.root || !this.playerRig) {
+      return;
+    }
+
+    viewer.root.getWorldPosition(viewer.billboardTarget);
+    const distance = Math.hypot(
+      this.playerRig.position.x - viewer.billboardTarget.x,
+      this.playerRig.position.z - viewer.billboardTarget.z,
+    );
+    const normalized = THREE.MathUtils.clamp(
+      (distance - MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE)
+        / (MUSEUM_ARTIFACT_AUDIO_FAR_DISTANCE - MUSEUM_ARTIFACT_AUDIO_NEAR_DISTANCE),
+      0,
+      1,
+    );
+    const eased = (1 - normalized) * (1 - normalized);
+    viewer.audio.volume = MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME
+      + (1 - MUSEUM_ARTIFACT_AUDIO_MIN_VOLUME) * eased;
+  }
+
   _updateMuseumContentViewer(dt) {
     const viewer = this.museumContentViewer;
     if (!viewer.isOpen || !viewer.root || !viewer.mediaRoot) {
       return;
     }
+
+    this._updateMuseumContentAudioVolume();
 
     const entry = this._getCurrentMuseumContentEntry();
     if (!entry?.modelUrl && this.camera) {

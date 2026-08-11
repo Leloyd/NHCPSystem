@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-jar-position-adjustment-13';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-positional-exhibit-audio-14';
 
 function getRefs() {
   return {
