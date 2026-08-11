@@ -440,6 +440,13 @@ export class WebXRApp {
 
     this.clock = new THREE.Clock();
     this.labelProjection = new THREE.Vector3();
+    this.hotspotOcclusionRaycaster = new THREE.Raycaster();
+    this.hotspotOcclusionRaycaster.firstHitOnly = true;
+    this.hotspotOcclusionOrigin = new THREE.Vector3();
+    this.hotspotOcclusionTarget = new THREE.Vector3();
+    this.hotspotOcclusionDirection = new THREE.Vector3();
+    this.hotspotOcclusionLastCheckedAt = 0;
+    this.hotspotOcclusionIntervalMs = 140;
 
     this.playerRig = new THREE.Group();
     this.playerRig.name = 'player-rig';
@@ -2595,6 +2602,10 @@ export class WebXRApp {
         this.sparkRenderer = new spark.SparkRenderer({
           renderer: this.renderer,
           maxStdDev: Math.sqrt(5),
+          // Maintain a compact LoD sample specifically for camera-to-hotspot
+          // visibility tests instead of scanning every source splat per ray.
+          lodRaycast: 20000,
+          lodRaycastIntervalMs: 180,
           // Spark recommends completing its update after the current render
           // in WebXR so the stereo frame can be submitted promptly.
           preUpdate: false,
@@ -2667,6 +2678,8 @@ export class WebXRApp {
       splatObject = new this.SplatMeshCtor({
         url: asset.url,
         lod: true,
+        raycastable: true,
+        minRaycastOpacity: 0.24,
       });
 
       if (!splatObject?.initialized || typeof splatObject.initialized.then !== 'function') {
@@ -3477,6 +3490,9 @@ export class WebXRApp {
     }
 
     root.add(icon);
+    root.userData.hotspotIcon = icon;
+    root.userData.splatOccluded = false;
+    root.userData.splatOcclusionMargin = Math.max(0.1, Number(radius) * 1.5);
 
     return { root, icon };
   }
@@ -3486,6 +3502,7 @@ export class WebXRApp {
       this.scene.remove(marker);
     }
     this.hotspotMarkers = [];
+    this.hotspotOcclusionLastCheckedAt = 0;
     this._clearFloatingHotspotLabels();
     this.pickableMeshes = this.pickableMeshes.filter((mesh) => !mesh.userData?.isHotspotPickable);
 
@@ -3520,6 +3537,7 @@ export class WebXRApp {
       }
     }
 
+    this._updateHotspotSplatOcclusion(performance.now(), true);
     this._updateFloatingHotspotLabels();
   }
 
@@ -3538,6 +3556,9 @@ export class WebXRApp {
 
       const hotspot = this._getHotspotConfig(hotspotId);
       const maxDistance = Number(hotspot?.interactionMaxDistance ?? HOTSPOT_INTERACTION_MAX_DISTANCE);
+      if (anchor.userData?.splatOccluded) {
+        return;
+      }
       if (!this._isWithinInteractionDistance(anchor, maxDistance, 'hotspot')) {
         return;
       }
@@ -3691,11 +3712,13 @@ export class WebXRApp {
         continue;
       }
 
+      const splatOccluded = Boolean(label.anchor.userData?.splatOccluded);
+
       if (label.xrSprite) {
-        label.xrSprite.visible = xrPresenting;
+        label.xrSprite.visible = xrPresenting && !splatOccluded;
       }
 
-      if (xrPresenting) {
+      if (xrPresenting || splatOccluded || !label.anchor.visible) {
         label.element.classList.add('hidden');
         continue;
       }
@@ -3722,6 +3745,103 @@ export class WebXRApp {
       label.element.classList.remove('hidden');
       label.element.style.left = `${x}px`;
       label.element.style.top = `${y}px`;
+    }
+  }
+
+  _getHotspotOcclusionViewPosition(target) {
+    if (!target || !this.camera) {
+      return false;
+    }
+
+    if (this.renderer.xr.isPresenting) {
+      const xrCamera = this.renderer.xr.getCamera?.(this.camera);
+      const eyeCameras = Array.isArray(xrCamera?.cameras) ? xrCamera.cameras : [];
+      if (eyeCameras.length > 0) {
+        target.set(0, 0, 0);
+        for (const eyeCamera of eyeCameras) {
+          eyeCamera.getWorldPosition(this.hotspotOcclusionTarget);
+          target.add(this.hotspotOcclusionTarget);
+        }
+        target.multiplyScalar(1 / eyeCameras.length);
+        return true;
+      }
+      if (xrCamera) {
+        xrCamera.getWorldPosition(target);
+        return true;
+      }
+    }
+
+    this.camera.getWorldPosition(target);
+    return true;
+  }
+
+  _setHotspotSplatOccluded(marker, occluded) {
+    if (!marker) {
+      return;
+    }
+    const nextOccluded = Boolean(occluded);
+    marker.userData.splatOccluded = nextOccluded;
+    const icon = marker.userData.hotspotIcon;
+    if (icon) {
+      icon.visible = !nextOccluded;
+    }
+  }
+
+  _updateHotspotSplatOcclusion(now = performance.now(), force = false) {
+    if (!this.camera || this.hotspotMarkers.length === 0) {
+      return;
+    }
+    if (
+      !force
+      && now - this.hotspotOcclusionLastCheckedAt < this.hotspotOcclusionIntervalMs
+    ) {
+      return;
+    }
+    this.hotspotOcclusionLastCheckedAt = now;
+
+    const splatObjects = this.splatEntries
+      .map((entry) => entry?.object)
+      .filter((object) => object?.visible && object?.isInitialized !== false);
+    if (splatObjects.length === 0) {
+      this.hotspotMarkers.forEach((marker) => this._setHotspotSplatOccluded(marker, false));
+      return;
+    }
+
+    if (!this._getHotspotOcclusionViewPosition(this.hotspotOcclusionOrigin)) {
+      return;
+    }
+
+    for (const marker of this.hotspotMarkers) {
+      if (!marker?.parent) {
+        continue;
+      }
+
+      marker.getWorldPosition(this.hotspotOcclusionTarget);
+      this.hotspotOcclusionDirection
+        .copy(this.hotspotOcclusionTarget)
+        .sub(this.hotspotOcclusionOrigin);
+      const hotspotDistance = this.hotspotOcclusionDirection.length();
+      const margin = Number(marker.userData?.splatOcclusionMargin ?? 0.1);
+      if (!Number.isFinite(hotspotDistance) || hotspotDistance <= margin + 0.04) {
+        this._setHotspotSplatOccluded(marker, false);
+        continue;
+      }
+
+      this.hotspotOcclusionDirection.multiplyScalar(1 / hotspotDistance);
+      this.hotspotOcclusionRaycaster.set(
+        this.hotspotOcclusionOrigin,
+        this.hotspotOcclusionDirection,
+      );
+      this.hotspotOcclusionRaycaster.near = 0.06;
+      this.hotspotOcclusionRaycaster.far = Math.max(0.06, hotspotDistance - margin);
+
+      let occluded = false;
+      try {
+        occluded = this.hotspotOcclusionRaycaster.intersectObjects(splatObjects, false).length > 0;
+      } catch (error) {
+        console.warn('[hotspot] splat visibility test failed', error);
+      }
+      this._setHotspotSplatOccluded(marker, occluded);
     }
   }
 
@@ -4263,6 +4383,13 @@ export class WebXRApp {
       } catch (error) {
         console.error('[xr] player update failed', error);
       }
+    }
+
+    try {
+      this._updateHotspotSplatOcclusion();
+      this._updateFloatingHotspotLabels();
+    } catch (error) {
+      console.warn('[hotspot] visibility update failed', error);
     }
 
     try {
