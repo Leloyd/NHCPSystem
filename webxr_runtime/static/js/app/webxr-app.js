@@ -3530,8 +3530,11 @@ export class WebXRApp {
       const cameraPosition = new THREE.Vector3();
       this.camera.getWorldPosition(cameraPosition);
       this.xrHotspotTableSourceMarker.getWorldPosition(viewerRoot.position);
-      // Keep the opened table image directly above its OPEN/CLOSE marker.
-      viewerRoot.position.y += 0.86;
+      // Incomplete Church records include a central Deposit/Isauli control.
+      // Raise that viewer slightly farther above the source marker so the
+      // deposit control never occupies the same world-space position as the
+      // marker's OPEN/CLOSE control.
+      viewerRoot.position.y += isChurchRecord && !churchRecordComplete ? 1.08 : 0.86;
       cameraPosition.y = viewerRoot.position.y;
       viewerRoot.lookAt(cameraPosition);
     } else {
