@@ -29,7 +29,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       {
         id: 'kabila',
         title: { tl: 'Ang Kabilang Buhay ng mga Filipino', en: 'The Afterlife of the Filipino' },
-        imageUrl: '/AR-Artifacts/Kabila/kabila.png',
+        textOnly: true,
+        hideTitle: true,
         audio: {
           tl: '/360Hotspots/Kabila/ANG KABILANG BUHAY NG MGA FILIPINO - Dibuho ni Bryan Anthony Paraiso.mp3',
           en: '/360Hotspots/Kabila/THE AFTERLIFE OF THE FILIPINO - Painting by Bryan Anthony Paraiso.mp3',
@@ -637,7 +638,6 @@ export class WebXRApp {
       nextSprite: null,
       languageSprite: null,
       subtitleToggleSprite: null,
-      closeSprite: null,
       hotspotId: '',
       entries: [],
       index: 0,
@@ -649,6 +649,7 @@ export class WebXRApp {
       loadToken: 0,
       modelCache: new Map(),
       elapsed: 0,
+      billboardTarget: new THREE.Vector3(),
     };
 
     this.sparkRenderer = null;
@@ -2578,12 +2579,15 @@ export class WebXRApp {
 
     Object.keys(MUSEUM_CONTENT_HOTSPOTS).forEach((hotspotId) => {
       this.interactionRegistry.register(hotspotId, () => {
+        if (
+          this.museumContentViewer.isOpen
+          && this.museumContentViewer.hotspotId === hotspotId
+        ) {
+          this._disposeMuseumContentViewer();
+          return;
+        }
         this._openMuseumContentViewer(hotspotId);
       });
-    });
-
-    this.interactionRegistry.register('museum-content-close', () => {
-      this._disposeMuseumContentViewer();
     });
 
     this.interactionRegistry.register('museum-content-prev', () => {
@@ -2930,7 +2934,7 @@ export class WebXRApp {
     return this._getActiveHotspotMarkers().find((hotspot) => hotspot.id === hotspotId) ?? null;
   }
 
-  _createHotspotIconTexture(color) {
+  _createHotspotIconTexture(color, iconType = 'arrow') {
     const canvas = document.createElement('canvas');
     canvas.width = 512;
     canvas.height = 512;
@@ -2971,18 +2975,32 @@ export class WebXRApp {
     context.strokeStyle = 'rgba(250, 247, 242, 0.28)';
     context.stroke();
 
-    // Forward arrow icon. Rounded strokes keep it clear at small sizes and
-    // match the restrained heritage control language used across the system.
     context.beginPath();
-    context.moveTo(78, 128);
-    context.lineTo(170, 128);
-    context.moveTo(137, 94);
-    context.lineTo(171, 128);
-    context.lineTo(137, 162);
     context.lineWidth = 18;
     context.lineCap = 'round';
     context.lineJoin = 'round';
     context.strokeStyle = '#faf7f2';
+
+    if (iconType === 'open') {
+      // A plus-shaped Open control. The same world-space button changes to
+      // Close while its museum exhibit is displayed.
+      context.moveTo(88, 128);
+      context.lineTo(168, 128);
+      context.moveTo(128, 88);
+      context.lineTo(128, 168);
+    } else if (iconType === 'close') {
+      context.moveTo(94, 94);
+      context.lineTo(162, 162);
+      context.moveTo(162, 94);
+      context.lineTo(94, 162);
+    } else {
+      // Scene portals retain the forward-arrow symbol.
+      context.moveTo(78, 128);
+      context.lineTo(170, 128);
+      context.moveTo(137, 94);
+      context.lineTo(171, 128);
+      context.lineTo(137, 162);
+    }
     context.stroke();
 
     return this._configureSharpUiTexture(new THREE.CanvasTexture(canvas));
@@ -3591,6 +3609,41 @@ export class WebXRApp {
     return sprite;
   }
 
+  _setMuseumContentHotspotOpenState(marker, isOpen, viewerRoot = null) {
+    const icon = marker?.userData?.hotspotIcon;
+    if (!marker || !icon?.material) {
+      return;
+    }
+
+    const hotspot = MUSEUM_CONTENT_HOTSPOTS[marker.name];
+    const markerConfig = this._getHotspotConfig(marker.name);
+    if (!hotspot || !markerConfig) {
+      return;
+    }
+
+    const previousTexture = icon.material.map;
+    icon.material.map = this._createHotspotIconTexture(
+      markerConfig.color ?? HOTSPOT_HELPER_COLOR,
+      isOpen ? 'close' : 'open',
+    );
+    icon.material.needsUpdate = true;
+    previousTexture?.dispose?.();
+
+    icon.parent?.remove(icon);
+    if (isOpen && viewerRoot) {
+      viewerRoot.add(icon);
+      icon.position.set(0.94, -1.16, 0.16);
+      icon.renderOrder = 62;
+      icon.userData.museumContentOpen = true;
+      return;
+    }
+
+    marker.add(icon);
+    icon.position.set(0, 0, 0);
+    icon.renderOrder = 6;
+    icon.userData.museumContentOpen = false;
+  }
+
   _openMuseumContentViewer(hotspotId) {
     const content = MUSEUM_CONTENT_HOTSPOTS[hotspotId];
     if (!this._isMuseumScene() || !content?.entries?.length || !this.camera) {
@@ -3605,20 +3658,21 @@ export class WebXRApp {
     viewer.isOpen = true;
     viewer.subtitlesOn = true;
     viewer.sourceMarker = this.hotspotMarkers.find((marker) => marker.name === hotspotId) || null;
-    if (viewer.sourceMarker) {
-      viewer.sourceMarker.visible = false;
-    }
 
     const root = new THREE.Group();
     root.name = 'museum-content-viewer';
     const cameraPosition = new THREE.Vector3();
-    const cameraDirection = new THREE.Vector3();
     this.camera.getWorldPosition(cameraPosition);
-    this.camera.getWorldDirection(cameraDirection);
-    cameraDirection.y = THREE.MathUtils.clamp(cameraDirection.y, -0.14, 0.14);
-    cameraDirection.normalize();
-    root.position.copy(cameraPosition).addScaledVector(cameraDirection, 1.85);
-    root.lookAt(cameraPosition);
+    if (viewer.sourceMarker) {
+      viewer.sourceMarker.getWorldPosition(root.position);
+    } else {
+      root.position.fromArray(content.position);
+    }
+    const uprightLookTarget = cameraPosition.clone();
+    uprightLookTarget.y = root.position.y;
+    root.lookAt(uprightLookTarget);
+    root.userData.splatOccluded = false;
+    root.userData.splatOcclusionMargin = 0.12;
 
     const border = new THREE.Mesh(
       new THREE.PlaneGeometry(2.24, 2.66),
@@ -3663,13 +3717,6 @@ export class WebXRApp {
     });
     root.add(titleSprite, subtitleSprite);
 
-    const closeSprite = this._createMuseumContentControl({
-      parent: root,
-      label: '×',
-      position: [0.94, 1.16, 0.12],
-      scale: 0.20,
-      name: 'museum-content-close',
-    });
     const previousSprite = this._createMuseumContentControl({
       parent: root,
       label: '←',
@@ -3707,11 +3754,11 @@ export class WebXRApp {
     viewer.nextSprite = nextSprite;
     viewer.languageSprite = languageSprite;
     viewer.subtitleToggleSprite = subtitleToggleSprite;
-    viewer.closeSprite = closeSprite;
     viewer.audio = new Audio();
     viewer.audio.preload = 'auto';
     viewer.audio.playsInline = true;
     this.scene.add(root);
+    this._setMuseumContentHotspotOpenState(viewer.sourceMarker, true, root);
 
     this._refreshMuseumContentPresentation();
     void this._showMuseumContentEntry(0, { playNarration: true });
@@ -3853,16 +3900,20 @@ export class WebXRApp {
       return;
     }
     const language = viewer.language === 'en' ? 'en' : 'tl';
+    const showTitle = !entry.hideTitle;
     let title = entry.title?.[language] || entry.title?.en || entry.id;
     if (loading) {
       title = language === 'tl' ? `${title} · Inihahanda…` : `${title} · Loading…`;
     } else if (unavailable) {
       title = language === 'tl' ? `${title} · Hindi mabuksan` : `${title} · Unavailable`;
     }
-    this._replaceMuseumArtifactSpriteTexture(
-      viewer.titleSprite,
-      this._createMuseumArtifactTextTexture(title),
-    );
+    if (showTitle) {
+      this._replaceMuseumArtifactSpriteTexture(
+        viewer.titleSprite,
+        this._createMuseumArtifactTextTexture(title),
+      );
+    }
+    viewer.titleSprite.visible = showTitle;
     this._replaceMuseumArtifactSpriteTexture(
       viewer.languageSprite,
       this._createMuseumArtifactControlTexture(language.toUpperCase(), true),
@@ -3879,6 +3930,13 @@ export class WebXRApp {
         viewer.subtitleSprite,
         this._createMuseumArtifactTextTexture(subtitleText, { subtitle: true }),
       );
+    }
+    if (entry.textOnly) {
+      viewer.subtitleSprite.position.set(0, 0.04, 0.09);
+      viewer.subtitleSprite.scale.set(1.92, 1.58, 1);
+    } else {
+      viewer.subtitleSprite.position.set(0, -0.62, 0.09);
+      viewer.subtitleSprite.scale.set(1.86, 0.68, 1);
     }
     viewer.subtitleSprite.visible = Boolean(viewer.subtitlesOn && subtitleText);
     const showArrows = viewer.entries.length > 1;
@@ -3920,7 +3978,18 @@ export class WebXRApp {
 
   _updateMuseumContentViewer(dt) {
     const viewer = this.museumContentViewer;
-    if (!viewer.isOpen || !viewer.mediaRoot || !viewer.currentMedia?.userData?.isMuseumContentModel) {
+    if (!viewer.isOpen || !viewer.root || !viewer.mediaRoot) {
+      return;
+    }
+
+    const entry = this._getCurrentMuseumContentEntry();
+    if (!entry?.modelUrl && this.camera) {
+      this.camera.getWorldPosition(viewer.billboardTarget);
+      viewer.billboardTarget.y = viewer.root.position.y;
+      viewer.root.lookAt(viewer.billboardTarget);
+    }
+
+    if (!viewer.currentMedia?.userData?.isMuseumContentModel) {
       return;
     }
     viewer.elapsed += dt;
@@ -3938,6 +4007,10 @@ export class WebXRApp {
     this._stopMuseumContentNarration();
     viewer.loadToken += 1;
 
+    if (restoreSource && viewer.sourceMarker) {
+      this._setMuseumContentHotspotOpenState(viewer.sourceMarker, false);
+    }
+
     const removedPickables = new Set();
     if (viewer.root) {
       viewer.root.traverse((object) => {
@@ -3949,9 +4022,6 @@ export class WebXRApp {
       this._disposeObject3DResources(viewer.root);
     }
     this.pickableMeshes = this.pickableMeshes.filter((object) => !removedPickables.has(object));
-    if (restoreSource && viewer.sourceMarker) {
-      viewer.sourceMarker.visible = true;
-    }
 
     viewer.root = null;
     viewer.mediaRoot = null;
@@ -3962,7 +4032,6 @@ export class WebXRApp {
     viewer.nextSprite = null;
     viewer.languageSprite = null;
     viewer.subtitleToggleSprite = null;
-    viewer.closeSprite = null;
     viewer.hotspotId = '';
     viewer.entries = [];
     viewer.index = 0;
@@ -3977,6 +4046,7 @@ export class WebXRApp {
     position,
     color,
     radius,
+    iconType = 'arrow',
     interactionName = null,
     metadata = {},
     maxDistance = null,
@@ -3990,7 +4060,7 @@ export class WebXRApp {
       : new THREE.Vector3(position[0], position[1], position[2]);
     root.position.copy(markerPosition);
 
-    const iconTexture = this._createHotspotIconTexture(color);
+    const iconTexture = this._createHotspotIconTexture(color, iconType);
     const icon = new THREE.Sprite(
       new THREE.SpriteMaterial({
         map: iconTexture,
@@ -4049,11 +4119,13 @@ export class WebXRApp {
         : ((HOTSPOT_TABLES[hotspot.id] || MUSEUM_CONTENT_HOTSPOTS[hotspot.id])
           ? hotspot.id
           : null);
+      const iconType = MUSEUM_CONTENT_HOTSPOTS[hotspot.id] ? 'open' : 'arrow';
       const { root } = this._buildHotspotMarker({
         id: hotspot.id,
         position: hotspot.position,
         color: hotspot.color,
         radius: hotspot.radius,
+        iconType,
         interactionName,
         maxDistance: hotspot.interactionMaxDistance ?? HOTSPOT_INTERACTION_MAX_DISTANCE,
         metadata: {
@@ -4380,16 +4452,11 @@ export class WebXRApp {
       return false;
     }
 
-    // Once a spatial viewer is open, its buttons form one reading interface.
-    // Testing every small sprite against the splat independently makes
-    // neighboring controls blink out at different oblique headset angles.
-    // The unopened world hotspot remains occlusion-tested; only controls of
-    // an already-open viewer bypass the per-button splat test.
+    // The table viewer remains a single reading surface. Museum exhibit
+    // controls intentionally do not bypass this test: their complete viewer
+    // is hidden whenever a captured splat wall is between it and the user.
     if (object.userData?.isXrTablePickable) {
       return true;
-    }
-    if (object.userData?.isMuseumContentPickable) {
-      return Boolean(this.museumContentViewer?.isOpen);
     }
     return Boolean(
       object.userData?.isMuseumArtifactPickable
@@ -4440,6 +4507,10 @@ export class WebXRApp {
       .filter((object) => object?.visible && object?.isInitialized !== false);
     if (splatObjects.length === 0) {
       this.hotspotMarkers.forEach((marker) => this._setHotspotSplatOccluded(marker, false));
+      if (this.museumContentViewer?.root) {
+        this.museumContentViewer.root.userData.splatOccluded = false;
+        this.museumContentViewer.root.visible = true;
+      }
       this.pickableMeshes.forEach((object) => {
         if (!object?.userData?.isHotspotPickable) {
           this._setPickableSplatOccluded(object, false);
@@ -4465,6 +4536,19 @@ export class WebXRApp {
         splatObjects,
       );
       this._setHotspotSplatOccluded(marker, occluded);
+    }
+
+    const museumContentRoot = this.museumContentViewer?.root;
+    if (museumContentRoot?.parent) {
+      museumContentRoot.getWorldPosition(this.hotspotOcclusionTarget);
+      const margin = Number(museumContentRoot.userData?.splatOcclusionMargin ?? 0.12);
+      const occluded = this._testSplatOcclusionAtTarget(
+        this.hotspotOcclusionTarget,
+        margin,
+        splatObjects,
+      );
+      museumContentRoot.userData.splatOccluded = occluded;
+      museumContentRoot.visible = !occluded;
     }
 
     // Table controls, museum artifact controls, door meshes, and future
