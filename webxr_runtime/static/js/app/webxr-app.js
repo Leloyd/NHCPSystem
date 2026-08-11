@@ -2019,7 +2019,9 @@ export class WebXRApp {
 
                 if (sessionMode === XR_SESSION_MODE_VR) {
                   try {
-                    this.renderer.xr.setFoveation(this._getXrQualityProfile().foveation);
+                    // Keep only a light compositor optimization. Splat detail
+                    // itself returns to the normal scene budget after startup.
+                    this.renderer.xr.setFoveation(this.mobileMode ? 0.2 : 0.1);
                   } catch (error) {
                     console.warn('[xr] foveation could not be configured', error);
                   }
@@ -2162,7 +2164,7 @@ export class WebXRApp {
 
         // Start conservatively to guarantee that the native compositor gets
         // valid frames. Once all SPZ files are visible, quality rises in two
-        // stages to the device-appropriate target below.
+        // stages back to the exact budget used by the normal 3D scene.
         this._applyXrStartupQuality();
       }
     });
@@ -2347,46 +2349,20 @@ export class WebXRApp {
     }
   }
 
-  _getXrQualityProfile() {
-    if (!this.mobileMode) {
-      return {
-        lodSplatCount: 900000,
-        lodSplatScale: 0.82,
-        lodRenderScale: 1.0,
-        foveation: 0.25,
-      };
-    }
-
-    const deviceMemory = Number(navigator.deviceMemory || 0);
-    if (deviceMemory > 0 && deviceMemory <= 4) {
-      return {
-        lodSplatCount: 360000,
-        lodSplatScale: 0.96,
-        lodRenderScale: 1.65,
-        foveation: 0.55,
-      };
-    }
-    if (deviceMemory >= 8) {
-      return {
-        lodSplatCount: 600000,
-        lodSplatScale: 0.78,
-        lodRenderScale: 1.2,
-        foveation: 0.4,
-      };
-    }
-    return {
-      lodSplatCount: 480000,
-      lodSplatScale: 0.86,
-      lodRenderScale: 1.4,
-      foveation: 0.46,
-    };
-  }
-
   _applyXrStartupQuality() {
     if (!this.sparkRenderer || this.activeXrSessionMode !== XR_SESSION_MODE_VR) {
       return;
     }
-    this.xrTargetSparkBudget = this._getXrQualityProfile();
+
+    // The values captured on session start are Spark's normal-mode settings.
+    // Preserve them verbatim instead of replacing them with a mobile-specific
+    // splat ceiling, so VR reaches the same source quality after warm-up.
+    const normalBudget = this.xrPreviousSparkBudget ?? {
+      lodSplatCount: this.sparkRenderer.lodSplatCount,
+      lodSplatScale: this.sparkRenderer.lodSplatScale,
+      lodRenderScale: this.sparkRenderer.lodRenderScale,
+    };
+    this.xrTargetSparkBudget = { ...normalBudget };
     this.xrQualityStage = 0;
     this.sparkRenderer.lodSplatCount = this.mobileMode ? 220000 : 420000;
     this.sparkRenderer.lodSplatScale = 1;
@@ -2412,15 +2388,24 @@ export class WebXRApp {
 
     const target = this.xrTargetSparkBudget;
     if (nextStage === 1) {
-      // First increase reduces visible softness without suddenly doubling the
-      // GPU workload on the frame that closes the loading panel.
-      this.sparkRenderer.lodSplatCount = Math.round(
-        (this.sparkRenderer.lodSplatCount + target.lodSplatCount) * 0.5,
-      );
-      this.sparkRenderer.lodSplatScale = (1 + target.lodSplatScale) * 0.5;
-      this.sparkRenderer.lodRenderScale = (
-        this.sparkRenderer.lodRenderScale + target.lodRenderScale
-      ) * 0.5;
+      // First increase reduces visible softness without suddenly applying the
+      // full normal-scene workload on the frame that closes the loading panel.
+      const targetCount = Number(target.lodSplatCount);
+      const targetScale = Number(target.lodSplatScale);
+      const targetRenderScale = Number(target.lodRenderScale);
+      if (Number.isFinite(targetCount)) {
+        this.sparkRenderer.lodSplatCount = Math.round(
+          (this.sparkRenderer.lodSplatCount + targetCount) * 0.5,
+        );
+      }
+      if (Number.isFinite(targetScale)) {
+        this.sparkRenderer.lodSplatScale = (1 + targetScale) * 0.5;
+      }
+      if (Number.isFinite(targetRenderScale)) {
+        this.sparkRenderer.lodRenderScale = (
+          this.sparkRenderer.lodRenderScale + targetRenderScale
+        ) * 0.5;
+      }
     } else {
       this.sparkRenderer.lodSplatCount = target.lodSplatCount;
       this.sparkRenderer.lodSplatScale = target.lodSplatScale;

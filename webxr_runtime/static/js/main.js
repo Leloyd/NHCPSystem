@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-xr-quality-1';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-normal-splats-1';
 
 function getRefs() {
   return {
