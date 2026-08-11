@@ -520,6 +520,7 @@ export class WebXRApp {
     this.xrSplatsFullyRevealedAt = 0;
     this.lastPositionDebugValue = '';
     this.hotspotDebugActive = false;
+    this.sceneTransitionInProgress = false;
 
     this.boundResize = this.onResize.bind(this);
     this.boundFullscreenChange = this._onFullscreenChange.bind(this);
@@ -2290,6 +2291,13 @@ export class WebXRApp {
     viewCamera.getWorldDirection(direction).normalize();
     panel.position.copy(origin).addScaledVector(direction, 1.45);
 
+    // Asset downloads and GPU initialization continue asynchronously while
+    // the XR animation loop keeps submitting frames. Never auto-hide this
+    // panel until the scene swap has finished configuring the new systems.
+    if (this.sceneTransitionInProgress) {
+      return;
+    }
+
     const now = performance.now();
     const elapsed = now - this.xrLoadingPanelStartedAt;
     const environmentSettled = this.splatEntries.length === 0
@@ -2408,6 +2416,21 @@ export class WebXRApp {
     const payload = await response.json();
     this._storePrefetchedMetadata(payload);
     return payload;
+  }
+
+  async _fetchSceneMetadata({ scene = null, zip = null } = {}) {
+    let query = '';
+    if (scene) {
+      query = `?scene=${encodeURIComponent(scene)}`;
+    } else if (zip) {
+      query = `?zip=${encodeURIComponent(zip)}`;
+    }
+
+    const response = await fetch(`/api/webxr/scene${query}`, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`Could not load the requested 3D scene (${response.status}).`);
+    }
+    return response.json();
   }
 
   _readPrefetchedMetadata() {
@@ -2593,6 +2616,12 @@ export class WebXRApp {
       splatObject.name = asset.name || asset.fileName;
       applyAssetTransform(splatObject, asset.transform);
       splatObject.updateMatrixWorld(true);
+      if (this.renderer.xr.isPresenting && this.activeXrSessionMode === XR_SESSION_MODE_VR) {
+        // A portal can replace the scene while the native compositor remains
+        // open. Reveal newly uploaded SPZ files progressively instead of
+        // drawing every new splat in the museum's first stereo frame.
+        splatObject.visible = false;
+      }
       this.scene.add(splatObject);
 
       this.splatEntries.push({
@@ -3029,6 +3058,45 @@ export class WebXRApp {
     audio.playsInline = true;
     station.audio = audio;
     this._refreshMuseumArtifactPresentation();
+  }
+
+  _disposeMuseumArtifactStation() {
+    const station = this.museumArtifactStation;
+    if (!station) {
+      return;
+    }
+
+    this._stopMuseumArtifactNarration();
+    station.loadToken += 1;
+
+    const roots = [
+      station.root,
+      station.toggleSprite,
+      station.languageSprite,
+      station.subtitleToggleSprite,
+    ].filter(Boolean);
+    const removedObjects = new Set();
+
+    roots.forEach((root) => {
+      root.traverse((object) => removedObjects.add(object));
+      root.parent?.remove(root);
+      this._disposeObject3DResources(root);
+    });
+
+    this.pickableMeshes = this.pickableMeshes.filter((object) => !removedObjects.has(object));
+    station.audio = null;
+    station.root = null;
+    station.modelPivot = null;
+    station.currentModel = null;
+    station.controlsRoot = null;
+    station.titleSprite = null;
+    station.subtitleSprite = null;
+    station.toggleSprite = null;
+    station.languageSprite = null;
+    station.subtitleToggleSprite = null;
+    station.isOpen = false;
+    station.modelCache.clear();
+    station.elapsed = 0;
   }
 
   _setMuseumArtifactStationOpen(open) {
@@ -3619,19 +3687,40 @@ export class WebXRApp {
 
     this.collisionSystem.setFallbackBounds(fallbackBounds);
 
-    this.playerController = new PlayerController({
-      camera: this.camera,
-      rig: this.playerRig,
-      renderer: this.renderer,
-      uiController: this.uiController,
-      playerConfig: this.metadata.player,
-      getXrSessionMode: () => this.activeXrSessionMode,
-      mobileMode: this.mobileMode,
-      mobileRefs: {
-        moveStickZone: this.refs.moveStickZone,
-        moveStickThumb: this.refs.moveStickThumb,
-      },
-    });
+    if (!this.playerController) {
+      this.playerController = new PlayerController({
+        camera: this.camera,
+        rig: this.playerRig,
+        renderer: this.renderer,
+        uiController: this.uiController,
+        playerConfig: this.metadata.player,
+        getXrSessionMode: () => this.activeXrSessionMode,
+        mobileMode: this.mobileMode,
+        mobileRefs: {
+          moveStickZone: this.refs.moveStickZone,
+          moveStickThumb: this.refs.moveStickThumb,
+        },
+      });
+    } else {
+      // Keep the one controller created at startup. Reconstructing it would
+      // register duplicate keyboard, pointer, and joystick listeners after
+      // every portal crossing; only its scene-specific settings must change.
+      const config = this.metadata.player || {};
+      const moveSpeed = Number(config.move_speed ?? 4.0);
+      const sprintSpeed = Number(config.sprint_speed ?? (moveSpeed * Number(config.sprint_multiplier ?? 1.55)));
+      this.playerController.settings = {
+        height: Number(config.height ?? 1.72),
+        radius: Number(config.radius ?? 0.35),
+        gravity: Number(config.gravity ?? 22.0),
+        moveSpeed,
+        jumpVelocity: Number(config.jump_strength ?? config.jump_velocity ?? 8.3),
+        sprintMultiplier: moveSpeed > 0 ? sprintSpeed / moveSpeed : 1,
+      };
+      this.playerController.velocity.set(0, 0, 0);
+      this.playerController.isGrounded = false;
+      this.playerController.xrPhysicalOffsetInitialized = false;
+      this.playerController.xrPhysicalOffsetBaseline.set(0, 0, 0);
+    }
 
     this.playerController.setMobileMode(this.mobileMode);
 
@@ -3657,7 +3746,14 @@ export class WebXRApp {
     } else if (this.requestedSpawnOverride) {
       spawnYaw = 0;
     }
-    this.camera.rotation.set(0, spawnYaw, 0);
+    if (this.renderer.xr.isPresenting) {
+      // The headset owns the camera pose during WebXR. Apply the authored
+      // entrance direction to its persistent parent rig without restarting
+      // the immersive session.
+      this.playerRig.rotation.y = spawnYaw;
+    } else {
+      this.camera.rotation.set(0, spawnYaw, 0);
+    }
     this.hotspotDebugActive = this.hotspotDebugRequested
       && !this._isMuseumScene()
       && !this._isUndergroundScene();
@@ -3819,6 +3915,16 @@ export class WebXRApp {
       nextUrl.searchParams.set('spawn', spawnOverride.join(','));
     }
 
+    if (this.renderer.xr.isPresenting) {
+      void this._transitionToScene({
+        scene: 'church',
+        spawnOverride,
+        historyUrl: nextUrl,
+        loadingMessage: 'Preparing the Chapel\u2026',
+      });
+      return;
+    }
+
     window.location.assign(nextUrl.toString());
   }
 
@@ -3833,6 +3939,16 @@ export class WebXRApp {
     // to override ?zip=underground.zip and reload Church instead.
     const nextUrl = new URL('/3d-environment', window.location.origin);
     nextUrl.searchParams.set('zip', UNDERGROUND_ZIP_NAME);
+
+    if (this.renderer.xr.isPresenting) {
+      void this._transitionToScene({
+        scene: 'underground',
+        historyUrl: nextUrl,
+        loadingMessage: 'Preparing the Underground Cemetery\u2026',
+      });
+      return;
+    }
+
     window.location.assign(nextUrl.toString());
   }
 
@@ -3841,7 +3957,171 @@ export class WebXRApp {
       return;
     }
 
+    if (this.renderer.xr.isPresenting) {
+      void this._transitionToScene({
+        scene: 'museum',
+        historyUrl: new URL('/3d-environment/museum', window.location.origin),
+        loadingMessage: 'Preparing the Museum\u2026',
+      });
+      return;
+    }
+
     window.location.assign('/3d-environment/museum');
+  }
+
+  _disposeObject3DResources(root) {
+    if (!root) {
+      return;
+    }
+    const geometries = new Set();
+    const materials = new Set();
+    const textures = new Set();
+    root.traverse((object) => {
+      if (object.geometry) {
+        geometries.add(object.geometry);
+      }
+      const objectMaterials = Array.isArray(object.material) ? object.material : [object.material];
+      objectMaterials.filter(Boolean).forEach((material) => {
+        materials.add(material);
+        Object.values(material).forEach((value) => {
+          if (value?.isTexture) {
+            textures.add(value);
+          }
+        });
+      });
+    });
+    textures.forEach((texture) => texture.dispose?.());
+    materials.forEach((material) => material.dispose?.());
+    geometries.forEach((geometry) => geometry.dispose?.());
+  }
+
+  _disposeSceneDependentContent() {
+    this.interactionSystem?.dispose?.();
+    this.interactionSystem = null;
+    this.phoneVrGazeSystem?.dispose?.();
+    this.phoneVrGazeSystem = null;
+    this.gazeTeleportSystem?.dispose?.();
+    this.gazeTeleportSystem = null;
+
+    this._disposeXrHotspotTableViewer({ restoreSource: false });
+    this.xrHotspotTableSourceMarker = null;
+    this.xrHotspotTableId = '';
+    this.xrHotspotTableDetail = null;
+    this._hideExpandedHotspotImage();
+    this._disposeMuseumArtifactStation();
+    this._clearFloatingHotspotLabels();
+
+    this.hotspotMarkers.forEach((marker) => {
+      marker.parent?.remove(marker);
+      this._disposeObject3DResources(marker);
+    });
+    this.hotspotMarkers = [];
+
+    this.meshEntries.forEach((entry) => {
+      entry.root?.parent?.remove(entry.root);
+      this._disposeObject3DResources(entry.root);
+    });
+    this.meshEntries = [];
+
+    this.splatEntries.forEach((entry) => {
+      entry.object?.parent?.remove(entry.object);
+      entry.object?.dispose?.();
+    });
+    this.splatEntries = [];
+
+    if (this.sparkRenderer && typeof this.sparkRenderer.clearSplats === 'function') {
+      this.sparkRenderer.clearSplats();
+    }
+
+    if (this.collisionSystem) {
+      this.collisionSystem._clearColliders?.();
+      this.collisionSystem.debugGroup?.parent?.remove(this.collisionSystem.debugGroup);
+      this._disposeObject3DResources(this.collisionSystem.debugGroup);
+      this.collisionSystem = null;
+    }
+
+    this.pickableMeshes = [];
+    this.uiController.hideInteraction();
+  }
+
+  _prepareTransferredSceneForXr() {
+    const now = performance.now();
+    this.xrFrameSubmitted = false;
+    this.xrRenderFailure = null;
+    this.xrLoadingPanelStartedAt = now;
+
+    if (this.activeXrSessionMode === XR_SESSION_MODE_VR) {
+      this.xrSplatRevealIndex = 0;
+      this.xrSplatRevealStartedAt = now + 250;
+      this.xrSplatsFullyRevealedAt = 0;
+      this.splatEntries.forEach((entry) => {
+        if (entry?.object) {
+          entry.object.visible = false;
+        }
+      });
+      if (this.sparkRenderer) {
+        this.sparkRenderer.visible = false;
+      }
+    } else {
+      this.xrSplatRevealIndex = this.splatEntries.length;
+      this.xrSplatRevealStartedAt = 0;
+      this.xrSplatsFullyRevealedAt = now;
+    }
+  }
+
+  async _transitionToScene({
+    scene,
+    spawnOverride = null,
+    historyUrl,
+    loadingMessage = 'Preparing the 3D Environment\u2026',
+  }) {
+    if (!this.renderer.xr.isPresenting || this.sceneTransitionInProgress) {
+      return;
+    }
+
+    this.sceneTransitionInProgress = true;
+    this.phoneVrGazeSystem?.reset?.();
+    this.gazeTeleportSystem?.reset?.();
+    this._setXrLoadingPanel(loadingMessage, true);
+    this.uiController.setLoadingProgress(0.05, loadingMessage);
+
+    try {
+      // Fetch first so a network/metadata error leaves the current scene
+      // intact and the visitor inside the same immersive session.
+      const nextMetadata = await this._fetchSceneMetadata({ scene });
+
+      this._disposeSceneDependentContent();
+      this.requestedScene = scene || null;
+      this.requestedZipOverride = null;
+      this.requestedSpawnOverride = Array.isArray(spawnOverride) && spawnOverride.length === 3
+        ? new THREE.Vector3(...spawnOverride.map(Number))
+        : null;
+      this.metadata = nextMetadata;
+      if (this.container?.dataset) {
+        this.container.dataset.webxrScene = this.requestedScene || '';
+      }
+
+      // Keep the renderer's active immersive framebuffer and phone-safe VR
+      // quality budget unchanged. Resizing or changing pixel ratio while a
+      // native XR layer is presenting can invalidate that layer on Android.
+      await this._loadSceneAssets();
+      this._createHotspotMarkers();
+      this._setupGameplaySystems();
+      this._setupMuseumArtifactStation();
+      this._prepareTransferredSceneForXr();
+
+      if (historyUrl) {
+        window.history.replaceState({}, '', historyUrl.toString());
+      }
+      this.uiController.completeLoading('Scene ready.');
+    } catch (error) {
+      console.error('[scene transition] failed', error);
+      this.xrRenderFailure = error;
+      this._setXrLoadingPanel('This scene could not be loaded. Exit VR and try again.', true);
+      this.uiController.showError(`Scene transfer failed: ${error?.message ?? error}`, 5200);
+    } finally {
+      this.sceneTransitionInProgress = false;
+    }
   }
 
   _onGlobalKeyDown(event) {

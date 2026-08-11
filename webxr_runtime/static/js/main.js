@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-spark-xr-9';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-scene-transfer-1';
 
 function getRefs() {
   return {
