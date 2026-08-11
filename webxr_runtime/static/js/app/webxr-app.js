@@ -27,6 +27,7 @@ const MUSEUM_CONTENT_FORWARD_TILT = THREE.MathUtils.degToRad(-12);
 const MUSEUM_CONTENT_HOTSPOTS = {
   'museum-content-kabila': {
     position: [0.00, 1.00, 2.65],
+    controlsAlongZ: true,
     entries: [
       {
         id: 'kabila',
@@ -42,13 +43,15 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-maitum': {
     position: [-2.30, 1.00, 3.24],
-    displayPosition: [-2.60, 1.00, 3.37],
+    displayPosition: [-2.60, 0.50, 3.37],
+    controlsAlongZ: true,
     entries: [
       {
         id: 'jar',
         title: { tl: 'Mga Banga ng Maitum', en: 'The Maitum Jars' },
         modelUrl: '/AR-Artifacts/Maitum/Maitum-10k.glb',
         rotation: [0, -90, 0],
+        disableTilt: true,
         audio: {
           tl: '/360Hotspots/jar/MGA BANGA NG MAITUM.mp3',
           en: '/360Hotspots/jar/THE MAITUM JARS.mp3',
@@ -58,13 +61,15 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-manunggul': {
     position: [-2.30, 1.00, 1.82],
-    displayPosition: [-2.60, 1.00, 1.85],
+    displayPosition: [-2.60, 0.50, 1.85],
+    controlsAlongZ: true,
     entries: [
       {
         id: 'banga',
         title: { tl: 'Banga ng Manunggul', en: 'The Manunggul Jar' },
         modelUrl: '/AR-Artifacts/Banga/Banga-512(10k).glb',
         rotation: [0, 0, 0],
+        disableTilt: true,
         audio: {
           tl: '/360Hotspots/Balanghay/Banga/ANG BANGA NG MANUNGGUL.mp3',
           en: '/360Hotspots/Balanghay/Banga/THE MANUNGGUL JAR.mp3',
@@ -89,6 +94,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-kabaong': {
     position: [-2.93, 1.00, -0.88],
+    controlsAlongZ: true,
     entries: [
       {
         id: 'kabaong',
@@ -104,6 +110,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-uloh': {
     position: [-1.00, 1.00, 0.32],
+    controlsAlongZ: true,
     entries: [
       {
         id: 'uloh',
@@ -119,6 +126,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   },
   'museum-content-nagcarlan': {
     position: [-0.55, 1.00, 0.28],
+    controlsAlongZ: true,
     entries: [
       {
         id: 'thenagcarlanundergroundcemetery',
@@ -3116,10 +3124,10 @@ export class WebXRApp {
     return lines;
   }
 
-  _createMuseumArtifactTextTexture(text, { subtitle = false } = {}) {
+  _createMuseumArtifactTextTexture(text, { subtitle = false, contentFit = false } = {}) {
     const canvas = document.createElement('canvas');
     canvas.width = 1024;
-    canvas.height = subtitle ? 512 : 180;
+    canvas.height = subtitle ? (contentFit ? 640 : 512) : 180;
     const context = canvas.getContext('2d');
     if (!context) {
       return null;
@@ -3140,20 +3148,25 @@ export class WebXRApp {
       context.stroke();
     }
 
-    let fontSize = subtitle ? 40 : 72;
-    const maxLines = subtitle ? 11 : 2;
+    let fontSize = subtitle ? (contentFit ? 38 : 40) : 72;
+    const maxLines = subtitle ? (contentFit ? 20 : 11) : 2;
+    const minimumFontSize = subtitle ? (contentFit ? 20 : 27) : 52;
     const maxWidth = canvas.width - (subtitle ? 96 : 48);
+    const availableHeight = canvas.height - (subtitle ? 88 : 28);
     let lines = [];
     do {
       context.font = `${subtitle ? 500 : 700} ${fontSize}px ${subtitle ? 'Georgia' : 'Georgia'}, serif`;
       lines = this._wrapMuseumArtifactText(context, text, maxWidth);
-      if (lines.length <= maxLines || fontSize <= (subtitle ? 27 : 52)) {
+      const candidateLineHeight = fontSize * (subtitle ? (contentFit ? 1.32 : 1.28) : 1.12);
+      const fitsWidthAndHeight = lines.length <= maxLines
+        && Math.max(1, lines.length) * candidateLineHeight <= availableHeight;
+      if (fitsWidthAndHeight || fontSize <= minimumFontSize) {
         break;
       }
       fontSize -= 2;
-    } while (fontSize > 20);
+    } while (fontSize >= minimumFontSize);
 
-    const lineHeight = fontSize * (subtitle ? 1.28 : 1.12);
+    const lineHeight = fontSize * (subtitle ? (contentFit ? 1.32 : 1.28) : 1.12);
     const contentHeight = Math.max(1, lines.length) * lineHeight;
     let y = (canvas.height - contentHeight) * 0.5 + lineHeight * 0.72;
     context.fillStyle = subtitle ? '#faf7f2' : '#d4af6a';
@@ -3720,7 +3733,7 @@ export class WebXRApp {
       scale: [0.92, 0.16],
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
-      texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
+      texture: this._createMuseumArtifactTextTexture('', { subtitle: true, contentFit: true }),
       position: [0, -0.72, 0.09],
       scale: [1.65, 0.54],
     });
@@ -3769,14 +3782,20 @@ export class WebXRApp {
     this.scene.add(root);
     this._setMuseumContentHotspotOpenState(viewer.sourceMarker, true, root);
 
-    // Keep the supporting controls beside the original hotspot: CC on the
-    // left, CLOSE in the center, and TL/EN on the right.
+    // Keep the supporting controls around the original hotspot. Selected
+    // exhibits use the museum's depth axis: CC toward +Z, CLOSE at the
+    // hotspot, and TL/EN toward -Z.
     if (viewer.sourceMarker) {
       subtitleToggleSprite.parent?.remove(subtitleToggleSprite);
       languageSprite.parent?.remove(languageSprite);
       viewer.sourceMarker.add(subtitleToggleSprite, languageSprite);
-      subtitleToggleSprite.position.set(-0.22, 0, 0.02);
-      languageSprite.position.set(0.22, 0, 0.02);
+      if (content.controlsAlongZ) {
+        subtitleToggleSprite.position.set(0, 0, 0.22);
+        languageSprite.position.set(0, 0, -0.22);
+      } else {
+        subtitleToggleSprite.position.set(-0.22, 0, 0.02);
+        languageSprite.position.set(0.22, 0, 0.02);
+      }
       subtitleToggleSprite.renderOrder = 61;
       languageSprite.renderOrder = 61;
     }
@@ -3901,6 +3920,12 @@ export class WebXRApp {
       if (media) {
         if (media.userData?.isMuseumContentImage) {
           viewer.mediaRoot.rotation.set(0, 0, 0);
+        } else if (media.userData?.isMuseumContentModel) {
+          viewer.mediaRoot.rotation.set(
+            entry.disableTilt ? 0 : MUSEUM_CONTENT_FORWARD_TILT,
+            Math.PI,
+            0,
+          );
         }
         viewer.currentMedia = media;
         viewer.mediaRoot.add(media);
@@ -4000,17 +4025,17 @@ export class WebXRApp {
     if (subtitleText) {
       this._replaceMuseumArtifactSpriteTexture(
         viewer.subtitleSprite,
-        this._createMuseumArtifactTextTexture(subtitleText, { subtitle: true }),
+        this._createMuseumArtifactTextTexture(subtitleText, { subtitle: true, contentFit: true }),
       );
     }
     if (entry.textOnly) {
       // Kabila keeps its controls at the hotspot and places a smaller,
       // comfortably wrapped text panel directly below them.
       viewer.subtitleSprite.position.set(0, -0.60, 0.09);
-      viewer.subtitleSprite.scale.set(1.56, 0.84, 1);
+      viewer.subtitleSprite.scale.set(1.56, 0.88, 1);
     } else {
-      viewer.subtitleSprite.position.set(0, -0.72, 0.09);
-      viewer.subtitleSprite.scale.set(1.65, 0.54, 1);
+      viewer.subtitleSprite.position.set(0, -0.70, 0.09);
+      viewer.subtitleSprite.scale.set(1.65, 0.62, 1);
     }
     viewer.subtitleSprite.visible = Boolean(viewer.subtitlesOn && subtitleText);
     const showArrows = viewer.entries.length > 1;
@@ -4068,7 +4093,7 @@ export class WebXRApp {
     }
     viewer.elapsed += dt;
     viewer.mediaRoot.position.y = 0.34 + Math.sin(viewer.elapsed * 1.15) * 0.018;
-    viewer.mediaRoot.rotation.x = MUSEUM_CONTENT_FORWARD_TILT;
+    viewer.mediaRoot.rotation.x = entry.disableTilt ? 0 : MUSEUM_CONTENT_FORWARD_TILT;
     viewer.mediaRoot.rotation.y += dt * 0.20;
   }
 

@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-separated-jars-5';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-subtitle-fit-z-controls-6';
 
 function getRefs() {
   return {
