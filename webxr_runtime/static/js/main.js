@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-jar-subtitle-spacing-21';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-chapel-conservation-1';
 
 function getRefs() {
   return {
@@ -21,6 +21,15 @@ function getRefs() {
     positionDebugHint: document.getElementById('position-debug-hint'),
     positionDebugCopy: document.getElementById('position-debug-copy'),
     positionDebugCopyLabel: document.getElementById('position-debug-copy-label'),
+    conservationButton: document.getElementById('conservation-button'),
+    conservationBadge: document.getElementById('conservation-badge'),
+    conservationPanel: document.getElementById('conservation-panel'),
+    conservationKicker: document.getElementById('conservation-kicker'),
+    conservationTitle: document.getElementById('conservation-title'),
+    conservationLanguage: document.getElementById('conservation-language'),
+    conservationClose: document.getElementById('conservation-close'),
+    conservationContent: document.getElementById('conservation-content'),
+    conservationToast: document.getElementById('conservation-toast'),
     mobileControls: document.getElementById('mobile-controls'),
     moveStickZone: document.getElementById('move-stick-zone'),
     moveStickThumb: document.getElementById('move-stick-thumb'),

@@ -259,6 +259,34 @@ const UNDERGROUND_WALK_BOUNDARY = [
 ];
 const CHURCH_HOTSPOT_MARKERS = [
   {
+    id: 'hotspot-1',
+    position: [-2.494, 0.343, -2.280],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'hotspot-2',
+    position: [-2.504, 0.345, -1.342],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'hotspot-3',
+    position: [-2.619, 0.334, 1.068],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'hotspot-4',
+    position: [-2.641, 0.339, 2.063],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
     id: 'go-to-museum',
     position: [-4.50, 0.50, -0.19],
     color: 0x8fd3ff,
@@ -480,6 +508,92 @@ const MUSEUM_ARTIFACTS = [
   },
 ];
 const TABLE_IMAGE_BASE = '/images/360InsideChapel/';
+const TABLE_AUDIO_BASE = '/audio/360VT/TableAudio/';
+const tableAudio = (tl, en) => ({
+  tl: tl ? `${TABLE_AUDIO_BASE}${tl}` : '',
+  en: en ? `${TABLE_AUDIO_BASE}${en}` : '',
+});
+const CHURCH_HOTSPOT_TABLES = {
+  'hotspot-1': {
+    title: { en: 'Construction Materials', tl: 'Mga Materyales sa Konstruksyon' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art1-LeftTable.png`,
+    imageAlt: 'Construction materials table',
+    hotspots: [
+      { id: 'art1-left-table-1', x: 14.40, y: 28.76, imageUrl: `${TABLE_IMAGE_BASE}Artifact/ApogAdobe.png`, title: 'Lime Putty and Adobe Powder', audio: tableAudio('ApogAdobe-T.mp3', 'ApogAdobe-E.mp3') },
+      { id: 'art1-left-table-2', x: 13.70, y: 50.00, imageUrl: `${TABLE_IMAGE_BASE}Artifact/LimeSand.png`, title: 'Lime Putty and Sand', audio: tableAudio('ApogSand-T.mp3', 'ApogSand-E.mp3') },
+      { id: 'art1-left-table-3', x: 13.28, y: 71.24, imageUrl: `${TABLE_IMAGE_BASE}Artifact/LimeCoral.png`, title: 'Lime Putty and Coral Powder', audio: tableAudio('ApogCoral-T.mp3', 'ApogCoral-E.mp3') },
+      { id: 'art1-left-table-4', x: 58.74, y: 39.13, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Limestone.png`, title: 'Limestone', audio: tableAudio('Batong-Apog-T.mp3', 'Batong-Apog-E.mp3') },
+      { id: 'art1-left-table-5', x: 58.46, y: 78.82, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Brick.png`, title: 'Brick', audio: tableAudio('Ladrilyo-T.mp3', 'Ladrilyo-E.mp3') },
+      { id: 'art1-left-table-6', x: 84.62, y: 78.06, imageUrl: `${TABLE_IMAGE_BASE}Artifact/Adobe.png`, title: 'Adobe', audio: tableAudio('Adobe-T.mp3', 'Adobe-E.mp3') },
+      { id: 'art1-left-table-7', x: 83.79, y: 36.35, imageUrl: `${TABLE_IMAGE_BASE}Artifact/CoralStone.png`, title: 'Coral Stone', audio: tableAudio('CoralStone-T.mp3', 'CoralStone-E.mp3') },
+    ],
+  },
+  'hotspot-2': {
+    title: { en: 'Wood and Structural Elements', tl: 'Kahoy at mga Elementong Istruktural' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art2-LeftTable.png`,
+    imageAlt: 'Wood and structural elements table',
+    hotspots: [
+      { id: 'art2-left-table-1', x: 23.77, y: 21.26, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/molave.png`, title: 'Molave', audio: tableAudio('Molave-T.mp3', 'Molave-E.mp3') },
+      { id: 'art2-left-table-2', x: 23.28, y: 48.22, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Narra.png`, title: 'Narra', audio: tableAudio('Narra-T.mp3', 'Narra-E.mp3') },
+      { id: 'art2-left-table-3', x: 23.42, y: 75.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/KatongMatsing.png`, title: 'Katong Matsing', audio: tableAudio('Katong-Matsing-T.mp3', 'Katong-Matsing-E.mp3') },
+      { id: 'art2-left-table-4', x: 45.66, y: 32.45, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Kamagong.png`, title: 'Kamagong', audio: tableAudio('Kamagong-T.mp3', 'Kamagong-E.mp3') },
+      { id: 'art2-left-table-5', x: 45.80, y: 66.28, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Yakal.png`, title: 'Yakal', audio: tableAudio('Yakal-T.mp3', 'Yakal-E.mp3') },
+      { id: 'art2-left-table-6', x: 62.31, y: 55.60, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/BatikulingWHR.png`, title: 'Batikuling WHR', audio: tableAudio('Batikuling-T.mp3', 'Batikuling-E.mp3') },
+      { id: 'art2-left-table-7', x: 74.76, y: 53.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/Headrest.png`, title: 'Headrest', audio: tableAudio('Headrest-T.mp3', 'Headrest-E.mp3') },
+      { id: 'art2-left-table-8', x: 75.46, y: 87.14, imageUrl: `${TABLE_IMAGE_BASE}Artifact3/IronNail.png`, title: 'Iron Nail', audio: tableAudio('IronNail-T.mp3', 'IronNail-E.mp3') },
+    ],
+  },
+  'hotspot-3': {
+    title: { en: 'Architectural Details', tl: 'Mga Detalye ng Arkitektura' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art1-RightTable.png`,
+    imageAlt: 'Architectural details table',
+    hotspots: [
+      { id: 'art1-right-table-1', x: 27.20, y: 52.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/AzulejosTile.png`, title: 'Azulejos Tile', audio: tableAudio('Azulejos-T.mp3', 'Azulejos-E.mp3') },
+      { id: 'art1-right-table-2', x: 48.46, y: 29.74, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/RightWindow.png`, title: 'Right Window', audio: tableAudio('Right Window(T).mp3', 'Right Window.mp3') },
+      { id: 'art1-right-table-3', x: 47.90, y: 56.52, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/ChapelCeiling.png`, title: 'Chapel Ceiling', audio: tableAudio('Chapel Ceiling(T).mp3', 'Chapel Ceiling.mp3') },
+      { id: 'art1-right-table-4', x: 69.59, y: 30.90, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/PigmentAboveNiche.png`, title: 'Pigment Above Niche', audio: tableAudio('Pigment Above Niche(T).mp3', 'Pigment Above Niche.mp3') },
+      { id: 'art1-right-table-5', x: 69.45, y: 56.29, imageUrl: `${TABLE_IMAGE_BASE}Artifact2/BasReliefNiche.png`, title: 'Bas-Relief Niche', audio: tableAudio('Bas Relief Niche(T).mp3', 'Bas Relief Niche.mp3') },
+    ],
+  },
+  'hotspot-4': {
+    title: { en: 'Finishes and Mixtures', tl: 'Mga Palitada at Halo' },
+    imageUrl: `${TABLE_IMAGE_BASE}Art2-RightTable.png`,
+    imageAlt: 'Finishes, pigments, and mixtures table',
+    hotspots: [
+      { id: 'art2-right-table-1', x: 29.44, y: 18.22, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/InteriorWall.png`, title: 'Interior Wall', audio: tableAudio('Interior Wall, Chapel(T).mp3', 'Interior Wall, Chapel.mp3') },
+      { id: 'art2-right-table-2', x: 29.58, y: 38.40, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Flooring.png`, title: 'Flooring', audio: tableAudio('Flooring, Crypt(T).mp3', 'Flooring, Crypt.mp3') },
+      { id: 'art2-right-table-3', x: 29.58, y: 56.56, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Pilaster.png`, title: 'Pilaster', audio: tableAudio('Pilaster (T).mp3', 'Pilaster.mp3') },
+      { id: 'art2-right-table-4', x: 29.02, y: 73.96, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/PerimeterWall.png`, title: 'Perimeter Wall', audio: tableAudio('Perimeter Wall(T).mp3', 'Perimeter Wall.mp3') },
+      { id: 'art2-right-table-5', x: 40.49, y: 19.73, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Pigments.png`, title: 'Pigments', audio: tableAudio('Mga Kulay Pigments.mp3', 'Mga Kulay Pigments(E).mp3') },
+      { id: 'art2-right-table-6', x: 40.49, y: 73.21, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Artist_sMarterials.png`, title: "Artist's Materials", audio: tableAudio('Mga Kagamitan sa Pagdisenyo.mp3', 'Mga Kagamitan sa Pagdisenyo(E).mp3') },
+      { id: 'art2-right-table-7', x: 70.56, y: 36.89, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/CoralPowder.png`, title: 'Coral Powder', audio: tableAudio('Pulbos na Koral.mp3', 'Pulbos na Koral(E).mp3') },
+      { id: 'art2-right-table-8', x: 80.92, y: 37.64, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/AdobePowder.png`, title: 'Adobe Powder', audio: tableAudio('Pulbos na Adobe.mp3', 'Pulbos na Adobe(E).mp3') },
+      { id: 'art2-right-table-9', x: 91.55, y: 38.40, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/BrickPowder.png`, title: 'Brick Powder', audio: tableAudio('Pulbos na Ladrilyo.mp3', 'Pulbos na Ladrilyo(E).mp3') },
+      { id: 'art2-right-table-10', x: 73.92, y: 70.43, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Lime.png`, title: 'Lime', audio: tableAudio('Apog.mp3', 'Apog(E).mp3') },
+      { id: 'art2-right-table-11', x: 85.53, y: 70.69, imageUrl: `${TABLE_IMAGE_BASE}Artifact1/Sand.png`, title: 'Sand', audio: tableAudio('Buhangin.mp3', 'Buhangin(E).mp3') },
+    ],
+  },
+};
+const CHAPEL_CONSERVATION_STORAGE_KEY = 'nhcpChapelConservationV1';
+const CHAPEL_CONSERVATION_STATIONS = ['hotspot-1', 'hotspot-2', 'hotspot-3', 'hotspot-4'];
+const CHAPEL_CONSERVATION_FINDINGS = {
+  'hotspot-1': {
+    en: 'Historic masonry depends on compatible stone, brick, lime, sand, and mineral aggregates.',
+    tl: 'Nakasalalay ang makasaysayang masonriya sa magkakatugmang bato, ladrilyo, apog, buhangin, at mineral na halo.',
+  },
+  'hotspot-2': {
+    en: 'Durable local hardwoods and iron fasteners reveal how structural and movable elements were assembled.',
+    tl: 'Ipinakikita ng matitibay na lokal na kahoy at pakong bakal kung paano binuo ang mga elementong istruktural at naililipat.',
+  },
+  'hotspot-3': {
+    en: 'Tiles, windows, ceilings, pigments, and relief work carry both artistic and architectural evidence.',
+    tl: 'Ang mga baldosa, bintana, kisame, pigment, at reliebo ay nagtataglay ng ebidensiyang pansining at pang-arkitektura.',
+  },
+  'hotspot-4': {
+    en: 'Walls and finishes preserve traces of lime, sand, powdered masonry, pigments, and the makers’ techniques.',
+    tl: 'Nananatili sa mga pader at palitada ang bakas ng apog, buhangin, pinulbos na masonriya, pigment, at pamamaraan ng mga gumawa.',
+  },
+};
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
 const HERITAGE_MISSION_CHAPEL_IDS = [];
@@ -540,6 +654,7 @@ const HERITAGE_MISSION_EVIDENCE_TABLES = Object.fromEntries(
   }]),
 );
 const HOTSPOT_TABLES = {
+  ...CHURCH_HOTSPOT_TABLES,
   ...HERITAGE_MISSION_EVIDENCE_TABLES,
 };
 const HOTSPOT_FLOATING_LABEL_IMAGES = Object.fromEntries(
@@ -712,6 +827,9 @@ export class WebXRApp {
     this.lastPositionDebugValue = '';
     this.hotspotDebugActive = false;
     this.sceneTransitionInProgress = false;
+    this.chapelConservation = this._readChapelConservationState();
+    this.chapelConservationOpen = false;
+    this.chapelConservationToastTimer = 0;
 
     this.boundResize = this.onResize.bind(this);
     this.boundFullscreenChange = this._onFullscreenChange.bind(this);
@@ -723,6 +841,7 @@ export class WebXRApp {
       this.container.appendChild(this.renderer.domElement);
 
       this._setupUi();
+      this._setupChapelConservation();
       this._setupLights();
       this._registerInteractions();
 
@@ -739,6 +858,7 @@ export class WebXRApp {
       this._createHotspotMarkers();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
+      this._updateChapelConservationUi();
 
       window.addEventListener('resize', this.boundResize);
       window.addEventListener('keydown', this.boundGlobalKeyDown);
@@ -788,6 +908,268 @@ export class WebXRApp {
         }
       }
     });
+  }
+
+  _createDefaultChapelConservationState() {
+    return {
+      version: 1,
+      language: 'tl',
+      examined: [],
+      completed: false,
+    };
+  }
+
+  _readChapelConservationState() {
+    const fallback = this._createDefaultChapelConservationState();
+    try {
+      const parsed = JSON.parse(window.localStorage.getItem(CHAPEL_CONSERVATION_STORAGE_KEY) || 'null');
+      if (!parsed || parsed.version !== 1) {
+        return fallback;
+      }
+      return {
+        ...fallback,
+        language: parsed.language === 'en' ? 'en' : 'tl',
+        examined: Array.isArray(parsed.examined)
+          ? parsed.examined.filter((id) => CHAPEL_CONSERVATION_STATIONS.includes(id))
+          : [],
+        completed: parsed.completed === true,
+      };
+    } catch (error) {
+      console.warn('[conservation] Could not read saved notebook progress.', error);
+      return fallback;
+    }
+  }
+
+  _saveChapelConservationState() {
+    try {
+      window.localStorage.setItem(
+        CHAPEL_CONSERVATION_STORAGE_KEY,
+        JSON.stringify(this.chapelConservation),
+      );
+    } catch (error) {
+      console.warn('[conservation] Could not save notebook progress.', error);
+    }
+  }
+
+  _conservationText(tl, en) {
+    return this.chapelConservation.language === 'en' ? en : tl;
+  }
+
+  _setupChapelConservation() {
+    const {
+      conservationButton,
+      conservationClose,
+      conservationLanguage,
+      conservationContent,
+    } = this.refs;
+    conservationButton?.addEventListener('click', () => {
+      this._setChapelConservationOpen(!this.chapelConservationOpen);
+    });
+    conservationClose?.addEventListener('click', () => {
+      this._setChapelConservationOpen(false);
+      conservationButton?.focus({ preventScroll: true });
+    });
+    conservationLanguage?.addEventListener('click', () => {
+      this.chapelConservation.language = this.chapelConservation.language === 'tl' ? 'en' : 'tl';
+      this.expandedHotspotLanguage = this.chapelConservation.language;
+      this._saveChapelConservationState();
+      this._renderChapelConservation();
+    });
+    conservationContent?.addEventListener('click', (event) => {
+      const action = event.target?.closest?.('[data-conservation-action]')?.dataset?.conservationAction;
+      if (!action) {
+        return;
+      }
+      if (action === 'choose-lime') {
+        this.chapelConservation.completed = true;
+        this._saveChapelConservationState();
+        this._trackChapelConservation('learning_activity_completed', 'chapel-conservation', {
+          score: 4,
+          total: 4,
+        });
+        this._showChapelConservationToast(
+          'Tama. Ang katugmang materyal at maingat na pagsusuri ang gabay sa konserbasyon.',
+          'Correct. Compatible materials and careful assessment guide conservation.',
+          5200,
+        );
+        this._renderChapelConservation();
+        return;
+      }
+      if (action === 'choose-cement' || action === 'choose-coating') {
+        this._showChapelConservationToast(
+          'Suriing muli: maaaring makulong ang halumigmig at masira ang lumang masonriya kapag hindi tugma ang materyal.',
+          'Review the evidence: incompatible materials can trap moisture and damage historic masonry.',
+          5200,
+        );
+        return;
+      }
+      if (action === 'reset') {
+        const language = this.chapelConservation.language;
+        this.chapelConservation = this._createDefaultChapelConservationState();
+        this.chapelConservation.language = language;
+        this._saveChapelConservationState();
+        this._renderChapelConservation();
+        this._refreshChapelConservationMarkers();
+      }
+    });
+    this._renderChapelConservation();
+  }
+
+  _setChapelConservationOpen(open) {
+    const allowed = this._isChapelScene();
+    this.chapelConservationOpen = Boolean(open && allowed);
+    this.refs.conservationPanel?.classList.toggle('hidden', !this.chapelConservationOpen);
+    this.refs.conservationPanel?.setAttribute('aria-hidden', String(!this.chapelConservationOpen));
+    this.refs.conservationButton?.classList.toggle('is-active', this.chapelConservationOpen);
+    this.refs.conservationButton?.setAttribute('aria-expanded', String(this.chapelConservationOpen));
+    if (this.chapelConservationOpen) {
+      this._renderChapelConservation();
+    }
+  }
+
+  _updateChapelConservationUi() {
+    const isChapel = this._isChapelScene();
+    this.refs.conservationButton?.classList.toggle('hidden', !isChapel);
+    if (!isChapel) {
+      this._setChapelConservationOpen(false);
+    }
+    this._renderChapelConservation();
+    this._refreshChapelConservationMarkers();
+  }
+
+  _renderChapelConservation() {
+    const { conservationContent, conservationBadge } = this.refs;
+    if (!conservationContent) {
+      return;
+    }
+    const language = this.chapelConservation.language;
+    const examined = new Set(this.chapelConservation.examined);
+    const count = examined.size;
+    if (conservationBadge) {
+      conservationBadge.textContent = this.chapelConservation.completed ? '✓' : `${count}/4`;
+      conservationBadge.classList.toggle('is-complete', this.chapelConservation.completed);
+    }
+    if (this.refs.conservationLanguage) {
+      this.refs.conservationLanguage.textContent = language === 'tl' ? 'TL' : 'EN';
+      this.refs.conservationLanguage.setAttribute(
+        'aria-label',
+        language === 'tl' ? 'Switch notebook to English' : 'Ilipat ang talaan sa Tagalog',
+      );
+    }
+    if (this.refs.conservationKicker) {
+      this.refs.conservationKicker.textContent = this._conservationText('Tala sa kapilya', 'Chapel field record');
+    }
+    if (this.refs.conservationTitle) {
+      this.refs.conservationTitle.textContent = this._conservationText('Talaan ng Konserbasyon', 'Conservation Notebook');
+    }
+
+    const stationRows = CHAPEL_CONSERVATION_STATIONS.map((id, index) => {
+      const table = CHURCH_HOTSPOT_TABLES[id];
+      const complete = examined.has(id);
+      const finding = CHAPEL_CONSERVATION_FINDINGS[id]?.[language] || '';
+      return `
+        <li class="conservation-station ${complete ? 'is-examined' : ''}">
+          <span class="conservation-station__number">${complete ? '✓' : String(index + 1).padStart(2, '0')}</span>
+          <div><strong>${table.title[language] || table.title.en}</strong><small>${complete ? finding : this._conservationText('Buksan ang mesa at siyasatin ang isang detalye.', 'Open the table and inspect one detail.')}</small></div>
+        </li>`;
+    }).join('');
+
+    let closingSection = `
+      <p class="conservation-notebook__instruction">${this._conservationText(
+        'Siyasatin ang apat na mesa. Ang isang tala ay makukumpleto lamang kapag binuksan mo ang isa sa mga materyal o detalye nito.',
+        'Investigate all four tables. A record is completed only after you open one of its materials or details.',
+      )}</p>`;
+    if (count === CHAPEL_CONSERVATION_STATIONS.length && !this.chapelConservation.completed) {
+      closingSection = `
+        <section class="conservation-decision">
+          <span>${this._conservationText('Panghuling pasiya', 'Final decision')}</span>
+          <h3>${this._conservationText('Aling lapit ang pinakaligtas na panimulang gabay para sa pag-aayos ng makasaysayang masonriya?', 'Which approach is the safest starting guide for repairing historic masonry?')}</h3>
+          <div class="conservation-decision__choices">
+            <button type="button" data-conservation-action="choose-lime">${this._conservationText('Katugmang halo na may apog', 'Compatible lime-based mixture')}</button>
+            <button type="button" data-conservation-action="choose-cement">${this._conservationText('Matigas na Portland cement', 'Hard Portland cement')}</button>
+            <button type="button" data-conservation-action="choose-coating">${this._conservationText('Hindi makahingang sintetikong coating', 'Impermeable synthetic coating')}</button>
+          </div>
+        </section>`;
+    } else if (this.chapelConservation.completed) {
+      closingSection = `
+        <section class="conservation-decision conservation-decision--complete">
+          <span>${this._conservationText('Tapos ang pagsisiyasat', 'Investigation complete')}</span>
+          <h3>${this._conservationText('Panatilihin ang materyal, patunay, at pamamaraan—hindi lamang ang hitsura.', 'Preserve the material, evidence, and craft—not only the appearance.')}</h3>
+          <p>${this._conservationText('Sa aktuwal na konserbasyon, kailangang kumpirmahin ng mga kwalipikadong conservator ang kondisyon at angkop na halo bago ang anumang interbensiyon.', 'In actual conservation work, qualified conservators must confirm the condition and compatible treatment before any intervention.')}</p>
+          <button class="conservation-notebook__reset" type="button" data-conservation-action="reset">${this._conservationText('Ulitin ang pagsisiyasat', 'Restart investigation')}</button>
+        </section>`;
+    }
+
+    conservationContent.innerHTML = `
+      <p class="conservation-notebook__lead">${this._conservationText('Ikaw ang tagapagsiyasat ng kapilya. Basahin ang mga pisikal na bakas bago magpasya kung paano ito pangangalagaan.', 'You are the chapel investigator. Read its physical evidence before deciding how it should be cared for.')}</p>
+      <div class="conservation-notebook__progress"><span style="width:${count * 25}%"></span></div>
+      <p class="conservation-notebook__count">${this._conservationText(`${count} sa 4 na tala ang nasuri`, `${count} of 4 records examined`)}</p>
+      <ol class="conservation-stations">${stationRows}</ol>
+      ${closingSection}`;
+  }
+
+  _recordChapelConservationEvidence(stationId, detailId = '') {
+    if (!this._isChapelScene() || !CHAPEL_CONSERVATION_STATIONS.includes(stationId)) {
+      return;
+    }
+    if (this.chapelConservation.examined.includes(stationId)) {
+      return;
+    }
+    this.chapelConservation.examined.push(stationId);
+    this._saveChapelConservationState();
+    this._trackChapelConservation('conservation_evidence_examined', detailId || stationId, {
+      station: stationId,
+      score: this.chapelConservation.examined.length,
+      total: CHAPEL_CONSERVATION_STATIONS.length,
+    });
+    this._renderChapelConservation();
+    this._refreshChapelConservationMarkers();
+    this._showChapelConservationToast(
+      `Naitala ang ebidensiya (${this.chapelConservation.examined.length}/4).`,
+      `Evidence recorded (${this.chapelConservation.examined.length}/4).`,
+    );
+  }
+
+  _showChapelConservationToast(tl, en, duration = 3200) {
+    const toast = this.refs.conservationToast;
+    if (!toast) {
+      return;
+    }
+    window.clearTimeout(this.chapelConservationToastTimer);
+    toast.textContent = this._conservationText(tl, en);
+    toast.classList.remove('hidden');
+    this.chapelConservationToastTimer = window.setTimeout(() => {
+      toast.classList.add('hidden');
+    }, duration);
+  }
+
+  _refreshChapelConservationMarkers() {
+    const examined = new Set(this.chapelConservation.examined);
+    this.hotspotMarkers.forEach((marker) => {
+      if (!CHAPEL_CONSERVATION_STATIONS.includes(marker.name)) {
+        return;
+      }
+      const complete = examined.has(marker.name);
+      marker.userData.conservationExamined = complete;
+      marker.scale.setScalar(complete ? 0.84 : 1);
+    });
+    this.floatingHotspotLabels.forEach((label) => {
+      if (CHAPEL_CONSERVATION_STATIONS.includes(label.hotspotId)) {
+        label.element?.classList.toggle('is-collected', examined.has(label.hotspotId));
+      }
+    });
+  }
+
+  _trackChapelConservation(eventName, targetId, extra = {}) {
+    try {
+      window.NHCPAnalytics?.track?.(eventName, {
+        target_id: targetId,
+        module: 'chapel-conservation',
+        ...extra,
+      });
+    } catch (error) {
+      console.warn('[conservation] Analytics event could not be recorded.', error);
+    }
   }
 
   _createDefaultHeritageMissionState() {
@@ -1502,7 +1884,6 @@ export class WebXRApp {
     if (!table || !imageUrl) {
       return;
     }
-    this._collectHeritageMissionRecord(hotspotId);
     if (this.renderer.xr.isPresenting) {
       this._showXrHotspotTable(hotspotId);
       return;
@@ -1608,6 +1989,7 @@ export class WebXRApp {
       return;
     }
     this.expandedHotspotDetail = detail;
+    this._recordChapelConservationEvidence(this.expandedHotspotId, detail.id);
     this.expandedHotspotOverlayDetailImage.src = detail.imageUrl;
     this.expandedHotspotOverlayDetailImage.alt = detail.title || 'Artifact detail';
     if (this.expandedHotspotOverlayDetailTitle) {
@@ -2648,6 +3030,42 @@ export class WebXRApp {
       this.interactionRegistry.register(hotspotId, () => {
         this._showExpandedHotspotImage(table.imageUrl, hotspotId);
       });
+    });
+
+    this.interactionRegistry.register('xr-table-close', () => {
+      this._disposeXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-language', () => {
+      this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
+      this.chapelConservation.language = this.expandedHotspotLanguage;
+      this._saveChapelConservationState();
+      if (this.xrHotspotTableDetail) {
+        this._playExpandedHotspotAudio(this.xrHotspotTableDetail.audio);
+      }
+      this._rebuildXrHotspotTableViewer();
+      this._renderChapelConservation();
+    });
+    this.interactionRegistry.register('xr-table-back', () => {
+      this._stopExpandedHotspotAudio();
+      this.xrHotspotTableDetail = null;
+      this._rebuildXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-toggle', () => {
+      this.xrHotspotTablePinsVisible = !this.xrHotspotTablePinsVisible;
+      this._rebuildXrHotspotTableViewer();
+    });
+    this.interactionRegistry.register('xr-table-detail', (context) => {
+      const stationId = String(context?.metadata?.hotspotId || this.xrHotspotTableId || '');
+      const detailId = String(context?.metadata?.detailId || '');
+      const table = HOTSPOT_TABLES[stationId];
+      const detail = table?.hotspots?.find((item) => item.id === detailId) || null;
+      if (!detail) {
+        return;
+      }
+      this.xrHotspotTableDetail = detail;
+      this._recordChapelConservationEvidence(stationId, detailId);
+      this._playExpandedHotspotAudio(detail.audio);
+      this._rebuildXrHotspotTableViewer();
     });
   }
 
@@ -4249,7 +4667,9 @@ export class WebXRApp {
         : ((HOTSPOT_TABLES[hotspot.id] || MUSEUM_CONTENT_HOTSPOTS[hotspot.id])
           ? hotspot.id
           : null);
-      const iconType = MUSEUM_CONTENT_HOTSPOTS[hotspot.id] ? 'open' : 'arrow';
+      const iconType = (MUSEUM_CONTENT_HOTSPOTS[hotspot.id] || CHURCH_HOTSPOT_TABLES[hotspot.id])
+        ? 'open'
+        : 'arrow';
       const { root } = this._buildHotspotMarker({
         id: hotspot.id,
         position: hotspot.position,
@@ -5115,6 +5535,10 @@ export class WebXRApp {
     return zipSource.includes(MUSEUM_ZIP_NAME);
   }
 
+  _isChapelScene() {
+    return Boolean(this.metadata) && !this._isMuseumScene() && !this._isUndergroundScene();
+  }
+
   _transferToChurch(spawnOverride = null) {
     if (!this._isUndergroundScene() && !this._isMuseumScene()) {
       return;
@@ -5361,6 +5785,7 @@ export class WebXRApp {
       this._createHotspotMarkers();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
+      this._updateChapelConservationUi();
       this._prepareTransferredSceneForXr();
 
       if (historyUrl) {
@@ -5378,6 +5803,12 @@ export class WebXRApp {
   }
 
   _onGlobalKeyDown(event) {
+    if (event.code === 'Escape' && this.chapelConservationOpen) {
+      this._setChapelConservationOpen(false);
+      this.refs.conservationButton?.focus({ preventScroll: true });
+      return;
+    }
+
     if (event.code === 'Escape' && this.museumContentViewer?.isOpen) {
       this._disposeMuseumContentViewer();
       return;

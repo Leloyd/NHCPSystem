@@ -60,6 +60,22 @@
       </div>
     </aside>
 
+    <aside id="conservation-panel" class="conservation-notebook hidden" aria-hidden="true" aria-labelledby="conservation-title">
+      <div class="conservation-notebook__header">
+        <div>
+          <span id="conservation-kicker" class="conservation-notebook__kicker">Chapel field record</span>
+          <h2 id="conservation-title">Conservation Notebook</h2>
+        </div>
+        <div class="conservation-notebook__header-actions">
+          <button id="conservation-language" type="button" aria-label="Switch notebook to English">TL</button>
+          <button id="conservation-close" type="button" aria-label="Close conservation notebook">&times;</button>
+        </div>
+      </div>
+      <div id="conservation-content" class="conservation-notebook__content"></div>
+    </aside>
+
+    <div id="conservation-toast" class="conservation-toast hidden" role="status" aria-live="polite"></div>
+
     <!-- Guide controls — the Landing page's gold pill bar; the joystick stays
          dead-center and slightly larger than the buttons around it. -->
     <section id="mobile-controls" class="tour-control-dock" aria-label="Movement and navigation controls">
@@ -86,6 +102,16 @@
       </div>
 
       <div class="tour-control-dock__group tour-control-dock__group--right">
+        <button id="conservation-button" class="tour-control-dock__action tour-control-dock__action--conservation hidden" type="button" aria-label="Open Conservation Notebook" aria-expanded="false">
+          <span class="tour-control-dock__icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24">
+              <path d="M5.5 3.75h10A2.75 2.75 0 0 1 18.25 6.5v13a.75.75 0 0 1-1.12.65A5.25 5.25 0 0 0 14.5 19.5h-9A1.75 1.75 0 0 1 3.75 17.75V5.5A1.75 1.75 0 0 1 5.5 3.75Zm0 1.5a.25.25 0 0 0-.25.25v12.25c0 .14.11.25.25.25h9c.77 0 1.53.13 2.25.39V6.5c0-.69-.56-1.25-1.25-1.25h-10Zm2 3h6.5a.75.75 0 0 1 0 1.5H7.5a.75.75 0 0 1 0-1.5Zm0 3.5h6.5a.75.75 0 0 1 0 1.5H7.5a.75.75 0 0 1 0-1.5Z" fill="currentColor"></path>
+            </svg>
+          </span>
+          <span class="tour-control-dock__label">Record</span>
+          <span id="conservation-badge" class="conservation-notebook__badge">0/4</span>
+        </button>
+
         <button id="control-fullscreen-button" class="tour-control-dock__action" type="button" aria-label="Toggle fullscreen" aria-pressed="false">
           <span class="tour-control-dock__icon" aria-hidden="true">
             <svg viewBox="0 0 24 24">
