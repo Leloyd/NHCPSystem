@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-museum-content-controls-4';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-separated-jars-5';
 
 function getRefs() {
   return {

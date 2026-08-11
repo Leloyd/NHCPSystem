@@ -40,8 +40,9 @@ const MUSEUM_CONTENT_HOTSPOTS = {
       },
     ],
   },
-  'museum-content-burial-jars': {
-    position: [-2.30, 1.00, 2.53],
+  'museum-content-maitum': {
+    position: [-2.30, 1.00, 3.24],
+    displayPosition: [-2.60, 1.00, 3.37],
     entries: [
       {
         id: 'jar',
@@ -53,6 +54,12 @@ const MUSEUM_CONTENT_HOTSPOTS = {
           en: '/360Hotspots/jar/THE MAITUM JARS.mp3',
         },
       },
+    ],
+  },
+  'museum-content-manunggul': {
+    position: [-2.30, 1.00, 1.82],
+    displayPosition: [-2.60, 1.00, 1.85],
+    entries: [
       {
         id: 'banga',
         title: { tl: 'Banga ng Manunggul', en: 'The Manunggul Jar' },
@@ -3623,27 +3630,22 @@ export class WebXRApp {
       return;
     }
 
-    const previousTexture = icon.material.map;
-    icon.material.map = this._createMuseumArtifactControlTexture(
-      isOpen ? 'CLOSE' : 'OPEN',
-      isOpen,
+    this._replaceMuseumArtifactSpriteTexture(
+      icon,
+      this._createMuseumArtifactControlTexture(isOpen ? 'CLOSE' : 'OPEN', isOpen),
     );
-    icon.material.needsUpdate = true;
-    previousTexture?.dispose?.();
 
     icon.parent?.remove(icon);
-    if (isOpen && viewerRoot) {
-      viewerRoot.add(icon);
-      // CLOSE joins the compact control row directly beneath the title.
-      icon.position.set(-0.24, -0.33, 0.12);
+    marker.add(icon);
+    icon.position.set(0, 0, 0);
+    if (isOpen) {
+      // Keep CLOSE exactly where OPEN was, matching the original exhibit.
       icon.scale.set(0.16, 0.16, 1);
       icon.renderOrder = 62;
       icon.userData.museumContentOpen = true;
       return;
     }
 
-    marker.add(icon);
-    icon.position.set(0, 0, 0);
     icon.scale.set(0.18, 0.18, 1);
     icon.renderOrder = 6;
     icon.userData.museumContentOpen = false;
@@ -3668,7 +3670,9 @@ export class WebXRApp {
     root.name = 'museum-content-viewer';
     const cameraPosition = new THREE.Vector3();
     this.camera.getWorldPosition(cameraPosition);
-    if (viewer.sourceMarker) {
+    if (Array.isArray(content.displayPosition)) {
+      root.position.fromArray(content.displayPosition);
+    } else if (viewer.sourceMarker) {
       viewer.sourceMarker.getWorldPosition(root.position);
     } else {
       root.position.fromArray(content.position);
@@ -3764,6 +3768,18 @@ export class WebXRApp {
     viewer.audio.playsInline = true;
     this.scene.add(root);
     this._setMuseumContentHotspotOpenState(viewer.sourceMarker, true, root);
+
+    // Keep the supporting controls beside the original hotspot: CC on the
+    // left, CLOSE in the center, and TL/EN on the right.
+    if (viewer.sourceMarker) {
+      subtitleToggleSprite.parent?.remove(subtitleToggleSprite);
+      languageSprite.parent?.remove(languageSprite);
+      viewer.sourceMarker.add(subtitleToggleSprite, languageSprite);
+      subtitleToggleSprite.position.set(-0.22, 0, 0.02);
+      languageSprite.position.set(0.22, 0, 0.02);
+      subtitleToggleSprite.renderOrder = 61;
+      languageSprite.renderOrder = 61;
+    }
 
     this._refreshMuseumContentPresentation();
     void this._showMuseumContentEntry(0, { playNarration: true });
@@ -3988,20 +4004,14 @@ export class WebXRApp {
       );
     }
     if (entry.textOnly) {
-      viewer.subtitleSprite.position.set(0, 0.04, 0.09);
-      viewer.subtitleSprite.scale.set(1.65, 1.28, 1);
+      // Kabila keeps its controls at the hotspot and places a smaller,
+      // comfortably wrapped text panel directly below them.
+      viewer.subtitleSprite.position.set(0, -0.60, 0.09);
+      viewer.subtitleSprite.scale.set(1.56, 0.84, 1);
     } else {
       viewer.subtitleSprite.position.set(0, -0.72, 0.09);
       viewer.subtitleSprite.scale.set(1.65, 0.54, 1);
     }
-
-    // Keep CLOSE, subtitles, and translation together. Kabila has no title,
-    // so its row moves below the text-only narration instead.
-    const controlY = entry.textOnly ? -0.82 : -0.33;
-    const hotspotIcon = viewer.sourceMarker?.userData?.hotspotIcon || null;
-    hotspotIcon?.position.set(-0.24, controlY, 0.12);
-    viewer.subtitleToggleSprite.position.set(0, controlY, 0.12);
-    viewer.languageSprite.position.set(0.24, controlY, 0.12);
     viewer.subtitleSprite.visible = Boolean(viewer.subtitlesOn && subtitleText);
     const showArrows = viewer.entries.length > 1;
     viewer.previousSprite.visible = showArrows;
@@ -4076,6 +4086,14 @@ export class WebXRApp {
     }
 
     const removedPickables = new Set();
+    [viewer.languageSprite, viewer.subtitleToggleSprite].forEach((control) => {
+      if (!control || control.parent === viewer.root) {
+        return;
+      }
+      removedPickables.add(control);
+      control.parent?.remove(control);
+      this._disposeObject3DResources(control);
+    });
     if (viewer.root) {
       viewer.root.traverse((object) => {
         if (object.userData?.isMuseumContentPickable) {
