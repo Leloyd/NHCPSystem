@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-subtitle-fit-z-controls-6';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-museum-glass-splat-8';
 
 function getRefs() {
   return {
