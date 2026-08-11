@@ -2916,10 +2916,13 @@ export class WebXRApp {
             suppressPanel: true,
             maxDistance: DOOR_INTERACTION_MAX_DISTANCE,
             metadata: {
-              type: 'door',
               fileName: asset.fileName,
               relativePath: asset.relativePath,
               ...asset.metadata,
+              // Asset metadata must never turn the church portal back into a
+              // generic model, because the VR gaze rules use this type to
+              // keep the door clickable without making it a floor blocker.
+              type: 'door',
             },
           };
 
@@ -5081,7 +5084,17 @@ export class WebXRApp {
   }
 
   _getPhoneVrGazeBlockers() {
-    const blockers = new Set(this.pickableMeshes.filter(Boolean));
+    // The church door is an intentional scene portal. Keep it in
+    // `pickableMeshes` so the VR gaze dwell can open the underground scene,
+    // but do not treat it as ordinary GLB/spatial content that merely blocks
+    // gaze locomotion. All other interactive models and panels still prevent
+    // a floor move from activating through them.
+    const blockers = new Set(this.pickableMeshes.filter((object) => {
+      const interactionType = String(
+        object?.userData?.interaction?.metadata?.type || '',
+      ).toLowerCase();
+      return Boolean(object) && interactionType !== 'door';
+    }));
     const addVisibleRenderables = (root) => {
       if (!root) {
         return;
