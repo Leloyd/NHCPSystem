@@ -7,7 +7,7 @@ import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-vr-gaze-
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js?v=20260811-splat-interactions-1';
 import { PlayerController } from './player-controller.js?v=20260811-vr-ui-quality-1';
-import { UiController } from './ui-controller.js';
+import { UiController } from './ui-controller.js?v=20260812-underground-memory-1';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 
 const DEFAULT_BG = 0x0f1114;
@@ -295,6 +295,34 @@ const CHURCH_HOTSPOT_MARKERS = [
   },
 ];
 const UNDERGROUND_HOTSPOT_MARKERS = [
+  {
+    id: 'evidence-revolution',
+    position: [0.92, 0.58, -1.42],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'evidence-biak-na-bato',
+    position: [0.72, 0.58, -4.32],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'evidence-world-war-ii',
+    position: [-0.86, 0.58, -4.48],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
+  {
+    id: 'evidence-guerrillas',
+    position: [-2.52, 0.58, 0.28],
+    color: 0xd4af6a,
+    radius: 0.07,
+    interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+  },
   {
     id: 'go-back-to-church',
     position: [3.5, 1.136, 0],
@@ -596,6 +624,9 @@ const CHAPEL_CONSERVATION_FINDINGS = {
 };
 const HERITAGE_MISSION_STORAGE_KEY = 'nhcpHeritageInvestigatorV1';
 const HERITAGE_MISSION_VERSION = 1;
+const UNDERGROUND_MEMORY_STORAGE_KEY = 'nhcpUndergroundMemoryV1';
+const UNDERGROUND_MEMORY_WALL_POSITION = [2.56, 0.62, 0];
+const UNDERGROUND_MEMORY_LAMPS_POSITION = [2.52, 1.48, 0];
 const HERITAGE_MISSION_CHAPEL_IDS = [];
 const HERITAGE_MISSION_TIMELINE = [
   'evidence-revolution',
@@ -613,6 +644,10 @@ const HERITAGE_MISSION_EVIDENCE = {
       en: 'The underground chambers became a discreet meeting place for Katipuneros during the revolution against Spain.',
       tl: 'Naging lihim na tagpuan ng mga Katipunero ang mga silid sa ilalim ng lupa noong rebolusyon laban sa Espanya.',
     },
+    audio: {
+      en: '/audio/trail/s8-revolution-en.mp3',
+      tl: '/audio/trail/s8-revolution-tl.mp3',
+    },
   },
   'evidence-biak-na-bato': {
     year: '1897',
@@ -622,6 +657,10 @@ const HERITAGE_MISSION_EVIDENCE = {
     text: {
       en: 'Pedro Paterno and General Severino Taiño met secretly here as discussions developed toward the Pact of Biak-na-Bato.',
       tl: 'Lihim na nagpulong dito sina Pedro Paterno at Heneral Severino Taiño habang umuusad ang mga usaping humantong sa Kasunduan sa Biak-na-Bato.',
+    },
+    audio: {
+      en: '/audio/trail/s8-biak-en.mp3',
+      tl: '/audio/trail/s8-biak-tl.mp3',
     },
   },
   'evidence-world-war-ii': {
@@ -633,6 +672,10 @@ const HERITAGE_MISSION_EVIDENCE = {
       en: 'During the Japanese occupation, the cemetery and the surrounding landscape formed part of the community’s wartime memory.',
       tl: 'Sa panahon ng pananakop ng mga Hapones, naging bahagi ng alaala ng pamayanan sa digmaan ang sementeryo at ang nakapaligid na lupain.',
     },
+    audio: {
+      en: '/audio/trail/s8-wwii-en.mp3',
+      tl: '/audio/trail/s8-wwii-tl.mp3',
+    },
   },
   'evidence-guerrillas': {
     year: '1945',
@@ -643,6 +686,10 @@ const HERITAGE_MISSION_EVIDENCE = {
       en: 'Nagcarlan guerrilla groups resisted the occupation through mountain operations, sabotage, and intelligence work for Allied forces.',
       tl: 'Lumaban ang mga pangkat-gerilya ng Nagcarlan sa pamamagitan ng mga operasyon sa kabundukan, pagsabotahe, at paghahatid ng impormasyon sa mga Allied.',
     },
+    audio: {
+      en: '/audio/trail/s8-guerrillas-en.mp3',
+      tl: '/audio/trail/s8-guerrillas-tl.mp3',
+    },
   },
 };
 const HERITAGE_MISSION_EVIDENCE_TABLES = Object.fromEntries(
@@ -650,6 +697,8 @@ const HERITAGE_MISSION_EVIDENCE_TABLES = Object.fromEntries(
     title: evidence.title,
     imageUrl: evidence.imageUrl,
     imageAlt: evidence.imageAlt,
+    description: evidence.text,
+    audio: evidence.audio,
     hotspots: [],
   }]),
 );
@@ -660,10 +709,7 @@ const HOTSPOT_TABLES = {
 // Chapel table images belong inside the spatial viewer and must remain hidden
 // until their OPEN marker is selected. Only mission evidence keeps the older
 // floating preview-label treatment.
-const HOTSPOT_FLOATING_LABEL_IMAGES = Object.fromEntries(
-  Object.entries(HERITAGE_MISSION_EVIDENCE_TABLES)
-    .map(([id, table]) => [id, table.imageUrl]),
-);
+const HOTSPOT_FLOATING_LABEL_IMAGES = {};
 const QUALITY_PRESETS = {
   auto: {
     pixelRatio: () => Math.min(window.devicePixelRatio || 1, isMobileLikeDevice() ? 1.2 : 1.6),
@@ -835,6 +881,15 @@ export class WebXRApp {
     this.chapelConservation = this._readChapelConservationState();
     this.chapelConservationOpen = false;
     this.chapelConservationToastTimer = 0;
+    this.undergroundMemory = this._readUndergroundMemoryState();
+    this.undergroundMemoryLampsRoot = null;
+    this.undergroundMemoryLampSprites = [];
+    this.undergroundMemoryStatusSprite = null;
+    this.undergroundMemoryMotes = [];
+    this.undergroundMemoryWallMarker = null;
+    this.undergroundMemoryWallRoot = null;
+    this.undergroundMemoryWallElapsed = 0;
+    this.undergroundMemoryAudioPosition = new THREE.Vector3();
 
     this.boundResize = this.onResize.bind(this);
     this.boundFullscreenChange = this._onFullscreenChange.bind(this);
@@ -861,6 +916,7 @@ export class WebXRApp {
       await this._loadSparkRuntime();
       await this._loadSceneAssets();
       this._createHotspotMarkers();
+      this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
       this._updateChapelConservationUi();
@@ -1174,6 +1230,436 @@ export class WebXRApp {
       });
     } catch (error) {
       console.warn('[conservation] Analytics event could not be recorded.', error);
+    }
+  }
+
+  _createDefaultUndergroundMemoryState() {
+    return {
+      version: 1,
+      language: 'tl',
+      subtitlesOn: true,
+      collected: [],
+      timelineOrder: [],
+      completed: false,
+    };
+  }
+
+  _readUndergroundMemoryState() {
+    const fallback = this._createDefaultUndergroundMemoryState();
+    try {
+      const stored = JSON.parse(window.localStorage.getItem(UNDERGROUND_MEMORY_STORAGE_KEY) || 'null');
+      if (!stored || stored.version !== fallback.version) {
+        return fallback;
+      }
+      const collected = Array.isArray(stored.collected)
+        ? stored.collected.filter((id) => HERITAGE_MISSION_TIMELINE.includes(id))
+        : [];
+      const timelineOrder = Array.isArray(stored.timelineOrder)
+        ? stored.timelineOrder.filter((id) => HERITAGE_MISSION_TIMELINE.includes(id))
+        : [];
+      return {
+        ...fallback,
+        ...stored,
+        language: stored.language === 'en' ? 'en' : 'tl',
+        subtitlesOn: stored.subtitlesOn !== false,
+        collected,
+        timelineOrder,
+        completed: Boolean(stored.completed)
+          && HERITAGE_MISSION_TIMELINE.every((id, index) => timelineOrder[index] === id),
+      };
+    } catch {
+      return fallback;
+    }
+  }
+
+  _saveUndergroundMemoryState() {
+    try {
+      window.localStorage.setItem(
+        UNDERGROUND_MEMORY_STORAGE_KEY,
+        JSON.stringify(this.undergroundMemory),
+      );
+    } catch {
+      // Local progress is optional; the scene remains fully usable without it.
+    }
+    this._refreshUndergroundMemoryStatus();
+  }
+
+  _isUndergroundMemoryStation(id) {
+    return HERITAGE_MISSION_TIMELINE.includes(id);
+  }
+
+  _isUndergroundMemoryEvidenceComplete() {
+    return HERITAGE_MISSION_TIMELINE.every((id) => this.undergroundMemory.collected.includes(id));
+  }
+
+  _recordUndergroundMemory(id) {
+    if (!this._isUndergroundScene() || !this._isUndergroundMemoryStation(id)) {
+      return;
+    }
+    if (this.undergroundMemory.collected.includes(id)) {
+      return;
+    }
+
+    const wasComplete = this._isUndergroundMemoryEvidenceComplete();
+    this.undergroundMemory.collected.push(id);
+    this._saveUndergroundMemoryState();
+    try {
+      window.NHCPAnalytics?.track?.('underground_memory_discovered', {
+        target_id: id,
+        module: 'echoes-beneath',
+        progress: this.undergroundMemory.collected.length,
+        total: HERITAGE_MISSION_TIMELINE.length,
+      });
+    } catch {
+      // Analytics must never interrupt the experience.
+    }
+
+    if (!wasComplete && this._isUndergroundMemoryEvidenceComplete()) {
+      this.uiController.showNotice(
+        this.undergroundMemory.language === 'en'
+          ? 'All four echoes are restored. Return to the illuminated Memory Wall near the entrance.'
+          : 'Nabuo na ang apat na alingawngaw. Bumalik sa nagliliwanag na Pader ng Alaala malapit sa pasukan.',
+        6200,
+      );
+    }
+  }
+
+  _setupUndergroundMemoryExperience() {
+    this._disposeUndergroundMemoryExperience({ removeMarker: true });
+    if (!this._isUndergroundScene() || !this.scene || !this.camera) {
+      return;
+    }
+
+    this.expandedHotspotLanguage = this.undergroundMemory.language;
+    const lampsRoot = new THREE.Group();
+    lampsRoot.name = 'underground-memory-lamps';
+    lampsRoot.position.fromArray(UNDERGROUND_MEMORY_LAMPS_POSITION);
+    lampsRoot.userData.splatOccluded = false;
+    lampsRoot.userData.splatOcclusionMargin = 0.12;
+    this.scene.add(lampsRoot);
+    this.undergroundMemoryLampsRoot = lampsRoot;
+
+    this.undergroundMemoryStatusSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(''),
+      position: [0, 0.18, 0.04],
+      scale: [1.05, 0.16],
+    });
+    lampsRoot.add(this.undergroundMemoryStatusSprite);
+
+    this.undergroundMemoryLampSprites = HERITAGE_MISSION_TIMELINE.map((id, index) => {
+      const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
+        map: this._createMuseumArtifactControlTexture(String(index + 1), false),
+        transparent: true,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+      }));
+      sprite.position.set((index - 1.5) * 0.18, 0, 0.05);
+      sprite.scale.set(0.13, 0.13, 1);
+      sprite.renderOrder = 60;
+      sprite.userData.memoryId = id;
+      lampsRoot.add(sprite);
+      return sprite;
+    });
+
+    HERITAGE_MISSION_TIMELINE.forEach((id, stationIndex) => {
+      const marker = this.hotspotMarkers.find((item) => item.name === id);
+      if (!marker) {
+        return;
+      }
+      for (let moteIndex = 0; moteIndex < 3; moteIndex += 1) {
+        const material = new THREE.MeshBasicMaterial({
+          color: 0xd4af6a,
+          transparent: true,
+          opacity: 0.42,
+          depthTest: false,
+          depthWrite: false,
+          toneMapped: false,
+        });
+        const mote = new THREE.Mesh(new THREE.SphereGeometry(0.012, 8, 8), material);
+        mote.renderOrder = 5;
+        mote.userData.memoryId = id;
+        mote.userData.phase = stationIndex * 1.7 + moteIndex * 2.1;
+        mote.userData.radius = 0.10 + moteIndex * 0.025;
+        marker.add(mote);
+        this.undergroundMemoryMotes.push(mote);
+      }
+    });
+
+    const { root: wallMarker } = this._buildHotspotMarker({
+      id: 'underground-memory-wall',
+      position: UNDERGROUND_MEMORY_WALL_POSITION,
+      color: 0xd4af6a,
+      radius: 0.075,
+      iconType: 'open',
+      interactionName: 'underground-memory-wall',
+      maxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
+      metadata: { type: 'underground-memory-wall' },
+    });
+    wallMarker.visible = this._isUndergroundMemoryEvidenceComplete();
+    wallMarker.userData.ignoreSplatOcclusion = true;
+    this.scene.add(wallMarker);
+    this.hotspotMarkers.push(wallMarker);
+    this.undergroundMemoryWallMarker = wallMarker;
+    this._refreshUndergroundMemoryStatus();
+  }
+
+  _refreshUndergroundMemoryStatus() {
+    if (!this._isUndergroundScene()) {
+      return;
+    }
+    const count = this.undergroundMemory.collected.length;
+    if (this.undergroundMemoryStatusSprite) {
+      const label = this.undergroundMemory.language === 'en'
+        ? `MEMORY ${count}/4`
+        : `ALAALA ${count}/4`;
+      this._replaceMuseumArtifactSpriteTexture(
+        this.undergroundMemoryStatusSprite,
+        this._createMuseumArtifactTextTexture(label),
+      );
+    }
+    this.undergroundMemoryLampSprites.forEach((sprite, index) => {
+      const id = HERITAGE_MISSION_TIMELINE[index];
+      const collected = this.undergroundMemory.collected.includes(id);
+      this._replaceMuseumArtifactSpriteTexture(
+        sprite,
+        this._createMuseumArtifactControlTexture(collected ? '✓' : String(index + 1), collected),
+      );
+    });
+    if (this.undergroundMemoryWallMarker) {
+      this.undergroundMemoryWallMarker.visible = this._isUndergroundMemoryEvidenceComplete();
+    }
+  }
+
+  _openUndergroundMemoryWall() {
+    if (!this._isUndergroundMemoryEvidenceComplete() || !this.undergroundMemoryWallMarker) {
+      return;
+    }
+    if (this.undergroundMemoryWallRoot) {
+      this._disposeUndergroundMemoryWall();
+      return;
+    }
+
+    this._setXrTableHotspotOpenState(this.undergroundMemoryWallMarker, true);
+    if (this.undergroundMemoryLampsRoot) {
+      this.undergroundMemoryLampsRoot.visible = false;
+    }
+    const root = new THREE.Group();
+    root.name = 'underground-memory-wall-viewer';
+    this.undergroundMemoryWallMarker.getWorldPosition(root.position);
+    root.position.y += 0.82;
+    const cameraPosition = new THREE.Vector3();
+    this.camera.getWorldPosition(cameraPosition);
+    cameraPosition.y = root.position.y;
+    root.lookAt(cameraPosition);
+
+    const backing = new THREE.Mesh(
+      new THREE.PlaneGeometry(1.82, 1.12),
+      new THREE.MeshBasicMaterial({
+        color: 0x120d07,
+        transparent: true,
+        opacity: 0.94,
+        depthTest: false,
+        depthWrite: false,
+      }),
+    );
+    backing.renderOrder = 54;
+    root.add(backing);
+
+    const title = this.undergroundMemory.language === 'en'
+      ? 'WALL OF MEMORY'
+      : 'PADER NG ALAALA';
+    root.add(this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(title),
+      position: [0, 0.40, 0.05],
+      scale: [1.38, 0.18],
+    }));
+
+    if (this.undergroundMemory.completed) {
+      const message = this.undergroundMemory.language === 'en'
+        ? '1896  →  1897  →  1941–1945  →  1945\nThe past survives when evidence is remembered in context.'
+        : '1896  →  1897  →  1941–1945  →  1945\nNananatili ang nakaraan kapag inaalala ang ebidensiya sa wastong konteksto.';
+      root.add(this._createMuseumArtifactSprite({
+        texture: this._createMuseumArtifactTextTexture(message, { subtitle: true, contentFit: true }),
+        position: [0, -0.04, 0.06],
+        scale: [1.54, 0.64],
+      }));
+    } else {
+      const instruction = this.undergroundMemory.language === 'en'
+        ? 'Select the records from the earliest event to the latest.'
+        : 'Piliin ang mga tala mula sa pinakamaagang pangyayari hanggang sa pinakahuli.';
+      root.add(this._createMuseumArtifactSprite({
+        texture: this._createMuseumArtifactTextTexture(instruction, { subtitle: true }),
+        position: [0, 0.14, 0.06],
+        scale: [1.45, 0.30],
+      }));
+      const scrambled = [
+        'evidence-guerrillas',
+        'evidence-revolution',
+        'evidence-world-war-ii',
+        'evidence-biak-na-bato',
+      ];
+      const labels = {
+        'evidence-revolution': '1896',
+        'evidence-biak-na-bato': '1897',
+        'evidence-world-war-ii': 'WWII',
+        'evidence-guerrillas': '1945',
+      };
+      const positions = [
+        [-0.54, -0.22, 0.08],
+        [-0.18, -0.22, 0.08],
+        [0.18, -0.22, 0.08],
+        [0.54, -0.22, 0.08],
+      ];
+      scrambled.forEach((id, index) => {
+        const selectedIndex = this.undergroundMemory.timelineOrder.indexOf(id);
+        const control = this._createXrTableControl({
+          parent: root,
+          label: selectedIndex >= 0 ? String(selectedIndex + 1) : labels[id],
+          position: positions[index],
+          scale: 0.20,
+          name: 'underground-memory-timeline',
+          metadata: { memoryId: id },
+        });
+        if (control && selectedIndex >= 0) {
+          control.material.map?.dispose?.();
+          control.material.map = this._createMuseumArtifactControlTexture(String(selectedIndex + 1), true);
+          control.material.needsUpdate = true;
+        }
+      });
+    }
+
+    this.scene.add(root);
+    this.undergroundMemoryWallRoot = root;
+  }
+
+  _selectUndergroundMemoryTimeline(id) {
+    if (!this._isUndergroundMemoryStation(id) || this.undergroundMemory.completed) {
+      return;
+    }
+    if (this.undergroundMemory.timelineOrder.includes(id)) {
+      return;
+    }
+    const expected = HERITAGE_MISSION_TIMELINE[this.undergroundMemory.timelineOrder.length];
+    if (id !== expected) {
+      this.uiController.showError(
+        this.undergroundMemory.language === 'en'
+          ? 'That record is not next. Compare the dates and try again.'
+          : 'Hindi pa iyan ang kasunod. Ihambing ang mga petsa at subukang muli.',
+        3400,
+      );
+      return;
+    }
+    this.undergroundMemory.timelineOrder.push(id);
+    this.undergroundMemory.completed = HERITAGE_MISSION_TIMELINE.every(
+      (memoryId, index) => this.undergroundMemory.timelineOrder[index] === memoryId,
+    );
+    this._saveUndergroundMemoryState();
+    this._disposeUndergroundMemoryWall({ restoreMarker: false });
+    this._openUndergroundMemoryWall();
+    if (this.undergroundMemory.completed) {
+      try {
+        window.NHCPAnalytics?.track?.('learning_activity_completed', {
+          target_id: 'echoes-beneath',
+          module: 'underground-memory',
+          score: 4,
+          total: 4,
+        });
+      } catch {
+        // Analytics must never interrupt completion.
+      }
+    }
+  }
+
+  _disposeUndergroundMemoryWall(options = {}) {
+    const restoreMarker = options.restoreMarker !== false;
+    const root = this.undergroundMemoryWallRoot;
+    if (root) {
+      const removedPickables = new Set();
+      root.traverse((object) => {
+        if (object.userData?.isXrTablePickable) {
+          removedPickables.add(object);
+        }
+      });
+      this.pickableMeshes = this.pickableMeshes.filter((object) => !removedPickables.has(object));
+      root.parent?.remove(root);
+      this._disposeObject3DResources(root);
+    }
+    this.undergroundMemoryWallRoot = null;
+    if (this.undergroundMemoryLampsRoot) {
+      this.undergroundMemoryLampsRoot.visible = true;
+    }
+    if (restoreMarker && this.undergroundMemoryWallMarker) {
+      this._setXrTableHotspotOpenState(this.undergroundMemoryWallMarker, false);
+    }
+  }
+
+  _disposeUndergroundMemoryExperience(options = {}) {
+    this._disposeUndergroundMemoryWall({ restoreMarker: false });
+    if (this.undergroundMemoryLampsRoot) {
+      this.undergroundMemoryLampsRoot.parent?.remove(this.undergroundMemoryLampsRoot);
+      this._disposeObject3DResources(this.undergroundMemoryLampsRoot);
+    }
+    if (options.removeMarker !== false && this.undergroundMemoryWallMarker) {
+      const icon = this.undergroundMemoryWallMarker.userData?.hotspotIcon;
+      this.pickableMeshes = this.pickableMeshes.filter((object) => object !== icon);
+      this.undergroundMemoryWallMarker.parent?.remove(this.undergroundMemoryWallMarker);
+      this.hotspotMarkers = this.hotspotMarkers.filter(
+        (marker) => marker !== this.undergroundMemoryWallMarker,
+      );
+      this._disposeObject3DResources(this.undergroundMemoryWallMarker);
+    }
+    this.undergroundMemoryLampsRoot = null;
+    this.undergroundMemoryLampSprites = [];
+    this.undergroundMemoryStatusSprite = null;
+    this.undergroundMemoryMotes = [];
+    this.undergroundMemoryWallMarker = null;
+  }
+
+  _updateUndergroundMemoryExperience(dt) {
+    if (!this._isUndergroundScene()) {
+      return;
+    }
+    this.undergroundMemoryWallElapsed += dt;
+    const elapsed = this.undergroundMemoryWallElapsed;
+
+    if (this.camera && this.undergroundMemoryLampsRoot) {
+      this.camera.getWorldPosition(this.xrHotspotTableBillboardTarget);
+      this.xrHotspotTableBillboardTarget.y = this.undergroundMemoryLampsRoot.position.y;
+      this.undergroundMemoryLampsRoot.lookAt(this.xrHotspotTableBillboardTarget);
+    }
+    if (this.camera && this.undergroundMemoryWallRoot) {
+      this.camera.getWorldPosition(this.xrHotspotTableBillboardTarget);
+      this.xrHotspotTableBillboardTarget.y = this.undergroundMemoryWallRoot.position.y;
+      this.undergroundMemoryWallRoot.lookAt(this.xrHotspotTableBillboardTarget);
+    }
+
+    this.undergroundMemoryMotes.forEach((mote, index) => {
+      const collected = this.undergroundMemory.collected.includes(mote.userData.memoryId);
+      mote.visible = !collected;
+      if (!mote.visible) {
+        return;
+      }
+      const phase = mote.userData.phase + elapsed * (0.72 + index * 0.015);
+      const radius = mote.userData.radius;
+      mote.position.set(
+        Math.cos(phase) * radius,
+        0.08 + Math.sin(phase * 1.4) * 0.07,
+        Math.sin(phase) * radius,
+      );
+      mote.material.opacity = 0.28 + (Math.sin(phase * 1.7) + 1) * 0.18;
+    });
+
+    if (
+      this.expandedHotspotAudio
+      && this.xrHotspotTableSourceMarker
+      && this._isUndergroundMemoryStation(this.xrHotspotTableId)
+      && this.playerRig
+    ) {
+      this.xrHotspotTableSourceMarker.getWorldPosition(this.undergroundMemoryAudioPosition);
+      const distance = this.playerRig.position.distanceTo(this.undergroundMemoryAudioPosition);
+      const normalized = THREE.MathUtils.clamp((distance - 0.65) / 4.4, 0, 1);
+      this.expandedHotspotAudio.volume = 0.06 + 0.94 * (1 - normalized) * (1 - normalized);
     }
   }
 
@@ -1892,7 +2378,11 @@ export class WebXRApp {
     // The four chapel tables use the same world-space viewer with mouse,
     // touch, or VR gaze. This keeps the image and its numbered detail pins in
     // the 3D environment instead of opening a flat browser overlay.
-    if (CHURCH_HOTSPOT_TABLES[hotspotId] || this.renderer.xr.isPresenting) {
+    if (
+      CHURCH_HOTSPOT_TABLES[hotspotId]
+      || HERITAGE_MISSION_EVIDENCE_TABLES[hotspotId]
+      || this.renderer.xr.isPresenting
+    ) {
       if (this.xrHotspotTableViewer && this.xrHotspotTableId === hotspotId) {
         this._disposeXrHotspotTableViewer();
         return;
@@ -2143,6 +2633,11 @@ export class WebXRApp {
     if (this.xrHotspotTableSourceMarker) {
       this._setXrTableHotspotOpenState(this.xrHotspotTableSourceMarker, true);
     }
+    if (this._isUndergroundMemoryStation(hotspotId)) {
+      this.expandedHotspotLanguage = this.undergroundMemory.language;
+      this._recordUndergroundMemory(hotspotId);
+      this._playExpandedHotspotAudio(HERITAGE_MISSION_EVIDENCE[hotspotId]?.audio);
+    }
     this._rebuildXrHotspotTableViewer();
   }
 
@@ -2166,6 +2661,7 @@ export class WebXRApp {
     if (!table || !this.scene || !this.camera) {
       return;
     }
+    const memory = HERITAGE_MISSION_EVIDENCE[this.xrHotspotTableId] || null;
 
     const previousViewer = this.xrHotspotTableViewer;
     const previousPosition = previousViewer?.position?.clone() || null;
@@ -2202,10 +2698,37 @@ export class WebXRApp {
     this._createXrTableControl({
       parent: viewerRoot,
       label: this.expandedHotspotLanguage === 'tl' ? 'TL' : 'EN',
-      position: [-0.66, -0.56, 0.09],
+      position: memory ? [0.72, -0.80, 0.09] : [-0.66, -0.56, 0.09],
       scale: 0.2,
       name: 'xr-table-language',
     });
+
+    if (memory) {
+      const title = memory.title?.[this.expandedHotspotLanguage] || memory.title?.en || '';
+      viewerRoot.add(this._createMuseumArtifactSprite({
+        texture: this._createMuseumArtifactTextTexture(title),
+        position: [0, -0.16, 0.08],
+        scale: [1.38, 0.16],
+      }));
+      if (this.undergroundMemory.subtitlesOn) {
+        const description = memory.text?.[this.expandedHotspotLanguage] || memory.text?.en || '';
+        viewerRoot.add(this._createMuseumArtifactSprite({
+          texture: this._createMuseumArtifactTextTexture(description, {
+            subtitle: true,
+            contentFit: true,
+          }),
+          position: [0, -0.48, 0.08],
+          scale: [1.56, 0.42],
+        }));
+      }
+      this._createXrTableControl({
+        parent: viewerRoot,
+        label: 'CC',
+        position: [-0.72, -0.80, 0.09],
+        scale: 0.2,
+        name: 'underground-memory-subtitles',
+      });
+    }
 
     const detail = this.xrHotspotTableDetail;
     const imageUrl = detail?.imageUrl || table.imageUrl;
@@ -2219,10 +2742,11 @@ export class WebXRApp {
       const sourceWidth = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
       const sourceHeight = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
       const aspect = sourceWidth / Math.max(1, sourceHeight);
-      let width = 1.68;
+      let width = memory ? 1.34 : 1.68;
       let height = width / aspect;
-      if (height > 1.02) {
-        height = 1.02;
+      const maximumHeight = memory ? 0.64 : 1.02;
+      if (height > maximumHeight) {
+        height = maximumHeight;
         width = height * aspect;
       }
       const image = new THREE.Mesh(
@@ -2235,7 +2759,7 @@ export class WebXRApp {
           toneMapped: false,
         }),
       );
-      image.position.set(0, 0.08, 0.06);
+      image.position.set(0, memory ? 0.27 : 0.08, 0.06);
       image.renderOrder = 49;
       viewerRoot.add(image);
 
@@ -3058,6 +3582,16 @@ export class WebXRApp {
     });
 
     this.interactionRegistry.register('xr-table-language', () => {
+      if (this._isUndergroundMemoryStation(this.xrHotspotTableId)) {
+        this.undergroundMemory.language = this.undergroundMemory.language === 'tl' ? 'en' : 'tl';
+        this.expandedHotspotLanguage = this.undergroundMemory.language;
+        this._saveUndergroundMemoryState();
+        this._playExpandedHotspotAudio(
+          HERITAGE_MISSION_EVIDENCE[this.xrHotspotTableId]?.audio,
+        );
+        this._rebuildXrHotspotTableViewer();
+        return;
+      }
       this.expandedHotspotLanguage = this.expandedHotspotLanguage === 'tl' ? 'en' : 'tl';
       this.chapelConservation.language = this.expandedHotspotLanguage;
       this._saveChapelConservationState();
@@ -3066,6 +3600,14 @@ export class WebXRApp {
       }
       this._rebuildXrHotspotTableViewer();
       this._renderChapelConservation();
+    });
+    this.interactionRegistry.register('underground-memory-subtitles', () => {
+      if (!this._isUndergroundMemoryStation(this.xrHotspotTableId)) {
+        return;
+      }
+      this.undergroundMemory.subtitlesOn = !this.undergroundMemory.subtitlesOn;
+      this._saveUndergroundMemoryState();
+      this._rebuildXrHotspotTableViewer();
     });
     this.interactionRegistry.register('xr-table-back', () => {
       this._stopExpandedHotspotAudio();
@@ -3088,6 +3630,13 @@ export class WebXRApp {
       this._recordChapelConservationEvidence(stationId, detailId);
       this._playExpandedHotspotAudio(detail.audio);
       this._rebuildXrHotspotTableViewer();
+    });
+
+    this.interactionRegistry.register('underground-memory-wall', () => {
+      this._openUndergroundMemoryWall();
+    });
+    this.interactionRegistry.register('underground-memory-timeline', (context) => {
+      this._selectUndergroundMemoryTimeline(String(context?.metadata?.memoryId || ''));
     });
   }
 
@@ -5228,6 +5777,10 @@ export class WebXRApp {
       if (!marker?.parent) {
         continue;
       }
+      if (marker.userData?.ignoreSplatOcclusion) {
+        marker.userData.splatOccluded = false;
+        continue;
+      }
 
       marker.getWorldPosition(this.hotspotOcclusionTarget);
       const margin = Number(marker.userData?.splatOcclusionMargin ?? 0.1);
@@ -5669,6 +6222,7 @@ export class WebXRApp {
     this._hideExpandedHotspotImage();
     this._disposeMuseumContentViewer({ restoreSource: false });
     this._disposeMuseumArtifactStation();
+    this._disposeUndergroundMemoryExperience({ removeMarker: false });
     this._clearFloatingHotspotLabels();
 
     this.hotspotMarkers.forEach((marker) => {
@@ -5737,6 +6291,7 @@ export class WebXRApp {
     }
     addVisibleRenderables(this.museumArtifactStation?.toggleSprite);
     addVisibleRenderables(this.xrHotspotTableViewer);
+    addVisibleRenderables(this.undergroundMemoryWallRoot);
     if (this.museumContentViewer?.isOpen) {
       addVisibleRenderables(this.museumContentViewer.root);
     }
@@ -5807,6 +6362,7 @@ export class WebXRApp {
       // native XR layer is presenting can invalidate that layer on Android.
       await this._loadSceneAssets();
       this._createHotspotMarkers();
+      this._setupUndergroundMemoryExperience();
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
       this._updateChapelConservationUi();
@@ -5936,6 +6492,7 @@ export class WebXRApp {
       this._updateMuseumArtifactStation(dt);
       this._updateMuseumContentViewer(dt);
       this._updateXrHotspotTableViewer();
+      this._updateUndergroundMemoryExperience(dt);
     } catch (error) {
       console.error('[xr] museum exhibit update failed', error);
     }

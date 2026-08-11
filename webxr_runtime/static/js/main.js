@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-chapel-table-back-1';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-underground-memory-1';
 
 function getRefs() {
   return {

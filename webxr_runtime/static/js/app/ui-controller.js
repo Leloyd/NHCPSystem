@@ -70,7 +70,29 @@ export class UiController {
       this.errorResetTimer = null;
     }
 
+    this.refs.errorBanner.classList.remove('is-notice');
     this.refs.errorBanner.textContent = message;
+    this.refs.errorBanner.classList.remove('hidden');
+
+    if (resetAfterMs > 0) {
+      this.errorResetTimer = window.setTimeout(() => {
+        this.clearError();
+      }, resetAfterMs);
+    }
+  }
+
+  showNotice(message, resetAfterMs = 0) {
+    if (!this.refs.errorBanner) {
+      return;
+    }
+
+    if (this.errorResetTimer) {
+      window.clearTimeout(this.errorResetTimer);
+      this.errorResetTimer = null;
+    }
+
+    this.refs.errorBanner.textContent = message;
+    this.refs.errorBanner.classList.add('is-notice');
     this.refs.errorBanner.classList.remove('hidden');
 
     if (resetAfterMs > 0) {
@@ -86,6 +108,7 @@ export class UiController {
       this.errorResetTimer = null;
     }
 
+    this.refs.errorBanner?.classList.remove('is-notice');
     this.refs.errorBanner?.classList.add('hidden');
   }
 
