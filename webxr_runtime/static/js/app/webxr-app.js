@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
-import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-9';
+import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-direct-floor-gaze-10';
 import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-vr-gaze-blocking-1';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js?v=20260811-splat-interactions-1';
@@ -49,7 +49,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   'museum-content-maitum': {
     position: [-2.30, 1.00, 3.24],
     displayPosition: [-2.30, 0.75, 3.37],
-    subtitlePosition: [0, -0.50, 0.09],
+    titlePosition: [0, 0.05, 0.09],
+    subtitlePosition: [0, -0.32, 0.09],
     controlsAlongZ: true,
     entries: [
       {
@@ -68,7 +69,8 @@ const MUSEUM_CONTENT_HOTSPOTS = {
   'museum-content-manunggul': {
     position: [-2.30, 1.00, 1.82],
     displayPosition: [-2.30, 0.75, 1.85],
-    subtitlePosition: [0, -0.50, 0.09],
+    titlePosition: [0, 0.05, 0.09],
+    subtitlePosition: [0, -0.32, 0.09],
     controlsAlongZ: true,
     entries: [
       {
@@ -599,6 +601,9 @@ export class WebXRApp {
     this.hotspotOcclusionDirection = new THREE.Vector3();
     this.hotspotOcclusionEyePosition = new THREE.Vector3();
     this.hotspotOcclusionEyeMatrix = new THREE.Matrix4();
+    this.gazeTeleportOcclusionRaycaster = new THREE.Raycaster();
+    this.gazeTeleportOcclusionRaycaster.firstHitOnly = true;
+    this.gazeTeleportOcclusionDirection = new THREE.Vector3();
     this.hotspotOcclusionLastCheckedAt = 0;
     this.hotspotOcclusionIntervalMs = 140;
 
@@ -3716,7 +3721,9 @@ export class WebXRApp {
 
     const titleSprite = this._createMuseumArtifactSprite({
       texture: this._createMuseumArtifactTextTexture(''),
-      position: [0, -0.12, 0.09],
+      position: Array.isArray(content.titlePosition)
+        ? content.titlePosition
+        : [0, -0.12, 0.09],
       scale: [0.92, 0.16],
     });
     const subtitleSprite = this._createMuseumArtifactSprite({
@@ -4676,6 +4683,50 @@ export class WebXRApp {
     }
   }
 
+  _isGazeTeleportPathBlocked(origin, target) {
+    if (!origin || !target) {
+      return false;
+    }
+
+    const splatObjects = this.splatEntries
+      .map((entry) => entry?.object)
+      .filter((object) => object?.visible && object?.isInitialized !== false);
+    if (splatObjects.length === 0) {
+      return false;
+    }
+
+    this.gazeTeleportOcclusionDirection.copy(target).sub(origin);
+    const targetDistance = this.gazeTeleportOcclusionDirection.length();
+    const destinationMargin = 0.28;
+    if (!Number.isFinite(targetDistance) || targetDistance <= destinationMargin + 0.08) {
+      return false;
+    }
+
+    this.gazeTeleportOcclusionDirection.multiplyScalar(1 / targetDistance);
+    this.gazeTeleportOcclusionRaycaster.set(
+      origin,
+      this.gazeTeleportOcclusionDirection,
+    );
+    this.gazeTeleportOcclusionRaycaster.near = 0.08;
+    // Ignore the destination's own floor splats while retaining walls and
+    // objects that intersect the path before the ring.
+    this.gazeTeleportOcclusionRaycaster.far = Math.max(
+      0.08,
+      targetDistance - destinationMargin,
+    );
+
+    try {
+      return this.gazeTeleportOcclusionRaycaster.intersectObjects(
+        splatObjects,
+        false,
+      ).length > 0;
+    } catch (error) {
+      console.warn('[xr] gaze teleport splat test failed', error);
+      // A failed optional visibility test must not strand the visitor.
+      return false;
+    }
+  }
+
   _updateHotspotSplatOcclusion(now = performance.now(), force = false) {
     if (!this.camera || (this.hotspotMarkers.length === 0 && this.pickableMeshes.length === 0)) {
       return;
@@ -4888,6 +4939,7 @@ export class WebXRApp {
       playerController: this.playerController,
       collisionSystem: this.collisionSystem,
       getViewRay: (origin, direction) => this.phoneVrGazeSystem?.copyViewRay(origin, direction) || false,
+      isPathBlocked: (origin, target) => this._isGazeTeleportPathBlocked(origin, target),
       isActive: () => this._shouldUsePhoneVrGazeTeleport()
         && !this.phoneVrGazeSystem?.hasTarget
         && !this.phoneVrGazeSystem?.hasForegroundBlocker,

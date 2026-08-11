@@ -22,7 +22,17 @@ const READY_COLOR = new THREE.Color(0x63e6a3);
  * collision/boundary path used by normal movement.
  */
 export class GazeTeleportSystem {
-  constructor({ scene, camera, rig, renderer, playerController, collisionSystem, getViewRay, isActive }) {
+  constructor({
+    scene,
+    camera,
+    rig,
+    renderer,
+    playerController,
+    collisionSystem,
+    getViewRay,
+    isPathBlocked,
+    isActive,
+  }) {
     this.scene = scene;
     this.camera = camera;
     this.rig = rig;
@@ -30,6 +40,7 @@ export class GazeTeleportSystem {
     this.playerController = playerController;
     this.collisionSystem = collisionSystem;
     this.getViewRay = typeof getViewRay === 'function' ? getViewRay : null;
+    this.isPathBlocked = typeof isPathBlocked === 'function' ? isPathBlocked : () => false;
     this.isActive = typeof isActive === 'function' ? isActive : () => false;
 
     this.marker = this._createMarker();
@@ -142,11 +153,24 @@ export class GazeTeleportSystem {
 
     const floorY = this.rig.position.y;
     const rayDistance = (floorY - VIEW_ORIGIN.y) / VIEW_DIRECTION.y;
-    const horizontalDistance = THREE.MathUtils.clamp(
-      rayDistance * Math.hypot(VIEW_DIRECTION.x, VIEW_DIRECTION.z),
-      MIN_DISTANCE,
-      MAX_DISTANCE,
+    const horizontalDistance = rayDistance * Math.hypot(
+      VIEW_DIRECTION.x,
+      VIEW_DIRECTION.z,
     );
+    // Do not manufacture a target by clamping a distant gaze ray back into
+    // range. The visitor must be looking at the actual floor position where
+    // the ring is rendered; looking mostly toward a wall cannot silently
+    // activate a nearer floor target.
+    if (
+      !Number.isFinite(horizontalDistance)
+      || horizontalDistance < MIN_DISTANCE
+      || horizontalDistance > MAX_DISTANCE
+    ) {
+      this.marker.visible = false;
+      this.hasStableTarget = false;
+      this.dwellSeconds = 0;
+      return;
+    }
 
     DESIRED_TARGET.copy(this.rig.position).addScaledVector(HORIZONTAL_DIRECTION, horizontalDistance);
     DESIRED_TARGET.y = floorY;
@@ -156,6 +180,16 @@ export class GazeTeleportSystem {
       this.collisionSystem,
       RESOLVED_TARGET,
     )) {
+      this.marker.visible = false;
+      this.hasStableTarget = false;
+      this.dwellSeconds = 0;
+      return;
+    }
+
+    // Gaussian splats are visual captures rather than ordinary collision
+    // meshes. Explicitly reject a floor point when a visible SPZ wall lies
+    // between the headset and that resolved destination.
+    if (this.isPathBlocked(VIEW_ORIGIN, RESOLVED_TARGET)) {
       this.marker.visible = false;
       this.hasStableTarget = false;
       this.dwellSeconds = 0;

@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-xr-occlusion-pose-19';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-direct-gaze-navigation-20';
 
 function getRefs() {
   return {
