@@ -13,6 +13,7 @@ export class InteractionSystem {
     registry,
     getPickables,
     getPlayerPosition,
+    isOccluded,
     pointerLockControls,
   }) {
     this.camera = camera;
@@ -22,6 +23,7 @@ export class InteractionSystem {
     this.registry = registry;
     this.getPickables = getPickables;
     this.getPlayerPosition = getPlayerPosition;
+    this.isOccluded = typeof isOccluded === 'function' ? isOccluded : () => false;
     this.pointerLockControls = pointerLockControls;
 
     this.raycaster = new THREE.Raycaster();
@@ -198,7 +200,12 @@ export class InteractionSystem {
       return;
     }
 
-    const hit = hits[0];
+    const hit = hits.find((candidate) => !this.isOccluded(candidate.object, candidate.point));
+    if (!hit) {
+      this.uiController?.hideInteraction();
+      this._clearHighlight();
+      return;
+    }
     const mesh = hit.object;
 
     this._highlight(mesh);

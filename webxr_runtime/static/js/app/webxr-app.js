@@ -3,9 +3,9 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-9';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-vr-ui-quality-1';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-splat-interactions-1';
 import { InteractionRegistry } from './interaction-registry.js';
-import { InteractionSystem } from './interaction-system.js?v=20260811-vr-ui-quality-1';
+import { InteractionSystem } from './interaction-system.js?v=20260811-splat-interactions-1';
 import { PlayerController } from './player-controller.js?v=20260811-vr-ui-quality-1';
 import { UiController } from './ui-controller.js';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
@@ -3740,8 +3740,88 @@ export class WebXRApp {
     }
   }
 
+  _isObjectInVisibleHierarchy(object) {
+    let current = object;
+    while (current) {
+      if (!current.visible) {
+        return false;
+      }
+      current = current.parent;
+    }
+    return true;
+  }
+
+  _setPickableSplatOccluded(object, occluded) {
+    if (!object) {
+      return;
+    }
+
+    const nextOccluded = Boolean(occluded);
+    object.userData.splatOccluded = nextOccluded;
+
+    // World-space control sprites do not receive reliable depth from the
+    // Gaussian splat renderer. Fade only those controls while a splat is in
+    // front of them; ordinary GLB meshes keep their authored appearance but
+    // are still made non-interactive by the same occlusion flag.
+    if (!object.isSprite || !object.material) {
+      return;
+    }
+
+    const materials = Array.isArray(object.material) ? object.material : [object.material];
+    materials.filter(Boolean).forEach((material) => {
+      if (!Number.isFinite(material.userData?.splatOcclusionBaseOpacity)) {
+        material.userData = material.userData || {};
+        material.userData.splatOcclusionBaseOpacity = Number.isFinite(material.opacity)
+          ? material.opacity
+          : 1;
+      }
+      material.transparent = true;
+      material.opacity = nextOccluded
+        ? 0
+        : material.userData.splatOcclusionBaseOpacity;
+      material.needsUpdate = true;
+    });
+  }
+
+  _isPickableSplatOccluded(object) {
+    let current = object;
+    while (current) {
+      if (current.userData?.splatOccluded) {
+        return true;
+      }
+      current = current.parent;
+    }
+    return false;
+  }
+
+  _testSplatOcclusionAtTarget(target, margin, splatObjects) {
+    this.hotspotOcclusionDirection
+      .copy(target)
+      .sub(this.hotspotOcclusionOrigin);
+    const targetDistance = this.hotspotOcclusionDirection.length();
+    const safeMargin = Math.max(0.04, Number(margin) || 0.08);
+    if (!Number.isFinite(targetDistance) || targetDistance <= safeMargin + 0.04) {
+      return false;
+    }
+
+    this.hotspotOcclusionDirection.multiplyScalar(1 / targetDistance);
+    this.hotspotOcclusionRaycaster.set(
+      this.hotspotOcclusionOrigin,
+      this.hotspotOcclusionDirection,
+    );
+    this.hotspotOcclusionRaycaster.near = 0.06;
+    this.hotspotOcclusionRaycaster.far = Math.max(0.06, targetDistance - safeMargin);
+
+    try {
+      return this.hotspotOcclusionRaycaster.intersectObjects(splatObjects, false).length > 0;
+    } catch (error) {
+      console.warn('[interaction] splat visibility test failed', error);
+      return false;
+    }
+  }
+
   _updateHotspotSplatOcclusion(now = performance.now(), force = false) {
-    if (!this.camera || this.hotspotMarkers.length === 0) {
+    if (!this.camera || (this.hotspotMarkers.length === 0 && this.pickableMeshes.length === 0)) {
       return;
     }
     if (
@@ -3757,6 +3837,11 @@ export class WebXRApp {
       .filter((object) => object?.visible && object?.isInitialized !== false);
     if (splatObjects.length === 0) {
       this.hotspotMarkers.forEach((marker) => this._setHotspotSplatOccluded(marker, false));
+      this.pickableMeshes.forEach((object) => {
+        if (!object?.userData?.isHotspotPickable) {
+          this._setPickableSplatOccluded(object, false);
+        }
+      });
       return;
     }
 
@@ -3770,31 +3855,36 @@ export class WebXRApp {
       }
 
       marker.getWorldPosition(this.hotspotOcclusionTarget);
-      this.hotspotOcclusionDirection
-        .copy(this.hotspotOcclusionTarget)
-        .sub(this.hotspotOcclusionOrigin);
-      const hotspotDistance = this.hotspotOcclusionDirection.length();
       const margin = Number(marker.userData?.splatOcclusionMargin ?? 0.1);
-      if (!Number.isFinite(hotspotDistance) || hotspotDistance <= margin + 0.04) {
-        this._setHotspotSplatOccluded(marker, false);
+      const occluded = this._testSplatOcclusionAtTarget(
+        this.hotspotOcclusionTarget,
+        margin,
+        splatObjects,
+      );
+      this._setHotspotSplatOccluded(marker, occluded);
+    }
+
+    // Table controls, museum artifact controls, door meshes, and future
+    // pickables are registered separately from portal markers. Apply the same
+    // splat line-of-sight rule so none can be seen or activated through a
+    // captured wall.
+    for (const object of this.pickableMeshes) {
+      if (!object?.parent || object.userData?.isHotspotPickable) {
+        continue;
+      }
+      if (!this._isObjectInVisibleHierarchy(object)) {
+        this._setPickableSplatOccluded(object, false);
         continue;
       }
 
-      this.hotspotOcclusionDirection.multiplyScalar(1 / hotspotDistance);
-      this.hotspotOcclusionRaycaster.set(
-        this.hotspotOcclusionOrigin,
-        this.hotspotOcclusionDirection,
+      object.getWorldPosition(this.hotspotOcclusionTarget);
+      const margin = Number(object.userData?.splatOcclusionMargin ?? 0.08);
+      const occluded = this._testSplatOcclusionAtTarget(
+        this.hotspotOcclusionTarget,
+        margin,
+        splatObjects,
       );
-      this.hotspotOcclusionRaycaster.near = 0.06;
-      this.hotspotOcclusionRaycaster.far = Math.max(0.06, hotspotDistance - margin);
-
-      let occluded = false;
-      try {
-        occluded = this.hotspotOcclusionRaycaster.intersectObjects(splatObjects, false).length > 0;
-      } catch (error) {
-        console.warn('[hotspot] splat visibility test failed', error);
-      }
-      this._setHotspotSplatOccluded(marker, occluded);
+      this._setPickableSplatOccluded(object, occluded);
     }
   }
 
@@ -3923,6 +4013,7 @@ export class WebXRApp {
       registry: this.interactionRegistry,
       getPickables: () => this.pickableMeshes,
       getPlayerPosition: () => this.playerRig.position,
+      isOccluded: (object) => this._isPickableSplatOccluded(object),
     });
     this.phoneVrGazeSystem?.dispose?.();
     this.phoneVrGazeSystem = new PhoneVrGazeSystem({
@@ -3933,6 +4024,7 @@ export class WebXRApp {
       uiController: this.uiController,
       getPickables: () => this.pickableMeshes,
       getPlayerPosition: () => this.playerRig.position,
+      isOccluded: (object) => this._isPickableSplatOccluded(object),
       isActive: () => this._shouldUsePhoneVrGazeInteraction(),
     });
     this.uiController.hideInteraction();

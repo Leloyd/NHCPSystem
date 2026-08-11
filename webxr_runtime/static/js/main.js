@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-vr-ui-quality-1';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-splat-interactions-1';
 
 function getRefs() {
   return {

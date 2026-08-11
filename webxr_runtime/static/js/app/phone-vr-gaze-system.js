@@ -21,7 +21,17 @@ const READY_COLOR = new THREE.Color(0x63e6a3);
  * activates the same handler used by mouse, touch, and WebXR selection.
  */
 export class PhoneVrGazeSystem {
-  constructor({ scene, camera, renderer, registry, uiController, getPickables, getPlayerPosition, isActive }) {
+  constructor({
+    scene,
+    camera,
+    renderer,
+    registry,
+    uiController,
+    getPickables,
+    getPlayerPosition,
+    isOccluded,
+    isActive,
+  }) {
     this.scene = scene;
     this.camera = camera;
     this.renderer = renderer;
@@ -29,6 +39,7 @@ export class PhoneVrGazeSystem {
     this.uiController = uiController;
     this.getPickables = getPickables;
     this.getPlayerPosition = getPlayerPosition;
+    this.isOccluded = typeof isOccluded === 'function' ? isOccluded : () => false;
     this.isActive = typeof isActive === 'function' ? isActive : () => false;
 
     this.raycaster = new THREE.Raycaster();
@@ -140,7 +151,7 @@ export class PhoneVrGazeSystem {
 
     for (const hit of hits) {
       const interaction = hit.object?.userData?.interaction;
-      if (!interaction) {
+      if (!interaction || this.isOccluded(hit.object, hit.point)) {
         continue;
       }
 
@@ -164,7 +175,7 @@ export class PhoneVrGazeSystem {
 
     for (const object of pickables) {
       const interaction = object?.userData?.interaction;
-      if (!interaction || !this._isObjectVisible(object)) {
+      if (!interaction || !this._isObjectVisible(object) || this.isOccluded(object)) {
         continue;
       }
 
