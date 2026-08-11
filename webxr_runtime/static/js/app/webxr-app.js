@@ -3797,6 +3797,25 @@ export class WebXRApp {
     return false;
   }
 
+  _shouldKeepSpatialControlVisible(object) {
+    if (!object) {
+      return false;
+    }
+
+    // Once a spatial viewer is open, its buttons form one reading interface.
+    // Testing every small sprite against the splat independently makes
+    // neighboring controls blink out at different oblique headset angles.
+    // The unopened world hotspot remains occlusion-tested; only controls of
+    // an already-open viewer bypass the per-button splat test.
+    if (object.userData?.isXrTablePickable) {
+      return true;
+    }
+    return Boolean(
+      object.userData?.isMuseumArtifactPickable
+      && this.museumArtifactStation?.isOpen,
+    );
+  }
+
   _testSplatOcclusionAtTarget(target, margin, splatObjects) {
     this.hotspotOcclusionDirection
       .copy(target)
@@ -3873,6 +3892,10 @@ export class WebXRApp {
     // captured wall.
     for (const object of this.pickableMeshes) {
       if (!object?.parent || object.userData?.isHotspotPickable) {
+        continue;
+      }
+      if (this._shouldKeepSpatialControlVisible(object)) {
+        this._setPickableSplatOccluded(object, false);
         continue;
       }
       if (!this._isObjectInVisibleHierarchy(object)) {
