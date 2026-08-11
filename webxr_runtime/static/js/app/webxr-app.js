@@ -3,10 +3,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-1';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-2';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
-import { PlayerController } from './player-controller.js?v=20260811-spark-xr-1';
+import { PlayerController } from './player-controller.js?v=20260811-spark-xr-2';
 import { UiController } from './ui-controller.js';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 
@@ -428,7 +428,10 @@ export class WebXRApp {
     this.camera = new THREE.PerspectiveCamera(70, window.innerWidth / window.innerHeight, 0.01, 3000);
 
     this.renderer = new THREE.WebGLRenderer({
-      antialias: true,
+      // Gaussian splats do not benefit from WebGL MSAA. In immersive VR it
+      // allocates the multisampled stereo targets twice and can exhaust a
+      // phone GPU, leaving Google's VR compositor visible but entirely black.
+      antialias: false,
       alpha: false,
       powerPreference: 'high-performance',
     });
@@ -520,7 +523,6 @@ export class WebXRApp {
 
       this._setupUi();
       this._setupLights();
-      this._setupXrUi();
       this._registerInteractions();
 
       this.uiController.setLoadingProgress(0.05, 'Fetching scene metadata...');
@@ -537,14 +539,19 @@ export class WebXRApp {
       this._setupGameplaySystems();
       this._setupMuseumArtifactStation();
 
-      this.uiController.completeLoading('Scene ready.');
-
       window.addEventListener('resize', this.boundResize);
       window.addEventListener('keydown', this.boundGlobalKeyDown);
       document.addEventListener('fullscreenchange', this.boundFullscreenChange);
       this.onResize();
 
+      // Do not expose the native XR controls until every required SPZ has
+      // initialized and the WebXR animation loop is already active. Entering
+      // immersive-vr before this point opens Google's compositor with no
+      // frames to present, which appears as a permanent black screen.
+      this.uiController.setLoadingProgress(0.97, 'Preparing VR renderer...');
       this.renderer.setAnimationLoop(this._animate.bind(this));
+      this._setupXrUi();
+      this.uiController.completeLoading('Scene ready.');
     } catch (error) {
       console.error('[startup] failed', error);
       this.uiController.showError(`Startup failed: ${error?.message ?? error}`);
@@ -1748,7 +1755,7 @@ export class WebXRApp {
     // budget and present a black compositor layer. This does not change the
     // normal-screen quality preset.
     try {
-      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.75 : 0.9);
+      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.5 : 0.85);
     } catch (error) {
       console.warn('[xr] framebuffer scale could not be configured', error);
     }
@@ -2267,6 +2274,9 @@ export class WebXRApp {
         this.sparkRenderer = new spark.SparkRenderer({
           renderer: this.renderer,
           maxStdDev: Math.sqrt(5),
+          // Spark recommends completing its update after the current render
+          // in WebXR so the stereo frame can be submitted promptly.
+          preUpdate: false,
         });
         this.sparkRenderer.name = 'spark-renderer';
         this.scene.add(this.sparkRenderer);
