@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-chapel-anchored-tables-2';
+import { WebXRApp } from './app/webxr-app.js?v=20260812-chapel-table-back-1';
 
 function getRefs() {
   return {

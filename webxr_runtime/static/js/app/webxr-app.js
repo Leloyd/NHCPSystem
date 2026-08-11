@@ -2243,7 +2243,8 @@ export class WebXRApp {
         this._createXrTableControl({
           parent: viewerRoot,
           label: '←',
-          position: [-0.72, 0.52, 0.09],
+          // Keep the return action directly below the opened detail image.
+          position: [0, -0.56, 0.09],
           scale: 0.2,
           name: 'xr-table-back',
         });
