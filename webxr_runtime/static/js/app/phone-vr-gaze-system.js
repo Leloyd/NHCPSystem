@@ -5,9 +5,13 @@ const VIEW_DIRECTION = new THREE.Vector3();
 const EYE_POSITION = new THREE.Vector3();
 const EYE_DIRECTION = new THREE.Vector3();
 const EYE_PROJECTION_CENTER = new THREE.Vector3();
+const TARGET_WORLD_POSITION = new THREE.Vector3();
+const TARGET_DIRECTION = new THREE.Vector3();
 const RETICLE_DISTANCE = 1.25;
 const XR_RETICLE_SIZE = 0.105;
 const DWELL_SECONDS = 1;
+const GAZE_TARGET_ANGLE_DEG = 6;
+const GAZE_UI_TARGET_ANGLE_DEG = 3;
 const BASE_COLOR = new THREE.Color(0xf4d77f);
 const READY_COLOR = new THREE.Color(0x63e6a3);
 
@@ -133,7 +137,65 @@ export class PhoneVrGazeSystem {
       return hit;
     }
 
-    return null;
+    // Match the Virtual Tour's forgiving gaze behavior. Small floating
+    // controls are difficult to hit with a mathematically thin ray in a
+    // phone viewer, so select the closest registered target inside a narrow
+    // angular cone around the centered reticle.
+    let closest = null;
+    let closestAngle = Infinity;
+
+    for (const object of pickables) {
+      const interaction = object?.userData?.interaction;
+      if (!interaction || !this._isObjectVisible(object)) {
+        continue;
+      }
+
+      object.getWorldPosition(TARGET_WORLD_POSITION);
+      TARGET_DIRECTION.copy(TARGET_WORLD_POSITION).sub(VIEW_ORIGIN);
+      const distance = TARGET_DIRECTION.length();
+      if (!Number.isFinite(distance) || distance < 1e-5) {
+        continue;
+      }
+      TARGET_DIRECTION.multiplyScalar(1 / distance);
+
+      const planarDistance = playerPosition
+        ? Math.hypot(TARGET_WORLD_POSITION.x - playerPosition.x, TARGET_WORLD_POSITION.z - playerPosition.z)
+        : distance;
+      const maxDistance = Number(interaction.maxDistance);
+      if (Number.isFinite(maxDistance) && Number.isFinite(planarDistance) && planarDistance > maxDistance) {
+        continue;
+      }
+
+      const angle = THREE.MathUtils.radToDeg(VIEW_DIRECTION.angleTo(TARGET_DIRECTION));
+      const name = String(interaction.name || object.name || '').toLowerCase();
+      const metadataType = String(interaction.metadata?.type || '').toLowerCase();
+      const isUiControl = name.includes('control')
+        || name.startsWith('xr-table-')
+        || metadataType.includes('control');
+      const selectionAngle = isUiControl ? GAZE_UI_TARGET_ANGLE_DEG : GAZE_TARGET_ANGLE_DEG;
+
+      if (angle <= selectionAngle && angle < closestAngle) {
+        closestAngle = angle;
+        closest = {
+          object,
+          point: TARGET_WORLD_POSITION.clone(),
+          distance,
+        };
+      }
+    }
+
+    return closest;
+  }
+
+  _isObjectVisible(object) {
+    let current = object;
+    while (current) {
+      if (!current.visible) {
+        return false;
+      }
+      current = current.parent;
+    }
+    return true;
   }
 
   _updateViewRay() {
@@ -268,6 +330,15 @@ export class PhoneVrGazeSystem {
 
     this._updateViewRay();
     this._updateReticle(this.reticleProgress);
+  }
+
+  copyViewRay(origin, direction) {
+    if (this.activeEyeCount < 1 || VIEW_DIRECTION.lengthSq() < 1e-8) {
+      return false;
+    }
+    origin?.copy(VIEW_ORIGIN);
+    direction?.copy(VIEW_DIRECTION);
+    return true;
   }
 
   update(deltaSeconds) {

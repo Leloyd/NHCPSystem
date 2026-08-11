@@ -22,13 +22,14 @@ const READY_COLOR = new THREE.Color(0x63e6a3);
  * collision/boundary path used by normal movement.
  */
 export class GazeTeleportSystem {
-  constructor({ scene, camera, rig, renderer, playerController, collisionSystem, isActive }) {
+  constructor({ scene, camera, rig, renderer, playerController, collisionSystem, getViewRay, isActive }) {
     this.scene = scene;
     this.camera = camera;
     this.rig = rig;
     this.renderer = renderer;
     this.playerController = playerController;
     this.collisionSystem = collisionSystem;
+    this.getViewRay = typeof getViewRay === 'function' ? getViewRay : null;
     this.isActive = typeof isActive === 'function' ? isActive : () => false;
 
     this.marker = this._createMarker();
@@ -109,10 +110,13 @@ export class GazeTeleportSystem {
       return;
     }
 
-    const viewCamera = this._getViewCamera();
-    viewCamera.updateWorldMatrix(true, false);
-    viewCamera.getWorldPosition(VIEW_ORIGIN);
-    viewCamera.getWorldDirection(VIEW_DIRECTION).normalize();
+    const hasSharedViewRay = Boolean(this.getViewRay?.(VIEW_ORIGIN, VIEW_DIRECTION));
+    if (!hasSharedViewRay) {
+      const viewCamera = this._getViewCamera();
+      viewCamera.updateWorldMatrix(true, false);
+      viewCamera.getWorldPosition(VIEW_ORIGIN);
+      viewCamera.getWorldDirection(VIEW_DIRECTION).normalize();
+    }
 
     if (this.requiresGazeRelease) {
       this.marker.visible = false;

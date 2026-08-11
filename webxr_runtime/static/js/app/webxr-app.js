@@ -2,8 +2,8 @@ import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
-import { GazeTeleportSystem } from './gaze-teleport-system.js';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-7';
+import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-8';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-8';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js?v=20260811-spark-xr-2';
@@ -3632,6 +3632,7 @@ export class WebXRApp {
       renderer: this.renderer,
       playerController: this.playerController,
       collisionSystem: this.collisionSystem,
+      getViewRay: (origin, direction) => this.phoneVrGazeSystem?.copyViewRay(origin, direction) || false,
       isActive: () => this._shouldUsePhoneVrGazeTeleport() && !this.phoneVrGazeSystem?.hasTarget,
     });
 
