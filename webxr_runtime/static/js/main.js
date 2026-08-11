@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260811-direct-gaze-navigation-20';
+import { WebXRApp } from './app/webxr-app.js?v=20260811-jar-subtitle-spacing-21';
 
 function getRefs() {
   return {

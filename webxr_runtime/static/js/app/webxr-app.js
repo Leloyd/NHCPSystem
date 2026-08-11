@@ -50,7 +50,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
     position: [-2.30, 1.00, 3.24],
     displayPosition: [-2.30, 0.75, 3.37],
     titlePosition: [0, 0.05, 0.09],
-    subtitlePosition: [0, -0.32, 0.09],
+    subtitlePosition: [0, -0.25, 0.09],
     controlsAlongZ: true,
     entries: [
       {
@@ -70,7 +70,7 @@ const MUSEUM_CONTENT_HOTSPOTS = {
     position: [-2.30, 1.00, 1.82],
     displayPosition: [-2.30, 0.75, 1.85],
     titlePosition: [0, 0.05, 0.09],
-    subtitlePosition: [0, -0.32, 0.09],
+    subtitlePosition: [0, -0.25, 0.09],
     controlsAlongZ: true,
     entries: [
       {
