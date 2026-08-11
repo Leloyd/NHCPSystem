@@ -48,10 +48,11 @@ export class PhoneVrGazeSystem {
 
   _createXrReticles() {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const context = canvas.getContext('2d');
     if (context) {
+      context.scale(2, 2);
       context.clearRect(0, 0, 256, 256);
 
       // A dark outline keeps the gaze circle visible against both bright
@@ -81,9 +82,12 @@ export class PhoneVrGazeSystem {
 
     const texture = new THREE.CanvasTexture(canvas);
     texture.colorSpace = THREE.SRGBColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
     texture.magFilter = THREE.LinearFilter;
+    const maxAnisotropy = this.renderer?.capabilities?.getMaxAnisotropy?.() ?? 1;
+    texture.anisotropy = Math.min(8, Math.max(1, maxAnisotropy));
+    texture.needsUpdate = true;
 
     const material = new THREE.SpriteMaterial({
       map: texture,

@@ -3,10 +3,10 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js?v=20260811-spark-xr-9';
-import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-spark-xr-9';
+import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-vr-ui-quality-1';
 import { InteractionRegistry } from './interaction-registry.js';
-import { InteractionSystem } from './interaction-system.js';
-import { PlayerController } from './player-controller.js?v=20260811-spark-xr-2';
+import { InteractionSystem } from './interaction-system.js?v=20260811-vr-ui-quality-1';
+import { PlayerController } from './player-controller.js?v=20260811-vr-ui-quality-1';
 import { UiController } from './ui-controller.js';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 
@@ -408,7 +408,6 @@ const QUALITY_PRESETS = {
     splatLodScale: 0.75,
   },
 };
-const XR_SESSION_MODE_AR = 'immersive-ar';
 const XR_SESSION_MODE_VR = 'immersive-vr';
 
 export class WebXRApp {
@@ -1487,12 +1486,13 @@ export class WebXRApp {
 
   _createXrTableControlTexture(label) {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const context = canvas.getContext('2d');
     if (!context) {
       return null;
     }
+    context.scale(2, 2);
     context.clearRect(0, 0, 256, 256);
     context.beginPath();
     context.arc(128, 128, 104, 0, Math.PI * 2);
@@ -1508,10 +1508,7 @@ export class WebXRApp {
     context.textAlign = 'center';
     context.textBaseline = 'middle';
     context.fillText(String(label), 128, 132);
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.needsUpdate = true;
-    return texture;
+    return this._configureSharpUiTexture(new THREE.CanvasTexture(canvas));
   }
 
   _createXrTableControl({
@@ -1757,6 +1754,55 @@ export class WebXRApp {
     this.scene.add(hemi, key);
   }
 
+  _configureSharpUiTexture(texture) {
+    if (!texture) {
+      return texture;
+    }
+
+    const maxAnisotropy = this.renderer?.capabilities?.getMaxAnisotropy?.() ?? 1;
+    texture.colorSpace = THREE.SRGBColorSpace;
+    texture.generateMipmaps = true;
+    texture.minFilter = THREE.LinearMipmapLinearFilter;
+    texture.magFilter = THREE.LinearFilter;
+    texture.anisotropy = Math.min(8, Math.max(1, maxAnisotropy));
+    texture.needsUpdate = true;
+    return texture;
+  }
+
+  _configureSharpModelMaterials(root) {
+    if (!root?.traverse) {
+      return;
+    }
+
+    const maxAnisotropy = this.renderer?.capabilities?.getMaxAnisotropy?.() ?? 1;
+    const anisotropy = Math.min(8, Math.max(1, maxAnisotropy));
+    const textureKeys = ['map', 'normalMap', 'roughnessMap', 'metalnessMap', 'emissiveMap', 'aoMap'];
+
+    root.traverse((object) => {
+      if (!object?.isMesh) {
+        return;
+      }
+      const materials = Array.isArray(object.material) ? object.material : [object.material];
+      materials.forEach((material) => {
+        if (!material) {
+          return;
+        }
+        textureKeys.forEach((key) => {
+          const texture = material[key];
+          if (!texture) {
+            return;
+          }
+          texture.anisotropy = anisotropy;
+          if (key === 'map' || key === 'emissiveMap') {
+            texture.colorSpace = THREE.SRGBColorSpace;
+          }
+          texture.needsUpdate = true;
+        });
+        material.needsUpdate = true;
+      });
+    });
+  }
+
   _setupXrUi() {
     const mountXrButton = (button) => {
       const host = this.refs.xrButtonContainer ?? document.body;
@@ -1769,12 +1815,11 @@ export class WebXRApp {
       this.renderer.xr.setReferenceSpaceType('local');
     }
 
-    // A stereoscopic SPZ scene renders once per eye. Limit the XR framebuffer
-    // before a session begins so phone GPUs do not exhaust their render-target
-    // budget and present a black compositor layer. This does not change the
-    // normal-screen quality preset.
+    // Keep the framebuffer conservative enough for phone VR, but give GLBs,
+    // canvas controls, text, and the gaze reticle more pixels. Spark's splat
+    // count and LOD budget remain unchanged.
     try {
-      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.38 : 0.85);
+      this.renderer.xr.setFramebufferScaleFactor(this.mobileMode ? 0.52 : 0.9);
     } catch (error) {
       console.warn('[xr] framebuffer scale could not be configured', error);
     }
@@ -1783,33 +1828,10 @@ export class WebXRApp {
 
     Promise.resolve(
       xrApiAvailable
-        ? Promise.all([
-          navigator.xr.isSessionSupported(XR_SESSION_MODE_AR).catch(() => false),
-          navigator.xr.isSessionSupported(XR_SESSION_MODE_VR).catch(() => false),
-        ])
-        : [false, false],
+        ? navigator.xr.isSessionSupported(XR_SESSION_MODE_VR).catch(() => false)
+        : false,
     )
-      .then(([arSupported, vrSupported]) => {
-        const formatArStartError = (error) => {
-          const name = String(error?.name || 'Error');
-          const message = String(error?.message || '').trim();
-          const detail = message ? `${name}: ${message}` : name;
-
-          if (name === 'NotAllowedError') {
-            return `AR blocked (${detail}). Allow camera/motion permissions for this site.`;
-          }
-
-          if (name === 'SecurityError') {
-            return `AR blocked (${detail}). Open this page over HTTPS.`;
-          }
-
-          if (name === 'NotSupportedError') {
-            return `AR unsupported (${detail}). Try Chrome on Android with Google Play Services for AR.`;
-          }
-
-          return `AR start failed (${detail}). Check HTTPS, permissions, and browser/device support.`;
-        };
-
+      .then((vrSupported) => {
         const formatVrStartError = (error) => {
           const name = String(error?.name || 'Error');
           const message = String(error?.message || '').trim();
@@ -1830,12 +1852,7 @@ export class WebXRApp {
           return `Full 3D XR start failed (${detail}).`;
         };
 
-        const showUnsupportedModeMessage = (sessionMode) => {
-          if (sessionMode === XR_SESSION_MODE_AR) {
-            this.uiController.showError('AR needs Chrome on Android (with Google Play Services for AR). On iPhone, use the artifact 3D viewers’ AR button instead.', 4500);
-            return;
-          }
-
+        const showUnsupportedModeMessage = () => {
           if (IS_IOS_DEVICE) {
             this.uiController.showError(
               'VR mode is not supported on iPhone. You can continue in the normal 3D view or use the Gyro button to look around.',
@@ -1845,31 +1862,6 @@ export class WebXRApp {
           }
 
           this.uiController.showError('VR headset mode is not available on this device/browser. Tip: tap the Gyro button to look around by moving your phone.', 4500);
-        };
-
-        const requestArSessionWithFallback = async () => {
-          const sessionAttempts = [
-            {
-              optionalFeatures: ['local-floor', 'bounded-floor', 'hit-test', 'hand-tracking'],
-            },
-            {
-              optionalFeatures: ['local-floor', 'bounded-floor'],
-            },
-            {},
-          ];
-
-          let lastError = null;
-
-          for (const options of sessionAttempts) {
-            try {
-              return await navigator.xr.requestSession(XR_SESSION_MODE_AR, options);
-            } catch (error) {
-              lastError = error;
-              console.warn('[xr] AR requestSession attempt failed', { options, error });
-            }
-          }
-
-          throw lastError || new Error('AR session request failed.');
         };
 
         const requestVrSessionWithFallback = async () => {
@@ -2070,16 +2062,6 @@ export class WebXRApp {
             formatStartError: formatVrStartError,
           });
 
-          createSessionButton({
-            iconLabel: 'AR',
-            startLabel: 'AR',
-            startingLabel: '...',
-            stopLabel: 'Stop',
-            sessionMode: XR_SESSION_MODE_AR,
-            supported: arSupported,
-            requestSession: requestArSessionWithFallback,
-            formatStartError: formatArStartError,
-          });
       })
       .catch(() => {
         const fallbackButtons = [
@@ -2087,11 +2069,6 @@ export class WebXRApp {
             iconLabel: 'VR',
             startLabel: 'VR',
             sessionMode: XR_SESSION_MODE_VR,
-          },
-          {
-            iconLabel: 'AR',
-            startLabel: 'AR',
-            sessionMode: XR_SESSION_MODE_AR,
           },
         ];
 
@@ -2112,13 +2089,7 @@ export class WebXRApp {
 
     this.renderer.xr.addEventListener('sessionstart', () => {
       const mode = this.activeXrSessionMode;
-      if (mode === XR_SESSION_MODE_AR) {
-        this.uiController.clearError();
-      } else if (mode === XR_SESSION_MODE_VR) {
-        this.uiController.clearError();
-      } else {
-        this.uiController.clearError();
-      }
+      this.uiController.clearError();
 
       this.uiController.setMobileControlsVisible(true);
       if (mode === XR_SESSION_MODE_VR) {
@@ -2219,11 +2190,7 @@ export class WebXRApp {
       return null;
     }
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
+    const texture = this._configureSharpUiTexture(new THREE.CanvasTexture(canvas));
 
     const sprite = new THREE.Sprite(new THREE.SpriteMaterial({
       map: texture,
@@ -2726,6 +2693,7 @@ export class WebXRApp {
     try {
       const gltf = await this.gltfLoader.loadAsync(asset.url);
       const root = gltf.scene;
+      this._configureSharpModelMaterials(root);
       root.name = asset.name || asset.fileName;
       const isDoorAsset = String(asset.fileName || asset.relativePath || asset.name || '')
         .toLowerCase()
@@ -2787,13 +2755,14 @@ export class WebXRApp {
 
   _createHotspotIconTexture(color) {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
 
     const context = canvas.getContext('2d');
     if (!context) {
       return null;
     }
+    context.scale(2, 2);
 
     const accent = new THREE.Color(color).getStyle();
     const center = 128;
@@ -2839,13 +2808,7 @@ export class WebXRApp {
     context.strokeStyle = '#faf7f2';
     context.stroke();
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.needsUpdate = true;
-    return texture;
+    return this._configureSharpUiTexture(new THREE.CanvasTexture(canvas));
   }
 
   _shouldUsePhoneVrGazeTeleport() {
@@ -2886,12 +2849,13 @@ export class WebXRApp {
 
   _createMuseumArtifactControlTexture(label, active = false) {
     const canvas = document.createElement('canvas');
-    canvas.width = 256;
-    canvas.height = 256;
+    canvas.width = 512;
+    canvas.height = 512;
     const context = canvas.getContext('2d');
     if (!context) {
       return null;
     }
+    context.scale(2, 2);
 
     context.clearRect(0, 0, 256, 256);
     const halo = context.createRadialGradient(128, 128, 72, 128, 128, 124);
@@ -2919,13 +2883,7 @@ export class WebXRApp {
     context.textBaseline = 'middle';
     context.fillText(normalizedLabel, 128, 132);
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.needsUpdate = true;
-    return texture;
+    return this._configureSharpUiTexture(new THREE.CanvasTexture(canvas));
   }
 
   _wrapMuseumArtifactText(context, text, maxWidth) {
@@ -3002,13 +2960,7 @@ export class WebXRApp {
       y += lineHeight;
     });
 
-    const texture = new THREE.CanvasTexture(canvas);
-    texture.colorSpace = THREE.SRGBColorSpace;
-    texture.generateMipmaps = false;
-    texture.minFilter = THREE.LinearFilter;
-    texture.magFilter = THREE.LinearFilter;
-    texture.needsUpdate = true;
-    return texture;
+    return this._configureSharpUiTexture(new THREE.CanvasTexture(canvas));
   }
 
   _createMuseumArtifactSprite({ texture, position, scale, interactionName = '' }) {
@@ -3288,6 +3240,7 @@ export class WebXRApp {
     if (!content) {
       throw new Error('The GLB contains no displayable scene.');
     }
+    this._configureSharpModelMaterials(content);
 
     const degrees = artifact.rotation || [0, 0, 0];
     content.rotation.set(
@@ -3970,7 +3923,6 @@ export class WebXRApp {
       registry: this.interactionRegistry,
       getPickables: () => this.pickableMeshes,
       getPlayerPosition: () => this.playerRig.position,
-      getXrSessionMode: () => this.activeXrSessionMode,
     });
     this.phoneVrGazeSystem?.dispose?.();
     this.phoneVrGazeSystem = new PhoneVrGazeSystem({

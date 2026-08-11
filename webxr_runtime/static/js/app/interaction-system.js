@@ -2,9 +2,7 @@ import * as THREE from 'three';
 
 const XR_RAY_MATRIX = new THREE.Matrix4();
 const XR_RAY_DIRECTION = new THREE.Vector3();
-const XR_SESSION_MODE_AR = 'immersive-ar';
 const XR_SELECT_DEDUP_MS = 120;
-const XR_DOM_FALLBACK_BLOCK_MS = 220;
 
 export class InteractionSystem {
   constructor({
@@ -16,7 +14,6 @@ export class InteractionSystem {
     getPickables,
     getPlayerPosition,
     pointerLockControls,
-    getXrSessionMode,
   }) {
     this.camera = camera;
     this.renderer = renderer;
@@ -26,9 +23,6 @@ export class InteractionSystem {
     this.getPickables = getPickables;
     this.getPlayerPosition = getPlayerPosition;
     this.pointerLockControls = pointerLockControls;
-    this.getXrSessionMode = typeof getXrSessionMode === 'function'
-      ? getXrSessionMode
-      : () => null;
 
     this.raycaster = new THREE.Raycaster();
     this.raycaster.firstHitOnly = true;
@@ -69,11 +63,7 @@ export class InteractionSystem {
   }
 
   _onClick(event) {
-    if (this.renderer.xr.isPresenting && !this._isArSessionPresenting()) {
-      return;
-    }
-
-    if (this.renderer.xr.isPresenting && this._hasRecentXrSelect()) {
+    if (this.renderer.xr.isPresenting) {
       return;
     }
 
@@ -85,11 +75,7 @@ export class InteractionSystem {
       return;
     }
 
-    if (this.renderer.xr.isPresenting && !this._isArSessionPresenting()) {
-      return;
-    }
-
-    if (this.renderer.xr.isPresenting && this._hasRecentXrSelect()) {
+    if (this.renderer.xr.isPresenting) {
       return;
     }
 
@@ -97,11 +83,7 @@ export class InteractionSystem {
   }
 
   _onTouchEnd(event) {
-    if (this.renderer.xr.isPresenting && !this._isArSessionPresenting()) {
-      return;
-    }
-
-    if (this.renderer.xr.isPresenting && this._hasRecentXrSelect()) {
+    if (this.renderer.xr.isPresenting) {
       return;
     }
 
@@ -186,14 +168,6 @@ export class InteractionSystem {
     }
 
     this._pickAtCenter();
-  }
-
-  _isArSessionPresenting() {
-    return this.renderer.xr.isPresenting && this.getXrSessionMode() === XR_SESSION_MODE_AR;
-  }
-
-  _hasRecentXrSelect() {
-    return performance.now() - this.lastXrSelectTimestamp < XR_DOM_FALLBACK_BLOCK_MS;
   }
 
   _pickAtCenter() {

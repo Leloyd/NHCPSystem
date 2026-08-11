@@ -19,10 +19,8 @@ const GYRO_EULER = new THREE.Euler();
 const GYRO_Q0 = new THREE.Quaternion();
 const GYRO_Q1 = new THREE.Quaternion(-Math.sqrt(0.5), 0, 0, Math.sqrt(0.5));
 const GYRO_QUAT = new THREE.Quaternion();
-const XR_SESSION_MODE_AR = 'immersive-ar';
 const XR_SESSION_MODE_VR = 'immersive-vr';
 const VR_MIN_TRACKED_HEAD_HEIGHT = 1.0;
-const AR_PHYSICAL_MOVE_DEADZONE_METERS = 0.012;
 const DESKTOP_JUMP_KEYS = new Set(['Space']);
 const DESKTOP_SPRINT_KEYS = new Set(['ShiftLeft', 'ShiftRight']);
 
@@ -89,7 +87,6 @@ export class PlayerController {
       z: 0,
     };
 
-    this.wasArPresenting = false;
     this.wasVrPresenting = false;
     this.xrPhysicalOffsetInitialized = false;
     this.xrPhysicalOffsetBaseline = new THREE.Vector3();
@@ -448,7 +445,6 @@ export class PlayerController {
     this.velocity.set(0, 0, 0);
     this.xrInput.x = 0;
     this.xrInput.z = 0;
-    this.wasArPresenting = false;
     this.wasVrPresenting = false;
     this.xrPhysicalOffsetInitialized = false;
     this.xrPhysicalOffsetBaseline.set(0, 0, 0);
@@ -571,7 +567,6 @@ export class PlayerController {
     const sessionMode = this.renderer.xr.isPresenting
       ? this.getXrSessionMode()
       : null;
-    const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
     const isVrPresenting = sessionMode === XR_SESSION_MODE_VR;
 
     // Capture the feet before any input source moves the rig. In particular,
@@ -592,29 +587,18 @@ export class PlayerController {
       this.camera.position.x = 0;
       this.camera.position.z = 0;
       this.camera.position.y = this.settings.height;
-      this.wasArPresenting = false;
       this.wasVrPresenting = false;
       this.xrPhysicalOffsetInitialized = false;
       this.xrPhysicalOffsetBaseline.set(0, 0, 0);
     } else {
-      if (isArPresenting && !this.wasArPresenting) {
-        this._calibrateArHeightFromCurrentPose();
-      } else if (isVrPresenting && !this.wasVrPresenting) {
+      if (isVrPresenting && !this.wasVrPresenting) {
         this._calibrateVrHeightFromCurrentPose();
       }
 
-      this._applyXrPhysicalOffset(sessionMode);
+      this._applyXrPhysicalOffset();
     }
 
-    this.wasArPresenting = isArPresenting;
     this.wasVrPresenting = isVrPresenting;
-
-    if (isArPresenting) {
-      this.velocity.set(0, 0, 0);
-      this.xrInput.x = 0;
-      this.xrInput.z = 0;
-      return;
-    }
 
     const moveInput = this._collectMoveInput();
     const speedMultiplier = this._shouldUseDesktopActions() && this.input.sprint
@@ -662,19 +646,6 @@ export class PlayerController {
     }
   }
 
-  _calibrateArHeightFromCurrentPose() {
-    const currentHeadHeight = Number.isFinite(this.camera.position.y)
-      ? this.camera.position.y
-      : 0;
-    const correction = this.settings.height - currentHeadHeight;
-
-    if (Math.abs(correction) < 1e-4) {
-      return;
-    }
-
-    this.rig.position.y += correction;
-  }
-
   _calibrateVrHeightFromCurrentPose() {
     const currentHeadHeight = Number.isFinite(this.camera.position.y)
       ? this.camera.position.y
@@ -692,7 +663,7 @@ export class PlayerController {
     this.rig.position.y += correction;
   }
 
-  _applyXrPhysicalOffset(sessionMode = null) {
+  _applyXrPhysicalOffset() {
     const currentX = Number.isFinite(this.camera.position.x) ? this.camera.position.x : 0;
     const currentZ = Number.isFinite(this.camera.position.z) ? this.camera.position.z : 0;
 
@@ -709,17 +680,6 @@ export class PlayerController {
       0,
       currentZ - this.xrPhysicalOffsetBaseline.z,
     );
-
-    const isArPresenting = sessionMode === XR_SESSION_MODE_AR;
-    if (isArPresenting) {
-      const deadzoneSq = AR_PHYSICAL_MOVE_DEADZONE_METERS * AR_PHYSICAL_MOVE_DEADZONE_METERS;
-      if (XR_LOCAL_OFFSET.lengthSq() < deadzoneSq) {
-        this.xrPhysicalOffsetBaseline.set(currentX, 0, currentZ);
-        this.camera.position.x = 0;
-        this.camera.position.z = 0;
-        return;
-      }
-    }
 
     if (XR_LOCAL_OFFSET.lengthSq() > 1e-8) {
       this.rig.position.add(XR_LOCAL_OFFSET);
