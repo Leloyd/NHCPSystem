@@ -3,6 +3,7 @@ import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 
 import { CollisionSystem } from './collision-system.js';
 import { GazeTeleportSystem } from './gaze-teleport-system.js';
+import { CardboardGazeSystem } from './cardboard-gaze-system.js';
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js';
 import { PlayerController } from './player-controller.js';
@@ -503,6 +504,7 @@ export class WebXRApp {
     this.collisionSystem = null;
     this.interactionSystem = null;
     this.gazeTeleportSystem = null;
+    this.cardboardGazeSystem = null;
     this.activeXrReferenceSpaceType = null;
     this.lastPositionDebugValue = '';
     this.hotspotDebugActive = false;
@@ -1205,7 +1207,7 @@ export class WebXRApp {
     element.addEventListener('touchend', this.cardboard.onTouchEnd, { passive: true });
 
     const portrait = window.innerHeight > window.innerWidth;
-    let hint = `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Look down and hold the gold floor target = move · touch & hold = walk · double-tap = exit.`;
+    let hint = `${portrait ? 'Rotate your phone to landscape, then place' : 'Place'} it in your VR box. Hold the center circle on a button for 1 second = select · look down and hold the gold floor target = move · touch and hold = walk · double-tap = exit.`;
     if (!gotFullscreen) {
       hint += ' Your browser kept the page windowed; landscape mode is recommended.';
     }
@@ -1252,6 +1254,7 @@ export class WebXRApp {
       this.playerController.levelHorizon();
     }
     this.gazeTeleportSystem?.reset();
+    this.cardboardGazeSystem?.reset();
     if (this.interactionSystem) {
       this.interactionSystem.suspended = false;
     }
@@ -3533,7 +3536,7 @@ export class WebXRApp {
       renderer: this.renderer,
       playerController: this.playerController,
       collisionSystem: this.collisionSystem,
-      isActive: () => this._shouldUsePhoneVrGazeTeleport(),
+      isActive: () => this._shouldUsePhoneVrGazeTeleport() && !this.cardboardGazeSystem?.hasTarget,
     });
 
     const spawnPoint = this._computeSpawnPoint();
@@ -3575,6 +3578,16 @@ export class WebXRApp {
       registry: this.interactionRegistry,
       getPickables: () => this.pickableMeshes,
       getPlayerPosition: () => this.playerRig.position,
+    });
+    this.cardboardGazeSystem?.dispose?.();
+    this.cardboardGazeSystem = new CardboardGazeSystem({
+      scene: this.scene,
+      camera: this.camera,
+      registry: this.interactionRegistry,
+      uiController: this.uiController,
+      getPickables: () => this.pickableMeshes,
+      getPlayerPosition: () => this.playerRig.position,
+      isActive: () => this.cardboard.active,
     });
     this.uiController.hideInteraction();
   }
@@ -3763,6 +3776,7 @@ export class WebXRApp {
       this._updatePositionDebugValue();
     }
 
+    this.cardboardGazeSystem?.update(dt);
     this.gazeTeleportSystem?.update(dt);
 
     this._updateMuseumArtifactStation(dt);
