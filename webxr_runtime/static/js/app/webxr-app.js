@@ -19,6 +19,126 @@ const HOTSPOT_HELPER_COLOR = 0xffd54a;
 const HOTSPOT_HELPER_RADIUS = 0.07;
 const UNDERGROUND_ZIP_NAME = 'underground.zip';
 const MUSEUM_ZIP_NAME = 'museum.zip';
+const MUSEUM_CONTENT_INTERACTION_MAX_DISTANCE = 2.35;
+const MUSEUM_CONTENT_DISPLAY_SIZE = 0.88;
+const MUSEUM_CONTENT_FORWARD_TILT = THREE.MathUtils.degToRad(-8);
+const MUSEUM_CONTENT_HOTSPOTS = {
+  'museum-content-kabila': {
+    position: [0.00, 1.00, 2.65],
+    entries: [
+      {
+        id: 'kabila',
+        title: { tl: 'Ang Kabilang Buhay ng mga Filipino', en: 'The Afterlife of the Filipino' },
+        imageUrl: '/AR-Artifacts/Kabila/kabila.png',
+        audio: {
+          tl: '/360Hotspots/Kabila/ANG KABILANG BUHAY NG MGA FILIPINO - Dibuho ni Bryan Anthony Paraiso.mp3',
+          en: '/360Hotspots/Kabila/THE AFTERLIFE OF THE FILIPINO - Painting by Bryan Anthony Paraiso.mp3',
+        },
+      },
+    ],
+  },
+  'museum-content-burial-jars': {
+    position: [-2.30, 1.00, 2.53],
+    entries: [
+      {
+        id: 'jar',
+        title: { tl: 'Mga Banga ng Maitum', en: 'The Maitum Jars' },
+        modelUrl: '/AR-Artifacts/Maitum/Maitum-10k.glb',
+        rotation: [0, -90, 0],
+        audio: {
+          tl: '/360Hotspots/jar/MGA BANGA NG MAITUM.mp3',
+          en: '/360Hotspots/jar/THE MAITUM JARS.mp3',
+        },
+      },
+      {
+        id: 'banga',
+        title: { tl: 'Banga ng Manunggul', en: 'The Manunggul Jar' },
+        modelUrl: '/AR-Artifacts/Banga/Banga-512(10k).glb',
+        rotation: [0, 0, 0],
+        audio: {
+          tl: '/360Hotspots/Balanghay/Banga/ANG BANGA NG MANUNGGUL.mp3',
+          en: '/360Hotspots/Balanghay/Banga/THE MANUNGGUL JAR.mp3',
+        },
+      },
+    ],
+  },
+  'museum-content-balanghay': {
+    position: [-2.07, 1.00, -1.91],
+    entries: [
+      {
+        id: 'balanghay',
+        title: { tl: 'Ang Balanghay', en: 'The Balanghay' },
+        modelUrl: '/AR-Artifacts/Balanghay/Balanghay-512(10K).glb',
+        rotation: [0, 0, 0],
+        audio: {
+          tl: '/360Hotspots/Balanghay/ANG BALANGHAY.mp3',
+          en: '/360Hotspots/Balanghay/THE BALANGHAY.mp3',
+        },
+      },
+    ],
+  },
+  'museum-content-kabaong': {
+    position: [-2.93, 1.00, -0.88],
+    entries: [
+      {
+        id: 'kabaong',
+        title: { tl: 'Mga Nakabiting Kabaong ng Sagada', en: 'The Hanging Coffins of Sagada' },
+        modelUrl: '/AR-Artifacts/Kabaong/Kabaong-512(10k).glb',
+        rotation: [0, 0, 0],
+        audio: {
+          tl: '/360Hotspots/Kabaong/ANG MGA NAKABITING KABAONG NG SAGADA.mp3',
+          en: '/360Hotspots/Kabaong/THE HANGING COFFINS OF SAGADA.mp3',
+        },
+      },
+    ],
+  },
+  'museum-content-uloh': {
+    position: [-1.00, 1.00, 0.32],
+    entries: [
+      {
+        id: 'uloh',
+        title: { tl: 'Tradisyunal na Ulóh ng mga Ifugao', en: 'Traditional Ulóh of the Ifugao' },
+        modelUrl: '/AR-Artifacts/Uloh/Uloh-512(10k).glb',
+        rotation: [0, -90, 0],
+        audio: {
+          tl: '/360Hotspots/Uloh/TRADISYUNAL NA ULÓH NG MGA IFUGAO.mp3',
+          en: '/360Hotspots/Uloh/TRADITIONAL ULÓH OF IFUGAO.mp3',
+        },
+      },
+    ],
+  },
+  'museum-content-nagcarlan': {
+    position: [-0.55, 1.00, 0.28],
+    entries: [
+      {
+        id: 'thenagcarlanundergroundcemetery',
+        title: {
+          tl: 'Libingan sa Ilalim ng Lupa ng Nagcarlan',
+          en: 'The Nagcarlan Underground Cemetery',
+        },
+        imageUrl: '/images/InsideMuseum/The_Nagcarlan_Underground_Cemetery.png',
+        audio: {
+          tl: '/audio/landing-voice/T3 - AboutSite1.mp3',
+          en: '/audio/landing-voice/E3 - AboutSite1.mp3',
+        },
+      },
+    ],
+  },
+  'museum-content-huling-taludtod': {
+    position: [0.10, 1.00, 0.89],
+    entries: [
+      {
+        id: 'hulingtaludtod',
+        title: { tl: 'Huling Taludtod', en: 'The Final Stanza' },
+        imageUrl: '/images/InsideMuseum/HulingTaludtod.jpg',
+        audio: {
+          tl: '/audio/360VT/HULING_TALUDTOD.mp3',
+          en: '/audio/360VT/THE_FINAL_STANZA.mp3',
+        },
+      },
+    ],
+  },
+};
 const MUSEUM_HOTSPOT_MARKERS = [
   {
     id: 'go-to-church',
@@ -27,6 +147,13 @@ const MUSEUM_HOTSPOT_MARKERS = [
     radius: 0.07,
     interactionMaxDistance: HOTSPOT_INTERACTION_MAX_DISTANCE,
   },
+  ...Object.entries(MUSEUM_CONTENT_HOTSPOTS).map(([id, content]) => ({
+    id,
+    position: content.position,
+    color: HOTSPOT_HELPER_COLOR,
+    radius: HOTSPOT_HELPER_RADIUS,
+    interactionMaxDistance: MUSEUM_CONTENT_INTERACTION_MAX_DISTANCE,
+  })),
 ];
 // Museum is a splat-only capture (no .glb collision meshes), so these bounds
 // retain its floor height while the calibrated open segments limit travel.
@@ -495,6 +622,29 @@ export class WebXRApp {
       isOpen: false,
       subtitlesOn: false,
       language: 'tl',
+      audio: null,
+      loadToken: 0,
+      modelCache: new Map(),
+      elapsed: 0,
+    };
+    this.museumContentViewer = {
+      root: null,
+      mediaRoot: null,
+      currentMedia: null,
+      titleSprite: null,
+      subtitleSprite: null,
+      previousSprite: null,
+      nextSprite: null,
+      languageSprite: null,
+      subtitleToggleSprite: null,
+      closeSprite: null,
+      hotspotId: '',
+      entries: [],
+      index: 0,
+      isOpen: false,
+      subtitlesOn: true,
+      language: 'tl',
+      sourceMarker: null,
       audio: null,
       loadToken: 0,
       modelCache: new Map(),
@@ -2426,6 +2576,32 @@ export class WebXRApp {
       this._toggleMuseumArtifactSubtitles();
     });
 
+    Object.keys(MUSEUM_CONTENT_HOTSPOTS).forEach((hotspotId) => {
+      this.interactionRegistry.register(hotspotId, () => {
+        this._openMuseumContentViewer(hotspotId);
+      });
+    });
+
+    this.interactionRegistry.register('museum-content-close', () => {
+      this._disposeMuseumContentViewer();
+    });
+
+    this.interactionRegistry.register('museum-content-prev', () => {
+      this._stepMuseumContent(-1);
+    });
+
+    this.interactionRegistry.register('museum-content-next', () => {
+      this._stepMuseumContent(1);
+    });
+
+    this.interactionRegistry.register('museum-content-language', () => {
+      this._toggleMuseumContentLanguage();
+    });
+
+    this.interactionRegistry.register('museum-content-subtitles', () => {
+      this._toggleMuseumContentSubtitles();
+    });
+
     this.interactionRegistry.register('altar', (context) => {
       console.log('[interaction] altar selected', context);
     });
@@ -3396,6 +3572,406 @@ export class WebXRApp {
     this._updateMuseumArtifactAudioVolume();
   }
 
+  _createMuseumContentControl({ parent, label, position, scale = 0.2, name }) {
+    const sprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactControlTexture(label),
+      position,
+      scale: [scale, scale],
+      interactionName: name,
+    });
+    if (!sprite || !parent) {
+      return null;
+    }
+    sprite.userData.isMuseumContentPickable = true;
+    if (sprite.userData.interaction) {
+      sprite.userData.interaction.maxDistance = MUSEUM_CONTENT_INTERACTION_MAX_DISTANCE;
+      sprite.userData.interaction.metadata = { type: 'museum-content-control' };
+    }
+    parent.add(sprite);
+    return sprite;
+  }
+
+  _openMuseumContentViewer(hotspotId) {
+    const content = MUSEUM_CONTENT_HOTSPOTS[hotspotId];
+    if (!this._isMuseumScene() || !content?.entries?.length || !this.camera) {
+      return;
+    }
+
+    this._disposeMuseumContentViewer();
+    const viewer = this.museumContentViewer;
+    viewer.hotspotId = hotspotId;
+    viewer.entries = content.entries;
+    viewer.index = 0;
+    viewer.isOpen = true;
+    viewer.subtitlesOn = true;
+    viewer.sourceMarker = this.hotspotMarkers.find((marker) => marker.name === hotspotId) || null;
+    if (viewer.sourceMarker) {
+      viewer.sourceMarker.visible = false;
+    }
+
+    const root = new THREE.Group();
+    root.name = 'museum-content-viewer';
+    const cameraPosition = new THREE.Vector3();
+    const cameraDirection = new THREE.Vector3();
+    this.camera.getWorldPosition(cameraPosition);
+    this.camera.getWorldDirection(cameraDirection);
+    cameraDirection.y = THREE.MathUtils.clamp(cameraDirection.y, -0.14, 0.14);
+    cameraDirection.normalize();
+    root.position.copy(cameraPosition).addScaledVector(cameraDirection, 1.85);
+    root.lookAt(cameraPosition);
+
+    const border = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.24, 2.66),
+      new THREE.MeshBasicMaterial({
+        color: 0xd4af6a,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    border.renderOrder = 55;
+    root.add(border);
+
+    const panel = new THREE.Mesh(
+      new THREE.PlaneGeometry(2.18, 2.60),
+      new THREE.MeshBasicMaterial({
+        color: 0x120c06,
+        depthTest: false,
+        depthWrite: false,
+        toneMapped: false,
+      }),
+    );
+    panel.position.z = 0.012;
+    panel.renderOrder = 56;
+    root.add(panel);
+
+    const mediaRoot = new THREE.Group();
+    mediaRoot.name = 'museum-content-media';
+    mediaRoot.position.set(0, 0.34, 0.08);
+    mediaRoot.rotation.set(MUSEUM_CONTENT_FORWARD_TILT, Math.PI, 0);
+    root.add(mediaRoot);
+
+    const titleSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture(''),
+      position: [0, -0.10, 0.09],
+      scale: [1.60, 0.28],
+    });
+    const subtitleSprite = this._createMuseumArtifactSprite({
+      texture: this._createMuseumArtifactTextTexture('', { subtitle: true }),
+      position: [0, -0.62, 0.09],
+      scale: [1.86, 0.68],
+    });
+    root.add(titleSprite, subtitleSprite);
+
+    const closeSprite = this._createMuseumContentControl({
+      parent: root,
+      label: '×',
+      position: [0.94, 1.16, 0.12],
+      scale: 0.20,
+      name: 'museum-content-close',
+    });
+    const previousSprite = this._createMuseumContentControl({
+      parent: root,
+      label: '←',
+      position: [-0.86, 0.34, 0.12],
+      scale: 0.20,
+      name: 'museum-content-prev',
+    });
+    const nextSprite = this._createMuseumContentControl({
+      parent: root,
+      label: '→',
+      position: [0.86, 0.34, 0.12],
+      scale: 0.20,
+      name: 'museum-content-next',
+    });
+    const languageSprite = this._createMuseumContentControl({
+      parent: root,
+      label: viewer.language.toUpperCase(),
+      position: [-0.24, -1.15, 0.12],
+      scale: 0.20,
+      name: 'museum-content-language',
+    });
+    const subtitleToggleSprite = this._createMuseumContentControl({
+      parent: root,
+      label: 'CC',
+      position: [0.24, -1.15, 0.12],
+      scale: 0.20,
+      name: 'museum-content-subtitles',
+    });
+
+    viewer.root = root;
+    viewer.mediaRoot = mediaRoot;
+    viewer.titleSprite = titleSprite;
+    viewer.subtitleSprite = subtitleSprite;
+    viewer.previousSprite = previousSprite;
+    viewer.nextSprite = nextSprite;
+    viewer.languageSprite = languageSprite;
+    viewer.subtitleToggleSprite = subtitleToggleSprite;
+    viewer.closeSprite = closeSprite;
+    viewer.audio = new Audio();
+    viewer.audio.preload = 'auto';
+    viewer.audio.playsInline = true;
+    this.scene.add(root);
+
+    this._refreshMuseumContentPresentation();
+    void this._showMuseumContentEntry(0, { playNarration: true });
+  }
+
+  _getCurrentMuseumContentEntry() {
+    const viewer = this.museumContentViewer;
+    return viewer.entries[viewer.index] || null;
+  }
+
+  _stepMuseumContent(direction) {
+    const viewer = this.museumContentViewer;
+    if (!viewer.isOpen || viewer.entries.length < 2) {
+      return;
+    }
+    const nextIndex = (viewer.index + direction + viewer.entries.length) % viewer.entries.length;
+    void this._showMuseumContentEntry(nextIndex, { playNarration: true });
+  }
+
+  _toggleMuseumContentLanguage() {
+    const viewer = this.museumContentViewer;
+    if (!viewer.isOpen) {
+      return;
+    }
+    viewer.language = viewer.language === 'tl' ? 'en' : 'tl';
+    this._refreshMuseumContentPresentation();
+    this._playMuseumContentNarration();
+  }
+
+  _toggleMuseumContentSubtitles() {
+    const viewer = this.museumContentViewer;
+    if (!viewer.isOpen) {
+      return;
+    }
+    viewer.subtitlesOn = !viewer.subtitlesOn;
+    this._refreshMuseumContentPresentation();
+  }
+
+  async _showMuseumContentEntry(index, { playNarration = false } = {}) {
+    const viewer = this.museumContentViewer;
+    if (!viewer.isOpen || !viewer.mediaRoot || !viewer.entries.length) {
+      return;
+    }
+
+    viewer.index = (index + viewer.entries.length) % viewer.entries.length;
+    const entry = this._getCurrentMuseumContentEntry();
+    const loadToken = ++viewer.loadToken;
+    this._stopMuseumContentNarration();
+    this._clearMuseumContentMedia();
+    this._refreshMuseumContentPresentation({ loading: true });
+    if (playNarration) {
+      this._playMuseumContentNarration();
+    }
+
+    try {
+      let media = null;
+      if (entry.modelUrl) {
+        media = await this._loadAndNormalizeMuseumArtifact(entry);
+        media.scale.multiplyScalar(MUSEUM_CONTENT_DISPLAY_SIZE / MUSEUM_ARTIFACT_DISPLAY_SIZE);
+        media.userData.isMuseumContentModel = true;
+      } else if (entry.imageUrl) {
+        media = await this._loadMuseumContentImage(entry.imageUrl);
+      }
+      if (loadToken !== viewer.loadToken || !viewer.isOpen) {
+        this._disposeObject3DResources(media);
+        return;
+      }
+      if (media) {
+        if (media.userData?.isMuseumContentImage) {
+          viewer.mediaRoot.rotation.set(0, 0, 0);
+        }
+        viewer.currentMedia = media;
+        viewer.mediaRoot.add(media);
+      }
+      this._refreshMuseumContentPresentation();
+    } catch (error) {
+      console.warn('[museum content] Could not load exhibit media.', entry?.id, error);
+      if (loadToken === viewer.loadToken && viewer.isOpen) {
+        this._refreshMuseumContentPresentation({ unavailable: true });
+        this.uiController.showError('This museum exhibit could not be displayed. Try opening it again.', 3200);
+      }
+    }
+  }
+
+  _loadMuseumContentImage(imageUrl) {
+    return new Promise((resolve, reject) => {
+      new THREE.TextureLoader().load(
+        imageUrl,
+        (texture) => {
+          texture.colorSpace = THREE.SRGBColorSpace;
+          const width = Number(texture.image?.naturalWidth ?? texture.image?.width ?? 1);
+          const height = Number(texture.image?.naturalHeight ?? texture.image?.height ?? 1);
+          const aspect = width / Math.max(1, height);
+          let planeWidth = 1.34;
+          let planeHeight = planeWidth / Math.max(0.1, aspect);
+          if (planeHeight > 0.78) {
+            planeHeight = 0.78;
+            planeWidth = planeHeight * aspect;
+          }
+          const image = new THREE.Mesh(
+            new THREE.PlaneGeometry(planeWidth, planeHeight),
+            new THREE.MeshBasicMaterial({
+              map: texture,
+              transparent: true,
+              side: THREE.DoubleSide,
+              depthTest: false,
+              depthWrite: false,
+              toneMapped: false,
+            }),
+          );
+          image.position.y = -0.12;
+          image.renderOrder = 59;
+          image.userData.isMuseumContentImage = true;
+          resolve(image);
+        },
+        undefined,
+        reject,
+      );
+    });
+  }
+
+  _clearMuseumContentMedia() {
+    const viewer = this.museumContentViewer;
+    if (viewer.currentMedia) {
+      viewer.currentMedia.parent?.remove(viewer.currentMedia);
+      this._disposeObject3DResources(viewer.currentMedia);
+      viewer.currentMedia = null;
+    }
+    if (viewer.mediaRoot) {
+      viewer.mediaRoot.rotation.set(MUSEUM_CONTENT_FORWARD_TILT, Math.PI, 0);
+      viewer.mediaRoot.position.y = 0.34;
+    }
+  }
+
+  _refreshMuseumContentPresentation({ loading = false, unavailable = false } = {}) {
+    const viewer = this.museumContentViewer;
+    const entry = this._getCurrentMuseumContentEntry();
+    if (!viewer.isOpen || !entry) {
+      return;
+    }
+    const language = viewer.language === 'en' ? 'en' : 'tl';
+    let title = entry.title?.[language] || entry.title?.en || entry.id;
+    if (loading) {
+      title = language === 'tl' ? `${title} · Inihahanda…` : `${title} · Loading…`;
+    } else if (unavailable) {
+      title = language === 'tl' ? `${title} · Hindi mabuksan` : `${title} · Unavailable`;
+    }
+    this._replaceMuseumArtifactSpriteTexture(
+      viewer.titleSprite,
+      this._createMuseumArtifactTextTexture(title),
+    );
+    this._replaceMuseumArtifactSpriteTexture(
+      viewer.languageSprite,
+      this._createMuseumArtifactControlTexture(language.toUpperCase(), true),
+    );
+    this._replaceMuseumArtifactSpriteTexture(
+      viewer.subtitleToggleSprite,
+      this._createMuseumArtifactControlTexture('CC', viewer.subtitlesOn),
+    );
+
+    const subtitles = window.NHCP_ARTIFACT_SUBTITLES?.[entry.subtitleKey || entry.id] || null;
+    const subtitleText = subtitles?.[language] || '';
+    if (subtitleText) {
+      this._replaceMuseumArtifactSpriteTexture(
+        viewer.subtitleSprite,
+        this._createMuseumArtifactTextTexture(subtitleText, { subtitle: true }),
+      );
+    }
+    viewer.subtitleSprite.visible = Boolean(viewer.subtitlesOn && subtitleText);
+    const showArrows = viewer.entries.length > 1;
+    viewer.previousSprite.visible = showArrows;
+    viewer.nextSprite.visible = showArrows;
+  }
+
+  _playMuseumContentNarration() {
+    const viewer = this.museumContentViewer;
+    const entry = this._getCurrentMuseumContentEntry();
+    if (!viewer.isOpen || !viewer.audio || !entry) {
+      return;
+    }
+    const language = viewer.language === 'en' ? 'en' : 'tl';
+    const source = entry.audio?.[language] || entry.audio?.tl || entry.audio?.en || '';
+    if (!source) {
+      return;
+    }
+    viewer.audio.pause();
+    viewer.audio.src = encodeURI(source);
+    viewer.audio.currentTime = 0;
+    viewer.audio.volume = 1;
+    const playing = viewer.audio.play();
+    if (playing?.catch) {
+      playing.catch((error) => {
+        console.warn('[museum content] Narration could not autoplay.', error);
+      });
+    }
+  }
+
+  _stopMuseumContentNarration() {
+    const audio = this.museumContentViewer.audio;
+    if (!audio) {
+      return;
+    }
+    audio.pause();
+    audio.currentTime = 0;
+  }
+
+  _updateMuseumContentViewer(dt) {
+    const viewer = this.museumContentViewer;
+    if (!viewer.isOpen || !viewer.mediaRoot || !viewer.currentMedia?.userData?.isMuseumContentModel) {
+      return;
+    }
+    viewer.elapsed += dt;
+    viewer.mediaRoot.position.y = 0.34 + Math.sin(viewer.elapsed * 1.15) * 0.018;
+    viewer.mediaRoot.rotation.x = MUSEUM_CONTENT_FORWARD_TILT;
+    viewer.mediaRoot.rotation.y += dt * 0.20;
+  }
+
+  _disposeMuseumContentViewer(options = {}) {
+    const viewer = this.museumContentViewer;
+    if (!viewer) {
+      return;
+    }
+    const restoreSource = options.restoreSource !== false;
+    this._stopMuseumContentNarration();
+    viewer.loadToken += 1;
+
+    const removedPickables = new Set();
+    if (viewer.root) {
+      viewer.root.traverse((object) => {
+        if (object.userData?.isMuseumContentPickable) {
+          removedPickables.add(object);
+        }
+      });
+      viewer.root.parent?.remove(viewer.root);
+      this._disposeObject3DResources(viewer.root);
+    }
+    this.pickableMeshes = this.pickableMeshes.filter((object) => !removedPickables.has(object));
+    if (restoreSource && viewer.sourceMarker) {
+      viewer.sourceMarker.visible = true;
+    }
+
+    viewer.root = null;
+    viewer.mediaRoot = null;
+    viewer.currentMedia = null;
+    viewer.titleSprite = null;
+    viewer.subtitleSprite = null;
+    viewer.previousSprite = null;
+    viewer.nextSprite = null;
+    viewer.languageSprite = null;
+    viewer.subtitleToggleSprite = null;
+    viewer.closeSprite = null;
+    viewer.hotspotId = '';
+    viewer.entries = [];
+    viewer.index = 0;
+    viewer.isOpen = false;
+    viewer.sourceMarker = null;
+    viewer.audio = null;
+    viewer.elapsed = 0;
+  }
+
   _buildHotspotMarker({
     id,
     position,
@@ -3470,7 +4046,9 @@ export class WebXRApp {
         || hotspot.id === 'go-to-museum';
       const interactionName = isScenePortal
         ? hotspot.id
-        : (HOTSPOT_TABLES[hotspot.id] ? hotspot.id : null);
+        : ((HOTSPOT_TABLES[hotspot.id] || MUSEUM_CONTENT_HOTSPOTS[hotspot.id])
+          ? hotspot.id
+          : null);
       const { root } = this._buildHotspotMarker({
         id: hotspot.id,
         position: hotspot.position,
@@ -3809,6 +4387,9 @@ export class WebXRApp {
     // an already-open viewer bypass the per-button splat test.
     if (object.userData?.isXrTablePickable) {
       return true;
+    }
+    if (object.userData?.isMuseumContentPickable) {
+      return Boolean(this.museumContentViewer?.isOpen);
     }
     return Boolean(
       object.userData?.isMuseumArtifactPickable
@@ -4269,6 +4850,7 @@ export class WebXRApp {
     this.xrHotspotTableId = '';
     this.xrHotspotTableDetail = null;
     this._hideExpandedHotspotImage();
+    this._disposeMuseumContentViewer({ restoreSource: false });
     this._disposeMuseumArtifactStation();
     this._clearFloatingHotspotLabels();
 
@@ -4328,6 +4910,9 @@ export class WebXRApp {
     }
     addVisibleRenderables(this.museumArtifactStation?.toggleSprite);
     addVisibleRenderables(this.xrHotspotTableViewer);
+    if (this.museumContentViewer?.isOpen) {
+      addVisibleRenderables(this.museumContentViewer.root);
+    }
 
     return [...blockers];
   }
@@ -4414,6 +4999,11 @@ export class WebXRApp {
   }
 
   _onGlobalKeyDown(event) {
+    if (event.code === 'Escape' && this.museumContentViewer?.isOpen) {
+      this._disposeMuseumContentViewer();
+      return;
+    }
+
     if (event.code === 'Escape' && this.expandedHotspotOverlay && !this.expandedHotspotOverlay.classList.contains('hidden')) {
       this._hideExpandedHotspotImage();
       return;
@@ -4510,8 +5100,9 @@ export class WebXRApp {
 
     try {
       this._updateMuseumArtifactStation(dt);
+      this._updateMuseumContentViewer(dt);
     } catch (error) {
-      console.error('[xr] artifact station update failed', error);
+      console.error('[xr] museum exhibit update failed', error);
     }
 
     if (!this.renderer.xr.isPresenting) {
