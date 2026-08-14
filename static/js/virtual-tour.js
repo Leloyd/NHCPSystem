@@ -16,7 +16,7 @@
   const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
   const captureViewButton = document.getElementById("tourCaptureView");
   const toggleFullscreenButton = document.getElementById("tourToggleFullscreen");
-  const backToExhibitsButton = document.getElementById("tourBackToExhibits");
+  const backToInteractiveButton = document.getElementById("tourBackToInteractive");
   const listenButton = document.getElementById("tourListen");
   const muteButton = document.getElementById("tourMute");
   const subtitlesButton = document.getElementById("tourSubs");
@@ -51,7 +51,7 @@
   const fullscreenTarget = document.documentElement;
   const canUseNativeFullscreen = !isIOSDevice && typeof fullscreenTarget.requestFullscreen === "function" && typeof document.exitFullscreen === "function";
   const canUseFullscreen = canUseNativeFullscreen;
-  const digitalExhibitsUrl = app ? app.dataset.digitalExhibitsUrl : "";
+  const interactiveUrl = app ? app.dataset.interactiveUrl : "";
   const balanghayImageSrc = app ? app.dataset.balanghayImageSrc : "";
   const balanghayGlbSrc = app ? app.dataset.balanghayGlbSrc : "";
   const balanghayTagalogAudioSrc = app ? app.dataset.balanghayTagalogAudioSrc : "";
@@ -4913,10 +4913,10 @@
     });
   }
 
-  if (backToExhibitsButton) {
-    backToExhibitsButton.addEventListener("click", function () {
-      if (digitalExhibitsUrl) {
-        window.location.href = digitalExhibitsUrl;
+  if (backToInteractiveButton) {
+    backToInteractiveButton.addEventListener("click", function () {
+      if (interactiveUrl) {
+        window.location.href = interactiveUrl;
       }
     });
   }

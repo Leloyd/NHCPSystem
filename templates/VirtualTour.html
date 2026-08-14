@@ -73,7 +73,7 @@
       data-panorama-museum1-src="{{ url_for('virtual_tour_file', filename='1Museum.jpg') }}"
       data-panorama-museum2-src="{{ url_for('virtual_tour_file', filename='2Museum.jpg') }}"
       data-panorama-museum3-src="{{ url_for('virtual_tour_file', filename='3Museum.jpg') }}"
-      data-digital-exhibits-url="{{ url_for('digital_exhibits') }}"
+      data-interactive-url="{{ url_for('interactive') }}"
       data-minimap-url="{{ url_for('static', filename='data/tour-minimap.json') }}"
       data-inside-chapel-art1-left-table-image-src="{{ url_for('public_images_file', filename='360InsideChapel/Art1-LeftTable.png') }}"
       data-inside-chapel-art2-left-table-image-src="{{ url_for('public_images_file', filename='360InsideChapel/Art2-LeftTable.png') }}"
@@ -249,7 +249,7 @@
       <div class="tour-overlay tour-overlay--center" id="tourErrorOverlay" hidden>
         <section class="tour-status-card tour-status-card--error">
           <p class="tour-status-card__title">Unable to load the panorama</p>
-          <p class="tour-status-card__copy">Please refresh the page or return to Digital Exhibits and try again.</p>
+          <p class="tour-status-card__copy">Please refresh the page or return to Interactive &amp; Immersive and try again.</p>
         </section>
       </div>
 
@@ -280,7 +280,7 @@
         <button class="tour-btn" id="tourCaptureView" type="button" aria-label="Capture current view">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8.25 6.5 9.4 5.1c.29-.35.72-.55 1.17-.55h2.86c.45 0 .88.2 1.17.55l1.15 1.4h1.75A2.5 2.5 0 0 1 20 9v8.25a2.5 2.5 0 0 1-2.5 2.5h-11A2.5 2.5 0 0 1 4 17.25V9a2.5 2.5 0 0 1 2.5-2.5h1.75Zm2.32-.45L9.42 7.5H6.5c-.83 0-1.5.67-1.5 1.5v8.25c0 .83.67 1.5 1.5 1.5h11c.83 0 1.5-.67 1.5-1.5V9c0-.83-.67-1.5-1.5-1.5h-2.92l-1.15-1.45a.52.52 0 0 0-.4-.2h-2.86a.52.52 0 0 0-.4.2ZM12 9a4 4 0 1 1 0 8 4 4 0 0 1 0-8Zm0 1a3 3 0 1 0 0 6 3 3 0 0 0 0-6Z"/></svg>
         </button>
-        <button class="tour-btn" id="tourBackToExhibits" type="button" aria-label="Back to Digital Exhibits">
+        <button class="tour-btn" id="tourBackToInteractive" type="button" aria-label="Back to Interactive and Immersive">
           <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M10.53 5.47a.75.75 0 0 1 0 1.06L5.81 11.25H20a.75.75 0 0 1 0 1.5H5.81l4.72 4.72a.75.75 0 1 1-1.06 1.06l-6-6a.75.75 0 0 1 0-1.06l6-6a.75.75 0 0 1 1.06 0Z"/></svg>
         </button>
       </div>

@@ -1847,9 +1847,14 @@
   }
 
   function configureBackButton() {
-    if (!backButton) {
+    if (!backButton || backButton.dataset.arBackConfigured === "true") {
       return;
     }
+
+    // This setup is called during both early bootstrap and control binding.
+    // Guard it so one click cannot trigger history.back() twice and skip from
+    // Trail Stop 3 to Stop 2 on browsers that restore the trail from bfcache.
+    backButton.dataset.arBackConfigured = "true";
 
     try {
       if (new URLSearchParams(window.location.search).get("from") === "trail") {
