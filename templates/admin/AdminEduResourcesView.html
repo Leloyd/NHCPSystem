@@ -101,7 +101,7 @@
                     <small>{% if resource_item.is_story %}No story image attached{% else %}{{ resource_item.file_filename or 'No resource file uploaded' }}{% endif %}</small>
                   </div>
                   {% endif %}
-                  <figcaption><span>{{ resource_item.category }}</span><span>{{ resource_item.year if resource_item.is_story else resource_item.grade_level }}</span></figcaption>
+                  <figcaption><span>{{ resource_item.category }}</span><span>{{ resource_item.year if resource_item.is_story else resource_item.subject_topic }}</span></figcaption>
                 </figure>
 
                 {% if resource_item.file_url %}
@@ -131,7 +131,6 @@
                 <div class="admin-highlight-view-meta">
                   <span>{{ resource_item.category }}</span>
                   {% if resource_item.is_story and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
-                  {% if not resource_item.is_story and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
                   {% if not resource_item.is_story and resource_item.subject_topic %}<span>{{ resource_item.subject_topic }}</span>{% endif %}
                 </div>
 
@@ -151,7 +150,6 @@
                     <div><dt>Story image</dt><dd>{% if resource_item.cover_image_filename %}Image attached{% else %}No image attached{% endif %}</dd></div>
                     {% else %}
                     <div><dt>Educator / source</dt><dd>{{ resource_item.educator_name or 'Not provided' }}</dd></div>
-                    <div><dt>Grade level</dt><dd>{{ resource_item.grade_level or 'Not provided' }}</dd></div>
                     <div><dt>Subject / topic</dt><dd>{{ resource_item.subject_topic or 'Not provided' }}</dd></div>
                     <div><dt>Resource file</dt><dd>{% if resource_item.file_filename %}{{ resource_item.format }} attached{% else %}No file attached{% endif %}</dd></div>
                     {% endif %}

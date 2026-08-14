@@ -17,7 +17,6 @@
   var authorInput = editor.querySelector("[data-edu-editor-author]");
   var yearInput = editor.querySelector("[data-edu-editor-year]");
   var educatorInput = editor.querySelector("[data-edu-editor-educator]");
-  var gradeInput = editor.querySelector("[data-edu-editor-grade]");
   var topicInput = editor.querySelector("[data-edu-editor-topic]");
   var kindOutput = editor.querySelector("[data-edu-editor-kind]");
   var categoryOutputs = Array.prototype.slice.call(
@@ -169,8 +168,7 @@
       ? normalize(authorInput && authorInput.value) ||
         normalize(yearInput && yearInput.value) ||
         "Community story"
-      : normalize(gradeInput && gradeInput.value) ||
-        normalize(topicInput && topicInput.value) ||
+      : normalize(topicInput && topicInput.value) ||
         "Learning material";
     contextOutputs.forEach(function (output) {
       output.textContent = value;
@@ -353,7 +351,6 @@
     if (!isStory) {
       requirements.push(
         { field: educatorInput, min: 2, message: "Educator name or source must be at least 2 characters." },
-        { field: gradeInput, min: 2, message: "Grade level must be at least 2 characters." },
         { field: topicInput, min: 2, message: "Subject or topic must be at least 2 characters." }
       );
     }
@@ -411,12 +408,12 @@
   if (fileInput) {
     fileInput.addEventListener("change", handleFileSelection);
   }
-  [authorInput, yearInput, gradeInput, topicInput]
+  [authorInput, yearInput, topicInput]
     .filter(Boolean)
     .forEach(function (field) {
       field.addEventListener("input", updateContext);
     });
-  [titleInput, descriptionInput, authorInput, yearInput, educatorInput, gradeInput, topicInput]
+  [titleInput, descriptionInput, authorInput, yearInput, educatorInput, topicInput]
     .filter(Boolean)
     .forEach(function (field) {
       field.addEventListener("input", function () {

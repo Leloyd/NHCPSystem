@@ -92,7 +92,6 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
     author = str(form.get("author") or "").strip()
     year_label = str(form.get("year_label") or "").strip()
     educator_name = str(form.get("educator_name") or "").strip()
-    grade_level = str(form.get("grade_level") or "").strip()
     subject_topic = str(form.get("subject_topic") or "").strip()
 
     if len(title) < 3:
@@ -118,7 +117,6 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
         "author": "",
         "year_label": "",
         "educator_name": "",
-        "grade_level": "",
         "subject_topic": "",
         "file_filename": None,
         "cover_image_filename": None,
@@ -151,13 +149,10 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
     else:
         if len(educator_name) < 2:
             raise ValueError("Educator name / source must be at least 2 characters.")
-        if len(grade_level) < 2:
-            raise ValueError("Grade level must be at least 2 characters.")
         if len(subject_topic) < 2:
             raise ValueError("Subject / topic must be at least 2 characters.")
 
         payload["educator_name"] = educator_name
-        payload["grade_level"] = grade_level
         payload["subject_topic"] = subject_topic
 
         allowed_extensions, invalid_type_message = CATEGORY_ALLOWED_EXTENSIONS[category]

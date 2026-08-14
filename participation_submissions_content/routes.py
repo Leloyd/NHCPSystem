@@ -73,7 +73,6 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
         "is_private": is_private,
         "resource_category": "",
         "story_category": "",
-        "grade_level": "",
         "subject_topic": "",
         "description": "",
         "story_content": "",
@@ -85,13 +84,10 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
 
     if submission_type == "teacher_corner":
         title = str(form.get("title") or "").strip()
-        grade_level = str(form.get("grade_level") or "").strip()
         subject_topic = str(form.get("subject_topic") or "").strip()
         description = str(form.get("description") or "").strip()
         if len(title) < 3:
             raise ValueError("Material title must be at least 3 characters.")
-        if len(grade_level) < 2:
-            raise ValueError("Grade level is required.")
         if len(subject_topic) < 2:
             raise ValueError("Subject / topic is required.")
         if len(description) < 12:
@@ -111,7 +107,6 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
             {
                 "title": title,
                 "resource_category": category,
-                "grade_level": grade_level,
                 "subject_topic": subject_topic,
                 "description": description,
                 "resource_file_filename": uploaded_file_name,

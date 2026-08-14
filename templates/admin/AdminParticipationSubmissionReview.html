@@ -86,7 +86,6 @@
                 <dl class="admin-submission-review-details">
                   <div><dt>Submission type</dt><dd>{{ submission_item.submission_type_label }}</dd></div>
                   <div><dt>Resource category</dt><dd>{{ submission_item.resource_category or 'Story' }}</dd></div>
-                  {% if submission_item.grade_level %}<div><dt>Grade level</dt><dd>{{ submission_item.grade_level }}</dd></div>{% endif %}
                   {% if submission_item.subject_topic or submission_item.story_category %}<div><dt>Subject / story category</dt><dd>{{ submission_item.subject_topic or submission_item.story_category }}</dd></div>{% endif %}
                   <div class="is-wide"><dt>Summary</dt><dd>{{ submission_item.description or submission_item.preview_text or 'No summary provided.' }}</dd></div>
                 </dl>

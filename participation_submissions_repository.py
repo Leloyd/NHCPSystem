@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 PARTICIPATION_SUBMISSIONS_TABLE = "community_participation_submissions"
 PARTICIPATION_SUBMISSIONS_SELECT_FIELDS = (
-    "id, user_id, submission_type, title, resource_category, story_category, submitter_name, submitter_email, grade_level, subject_topic, description, story_content, resource_file_filename, photo_filename, is_private, status, verification_code_hash, verification_sent_at, verification_expires_at, verified_at, reviewed_at, reviewed_by, created_at, updated_at"
+    "id, user_id, submission_type, title, resource_category, story_category, submitter_name, submitter_email, subject_topic, description, story_content, resource_file_filename, photo_filename, is_private, status, verification_code_hash, verification_sent_at, verification_expires_at, verified_at, reviewed_at, reviewed_by, created_at, updated_at"
 )
 
 

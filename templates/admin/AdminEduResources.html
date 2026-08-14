@@ -84,7 +84,7 @@
                 class="admin-gallery-card admin-edu-card is-{{ resource_item.status }}"
                 data-edu-card
                 data-edu-status="{{ resource_item.status }}"
-                data-edu-search="{{ (resource_item.title ~ ' ' ~ resource_item.description ~ ' ' ~ resource_item.category ~ ' ' ~ resource_item.author ~ ' ' ~ resource_item.year ~ ' ' ~ resource_item.educator_name ~ ' ' ~ resource_item.grade_level ~ ' ' ~ resource_item.subject_topic)|lower }}"
+                data-edu-search="{{ (resource_item.title ~ ' ' ~ resource_item.description ~ ' ' ~ resource_item.category ~ ' ' ~ resource_item.author ~ ' ' ~ resource_item.year ~ ' ' ~ resource_item.educator_name ~ ' ' ~ resource_item.subject_topic)|lower }}"
               >
                 <figure class="admin-gallery-card-media admin-edu-card-media is-{{ resource_item.category|lower }}">
                   {% if resource_item.is_story and resource_item.cover_image_url %}
@@ -118,7 +118,7 @@
                   <div class="admin-gallery-card-meta">
                     <span>{{ resource_item.category }}</span>
                     {% if resource_item.is_story and resource_item.year %}<span>{{ resource_item.year }}</span>{% endif %}
-                    {% if not resource_item.is_story and resource_item.grade_level %}<span>{{ resource_item.grade_level }}</span>{% endif %}
+                    {% if not resource_item.is_story and resource_item.subject_topic %}<span>{{ resource_item.subject_topic }}</span>{% endif %}
                   </div>
 
                   <h3>{{ resource_item.title }}</h3>

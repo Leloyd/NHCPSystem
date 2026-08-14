@@ -25,10 +25,8 @@
   const searchClearButton = document.getElementById("resourceSearchClear");
   const resourceTypeTabs = document.getElementById("resourceTypeTabs");
   const typeButtons = resourceTypeTabs ? Array.from(resourceTypeTabs.querySelectorAll("[data-resource-type-filter]")) : [];
-  const gradeFilter = document.getElementById("resourceAudienceFilter");
   const subjectFilter = document.getElementById("resourceFormatFilter");
   const sortFilter = document.getElementById("resourceSortFilter");
-  const gradeLabel = document.getElementById("resourceAudienceLabel");
   const subjectLabel = document.getElementById("resourceFormatLabel");
   const sortLabel = document.getElementById("resourceSortLabel");
   const clearFiltersButton = document.getElementById("resourceClearFilters");
@@ -44,12 +42,10 @@
       headerKicker: "Learning Materials",
       headerCopy: "Browse community stories, presentations, documents, and PDF materials prepared for classroom and heritage learning use.",
       searchLabel: "Search learning resources",
-      searchPlaceholder: "Search by title, author, educator, grade level, or topic...",
+      searchPlaceholder: "Search by title, author, educator, or topic...",
       searchClearLabel: "Clear search",
-      gradeLabel: "Filter by grade level",
       subjectLabel: "Filter by subject / topic",
       sortLabel: "Sort resources",
-      gradeAll: "All Grade Levels",
       subjectAll: "All Subjects / Topics",
       sortNewest: "Newest",
       sortOldest: "Oldest",
@@ -73,12 +69,10 @@
       headerKicker: "Mga Materyal sa Pagkatuto",
       headerCopy: "Tuklasin ang mga kuwentong pangkomunidad, presentasyon, dokumento, at PDF material na inihanda para sa klase at heritage learning.",
       searchLabel: "Maghanap ng mga materyal sa pagkatuto",
-      searchPlaceholder: "Maghanap ayon sa pamagat, awtor, educator, baitang, o paksa...",
+      searchPlaceholder: "Maghanap ayon sa pamagat, awtor, educator, o paksa...",
       searchClearLabel: "I-clear ang paghahanap",
-      gradeLabel: "I-filter ayon sa baitang",
       subjectLabel: "I-filter ayon sa paksa",
       sortLabel: "Ayusin ang mga resource",
-      gradeAll: "Lahat ng Baitang",
       subjectAll: "Lahat ng Paksa",
       sortNewest: "Pinakabago",
       sortOldest: "Pinakaluma",
@@ -237,7 +231,7 @@
     if (item.is_story) {
       return [item.author, item.year, item.category].filter(Boolean).join(" • ");
     }
-    return [item.educator_name, item.grade_level, item.subject_topic, item.format].filter(Boolean).join(" • ");
+    return [item.educator_name, item.subject_topic, item.format].filter(Boolean).join(" • ");
   }
 
   function buildCard(item) {
@@ -290,10 +284,8 @@
     if (resourceSearchLabel) resourceSearchLabel.textContent = strings.searchLabel;
     if (searchInput) searchInput.placeholder = strings.searchPlaceholder;
     if (searchClearButton) searchClearButton.setAttribute("aria-label", strings.searchClearLabel);
-    if (gradeLabel) gradeLabel.textContent = strings.gradeLabel;
     if (subjectLabel) subjectLabel.textContent = strings.subjectLabel;
     if (sortLabel) sortLabel.textContent = strings.sortLabel;
-    if (gradeFilter) gradeFilter.setAttribute("aria-label", strings.gradeLabel);
     if (subjectFilter) subjectFilter.setAttribute("aria-label", strings.subjectLabel);
     if (sortFilter) {
       sortFilter.setAttribute("aria-label", strings.sortLabel);
@@ -313,7 +305,6 @@
         : normalizeText(button.dataset.labelTl) || button.textContent;
       button.textContent = label;
     });
-    populateDynamicOptions(gradeFilter, resources.map((item) => item.grade_level), strings.gradeAll);
     populateDynamicOptions(subjectFilter, resources.map((item) => item.subject_topic), strings.subjectAll);
   }
 
@@ -331,7 +322,7 @@
         resourceCount.textContent = strings.countZero;
       }
       if (clearFiltersButton) {
-        clearFiltersButton.hidden = !getSearchValue() && activeType === "all" && (gradeFilter?.value || "all") === "all" && (subjectFilter?.value || "all") === "all";
+        clearFiltersButton.hidden = !getSearchValue() && activeType === "all" && (subjectFilter?.value || "all") === "all";
       }
       if (window.lucide && typeof window.lucide.createIcons === "function") {
         window.lucide.createIcons();
@@ -344,7 +335,7 @@
       resourceCount.textContent = data.length === 1 ? strings.countSingle : strings.countPlural.replace("{count}", String(data.length));
     }
     if (clearFiltersButton) {
-      clearFiltersButton.hidden = !getSearchValue() && activeType === "all" && (gradeFilter?.value || "all") === "all" && (subjectFilter?.value || "all") === "all";
+      clearFiltersButton.hidden = !getSearchValue() && activeType === "all" && (subjectFilter?.value || "all") === "all";
     }
     if (window.lucide && typeof window.lucide.createIcons === "function") {
       window.lucide.createIcons();
@@ -353,7 +344,6 @@
 
   function applyFilters() {
     const query = getSearchValue();
-    const grade = gradeFilter?.value || "all";
     const subject = subjectFilter?.value || "all";
     const sortMode = sortFilter?.value || "newest";
 
@@ -364,16 +354,14 @@
         item.author,
         item.year,
         item.educator_name,
-        item.grade_level,
         item.subject_topic,
         item.category,
         item.format,
       ].join(" ").toLowerCase();
       const inQuery = haystack.includes(query);
       const inType = activeType === "all" || item.category === activeType;
-      const inGrade = grade === "all" || item.grade_level === grade;
       const inSubject = subject === "all" || item.subject_topic === subject;
-      return inQuery && inType && inGrade && inSubject;
+      return inQuery && inType && inSubject;
     });
 
     updateQueryString();
@@ -418,7 +406,6 @@
     });
   });
 
-  if (gradeFilter) gradeFilter.addEventListener("change", applyFilters);
   if (subjectFilter) subjectFilter.addEventListener("change", applyFilters);
   if (sortFilter) sortFilter.addEventListener("change", applyFilters);
 
@@ -443,9 +430,6 @@
       }
       if (searchClearButton) {
         searchClearButton.hidden = true;
-      }
-      if (gradeFilter) {
-        gradeFilter.value = "all";
       }
       if (subjectFilter) {
         subjectFilter.value = "all";

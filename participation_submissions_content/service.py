@@ -85,7 +85,6 @@ def prepare_participation_submission_item(item: dict[str, Any] | None) -> dict[s
     prepared["title"] = title
     prepared["submitter_name"] = submitter_name
     prepared["submitter_email"] = submitter_email
-    prepared["grade_level"] = str(prepared.get("grade_level") or "").strip()
     prepared["subject_topic"] = str(prepared.get("subject_topic") or "").strip()
     prepared["description"] = description
     prepared["story_content"] = story_content
@@ -196,7 +195,6 @@ def load_public_approved_participation_submission_resources() -> list[dict[str, 
                 "author": contributor_name if category == "Story" else "",
                 "year": "",
                 "educator_name": contributor_name if category != "Story" else "",
-                "grade_level": prepared.get("grade_level") or "",
                 "subject_topic": prepared.get("subject_topic") or prepared.get("story_category") or "",
                 "description": build_submission_excerpt(full_text),
                 "full_text": full_text,

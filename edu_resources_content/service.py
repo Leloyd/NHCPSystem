@@ -66,7 +66,6 @@ def prepare_edu_resource_item(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared["author"] = str(prepared.get("author") or "").strip()
     prepared["year"] = str(prepared.get("year_label") or "").strip()
     prepared["educator_name"] = str(prepared.get("educator_name") or "").strip()
-    prepared["grade_level"] = str(prepared.get("grade_level") or "").strip()
     prepared["subject_topic"] = str(prepared.get("subject_topic") or "").strip()
     prepared["description"] = str(prepared.get("description") or "").strip()
     prepared["full_text"] = str(prepared.get("full_text") or prepared.get("description") or "").strip()
@@ -145,7 +144,6 @@ def build_edu_resource_form_state(source: dict[str, Any] | None = None) -> dict[
         "title": str(source.get("title") or "").strip(),
         "category": category,
         "educator_name": str(source.get("educator_name") or "").strip(),
-        "grade_level": str(source.get("grade_level") or "").strip(),
         "subject_topic": str(source.get("subject_topic") or "").strip(),
         "author": str(source.get("author") or "").strip(),
         "year_label": str(source.get("year_label") or source.get("year") or "").strip(),

@@ -6,7 +6,6 @@ create table if not exists public.community_participation_submissions (
   story_category text not null default '',
   submitter_name text not null,
   submitter_email text not null,
-  grade_level text not null default '',
   subject_topic text not null default '',
   description text not null default '',
   story_content text not null default '',

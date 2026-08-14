@@ -73,7 +73,7 @@
                   <figcaption>
                     <span data-edu-editor-output="category">{{ resource_form.category or 'Select a category' }}</span>
                     <span data-edu-editor-output="context">
-                      {% if resource_form.category in ['Story', 'Books'] %}{{ resource_form.author or resource_form.year_label or 'Community story' }}{% else %}{{ resource_form.grade_level or resource_form.subject_topic or 'Learning material' }}{% endif %}
+                      {% if resource_form.category in ['Story', 'Books'] %}{{ resource_form.author or resource_form.year_label or 'Community story' }}{% else %}{{ resource_form.subject_topic or 'Learning material' }}{% endif %}
                     </span>
                   </figcaption>
                 </figure>
@@ -162,8 +162,7 @@
                   </header>
                   <div class="admin-edu-editor-field-grid">
                     <label class="is-wide"><span>Educator name / source</span><input id="resourceEducatorName" name="educator_name" type="text" maxlength="180" value="{{ resource_form.educator_name }}" placeholder="Enter the educator, office, or source" data-edu-editor-educator /></label>
-                    <label><span>Grade level</span><input id="resourceGradeLevel" name="grade_level" type="text" maxlength="120" value="{{ resource_form.grade_level }}" placeholder="e.g. Grade 6" data-edu-editor-grade /></label>
-                    <label><span>Subject / topic</span><input id="resourceSubjectTopic" name="subject_topic" type="text" maxlength="180" value="{{ resource_form.subject_topic }}" placeholder="e.g. Heritage Awareness" data-edu-editor-topic /></label>
+                    <label class="is-wide"><span>Subject / topic</span><input id="resourceSubjectTopic" name="subject_topic" type="text" maxlength="180" value="{{ resource_form.subject_topic }}" placeholder="e.g. Heritage Awareness" data-edu-editor-topic /></label>
                   </div>
                 </section>
 

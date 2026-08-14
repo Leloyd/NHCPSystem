@@ -79,7 +79,6 @@
       contributor: "Contributor",
       year: "Year",
       source: "Educator / Source",
-      gradeLevel: "Grade Level",
       subject: "Subject / Topic",
       format: "Format",
       fallbackCategory: "Edu Resource",
@@ -113,7 +112,6 @@
       contributor: "Nag-ambag",
       year: "Taon",
       source: "Educator / Source",
-      gradeLevel: "Baitang",
       subject: "Paksa",
       format: "Format",
       fallbackCategory: "Edu Resource",
@@ -192,7 +190,7 @@
     if (item.is_story) {
       return [item.author, item.year, item.category].filter(Boolean).join(" • ");
     }
-    return [item.educator_name, item.grade_level, item.subject_topic, item.format].filter(Boolean).join(" • ");
+    return [item.educator_name, item.subject_topic, item.format].filter(Boolean).join(" • ");
   }
 
   function buildRelatedMediaMarkup(item) {
@@ -360,7 +358,6 @@
         : [
             buildFactItem("tag", strings.category, category),
             buildFactItem("user", strings.source, item.educator_name || strings.metadataUnavailable),
-            buildFactItem("users", strings.gradeLevel, item.grade_level || strings.metadataUnavailable),
             buildFactItem("book-open", strings.subject, item.subject_topic || strings.metadataUnavailable),
             buildFactItem("file-text", strings.format, item.format || strings.metadataUnavailable),
           ].join("");

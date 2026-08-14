@@ -83,7 +83,7 @@
                 class="admin-gallery-card admin-submission-card is-{{ submission_item.status }}"
                 data-submission-card
                 data-submission-status="{{ submission_item.status }}"
-                data-submission-search="{{ (submission_item.title ~ ' ' ~ submission_item.preview_text ~ ' ' ~ submission_item.submission_type_label ~ ' ' ~ submission_item.submitter_name ~ ' ' ~ submission_item.submitter_email ~ ' ' ~ submission_item.resource_category ~ ' ' ~ submission_item.story_category ~ ' ' ~ submission_item.grade_level ~ ' ' ~ submission_item.subject_topic)|lower }}"
+                data-submission-search="{{ (submission_item.title ~ ' ' ~ submission_item.preview_text ~ ' ' ~ submission_item.submission_type_label ~ ' ' ~ submission_item.submitter_name ~ ' ' ~ submission_item.submitter_email ~ ' ' ~ submission_item.resource_category ~ ' ' ~ submission_item.story_category ~ ' ' ~ submission_item.subject_topic)|lower }}"
               >
                 <figure class="admin-gallery-card-media admin-submission-card-media is-{{ submission_item.submission_type }}">
                   {% if submission_item.photo_url %}
@@ -137,7 +137,7 @@
                 <div class="admin-gallery-card-body">
                   <div class="admin-gallery-card-meta">
                     <span>{{ submission_item.resource_category or submission_item.story_category or 'Community Entry' }}</span>
-                    {% if submission_item.grade_level %}<span>{{ submission_item.grade_level }}</span>{% endif %}
+                    {% if submission_item.subject_topic %}<span>{{ submission_item.subject_topic }}</span>{% endif %}
                     <span>{% if submission_item.is_private %}Private attribution{% else %}Public attribution{% endif %}</span>
                   </div>
                   <h3>{{ submission_item.title }}</h3>
