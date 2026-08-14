@@ -7,6 +7,7 @@ from flask import jsonify, redirect, render_template, request, session, url_for
 
 from supabase_client import is_supabase_configured
 from visitor_feedback_repository import create_visitor_feedback, update_visitor_feedback
+from visitor_feedback_sentiment import analyze_feedback_sentiment
 
 from .service import (
     VISITOR_FEEDBACK_STATUS_OPTIONS,
@@ -89,6 +90,7 @@ def register_visitor_feedback_routes(
             payload["user_id"] = int(current_user.get("id"))
             if not str(payload.get("visitor_name") or "").strip():
                 payload["visitor_name"] = str(current_user.get("full_name") or "").strip()
+            payload.update(analyze_feedback_sentiment(payload.get("comments"), payload.get("rating")))
             create_visitor_feedback(payload)
             return jsonify({"ok": True, "message": "Thank you for sharing your experience. Your feedback was received."})
         except ValueError as exc:
@@ -139,6 +141,24 @@ def register_visitor_feedback_routes(
             return redirect(url_for("admin_visitor_feedback"))
 
         moderation_action = str(request.form.get("moderation_action") or "").strip().lower()
+        if moderation_action == "reanalyze":
+            try:
+                analysis = analyze_feedback_sentiment(
+                    feedback_item.get("comments"),
+                    feedback_item.get("rating"),
+                )
+                update_visitor_feedback(feedback_id, analysis)
+            except Exception as exc:
+                app.logger.exception("Failed to analyze visitor feedback %s: %s", feedback_id, exc)
+                return render_admin_visitor_feedback_review(
+                    ensure_admin_csrf_token=ensure_admin_csrf_token,
+                    admin_session_user_key=admin_session_user_key,
+                    admin_username=admin_username,
+                    feedback_item=feedback_item,
+                    error_message="Could not update the sentiment analysis right now.",
+                )
+            return redirect(url_for("admin_visitor_feedback_review", feedback_id=feedback_id, analysis="updated"))
+
         transitions = {
             "reviewed": {
                 "from": {"new"},

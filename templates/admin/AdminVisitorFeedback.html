@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'visitor-feedback' %}
 {% set admin_topbar_title = 'Visitor Feedback' %}
-{% set admin_topbar_subtitle = 'Review visitor experiences and monitor satisfaction across on-site and website visits.' %}
+{% set admin_topbar_subtitle = 'Review visitor experiences, ratings, and automated sentiment across on-site and website visits.' %}
 
 {% block admin_content %}
           {% if status_message %}
@@ -57,7 +57,7 @@
                 <span class="admin-feedback-metric-icon is-positive" aria-hidden="true">
                   <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm-7.2 5a5 5 0 0 0 8.4 0l-1.7-1a3 3 0 0 1-5 0Z"></path></svg>
                 </span>
-                <span><small>Positive experience</small><strong>{{ feedback_analytics.positive_percent }}<em>%</em></strong><span>{{ feedback_analytics.positive_count }} ratings of 4 or 5</span></span>
+                <span><small>Positive sentiment</small><strong>{{ feedback_analytics.positive_percent }}<em>%</em></strong><span>{{ feedback_analytics.positive_count }} of {{ feedback_analytics.analyzed_total }} responses</span></span>
               </article>
             </div>
 
@@ -99,6 +99,27 @@
                 </div>
               </section>
             </div>
+
+            <section class="admin-feedback-sentiment-summary" aria-labelledby="feedbackSentimentTitle">
+              <header>
+                <div>
+                  <p>Automated comment analysis</p>
+                  <h3 id="feedbackSentimentTitle">Sentiment Distribution</h3>
+                  <span>English and Filipino comments are classified as positive, neutral, or negative. Results support—not replace—staff review.</span>
+                </div>
+                <span>{{ feedback_analytics.stored_analysis_count }} stored analyses</span>
+              </header>
+              <div class="admin-feedback-sentiment-grid">
+                {% for sentiment in feedback_analytics.sentiment_distribution %}
+                <article class="is-{{ sentiment.key }}">
+                  <span>{{ sentiment.label }}</span>
+                  <strong>{{ sentiment.count }}</strong>
+                  <div aria-label="{{ sentiment.percent }} percent {{ sentiment.label|lower }}"><i style="--feedback-value: {{ sentiment.percent }}%;"></i></div>
+                  <small>{{ sentiment.percent }}% of analyzed responses</small>
+                </article>
+                {% endfor %}
+              </div>
+            </section>
           </section>
 
           <section class="admin-gallery-manager admin-feedback-manager" data-admin-feedback-manager data-feedback-filter="{{ status_filter }}">
@@ -159,7 +180,7 @@
 
                 <div class="admin-gallery-card-body">
                   <div class="admin-gallery-card-meta">
-                    <span class="is-{{ feedback_item.sentiment_class }}">{{ feedback_item.sentiment_label }}</span>
+                    <span class="is-{{ feedback_item.sentiment_class }}">{{ feedback_item.sentiment_label }} · {{ feedback_item.sentiment_confidence_percent }}%</span>
                     <span>{{ feedback_item.display_date }}</span>
                   </div>
                   <h3>{{ feedback_item.visitor_display }}</h3>
@@ -167,6 +188,7 @@
                   <div class="admin-gallery-card-assets admin-feedback-card-details">
                     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v14H3Zm2 2v10h14V6Z"></path></svg>{{ feedback_item.visit_type_label }}</span>
                     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14v18H5Zm2 2v14h10V5Z"></path></svg>{% if feedback_item.comments %}Comment included{% else %}Rating only{% endif %}</span>
+                    <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1 5h2v6h-2Zm0 8h2v2h-2Z"></path></svg>{{ feedback_item.sentiment_method_label }}</span>
                   </div>
                 </div>
 

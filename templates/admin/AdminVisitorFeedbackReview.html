@@ -5,7 +5,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout' %}
 {% set admin_active_page = 'visitor-feedback' %}
 {% set admin_topbar_title = 'Review Visitor Feedback' if is_new_feedback else 'Visitor Feedback Details' %}
-{% set admin_topbar_subtitle = 'Inspect the visitor rating, experience channel, comments, and moderation record.' %}
+{% set admin_topbar_subtitle = 'Inspect the visitor rating, written comment, sentiment estimate, and moderation record.' %}
 {% set admin_topbar_tool_href = url_for('admin_visitor_feedback', filter=feedback_item.status) %}
 {% set admin_topbar_tool_label = 'Back to feedback' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
@@ -14,14 +14,17 @@
           {% if error_message %}
           <section class="admin-alert admin-alert-error"><strong>Unable to save</strong><span>{{ error_message }}</span></section>
           {% endif %}
+          {% if analysis_message %}
+          <section class="admin-alert admin-alert-success"><strong>Analysis updated</strong><span>{{ analysis_message }}</span></section>
+          {% endif %}
 
           <article class="admin-submission-record admin-feedback-record">
             <div class="admin-submission-record-accent" aria-hidden="true"></div>
             <header class="admin-submission-record-hero">
               <span class="admin-submission-record-mark admin-feedback-record-mark is-{{ feedback_item.sentiment_class }}" aria-hidden="true">
-                {% if feedback_item.rating >= 4 %}
+                {% if feedback_item.sentiment_key == 'positive' %}
                 <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm-7.2 5a5 5 0 0 0 8.4 0l-1.7-1a3 3 0 0 1-5 0Z"></path></svg>
-                {% elif feedback_item.rating == 3 %}
+                {% elif feedback_item.sentiment_key == 'neutral' %}
                 <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm-7 5h8v2H8Z"></path></svg>
                 {% else %}
                 <svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 1-10 10A10 10 0 0 1 12 2ZM7 9h2v2H7Zm8 0h2v2h-2Zm1 8H8a4 4 0 0 1 8 0Z"></path></svg>
@@ -61,13 +64,38 @@
                 </blockquote>
               </section>
 
+              <section class="admin-submission-review-section admin-feedback-analysis-section">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M4 4h16v16H4Zm2 2v12h12V6Zm2 8h2v2H8Zm3-4h2v6h-2Zm3-2h2v8h-2Z"></path></svg></span><div><h3>Sentiment Analysis</h3><p>An automated estimate of the tone expressed in the written feedback.</p></div></header>
+                <div class="admin-feedback-analysis-result">
+                  <div class="admin-feedback-analysis-verdict is-{{ feedback_item.sentiment_class }}">
+                    <span><small>Estimated sentiment</small><strong>{{ feedback_item.sentiment_label }}</strong></span>
+                    <em>{{ feedback_item.sentiment_confidence_percent }}% confidence</em>
+                  </div>
+                  <div class="admin-feedback-analysis-bars">
+                    {% for score in feedback_item.sentiment_score_rows %}
+                    <div class="is-{{ score.key }}"><span>{{ score.label }}</span><div><i style="--feedback-value: {{ score.percent }}%;"></i></div><strong>{{ score.percent }}%</strong></div>
+                    {% endfor %}
+                  </div>
+                  <dl class="admin-submission-review-details">
+                    <div><dt>Analysis method</dt><dd>{{ feedback_item.sentiment_method_label }}</dd></div>
+                    <div><dt>Analyzed</dt><dd>{{ feedback_item.sentiment_analyzed_display }}</dd></div>
+                  </dl>
+                  <p class="admin-feedback-analysis-notice">Automated sentiment can misunderstand context, mixed language, humor, or sarcasm. Read the original comment before taking administrative action.</p>
+                  <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}">
+                    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+                    <input type="hidden" name="moderation_action" value="reanalyze" />
+                    <button type="submit" class="admin-feedback-analysis-action">Run analysis again</button>
+                  </form>
+                </div>
+              </section>
+
               <section class="admin-submission-review-section">
                 <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 12a5 5 0 1 0-5-5 5 5 0 0 0 5 5ZM4 22v-2a7 7 0 0 1 14 0v2h-2v-2a5 5 0 0 0-10 0v2Z"></path></svg></span><div><h3>Feedback Details</h3><p>Visitor identity, rating classification, and experience channel.</p></div></header>
                 <dl class="admin-submission-review-details">
                   <div><dt>Visitor</dt><dd>{{ feedback_item.visitor_display }}</dd></div>
                   <div><dt>Visit type</dt><dd>{{ feedback_item.visit_type_label }}</dd></div>
                   <div><dt>Rating</dt><dd>{{ feedback_item.rating }} out of 5</dd></div>
-                  <div><dt>Experience classification</dt><dd>{{ feedback_item.sentiment_label }}</dd></div>
+                  <div><dt>Automated sentiment</dt><dd>{{ feedback_item.sentiment_label }} ({{ feedback_item.sentiment_confidence_percent }}%)</dd></div>
                   <div class="is-wide"><dt>Submitted</dt><dd>{{ feedback_item.display_date }}</dd></div>
                 </dl>
               </section>
