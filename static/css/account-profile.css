@@ -1,19 +1,19 @@
 :root {
-  --ap-bg: #f4f1e9;
+  --ap-bg: #faf6ef;
   --ap-surface: #fffdf8;
-  --ap-surface-soft: #f8f4ea;
-  --ap-surface-strong: #eee7d8;
-  --ap-ink: #17201e;
-  --ap-muted: #66716d;
-  --ap-faint: #66716d;
-  --ap-line: #ded8ca;
-  --ap-brand: #174b43;
-  --ap-brand-deep: #0d302c;
-  --ap-brand-soft: #dcebe6;
+  --ap-surface-soft: #f8f1e5;
+  --ap-surface-strong: #eee4d2;
+  --ap-ink: #211a10;
+  --ap-muted: #6b5a40;
+  --ap-faint: #6b5a40;
+  --ap-line: #ded3be;
+  --ap-brand: #465035;
+  --ap-brand-deep: #303820;
+  --ap-brand-soft: #e8eadb;
   --ap-gold: #8f5b18;
   --ap-gold-soft: #f2e4c7;
   --ap-danger: #9b3d38;
-  --ap-shadow: 0 1rem 2.8rem rgba(28, 42, 38, 0.08);
+  --ap-shadow: 0 1rem 2.8rem rgba(48, 36, 19, 0.09);
   --ap-radius-lg: 1.5rem;
   --ap-radius-md: 1rem;
   --ap-radius-sm: 0.75rem;
@@ -30,7 +30,7 @@
   color: var(--ap-ink);
   background:
     radial-gradient(circle at 7% 12%, rgba(177, 122, 50, 0.1), transparent 24rem),
-    radial-gradient(circle at 94% 32%, rgba(23, 75, 67, 0.07), transparent 28rem),
+    radial-gradient(circle at 94% 32%, rgba(70, 80, 53, 0.08), transparent 28rem),
     var(--ap-bg);
   font-family: "DM Sans", Inter, Arial, sans-serif;
   line-height: 1.5;
@@ -67,7 +67,7 @@
   z-index: 200;
   padding: 0.75rem 1rem;
   color: #fff;
-  background: #0d302c;
+  background: #303820;
   border-radius: 0.5rem;
   font-weight: 700;
   text-decoration: none;
@@ -128,11 +128,11 @@
   padding: clamp(2rem, 4.5vw, 3.75rem);
   color: #f9f6eb;
   background:
-    linear-gradient(118deg, rgba(4, 28, 25, 0.08), rgba(3, 22, 20, 0.55)),
-    linear-gradient(135deg, #1b5a50, #0e3530 72%);
+    linear-gradient(118deg, rgba(31, 32, 17, 0.08), rgba(24, 25, 13, 0.5)),
+    linear-gradient(135deg, #566142, #303820 72%);
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: var(--ap-radius-lg);
-  box-shadow: 0 1.5rem 4rem rgba(10, 42, 37, 0.2);
+  box-shadow: 0 1.5rem 4rem rgba(39, 38, 20, 0.22);
 }
 
 .ap-hero::before {
@@ -184,7 +184,7 @@
   aspect-ratio: 1;
   place-items: center;
   overflow: hidden;
-  color: #183b35;
+  color: #363a22;
   object-fit: cover;
   background: linear-gradient(145deg, #f7e9c5, #cda75f);
   border: 0.35rem solid rgba(255, 255, 255, 0.2);
@@ -205,9 +205,9 @@ img.ap-avatar {
   width: 2rem;
   height: 2rem;
   place-items: center;
-  color: #174b43;
+  color: #465035;
   background: #f2d58f;
-  border: 0.2rem solid #164940;
+  border: 0.2rem solid #465035;
   border-radius: 50%;
 }
 
@@ -253,7 +253,7 @@ img.ap-avatar {
 .ap-hero__intro {
   max-width: 43rem;
   margin: 1rem 0 0;
-  color: #d6e3df;
+  color: #e1e6d7;
   font-size: clamp(0.95rem, 1.4vw, 1.08rem);
   line-height: 1.7;
 }
@@ -291,7 +291,7 @@ img.ap-avatar {
 }
 
 .ap-button--light {
-  color: #143f38;
+  color: #363a22;
   background: #fffaf0;
 }
 
@@ -338,7 +338,7 @@ img.ap-avatar {
 
 .ap-stat:hover {
   transform: translateY(-3px);
-  border-color: rgba(23, 75, 67, 0.4);
+  border-color: rgba(70, 80, 53, 0.45);
   box-shadow: var(--ap-shadow);
 }
 
@@ -594,10 +594,10 @@ img.ap-avatar {
   color: #f8f6ef;
   background:
     radial-gradient(circle at 86% -10%, rgba(234, 201, 130, 0.22), transparent 18rem),
-    linear-gradient(135deg, #173f39, #0b2c28);
+    linear-gradient(135deg, #465035, #20261a);
   border: 1px solid rgba(230, 199, 132, 0.35);
   border-radius: var(--ap-radius-lg);
-  box-shadow: 0 1rem 2.6rem rgba(9, 40, 35, 0.15);
+  box-shadow: 0 1rem 2.6rem rgba(38, 35, 18, 0.18);
 }
 
 .ap-keeper__top {
@@ -619,7 +619,7 @@ img.ap-avatar {
 .ap-keeper__top > div:first-child > p:last-child {
   max-width: 37rem;
   margin: 0.65rem 0 0;
-  color: #c6d8d3;
+  color: #d6dccd;
   font-size: 0.9rem;
   line-height: 1.65;
 }
@@ -640,7 +640,7 @@ img.ap-avatar {
   height: 5.7rem;
   place-content: center;
   text-align: center;
-  background: #103530;
+  background: #2b321f;
   border-radius: 50%;
 }
 
@@ -655,7 +655,7 @@ img.ap-avatar {
 
 .ap-progress-ring span {
   margin-top: 0.25rem;
-  color: #c7d8d3;
+  color: #d6dccd;
   font-size: 0.68rem;
   font-weight: 600;
 }
@@ -704,7 +704,7 @@ img.ap-avatar {
 .ap-journey__label {
   padding-right: 0.1rem;
   overflow-wrap: anywhere;
-  color: #eaf1ef;
+  color: #f1f1e8;
   font-size: 0.76rem;
   font-weight: 700;
 }
@@ -735,7 +735,7 @@ img.ap-avatar {
 .ap-journey__arrow {
   width: 0.95rem;
   height: 0.95rem;
-  color: #91aaa4;
+  color: #b6bca7;
 }
 
 .ap-keeper__footer {
@@ -745,7 +745,7 @@ img.ap-avatar {
   justify-content: space-between;
   gap: 1rem;
   padding: 0.8rem clamp(1.25rem, 3vw, 2rem);
-  color: #c6d8d3;
+  color: #d6dccd;
   font-size: 0.78rem;
 }
 
@@ -908,7 +908,7 @@ img.ap-avatar {
 
 a.ap-entry:hover {
   background: var(--ap-brand-soft);
-  border-color: rgba(23, 75, 67, 0.35);
+  border-color: rgba(70, 80, 53, 0.4);
 }
 
 .ap-entry__icon {
@@ -1065,17 +1065,17 @@ a.ap-entry:hover {
 
 /* Dark theme */
 html[data-theme="dark"] {
-  --ap-bg: #0d1513;
-  --ap-surface: #15211f;
-  --ap-surface-soft: #111b19;
-  --ap-surface-strong: #20302d;
-  --ap-ink: #f2eee4;
-  --ap-muted: #bdc7c2;
-  --ap-faint: #98a8a2;
-  --ap-line: #344640;
-  --ap-brand: #79b9aa;
-  --ap-brand-deep: #b8ded4;
-  --ap-brand-soft: #213a35;
+  --ap-bg: #141009;
+  --ap-surface: #211a10;
+  --ap-surface-soft: #1a140c;
+  --ap-surface-strong: #2a2114;
+  --ap-ink: #f3ece0;
+  --ap-muted: #c4b494;
+  --ap-faint: #b6a684;
+  --ap-line: #514329;
+  --ap-brand: #c5cc9a;
+  --ap-brand-deep: #e1e4bd;
+  --ap-brand-soft: #30301e;
   --ap-gold: #e0bd78;
   --ap-gold-soft: #392e1e;
   --ap-shadow: 0 1rem 2.8rem rgba(0, 0, 0, 0.3);
@@ -1084,7 +1084,7 @@ html[data-theme="dark"] {
 html[data-theme="dark"] .ap-page {
   background:
     radial-gradient(circle at 8% 12%, rgba(224, 189, 120, 0.07), transparent 24rem),
-    radial-gradient(circle at 94% 32%, rgba(121, 185, 170, 0.06), transparent 28rem),
+    radial-gradient(circle at 94% 32%, rgba(197, 204, 154, 0.05), transparent 28rem),
     var(--ap-bg) !important;
 }
 
@@ -1101,9 +1101,9 @@ html[data-theme="dark"] .ap-roles__list span {
 
 html[data-theme="dark"] .ap-icon-link:hover,
 html[data-theme="dark"] .ap-collection__head > strong {
-  color: #0d1b18;
-  background: #8dc6b8;
-  border-color: #8dc6b8;
+  color: #171109;
+  background: #c5cc9a;
+  border-color: #c5cc9a;
 }
 
 html[data-theme="dark"] .ap-status {
