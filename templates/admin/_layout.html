@@ -7,6 +7,7 @@
     <title>{{ admin_document_title or 'NHCP Admin' }}</title>
     <link rel="icon" type="image/jpeg" href="/images/UndergroundLogo.jpg" />
     <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-dashboard.css') }}" />
+    {% block admin_head %}{% endblock %}
     <script defer src="{{ url_for('static', filename='admin/js/admin-dashboard.js') }}"></script>
   </head>
   <body class="admin-dashboard-page">
@@ -52,5 +53,6 @@
         </div>
       </section>
     </div>
+    {% block admin_scripts %}{% endblock %}
   </body>
 </html>
