@@ -5,6 +5,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from virtual_tour_content import service
+from virtual_tour_content.routes import _normalize_yaw
 
 
 class _StorageBucket:
@@ -32,6 +33,11 @@ class _Client:
 
 
 class VirtualTourServiceTests(unittest.TestCase):
+    def test_original_import_normalizes_equivalent_yaw_angles(self):
+        self.assertEqual(_normalize_yaw(248, label="Yaw"), -112)
+        self.assertEqual(_normalize_yaw(-200, label="Target yaw"), 160)
+        self.assertEqual(_normalize_yaw(180, label="Yaw"), 180)
+
     def test_slugify_creates_stable_url_key(self):
         self.assertEqual(service.slugify("  New Museum 360! "), "new-museum-360")
 

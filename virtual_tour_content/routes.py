@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import math
 import os
 from datetime import datetime, timezone
 from typing import Any
@@ -57,6 +58,22 @@ def _number(value: Any, *, minimum: float, maximum: float, label: str, default: 
     if result < minimum or result > maximum:
         raise ValueError(f"{label} must be between {minimum:g} and {maximum:g}.")
     return round(result, 2)
+
+
+def _normalize_yaw(value: Any, *, label: str, default: float | None = None) -> float | None:
+    """Wrap an equivalent panorama heading into the database's -180..180 range."""
+    if value in (None, ""):
+        return default
+    try:
+        result = float(value)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a number.") from exc
+    if not math.isfinite(result):
+        raise ValueError(f"{label} must be a finite number.")
+    normalized = ((result + 180) % 360) - 180
+    if normalized == -180 and result > 0:
+        normalized = 180
+    return round(normalized, 2)
 
 
 def _clean_text(value: Any, *, label: str, minimum: int = 0, maximum: int = 5000) -> str:
@@ -155,7 +172,7 @@ def register_virtual_tour_content_routes(
                     "name_tl": "", "panorama_path": panorama, "panorama_width": 4096,
                     "panorama_height": 2048, "panorama_mime": "image/jpeg", "validation_status": "valid",
                     "initial_pitch": _number(source.get("pitch"), minimum=-90, maximum=90, label="Initial pitch", default=0),
-                    "initial_yaw": _number(source.get("yaw"), minimum=-180, maximum=180, label="Initial yaw", default=0),
+                    "initial_yaw": _normalize_yaw(source.get("yaw"), label="Initial yaw", default=0),
                     "initial_hfov": _number(source.get("hfov"), minimum=30, maximum=150, label="Initial field of view", default=100),
                     "is_start_scene": str(source.get("id")) == str(data.get("startScene") or "frontGate"), "sort_order": index,
                 })
@@ -205,9 +222,11 @@ def register_virtual_tour_content_routes(
                         "name_en": _clean_text(name.get("en") or name.get("tl") or "Museum hotspot", label="Hotspot name", minimum=2, maximum=120),
                         "name_tl": _clean_text(name.get("tl"), label="Tagalog hotspot name", maximum=120),
                         "pitch": _number(hotspot.get("pitch"), minimum=-90, maximum=90, label="Pitch"),
-                        "yaw": _number(hotspot.get("yaw"), minimum=-180, maximum=180, label="Yaw"),
+                        "yaw": _normalize_yaw(hotspot.get("yaw"), label="Yaw"),
                         "target_scene_id": target["id"] if target else None,
-                        "target_pitch": hotspot.get("targetPitch"), "target_yaw": hotspot.get("targetYaw"), "target_hfov": hotspot.get("targetHfov"),
+                        "target_pitch": hotspot.get("targetPitch"),
+                        "target_yaw": _normalize_yaw(hotspot.get("targetYaw"), label="Target yaw"),
+                        "target_hfov": hotspot.get("targetHfov"),
                         "image_path": image_path, "glb_path": safe_asset(content.get("glb")),
                         "subtitle_en": _clean_text(subtitle.get("en"), label="English subtitle"),
                         "subtitle_tl": _clean_text(subtitle.get("tl"), label="Tagalog subtitle"),
