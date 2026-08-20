@@ -8,10 +8,10 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,600&family=Inter:wght@400;500;600;700&family=Cormorant+Garamond:ital,wght@1,600&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     {% include 'partials/_site_prefs_head.html' %}
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper-page.css') }}?v=20260812-plate-layout-3" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/heritage-keeper-page.css') }}?v=20260820-account-system-1" />
     <script type="importmap">
       {
         "imports": {
@@ -22,16 +22,17 @@
     </script>
   </head>
   <body class="hk-page">
+    <a class="hk-skip-link" href="#heritageKeeperMain"><span data-lang-en>Skip to Heritage Keeper</span><span data-lang-tl>Lumaktaw sa Tagapangalaga ng Pamana</span></a>
     {% set public_active_page = '' %}
     {% include 'partials/_public_top_nav.html' %}
 
-    <main class="hk-page__main">
+    <main id="heritageKeeperMain" class="hk-page__main" tabindex="-1">
       <nav class="hk-page__crumb" aria-label="Breadcrumb">
         <a href="{{ url_for('index') }}"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
-        <span aria-hidden="true">&gt;</span>
+        <i data-lucide="chevron-right" aria-hidden="true"></i>
         <a href="{{ url_for('account_profile') }}"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></a>
-        <span aria-hidden="true">&gt;</span>
-        <span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span>
+        <i data-lucide="chevron-right" aria-hidden="true"></i>
+        <span aria-current="page"><span data-lang-en>Heritage Keeper</span><span data-lang-tl>Tagapangalaga ng Pamana</span></span>
       </nav>
 
       {% set trail_fragments = heritage_keeper.fragments[:heritage_keeper.trail_required] %}
@@ -99,6 +100,15 @@
             </div>
             <div class="hk-journey__track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ heritage_keeper.ar_required }}" aria-valuenow="{{ heritage_keeper.ar_count }}" aria-label="AR Restoration fragments">
               <span style="width: {{ (heritage_keeper.ar_count / heritage_keeper.ar_required * 100)|round }}%"></span>
+            </div>
+          </div>
+          <div class="hk-journey">
+            <div class="hk-journey__line">
+              <span><span data-lang-en>3D Environments</span><span data-lang-tl>Mga 3D Environment</span></span>
+              <strong>{{ heritage_keeper.webxr_count }} / {{ heritage_keeper.webxr_required }}</strong>
+            </div>
+            <div class="hk-journey__track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ heritage_keeper.webxr_required }}" aria-valuenow="{{ heritage_keeper.webxr_count }}" aria-label="3D Environment fragments">
+              <span style="width: {{ (heritage_keeper.webxr_count / heritage_keeper.webxr_required * 100)|round }}%"></span>
             </div>
           </div>
           </div>
@@ -315,6 +325,7 @@
 
     </main>
 
+    {% include 'partials/_public_footer.html' %}
     {% include 'partials/_site_accessibility_fab.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
     <script>if (window.lucide) window.lucide.createIcons();</script>

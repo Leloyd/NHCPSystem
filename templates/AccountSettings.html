@@ -16,6 +16,9 @@
       })();
     </script>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Playfair+Display:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
     <style>
       :root {
@@ -116,8 +119,10 @@
       @media (prefers-reduced-motion: reduce) { .s-modal-card { animation: none; } }
     </style>
     {% include 'partials/_site_prefs_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/account-settings-page.css') }}" />
   </head>
   <body class="s-page min-h-screen" data-site-prefs-no-reload>
+    <a class="s-skip-link" href="#settingsMain"><span data-lang-en>Skip to settings</span><span data-lang-tl>Lumaktaw sa mga setting</span></a>
     {% set public_active_page = '' %}
     {% include 'partials/_public_top_nav.html' %}
 
@@ -125,20 +130,25 @@
     {% set _parts = _name.split() %}
     {% set _initials = ((_parts[0][:1] if _parts else 'M') ~ (_parts[1][:1] if _parts|length > 1 else '')) | upper %}
 
-    <main class="pt-24 sm:pt-28 pb-16 px-4">
-      <div class="max-w-5xl mx-auto">
+    <main id="settingsMain" class="s-main" tabindex="-1">
+      <div class="s-shell">
         <!-- Breadcrumb -->
-        <nav class="mb-4 flex items-center gap-2 text-xs s-muted">
-          <a href="/" class="hover:opacity-80">Home</a>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
-          <a href="{{ url_for('account_profile') }}" class="hover:opacity-80">My Account</a>
-          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="m9 18 6-6-6-6"></path></svg>
-          <span style="color: var(--s-gold);"><span data-lang-en>Settings</span><span data-lang-tl>Mga Setting</span></span>
+        <nav class="s-breadcrumb" aria-label="Breadcrumb">
+          <a href="{{ url_for('index') }}"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+          <a href="{{ url_for('account_profile') }}"><span data-lang-en>My Account</span><span data-lang-tl>Aking Account</span></a>
+          <i data-lucide="chevron-right" aria-hidden="true"></i>
+          <span aria-current="page"><span data-lang-en>Settings</span><span data-lang-tl>Mga Setting</span></span>
         </nav>
 
-        <header class="mb-6">
-          <p class="s-eyebrow"><span data-lang-en>Account</span><span data-lang-tl>Account</span></p>
-          <h1 class="mt-1 text-3xl font-serif"><span data-lang-en>Settings</span><span data-lang-tl>Mga Setting</span></h1>
+        <header class="s-hero">
+          <div class="s-hero__icon" aria-hidden="true"><i data-lucide="sliders-horizontal"></i></div>
+          <div>
+            <p class="s-eyebrow"><span data-lang-en>Your account</span><span data-lang-tl>Iyong account</span></p>
+            <h1><span data-lang-en>Settings</span><span data-lang-tl>Mga Setting</span></h1>
+            <p class="s-hero__copy"><span data-lang-en>Manage your museum profile, viewing preferences, sign-in security, and account access.</span><span data-lang-tl>Pamahalaan ang iyong museum profile, mga kagustuhan sa pagtingin, seguridad sa pag-sign in, at access sa account.</span></p>
+          </div>
+          <a class="s-hero__back" href="{{ url_for('account_profile') }}"><i data-lucide="arrow-left" aria-hidden="true"></i><span data-lang-en>Back to profile</span><span data-lang-tl>Bumalik sa profile</span></a>
         </header>
 
         {% if status_message %}
@@ -148,9 +158,20 @@
         <div class="s-alert s-alert-err mb-5">{{ error_message }}</div>
         {% endif %}
 
-        <div class="space-y-6">
+        <div class="s-settings-layout">
+          <aside class="s-settings-nav" aria-labelledby="settingsNavTitle">
+            <p id="settingsNavTitle" class="s-settings-nav__title"><span data-lang-en>Settings menu</span><span data-lang-tl>Menu ng mga setting</span></p>
+            <nav>
+              <a href="#profile"><i data-lucide="user-round" aria-hidden="true"></i><span data-lang-en>Profile</span><span data-lang-tl>Profile</span></a>
+              <a href="#accessibility"><i data-lucide="accessibility" aria-hidden="true"></i><span data-lang-en>Accessibility</span><span data-lang-tl>Aksesibilidad</span></a>
+              <a href="#security"><i data-lucide="shield-check" aria-hidden="true"></i><span data-lang-en>Security</span><span data-lang-tl>Seguridad</span></a>
+              <a href="#danger"><i data-lucide="triangle-alert" aria-hidden="true"></i><span data-lang-en>Account access</span><span data-lang-tl>Access sa account</span></a>
+            </nav>
+          </aside>
+
+          <div class="s-settings-content space-y-6">
           <!-- ===== Profile ===== -->
-          <section class="s-card p-6">
+          <section class="s-card p-6" id="profile">
             <div class="mb-5">
               <h2 class="s-card-title text-lg"><span data-lang-en>Profile</span><span data-lang-tl>Profile</span></h2>
               <p class="s-muted text-sm mt-1"><span data-lang-en>Your photo, name, and roles.</span><span data-lang-tl>Ang iyong larawan, pangalan, at mga tungkulin.</span></p>
@@ -205,7 +226,7 @@
           </section>
 
           <!-- ===== Accessibility ===== -->
-          <section class="s-card p-6">
+          <section class="s-card p-6" id="accessibility">
             <h2 class="s-card-title text-lg"><span data-lang-en>Accessibility</span><span data-lang-tl>Aksesibilidad</span></h2>
             <p class="s-muted text-sm mt-1 mb-5"><span data-lang-en>Theme, contrast, language, and text size. These apply across the whole site and are saved to your account.</span><span data-lang-tl>Tema, kontrast, wika, at laki ng teksto. Nalalapat ito sa buong site at nakasave sa iyong account.</span></p>
 
@@ -359,7 +380,7 @@
           </section>
 
           <!-- ===== Danger zone ===== -->
-          <section class="s-card s-danger-card p-6">
+          <section class="s-card s-danger-card p-6" id="danger">
             <h2 class="text-lg font-semibold" style="color: var(--s-danger);"><span data-lang-en>Delete account</span><span data-lang-tl>Burahin ang account</span></h2>
             <p class="s-muted text-sm mt-1 max-w-2xl">
               <span data-lang-en>Your account will be deactivated and you will be signed out. Your data is retained but hidden, and this email cannot be used to sign up again.</span>
@@ -367,9 +388,12 @@
             </p>
             <button type="button" id="openDeleteModal" class="s-btn s-btn-danger mt-4"><span data-lang-en>Delete my account</span><span data-lang-tl>Burahin ang aking account</span></button>
           </section>
+          </div>
         </div>
       </div>
     </main>
+
+    {% include 'partials/_public_footer.html' %}
 
     <!-- Delete confirmation modal -->
     <div class="s-modal" id="deleteModal" hidden>
