@@ -34,11 +34,6 @@ from tour_bookings_content import load_admin_tour_bookings, load_public_tour_boo
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
 from user_management_content import load_admin_public_users, register_user_management_routes
 from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
-from virtual_tour_content import (
-    build_public_tour_config,
-    load_public_tour_options,
-    register_virtual_tour_content_routes,
-)
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
 from webxr_progress_content import (
     collect_webxr_item,
@@ -1039,10 +1034,10 @@ def _set_security_headers(response):
         response.headers["Content-Security-Policy"] = (
             "default-src 'self'; "
             f"img-src {ADMIN_IMAGE_SOURCES}; "
-            "script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com https://cdn.jsdelivr.net; "
+            "script-src 'self' https://cdnjs.cloudflare.com https://ajax.googleapis.com; "
             # <model-viewer> injects its component styles inside Shadow DOM.
             # Inline JavaScript remains blocked; only component CSS is allowed.
-            "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+            "style-src 'self' 'unsafe-inline'; "
             f"connect-src {ADMIN_ASSET_SOURCES}; "
             f"media-src {ADMIN_ASSET_SOURCES}; "
             f"frame-src {ADMIN_ASSET_SOURCES} https://view.officeapps.live.com; "
@@ -1057,12 +1052,6 @@ def _set_security_headers(response):
     if request.path in {"/login", "/signup", "/account"} or request.path.startswith("/account"):
         response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
         response.headers["Pragma"] = "no-cache"
-
-    if request.path == "/virtual-tour" or request.path.startswith("/api/virtual-tours/"):
-        response.headers["Cache-Control"] = "private, no-store, max-age=0"
-        response.headers["Pragma"] = "no-cache"
-    elif request.path == "/interactive":
-        response.headers["Cache-Control"] = "no-cache, must-revalidate"
 
     return response
 
@@ -1509,17 +1498,6 @@ register_edu_resources_routes(
 )
 
 
-register_virtual_tour_content_routes(
-    app,
-    admin_route_prefix=ADMIN_ROUTE_PREFIX,
-    admin_required=_admin_required,
-    ensure_admin_csrf_token=_ensure_admin_csrf_token,
-    is_admin_csrf_valid=_is_admin_csrf_valid,
-    admin_session_user_key=ADMIN_SESSION_USER_KEY,
-    admin_username=ADMIN_DEFAULT_USERNAME,
-)
-
-
 @app.route("/")
 def index():
     return render_template("Landing.html")
@@ -1532,7 +1510,7 @@ def digital_exhibits():
 
 @app.route("/interactive")
 def interactive():
-    return render_template("Interactive.html", virtual_tour_options=load_public_tour_options())
+    return render_template("Interactive.html")
 
 
 @app.route("/online-gallery")
@@ -1559,13 +1537,7 @@ def online_gallery_details():
 
 @app.route("/virtual-tour")
 def virtual_tour():
-    requested_tour = _slugify_text(request.args.get("tour"), fallback="original")
-    dynamic_tour_config = build_public_tour_config(requested_tour)
-    return render_template(
-        "VirtualTour.html",
-        dynamic_tour_config=dynamic_tour_config,
-        selected_virtual_tour_slug=requested_tour if dynamic_tour_config else "original",
-    )
+    return render_template("VirtualTour.html")
 
 
 @app.route("/AR-Artifacts/<path:filename>")

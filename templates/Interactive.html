@@ -259,92 +259,6 @@
         padding: 0.35rem 0.7rem;
       }
 
-      .ix-tour-picker {
-        background: #fff;
-        border: 1px solid rgba(201, 165, 80, 0.24);
-        border-radius: 0.9rem;
-        display: grid;
-        gap: 0.45rem;
-        margin-top: 0.15rem;
-        padding: 0.85rem;
-      }
-
-      .ix-tour-picker label {
-        color: var(--ix-muted);
-        font-size: 0.72rem;
-        font-weight: 700;
-        letter-spacing: 0.08em;
-        text-transform: uppercase;
-      }
-
-      .ix-tour-picker-select-wrap {
-        position: relative;
-      }
-
-      .ix-tour-picker select {
-        appearance: none;
-        background: var(--ix-surface-alt);
-        border: 1px solid rgba(201, 165, 80, 0.32);
-        border-radius: 0.7rem;
-        color: var(--ix-ink);
-        cursor: pointer;
-        font: inherit;
-        font-size: 0.83rem;
-        font-weight: 600;
-        min-height: 2.7rem;
-        padding: 0.65rem 2.4rem 0.65rem 0.75rem;
-        width: 100%;
-      }
-
-      .ix-tour-picker select:focus-visible {
-        border-color: var(--ix-gold);
-        box-shadow: 0 0 0 3px rgba(201, 165, 80, 0.18);
-        outline: none;
-      }
-
-      .ix-tour-picker-select-wrap svg {
-        color: var(--ix-gold);
-        height: 1rem;
-        pointer-events: none;
-        position: absolute;
-        right: 0.75rem;
-        top: 50%;
-        transform: translateY(-50%);
-        width: 1rem;
-      }
-
-      .ix-tour-picker small {
-        color: var(--ix-muted-2);
-        font-size: 0.7rem;
-        line-height: 1.45;
-      }
-
-      html[data-theme="dark"] .ix-tour-picker {
-        background: var(--ix-surface);
-        border-color: rgba(230, 207, 138, 0.28);
-      }
-
-      html[data-contrast="on"] .ix-tour-picker,
-      html[data-contrast="on"] .ix-tour-picker select {
-        background: #000 !important;
-        border-color: #facc15 !important;
-        color: #fff !important;
-      }
-
-      html[data-contrast="on"] .ix-tour-picker select:focus-visible {
-        outline: 3px solid #facc15;
-        outline-offset: 2px;
-        box-shadow: none;
-      }
-
-      .ix-card-link[type="submit"] {
-        background: transparent;
-        border: 0;
-        cursor: pointer;
-        font: inherit;
-        width: 100%;
-      }
-
       .ix-card-footer {
         border-top: 1px solid rgba(201, 165, 80, 0.12);
         display: flex;
@@ -473,25 +387,11 @@
                 <span class="ix-chip"><span data-lang-en>Immersive 360° views</span><span data-lang-tl>Malalim na 360° na tanaw</span></span>
                 <span class="ix-chip"><span data-lang-en>Free-roam site exploration</span><span data-lang-tl>Malayang paglilibot</span></span>
               </div>
-              <form class="ix-tour-picker" id="interactiveTourEnvironmentForm" method="get" action="{{ url_for('virtual_tour') }}">
-                <label for="interactiveTourEnvironment"><span data-lang-en>Choose a tour environment</span><span data-lang-tl>Pumili ng kapaligiran ng tour</span></label>
-                <div class="ix-tour-picker-select-wrap">
-                  <select id="interactiveTourEnvironment" name="tour" aria-describedby="interactiveTourEnvironmentHint">
-                    {% for tour_option in virtual_tour_options|default([]) %}
-                    <option value="{{ tour_option.slug }}">{{ tour_option.title_en }}{% if tour_option.title_tl %} / {{ tour_option.title_tl }}{% endif %}{% if tour_option.is_system_original %} · Original{% endif %}</option>
-                    {% else %}
-                    <option value="original">Original Museum Tour · Original</option>
-                    {% endfor %}
-                  </select>
-                  <i data-lucide="chevron-down" aria-hidden="true"></i>
-                </div>
-                <small id="interactiveTourEnvironmentHint"><span data-lang-en>Only Original and active environments are available here.</span><span data-lang-tl>Orihinal at mga aktibong kapaligiran lamang ang makikita rito.</span></small>
-              </form>
               <div class="ix-card-footer">
-                <button class="ix-card-link" type="submit" form="interactiveTourEnvironmentForm">
+                <a class="ix-card-link" href="{{ url_for('virtual_tour') }}">
                   <span><span data-lang-en>Start Tour</span><span data-lang-tl>Simulan ang Tour</span></span>
                   <i data-lucide="arrow-right" class="h-3.5 w-3.5"></i>
-                </button>
+                </a>
               </div>
             </article>
 
