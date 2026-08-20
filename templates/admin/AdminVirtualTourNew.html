@@ -1,0 +1,27 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Create Virtual Tour | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout' %}
+{% set admin_active_page = 'virtual-tours' %}
+{% set admin_topbar_title = 'Create tour environment' %}
+{% set admin_topbar_subtitle = 'Name the environment first. Its first validated panorama becomes the starting scene.' %}
+{% set admin_topbar_tool_href = url_for('admin_virtual_tours') %}
+{% set admin_topbar_tool_label = 'Back to virtual tours' %}
+
+{% block admin_head %}<link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-virtual-tour.css') }}" />{% endblock %}
+
+{% block admin_content %}
+  {% if error_message %}<section class="admin-alert admin-alert-error" role="alert"><strong>Unable to create environment</strong><span>{{ error_message }}</span></section>{% endif %}
+  <form method="post" class="vt-new-card">
+    <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
+    <div class="vt-new-card__intro"><p class="vt-eyebrow">New loadout</p><h2>Environment details</h2><p>This creates a private draft. Nothing appears publicly until it has a valid starting scene and you publish it.</p></div>
+    <div class="vt-form-grid">
+      <label><span>English title <b aria-hidden="true">*</b></span><input name="title_en" required minlength="2" maxlength="120" value="{{ form_data.title_en or '' }}" autocomplete="off" /></label>
+      <label><span>Tagalog title</span><input name="title_tl" maxlength="120" value="{{ form_data.title_tl or '' }}" autocomplete="off" /></label>
+      <label class="is-wide"><span>URL slug</span><input name="slug" maxlength="120" value="{{ form_data.slug or '' }}" placeholder="Generated from the English title" autocomplete="off" /></label>
+      <label><span>English description</span><textarea name="description_en" maxlength="600" rows="4">{{ form_data.description_en or '' }}</textarea></label>
+      <label><span>Tagalog description</span><textarea name="description_tl" maxlength="600" rows="4">{{ form_data.description_tl or '' }}</textarea></label>
+    </div>
+    <div class="vt-form-actions"><a href="{{ url_for('admin_virtual_tours') }}">Cancel</a><button type="submit">Create draft and open editor</button></div>
+  </form>
+{% endblock %}

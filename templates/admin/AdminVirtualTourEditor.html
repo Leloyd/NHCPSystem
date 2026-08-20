@@ -1,0 +1,112 @@
+{% extends 'admin/_layout.html' %}
+
+{% set admin_document_title = 'Edit ' ~ tour.title_en ~ ' | NHCP Admin' %}
+{% set admin_layout_class = 'admin-layout admin-resource-layout vt-editor-layout-root' %}
+{% set admin_active_page = 'virtual-tours' %}
+{% set admin_topbar_title = 'Tour environment editor' %}
+{% set admin_topbar_subtitle = 'Upload full 360° panoramas, choose a starting scene, and place navigation or artifact hotspots directly in the view.' %}
+{% set admin_topbar_tool_href = url_for('admin_virtual_tours') %}
+{% set admin_topbar_tool_label = 'Back to virtual tours' %}
+
+{% block admin_head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.css" />
+<link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-virtual-tour.css') }}" />
+{% endblock %}
+
+{% block admin_content %}
+  {% if error_message %}<section class="admin-alert admin-alert-error" role="alert"><strong>Unable to publish</strong><span>{{ error_message }}</span></section>{% endif %}
+  <section class="vt-editor" data-vt-editor>
+    <script type="application/json" id="vtEditorConfig">{{ editor_config|tojson }}</script>
+    <script type="application/json" id="vtEditorScenes">{{ scenes|tojson }}</script>
+    <script type="application/json" id="vtEditorHotspots">{{ hotspots|tojson }}</script>
+
+    <header class="vt-editor__header">
+      <div><span class="vt-badge is-{{ tour.status }}">{{ tour.status|title }}</span><h2>{{ tour.title_en }}</h2><p>Working revision {{ revision_id }}{% if tour.published_revision_id %} · the active version remains public until this draft is published{% endif %}</p></div>
+      <div class="vt-editor__header-actions">
+        {% if tour.status == 'active' %}<a href="{{ url_for('virtual_tour', tour=tour.slug) }}" target="_blank" rel="noopener">Open public version</a>{% endif %}
+        <button type="button" data-vt-save-meta>Save details</button>
+        <form method="post" action="{{ url_for('admin_virtual_tour_publish', tour_id=tour.id) }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="Publish this tour revision?" data-confirm-message="Visitors will receive this complete revision. Your next edits will continue in a separate draft." data-confirm-label="Publish" data-confirm-variant="enable">
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit" class="is-publish">Publish</button>
+        </form>
+      </div>
+    </header>
+
+    <div class="vt-editor__workspace">
+      <aside class="vt-scenes-panel" aria-label="Tour scenes">
+        <div class="vt-panel-heading"><div><span>Scene library</span><strong data-vt-scene-count>{{ scenes|length }} scenes</strong></div><button type="button" data-vt-open-scene-upload aria-controls="vtSceneUpload">＋ Add</button></div>
+        <div class="vt-scene-list" data-vt-scene-list>
+          {% for scene in scenes %}
+          <button type="button" class="vt-scene-item{% if loop.first %} is-active{% endif %}" data-scene-id="{{ scene.id }}">
+            <img src="{{ scene.panorama_url }}" alt="" /><span><strong>{{ scene.name_en }}</strong><small>{{ 'Starting scene' if scene.is_start_scene else scene.panorama_width ~ ' × ' ~ scene.panorama_height }}</small></span>
+          </button>
+          {% else %}<div class="vt-empty" data-vt-scenes-empty><strong>No panorama yet</strong><p>Add a 2:1 equirectangular image to create the starting scene.</p></div>{% endfor %}
+        </div>
+      </aside>
+
+      <section class="vt-viewer-column" aria-label="360 degree scene editor">
+        <div class="vt-viewer-toolbar"><span data-vt-current-scene>{{ scenes[0].name_en if scenes else 'No scene selected' }}</span><div><button type="button" data-vt-place-center disabled>Place at view center</button><button type="button" data-vt-replace-scene disabled>Replace 360°</button><button type="button" data-vt-set-start disabled>Set as start</button><button type="button" data-vt-delete-scene disabled>Delete</button></div></div>
+        <div class="vt-viewer" id="vtEditorViewer" tabindex="0" aria-label="Interactive panorama editor">
+          <div class="vt-viewer-empty" data-vt-viewer-empty {% if scenes %}hidden{% endif %}><span>360°</span><strong>Your panorama preview will appear here</strong><p>Upload a full equirectangular scene to begin.</p></div>
+        </div>
+        <p class="vt-placement-status" data-vt-placement-status aria-live="polite">Select Add item or Add navigation to begin placing a hotspot.</p>
+      </section>
+
+      <aside class="vt-inspector" aria-label="Tour properties">
+        <div class="vt-inspector-tabs" role="tablist" aria-label="Editor panels"><button id="vtHotspotsTab" type="button" role="tab" aria-selected="true" aria-controls="vtHotspotsPanel" data-vt-tab="hotspots">Hotspots</button><button id="vtDetailsTab" type="button" role="tab" aria-selected="false" aria-controls="vtDetailsPanel" tabindex="-1" data-vt-tab="details">Details</button></div>
+        <div id="vtHotspotsPanel" role="tabpanel" aria-labelledby="vtHotspotsTab" data-vt-panel="hotspots">
+          <div class="vt-hotspot-actions"><button type="button" data-vt-add-hotspot="item" disabled>＋ Item hotspot</button><button type="button" data-vt-add-hotspot="navigation" disabled>＋ Navigation</button></div>
+          <div class="vt-hotspot-list" data-vt-hotspot-list><div class="vt-empty"><strong>No scene selected</strong><p>Select a panorama to view its hotspots.</p></div></div>
+          <form class="vt-hotspot-form" data-vt-hotspot-form hidden>
+            <header><div><span data-vt-hotspot-kicker>New hotspot</span><strong data-vt-hotspot-title>Place hotspot</strong></div><button type="button" data-vt-cancel-hotspot aria-label="Cancel hotspot">×</button></header>
+            <input type="hidden" name="hotspot_type" /><input type="hidden" name="image_path" /><input type="hidden" name="glb_path" /><input type="hidden" name="audio_en_path" /><input type="hidden" name="audio_tl_path" />
+            <label><span>English name *</span><input name="name_en" required maxlength="120" /></label>
+            <label><span>Tagalog name</span><input name="name_tl" maxlength="120" /></label>
+            <div class="vt-coordinates"><label><span>Pitch</span><input name="pitch" readonly placeholder="Click the 360° view" /></label><label><span>Yaw</span><input name="yaw" readonly placeholder="Click the 360° view" /></label></div>
+            <div class="vt-placement-actions"><button type="button" data-vt-confirm-position disabled>Confirm position</button><button type="button" data-vt-reposition disabled>Reposition</button></div>
+            <label data-vt-navigation-fields hidden><span>Destination scene *</span><select name="target_scene_id"></select></label>
+            <div data-vt-item-fields>
+              <label><span>Artifact image *</span><input type="file" accept="image/jpeg,image/png,image/webp" data-vt-asset-input="image" /></label>
+              <label><span>Optional GLB</span><input type="file" accept=".glb,model/gltf-binary" data-vt-asset-input="glb" /></label>
+              <label><span>English subtitle *</span><textarea name="subtitle_en" rows="3" maxlength="5000"></textarea></label>
+              <label><span>Tagalog subtitle *</span><textarea name="subtitle_tl" rows="3" maxlength="5000"></textarea></label>
+              <label><span>English voice-over</span><input type="file" accept="audio/*" data-vt-asset-input="audio_en" /></label>
+              <label><span>Tagalog voice-over</span><input type="file" accept="audio/*" data-vt-asset-input="audio_tl" /></label>
+            </div>
+            <p class="vt-inline-message" data-vt-hotspot-message aria-live="polite"></p>
+            <button type="submit" class="vt-save-hotspot" disabled>Save hotspot</button>
+          </form>
+        </div>
+        <div id="vtDetailsPanel" role="tabpanel" aria-labelledby="vtDetailsTab" data-vt-panel="details" hidden>
+          <form class="vt-details-form" data-vt-details-form>
+            <label><span>English title</span><input name="title_en" value="{{ tour.title_en }}" maxlength="120" required /></label>
+            <label><span>Tagalog title</span><input name="title_tl" value="{{ tour.title_tl }}" maxlength="120" /></label>
+            <label><span>URL slug</span><input name="slug" value="{{ tour.slug }}" maxlength="120" {% if tour.is_system_original %}readonly aria-describedby="vtOriginalSlugHint"{% endif %} /></label>
+            {% if tour.is_system_original %}<p id="vtOriginalSlugHint" class="vt-inline-message">Original keeps its protected public URL.</p>{% endif %}
+            <label><span>English description</span><textarea name="description_en" rows="3" maxlength="600">{{ tour.description_en }}</textarea></label>
+            <label><span>Tagalog description</span><textarea name="description_tl" rows="3" maxlength="600">{{ tour.description_tl }}</textarea></label>
+            <p class="vt-inline-message" data-vt-details-message aria-live="polite"></p>
+          </form>
+        </div>
+      </aside>
+    </div>
+
+    <dialog class="vt-upload-dialog" id="vtSceneUpload" data-vt-scene-dialog aria-labelledby="vtSceneUploadTitle">
+      <form method="dialog"><button value="cancel" aria-label="Close upload dialog">×</button></form>
+      <p class="vt-eyebrow">Add panorama scene</p><h2 id="vtSceneUploadTitle">Upload a full 360° view</h2><p>The image must decode successfully, have a 2:1 ratio, and be between 2048×1024 and 4096×2048 pixels for reliable mobile WebGL support.</p>
+      <form data-vt-scene-form>
+        <label><span>English scene name *</span><input name="name_en" required maxlength="120" /></label>
+        <label><span>Tagalog scene name</span><input name="name_tl" maxlength="120" /></label>
+        <label class="vt-upload-drop"><span>Choose panorama</span><input name="panorama" type="file" accept="image/jpeg,image/png,image/webp" required /><small data-vt-panorama-file>JPEG, PNG or WebP · full 2:1 panorama</small></label>
+        <div class="vt-upload-preview" data-vt-upload-preview hidden><div id="vtUploadViewer"></div><span>Browser preview passed</span></div>
+        <p class="vt-inline-message" data-vt-scene-message aria-live="polite"></p>
+        <button type="submit" data-vt-upload-scene disabled>Validate and add scene</button>
+      </form>
+    </dialog>
+  </section>
+{% endblock %}
+
+{% block admin_scripts %}
+<script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script defer src="{{ url_for('static', filename='admin/js/admin-virtual-tour-editor.js') }}"></script>
+{% endblock %}

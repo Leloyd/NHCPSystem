@@ -278,3 +278,7 @@ CREATE TABLE public.analytics_events (
   CONSTRAINT analytics_events_pkey PRIMARY KEY (id),
   CONSTRAINT analytics_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE SET NULL
 );
+
+-- The revisioned 360 Virtual Tour module is installed through
+-- virtual_tour_tables.sql. It is kept as an idempotent migration because it
+-- also defines the atomic publication function and its restricted grants.
