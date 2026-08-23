@@ -134,6 +134,12 @@
     return String(value[preferred] || value.en || value.tl || "");
   }
 
+  function setControlDockVisibility(isVisible) {
+    if (!dock) return;
+    dock.hidden = !isVisible;
+    dock.classList.toggle("is-visible", isVisible);
+  }
+
   function ensureArNotice() {
     if (arNotice) return arNotice;
     var notice = document.createElement("div");
@@ -593,7 +599,9 @@
     });
     HTMLCanvasElement.prototype.getContext = originalGetContext;
     viewer.on("load", function () {
-      loading.hidden = true; errorOverlay.hidden = true; dock.hidden = false;
+      loading.hidden = true;
+      errorOverlay.hidden = true;
+      setControlDockVisibility(true);
       if (window.NHCPAnalytics && window.NHCPAnalytics.track) {
         window.NHCPAnalytics.track("virtual_tour_opened", "virtual-tour", config.tour.slug, { scene: viewer.getScene(), tour: config.tour.slug }, { onceKey: "virtual-tour:" + config.tour.slug });
       }
