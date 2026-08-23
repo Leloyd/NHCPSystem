@@ -140,6 +140,14 @@
     dock.classList.toggle("is-visible", isVisible);
   }
 
+  function syncHotspotVisibilityControl() {
+    app.classList.toggle("tour-hide-scene-hotspots", !hotspotsVisible);
+    app.classList.toggle("tour-hide-artifact-hotspots", !hotspotsVisible);
+    hotspotButton.classList.toggle("is-active", hotspotsVisible);
+    hotspotButton.setAttribute("aria-pressed", hotspotsVisible ? "true" : "false");
+    hotspotButton.setAttribute("aria-label", hotspotsVisible ? "Hide hotspots" : "Show hotspots");
+  }
+
   function ensureArNotice() {
     if (arNotice) return arNotice;
     var notice = document.createElement("div");
@@ -211,6 +219,7 @@
     var value = activeItem && activeItem.content ? localized(activeItem.content.subtitle, language) : "";
     subtitleText.textContent = value;
     subtitleBar.hidden = !subtitlesOn || !value;
+    if (!subtitleBar.hidden) subtitleBar.scrollTop = 0;
   }
 
   function setPane(name) {
@@ -235,7 +244,9 @@
     languageButton.disabled = !hasLanguageContent;
     languageButton.setAttribute("aria-disabled", languageButton.disabled ? "true" : "false");
     languageButton.textContent = language.toUpperCase();
-    languageButton.setAttribute("aria-label", language === "tl" ? "Switch to English narration and subtitles" : "Switch to Tagalog narration and subtitles");
+    languageButton.setAttribute("aria-label", hasLanguageContent
+      ? (language === "tl" ? "Switch to English narration and subtitles" : "Switch to Tagalog narration and subtitles")
+      : "Narration and subtitle language unavailable");
     listenButton.classList.toggle("is-playing", !audio.paused && !audio.ended);
     listenButton.setAttribute("aria-pressed", !audio.paused && !audio.ended ? "true" : "false");
     listenButton.setAttribute("aria-label", !audio.paused && !audio.ended ? "Pause narration" : "Play narration");
@@ -547,6 +558,176 @@
     detailOpener = null;
   }
 
+  function downloadCapture(dataUrl) {
+    var link = document.createElement("a");
+    var timestamp = new Date().toISOString().replace(/[.:]/g, "-");
+    link.href = dataUrl;
+    link.download = "virtual-tour-" + String(config.tour.slug || "capture") + "-" + timestamp + ".png";
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+  }
+
+  function getCaptureDimensions() {
+    var rect = document.getElementById("tourViewer").getBoundingClientRect();
+    var scale = Math.max(1, Math.min(window.devicePixelRatio || 1, 2));
+    var width = Math.max(1, Math.round((rect.width || window.innerWidth || 1280) * scale));
+    var height = Math.max(1, Math.round((rect.height || window.innerHeight || 720) * scale));
+    var longest = Math.max(width, height);
+    if (longest > 1600) {
+      var ratio = 1600 / longest;
+      width = Math.max(1, Math.round(width * ratio));
+      height = Math.max(1, Math.round(height * ratio));
+    }
+    return { width: width, height: height };
+  }
+
+  function rendererCanvasDataUrl() {
+    var viewerElement = document.getElementById("tourViewer");
+    var canvas = viewerElement.querySelector("canvas.pnlm-render-container, .pnlm-render-container canvas, canvas");
+    if (!canvas || !canvas.width || !canvas.height) return "";
+
+    try {
+      var probe = document.createElement("canvas");
+      probe.width = 48;
+      probe.height = 27;
+      var probeContext = probe.getContext("2d", { willReadFrequently: true });
+      probeContext.drawImage(canvas, 0, 0, probe.width, probe.height);
+      var pixels = probeContext.getImageData(0, 0, probe.width, probe.height).data;
+      var opaque = 0;
+      var minLight = 255;
+      var maxLight = 0;
+      for (var i = 0; i < pixels.length; i += 4) {
+        if (pixels[i + 3] < 16) continue;
+        opaque += 1;
+        var light = (pixels[i] + pixels[i + 1] + pixels[i + 2]) / 3;
+        minLight = Math.min(minLight, light);
+        maxLight = Math.max(maxLight, light);
+      }
+      if (opaque < probe.width * probe.height * 0.5 || maxLight - minLight < 4) return "";
+      return canvas.toDataURL("image/png");
+    } catch (_) {
+      return "";
+    }
+  }
+
+  function loadCaptureImage(source) {
+    return new Promise(function (resolve, reject) {
+      var image = new Image();
+      image.decoding = "async";
+      image.crossOrigin = "anonymous";
+      image.onload = function () { resolve(image); };
+      image.onerror = function () { reject(new Error("The current panorama could not be loaded for capture.")); };
+      image.src = source;
+    });
+  }
+
+  function wrapPanoramaX(value, size) {
+    var remainder = value % size;
+    return remainder < 0 ? remainder + size : remainder;
+  }
+
+  async function renderCurrentViewFromPanorama() {
+    if (!viewer || typeof viewer.getScene !== "function") throw new Error("The 360 viewer is not ready.");
+    var sceneId = viewer.getScene();
+    var scene = scenes.find(function (entry) { return entry.id === sceneId; });
+    if (!scene || !scene.panorama) throw new Error("The current panorama is unavailable.");
+
+    var panorama = await loadCaptureImage(scene.panorama);
+    var naturalWidth = panorama.naturalWidth || panorama.width;
+    var naturalHeight = panorama.naturalHeight || panorama.height;
+    var sourceScale = Math.min(1, 4096 / Math.max(naturalWidth, naturalHeight));
+    var sourceWidth = Math.max(1, Math.round(naturalWidth * sourceScale));
+    var sourceHeight = Math.max(1, Math.round(naturalHeight * sourceScale));
+    var sourceCanvas = document.createElement("canvas");
+    sourceCanvas.width = sourceWidth;
+    sourceCanvas.height = sourceHeight;
+    var sourceContext = sourceCanvas.getContext("2d", { willReadFrequently: true });
+    if (!sourceContext) throw new Error("A panorama capture canvas could not be created.");
+    sourceContext.drawImage(panorama, 0, 0, sourceWidth, sourceHeight);
+    var sourcePixels = sourceContext.getImageData(0, 0, sourceWidth, sourceHeight).data;
+
+    var size = getCaptureDimensions();
+    var outputCanvas = document.createElement("canvas");
+    outputCanvas.width = size.width;
+    outputCanvas.height = size.height;
+    var outputContext = outputCanvas.getContext("2d");
+    if (!outputContext) throw new Error("The captured image could not be created.");
+    var outputImage = outputContext.createImageData(size.width, size.height);
+    var outputPixels = outputImage.data;
+    var pitch = Number(viewer.getPitch ? viewer.getPitch() : 0) * Math.PI / 180;
+    var yaw = Number(viewer.getYaw ? viewer.getYaw() : 0) * Math.PI / 180;
+    var hfov = Number(viewer.getHfov ? viewer.getHfov() : 100) * Math.PI / 180;
+    var vfov = 2 * Math.atan(Math.tan(hfov / 2) / (size.width / size.height));
+    var tanH = Math.tan(hfov / 2);
+    var tanV = Math.tan(vfov / 2);
+    var sinPitch = Math.sin(pitch), cosPitch = Math.cos(pitch);
+    var sinYaw = Math.sin(yaw), cosYaw = Math.cos(yaw);
+
+    for (var y = 0; y < size.height; y += 1) {
+      var normalizedY = 1 - (2 * (y + 0.5)) / size.height;
+      for (var x = 0; x < size.width; x += 1) {
+        var normalizedX = (2 * (x + 0.5)) / size.width - 1;
+        var directionX = normalizedX * tanH;
+        var directionY = normalizedY * tanV;
+        var directionZ = 1;
+        var inverseLength = 1 / Math.hypot(directionX, directionY, directionZ);
+        directionX *= inverseLength;
+        directionY *= inverseLength;
+        directionZ *= inverseLength;
+        var pitchedY = directionY * cosPitch + directionZ * sinPitch;
+        var pitchedZ = -directionY * sinPitch + directionZ * cosPitch;
+        var worldX = directionX * cosYaw + pitchedZ * sinYaw;
+        var worldZ = -directionX * sinYaw + pitchedZ * cosYaw;
+        var longitude = Math.atan2(worldX, worldZ);
+        var latitude = Math.asin(Math.max(-1, Math.min(1, pitchedY)));
+        var panoramaX = wrapPanoramaX((longitude / (2 * Math.PI) + 0.5) * sourceWidth, sourceWidth);
+        var panoramaY = Math.min(sourceHeight - 1, Math.max(0, (0.5 - latitude / Math.PI) * sourceHeight));
+        var sourceX = Math.floor(panoramaX);
+        var sourceY = Math.floor(panoramaY);
+        var nextSourceX = wrapPanoramaX(sourceX + 1, sourceWidth);
+        var nextSourceY = Math.min(sourceHeight - 1, sourceY + 1);
+        var weightX = panoramaX - sourceX;
+        var weightY = panoramaY - sourceY;
+        var index00 = (sourceY * sourceWidth + sourceX) * 4;
+        var index10 = (sourceY * sourceWidth + nextSourceX) * 4;
+        var index01 = (nextSourceY * sourceWidth + sourceX) * 4;
+        var index11 = (nextSourceY * sourceWidth + nextSourceX) * 4;
+        var outputIndex = (y * size.width + x) * 4;
+        for (var channel = 0; channel < 3; channel += 1) {
+          var top = sourcePixels[index00 + channel] * (1 - weightX) + sourcePixels[index10 + channel] * weightX;
+          var bottom = sourcePixels[index01 + channel] * (1 - weightX) + sourcePixels[index11 + channel] * weightX;
+          outputPixels[outputIndex + channel] = top * (1 - weightY) + bottom * weightY;
+        }
+        outputPixels[outputIndex + 3] = 255;
+      }
+    }
+    outputContext.putImageData(outputImage, 0, 0);
+    return outputCanvas.toDataURL("image/png");
+  }
+
+  async function captureCurrentView() {
+    if (!viewer || captureButton.disabled) return;
+    var previousLabel = captureButton.getAttribute("aria-label") || "Capture current view";
+    captureButton.disabled = true;
+    captureButton.setAttribute("aria-label", "Capturing current view");
+    captureButton.setAttribute("aria-busy", "true");
+    try {
+      await new Promise(function (resolve) { window.requestAnimationFrame(resolve); });
+      var dataUrl = rendererCanvasDataUrl();
+      if (!dataUrl) dataUrl = await renderCurrentViewFromPanorama();
+      downloadCapture(dataUrl);
+    } catch (error) {
+      console.error("Unable to capture the current virtual tour view.", error);
+      window.alert("Unable to capture the current 360 view. Please wait for the panorama to finish loading, then try again.");
+    } finally {
+      captureButton.disabled = false;
+      captureButton.setAttribute("aria-label", previousLabel);
+      captureButton.removeAttribute("aria-busy");
+      captureButton.focus();
+    }
+  }
+
   function itemTooltip(node, args) {
     node.setAttribute("role", "button"); node.setAttribute("tabindex", "0");
     node.setAttribute("aria-label", localized(args.name, "en") || "Open artifact");
@@ -645,14 +826,12 @@
   listenButton.addEventListener("click", function () { if (!audio.paused) audio.pause(); else playNarration(false); syncAudioControls(); });
   muteButton.addEventListener("click", function () { audio.muted = !audio.muted; syncAudioControls(); });
   subtitlesButton.addEventListener("click", function () { subtitlesOn = !subtitlesOn; subtitlesButton.classList.toggle("is-active", subtitlesOn); subtitlesButton.setAttribute("aria-pressed", subtitlesOn ? "true" : "false"); subtitlesButton.setAttribute("aria-label", subtitlesOn ? "Hide subtitles" : "Show subtitles"); setSubtitle(); });
-  hotspotButton.addEventListener("click", function () { hotspotsVisible = !hotspotsVisible; app.classList.toggle("tour-hide-scene-hotspots", !hotspotsVisible); app.classList.toggle("tour-hide-artifact-hotspots", !hotspotsVisible); hotspotButton.setAttribute("aria-pressed", hotspotsVisible ? "true" : "false"); hotspotButton.setAttribute("aria-label", hotspotsVisible ? "Hide hotspots" : "Show hotspots"); });
-  backButton.addEventListener("click", function () { window.location.href = app.dataset.interactiveUrl || "/interactive"; });
-  captureButton.addEventListener("click", function () {
-    if (!window.html2canvas) return;
-    window.html2canvas(document.getElementById("tourViewer"), { useCORS: true, backgroundColor: null }).then(function (canvas) {
-      var link = document.createElement("a"); link.download = "virtual-tour-" + config.tour.slug + ".png"; link.href = canvas.toDataURL("image/png"); link.click();
-    }).catch(function () {});
+  hotspotButton.addEventListener("click", function () {
+    hotspotsVisible = !hotspotsVisible;
+    syncHotspotVisibilityControl();
   });
+  backButton.addEventListener("click", function () { window.location.href = app.dataset.interactiveUrl || "/interactive"; });
+  captureButton.addEventListener("click", captureCurrentView);
   audio.addEventListener("play", syncAudioControls); audio.addEventListener("pause", syncAudioControls); audio.addEventListener("ended", syncAudioControls);
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
@@ -673,6 +852,8 @@
     if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
     else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
   });
-  hotspotButton.setAttribute("aria-pressed", "true");
-  syncAudioControls(); setSubtitle();
+  subtitlesButton.classList.toggle("is-active", subtitlesOn);
+  syncHotspotVisibilityControl();
+  syncAudioControls();
+  setSubtitle();
 })();
