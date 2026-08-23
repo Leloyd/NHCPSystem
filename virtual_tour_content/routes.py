@@ -36,6 +36,7 @@ from .service import (
     load_admin_tours,
     list_tour_asset_paths,
     prepare_upload,
+    resolve_admin_asset_urls,
     slugify,
     validate_stored_asset,
 )
@@ -304,9 +305,15 @@ def register_virtual_tour_content_routes(
             tour, revision_id = editable_tour(tour_id)
             scenes = list_scenes(revision_id)
             hotspots = list_hotspots(revision_id)
+            asset_fields = ("image_path", "glb_path", "audio_en_path", "audio_tl_path")
+            asset_paths = [scene.get("panorama_path") for scene in scenes]
+            asset_paths.extend(hotspot.get(field) for hotspot in hotspots for field in asset_fields)
+            asset_urls = resolve_admin_asset_urls(asset_paths)
             for scene in scenes:
-                from .service import _asset_url
-                scene["panorama_url"] = _asset_url(scene.get("panorama_path"))
+                scene["panorama_url"] = asset_urls.get(str(scene.get("panorama_path") or "").strip(), "")
+            for hotspot in hotspots:
+                for field in asset_fields:
+                    hotspot[field.replace("_path", "_url")] = asset_urls.get(str(hotspot.get(field) or "").strip(), "")
             return render_template(
                 "admin/AdminVirtualTourEditor.html",
                 csrf_token=ensure_admin_csrf_token(), admin_username=current_admin(),
@@ -583,14 +590,46 @@ def register_virtual_tour_content_routes(
             if not hotspot or int(hotspot["revision_id"]) != revision_id or hotspot["hotspot_type"] != "item":
                 raise ValueError("Choose an item hotspot from this draft.")
             data = request.get_json(silent=True) or {}
-            language = "tl" if data.get("language") == "tl" else "en"
-            script = hotspot.get(f"subtitle_{language}") or ""
-            path, voice_id, model_id = generate_narration(script, language=language, tour_id=tour_id, hotspot_id=hotspot_id)
-            updated = update_hotspot(hotspot_id, {
-                f"audio_{language}_path": path, "tts_voice_id": voice_id,
-                "tts_model_id": model_id, "updated_at": datetime.now(timezone.utc).isoformat(),
+            requested = data.get("languages")
+            if isinstance(requested, list):
+                languages = [language for language in ("en", "tl") if language in requested]
+            else:
+                languages = ["tl" if data.get("language") == "tl" else "en"]
+            if not languages:
+                raise ValueError("Choose English, Tagalog, or both languages.")
+
+            generated: list[str] = []
+            failures: dict[str, str] = {}
+            updated = hotspot
+            for language in languages:
+                script = str(updated.get(f"subtitle_{language}") or "").strip()
+                if not script:
+                    failures[language] = f"Add the {'Tagalog' if language == 'tl' else 'English'} subtitle first."
+                    continue
+                try:
+                    path, voice_id, model_id = generate_narration(
+                        script, language=language, tour_id=tour_id, hotspot_id=hotspot_id
+                    )
+                    updated = update_hotspot(hotspot_id, {
+                        f"audio_{language}_path": path, "tts_voice_id": voice_id,
+                        "tts_model_id": model_id, "updated_at": datetime.now(timezone.utc).isoformat(),
+                    })
+                    generated.append(language)
+                except Exception as exc:
+                    failures[language] = str(exc)
+
+            if not generated:
+                raise ValueError(" ".join(failures.values()) or "Narration could not be generated.")
+            audio_urls = resolve_admin_asset_urls([
+                updated.get("audio_en_path"), updated.get("audio_tl_path")
+            ])
+            for language in ("en", "tl"):
+                path = str(updated.get(f"audio_{language}_path") or "").strip()
+                updated[f"audio_{language}_url"] = audio_urls.get(path, "")
+            return jsonify({
+                "ok": True, "hotspot": updated, "generated": generated,
+                "failures": failures, "complete": not failures,
             })
-            return jsonify({"ok": True, "hotspot": updated})
         except Exception as exc:
             app.logger.warning("Narration generation failed: %s", exc)
             return _json_error(str(exc))

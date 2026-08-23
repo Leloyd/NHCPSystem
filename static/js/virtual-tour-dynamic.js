@@ -12,14 +12,15 @@
   var loading = document.getElementById("tourLoadingOverlay");
   var errorOverlay = document.getElementById("tourErrorOverlay");
   var dock = document.getElementById("tourControlDock");
-  var artifactOverlay = document.getElementById("tourArtifactOverlay");
-  var artifactImage = document.getElementById("tourArtifactImage");
-  var artifactImageWrap = artifactImage ? artifactImage.closest(".tour-artifact-modal__image-wrap") : null;
-  var artifactModel = document.getElementById("tourArtifactModel");
-  var titleTl = document.getElementById("tourArtifactTagalogTitle");
-  var textTl = document.getElementById("tourArtifactTagalogText");
-  var titleEn = document.getElementById("tourArtifactEnglishTitle");
-  var textEn = document.getElementById("tourArtifactEnglishText");
+  var artifactOverlay = document.createElement("div");
+  var artifactPanel = document.createElement("section");
+  var artifactMediaWrap = document.createElement("div");
+  var artifactImageWrap = document.createElement("div");
+  var artifactImage = document.createElement("img");
+  var artifactModel = document.createElement("model-viewer");
+  var artifactSwitch = document.createElement("button");
+  var artifactTitle = document.createElement("p");
+  var artifactClose = document.createElement("button");
   var listenButton = document.getElementById("tourListen");
   var muteButton = document.getElementById("tourMute");
   var languageButton = document.getElementById("tourToggleArtifactHotspots");
@@ -49,6 +50,43 @@
   var detailTitle = document.createElement("p");
   var detailClose = document.createElement("button");
 
+  artifactOverlay.className = "tour-overlay tour-overlay--center tour-overlay--interactive tour-floating-preview-overlay";
+  artifactOverlay.hidden = true;
+  artifactOverlay.id = "tourArtifactPreviewOverlay";
+  artifactPanel.className = "tour-floating-media-preview";
+  artifactPanel.setAttribute("role", "dialog");
+  artifactPanel.setAttribute("aria-modal", "true");
+  artifactPanel.setAttribute("aria-label", "Artifact preview");
+  artifactMediaWrap.className = "tour-floating-media-preview__mediawrap";
+  artifactImageWrap.className = "tour-preview-zoomframe";
+  artifactImage.className = "tour-floating-media-preview__image";
+  artifactImage.alt = "";
+  artifactImageWrap.appendChild(artifactImage);
+  artifactModel.className = "tour-floating-media-preview__model";
+  artifactModel.setAttribute("camera-controls", "");
+  artifactModel.setAttribute("touch-action", "none");
+  artifactModel.setAttribute("auto-rotate", "");
+  artifactModel.setAttribute("shadow-intensity", "1");
+  artifactModel.setAttribute("ar", "");
+  artifactModel.setAttribute("ar-modes", "webxr scene-viewer quick-look");
+  artifactModel.hidden = true;
+  artifactSwitch.className = "tour-floating-media-window-switch tour-dynamic-artifact-switch";
+  artifactSwitch.type = "button";
+  artifactSwitch.hidden = true;
+  artifactTitle.className = "tour-floating-preview__title";
+  artifactClose.className = "tour-floating-media-preview__close";
+  artifactClose.type = "button";
+  artifactClose.setAttribute("aria-label", "Return artifact to tour view");
+  artifactClose.textContent = "\u00d7";
+  artifactMediaWrap.appendChild(artifactImageWrap);
+  artifactMediaWrap.appendChild(artifactModel);
+  artifactMediaWrap.appendChild(artifactSwitch);
+  artifactPanel.appendChild(artifactMediaWrap);
+  artifactPanel.appendChild(artifactTitle);
+  artifactPanel.appendChild(artifactClose);
+  artifactOverlay.appendChild(artifactPanel);
+  app.appendChild(artifactOverlay);
+
   imageHotspotLayer.className = "tour-artifact-image-hotspots";
   imageHotspotLayer.hidden = true;
   imageHotspotToggle.className = "tour-artifact-image-hotspots__toggle";
@@ -74,11 +112,9 @@
   detailOverlay.appendChild(detailZoomFrame);
   detailOverlay.appendChild(detailTitle);
   detailOverlay.appendChild(detailClose);
-  if (artifactImageWrap) {
-    artifactImageWrap.appendChild(imageHotspotLayer);
-    artifactImageWrap.appendChild(imageHotspotToggle);
-    artifactImageWrap.appendChild(detailOverlay);
-  }
+  artifactImageWrap.appendChild(imageHotspotLayer);
+  artifactImageWrap.appendChild(imageHotspotToggle);
+  artifactOverlay.appendChild(detailOverlay);
 
   if (minimap) minimap.hidden = true;
   if (viewModes) viewModes.hidden = true;
@@ -97,16 +133,15 @@
   function setPane(name) {
     var hasGlb = Boolean(activeItem && activeItem.content && activeItem.content.glb);
     if (name === "glb" && !hasGlb) name = "image";
-    document.querySelectorAll("[data-artifact-pane]").forEach(function (pane) {
-      var active = pane.dataset.artifactPane === name;
-      pane.hidden = !active; pane.classList.toggle("is-active", active);
-    });
-    document.querySelectorAll("[data-artifact-view]").forEach(function (button) {
-      var active = button.dataset.artifactView === name;
-      button.classList.toggle("is-active", active);
-      button.setAttribute("aria-pressed", active ? "true" : "false");
-      if (button.dataset.artifactView === "glb") button.hidden = !hasGlb;
-    });
+    var showModel = name === "glb";
+    artifactImageWrap.hidden = showModel;
+    artifactModel.hidden = !showModel;
+    artifactSwitch.hidden = !hasGlb;
+    artifactSwitch.setAttribute("aria-label", showModel ? "Show artifact image" : "Quick look at the 3D artifact");
+    artifactSwitch.setAttribute("aria-pressed", showModel ? "true" : "false");
+    artifactSwitch.innerHTML = showModel
+      ? '<span class="tour-floating-media-window-switch-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Zm1.5-.5a.5.5 0 0 0-.5.5v8.2l3.1-3.45a1 1 0 0 1 1.48-.03l1.9 2.02 2.45-2.78a1 1 0 0 1 1.5.02L18 12.4V6.5a.5.5 0 0 0-.5-.5h-11Z" fill="currentColor"></path></svg></span><span class="tour-sr-only">Show image</span>'
+      : '<span class="tour-floating-media-window-switch-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 6v12L12 21.5 4.5 18V6L12 2.5Zm0 1.12L5.73 6.5 12 9.38l6.27-2.88L12 3.62Zm6.5 3.69-6 2.76v10.28l6-3V7.31Zm-13 0v7.74l6 3V10.07l-6-2.76Z" fill="currentColor"></path></svg></span><span class="tour-sr-only">Quick look at 3D model</span>';
   }
 
   function syncAudioControls() {
@@ -202,15 +237,14 @@
     activeItem = item;
     artifactImage.src = item.content.image || "";
     artifactImage.alt = localized(item.name, language) || "Artifact image";
-    titleEn.textContent = localized(item.name, "en"); textEn.textContent = localized(item.content.subtitle, "en");
-    titleTl.textContent = localized(item.name, "tl") || localized(item.name, "en"); textTl.textContent = localized(item.content.subtitle, "tl");
+    artifactTitle.textContent = localized(item.name, language) || "Artifact";
     if (item.content.glb) artifactModel.src = item.content.glb; else artifactModel.removeAttribute("src");
     artifactOverlay.hidden = false;
-    artifactOverlay.querySelector(".tour-artifact-modal").setAttribute("aria-label", localized(item.name, language) || "Artifact details");
+    artifactPanel.setAttribute("aria-label", localized(item.name, language) || "Artifact details");
     hideNestedDetail(false);
     renderNestedHotspots(item);
     setPane("image"); setSubtitle(); playNarration(true);
-    document.getElementById("tourArtifactClose").focus();
+    artifactClose.focus();
     if (window.NHCPAnalytics && window.NHCPAnalytics.track) {
       window.NHCPAnalytics.track("artifact_viewed", "virtual-tour", String(item.id), { tour: config.tour.slug, scene: viewer.getScene() });
     }
@@ -292,7 +326,7 @@
     loading.hidden = true; errorOverlay.hidden = false;
   }
 
-  document.getElementById("tourArtifactClose").addEventListener("click", closeItem);
+  artifactClose.addEventListener("click", closeItem);
   detailClose.addEventListener("click", function () { hideNestedDetail(true); });
   detailOverlay.addEventListener("click", function (event) { if (event.target === detailOverlay) hideNestedDetail(true); });
   imageHotspotToggle.addEventListener("click", function () {
@@ -303,7 +337,7 @@
     imageHotspotToggle.setAttribute("aria-label", willShow ? "Hide artifact image hotspots" : "Show artifact image hotspots");
   });
   artifactOverlay.addEventListener("click", function (event) { if (event.target === artifactOverlay) closeItem(); });
-  document.querySelectorAll("[data-artifact-view]").forEach(function (button) { button.addEventListener("click", function () { setPane(button.dataset.artifactView); }); });
+  artifactSwitch.addEventListener("click", function () { setPane(artifactModel.hidden ? "glb" : "image"); });
   languageButton.addEventListener("click", function () {
     language = language === "tl" ? "en" : "tl";
     if (!detailOverlay.hidden && activeItem) {
@@ -311,7 +345,8 @@
       detailTitle.textContent = localized(activeItem.name, language) || "Artifact detail";
     } else if (rootItem) {
       artifactImage.alt = localized(rootItem.name, language) || "Artifact image";
-      artifactOverlay.querySelector(".tour-artifact-modal").setAttribute("aria-label", localized(rootItem.name, language) || "Artifact details");
+      artifactTitle.textContent = localized(rootItem.name, language) || "Artifact";
+      artifactPanel.setAttribute("aria-label", localized(rootItem.name, language) || "Artifact details");
       renderNestedHotspots(rootItem);
     }
     setSubtitle(); syncAudioControls(); playNarration(true);

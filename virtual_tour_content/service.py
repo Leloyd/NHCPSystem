@@ -149,6 +149,19 @@ def _asset_url(path: Any, signed_urls: dict[str, str] | None = None) -> str:
     return _absolute_signed_url(data.get("signedURL") or data.get("signedUrl") or data.get("signed_url"))
 
 
+def resolve_admin_asset_urls(paths: list[Any]) -> dict[str, str]:
+    """Resolve stored draft assets to short-lived URLs for the admin editor."""
+    values = list(dict.fromkeys(
+        str(path or "").strip()
+        for path in paths
+        if str(path or "").strip()
+    ))
+    if not values:
+        return {}
+    signed_urls = _signed_asset_urls(values)
+    return {value: _asset_url(value, signed_urls) for value in values}
+
+
 def _nested_hotspots(value: Any, signed_urls: dict[str, str]) -> list[dict[str, Any]]:
     if not isinstance(value, list):
         return []

@@ -64,13 +64,23 @@
             <div class="vt-coordinates"><label><span>Pitch</span><input name="pitch" readonly placeholder="Click the 360° view" /></label><label><span>Yaw</span><input name="yaw" readonly placeholder="Click the 360° view" /></label></div>
             <div class="vt-placement-actions"><button type="button" data-vt-confirm-position disabled>Confirm position</button><button type="button" data-vt-reposition disabled>Reposition</button></div>
             <label data-vt-navigation-fields hidden><span>Destination scene *</span><select name="target_scene_id"></select></label>
-            <div data-vt-item-fields>
+            <div class="vt-item-fields" data-vt-item-fields>
               <label><span>Artifact image *</span><input type="file" accept="image/jpeg,image/png,image/webp" data-vt-asset-input="image" /></label>
               <label><span>Optional GLB</span><input type="file" accept=".glb,model/gltf-binary" data-vt-asset-input="glb" /></label>
+              <section class="vt-current-media" data-vt-current-media hidden aria-label="Current artifact media">
+                <div class="vt-current-media__heading"><span>Current media</span><div role="group" aria-label="Preview format"><button type="button" class="is-active" data-vt-preview-kind="image" aria-pressed="true">Image</button><button type="button" data-vt-preview-kind="glb" aria-pressed="false" hidden>Quick look 3D</button></div></div>
+                <div class="vt-current-media__stage"><img data-vt-current-image alt="Current artifact" /><model-viewer data-vt-current-model camera-controls touch-action="pan-y" auto-rotate shadow-intensity="1" ar ar-modes="webxr scene-viewer quick-look" hidden></model-viewer></div>
+              </section>
               <label><span>English subtitle *</span><textarea name="subtitle_en" rows="3" maxlength="5000"></textarea></label>
               <label><span>Tagalog subtitle *</span><textarea name="subtitle_tl" rows="3" maxlength="5000"></textarea></label>
+              <div class="vt-voice-generator">
+                <button type="button" data-vt-generate-voices><span aria-hidden="true">♪</span> Generate English + Tagalog voice</button>
+                <span data-vt-tts-status role="status" aria-live="polite"></span>
+              </div>
               <label><span>English voice-over</span><input type="file" accept="audio/*" data-vt-asset-input="audio_en" /></label>
+              <div class="vt-audio-preview" data-vt-audio-preview="en" hidden><span>Current English voice</span><audio controls preload="metadata"></audio></div>
               <label><span>Tagalog voice-over</span><input type="file" accept="audio/*" data-vt-asset-input="audio_tl" /></label>
+              <div class="vt-audio-preview" data-vt-audio-preview="tl" hidden><span>Current Tagalog voice</span><audio controls preload="metadata"></audio></div>
             </div>
             <p class="vt-inline-message" data-vt-hotspot-message aria-live="polite"></p>
             <button type="submit" class="vt-save-hotspot" disabled>Save hotspot</button>
@@ -108,5 +118,6 @@
 {% block admin_scripts %}
 <script src="https://cdn.jsdelivr.net/npm/pannellum@2.5.6/build/pannellum.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 <script defer src="{{ url_for('static', filename='admin/js/admin-virtual-tour-editor.js') }}"></script>
 {% endblock %}

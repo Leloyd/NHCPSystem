@@ -36,6 +36,8 @@
   var setStartButton = root.querySelector("[data-vt-set-start]");
   var replaceSceneButton = root.querySelector("[data-vt-replace-scene]");
   var deleteSceneButton = root.querySelector("[data-vt-delete-scene]");
+  var generateVoicesButton = root.querySelector("[data-vt-generate-voices]");
+  var ttsStatus = root.querySelector("[data-vt-tts-status]");
 
   if (window.supabase && config.supabaseUrl && config.supabaseKey) {
     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, {
@@ -48,6 +50,7 @@
     element.textContent = value || "";
     element.classList.toggle("is-error", kind === "error");
     element.classList.toggle("is-success", kind === "success");
+    element.classList.toggle("is-warning", kind === "warning");
   }
 
   async function api(path, options) {
@@ -165,24 +168,6 @@
           renderHotspots(); renderViewer();
         } catch (error) { message(placementStatus, error.message, "error"); }
       });
-      if (hotspot.hotspot_type === "item") {
-        var controls = document.createElement("span");
-        controls.className = "vt-tts-actions";
-        ["en", "tl"].forEach(function (language) {
-          if (!hotspot["subtitle_" + language]) return;
-          var button = document.createElement("button");
-          button.type = "button"; button.textContent = "Generate " + language.toUpperCase() + " voice";
-          button.addEventListener("click", async function () {
-            button.disabled = true; button.textContent = "Generating…";
-            try {
-              var result = await api(endpoint("/hotspots/" + hotspot.id + "/tts"), { method: "POST", body: JSON.stringify({ language: language }) });
-              Object.assign(hotspot, result.hotspot); button.textContent = language.toUpperCase() + " voice ready";
-            } catch (error) { button.disabled = false; button.textContent = "Retry " + language.toUpperCase(); message(placementStatus, error.message, "error"); }
-          });
-          controls.appendChild(button);
-        });
-        if (controls.children.length) card.appendChild(controls);
-      }
       hotspotList.appendChild(card);
     });
   }
@@ -202,6 +187,69 @@
     });
   }
 
+  function setPreviewKind(kind) {
+    var image = hotspotForm.querySelector("[data-vt-current-image]");
+    var model = hotspotForm.querySelector("[data-vt-current-model]");
+    var hasModel = Boolean(model && model.getAttribute("src"));
+    var next = kind === "glb" && hasModel ? "glb" : "image";
+    if (image) image.hidden = next !== "image";
+    if (model) model.hidden = next !== "glb";
+    hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
+      var active = button.dataset.vtPreviewKind === next;
+      button.classList.toggle("is-active", active);
+      button.setAttribute("aria-pressed", active ? "true" : "false");
+    });
+  }
+
+  function updateAssetPreviews(hotspot) {
+    var media = hotspotForm.querySelector("[data-vt-current-media]");
+    var image = hotspotForm.querySelector("[data-vt-current-image]");
+    var model = hotspotForm.querySelector("[data-vt-current-model]");
+    var imageUrl = hotspot ? String(hotspot.image_url || "") : "";
+    var glbUrl = hotspot ? String(hotspot.glb_url || "") : "";
+    if (image) {
+      if (imageUrl) image.src = imageUrl; else image.removeAttribute("src");
+      image.alt = hotspot && hotspot.name_en ? "Current image for " + hotspot.name_en : "Current artifact image";
+    }
+    if (model) {
+      if (glbUrl) model.src = glbUrl; else model.removeAttribute("src");
+    }
+    var modelButton = hotspotForm.querySelector('[data-vt-preview-kind="glb"]');
+    if (modelButton) modelButton.hidden = !glbUrl;
+    if (media) media.hidden = !imageUrl && !glbUrl;
+    setPreviewKind(imageUrl ? "image" : "glb");
+
+    ["en", "tl"].forEach(function (language) {
+      var preview = hotspotForm.querySelector('[data-vt-audio-preview="' + language + '"]');
+      var player = preview ? preview.querySelector("audio") : null;
+      var source = hotspot ? String(hotspot["audio_" + language + "_url"] || "") : "";
+      if (player) {
+        player.pause();
+        if (source) player.src = source; else player.removeAttribute("src");
+      }
+      if (preview) preview.hidden = !source;
+    });
+    if (generateVoicesButton) {
+      var hasBoth = Boolean(hotspot && hotspot.audio_en_path && hotspot.audio_tl_path);
+      generateVoicesButton.lastChild.textContent = hasBoth ? " Regenerate English + Tagalog voice" : " Generate English + Tagalog voice";
+    }
+    message(ttsStatus, "");
+  }
+
+  function configureHotspotKind(kind) {
+    var isItem = kind === "item";
+    var navigationFields = hotspotForm.querySelector("[data-vt-navigation-fields]");
+    var itemFields = hotspotForm.querySelector("[data-vt-item-fields]");
+    navigationFields.hidden = isItem;
+    itemFields.hidden = !isItem;
+    hotspotForm.elements.target_scene_id.disabled = isItem;
+    hotspotForm.elements.target_scene_id.required = !isItem;
+    itemFields.querySelectorAll("input,textarea,button").forEach(function (control) { control.disabled = !isItem; });
+    hotspotForm.elements.subtitle_en.required = isItem;
+    hotspotForm.elements.subtitle_tl.required = isItem;
+    hotspotForm.querySelector('[data-vt-asset-input="image"]').required = isItem && !editingHotspot;
+  }
+
   function beginHotspot(kind) {
     editingHotspot = null;
     hotspotForm.reset();
@@ -209,12 +257,8 @@
     hotspotForm.elements.hotspot_type.value = kind;
     hotspotForm.querySelector("[data-vt-hotspot-kicker]").textContent = kind === "navigation" ? "Navigation hotspot" : "Artifact hotspot";
     hotspotForm.querySelector("[data-vt-hotspot-title]").textContent = "Click the 360° view to place it";
-    hotspotForm.querySelector("[data-vt-navigation-fields]").hidden = kind !== "navigation";
-    hotspotForm.querySelector("[data-vt-item-fields]").hidden = kind !== "item";
-    hotspotForm.elements.subtitle_en.required = kind === "item";
-    hotspotForm.elements.subtitle_tl.required = kind === "item";
-    hotspotForm.querySelector('[data-vt-asset-input="image"]').required = kind === "item";
-    hotspotForm.elements.target_scene_id.required = kind === "navigation";
+    configureHotspotKind(kind);
+    updateAssetPreviews(null);
     placementMode = true; positionLocked = false;
     root.classList.add("vt-editor-placement");
     placementStatus.textContent = "Placement mode is active. Click the panorama, or use Place at view center.";
@@ -234,12 +278,9 @@
     });
     hotspotForm.querySelector("[data-vt-hotspot-kicker]").textContent = "Edit " + hotspot.hotspot_type + " hotspot";
     hotspotForm.querySelector("[data-vt-hotspot-title]").textContent = "Position locked";
-    hotspotForm.querySelector("[data-vt-navigation-fields]").hidden = hotspot.hotspot_type !== "navigation";
-    hotspotForm.querySelector("[data-vt-item-fields]").hidden = hotspot.hotspot_type !== "item";
-    hotspotForm.elements.subtitle_en.required = hotspot.hotspot_type === "item";
-    hotspotForm.elements.subtitle_tl.required = hotspot.hotspot_type === "item";
+    configureHotspotKind(hotspot.hotspot_type);
     hotspotForm.querySelector('[data-vt-asset-input="image"]').required = false;
-    hotspotForm.elements.target_scene_id.required = hotspot.hotspot_type === "navigation";
+    updateAssetPreviews(hotspot);
     fillTargetScenes();
     if (hotspot.target_scene_id) hotspotForm.elements.target_scene_id.value = hotspot.target_scene_id;
     placementMode = false; positionLocked = true; root.classList.remove("vt-editor-placement");
@@ -363,6 +404,9 @@
   root.querySelector("[data-vt-cancel-hotspot]").addEventListener("click", cancelHotspot);
   root.querySelector("[data-vt-confirm-position]").addEventListener("click", confirmPosition);
   root.querySelector("[data-vt-reposition]").addEventListener("click", reposition);
+  hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
+    button.addEventListener("click", function () { setPreviewKind(button.dataset.vtPreviewKind); });
+  });
   placeCenterButton.addEventListener("click", function () { if (placementMode && viewer) capturePosition(viewer.getPitch(), viewer.getYaw()); });
 
   setStartButton.addEventListener("click", async function () {
@@ -449,8 +493,9 @@
     }
   });
 
-  hotspotForm.addEventListener("submit", async function (event) {
-    event.preventDefault(); if (!selectedScene || !positionLocked) return;
+  async function saveHotspot(keepOpen) {
+    if (!selectedScene || !positionLocked) throw new Error("Confirm the hotspot position before saving.");
+    if (!hotspotForm.reportValidity()) throw new Error("Complete the required hotspot fields first.");
     var submit = hotspotForm.querySelector(".vt-save-hotspot"); submit.disabled = true;
     message(hotspotMessage, "Uploading attached media and saving hotspot…");
     var uploadedPaths = [];
@@ -468,19 +513,78 @@
       var result;
       if (editingHotspot) {
         result = await api(endpoint("/hotspots/" + editingHotspot.id), { method: "PATCH", body: JSON.stringify(data) });
+        result.hotspot = Object.assign({}, editingHotspot, result.hotspot);
         hotspots = hotspots.map(function (entry) { return Number(entry.id) === Number(result.hotspot.id) ? result.hotspot : entry; });
       } else {
         result = await api(endpoint("/hotspots"), { method: "POST", body: JSON.stringify(data) });
         hotspots.push(result.hotspot);
       }
-      cancelHotspot(); renderHotspots(); renderViewer();
-      message(placementStatus, "Hotspot saved. You can add another one.", "success");
+      editingHotspot = result.hotspot;
+      hotspotForm.querySelector('[data-vt-asset-input="image"]').required = false;
+      ["image_path", "glb_path", "audio_en_path", "audio_tl_path"].forEach(function (field) {
+        hotspotForm.elements[field].value = result.hotspot[field] || hotspotForm.elements[field].value || "";
+      });
+      hotspotForm.querySelectorAll("[data-vt-asset-input]").forEach(function (input) { input.value = ""; });
+      renderHotspots();
+      if (keepOpen) {
+        submit.disabled = false;
+        submit.textContent = "Save hotspot changes";
+        message(hotspotMessage, "Hotspot details saved.", "success");
+      } else {
+        cancelHotspot(); renderViewer();
+        message(placementStatus, "Hotspot saved. You can add another one.", "success");
+      }
+      return result.hotspot;
     } catch (error) {
       await discardUploads(uploadedPaths);
       submit.disabled = false;
       message(hotspotMessage, error.message, "error");
+      throw error;
     }
+  }
+
+  hotspotForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    try { await saveHotspot(false); } catch (_) {}
   });
+
+  if (generateVoicesButton) {
+    generateVoicesButton.addEventListener("click", async function () {
+      var english = hotspotForm.elements.subtitle_en.value.trim();
+      var tagalog = hotspotForm.elements.subtitle_tl.value.trim();
+      if (!english || !tagalog) {
+        var missing = !english ? hotspotForm.elements.subtitle_en : hotspotForm.elements.subtitle_tl;
+        message(ttsStatus, "Add both English and Tagalog subtitle text before generating voices.", "error");
+        missing.focus();
+        return;
+      }
+      generateVoicesButton.disabled = true;
+      message(ttsStatus, "Saving subtitles…");
+      try {
+        var saved = await saveHotspot(true);
+        message(ttsStatus, "Generating both voices. This may take a moment…");
+        var result = await api(endpoint("/hotspots/" + saved.id + "/tts"), {
+          method: "POST", body: JSON.stringify({ languages: ["en", "tl"] }),
+        });
+        result.hotspot = Object.assign({}, editingHotspot, result.hotspot);
+        hotspots = hotspots.map(function (entry) { return Number(entry.id) === Number(result.hotspot.id) ? result.hotspot : entry; });
+        editingHotspot = result.hotspot;
+        updateAssetPreviews(result.hotspot);
+        renderHotspots();
+        if (result.complete) {
+          message(ttsStatus, "✓ English and Tagalog voices are ready.", "success");
+        } else {
+          var failedNames = Object.keys(result.failures || {}).map(function (language) { return language === "tl" ? "Tagalog" : "English"; });
+          message(ttsStatus, "✓ One voice is ready. " + failedNames.join(" and ") + " could not be generated.", "warning");
+        }
+      } catch (error) {
+        message(ttsStatus, "Voice generation failed: " + error.message, "error");
+      } finally {
+        generateVoicesButton.disabled = false;
+        hotspotForm.querySelector(".vt-save-hotspot").disabled = false;
+      }
+    });
+  }
 
   renderSceneSelection(); renderHotspots(); renderViewer(); fillTargetScenes();
 })();

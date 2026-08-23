@@ -3,14 +3,6 @@
   const viewerContainer = document.getElementById("tourViewer");
   const loadingOverlay = document.getElementById("tourLoadingOverlay");
   const errorOverlay = document.getElementById("tourErrorOverlay");
-  const artifactOverlay = document.getElementById("tourArtifactOverlay");
-  const artifactCloseButton = document.getElementById("tourArtifactClose");
-  const artifactImage = document.getElementById("tourArtifactImage");
-  const artifactModel = document.getElementById("tourArtifactModel");
-  const artifactTagalogTitle = document.getElementById("tourArtifactTagalogTitle");
-  const artifactTagalogText = document.getElementById("tourArtifactTagalogText");
-  const artifactEnglishTitle = document.getElementById("tourArtifactEnglishTitle");
-  const artifactEnglishText = document.getElementById("tourArtifactEnglishText");
   const controlDock = document.getElementById("tourControlDock");
   const toggleSceneHotspotsButton = document.getElementById("tourToggleSceneHotspots");
   const toggleArtifactHotspotsButton = document.getElementById("tourToggleArtifactHotspots");
@@ -307,8 +299,6 @@
   };
   const frontGateHotspotH1Src = app ? app.dataset.frontGateHotspotH1Src : "";
   const frontGateHotspotH1AudioSrc = app ? app.dataset.frontGateHotspotH1AudioSrc : "";
-  const artifactNavButtons = Array.from(document.querySelectorAll("[data-artifact-view]"));
-  const artifactPanes = Array.from(document.querySelectorAll("[data-artifact-pane]"));
   let hotspotsVisible = true;
   let tourViewer = null;
   let resolvedScenes = null;
@@ -661,8 +651,6 @@
 
     return button;
   }
-
-  installModelArControl(artifactModel, artifactModel?.parentElement);
 
   if (!app || !viewerContainer || !window.pannellum) {
     if (loadingOverlay) {
@@ -4822,96 +4810,7 @@
     }
   }
 
-  function setArtifactView(nextView) {
-    artifactNavButtons.forEach(function (button) {
-      const isActive = button.dataset.artifactView === nextView;
-      button.classList.toggle("is-active", isActive);
-      button.setAttribute("aria-pressed", isActive ? "true" : "false");
-    });
-
-    artifactPanes.forEach(function (pane) {
-      const isActive = pane.dataset.artifactPane === nextView;
-      pane.hidden = !isActive;
-      pane.classList.toggle("is-active", isActive);
-    });
-  }
-
-  function openArtifactOverlay(event, args) {
-    if (event && typeof event.preventDefault === "function") {
-      event.preventDefault();
-    }
-
-    if (artifactImage && args && args.imageSrc) {
-      artifactImage.src = args.imageSrc;
-      artifactImage.alt = args.imageAlt || "Artifact image";
-    }
-
-    if (artifactModel && args && args.glbSrc) {
-      artifactModel.src = args.glbSrc;
-    }
-
-    if (artifactTagalogTitle && args && args.tagalogTitle) {
-      artifactTagalogTitle.textContent = args.tagalogTitle;
-    }
-
-    if (artifactTagalogText && args && args.tagalogText) {
-      artifactTagalogText.textContent = args.tagalogText;
-    }
-
-    if (artifactEnglishTitle && args && args.englishTitle) {
-      artifactEnglishTitle.textContent = args.englishTitle;
-    }
-
-    if (artifactEnglishText && args && args.englishText) {
-      artifactEnglishText.textContent = args.englishText;
-    }
-
-    setArtifactView(args && args.view ? args.view : "image");
-
-    if (artifactOverlay) {
-      artifactOverlay.hidden = false;
-    }
-  }
-
-  function closeArtifactOverlay() {
-    if (artifactOverlay) {
-      artifactOverlay.hidden = true;
-    }
-
-    if (artifactImage) {
-      artifactImage.removeAttribute("src");
-    }
-
-    if (artifactModel) {
-      artifactModel.removeAttribute("src");
-    }
-
-    setArtifactView("image");
-  }
-
-  artifactNavButtons.forEach(function (button) {
-    button.addEventListener("click", function () {
-      setArtifactView(button.dataset.artifactView || "image");
-    });
-  });
-
-  if (artifactCloseButton) {
-    artifactCloseButton.addEventListener("click", closeArtifactOverlay);
-  }
-
-  if (artifactOverlay) {
-    artifactOverlay.addEventListener("click", function (event) {
-      if (event.target === artifactOverlay) {
-        closeArtifactOverlay();
-      }
-    });
-  }
-
   document.addEventListener("keydown", function (event) {
-    if (event.key === "Escape" && artifactOverlay && !artifactOverlay.hidden) {
-      closeArtifactOverlay();
-    }
-
     if (event.key === "Escape" && floatingArtifactPreviewOverlay && !floatingArtifactPreviewOverlay.hidden) {
       hideFloatingArtifactPreviewOverlay();
       return;
