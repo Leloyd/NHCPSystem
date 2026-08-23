@@ -305,8 +305,9 @@ environment variables automatically.
 9. Open one scene and confirm its panorama loads in Pannellum.
 10. Add or edit a test hotspot. Save it, but do not publish until its content and
     navigation have been reviewed.
-11. For automatic voice-over, save an item hotspot with subtitle text, then use
-    **Generate EN voice** or **Generate TL voice** on its hotspot card.
+11. For automatic voice-over, add both subtitle texts, then click **Generate
+    English + Tagalog voices**. A check message appears beside the button when
+    generation succeeds.
 12. When the draft is ready, click **Publish** and confirm the publication dialog.
 13. Open the public **Interactive** page, choose the environment, and test it on
     both desktop and mobile.

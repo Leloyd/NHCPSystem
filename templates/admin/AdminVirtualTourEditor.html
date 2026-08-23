@@ -61,7 +61,7 @@
             <input type="hidden" name="hotspot_type" /><input type="hidden" name="image_path" /><input type="hidden" name="glb_path" /><input type="hidden" name="audio_en_path" /><input type="hidden" name="audio_tl_path" />
             <label><span>English name *</span><input name="name_en" required maxlength="120" /></label>
             <label><span>Tagalog name</span><input name="name_tl" maxlength="120" /></label>
-            <div class="vt-coordinates"><label><span>Pitch</span><input name="pitch" readonly placeholder="Click the 360° view" /></label><label><span>Yaw</span><input name="yaw" readonly placeholder="Click the 360° view" /></label></div>
+            <div class="vt-coordinates"><label><span>Pitch</span><input name="pitch" readonly placeholder="Select point" /></label><label><span>Yaw</span><input name="yaw" readonly placeholder="Select point" /></label></div>
             <div class="vt-placement-actions"><button type="button" data-vt-confirm-position disabled>Confirm position</button><button type="button" data-vt-reposition disabled>Reposition</button></div>
             <label data-vt-navigation-fields hidden><span>Destination scene *</span><select name="target_scene_id"></select></label>
             <div class="vt-item-fields" data-vt-item-fields>
@@ -74,7 +74,7 @@
               <label><span>English subtitle *</span><textarea name="subtitle_en" rows="3" maxlength="5000"></textarea></label>
               <label><span>Tagalog subtitle *</span><textarea name="subtitle_tl" rows="3" maxlength="5000"></textarea></label>
               <div class="vt-voice-generator">
-                <button type="button" data-vt-generate-voices><span aria-hidden="true">♪</span> Generate English + Tagalog voice</button>
+                <button type="button" data-vt-generate-voices><span aria-hidden="true">♪</span> Generate English + Tagalog voices</button>
                 <span data-vt-tts-status role="status" aria-live="polite"></span>
               </div>
               <label><span>English voice-over</span><input type="file" accept="audio/*" data-vt-asset-input="audio_en" /></label>

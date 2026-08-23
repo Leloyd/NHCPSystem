@@ -249,7 +249,7 @@
     });
     if (generateVoicesButton) {
       var hasBoth = Boolean(hotspot && hotspot.audio_en_path && hotspot.audio_tl_path);
-      generateVoicesButton.lastChild.textContent = hasBoth ? " Regenerate English + Tagalog voice" : " Generate English + Tagalog voice";
+      generateVoicesButton.lastChild.textContent = hasBoth ? " Regenerate English + Tagalog voices" : " Generate English + Tagalog voices";
     }
     message(ttsStatus, "");
   }
@@ -580,7 +580,7 @@
       message(ttsStatus, "Saving subtitles…");
       try {
         var saved = await saveHotspot(true);
-        message(ttsStatus, "Generating both voices. This may take a moment…");
+        message(ttsStatus, "Generating both voices with ElevenLabs. This may take a moment…");
         var result = await api(endpoint("/hotspots/" + saved.id + "/tts"), {
           method: "POST", body: JSON.stringify({ languages: ["en", "tl"] }),
         });
