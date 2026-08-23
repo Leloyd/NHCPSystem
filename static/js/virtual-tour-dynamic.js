@@ -19,6 +19,7 @@
   var artifactImage = document.createElement("img");
   var artifactModel = document.createElement("model-viewer");
   var artifactSwitch = document.createElement("button");
+  var artifactArButton = null;
   var artifactTitle = document.createElement("p");
   var artifactClose = document.createElement("button");
   var listenButton = document.getElementById("tourListen");
@@ -35,12 +36,19 @@
   var audio = new Audio();
   var activeItem = null;
   var rootItem = null;
+  var itemOpener = null;
   var modalOpener = null;
   var detailOpener = null;
   var language = "tl";
   var subtitlesOn = true;
   var hotspotsVisible = true;
   var viewer = null;
+  var floatingSceneId = "";
+  var floatingHotspotId = "";
+  var spatialRefresh = null;
+  var arNotice = null;
+  var arNoticeTimer = 0;
+  var managedArModels = new WeakSet();
   var scenes = Array.isArray(config.scenes) ? config.scenes : [];
   var sceneIds = new Set(scenes.map(function (scene) { return scene.id; }));
   var imageHotspotLayer = document.createElement("div");
@@ -80,6 +88,8 @@
   artifactClose.textContent = "\u00d7";
   artifactMediaWrap.appendChild(artifactImageWrap);
   artifactMediaWrap.appendChild(artifactModel);
+  artifactArButton = installModelArControl(artifactModel, artifactMediaWrap);
+  artifactArButton.hidden = true;
   artifactMediaWrap.appendChild(artifactSwitch);
   artifactPanel.appendChild(artifactMediaWrap);
   artifactPanel.appendChild(artifactTitle);
@@ -124,6 +134,73 @@
     return String(value[preferred] || value.en || value.tl || "");
   }
 
+  function ensureArNotice() {
+    if (arNotice) return arNotice;
+    var notice = document.createElement("div");
+    notice.className = "tour-ar-notice";
+    notice.hidden = true;
+    notice.setAttribute("role", "alert");
+    notice.setAttribute("aria-live", "assertive");
+    notice.setAttribute("aria-atomic", "true");
+    notice.innerHTML = '<span class="tour-ar-notice__icon" aria-hidden="true">!</span>'
+      + '<span class="tour-ar-notice__copy"><strong>AR is unavailable</strong>'
+      + '<span>This device or browser does not support Quick Look, WebXR, or Scene Viewer AR. You can still explore the 3D model here.</span></span>'
+      + '<button class="tour-ar-notice__close" type="button" aria-label="Close AR compatibility notice">&times;</button>';
+    notice.querySelector(".tour-ar-notice__close").addEventListener("click", function () {
+      window.clearTimeout(arNoticeTimer);
+      notice.classList.remove("is-visible");
+      notice.hidden = true;
+    });
+    app.appendChild(notice);
+    arNotice = notice;
+    return notice;
+  }
+
+  function showArCompatibilityNotice() {
+    var notice = ensureArNotice();
+    window.clearTimeout(arNoticeTimer);
+    notice.hidden = false;
+    window.requestAnimationFrame(function () { notice.classList.add("is-visible"); });
+    arNoticeTimer = window.setTimeout(function () {
+      notice.classList.remove("is-visible");
+      window.setTimeout(function () {
+        if (!notice.classList.contains("is-visible")) notice.hidden = true;
+      }, 220);
+    }, 6000);
+  }
+
+  function installModelArControl(model, container) {
+    if (!model || !container) return null;
+    var existing = container.querySelector(":scope > .tour-model-ar-button");
+    if (existing) return existing;
+    model.classList.add("tour-model--managed-ar");
+    var button = document.createElement("button");
+    button.className = "tour-model-ar-button";
+    button.type = "button";
+    button.setAttribute("aria-label", "Quick Look: view artifact in your space");
+    button.setAttribute("title", "Quick Look · View in your space");
+    button.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M12 2.75 19 6.2v8.1L12 17.75 5 14.3V6.2L12 2.75Zm0 7.05L5.4 6.55M12 9.8l6.6-3.25M12 9.8v7.6"/><path stroke-linecap="round" d="M8.25 20.5h7.5"/></svg>';
+    container.appendChild(button);
+    if (!managedArModels.has(model)) {
+      managedArModels.add(model);
+      model.addEventListener("ar-status", function (event) {
+        if (event.detail && event.detail.status === "failed") showArCompatibilityNotice();
+      });
+    }
+    button.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      window.customElements.whenDefined("model-viewer").then(function () {
+        if (!model.src || typeof model.activateAR !== "function" || !model.canActivateAR) {
+          showArCompatibilityNotice();
+          return;
+        }
+        return model.activateAR();
+      }).catch(function () { showArCompatibilityNotice(); });
+    });
+    return button;
+  }
+
   function setSubtitle() {
     var value = activeItem && activeItem.content ? localized(activeItem.content.subtitle, language) : "";
     subtitleText.textContent = value;
@@ -136,6 +213,7 @@
     var showModel = name === "glb";
     artifactImageWrap.hidden = showModel;
     artifactModel.hidden = !showModel;
+    artifactArButton.hidden = !showModel;
     artifactSwitch.hidden = !hasGlb;
     artifactSwitch.setAttribute("aria-label", showModel ? "Show artifact image" : "Quick look at the 3D artifact");
     artifactSwitch.setAttribute("aria-pressed", showModel ? "true" : "false");
@@ -231,8 +309,9 @@
     imageHotspotToggle.setAttribute("aria-label", "Hide artifact image hotspots");
   }
 
-  function openItem(item) {
-    modalOpener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+  function openExpandedItem(item, pane, opener) {
+    if (!item || !item.content) return;
+    modalOpener = opener || (document.activeElement !== document.body ? document.activeElement : null);
     rootItem = item;
     activeItem = item;
     artifactImage.src = item.content.image || "";
@@ -243,20 +322,223 @@
     artifactPanel.setAttribute("aria-label", localized(item.name, language) || "Artifact details");
     hideNestedDetail(false);
     renderNestedHotspots(item);
-    setPane("image"); setSubtitle(); playNarration(true);
+    setPane(pane || "image");
+    setSubtitle();
+    syncAudioControls();
     artifactClose.focus();
+  }
+
+  function closeExpandedItem(restoreFocus) {
+    if (artifactOverlay.hidden) return;
+    var wasShowingNestedDetail = Boolean(activeItem && rootItem && activeItem !== rootItem);
+    artifactOverlay.hidden = true;
+    detailOverlay.hidden = true;
+    detailImage.removeAttribute("src");
+    imageHotspotLayer.innerHTML = "";
+    imageHotspotLayer.hidden = true;
+    imageHotspotToggle.hidden = true;
+    artifactImage.removeAttribute("src");
+    artifactModel.removeAttribute("src");
+    artifactArButton.hidden = true;
+    activeItem = rootItem;
+    setSubtitle();
+    syncAudioControls();
+    if (wasShowingNestedDetail && activeItem) playNarration(true);
+    if (restoreFocus !== false && modalOpener && modalOpener.isConnected) modalOpener.focus();
+    modalOpener = null;
+    detailOpener = null;
+  }
+
+  function renderSpatialItem(node, item) {
+    node.classList.add("tour-floating-image-window-hotspot", "tour-floating-media-window-hotspot");
+    node.setAttribute("role", "group");
+    node.setAttribute("aria-label", (localized(item.name, language) || "Artifact") + " media preview");
+
+    var shell = document.createElement("div");
+    var mediaWrap = document.createElement("div");
+    var imageButton = document.createElement("button");
+    var image = document.createElement("img");
+    var model = document.createElement("model-viewer");
+    var switchButton = document.createElement("button");
+    var switchIcon = document.createElement("span");
+    var switchLabel = document.createElement("span");
+    var title = document.createElement("p");
+    var closeButton = document.createElement("button");
+    var currentView = "image";
+    var pointerStart = null;
+    var modelWasDragged = false;
+
+    shell.className = "tour-floating-image-window-shell";
+    mediaWrap.className = "tour-floating-image-window-mediawrap";
+    imageButton.className = "tour-floating-image-window-trigger";
+    imageButton.type = "button";
+    imageButton.setAttribute("aria-label", "Expand artifact image");
+    image.className = "tour-floating-image-window";
+    image.src = item.content.image || "";
+    image.draggable = false;
+    model.className = "tour-floating-media-window-model";
+    model.setAttribute("camera-controls", "");
+    model.setAttribute("touch-action", "pan-y");
+    model.setAttribute("auto-rotate", "");
+    model.setAttribute("shadow-intensity", "1");
+    model.setAttribute("ar", "");
+    model.setAttribute("ar-modes", "webxr scene-viewer quick-look");
+    model.hidden = true;
+    if (item.content.glb) model.src = item.content.glb;
+    switchButton.className = "tour-floating-media-window-switch";
+    switchButton.type = "button";
+    switchIcon.className = "tour-floating-media-window-switch-icon";
+    switchIcon.setAttribute("aria-hidden", "true");
+    switchLabel.className = "tour-sr-only";
+    switchButton.appendChild(switchIcon);
+    switchButton.appendChild(switchLabel);
+    title.className = "tour-floating-image-window-title";
+    closeButton.className = "tour-floating-image-window-close";
+    closeButton.type = "button";
+    closeButton.setAttribute("aria-label", "Close floating artifact");
+    closeButton.textContent = "\u00d7";
+
+    imageButton.appendChild(image);
+    mediaWrap.appendChild(imageButton);
+    mediaWrap.appendChild(model);
+    var arButton = installModelArControl(model, mediaWrap);
+    mediaWrap.appendChild(switchButton);
+    shell.appendChild(mediaWrap);
+    shell.appendChild(title);
+    shell.appendChild(closeButton);
+    node.appendChild(shell);
+
+    function refreshText() {
+      var name = localized(item.name, language) || "Artifact";
+      image.alt = name;
+      model.setAttribute("aria-label", name + " 3D model");
+      title.textContent = name;
+      node.setAttribute("aria-label", name + " media preview");
+    }
+
+    function syncView(nextView) {
+      var hasGlb = Boolean(item.content.glb);
+      currentView = nextView === "glb" && hasGlb ? "glb" : "image";
+      var showModel = currentView === "glb";
+      imageButton.hidden = showModel;
+      imageButton.style.display = showModel ? "none" : "block";
+      image.hidden = showModel;
+      image.style.display = showModel ? "none" : "block";
+      model.hidden = !showModel;
+      model.style.display = showModel ? "block" : "none";
+      arButton.hidden = !showModel;
+      switchButton.hidden = !hasGlb;
+      switchButton.setAttribute("aria-label", showModel ? "Switch floating artifact to image" : "Switch floating artifact to 3D model");
+      switchButton.setAttribute("aria-pressed", showModel ? "true" : "false");
+      switchLabel.textContent = showModel ? "Switch to image" : "Switch to 3D model";
+      switchIcon.innerHTML = showModel
+        ? '<svg viewBox="0 0 24 24"><path d="M5 6.5A1.5 1.5 0 0 1 6.5 5h11A1.5 1.5 0 0 1 19 6.5v11a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 17.5v-11Zm1.5-.5a.5.5 0 0 0-.5.5v8.2l3.1-3.45a1 1 0 0 1 1.48-.03l1.9 2.02 2.45-2.78a1 1 0 0 1 1.5.02L18 12.4V6.5a.5.5 0 0 0-.5-.5h-11Z" fill="currentColor"></path></svg>'
+        : '<svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 6v12L12 21.5 4.5 18V6L12 2.5Zm0 1.12L5.73 6.5 12 9.38l6.27-2.88L12 3.62Zm6.5 3.69-6 2.76v10.28l6-3V7.31Zm-13 0v7.74l6 3V10.07l-6-2.76Z" fill="currentColor"></path></svg>';
+    }
+
+    imageButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      openExpandedItem(item, "image", imageButton);
+    });
+    switchButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      syncView(currentView === "image" ? "glb" : "image");
+    });
+    closeButton.addEventListener("click", function (event) {
+      event.preventDefault();
+      event.stopPropagation();
+      closeItem();
+    });
+    model.addEventListener("pointerdown", function (event) {
+      pointerStart = { x: event.clientX, y: event.clientY };
+      modelWasDragged = false;
+    });
+    model.addEventListener("pointermove", function (event) {
+      if (!pointerStart) return;
+      if (Math.hypot(event.clientX - pointerStart.x, event.clientY - pointerStart.y) > 6) modelWasDragged = true;
+    });
+    model.addEventListener("pointerup", function () { window.setTimeout(function () { pointerStart = null; }, 0); });
+    model.addEventListener("pointercancel", function () { pointerStart = null; modelWasDragged = false; });
+    model.addEventListener("click", function (event) {
+      if (modelWasDragged) { modelWasDragged = false; return; }
+      event.preventDefault();
+      event.stopPropagation();
+      openExpandedItem(item, "glb", model);
+    });
+
+    spatialRefresh = refreshText;
+    refreshText();
+    syncView("image");
+  }
+
+  function openItem(item) {
+    if (!item || !item.content || !viewer || typeof viewer.getScene !== "function") return;
+    var nextSceneId = viewer.getScene();
+    var nextHotspotId = "item-" + String(item.id) + "-window";
+    if (floatingSceneId === nextSceneId && floatingHotspotId === nextHotspotId) {
+      closeItem();
+      return;
+    }
+    var opener = document.activeElement && document.activeElement !== document.body ? document.activeElement : null;
+    closeItem(false);
+    itemOpener = opener;
+    rootItem = item;
+    activeItem = item;
+    floatingSceneId = nextSceneId;
+    floatingHotspotId = nextHotspotId;
+    try {
+      viewer.addHotSpot({
+        id: nextHotspotId,
+        pitch: Number(item.pitch),
+        yaw: Number(item.yaw),
+        type: "info",
+        text: "",
+        cssClass: "tour-floating-image-window-hotspot tour-floating-media-window-hotspot",
+        createTooltipFunc: renderSpatialItem,
+        createTooltipArgs: item,
+      }, nextSceneId);
+    } catch (_) {
+      floatingSceneId = "";
+      floatingHotspotId = "";
+      spatialRefresh = null;
+      activeItem = null;
+      rootItem = null;
+      itemOpener = null;
+      setSubtitle();
+      syncAudioControls();
+      return;
+    }
+    setSubtitle();
+    playNarration(true);
     if (window.NHCPAnalytics && window.NHCPAnalytics.track) {
-      window.NHCPAnalytics.track("artifact_viewed", "virtual-tour", String(item.id), { tour: config.tour.slug, scene: viewer.getScene() });
+      window.NHCPAnalytics.track("artifact_viewed", "virtual-tour", String(item.id), { tour: config.tour.slug, scene: nextSceneId });
     }
   }
 
-  function closeItem() {
-    artifactOverlay.hidden = true; audio.pause(); activeItem = null; rootItem = null; setSubtitle(); syncAudioControls();
-    detailOverlay.hidden = true; imageHotspotLayer.innerHTML = ""; imageHotspotLayer.hidden = true; imageHotspotToggle.hidden = true;
-    artifactImage.removeAttribute("src"); artifactModel.removeAttribute("src");
-    if (modalOpener && modalOpener.isConnected) modalOpener.focus();
-    else document.getElementById("tourViewer").focus();
-    modalOpener = null; detailOpener = null;
+  function closeItem(restoreFocus) {
+    closeExpandedItem(false);
+    if (viewer && floatingHotspotId && floatingSceneId) {
+      try { viewer.removeHotSpot(floatingHotspotId, floatingSceneId); } catch (_) {}
+    }
+    floatingSceneId = "";
+    floatingHotspotId = "";
+    spatialRefresh = null;
+    audio.pause();
+    audio.removeAttribute("src");
+    activeItem = null;
+    rootItem = null;
+    detailOverlay.hidden = true;
+    setSubtitle();
+    syncAudioControls();
+    if (restoreFocus !== false) {
+      if (itemOpener && itemOpener.isConnected) itemOpener.focus();
+      else document.getElementById("tourViewer").focus();
+    }
+    itemOpener = null;
+    modalOpener = null;
+    detailOpener = null;
   }
 
   function itemTooltip(node, args) {
@@ -326,7 +608,7 @@
     loading.hidden = true; errorOverlay.hidden = false;
   }
 
-  artifactClose.addEventListener("click", closeItem);
+  artifactClose.addEventListener("click", function () { closeExpandedItem(true); });
   detailClose.addEventListener("click", function () { hideNestedDetail(true); });
   detailOverlay.addEventListener("click", function (event) { if (event.target === detailOverlay) hideNestedDetail(true); });
   imageHotspotToggle.addEventListener("click", function () {
@@ -336,7 +618,7 @@
     imageHotspotToggle.setAttribute("aria-pressed", willShow ? "true" : "false");
     imageHotspotToggle.setAttribute("aria-label", willShow ? "Hide artifact image hotspots" : "Show artifact image hotspots");
   });
-  artifactOverlay.addEventListener("click", function (event) { if (event.target === artifactOverlay) closeItem(); });
+  artifactOverlay.addEventListener("click", function (event) { if (event.target === artifactOverlay) closeExpandedItem(true); });
   artifactSwitch.addEventListener("click", function () { setPane(artifactModel.hidden ? "glb" : "image"); });
   languageButton.addEventListener("click", function () {
     language = language === "tl" ? "en" : "tl";
@@ -349,6 +631,7 @@
       artifactPanel.setAttribute("aria-label", localized(rootItem.name, language) || "Artifact details");
       renderNestedHotspots(rootItem);
     }
+    if (spatialRefresh) spatialRefresh();
     setSubtitle(); syncAudioControls(); playNarration(true);
   });
   listenButton.addEventListener("click", function () { if (!audio.paused) audio.pause(); else playNarration(false); syncAudioControls(); });
@@ -364,11 +647,15 @@
   });
   audio.addEventListener("play", syncAudioControls); audio.addEventListener("pause", syncAudioControls); audio.addEventListener("ended", syncAudioControls);
   document.addEventListener("keydown", function (event) {
-    if (artifactOverlay.hidden) return;
     if (event.key === "Escape") {
-      if (!detailOverlay.hidden) hideNestedDetail(true); else closeItem();
+      if (!artifactOverlay.hidden) {
+        if (!detailOverlay.hidden) hideNestedDetail(true); else closeExpandedItem(true);
+      } else if (floatingHotspotId) {
+        closeItem();
+      }
       return;
     }
+    if (artifactOverlay.hidden) return;
     if (event.key !== "Tab") return;
     var focusable = Array.prototype.slice.call(artifactOverlay.querySelectorAll('button:not([disabled]), [href], [tabindex]:not([tabindex="-1"])')).filter(function (element) {
       return !element.closest("[hidden]");
