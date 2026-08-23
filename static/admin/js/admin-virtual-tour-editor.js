@@ -38,6 +38,24 @@
   var deleteSceneButton = root.querySelector("[data-vt-delete-scene]");
   var generateVoicesButton = root.querySelector("[data-vt-generate-voices]");
   var ttsStatus = root.querySelector("[data-vt-tts-status]");
+  var viewerHost = root.querySelector("#vtEditorViewer");
+  var viewerResizeFrame = 0;
+  var viewerResizeObserver = null;
+
+  function resizeViewer() {
+    if (viewerResizeFrame) window.cancelAnimationFrame(viewerResizeFrame);
+    viewerResizeFrame = window.requestAnimationFrame(function () {
+      viewerResizeFrame = 0;
+      if (viewer && typeof viewer.resize === "function") viewer.resize();
+    });
+  }
+
+  if (viewerHost && "ResizeObserver" in window) {
+    viewerResizeObserver = new ResizeObserver(resizeViewer);
+    viewerResizeObserver.observe(viewerHost);
+  } else {
+    window.addEventListener("resize", resizeViewer);
+  }
 
   if (window.supabase && config.supabaseUrl && config.supabaseKey) {
     supabaseClient = window.supabase.createClient(config.supabaseUrl, config.supabaseKey, {
