@@ -740,7 +740,7 @@ function setChapter(index) {
   dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
   hint?.classList.toggle('is-hidden', index > 0);
 
-  // Reset any previous internal list position and re-fit the new chapter.
+  // Mobile: start tall chapters at their top and re-check the scroll veil.
   if (mobileQuery.matches) chapters[index].scrollTop = 0;
   refreshChapterFit();
 
@@ -847,23 +847,12 @@ function setLang(lang) {
   else narrateChapter(state.chapter, { speakIt: false });
 }
 
-/* Preserve the original centered/bottom-aligned composition at every text
-   size. If natural content would exceed the viewport, compact decorative
-   spacing in two steps instead of making the entire chapter scroll. */
+/* Re-check whether the active chapter needs its scrollable "tall" mode —
+   layout-affecting settings (subtitles, text size) change its height. */
 function refreshChapterFit() {
-  if (state.chapter < 0) return;
+  if (!mobileQuery.matches || state.chapter < 0) return;
   const active = chapters[state.chapter];
-  if (!active) return;
-  active.classList.remove('is-tall', 'is-compact', 'is-tight');
-  active.classList.add('is-fit-check');
-  const availableHeight = active.clientHeight;
-  const overflows = () => active.scrollHeight > availableHeight + 8;
-
-  if (overflows()) active.classList.add('is-compact');
-  if (overflows()) active.classList.add('is-tight');
-
-  active.classList.remove('is-fit-check');
-  if (active.scrollTop) active.scrollTop = 0;
+  if (active) active.classList.toggle('is-tall', active.scrollHeight > active.clientHeight + 8);
 }
 
 function setSubtitles(on) {
