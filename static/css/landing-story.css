@@ -217,10 +217,6 @@ body {
 
 /* Staggered children inside the active chapter */
 .story-chapter > * {
-  /* Preserve each block's natural height. This lets the chapter reliably
-     detect overflow when text is enlarged instead of squeezing flex items
-     until headings and controls collide. */
-  flex-shrink: 0;
   opacity: 0;
   transform: translateY(22px);
   transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -234,30 +230,34 @@ body {
 .story-chapter.is-active > *:nth-child(6) { transition-delay: 0.58s; }
 .story-chapter.is-active > *:nth-child(7) { transition-delay: 0.66s; }
 
-/* Enlarged text and short/zoomed viewports can make a chapter taller than
-   the space between the fixed navigation and guide controls. JavaScript adds
-   `is-tall` after measuring the active chapter. Anchor that content at the
-   safe top edge and allow vertical scrolling rather than letting it escape
-   above the device viewport. Only the overflowing text column captures the
-   pointer; the rest of the stage remains interactive. */
-.story-chapter.is-tall {
-  justify-content: flex-start;
-  overflow-x: hidden;
-  overflow-y: auto;
-  scrollbar-width: thin;
-  scrollbar-color: rgba(212, 175, 106, 0.55) transparent;
-  -webkit-overflow-scrolling: touch;
-}
-.story-chapter.is-active.is-tall {
-  pointer-events: auto;
-  touch-action: pan-y;
-}
-.story-chapter.is-tall::-webkit-scrollbar { width: 5px; }
-.story-chapter.is-tall::-webkit-scrollbar-track { background: transparent; }
-.story-chapter.is-tall::-webkit-scrollbar-thumb {
-  border-radius: 999px;
-  background: rgba(212, 175, 106, 0.55);
-}
+/* Height-aware fit modes preserve the original center/bottom placement. They
+   compact decorative rhythm only when the selected text size would otherwise
+   escape the usable viewport; the chapter itself never becomes a scroller. */
+.story-chapter.is-fit-check { justify-content: flex-start !important; }
+.story-chapter.is-fit-check > * { flex-shrink: 0; }
+.story-chapter.is-compact .story-label { margin-bottom: 0.45rem; }
+.story-chapter.is-compact h1,
+.story-chapter.is-compact h2 { margin-bottom: 0.45rem; line-height: 1.08; }
+.story-chapter.is-compact .story-copy { line-height: 1.42; }
+.story-chapter.is-compact .story-hero-sub { margin-bottom: 0.55rem; }
+.story-chapter.is-compact .story-hero-divider { margin-bottom: 0.65rem; }
+.story-chapter.is-compact .story-hero-tagline { margin-bottom: 0.75rem; }
+.story-chapter.is-compact .story-hero-footnote { margin-top: 0.45rem; }
+.story-chapter.is-compact .story-cta { padding-block: 0.72rem; }
+.story-chapter.is-compact .story-stat { padding-block: 0.3rem; }
+.story-chapter.is-compact .story-card { padding-block: 0.45rem; }
+
+/* On exceptionally short screens, preserve all primary content and the CTA,
+   but remove the eyebrow/divider/footnote decoration that duplicates context
+   already communicated by the heading and page navigation. */
+.story-chapter.is-tight .story-label,
+.story-chapter.is-tight .story-hero-divider,
+.story-chapter.is-tight .story-hero-footnote { display: none; }
+.story-chapter.is-tight h1,
+.story-chapter.is-tight h2 { margin-bottom: 0.35rem; line-height: 1.04; }
+.story-chapter.is-tight .story-copy { line-height: 1.32; }
+.story-chapter.is-tight .story-hero-sub { margin-bottom: 0.4rem; }
+.story-chapter.is-tight .story-hero-tagline { margin-bottom: 0.55rem; }
 
 /* Long chapters can scroll internally on short screens */
 .story-chapter__scroll {
@@ -1028,12 +1028,22 @@ body.is-trail-exit #publicNavHeader {
     background: linear-gradient(180deg, transparent 0%, rgba(13, 10, 4, 0.6) 30%, rgba(13, 10, 4, 0.92) 62%);
     pointer-events: none;
   }
-  .story-chapter h1 { font-size: calc(clamp(1.85rem, 8.5vw, 2.5rem) * var(--story-font-scale, 1)); }
-  .story-chapter h2 { font-size: calc(clamp(1.45rem, 7vw, 2rem) * var(--story-font-scale, 1)); margin-bottom: 0.7rem; }
+  /* Width controls wrapping while small-viewport height prevents A++ from
+     becoming taller than the physical display. The selected scale is still
+     applied afterwards, so A+ and A++ remain visibly larger at every size. */
+  .story-chapter h1 { font-size: calc(clamp(1.35rem, min(8.5vw, 5.4svh), 2.5rem) * var(--story-font-scale, 1)); }
+  .story-chapter h2 { font-size: calc(clamp(1.2rem, min(7vw, 4.7svh), 2rem) * var(--story-font-scale, 1)); margin-bottom: 0.7rem; }
   .story-label { margin-bottom: 0.7rem; }
   .story-chapter[data-chapter="hero"] .story-label { margin-bottom: 1.1rem; }
   .story-hero-tagline { margin-bottom: 1.6rem; }
-  .story-copy { font-size: calc(0.95rem * var(--story-font-scale, 1)); }
+  .story-copy { font-size: calc(clamp(0.82rem, min(4vw, 2.45svh), 0.95rem) * var(--story-font-scale, 1)); }
+  .story-cta {
+    max-width: 100%;
+    justify-content: center;
+    padding-inline: clamp(1.25rem, 7vw, 2.4rem);
+    text-align: center;
+    white-space: normal;
+  }
   .story-chapter__scroll { max-height: 33vh; max-height: 33svh; }
   /* Visitor cards: compact, no inner scrolling — everything fits one screen. */
   .story-cards {
@@ -1134,10 +1144,18 @@ body.is-trail-exit #publicNavHeader {
   .story__glow { display: none; } /* less visual noise behind the sheet */
 }
 
-/* Short screens: hide the decorative figure to protect the text */
+/* Short screens: reclaim decorative space while keeping the original chapter
+   alignment and all primary text/actions visible. */
 @media (max-height: 720px) {
   .story-figure { display: none; }
-  .story-chapter { padding-top: 6.4rem; }
+  .story-chapter { padding-top: 5.2rem; padding-bottom: 5.2rem; }
+  .story-chapter h1 { font-size: calc(clamp(1.35rem, min(4.6vw, 7svh), 3.9rem) * var(--story-font-scale, 1)); }
+  .story-chapter h2 { font-size: calc(clamp(1.2rem, min(3.4vw, 6svh), 2.7rem) * var(--story-font-scale, 1)); }
+  .story-copy { font-size: calc(clamp(0.82rem, min(1.5vw, 2.6svh), 1.14rem) * var(--story-font-scale, 1)); }
+}
+@media (max-width: 768px) and (max-height: 720px) {
+  .story-chapter { padding-top: 4.75rem; padding-bottom: 7.8rem; }
+  .story__viewport[data-subtitles="off"] .story-chapter { padding-bottom: 4.6rem; }
 }
 
 /* Loading overlay ------------------------------------------------------------- */

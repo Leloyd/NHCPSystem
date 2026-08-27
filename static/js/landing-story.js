@@ -740,7 +740,7 @@ function setChapter(index) {
   dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
   hint?.classList.toggle('is-hidden', index > 0);
 
-  // Mobile: start tall chapters at their top and re-check the scroll veil.
+  // Reset any previous internal list position and re-fit the new chapter.
   if (mobileQuery.matches) chapters[index].scrollTop = 0;
   refreshChapterFit();
 
@@ -847,19 +847,23 @@ function setLang(lang) {
   else narrateChapter(state.chapter, { speakIt: false });
 }
 
-/* Re-check whether the active chapter needs its scrollable "tall" mode.
-   This applies to desktop too: browser zoom, a short laptop viewport, a
-   longer translation, or enlarged text can overflow at any width. Measure
-   while top-aligned so mobile's normal bottom alignment cannot hide overflow
-   above the scrollable area. */
+/* Preserve the original centered/bottom-aligned composition at every text
+   size. If natural content would exceed the viewport, compact decorative
+   spacing in two steps instead of making the entire chapter scroll. */
 function refreshChapterFit() {
   if (state.chapter < 0) return;
   const active = chapters[state.chapter];
   if (!active) return;
-  active.classList.add('is-tall');
-  const needsScroll = active.scrollHeight > active.clientHeight + 8;
-  active.classList.toggle('is-tall', needsScroll);
-  if (!needsScroll && active.scrollTop) active.scrollTop = 0;
+  active.classList.remove('is-tall', 'is-compact', 'is-tight');
+  active.classList.add('is-fit-check');
+  const availableHeight = active.clientHeight;
+  const overflows = () => active.scrollHeight > availableHeight + 8;
+
+  if (overflows()) active.classList.add('is-compact');
+  if (overflows()) active.classList.add('is-tight');
+
+  active.classList.remove('is-fit-check');
+  if (active.scrollTop) active.scrollTop = 0;
 }
 
 function setSubtitles(on) {
