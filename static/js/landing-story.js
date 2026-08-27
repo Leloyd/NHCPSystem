@@ -828,12 +828,19 @@ function setLang(lang) {
   narrateChapter(state.chapter, { speakIt: state.unlocked });
 }
 
-/* Re-check whether the active chapter needs its scrollable "tall" mode —
-   layout-affecting settings (subtitles, text size) change its height. */
+/* Re-check whether the active chapter needs its scrollable "tall" mode.
+   This applies to desktop too: browser zoom, a short laptop viewport, a
+   longer translation, or enlarged text can overflow at any width. Measure
+   while top-aligned so mobile's normal bottom alignment cannot hide overflow
+   above the scrollable area. */
 function refreshChapterFit() {
-  if (!mobileQuery.matches || state.chapter < 0) return;
+  if (state.chapter < 0) return;
   const active = chapters[state.chapter];
-  if (active) active.classList.toggle('is-tall', active.scrollHeight > active.clientHeight + 8);
+  if (!active) return;
+  active.classList.add('is-tall');
+  const needsScroll = active.scrollHeight > active.clientHeight + 8;
+  active.classList.toggle('is-tall', needsScroll);
+  if (!needsScroll && active.scrollTop) active.scrollTop = 0;
 }
 
 function setSubtitles(on) {
@@ -1364,7 +1371,20 @@ if (story && viewport && chapters.length) {
   initStage();
 
   window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll, { passive: true });
+  window.addEventListener('resize', () => {
+    onScroll();
+    window.requestAnimationFrame(refreshChapterFit);
+  }, { passive: true });
+
+  /* Dynamic browser chrome and late-loading web fonts can change the usable
+     height after first paint without changing the selected text size. */
+  if ('ResizeObserver' in window) {
+    const chapterFitObserver = new ResizeObserver(() => {
+      window.requestAnimationFrame(refreshChapterFit);
+    });
+    chapterFitObserver.observe(viewport);
+  }
+  document.fonts?.ready.then(() => window.requestAnimationFrame(refreshChapterFit));
 
   // Drive the About scenes. A timer (not the render loop) so it also works
   // if WebGL is unavailable. Recorded VO has no word-boundary events, so the

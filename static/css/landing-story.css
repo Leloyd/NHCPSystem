@@ -217,6 +217,10 @@ body {
 
 /* Staggered children inside the active chapter */
 .story-chapter > * {
+  /* Preserve each block's natural height. This lets the chapter reliably
+     detect overflow when text is enlarged instead of squeezing flex items
+     until headings and controls collide. */
+  flex-shrink: 0;
   opacity: 0;
   transform: translateY(22px);
   transition: opacity 0.6s cubic-bezier(0.22, 1, 0.36, 1), transform 0.6s cubic-bezier(0.22, 1, 0.36, 1);
@@ -229,6 +233,31 @@ body {
 .story-chapter.is-active > *:nth-child(5) { transition-delay: 0.5s; }
 .story-chapter.is-active > *:nth-child(6) { transition-delay: 0.58s; }
 .story-chapter.is-active > *:nth-child(7) { transition-delay: 0.66s; }
+
+/* Enlarged text and short/zoomed viewports can make a chapter taller than
+   the space between the fixed navigation and guide controls. JavaScript adds
+   `is-tall` after measuring the active chapter. Anchor that content at the
+   safe top edge and allow vertical scrolling rather than letting it escape
+   above the device viewport. Only the overflowing text column captures the
+   pointer; the rest of the stage remains interactive. */
+.story-chapter.is-tall {
+  justify-content: flex-start;
+  overflow-x: hidden;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(212, 175, 106, 0.55) transparent;
+  -webkit-overflow-scrolling: touch;
+}
+.story-chapter.is-active.is-tall {
+  pointer-events: auto;
+  touch-action: pan-y;
+}
+.story-chapter.is-tall::-webkit-scrollbar { width: 5px; }
+.story-chapter.is-tall::-webkit-scrollbar-track { background: transparent; }
+.story-chapter.is-tall::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: rgba(212, 175, 106, 0.55);
+}
 
 /* Long chapters can scroll internally on short screens */
 .story-chapter__scroll {
