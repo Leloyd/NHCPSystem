@@ -186,6 +186,11 @@ Supabase explains the new key types in
 
 Skip this section if administrators will always upload their own audio. Scene,
 hotspot, image, GLB, subtitle, and manual audio features work without ElevenLabs.
+If a published hotspot has no generated/uploaded audio, or its audio cannot be
+loaded, the public tour automatically reads the matching English or Tagalog
+subtitle with the browser's speech service. Chrome prefers an available Google
+female-style voice, but the exact voice depends on the visitor's device and
+installed browser voices.
 
 ### Add the requested voice
 

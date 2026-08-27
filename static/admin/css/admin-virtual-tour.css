@@ -1,5 +1,15 @@
 :root{--vt-green:#0c6448;--vt-green-dark:#084936;--vt-green-soft:#e8f3ee;--vt-gold:#bf9847;--vt-ink:#17231e;--vt-muted:#66736d;--vt-line:#dce5e0;--vt-surface:#fff;--vt-bg:#f3f6f4}
 .vt-form-grid label>small{color:var(--vt-muted);font-size:.7rem;line-height:1.45}
+.vt-hotspot-form-slot{min-height:0}
+.vt-hotspot-card.is-editing{background:#eef7f3;border-color:#8ebdab;box-shadow:0 0 0 2px rgba(12,100,72,.08)}
+.vt-hotspot-list>.vt-hotspot-form{background:#fff;border:1px solid #b9d4c8;border-radius:0 0 12px 12px;box-shadow:0 10px 22px rgba(27,55,43,.08);margin:-.45rem 0 .35rem;padding-top:1rem}
+.vt-loading-modal[hidden]{display:none}
+body.vt-loading-open{overflow:hidden}
+.vt-loading-modal{align-items:center;background:rgba(5,18,12,.72);backdrop-filter:blur(7px);display:flex;inset:0;justify-content:center;padding:max(1rem,env(safe-area-inset-top)) max(1rem,env(safe-area-inset-right)) max(1rem,env(safe-area-inset-bottom)) max(1rem,env(safe-area-inset-left));position:fixed;z-index:120}
+.vt-loading-card{background:#fffdf8;border:1px solid rgba(191,152,71,.42);border-radius:1.25rem;box-shadow:0 28px 75px rgba(0,0,0,.3);max-width:24rem;padding:1.8rem;text-align:center;width:100%}
+.vt-loading-card h2{color:var(--vt-ink);font-family:Georgia,serif;font-size:1.45rem;margin:.15rem 0 .55rem}.vt-loading-card>p:last-child{color:var(--vt-muted);font-size:.82rem;line-height:1.55;margin:0}
+.vt-loading-spinner{animation:vt-loading-spin .8s linear infinite;border:3px solid #dce9e3;border-radius:50%;border-top-color:var(--vt-green);display:inline-block;height:2.15rem;margin-bottom:.85rem;width:2.15rem}
+@keyframes vt-loading-spin{to{transform:rotate(360deg)}}
 .vt-eyebrow{color:var(--vt-green);font-size:.72rem;font-weight:800;letter-spacing:.13em;margin:0 0 .45rem;text-transform:uppercase}
 .vt-manager,.vt-new-card,.vt-editor{color:var(--vt-ink)}
 .vt-manager__head{align-items:center;background:linear-gradient(135deg,#fff,#f2f8f5);border:1px solid var(--vt-line);border-radius:22px;display:flex;gap:2rem;justify-content:space-between;padding:1.6rem 1.8rem}
@@ -20,6 +30,7 @@
 @media(max-width:780px){.vt-manager__head,.vt-editor__header{align-items:flex-start;flex-direction:column}.vt-primary-link{justify-content:center;width:100%}.vt-tour-grid,.vt-form-grid{grid-template-columns:1fr}.vt-editor__workspace{display:flex;flex-direction:column}.vt-scenes-panel{max-height:none;order:2}.vt-viewer-column{height:max(480px,64dvh);max-height:none;order:1}.vt-inspector{height:min(72dvh,640px);max-height:640px;order:3}.vt-viewer{min-height:0}.vt-scene-list{flex-direction:row;max-height:none;overflow-x:auto;overflow-y:hidden}.vt-scene-item{flex:0 0 180px}.vt-viewer-toolbar{align-items:flex-start;flex-direction:column;gap:.45rem}.vt-editor__header-actions{width:100%}.vt-upload-dialog>form:last-child{grid-template-columns:1fr}.vt-upload-dialog>form:last-child>*{grid-column:1/-1}}
 @media(max-width:520px){.vt-tour-grid{grid-template-columns:1fr}.vt-manager__head,.vt-new-card{padding:1.15rem}.vt-editor__header{padding:.9rem}.vt-editor__header-actions>a,.vt-editor__header-actions>button,.vt-editor__header-actions>form{flex:1}.vt-editor__header-actions button{width:100%}.vt-viewer-toolbar>div{display:grid;grid-template-columns:1fr 1fr;width:100%}.vt-hotspot-actions{grid-template-columns:1fr}.vt-upload-dialog{padding:1rem}}
 @media(prefers-reduced-motion:reduce){.vt-manager *,.vt-editor *{scroll-behavior:auto!important;transition:none!important}}
+@media(prefers-reduced-motion:reduce){.vt-loading-spinner{animation:none}}
 .vt-viewer-toolbar>div{flex-wrap:wrap}
 .vt-hotspot-card__buttons{display:flex;flex:0 0 auto;gap:.15rem}.vt-hotspot-card__buttons button{border-radius:6px;font-size:.66rem;font-weight:750;padding:.3rem}.vt-hotspot-card__buttons [data-action=edit]{color:var(--vt-green)}
 .vt-editor-nav-hotspot,.vt-editor-item-hotspot{border:3px solid #fff;border-radius:50%;box-shadow:0 0 0 4px rgba(12,100,72,.25);height:18px;width:18px}.vt-editor-nav-hotspot{background:#e2aa40}.vt-editor-item-hotspot{background:#168760}
@@ -36,7 +47,7 @@
 .vt-original-import :is(a,button):focus-visible{outline:3px solid #d09e27;outline-offset:3px}
 
 @media(forced-colors:active){
-  .vt-tour-card,.vt-manager__head,.vt-new-card,.vt-editor__header,.vt-scenes-panel,.vt-viewer-column,.vt-inspector,.vt-upload-dialog,.vt-original-import,.vt-current-media,.vt-voice-generator,.vt-audio-preview{border:1px solid CanvasText;box-shadow:none}
+  .vt-tour-card,.vt-manager__head,.vt-new-card,.vt-editor__header,.vt-scenes-panel,.vt-viewer-column,.vt-inspector,.vt-upload-dialog,.vt-original-import,.vt-current-media,.vt-voice-generator,.vt-audio-preview,.vt-loading-card{border:1px solid CanvasText;box-shadow:none}
   .vt-primary-link,.vt-save-hotspot,.vt-form-actions button,.vt-editor__header-actions .is-publish,.vt-original-import__copy button,.vt-voice-generator button{forced-color-adjust:auto}
   .vt-temp-hotspot,.vt-editor-nav-hotspot,.vt-editor-item-hotspot{border:3px solid Highlight}
 }

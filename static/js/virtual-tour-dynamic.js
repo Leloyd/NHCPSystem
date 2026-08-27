@@ -34,6 +34,8 @@
   var minimap = document.getElementById("tourMinimap");
   var viewModes = document.getElementById("tourViewModes");
   var audio = new Audio();
+  var speechFallback = window.NHCPSpeechFallback || null;
+  var usingSpeechFallback = false;
   var activeItem = null;
   var rootItem = null;
   var itemOpener = null;
@@ -237,20 +239,59 @@
       : '<span class="tour-floating-media-window-switch-icon" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2.5 19.5 6v12L12 21.5 4.5 18V6L12 2.5Zm0 1.12L5.73 6.5 12 9.38l6.27-2.88L12 3.62Zm6.5 3.69-6 2.76v10.28l6-3V7.31Zm-13 0v7.74l6 3V10.07l-6-2.76Z" fill="currentColor"></path></svg></span><span class="tour-sr-only">Quick look at 3D model</span>';
   }
 
+  function narrationText() {
+    return activeItem && activeItem.content ? localized(activeItem.content.subtitle, language) : "";
+  }
+
+  function speechIsPlaying() {
+    return Boolean(speechFallback && speechFallback.isPlaying());
+  }
+
+  function speechIsPaused() {
+    return Boolean(speechFallback && speechFallback.isPaused());
+  }
+
+  function stopSpeechFallback() {
+    usingSpeechFallback = false;
+    if (speechFallback) speechFallback.cancel();
+  }
+
+  function startSpeechFallback() {
+    if (usingSpeechFallback) return true;
+    var text = narrationText();
+    if (!text || audio.muted || !speechFallback || !speechFallback.available) {
+      syncAudioControls();
+      return false;
+    }
+    audio.pause();
+    audio.removeAttribute("src");
+    usingSpeechFallback = true;
+    var started = speechFallback.speak(text, language, {
+      onstart: syncAudioControls,
+      onend: function () { usingSpeechFallback = false; syncAudioControls(); },
+      onerror: function () { usingSpeechFallback = false; syncAudioControls(); },
+    });
+    if (!started) usingSpeechFallback = false;
+    syncAudioControls();
+    return started;
+  }
+
   function syncAudioControls() {
     var source = activeItem && activeItem.content && activeItem.content.audio ? activeItem.content.audio[language] : "";
     var content = activeItem && activeItem.content ? activeItem.content : {};
+    var text = narrationText();
     var hasLanguageContent = Boolean((content.audio && (content.audio.en || content.audio.tl)) || (content.subtitle && (content.subtitle.en || content.subtitle.tl)));
+    var narrationPlaying = (!audio.paused && !audio.ended) || speechIsPlaying();
     languageButton.disabled = !hasLanguageContent;
     languageButton.setAttribute("aria-disabled", languageButton.disabled ? "true" : "false");
     languageButton.textContent = language.toUpperCase();
     languageButton.setAttribute("aria-label", hasLanguageContent
       ? (language === "tl" ? "Switch to English narration and subtitles" : "Switch to Tagalog narration and subtitles")
       : "Narration and subtitle language unavailable");
-    listenButton.classList.toggle("is-playing", !audio.paused && !audio.ended);
-    listenButton.setAttribute("aria-pressed", !audio.paused && !audio.ended ? "true" : "false");
-    listenButton.setAttribute("aria-label", !audio.paused && !audio.ended ? "Pause narration" : "Play narration");
-    listenButton.disabled = !source;
+    listenButton.classList.toggle("is-playing", narrationPlaying);
+    listenButton.setAttribute("aria-pressed", narrationPlaying ? "true" : "false");
+    listenButton.setAttribute("aria-label", narrationPlaying ? "Pause narration" : "Play narration");
+    listenButton.disabled = !source && (!text || !speechFallback || !speechFallback.available);
     muteButton.classList.toggle("is-muted", audio.muted);
     muteButton.setAttribute("aria-pressed", audio.muted ? "true" : "false");
     muteButton.setAttribute("aria-label", audio.muted ? "Unmute narration" : "Mute narration");
@@ -259,9 +300,14 @@
   function playNarration(restart) {
     if (!activeItem || !activeItem.content) return;
     var source = String((activeItem.content.audio || {})[language] || "");
-    if (!source) { audio.pause(); audio.removeAttribute("src"); syncAudioControls(); return; }
+    if (!source) { stopSpeechFallback(); startSpeechFallback(); return; }
+    stopSpeechFallback();
     if (restart || audio.src !== new URL(source, window.location.href).href) { audio.src = source; audio.currentTime = 0; }
-    var promise = audio.play(); if (promise && promise.catch) promise.catch(function () {});
+    var promise = audio.play();
+    if (promise && promise.catch) promise.catch(function (error) {
+      if (!error || error.name !== "NotAllowedError") startSpeechFallback();
+      else syncAudioControls();
+    });
     syncAudioControls();
   }
 
@@ -544,6 +590,7 @@
     spatialRefresh = null;
     audio.pause();
     audio.removeAttribute("src");
+    stopSpeechFallback();
     activeItem = null;
     rootItem = null;
     detailOverlay.hidden = true;
@@ -823,8 +870,21 @@
     if (spatialRefresh) spatialRefresh();
     setSubtitle(); syncAudioControls(); playNarration(true);
   });
-  listenButton.addEventListener("click", function () { if (!audio.paused) audio.pause(); else playNarration(false); syncAudioControls(); });
-  muteButton.addEventListener("click", function () { audio.muted = !audio.muted; syncAudioControls(); });
+  listenButton.addEventListener("click", function () {
+    if (!audio.paused) audio.pause();
+    else if (speechIsPlaying()) speechFallback.pause();
+    else if (speechIsPaused()) speechFallback.resume();
+    else playNarration(false);
+    syncAudioControls();
+  });
+  muteButton.addEventListener("click", function () {
+    audio.muted = !audio.muted;
+    if (speechFallback) {
+      if (audio.muted && speechIsPlaying()) speechFallback.pause();
+      else if (!audio.muted && speechIsPaused()) speechFallback.resume();
+    }
+    syncAudioControls();
+  });
   subtitlesButton.addEventListener("click", function () { subtitlesOn = !subtitlesOn; subtitlesButton.classList.toggle("is-active", subtitlesOn); subtitlesButton.setAttribute("aria-pressed", subtitlesOn ? "true" : "false"); subtitlesButton.setAttribute("aria-label", subtitlesOn ? "Hide subtitles" : "Show subtitles"); setSubtitle(); });
   hotspotButton.addEventListener("click", function () {
     hotspotsVisible = !hotspotsVisible;
@@ -833,6 +893,7 @@
   backButton.addEventListener("click", function () { window.location.href = app.dataset.interactiveUrl || "/interactive"; });
   captureButton.addEventListener("click", captureCurrentView);
   audio.addEventListener("play", syncAudioControls); audio.addEventListener("pause", syncAudioControls); audio.addEventListener("ended", syncAudioControls);
+  audio.addEventListener("error", function () { if (activeItem && !usingSpeechFallback) startSpeechFallback(); });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
       if (!artifactOverlay.hidden) {

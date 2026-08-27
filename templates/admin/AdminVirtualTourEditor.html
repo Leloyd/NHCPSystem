@@ -44,7 +44,7 @@
       </aside>
 
       <section class="vt-viewer-column" aria-label="360 degree scene editor">
-        <div class="vt-viewer-toolbar"><span data-vt-current-scene>{{ scenes[0].name_en if scenes else 'No scene selected' }}</span><div><button type="button" data-vt-place-center disabled>Place at view center</button><button type="button" data-vt-replace-scene disabled>Replace 360°</button><button type="button" data-vt-set-start disabled>Set as start</button><button type="button" data-vt-delete-scene disabled>Delete</button></div></div>
+        <div class="vt-viewer-toolbar"><span data-vt-current-scene>{{ scenes[0].name_en if scenes else 'No scene selected' }}</span><div><button type="button" data-vt-replace-scene disabled>Replace 360°</button><button type="button" data-vt-set-start disabled>Set as start</button><button type="button" data-vt-delete-scene disabled>Delete</button></div></div>
         <div class="vt-viewer" id="vtEditorViewer" tabindex="0" aria-label="Interactive panorama editor">
           <div class="vt-viewer-empty" data-vt-viewer-empty {% if scenes %}hidden{% endif %}><span>360°</span><strong>Your panorama preview will appear here</strong><p>Upload a full equirectangular scene to begin.</p></div>
         </div>
@@ -56,6 +56,7 @@
         <div id="vtHotspotsPanel" role="tabpanel" aria-labelledby="vtHotspotsTab" data-vt-panel="hotspots">
           <div class="vt-hotspot-actions"><button type="button" data-vt-add-hotspot="item" disabled>＋ Item hotspot</button><button type="button" data-vt-add-hotspot="navigation" disabled>＋ Navigation</button></div>
           <div class="vt-hotspot-list" data-vt-hotspot-list><div class="vt-empty"><strong>No scene selected</strong><p>Select a panorama to view its hotspots.</p></div></div>
+          <div class="vt-hotspot-form-slot" data-vt-hotspot-form-slot>
           <form class="vt-hotspot-form" data-vt-hotspot-form hidden>
             <header><div><span data-vt-hotspot-kicker>New hotspot</span><strong data-vt-hotspot-title>Place hotspot</strong></div><button type="button" data-vt-cancel-hotspot aria-label="Cancel hotspot">×</button></header>
             <input type="hidden" name="hotspot_type" /><input type="hidden" name="image_path" /><input type="hidden" name="glb_path" /><input type="hidden" name="audio_en_path" /><input type="hidden" name="audio_tl_path" />
@@ -85,6 +86,7 @@
             <p class="vt-inline-message" data-vt-hotspot-message aria-live="polite"></p>
             <button type="submit" class="vt-save-hotspot" disabled>Save hotspot</button>
           </form>
+          </div>
         </div>
         <div id="vtDetailsPanel" role="tabpanel" aria-labelledby="vtDetailsTab" data-vt-panel="details" hidden>
           <form class="vt-details-form" data-vt-details-form>
@@ -114,6 +116,15 @@
         <button type="submit" data-vt-upload-scene disabled>Validate and add scene</button>
       </form>
     </dialog>
+
+    <div class="vt-loading-modal" data-vt-loading-modal role="dialog" aria-modal="true" aria-labelledby="vtLoadingTitle" aria-describedby="vtLoadingMessage" aria-hidden="true" hidden>
+      <section class="vt-loading-card" role="document">
+        <span class="vt-loading-spinner" aria-hidden="true"></span>
+        <p class="vt-eyebrow">Virtual Tour</p>
+        <h2 id="vtLoadingTitle" data-vt-loading-title>Updating environment</h2>
+        <p id="vtLoadingMessage" data-vt-loading-message>Saving your changes. Please keep this page open.</p>
+      </section>
+    </div>
   </section>
 {% endblock %}
 

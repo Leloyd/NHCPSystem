@@ -23,14 +23,18 @@
     var approveButton = modal && modal.querySelector("[data-admin-confirm-approve]");
     var pendingForm = null;
     var pendingSubmitter = null;
+    var pendingConfirmationResolve = null;
     var approvedForm = null;
     var previousFocus = null;
     var closeTimer = 0;
 
-    function closeModal(restoreFocus) {
+    function closeModal(restoreFocus, confirmationResult) {
       if (!modal) {
         return;
       }
+
+      var confirmationResolve = pendingConfirmationResolve;
+      pendingConfirmationResolve = null;
 
       modal.classList.remove("is-open");
       modal.setAttribute("aria-hidden", "true");
@@ -51,6 +55,10 @@
         previousFocus.focus();
       }
       previousFocus = null;
+
+      if (confirmationResolve) {
+        confirmationResolve(confirmationResult === true);
+      }
     }
 
     function openModal(form, submitter) {
@@ -71,6 +79,7 @@
 
       pendingForm = form;
       pendingSubmitter = submitter || form.querySelector('button[type="submit"], input[type="submit"]');
+      pendingConfirmationResolve = null;
       previousFocus = document.activeElement;
       title.textContent = nextTitle;
       message.textContent = nextMessage;
@@ -90,6 +99,49 @@
       });
       return false;
     }
+
+    function requestConfirmation(options) {
+      var settings = options || {};
+      var nextTitle = String(settings.title || "Confirm action").trim();
+      var nextMessage = String(settings.message || "").trim();
+      var nextLabel = String(settings.label || "Confirm").trim();
+      var nextEyebrow = String(settings.eyebrow || "Confirm action").trim();
+      var variant = String(settings.variant || "disable").trim().toLowerCase();
+
+      if (!modal || !title || !message || !approveButton || !cancelButton) {
+        return Promise.resolve(window.confirm(nextMessage || nextTitle));
+      }
+
+      if (!modal.hidden || pendingForm || pendingConfirmationResolve) {
+        return Promise.resolve(false);
+      }
+
+      return new Promise(function (resolve) {
+        if (closeTimer) {
+          window.clearTimeout(closeTimer);
+          closeTimer = 0;
+        }
+        pendingForm = null;
+        pendingSubmitter = null;
+        pendingConfirmationResolve = resolve;
+        previousFocus = document.activeElement;
+        title.textContent = nextTitle;
+        message.textContent = nextMessage;
+        if (eyebrow) eyebrow.textContent = nextEyebrow;
+        approveButton.textContent = nextLabel;
+        modal.classList.toggle("is-enable", variant === "enable");
+        modal.classList.toggle("is-disable", variant !== "enable");
+        modal.hidden = false;
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("admin-confirm-open");
+        window.requestAnimationFrame(function () {
+          modal.classList.add("is-open");
+          cancelButton.focus();
+        });
+      });
+    }
+
+    window.NHCPAdminConfirm = requestConfirmation;
 
     forms.forEach(function (form) {
       form.addEventListener("submit", function (event) {
@@ -116,10 +168,14 @@
     }
 
     cancelButton.addEventListener("click", function () {
-      closeModal(true);
+      closeModal(true, false);
     });
 
     approveButton.addEventListener("click", function () {
+      if (pendingConfirmationResolve) {
+        closeModal(true, true);
+        return;
+      }
       var form = pendingForm;
       var submitter = pendingSubmitter;
       if (!form) {
@@ -146,14 +202,14 @@
 
     modal.addEventListener("click", function (event) {
       if (event.target === modal) {
-        closeModal(true);
+        closeModal(true, false);
       }
     });
 
     modal.addEventListener("keydown", function (event) {
       if (event.key === "Escape") {
         event.preventDefault();
-        closeModal(true);
+        closeModal(true, false);
         return;
       }
 

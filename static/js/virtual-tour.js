@@ -351,6 +351,8 @@
   let activeFloatingArtifactAudioConfig = null;
   let floatingImageAudio = null;
   let floatingImageAudioSrc = "";
+  const speechFallback = window.NHCPSpeechFallback || null;
+  let usingSpeechFallback = false;
   let narrationMuted = false;
   let subtitlesOn = true;
   let activeSubtitle = null; // { tl, en } text for the artifact currently open
@@ -2690,7 +2692,10 @@
     // Translation button: shows the current narration language (TL/EN) and is
     // only enabled while an artifact with audio is open.
     if (toggleArtifactHotspotsButton) {
-      const artifactAudioEnabled = Boolean(activeFloatingArtifactAudioConfig && (activeFloatingArtifactAudioConfig.tl || activeFloatingArtifactAudioConfig.en));
+      const artifactAudioEnabled = Boolean(
+        (activeFloatingArtifactAudioConfig && (activeFloatingArtifactAudioConfig.tl || activeFloatingArtifactAudioConfig.en)) ||
+        (activeSubtitle && (activeSubtitle.tl || activeSubtitle.en))
+      );
       const isTagalog = floatingArtifactAudioLanguage === "tl";
       toggleArtifactHotspotsButton.textContent = isTagalog ? "TL" : "EN";
       toggleArtifactHotspotsButton.disabled = !artifactAudioEnabled;
@@ -3699,10 +3704,7 @@
       if (parentAudio && (parentAudio.tl || parentAudio.en)) {
         playFloatingArtifactAudio(parentAudio, floatingArtifactAudioLanguage);
       } else {
-        stopFloatingImageAudio();
-        activeFloatingArtifactAudioConfig = null;
-        updateHotspotVisibilityState();
-        syncNarrationControls();
+        playFloatingArtifactAudio(null, floatingArtifactAudioLanguage);
       }
     }
   }
@@ -3733,6 +3735,8 @@
         ? "en"
         : floatingArtifactAudioLanguage;
       playFloatingArtifactAudio(detailAudio, language);
+    } else {
+      playFloatingArtifactAudio(null, floatingArtifactAudioLanguage);
     }
   }
 
@@ -3934,6 +3938,9 @@
       floatingImageAudioSrc = "";
       syncNarrationControls();
     });
+    audio.addEventListener("error", function () {
+      if (!usingSpeechFallback) playSpeechFallback();
+    });
 
     floatingImageAudio = audio;
     floatingImageAudioSrc = audioSrc;
@@ -3954,11 +3961,16 @@
     if (playPromise && typeof playPromise.catch === "function") {
       playPromise.catch(function (error) {
         console.warn("Unable to autoplay hotspot audio.", error);
+        if (!error || error.name !== "NotAllowedError") playSpeechFallback();
       });
     }
   }
 
-  function stopFloatingImageAudio() {
+  function stopFloatingImageAudio(preserveSpeech) {
+    if (!preserveSpeech) {
+      usingSpeechFallback = false;
+      if (speechFallback) speechFallback.cancel();
+    }
     if (!floatingImageAudio) {
       floatingImageAudioSrc = "";
       return;
@@ -3970,20 +3982,36 @@
     floatingImageAudioSrc = "";
   }
 
+  function activeNarrationText() {
+    if (!activeSubtitle) return "";
+    return String((floatingArtifactAudioLanguage === "en" ? activeSubtitle.en : activeSubtitle.tl) || activeSubtitle.en || activeSubtitle.tl || "");
+  }
+
+  function playSpeechFallback() {
+    if (usingSpeechFallback) return true;
+    const text = activeNarrationText();
+    if (!text || narrationMuted || !speechFallback || !speechFallback.available) {
+      syncNarrationControls();
+      return false;
+    }
+    stopFloatingImageAudio(true);
+    usingSpeechFallback = true;
+    const started = speechFallback.speak(text, floatingArtifactAudioLanguage, {
+      onstart: syncNarrationControls,
+      onend: function () { usingSpeechFallback = false; syncNarrationControls(); },
+      onerror: function () { usingSpeechFallback = false; syncNarrationControls(); },
+    });
+    if (!started) usingSpeechFallback = false;
+    syncNarrationControls();
+    return started;
+  }
+
   function getFloatingArtifactAudioSource(audioConfig, language) {
     if (!audioConfig) {
       return "";
     }
 
-    if (language === "en" && audioConfig.en) {
-      return audioConfig.en;
-    }
-
-    if (audioConfig.tl) {
-      return audioConfig.tl;
-    }
-
-    return audioConfig.en || "";
+    return language === "en" ? (audioConfig.en || "") : (audioConfig.tl || "");
   }
 
   function playFloatingArtifactAudio(audioConfig, language) {
@@ -3994,6 +4022,7 @@
       activeFloatingArtifactAudioConfig = audioConfig || null;
       updateHotspotVisibilityState();
       renderSubtitle();
+      playSpeechFallback();
       syncNarrationControls();
       return;
     }
@@ -4046,7 +4075,10 @@
   }
 
   function isNarrationPlaying() {
-    return Boolean(floatingImageAudio && !floatingImageAudio.paused && !floatingImageAudio.ended);
+    return Boolean(
+      (floatingImageAudio && !floatingImageAudio.paused && !floatingImageAudio.ended) ||
+      (speechFallback && speechFallback.isPlaying())
+    );
   }
 
   function syncNarrationControls() {
@@ -4070,6 +4102,16 @@
       syncNarrationControls();
       return;
     }
+    if (speechFallback && speechFallback.isPlaying()) {
+      speechFallback.pause();
+      syncNarrationControls();
+      return;
+    }
+    if (speechFallback && speechFallback.isPaused()) {
+      speechFallback.resume();
+      syncNarrationControls();
+      return;
+    }
     // Buffered but paused → resume from where it stopped.
     if (floatingImageAudio && floatingImageAudioSrc) {
       const resume = floatingImageAudio.play();
@@ -4080,7 +4122,7 @@
       return;
     }
     // Nothing buffered — (re)start the open artifact's narration.
-    if (activeFloatingArtifactAudioConfig) {
+    if (activeFloatingArtifactAudioConfig || activeSubtitle) {
       playFloatingArtifactAudio(activeFloatingArtifactAudioConfig, floatingArtifactAudioLanguage);
     }
   }
@@ -4089,6 +4131,10 @@
     narrationMuted = !narrationMuted;
     if (floatingImageAudio) {
       floatingImageAudio.muted = narrationMuted;
+    }
+    if (speechFallback) {
+      if (narrationMuted && speechFallback.isPlaying()) speechFallback.pause();
+      else if (!narrationMuted && speechFallback.isPaused()) speechFallback.resume();
     }
     syncNarrationControls();
   }
@@ -4531,7 +4577,7 @@
     if (artifactAudioByLanguage && (artifactAudioByLanguage.tl || artifactAudioByLanguage.en)) {
       playFloatingArtifactAudio(artifactAudioByLanguage, "tl");
     } else {
-      clearFloatingArtifactAudioState();
+      playFloatingArtifactAudio(null, "tl");
     }
 
     const floatingWindowHotspot = {
@@ -4866,7 +4912,7 @@
 
   if (toggleArtifactHotspotsButton) {
     toggleArtifactHotspotsButton.addEventListener("click", function () {
-      if (!activeFloatingArtifactAudioConfig) {
+      if (!activeFloatingArtifactAudioConfig && !activeSubtitle) {
         return;
       }
 

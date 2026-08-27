@@ -32,7 +32,7 @@
   var sceneMessage = root.querySelector("[data-vt-scene-message]");
   var hotspotMessage = root.querySelector("[data-vt-hotspot-message]");
   var placementStatus = root.querySelector("[data-vt-placement-status]");
-  var placeCenterButton = root.querySelector("[data-vt-place-center]");
+  var hotspotFormSlot = root.querySelector("[data-vt-hotspot-form-slot]");
   var setStartButton = root.querySelector("[data-vt-set-start]");
   var replaceSceneButton = root.querySelector("[data-vt-replace-scene]");
   var deleteSceneButton = root.querySelector("[data-vt-delete-scene]");
@@ -41,6 +41,8 @@
   var viewerHost = root.querySelector("#vtEditorViewer");
   var viewerResizeFrame = 0;
   var viewerResizeObserver = null;
+  var loadingModal = root.querySelector("[data-vt-loading-modal]");
+  var loadingPreviousFocus = null;
 
   function resizeViewer() {
     if (viewerResizeFrame) window.cancelAnimationFrame(viewerResizeFrame);
@@ -69,6 +71,36 @@
     element.classList.toggle("is-error", kind === "error");
     element.classList.toggle("is-success", kind === "success");
     element.classList.toggle("is-warning", kind === "warning");
+  }
+
+  function confirmAction(options) {
+    if (typeof window.NHCPAdminConfirm === "function") return window.NHCPAdminConfirm(options);
+    return Promise.resolve(window.confirm((options && (options.message || options.title)) || "Confirm this action?"));
+  }
+
+  function showLoading(title, value) {
+    if (!loadingModal) return;
+    loadingPreviousFocus = document.activeElement;
+    loadingModal.querySelector("[data-vt-loading-title]").textContent = title;
+    loadingModal.querySelector("[data-vt-loading-message]").textContent = value;
+    loadingModal.hidden = false;
+    loadingModal.setAttribute("aria-hidden", "false");
+    document.body.classList.add("vt-loading-open");
+    root.setAttribute("aria-busy", "true");
+    var card = loadingModal.querySelector(".vt-loading-card");
+    card.tabIndex = -1;
+    card.focus();
+  }
+
+  function hideLoading() {
+    if (!loadingModal) return;
+    loadingModal.hidden = true;
+    loadingModal.setAttribute("aria-hidden", "true");
+    document.body.classList.remove("vt-loading-open");
+    root.removeAttribute("aria-busy");
+    if (loadingPreviousFocus && loadingPreviousFocus.isConnected && !loadingPreviousFocus.disabled) loadingPreviousFocus.focus();
+    else if (viewerHost) viewerHost.focus();
+    loadingPreviousFocus = null;
   }
 
   async function api(path, options) {
@@ -124,7 +156,6 @@
     if (!selectedScene || !panoramaUrl(selectedScene)) {
       if (empty) empty.hidden = false;
       if (currentName) currentName.textContent = "No scene selected";
-      placeCenterButton.disabled = true;
       setStartButton.disabled = true;
       replaceSceneButton.disabled = true;
       deleteSceneButton.disabled = true;
@@ -133,7 +164,6 @@
     }
     if (empty) empty.hidden = true;
     if (currentName) currentName.textContent = selectedScene.name_en;
-    placeCenterButton.disabled = false;
     setStartButton.disabled = Boolean(selectedScene.is_start_scene);
     replaceSceneButton.disabled = false;
     deleteSceneButton.disabled = scenes.length <= 1;
@@ -160,6 +190,7 @@
   }
 
   function renderHotspots() {
+    if (hotspotList.contains(hotspotForm)) hotspotFormSlot.appendChild(hotspotForm);
     if (!selectedScene) {
       hotspotList.innerHTML = '<div class="vt-empty"><strong>No scene selected</strong><p>Select a panorama to view its hotspots.</p></div>';
       return;
@@ -173,21 +204,37 @@
     entries.forEach(function (hotspot) {
       var card = document.createElement("article");
       card.className = "vt-hotspot-card";
+      card.dataset.hotspotId = hotspot.id;
       var target = hotspot.target_scene_id ? sceneById(hotspot.target_scene_id) : null;
       card.innerHTML = '<i aria-hidden="true">' + (hotspot.hotspot_type === "navigation" ? "→" : "◎") + '</i><span><strong></strong><small></small></span><div class="vt-hotspot-card__buttons"><button type="button" data-action="edit" aria-label="Edit hotspot">Edit</button><button type="button" data-action="delete" aria-label="Delete hotspot">×</button></div>';
       card.querySelector("strong").textContent = hotspot.name_en;
       card.querySelector("small").textContent = hotspot.hotspot_type === "navigation" ? "Links to " + (target ? target.name_en : "missing scene") : "Item · pitch " + hotspot.pitch + ", yaw " + hotspot.yaw;
       card.querySelector('[data-action="edit"]').addEventListener("click", function () { editHotspot(hotspot); });
       card.querySelector('[data-action="delete"]').addEventListener("click", async function () {
-        if (!window.confirm('Delete the hotspot “' + hotspot.name_en + '”?')) return;
+        var approved = await confirmAction({
+          eyebrow: "Virtual Tour hotspot",
+          title: "Delete this " + (hotspot.hotspot_type === "navigation" ? "navigation" : "item") + " hotspot?",
+          message: '“' + hotspot.name_en + '” will be permanently removed from this draft scene.',
+          label: "Delete hotspot",
+          variant: "disable",
+        });
+        if (!approved) return;
         try {
           await api(endpoint("/hotspots/" + hotspot.id), { method: "DELETE" });
+          if (editingHotspot && Number(editingHotspot.id) === Number(hotspot.id)) cancelHotspot();
           hotspots = hotspots.filter(function (entry) { return Number(entry.id) !== Number(hotspot.id); });
           renderHotspots(); renderViewer();
         } catch (error) { message(placementStatus, error.message, "error"); }
       });
       hotspotList.appendChild(card);
     });
+    if (editingHotspot && !hotspotForm.hidden) {
+      var editingCard = hotspotList.querySelector('[data-hotspot-id="' + editingHotspot.id + '"]');
+      if (editingCard) {
+        editingCard.classList.add("is-editing");
+        editingCard.after(hotspotForm);
+      }
+    }
   }
 
   function selectScene(id) {
@@ -270,6 +317,7 @@
 
   function beginHotspot(kind) {
     editingHotspot = null;
+    hotspotFormSlot.appendChild(hotspotForm);
     hotspotForm.reset();
     hotspotForm.hidden = false;
     hotspotForm.elements.hotspot_type.value = kind;
@@ -279,7 +327,7 @@
     updateAssetPreviews(null);
     placementMode = true; positionLocked = false;
     root.classList.add("vt-editor-placement");
-    placementStatus.textContent = "Placement mode is active. Click the panorama, or use Place at view center.";
+    placementStatus.textContent = "Placement mode is active. Click the panorama to choose the hotspot position.";
     hotspotForm.querySelector("[data-vt-confirm-position]").disabled = true;
     hotspotForm.querySelector("[data-vt-reposition]").disabled = true;
     hotspotForm.querySelector(".vt-save-hotspot").disabled = true;
@@ -294,7 +342,7 @@
     ["name_en", "name_tl", "pitch", "yaw", "subtitle_en", "subtitle_tl", "image_path", "glb_path", "audio_en_path", "audio_tl_path"].forEach(function (field) {
       if (hotspotForm.elements[field]) hotspotForm.elements[field].value = hotspot[field] == null ? "" : hotspot[field];
     });
-    hotspotForm.querySelector("[data-vt-hotspot-kicker]").textContent = "Edit " + hotspot.hotspot_type + " hotspot";
+    hotspotForm.querySelector("[data-vt-hotspot-kicker]").textContent = hotspot.hotspot_type === "navigation" ? "Edit Navigation Hotspot" : "Edit Item Hotspot";
     hotspotForm.querySelector("[data-vt-hotspot-title]").textContent = "Position locked";
     configureHotspotKind(hotspot.hotspot_type);
     hotspotForm.querySelector('[data-vt-asset-input="image"]').required = false;
@@ -309,6 +357,12 @@
     hotspotForm.querySelector(".vt-save-hotspot").disabled = false;
     hotspotForm.querySelector(".vt-save-hotspot").textContent = "Save hotspot changes";
     placementStatus.textContent = "Editing “" + hotspot.name_en + "”. Reposition it only if its coordinates need to change.";
+    hotspotList.querySelectorAll(".vt-hotspot-card").forEach(function (card) { card.classList.remove("is-editing"); });
+    var editingCard = hotspotList.querySelector('[data-hotspot-id="' + hotspot.id + '"]');
+    if (editingCard) {
+      editingCard.classList.add("is-editing");
+      editingCard.after(hotspotForm);
+    }
     hotspotForm.elements.name_en.focus();
   }
 
@@ -348,6 +402,8 @@
     placementMode = false; positionLocked = false; root.classList.remove("vt-editor-placement");
     removeTempHotspot();
     hotspotForm.hidden = true;
+    hotspotFormSlot.appendChild(hotspotForm);
+    hotspotList.querySelectorAll(".vt-hotspot-card").forEach(function (card) { card.classList.remove("is-editing"); });
     editingHotspot = null;
     hotspotForm.querySelector(".vt-save-hotspot").textContent = "Save hotspot";
     message(hotspotMessage, "");
@@ -425,20 +481,36 @@
   hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
     button.addEventListener("click", function () { setPreviewKind(button.dataset.vtPreviewKind); });
   });
-  placeCenterButton.addEventListener("click", function () { if (placementMode && viewer) capturePosition(viewer.getPitch(), viewer.getYaw()); });
-
   setStartButton.addEventListener("click", async function () {
     if (!selectedScene) return;
+    var sceneName = selectedScene.name_en || "selected scene";
+    setStartButton.disabled = true;
+    setStartButton.setAttribute("aria-busy", "true");
+    showLoading("Setting the starting scene", "Saving “" + sceneName + "” as the first view visitors will see.");
     try {
       var result = await api(endpoint("/scenes/" + selectedScene.id), { method: "PATCH", body: JSON.stringify({ is_start_scene: true }) });
       scenes.forEach(function (scene) { scene.is_start_scene = Number(scene.id) === Number(selectedScene.id); });
       Object.assign(selectedScene, result.scene); setStartButton.disabled = true;
       root.querySelectorAll("[data-scene-id] small").forEach(function (small) { var scene = sceneById(small.closest("[data-scene-id]").dataset.sceneId); small.textContent = scene.is_start_scene ? "Starting scene" : scene.panorama_width + " × " + scene.panorama_height; });
       message(placementStatus, "Starting scene updated.", "success");
-    } catch (error) { message(placementStatus, error.message, "error"); }
+    } catch (error) {
+      setStartButton.disabled = Boolean(selectedScene && selectedScene.is_start_scene);
+      message(placementStatus, error.message, "error");
+    } finally {
+      setStartButton.removeAttribute("aria-busy");
+      hideLoading();
+    }
   });
   deleteSceneButton.addEventListener("click", async function () {
-    if (!selectedScene || scenes.length <= 1 || !window.confirm('Delete the scene “' + selectedScene.name_en + '” and all of its item hotspots? Navigation links targeting it must be removed first.')) return;
+    if (!selectedScene || scenes.length <= 1) return;
+    var approved = await confirmAction({
+      eyebrow: "Virtual Tour scene",
+      title: "Delete this 360° scene?",
+      message: '“' + selectedScene.name_en + '” and all hotspots placed inside it will be permanently removed from this draft. Navigation links pointing to it must be removed first.',
+      label: "Delete scene",
+      variant: "disable",
+    });
+    if (!approved) return;
     try { await api(endpoint("/scenes/" + selectedScene.id), { method: "DELETE" }); window.location.reload(); }
     catch (error) { message(placementStatus, error.message, "error"); }
   });
