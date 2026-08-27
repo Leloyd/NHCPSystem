@@ -772,6 +772,14 @@ body.is-trail-exit #publicNavHeader {
 .story__viewport[data-playing="false"] .story-ico--pause { display: none; }
 .story__viewport[data-muted="true"] .story-ico--sound-on { display: none; }
 .story__viewport[data-muted="false"] .story-ico--sound-off { display: none; }
+.story__viewport[data-playing="true"] [data-story-play] {
+  box-shadow: 0 0 0 2px rgba(212, 175, 106, 0.28), 0 0 18px rgba(212, 175, 106, 0.24);
+}
+.story__viewport[data-muted="false"] [data-story-mute] {
+  border-color: var(--story-gold);
+  background: rgba(212, 175, 106, 0.18);
+  color: #f2d693;
+}
 
 /* Chapter progress dots ------------------------------------------------------ */
 .story__dots {

@@ -125,10 +125,12 @@ const state = {
   localProgress: 0, // 0..1 within the current chapter's scroll segment
   visible: true,
   lang: initialLanguage,
-  muted: localStorage.getItem('anaGuideMuted') === 'true',
+  // Each new page visit requests audible narration by default. A browser may
+  // temporarily require the first playback to stay silent until interaction.
+  muted: false,
   subtitles: localStorage.getItem('anaGuideSubs') !== 'off',
   textSize: Math.min(3, Math.max(1, parseInt(localStorage.getItem('anaGuideTextSize') || '1', 10) || 1)),
-  unlocked: false, // true after the first user gesture (required for TTS)
+  unlocked: false, // playback permission requested/granted; errors return it to false
   playing: false,
   typeTimer: 0,
 };
@@ -228,7 +230,17 @@ function setPlaying(isPlaying) {
   viewport?.setAttribute('data-playing', String(isPlaying));
   if (playBtn) {
     playBtn.setAttribute('aria-pressed', String(isPlaying));
-    playBtn.setAttribute('aria-label', isPlaying ? 'Pause narration' : 'Play narration');
+    const isTagalog = state.lang === 'tl';
+    playBtn.setAttribute(
+      'aria-label',
+      isPlaying
+        ? (isTagalog ? 'I-pause ang pagsasalaysay' : 'Pause narration')
+        : (isTagalog ? 'I-play ang pagsasalaysay' : 'Play narration'),
+    );
+    const englishLabel = playBtn.querySelector('[data-lang-en]');
+    const tagalogLabel = playBtn.querySelector('[data-lang-tl]');
+    if (englishLabel) englishLabel.textContent = isPlaying ? 'Pause' : 'Listen';
+    if (tagalogLabel) tagalogLabel.textContent = isPlaying ? 'I-pause' : 'Makinig';
   }
 }
 
@@ -264,6 +276,9 @@ if (voiceEl) {
    audible attempt is blocked, we start muted so the narration begins at page
    open exactly like on PC — then the first touch unmutes it mid-sentence. */
 let autoMutedStart = false;
+/* The loader holds narration until the visual stage is ready. Afterwards,
+   chapter and language changes always request their matching narration. */
+let narrationReady = false;
 
 function playVoiceFrom(url, seconds) {
   if (!voiceEl) return false;
@@ -729,9 +744,10 @@ function setChapter(index) {
   if (mobileQuery.matches) chapters[index].scrollTop = 0;
   refreshChapterFit();
 
-  // Auto-narrate every chapter once audio is unlocked — even while muted
-  // (silent playback keeps advancing, so unmuting rejoins mid-sentence).
-  narrateChapter(index, { speakIt: state.unlocked });
+  // Every chapter selected after the loader requests its own narration. When
+  // audible autoplay is restricted, it becomes audible on first interaction.
+  if (narrationReady) requestChapterNarration(index);
+  else narrateChapter(index, { speakIt: false });
 }
 
 function buildDots() {
@@ -771,6 +787,7 @@ function dismissLoader() {
     first.classList.add('is-active');
   }
   // The stage is revealed — start speaking (or arm the first-gesture start).
+  narrationReady = true;
   attemptAutoSpeak();
 }
 window.setTimeout(dismissLoader, 4500);
@@ -824,8 +841,10 @@ function setLang(lang) {
   document.documentElement.lang = lang === 'tl' ? 'tl' : 'en';
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
   if (bubbleEyebrow) bubbleEyebrow.textContent = lang === 'tl' ? 'Sabi ni Ana Kalang' : 'Ana Kalang says';
+  setPlaying(state.playing); // immediately localize the play/pause control
   refreshChapterFit(); // the other language may run longer/shorter
-  narrateChapter(state.chapter, { speakIt: state.unlocked });
+  if (narrationReady) requestChapterNarration(state.chapter);
+  else narrateChapter(state.chapter, { speakIt: false });
 }
 
 /* Re-check whether the active chapter needs its scrollable "tall" mode.
@@ -870,10 +889,24 @@ function setTextSize(size) {
 }
 
 function unlockAudio() {
-  if (state.unlocked) return;
+  const wasUnlocked = state.unlocked;
   state.unlocked = true;
+  // A real pointer or keyboard gesture permits a silent autoplay attempt to
+  // become audible without losing its current playback position.
+  if (autoMutedStart) {
+    autoMutedStart = false;
+    if (voiceEl && !state.muted) voiceEl.muted = false;
+  }
   // Some browsers require a speak() inside the gesture to unlock TTS.
-  if (synth && !state.muted) synth.speak(new SpeechSynthesisUtterance(''));
+  if (!wasUnlocked && synth && !state.muted) synth.speak(new SpeechSynthesisUtterance(''));
+}
+
+function requestChapterNarration(index) {
+  if (!narrationReady || index < 0) return;
+  // Optimistically request playback. The media/TTS error handlers return the
+  // flag to false if this browser still requires a user gesture.
+  state.unlocked = true;
+  narrateChapter(index, { speakIt: true });
 }
 
 /* Auto-start narration on load. Browsers usually block TTS before the first
@@ -881,26 +914,19 @@ function unlockAudio() {
    the unlock if refused), and arm a one-shot "kickstart" so the visitor's
    very first tap/click/keypress anywhere starts her speaking. */
 function attemptAutoSpeak() {
-  if (state.playing || state.unlocked) return;
-  state.unlocked = true; // optimistic — revoked by the not-allowed error
-  narrateChapter(state.chapter, { speakIt: true });
+  if (state.playing) return;
+  requestChapterNarration(state.chapter);
 }
 
 function setupAutoSpeakKickstart() {
   const types = ['pointerdown', 'keydown', 'touchend'];
   const handler = (event) => {
-    // If the narration auto-started muted (mobile policy), this first gesture
-    // brings the sound in right where she is.
-    if (autoMutedStart) {
-      autoMutedStart = false;
-      if (voiceEl && !state.muted) voiceEl.muted = false;
-    }
     const target = event.target;
     // On the guide controls, only unlock — their own handlers decide playback.
     const onControls = target instanceof Element && target.closest('.story__guidebar');
-    if (!state.unlocked) unlockAudio();
+    unlockAudio();
     if (!onControls && !state.playing && !narration.paused) {
-      narrateChapter(state.chapter, { speakIt: true });
+      requestChapterNarration(state.chapter);
     }
     types.forEach((t) => window.removeEventListener(t, handler, true));
   };
@@ -929,7 +955,10 @@ function wireControls() {
     }
   });
   muteBtn?.addEventListener('click', () => setMuted(!state.muted));
-  langBtn?.addEventListener('click', () => setLang(state.lang === 'en' ? 'tl' : 'en'));
+  langBtn?.addEventListener('click', () => {
+    unlockAudio();
+    setLang(state.lang === 'en' ? 'tl' : 'en');
+  });
   subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
   textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
   // On mobile the bubble is a collapsed 2-line chip; tapping it expands the
@@ -1409,6 +1438,7 @@ if (story && viewport && chapters.length) {
     viewport.classList.remove('is-departing');
     document.querySelectorAll('.story__curtain').forEach((el) => el.remove());
     onScroll();
+    window.requestAnimationFrame(() => requestChapterNarration(state.chapter));
   });
 
   setChapter(0);
