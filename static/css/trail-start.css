@@ -28,9 +28,16 @@
   inset: 0;
   overflow: hidden;
   --tx-font-scale: 1;
+  --tx-subtitle-font-scale: 1;
 }
-.trailx[data-textsize="2"] { --tx-font-scale: 1.16; }
-.trailx[data-textsize="3"] { --tx-font-scale: 1.34; }
+.trailx[data-textsize="2"] {
+  --tx-font-scale: 1.16;
+  --tx-subtitle-font-scale: 1.16;
+}
+.trailx[data-textsize="3"] {
+  --tx-font-scale: 1.34;
+  --tx-subtitle-font-scale: 1.34;
+}
 
 /* 360 panorama ---------------------------------------------------------------- */
 .trailx__pano {
@@ -366,7 +373,7 @@
 .trailx__bubble-text {
   margin: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: calc(1rem * var(--tx-font-scale, 1));
+  font-size: calc(1rem * var(--tx-subtitle-font-scale, 1));
   line-height: 1.42;
 }
 .trailx__bubble-text .tx-cursor {
@@ -504,7 +511,7 @@
 }
 
 /* Full-View artifact subtitle — cream panel above the controls (CC toggles it,
-   the text-size button scales it, via --tx-font-scale). */
+   and the requested A/A+/A++ size always reaches this subtitle). */
 .trailx__artsub {
   position: absolute;
   z-index: 8;
@@ -547,7 +554,7 @@
 .trailx__artsub-text {
   margin: 0;
   font-family: Georgia, "Times New Roman", serif;
-  font-size: calc(0.98rem * var(--tx-font-scale, 1));
+  font-size: calc(0.98rem * var(--tx-subtitle-font-scale, 1));
   line-height: 1.5;
   white-space: pre-line;
 }
@@ -3219,7 +3226,7 @@ html.trailx-vr-active body {
   .trailx__bubble::before { display: none; }
   .trailx__bubble-eyebrow { display: none; }
   .trailx__bubble-text {
-    font-size: calc(0.78rem * var(--tx-font-scale, 1));
+    font-size: calc(0.78rem * var(--tx-subtitle-font-scale, 1));
     line-height: 1.4;
     display: -webkit-box;
     -webkit-box-orient: vertical;
@@ -3274,7 +3281,7 @@ html.trailx-vr-active body {
     max-height: 30vh;
     padding: 0.65rem 0.85rem 0.75rem;
   }
-  .trailx__artsub-text { font-size: calc(0.9rem * var(--tx-font-scale, 1)); }
+  .trailx__artsub-text { font-size: calc(0.9rem * var(--tx-subtitle-font-scale, 1)); }
 
   /* Stop 1 on small screens — the landing's mobile chapter recipe, verbatim
      (landing-story.css): bottom-anchored panels, its exact paddings and its

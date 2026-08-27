@@ -259,8 +259,10 @@ const TRAIL_VOICE = Object.fromEntries(TRAIL_VOICE_KEYS.map((key) => [key, {
 const panoEl = document.getElementById('trailPano');
 const curtain = root.querySelector('[data-trail-curtain]');
 const canvasWrap = root.querySelector('[data-trail-canvas]');
+const panelEl = root.querySelector('[data-trail-panel]');
 const bubble = root.querySelector('[data-trail-bubble]');
 const bubbleText = root.querySelector('[data-trail-text]');
+const artifactSubtitleEl = root.querySelector('[data-trail-artsub]');
 const cursorGlow = root.querySelector('[data-trail-cursor]');
 const playBtn = root.querySelector('[data-trail-play]');
 const muteBtn = root.querySelector('[data-trail-mute]');
@@ -603,6 +605,126 @@ function setSubtitles(on) {
 
 const TEXT_SIZE_LABELS = { 1: 'A', 2: 'A+', 3: 'A++' };
 const TEXT_SIZE_NAMES = { 1: 'normal', 2: 'large', 3: 'extra large' };
+const TEXT_SIZE_SCALES = { 1: 1, 2: 1.16, 3: 1.34 };
+
+function trailLayoutElement(element) {
+  if (!element) return false;
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none'
+    && style.visibility !== 'hidden'
+    && element.offsetWidth > 0
+    && element.offsetHeight > 0;
+}
+
+function trailHorizontallyOverlaps(first, second) {
+  return first.left < second.right - 4 && first.right > second.left + 4;
+}
+
+function trailMainContainer() {
+  if (root.getAttribute('data-immersive') === 'true' || root.getAttribute('data-phase') === 'depart') return null;
+  if (state.mode === 'intro') return panelEl;
+  return activeStoryEl?.querySelector('.trailx__chapter.is-active') || null;
+}
+
+function trailContainerLayoutRect(container) {
+  // Chapter panels animate with translateY. offset geometry gives their final
+  // position immediately instead of measuring a temporary entrance frame.
+  if (container.classList.contains('trailx__chapter') && container.offsetParent) {
+    const parentRect = container.offsetParent.getBoundingClientRect();
+    return {
+      top: parentRect.top + container.offsetTop,
+      right: parentRect.left + container.offsetLeft + container.offsetWidth,
+      bottom: parentRect.top + container.offsetTop + container.offsetHeight,
+      left: parentRect.left + container.offsetLeft,
+      width: container.offsetWidth,
+      height: container.offsetHeight,
+    };
+  }
+  return container.getBoundingClientRect();
+}
+
+function trailMainTextFits(container) {
+  if (!trailLayoutElement(container)) return true;
+  const rootRect = root.getBoundingClientRect();
+  const containerRect = trailContainerLayoutRect(container);
+  const containerStyle = window.getComputedStyle(container);
+  // Ignore opacity because chapter and intro children may still be fading in
+  // when their final font size is selected.
+  const children = Array.from(container.children).filter(trailLayoutElement);
+  if (!children.length) return true;
+
+  const childRects = children.map((child) => ({
+    top: containerRect.top + child.offsetTop,
+    right: containerRect.left + child.offsetLeft + child.offsetWidth,
+    bottom: containerRect.top + child.offsetTop + child.offsetHeight,
+    left: containerRect.left + child.offsetLeft,
+  }));
+
+  const paddingTop = Number.parseFloat(containerStyle.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(containerStyle.paddingBottom) || 0;
+  const safeTop = Math.max(rootRect.top + 8, containerRect.top + paddingTop);
+  const safeBottom = Math.min(rootRect.bottom - 8, containerRect.bottom - paddingBottom);
+  const obstacles = [];
+  const phase = root.getAttribute('data-phase');
+  if (state.subtitles && phase !== 'depart' && bubbleText?.textContent.trim() && trailLayoutElement(bubble)) obstacles.push(bubble);
+  if (artifactSubtitleEl?.classList.contains('is-on') && trailLayoutElement(artifactSubtitleEl)) obstacles.push(artifactSubtitleEl);
+  if (phase !== 'depart' && trailLayoutElement(root.querySelector('.trailx__controls'))) {
+    obstacles.push(root.querySelector('.trailx__controls'));
+  }
+
+  const obstacleRects = obstacles.map((obstacle) => obstacle.getBoundingClientRect());
+  return childRects.every((rect) => {
+    let blockSafeBottom = safeBottom;
+    obstacleRects.forEach((obstacleRect) => {
+      if (trailHorizontallyOverlaps(rect, obstacleRect)) {
+        blockSafeBottom = Math.min(blockSafeBottom, obstacleRect.top - 8);
+      }
+    });
+    return rect.top >= safeTop - 1
+      && rect.bottom <= blockSafeBottom + 1
+      && rect.left >= rootRect.left - 1
+      && rect.right <= rootRect.right + 1;
+  });
+}
+
+function refreshTrailTextFit() {
+  const requestedSize = state.textSize;
+  const container = trailMainContainer();
+  const candidates = requestedSize === 3 ? [3, 2, 1] : requestedSize === 2 ? [2, 1] : [1];
+  let effectiveSize = requestedSize;
+
+  if (container) {
+    for (const candidate of candidates) {
+      root.style.setProperty('--tx-font-scale', String(TEXT_SIZE_SCALES[candidate]));
+      void container.offsetHeight;
+      effectiveSize = candidate;
+      if (trailMainTextFits(container)) break;
+    }
+  } else {
+    root.style.setProperty('--tx-font-scale', String(TEXT_SIZE_SCALES[requestedSize]));
+  }
+
+  root.setAttribute('data-effective-textsize', String(effectiveSize));
+  if (textSizeBtn) {
+    const limited = effectiveSize < requestedSize
+      ? ` Main trail text is limited to ${TEXT_SIZE_NAMES[effectiveSize]} to prevent overlap; subtitles remain ${TEXT_SIZE_NAMES[requestedSize]}.`
+      : '';
+    textSizeBtn.setAttribute(
+      'aria-label',
+      `Text size: ${TEXT_SIZE_NAMES[requestedSize]}.${limited} Tap to ${requestedSize >= 3 ? 'reset' : 'enlarge'}`,
+    );
+  }
+}
+
+let trailTextFitFrame = 0;
+function requestTrailTextFit() {
+  if (trailTextFitFrame) return;
+  trailTextFitFrame = window.requestAnimationFrame(() => {
+    trailTextFitFrame = 0;
+    refreshTrailTextFit();
+  });
+}
+
 function setTextSize(size) {
   state.textSize = size;
   localStorage.setItem('anaGuideTextSize', String(size));
@@ -611,6 +733,7 @@ function setTextSize(size) {
     textSizeBtn.textContent = TEXT_SIZE_LABELS[size];
     textSizeBtn.setAttribute('aria-label', `Text size: ${TEXT_SIZE_NAMES[size]}. Tap to ${size >= 3 ? 'reset' : 'enlarge'}`);
   }
+  requestTrailTextFit();
 }
 
 function unlockAudio() {
@@ -658,7 +781,34 @@ subsBtn?.addEventListener('click', () => {
 textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
 // On mobile the bubble is a collapsed 2-line chip above the controls; tapping
 // it expands the full narration (pointer-events are off on desktop → inert).
-bubble?.addEventListener('click', () => bubble.classList.toggle('is-expanded'));
+bubble?.addEventListener('click', () => {
+  bubble.classList.toggle('is-expanded');
+  requestTrailTextFit();
+});
+
+// Re-evaluate against actual rendered geometry instead of device names. This
+// covers phones, tablets, desktop resizing, orientation changes, browser zoom,
+// translated copy, expanding subtitles, and interactive chapter details.
+window.addEventListener('resize', requestTrailTextFit, { passive: true });
+root.addEventListener('animationend', requestTrailTextFit, true);
+root.addEventListener('transitionend', requestTrailTextFit, true);
+if ('ResizeObserver' in window) {
+  const trailTextFitObserver = new ResizeObserver(requestTrailTextFit);
+  trailTextFitObserver.observe(root);
+  if (bubble) trailTextFitObserver.observe(bubble);
+  if (artifactSubtitleEl) trailTextFitObserver.observe(artifactSubtitleEl);
+}
+const trailTextMutationObserver = new MutationObserver(requestTrailTextFit);
+trailTextMutationObserver.observe(root, {
+  attributes: true,
+  subtree: true,
+  attributeFilter: [
+    'class', 'hidden', 'open', 'aria-expanded',
+    'data-mode', 'data-phase', 'data-step', 'data-immersive',
+    'data-lang', 'data-subtitles', 'data-textsize',
+  ],
+});
+document.fonts?.ready.then(requestTrailTextFit);
 
 /* Auto-start narration on load (like the landing page). Browsers may block
    audible media or TTS before the first gesture, so try immediately and arm
