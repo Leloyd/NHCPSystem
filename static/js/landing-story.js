@@ -482,6 +482,7 @@ function narrateChapter(index, { speakIt } = {}) {
   // (re)starts from the top, replay the chapter's scene — bg, photo, videos.
   if ((key === 'about1' || key === 'about2' || key === 'about3') && speakIt) resetAboutScene(key);
   renderBubble(text);
+  window.requestAnimationFrame(refreshChapterFit);
   if (speakIt) speak(text, key);
   else stopSpeaking();
 }
@@ -847,12 +848,109 @@ function setLang(lang) {
   else narrateChapter(state.chapter, { speakIt: false });
 }
 
-/* Re-check whether the active chapter needs its scrollable "tall" mode —
-   layout-affecting settings (subtitles, text size) change its height. */
+const TEXT_SIZE_SCALES = { 1: 1, 2: 1.16, 3: 1.34 };
+
+function horizontallyOverlaps(first, second) {
+  return first.left < second.right - 4 && first.right > second.left + 4;
+}
+
+function isVisibleElement(element) {
+  if (!element) return false;
+  const style = window.getComputedStyle(element);
+  const rect = element.getBoundingClientRect();
+  return style.display !== 'none'
+    && style.visibility !== 'hidden'
+    && Number.parseFloat(style.opacity || '1') > 0.05
+    && rect.width > 0
+    && rect.height > 0;
+}
+
+function isLayoutElement(element) {
+  if (!element) return false;
+  const style = window.getComputedStyle(element);
+  return style.display !== 'none'
+    && style.visibility !== 'hidden'
+    && element.offsetWidth > 0
+    && element.offsetHeight > 0;
+}
+
+/* Test the rendered chapter against the real objects around it instead of a
+   device-name breakpoint. This works for phones, tablets, desktop windows,
+   landscape orientation, browser zoom, and mobile browser chrome. */
+function chapterFitsViewport(active) {
+  const activeRect = active.getBoundingClientRect();
+  const activeStyle = window.getComputedStyle(active);
+  // Opacity is intentionally ignored here: newly selected chapter children
+  // are measured while their entrance animation is still fading them in.
+  const children = Array.from(active.children).filter(isLayoutElement);
+  if (!children.length) return true;
+
+  // offset geometry represents the final layout without the chapter's
+  // entrance-animation transforms, preventing a temporary transition from
+  // incorrectly lowering the allowed font size.
+  const childRects = children.map((child) => ({
+    top: activeRect.top + child.offsetTop,
+    right: activeRect.left + child.offsetLeft + child.offsetWidth,
+    bottom: activeRect.top + child.offsetTop + child.offsetHeight,
+    left: activeRect.left + child.offsetLeft,
+  }));
+  const contentRect = {
+    top: Math.min(...childRects.map((rect) => rect.top)),
+    right: Math.max(...childRects.map((rect) => rect.right)),
+    bottom: Math.max(...childRects.map((rect) => rect.bottom)),
+    left: Math.min(...childRects.map((rect) => rect.left)),
+  };
+  const paddingTop = Number.parseFloat(activeStyle.paddingTop) || 0;
+  const paddingBottom = Number.parseFloat(activeStyle.paddingBottom) || 0;
+  let safeTop = activeRect.top + paddingTop;
+  let safeBottom = activeRect.bottom - paddingBottom;
+
+  const nav = document.getElementById('publicNavHeader');
+  if (isVisibleElement(nav)) safeTop = Math.max(safeTop, nav.getBoundingClientRect().bottom + 8);
+
+  [bubbleWrap, story?.querySelector('.story__guidebar'), story?.querySelector('.story__timeline'), story?.querySelector('.story__top')]
+    .filter(isVisibleElement)
+    .forEach((obstacle) => {
+      const obstacleRect = obstacle.getBoundingClientRect();
+      if (horizontallyOverlaps(contentRect, obstacleRect)) {
+        safeBottom = Math.min(safeBottom, obstacleRect.top - 8);
+      }
+    });
+
+  return contentRect.top >= safeTop - 1
+    && contentRect.bottom <= safeBottom + 1
+    && contentRect.left >= activeRect.left - 1
+    && contentRect.right <= activeRect.right + 1;
+}
+
+/* Apply the largest requested chapter scale that does not overlap. The
+   subtitle uses its separate CSS variable, so it always reaches A+ or A++
+   even when the main chapter must remain at a smaller safe step. */
 function refreshChapterFit() {
-  if (!mobileQuery.matches || state.chapter < 0) return;
+  if (!viewport || state.chapter < 0) return;
   const active = chapters[state.chapter];
-  if (active) active.classList.toggle('is-tall', active.scrollHeight > active.clientHeight + 8);
+  if (!active) return;
+
+  const requestedSize = state.textSize;
+  const candidates = requestedSize === 3 ? [3, 2, 1] : requestedSize === 2 ? [2, 1] : [1];
+  let effectiveSize = 1;
+
+  for (const candidate of candidates) {
+    viewport.style.setProperty('--story-font-scale', String(TEXT_SIZE_SCALES[candidate]));
+    // Reading geometry forces layout after changing the custom property.
+    void active.offsetHeight;
+    effectiveSize = candidate;
+    if (chapterFitsViewport(active)) break;
+  }
+
+  viewport.setAttribute('data-effective-textsize', String(effectiveSize));
+  if (textSizeBtn) {
+    const next = requestedSize >= 3 ? 'reset' : 'enlarge';
+    const limited = effectiveSize < requestedSize
+      ? ` Main story text is limited to ${TEXT_SIZE_NAMES[effectiveSize]} to prevent overlap; subtitles remain ${TEXT_SIZE_NAMES[requestedSize]}.`
+      : '';
+    textSizeBtn.setAttribute('aria-label', `Text size: ${TEXT_SIZE_NAMES[requestedSize]}.${limited} Tap to ${next}`);
+  }
 }
 
 function setSubtitles(on) {
@@ -1405,6 +1503,9 @@ if (story && viewport && chapters.length) {
       window.requestAnimationFrame(refreshChapterFit);
     });
     chapterFitObserver.observe(viewport);
+    if (bubbleWrap) chapterFitObserver.observe(bubbleWrap);
+    const publicNavHeader = document.getElementById('publicNavHeader');
+    if (publicNavHeader) chapterFitObserver.observe(publicNavHeader);
   }
   document.fonts?.ready.then(() => window.requestAnimationFrame(refreshChapterFit));
 

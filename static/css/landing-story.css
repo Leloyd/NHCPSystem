@@ -292,7 +292,7 @@ body {
 .story__bubble-text {
   margin: 0;
   font-family: "Cormorant Garamond", serif;
-  font-size: calc(1.02rem * var(--story-font-scale, 1));
+  font-size: calc(1.02rem * var(--story-subtitle-font-scale, 1));
   line-height: 1.42;
 }
 .story__bubble-text .ana-cursor {
@@ -722,10 +722,20 @@ body.is-trail-exit #publicNavHeader {
   .story__lightbox-close { margin-top: 1rem; }
 }
 
-/* Accessible text sizing: three steps driven by a single scale variable. */
-.story__viewport { --story-font-scale: 1; }
-.story__viewport[data-textsize="2"] { --story-font-scale: 1.16; }
-.story__viewport[data-textsize="3"] { --story-font-scale: 1.34; }
+/* The requested subtitle scale always follows A/A+/A++. JavaScript may cap
+   only --story-font-scale when enlarging the chapter would cause a collision. */
+.story__viewport {
+  --story-font-scale: 1;
+  --story-subtitle-font-scale: 1;
+}
+.story__viewport[data-textsize="2"] {
+  --story-font-scale: 1.16;
+  --story-subtitle-font-scale: 1.16;
+}
+.story__viewport[data-textsize="3"] {
+  --story-font-scale: 1.34;
+  --story-subtitle-font-scale: 1.34;
+}
 
 /* Subtitles toggle: hide the bubble when turned off; dim the CC button. */
 .story__viewport[data-subtitles="off"] .story__bubble {
@@ -1067,7 +1077,7 @@ body.is-trail-exit #publicNavHeader {
   .story__bubble::before { display: none; }
   .story__bubble-eyebrow { display: none; }
   .story__bubble-text {
-    font-size: calc(0.78rem * var(--story-font-scale, 1));
+    font-size: calc(0.78rem * var(--story-subtitle-font-scale, 1));
     line-height: 1.4;
     display: -webkit-box;
     -webkit-box-orient: vertical;
