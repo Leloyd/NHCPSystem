@@ -9,6 +9,8 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-dashboard.css') }}" />
     {% block admin_head %}{% endblock %}
     <script defer src="{{ url_for('static', filename='admin/js/admin-dashboard.js') }}"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script defer src="{{ url_for('static', filename='js/direct-media-upload.js') }}"></script>
   </head>
   <body class="admin-dashboard-page">
     <div class="{{ admin_layout_class or 'admin-layout' }}">

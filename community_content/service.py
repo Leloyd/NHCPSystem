@@ -15,14 +15,15 @@ from community_highlights_repository import (
     list_published_community_highlights,
 )
 from supabase_client import SupabaseConfigError, is_supabase_configured
+from media_upload_content import MEDIA_UPLOAD_MAX_BYTES
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "community-highlights").resolve()
 COMMUNITY_HIGHLIGHTS_STORAGE_PREFIX = "community-highlights"
 COMMUNITY_HIGHLIGHT_MAX_IMAGES = 12
-# Vercel Functions reject request bodies above 4.5 MB. Keep image data at
-# 4 MiB combined so multipart boundaries and the remaining form fields fit.
-COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
+# Files upload directly to Supabase; only their protected object paths pass
+# through Vercel when the highlight is saved.
+COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES = MEDIA_UPLOAD_MAX_BYTES
 COMMUNITY_HIGHLIGHT_CATEGORIES = (
     "Museum Programs",
     "School Engagement",

@@ -8,14 +8,14 @@ from flask import current_app, render_template, session
 from edu_resources_repository import get_edu_resource_by_id, list_all_edu_resources, list_published_edu_resources
 from participation_submissions_content import load_public_approved_participation_submission_resources
 from supabase_client import SupabaseConfigError, is_supabase_configured
+from media_upload_content import MEDIA_UPLOAD_MAX_BYTES
 from supabase_storage import EDU_RESOURCES_STORAGE_PREFIX, is_storage_object_path, resolve_public_image_url
 
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 EDU_RESOURCES_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "edu-resources").resolve()
-# Vercel Functions reject request bodies above 4.5 MB. Keep a selected cover
-# image or learning-resource file at 4 MiB so multipart form fields still fit.
-EDU_RESOURCES_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
+# The browser uploads media directly to Supabase before saving metadata.
+EDU_RESOURCES_UPLOAD_MAX_BYTES = MEDIA_UPLOAD_MAX_BYTES
 EDU_RESOURCE_CATEGORIES = (
     "PPT",
     "Story",

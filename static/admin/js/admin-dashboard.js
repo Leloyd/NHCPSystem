@@ -2069,7 +2069,7 @@
     );
     var maxUploadBytes = Math.max(
       1,
-      parseInt((imageLibrary && imageLibrary.getAttribute("data-highlight-editor-max-upload-bytes")) || "4194304", 10) || 4194304
+      parseInt((imageLibrary && imageLibrary.getAttribute("data-highlight-editor-max-upload-bytes")) || "26214400", 10) || 26214400
     );
 
     var visibilityStates = {

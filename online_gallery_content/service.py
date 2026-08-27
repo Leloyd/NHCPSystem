@@ -16,6 +16,7 @@ from online_gallery_repository import (
 )
 from supabase_storage import ONLINE_GALLERY_STORAGE_PREFIX, is_storage_object_path, resolve_public_image_url
 from supabase_client import SupabaseConfigError, is_supabase_configured
+from media_upload_content import MEDIA_UPLOAD_MAX_BYTES
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
@@ -45,9 +46,8 @@ def _resolve_runtime_uploads_root() -> Path:
 
 ONLINE_GALLERY_UPLOADS_ROOT = _resolve_runtime_uploads_root()
 ONLINE_GALLERY_UPLOAD_DIR = (ONLINE_GALLERY_UPLOADS_ROOT / "online-gallery").resolve()
-# Vercel Functions reject request bodies above 4.5 MB. Keep the combined
-# replacement image + GLB payload at 4 MiB so multipart fields still fit.
-ONLINE_GALLERY_UPLOAD_MAX_BYTES = 4 * 1024 * 1024
+# The browser uploads media directly to Supabase before saving metadata.
+ONLINE_GALLERY_UPLOAD_MAX_BYTES = MEDIA_UPLOAD_MAX_BYTES
 ONLINE_GALLERY_DEFAULT_CATEGORIES = [
     "Mga Rehiyunal na Kaugalian",
     "Mga Paniniwala sa Buong Bansa",

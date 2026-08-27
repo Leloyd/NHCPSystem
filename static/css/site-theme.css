@@ -912,6 +912,22 @@ html[data-theme="dark"] .participation-form-message.is-success {
   color: #f3ece0 !important;
   border-color: rgba(201, 168, 76, 0.34) !important;
 }
+
+html[data-theme="dark"] .participation-upload-status {
+  color: #d8eadf;
+  border-color: rgba(111, 190, 145, 0.34);
+  background: linear-gradient(135deg, rgba(25, 66, 48, 0.72), rgba(20, 42, 33, 0.9));
+}
+
+html[data-theme="dark"] .participation-upload-status small { color: #afc8b9; }
+
+html[data-theme="dark"] .participation-upload-status[data-upload-state="error"] {
+  color: #fecaca;
+  border-color: rgba(248, 113, 113, 0.42);
+  background: rgba(127, 29, 29, 0.24);
+}
+
+html[data-theme="dark"] .participation-upload-status[data-upload-state="error"] small { color: #f5b7b0; }
 html[data-theme="dark"] .participation-success-icon {
   background: #151008 !important;
   color: #e6cf8a !important;
@@ -931,6 +947,13 @@ html[data-contrast="on"] .photo-upload-zone {
   background: #000 !important;
   color: #fff !important;
   border-color: #facc15 !important;
+}
+
+html[data-contrast="on"] .participation-upload-status {
+  color: #fff;
+  border: 2px solid currentColor;
+  background: #000;
+  box-shadow: none;
 }
 html[data-contrast="on"] .participation-modal-shell,
 html[data-contrast="on"] .modal-container {

@@ -137,12 +137,19 @@
   var avatarFallback = document.getElementById("avatarFallback");
   var avatarUploadBtn = document.getElementById("avatarUploadBtn");
   var avatarRemoveBtn = document.getElementById("avatarRemoveBtn");
+  var avatarMaxBytes = 25 * 1024 * 1024;
 
   if (avatarChooseBtn && avatarInput) {
     avatarChooseBtn.addEventListener("click", function () { avatarInput.click(); });
     avatarInput.addEventListener("change", function () {
       var file = avatarInput.files && avatarInput.files[0];
       if (!file) return;
+      if (file.size > avatarMaxBytes) {
+        avatarInput.value = "";
+        if (avatarUploadBtn) avatarUploadBtn.classList.add("hidden");
+        showNotice("Your photo must be 25 MB or smaller.", "error", avatarChooseBtn);
+        return;
+      }
       var reader = new FileReader();
       reader.onload = function (event) {
         if (avatarPreview) {
@@ -165,6 +172,8 @@
       submitWithoutRefresh(avatarForm, submitter)
         .then(function (payload) {
           if (!payload) return;
+          if (window.NhcpDirectUpload) window.NhcpDirectUpload.clearFormUploads(avatarForm);
+          avatarForm._nhcpDirectUploads = [];
           if (payload.avatar_action === "remove") {
             if (avatarPreview) { avatarPreview.src = ""; avatarPreview.alt = ""; avatarPreview.style.display = "none"; }
             if (avatarFallback) avatarFallback.style.display = "";
@@ -176,7 +185,12 @@
           if (avatarInput) avatarInput.value = "";
           showNotice(payload.message, "success", submitter);
         })
-        .catch(function (error) { showNotice(error.message, "error", submitter); });
+        .catch(function (error) {
+          var cleanup = window.NhcpDirectUpload
+            ? window.NhcpDirectUpload.discardFormUploads(avatarForm)
+            : Promise.resolve();
+          cleanup.finally(function () { showNotice(error.message, "error", submitter); });
+        });
     });
   }
 

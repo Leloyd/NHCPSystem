@@ -4,6 +4,7 @@ from flask import redirect, render_template, request, session, url_for
 
 from online_gallery_repository import create_online_gallery_item, update_online_gallery_item
 from supabase_client import is_supabase_configured
+from media_upload_content import validate_direct_upload_reference
 
 from .service import (
     ONLINE_GALLERY_UPLOAD_DIR,
@@ -122,16 +123,35 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
 
     uploaded_file = files.get("image_file")
     uploaded_model_file = files.get("model_file")
-    upload_size_bytes = _get_uploaded_file_size(uploaded_file) + _get_uploaded_file_size(uploaded_model_file)
+    direct_image_path = str(form.get("image_object_path") or "").strip()
+    direct_model_path = str(form.get("model_object_path") or "").strip()
+    direct_image = (
+        validate_direct_upload_reference(direct_image_path, "online_gallery_image", audience="admin")
+        if direct_image_path
+        else None
+    )
+    direct_model = (
+        validate_direct_upload_reference(direct_model_path, "online_gallery_model", audience="admin")
+        if direct_model_path
+        else None
+    )
+    upload_size_bytes = (
+        (direct_image["size"] if direct_image else 0)
+        + (direct_model["size"] if direct_model else 0)
+        + _get_uploaded_file_size(uploaded_file)
+        + _get_uploaded_file_size(uploaded_model_file)
+    )
     if upload_size_bytes > ONLINE_GALLERY_UPLOAD_MAX_BYTES:
         upload_size_mb = upload_size_bytes / (1024 * 1024)
         max_upload_mb = ONLINE_GALLERY_UPLOAD_MAX_BYTES / (1024 * 1024)
         raise ValueError(
             f"The selected image and GLB total {upload_size_mb:.2f} MB. "
-            f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
+            f"Keep each save at or below {max_upload_mb:.1f} MB."
         )
 
-    new_image_filename = save_uploaded_image(uploaded_file, title_en or title_tl, ONLINE_GALLERY_UPLOAD_DIR)
+    new_image_filename = direct_image["path"] if direct_image else save_uploaded_image(
+        uploaded_file, title_en or title_tl, ONLINE_GALLERY_UPLOAD_DIR
+    )
     if new_image_filename:
         payload["image_filename"] = new_image_filename
     elif current_item:
@@ -139,7 +159,7 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     else:
         payload["image_filename"] = None
 
-    new_model_filename = save_uploaded_file(
+    new_model_filename = direct_model["path"] if direct_model else save_uploaded_file(
         uploaded_model_file,
         title_en or title_tl,
         ONLINE_GALLERY_UPLOAD_DIR,
@@ -173,6 +193,16 @@ def register_online_gallery_content_routes(
     save_uploaded_file,
     delete_local_image,
 ):
+    def cleanup_pending_direct_media(saved_paths: set[str]) -> None:
+        for field_name in ("image_object_path", "model_object_path"):
+            path = str(request.form.get(field_name) or "").strip()
+            if not path or path in saved_paths:
+                continue
+            try:
+                delete_local_image(path, ONLINE_GALLERY_UPLOAD_DIR)
+            except Exception:
+                pass
+
     @app.route(f"{admin_route_prefix}/online-gallery")
     @admin_required
     def admin_online_gallery():
@@ -260,6 +290,7 @@ def register_online_gallery_content_routes(
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
             if new_model_filename:
                 delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_image_filename, new_model_filename) if path})
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -279,6 +310,7 @@ def register_online_gallery_content_routes(
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
             if new_model_filename:
                 delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_image_filename, new_model_filename) if path})
             app.logger.exception("Failed to create online gallery item: %s", exc)
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -345,6 +377,7 @@ def register_online_gallery_content_routes(
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
             if new_model_filename:
                 delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_image_filename, new_model_filename) if path})
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -364,6 +397,7 @@ def register_online_gallery_content_routes(
                 delete_local_image(new_image_filename, ONLINE_GALLERY_UPLOAD_DIR)
             if new_model_filename:
                 delete_local_image(new_model_filename, ONLINE_GALLERY_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_image_filename, new_model_filename) if path})
             app.logger.exception("Failed to update online gallery item %s: %s", item_id, exc)
             return render_admin_online_gallery_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,

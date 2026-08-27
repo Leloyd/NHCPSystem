@@ -184,7 +184,7 @@
         selectedLabel +
         ". Keep each save at or below " +
         formatMegabytes(maxUploadBytes) +
-        " for Vercel.",
+        " per save.",
       true
     );
     return true;

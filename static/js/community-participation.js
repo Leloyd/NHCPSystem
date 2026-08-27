@@ -17,6 +17,7 @@ const highlights = Array.isArray(communityParticipationData.highlights) ? commun
 const events = Array.isArray(communityParticipationData.events) ? communityParticipationData.events : [];
 const authConfig = window.communityParticipationAuth || { isAuthenticated: false, loginUrl: '/login' };
 const INITIAL_HIGHLIGHTS_TOTAL = 7;
+const PARTICIPATION_UPLOAD_MAX_BYTES = 25 * 1024 * 1024;
 const now = new Date();
 const todayKey = formatDateKey(now);
 const tomorrow = new Date(now);
@@ -776,6 +777,14 @@ function initFormInteractions() {
       const acceptedFormats = ['.pdf', '.docx', '.pptx', '.ppt'];
       const firstValidFile = files.find(f => acceptedFormats.some(ext => f.name.toLowerCase().endsWith(ext)));
       if (!firstValidFile) {
+        setSubmissionMessage(teacherCornerFormMessage, 'Choose a PDF, DOCX, PPTX, or PPT file.');
+        return;
+      }
+      if (firstValidFile.size > PARTICIPATION_UPLOAD_MAX_BYTES) {
+        resourceFileInput.value = '';
+        uploadedFiles = [];
+        renderFileList();
+        setSubmissionMessage(teacherCornerFormMessage, 'The classroom material must be 25 MB or smaller.');
         return;
       }
       const transfer = new DataTransfer();
@@ -783,6 +792,7 @@ function initFormInteractions() {
       resourceFileInput.files = transfer.files;
       uploadedFiles = [firstValidFile];
       renderFileList();
+      setSubmissionMessage(teacherCornerFormMessage, 'File ready for secure upload.', 'success');
     }
 
     function renderFileList() {
@@ -883,6 +893,13 @@ function initFormInteractions() {
       element.classList.add(tone === 'success' ? 'is-success' : 'is-error');
     }
   }
+
+  [teacherCornerForm, storiesSubmitForm].filter(Boolean).forEach((form) => {
+    form.addEventListener('nhcp:direct-upload-error', (event) => {
+      const target = form === teacherCornerForm ? teacherCornerFormMessage : storiesSubmitFormMessage;
+      setSubmissionMessage(target, event.detail?.message || 'The upload could not be completed.');
+    });
+  });
 
   function resetSubmissionState() {
     submissionState['teacher-corner'] = { submissionId: null, email: '' };
@@ -987,18 +1004,23 @@ function initFormInteractions() {
     try {
       const { response, payload } = await postForm('/community-participation/submissions', formData);
       if (response.status === 401 && payload.login_required && payload.login_url) {
+        await window.NhcpDirectUpload?.discardFormUploads(form);
         window.location.href = payload.login_url;
         return;
       }
 
       if (payload.ok) {
+        window.NhcpDirectUpload?.clearFormUploads(form);
+        form._nhcpDirectUploads = [];
         form.classList.add('hidden');
         successBox?.classList.remove('hidden');
         return;
       }
 
+      await window.NhcpDirectUpload?.discardFormUploads(form);
       setSubmissionMessage(formMessage, payload.error || 'Could not submit your participation content right now.');
     } catch (error) {
+      await window.NhcpDirectUpload?.discardFormUploads(form);
       setSubmissionMessage(formMessage, 'Could not reach the server right now. Please try again.');
     }
   }
@@ -1161,6 +1183,11 @@ function initFormInteractions() {
 
     storyPhotoInput.addEventListener('change', (e) => {
       const file = e.target.files?.[0];
+      if (file && file.size > PARTICIPATION_UPLOAD_MAX_BYTES) {
+        storyPhotoInput.value = '';
+        setSubmissionMessage(storiesSubmitFormMessage, 'The story photo must be 25 MB or smaller.');
+        return;
+      }
       if (file && file.type.startsWith('image/')) {
         const reader = new FileReader();
         reader.onload = (ev) => {
@@ -1168,6 +1195,7 @@ function initFormInteractions() {
             photoPreviewImg.src = ev.target.result;
             photoPreview.classList.remove('hidden');
             photoUploadPrompt.classList.add('hidden');
+            setSubmissionMessage(storiesSubmitFormMessage, 'Photo ready for secure upload.', 'success');
           }
         };
         reader.readAsDataURL(file);

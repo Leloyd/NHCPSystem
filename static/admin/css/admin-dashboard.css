@@ -12196,3 +12196,81 @@ body.admin-settings-result-open {
     transition: none;
   }
 }
+.nhcp-direct-upload-status {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-top: 0.85rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid rgba(31, 111, 82, 0.22);
+  border-radius: 14px;
+  color: #21483a;
+  background: linear-gradient(135deg, rgba(233, 245, 238, 0.96), rgba(248, 252, 249, 0.98));
+  box-shadow: 0 10px 24px rgba(28, 72, 55, 0.07);
+}
+
+.nhcp-direct-upload-status[hidden] { display: none !important; }
+
+.nhcp-direct-upload-status > span:last-child {
+  display: grid;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.nhcp-direct-upload-status strong { font-size: 0.85rem; }
+.nhcp-direct-upload-status small { color: #5e756c; line-height: 1.45; overflow-wrap: anywhere; }
+
+.nhcp-direct-upload-status__icon {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  border: 2px solid rgba(31, 111, 82, 0.24);
+  border-top-color: #1f6f52;
+  border-radius: 999px;
+  animation: nhcp-direct-upload-spin 0.8s linear infinite;
+}
+
+.nhcp-direct-upload-status[data-upload-state="success"] {
+  border-color: rgba(31, 111, 82, 0.32);
+}
+
+.nhcp-direct-upload-status[data-upload-state="success"] .nhcp-direct-upload-status__icon {
+  border: 0;
+  border-radius: 0;
+  animation: none;
+  transform: rotate(-45deg);
+  width: 1rem;
+  height: 0.55rem;
+  border-left: 2px solid #1f6f52;
+  border-bottom: 2px solid #1f6f52;
+}
+
+.nhcp-direct-upload-status[data-upload-state="error"] {
+  color: #8b2f2f;
+  border-color: rgba(176, 53, 53, 0.3);
+  background: linear-gradient(135deg, #fff4f1, #fffafa);
+}
+
+.nhcp-direct-upload-status[data-upload-state="error"] small { color: #875b55; }
+.nhcp-direct-upload-status[data-upload-state="error"] .nhcp-direct-upload-status__icon {
+  border: 0;
+  animation: none;
+  position: relative;
+}
+
+.nhcp-direct-upload-status[data-upload-state="error"] .nhcp-direct-upload-status__icon::before,
+.nhcp-direct-upload-status[data-upload-state="error"] .nhcp-direct-upload-status__icon::after {
+  content: "";
+  position: absolute;
+  left: 0.5rem;
+  top: 0;
+  width: 2px;
+  height: 1.1rem;
+  border-radius: 2px;
+  background: #b03535;
+  transform: rotate(45deg);
+}
+
+.nhcp-direct-upload-status[data-upload-state="error"] .nhcp-direct-upload-status__icon::after { transform: rotate(-45deg); }
+
+@keyframes nhcp-direct-upload-spin { to { transform: rotate(360deg); } }

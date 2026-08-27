@@ -6,6 +6,7 @@ from flask import redirect, render_template, request, session, url_for
 
 from community_highlights_repository import clear_featured_community_highlights, create_community_highlight, list_all_community_highlights, update_community_highlight
 from supabase_client import is_supabase_configured
+from media_upload_content import validate_direct_upload_reference
 
 from .service import (
     COMMUNITY_HIGHLIGHT_MAX_IMAGES,
@@ -144,6 +145,16 @@ def _build_community_highlight_form_payload(
         filename for filename in existing_image_filenames if filename not in requested_removals
     ]
 
+    direct_upload_paths = [
+        str(value or "").strip()
+        for value in form.getlist("image_object_paths")
+        if str(value or "").strip()
+    ]
+    direct_uploads = [
+        validate_direct_upload_reference(path, "community_highlight_image", audience="admin")
+        for path in direct_upload_paths
+    ]
+
     uploaded_files = [
         file_storage
         for file_storage in files.getlist("image_files")
@@ -154,21 +165,23 @@ def _build_community_highlight_form_payload(
         if legacy_upload is not None and str(getattr(legacy_upload, "filename", "") or "").strip():
             uploaded_files = [legacy_upload]
 
-    if len(retained_image_filenames) + len(uploaded_files) > COMMUNITY_HIGHLIGHT_MAX_IMAGES:
+    if len(retained_image_filenames) + len(direct_uploads) + len(uploaded_files) > COMMUNITY_HIGHLIGHT_MAX_IMAGES:
         raise ValueError(
             f"A community highlight can contain up to {COMMUNITY_HIGHLIGHT_MAX_IMAGES} images."
         )
 
-    upload_size_bytes = sum(_get_uploaded_file_size(file_storage) for file_storage in uploaded_files)
+    upload_size_bytes = sum(item["size"] for item in direct_uploads) + sum(
+        _get_uploaded_file_size(file_storage) for file_storage in uploaded_files
+    )
     if upload_size_bytes > COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES:
         upload_size_mb = upload_size_bytes / (1024 * 1024)
         max_upload_mb = COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES / (1024 * 1024)
         raise ValueError(
             f"The newly selected images total {upload_size_mb:.2f} MB. "
-            f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
+            f"Keep each save at or below {max_upload_mb:.1f} MB."
         )
 
-    new_image_filenames: list[str] = []
+    new_image_filenames: list[str] = [item["path"] for item in direct_uploads]
     try:
         for file_storage in uploaded_files:
             uploaded_filename = save_uploaded_image(
@@ -205,6 +218,17 @@ def register_community_content_routes(
     delete_local_image,
     slugify_text,
 ):
+    def cleanup_pending_direct_images(saved_paths: list[str]) -> None:
+        saved = set(saved_paths)
+        for path in request.form.getlist("image_object_paths"):
+            normalized = str(path or "").strip()
+            if not normalized or normalized in saved:
+                continue
+            try:
+                delete_local_image(normalized, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            except Exception:
+                pass
+
     @app.route(f"{admin_route_prefix}/community-highlights")
     @admin_required
     def admin_community_highlights():
@@ -300,6 +324,7 @@ def register_community_content_routes(
         except ValueError as exc:
             for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            cleanup_pending_direct_images(new_image_filenames)
             return render_admin_community_highlight_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -313,6 +338,7 @@ def register_community_content_routes(
         except Exception as exc:
             for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            cleanup_pending_direct_images(new_image_filenames)
             app.logger.exception("Failed to create community highlight: %s", exc)
             return render_admin_community_highlight_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -367,6 +393,7 @@ def register_community_content_routes(
         except ValueError as exc:
             for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            cleanup_pending_direct_images(new_image_filenames)
             return render_admin_community_highlight_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -380,6 +407,7 @@ def register_community_content_routes(
         except Exception as exc:
             for new_image_filename in new_image_filenames:
                 delete_local_image(new_image_filename, COMMUNITY_HIGHLIGHTS_UPLOAD_DIR)
+            cleanup_pending_direct_images(new_image_filenames)
             app.logger.exception("Failed to update community highlight %s: %s", highlight_id, exc)
             return render_admin_community_highlight_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,

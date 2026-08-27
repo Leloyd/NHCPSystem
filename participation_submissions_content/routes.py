@@ -17,6 +17,7 @@ from participation_submissions_repository import (
     update_participation_submission,
 )
 from supabase_client import is_supabase_configured
+from media_upload_content import MEDIA_UPLOAD_MAX_BYTES, discard_direct_uploads, validate_direct_upload_reference
 
 from .emailer import EmailDeliveryError, is_participation_email_configured, send_participation_verification_email
 from .service import (
@@ -34,6 +35,22 @@ VERIFICATION_WINDOW_MINUTES = 30
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 TEACHER_ALLOWED_EXTENSIONS = {".pdf", ".docx", ".ppt", ".pptx"}
 ADMIN_SUBMISSION_STATUSES = {"pending_verification", "pending_review", "active", "archived"}
+
+
+def _get_uploaded_file_size(file_storage) -> int:
+    if file_storage is None or not str(getattr(file_storage, "filename", "") or "").strip():
+        return 0
+    stream = getattr(file_storage, "stream", None)
+    if stream is None:
+        raise ValueError("The selected upload size could not be verified.")
+    try:
+        original_position = stream.tell()
+        stream.seek(0, 2)
+        size = int(stream.tell())
+        stream.seek(original_position)
+    except (AttributeError, OSError, TypeError, ValueError) as exc:
+        raise ValueError("The selected upload size could not be verified.") from exc
+    return max(0, size)
 
 
 def _utcnow() -> datetime:
@@ -93,7 +110,20 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
         if len(description) < 12:
             raise ValueError("Material description must be at least 12 characters.")
         uploaded_file = files.get("resource_file")
-        uploaded_file_name = save_uploaded_file(
+        direct_path = str(form.get("resource_object_path") or "").strip()
+        direct_upload = (
+            validate_direct_upload_reference(
+                direct_path,
+                "participation_teacher_file",
+                audience="public",
+                owner_id=current_user.get("id"),
+            )
+            if direct_path
+            else None
+        )
+        if _get_uploaded_file_size(uploaded_file) > MEDIA_UPLOAD_MAX_BYTES:
+            raise ValueError("The classroom material exceeds the 25 MB upload limit.")
+        uploaded_file_name = direct_upload["path"] if direct_upload else save_uploaded_file(
             uploaded_file,
             title,
             PARTICIPATION_SUBMISSIONS_UPLOAD_DIR,
@@ -123,7 +153,22 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
         if len(story_content) < 40:
             raise ValueError("Story content must be at least 40 characters.")
         uploaded_photo = files.get("photo")
-        uploaded_photo_name = save_uploaded_image(uploaded_photo, title, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+        direct_path = str(form.get("photo_object_path") or "").strip()
+        direct_upload = (
+            validate_direct_upload_reference(
+                direct_path,
+                "participation_story_photo",
+                audience="public",
+                owner_id=current_user.get("id"),
+            )
+            if direct_path
+            else None
+        )
+        if _get_uploaded_file_size(uploaded_photo) > MEDIA_UPLOAD_MAX_BYTES:
+            raise ValueError("The story photo exceeds the 25 MB upload limit.")
+        uploaded_photo_name = direct_upload["path"] if direct_upload else save_uploaded_image(
+            uploaded_photo, title, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR
+        )
         payload.update(
             {
                 "title": title,
@@ -155,6 +200,25 @@ def register_participation_submission_routes(
     get_current_public_user,
     consume_public_action_rate_limit,
 ):
+    def cleanup_pending_direct_uploads(current_user, saved_paths: set[str]) -> None:
+        candidates = [
+            {
+                "purpose": "participation_teacher_file",
+                "path": str(request.form.get("resource_object_path") or "").strip(),
+            },
+            {
+                "purpose": "participation_story_photo",
+                "path": str(request.form.get("photo_object_path") or "").strip(),
+            },
+        ]
+        candidates = [item for item in candidates if item["path"] and item["path"] not in saved_paths]
+        if not candidates:
+            return
+        try:
+            discard_direct_uploads(candidates, audience="public", owner_id=current_user.get("id"))
+        except Exception:
+            pass
+
     @app.route("/community-participation/submissions", methods=["POST"])
     @public_login_required
     def community_participation_create_submission():
@@ -197,12 +261,18 @@ def register_participation_submission_routes(
                 delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
             if uploaded_photo_name:
                 delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            cleanup_pending_direct_uploads(
+                current_user, {path for path in (uploaded_file_name, uploaded_photo_name) if path}
+            )
             return jsonify({"ok": False, "error": str(exc)}), 400
         except Exception as exc:
             if uploaded_file_name:
                 delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
             if uploaded_photo_name:
                 delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            cleanup_pending_direct_uploads(
+                current_user, {path for path in (uploaded_file_name, uploaded_photo_name) if path}
+            )
             app.logger.exception("Failed to create community participation submission: %s", exc)
             return jsonify({"ok": False, "error": "Could not submit your participation content right now."}), 500
 

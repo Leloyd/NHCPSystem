@@ -29,6 +29,7 @@ from online_gallery_content.service import load_admin_online_gallery_items
 from participation_submissions_content import load_admin_participation_submissions, register_participation_submission_routes
 from public_users_repository import get_public_user_profile_by_id
 from supabase_storage import delete_public_image, resolve_public_image_url, upload_public_file, upload_public_image
+from media_upload_content import register_media_upload_routes
 from supabase_client import is_supabase_configured
 from tour_bookings_content import load_admin_tour_bookings, load_public_tour_bookings, register_tour_booking_routes
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
@@ -1394,6 +1395,17 @@ register_user_account_routes(
     is_public_auth_rate_limited=_is_public_auth_rate_limited,
     record_public_auth_failure=_record_public_auth_failure,
     clear_public_auth_failures=_clear_public_auth_failures,
+)
+
+
+register_media_upload_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    is_public_csrf_valid=_is_public_csrf_valid,
+    get_current_public_user=_get_current_public_user,
+    consume_public_action_rate_limit=_consume_public_action_rate_limit,
 )
 
 

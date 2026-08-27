@@ -7,6 +7,7 @@ from flask import redirect, render_template, request, session, url_for
 
 from edu_resources_repository import create_edu_resource, list_all_edu_resources, update_edu_resource
 from supabase_client import is_supabase_configured
+from media_upload_content import validate_direct_upload_reference
 
 from .service import (
     EDU_RESOURCES_UPLOAD_DIR,
@@ -126,27 +127,50 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
     new_cover_image_filename = None
     uploaded_file = files.get("resource_file")
     uploaded_cover = files.get("cover_image_file")
-    upload_size_bytes = _get_uploaded_file_size(uploaded_file) + _get_uploaded_file_size(uploaded_cover)
+    direct_file_path = str(form.get("resource_object_path") or "").strip()
+    direct_cover_path = str(form.get("cover_image_object_path") or "").strip()
+    direct_file = (
+        validate_direct_upload_reference(direct_file_path, "edu_resource_file", audience="admin")
+        if direct_file_path
+        else None
+    )
+    direct_cover = (
+        validate_direct_upload_reference(direct_cover_path, "edu_story_cover", audience="admin")
+        if direct_cover_path
+        else None
+    )
+    upload_size_bytes = (
+        (direct_file["size"] if direct_file else 0)
+        + (direct_cover["size"] if direct_cover else 0)
+        + _get_uploaded_file_size(uploaded_file)
+        + _get_uploaded_file_size(uploaded_cover)
+    )
     if upload_size_bytes > EDU_RESOURCES_UPLOAD_MAX_BYTES:
         upload_size_mb = upload_size_bytes / (1024 * 1024)
         max_upload_mb = EDU_RESOURCES_UPLOAD_MAX_BYTES / (1024 * 1024)
         raise ValueError(
             f"The selected upload is {upload_size_mb:.2f} MB. "
-            f"Keep each save at or below {max_upload_mb:.1f} MB to stay within Vercel's upload limit."
+            f"Keep each save at or below {max_upload_mb:.1f} MB."
         )
 
     if category == "Story":
+        if direct_file:
+            raise ValueError("Story resources accept an optional JPG or PNG cover instead of a document upload.")
         if author and len(author) < 2:
             raise ValueError("Contributor name must be at least 2 characters when provided.")
         payload["author"] = author
         payload["year_label"] = year_label
 
-        new_cover_image_filename = save_uploaded_image(uploaded_cover, title, EDU_RESOURCES_UPLOAD_DIR)
+        new_cover_image_filename = direct_cover["path"] if direct_cover else save_uploaded_image(
+            uploaded_cover, title, EDU_RESOURCES_UPLOAD_DIR
+        )
         if new_cover_image_filename:
             payload["cover_image_filename"] = new_cover_image_filename
         elif current_item and current_item.get("cover_image_filename"):
             payload["cover_image_filename"] = current_item.get("cover_image_filename")
     else:
+        if direct_cover:
+            raise ValueError("Cover images are only available for Story resources.")
         if len(educator_name) < 2:
             raise ValueError("Educator name / source must be at least 2 characters.")
         if len(subject_topic) < 2:
@@ -156,7 +180,9 @@ def _build_edu_resource_form_payload(form, files, *, current_item, save_uploaded
         payload["subject_topic"] = subject_topic
 
         allowed_extensions, invalid_type_message = CATEGORY_ALLOWED_EXTENSIONS[category]
-        new_file_filename = save_uploaded_file(
+        if direct_file and direct_file["extension"] not in allowed_extensions:
+            raise ValueError(invalid_type_message)
+        new_file_filename = direct_file["path"] if direct_file else save_uploaded_file(
             uploaded_file,
             title,
             EDU_RESOURCES_UPLOAD_DIR,
@@ -187,6 +213,16 @@ def register_edu_resources_routes(
     delete_local_image,
     slugify_text,
 ):
+    def cleanup_pending_direct_media(saved_paths: set[str]) -> None:
+        for field_name in ("resource_object_path", "cover_image_object_path"):
+            path = str(request.form.get(field_name) or "").strip()
+            if not path or path in saved_paths:
+                continue
+            try:
+                delete_local_image(path, EDU_RESOURCES_UPLOAD_DIR)
+            except Exception:
+                pass
+
     @app.route(f"{admin_route_prefix}/edu-resources")
     @admin_required
     def admin_edu_resources():
@@ -269,6 +305,7 @@ def register_edu_resources_routes(
                 delete_local_image(new_file_filename, EDU_RESOURCES_UPLOAD_DIR)
             if new_cover_image_filename:
                 delete_local_image(new_cover_image_filename, EDU_RESOURCES_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_file_filename, new_cover_image_filename) if path})
             return render_admin_edu_resource_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -284,6 +321,7 @@ def register_edu_resources_routes(
                 delete_local_image(new_file_filename, EDU_RESOURCES_UPLOAD_DIR)
             if new_cover_image_filename:
                 delete_local_image(new_cover_image_filename, EDU_RESOURCES_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_file_filename, new_cover_image_filename) if path})
             app.logger.exception("Failed to create edu resource: %s", exc)
             return render_admin_edu_resource_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
@@ -346,6 +384,7 @@ def register_edu_resources_routes(
                 delete_local_image(new_file_filename, EDU_RESOURCES_UPLOAD_DIR)
             if new_cover_image_filename:
                 delete_local_image(new_cover_image_filename, EDU_RESOURCES_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_file_filename, new_cover_image_filename) if path})
             return render_admin_edu_resource_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,
                 admin_session_user_key=admin_session_user_key,
@@ -361,6 +400,7 @@ def register_edu_resources_routes(
                 delete_local_image(new_file_filename, EDU_RESOURCES_UPLOAD_DIR)
             if new_cover_image_filename:
                 delete_local_image(new_cover_image_filename, EDU_RESOURCES_UPLOAD_DIR)
+            cleanup_pending_direct_media({path for path in (new_file_filename, new_cover_image_filename) if path})
             app.logger.exception("Failed to update edu resource %s: %s", item_id, exc)
             return render_admin_edu_resource_form(
                 ensure_admin_csrf_token=ensure_admin_csrf_token,

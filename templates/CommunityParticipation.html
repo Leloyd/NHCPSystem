@@ -387,19 +387,19 @@
 
           <!-- Teacher Corner Form -->
           <div id="teacherCornerPanel" class="participation-panel" style="display: none;">
-          <form id="teacherCornerForm" class="participation-form" action="#" method="post" enctype="multipart/form-data">
+          <form id="teacherCornerForm" class="participation-form" action="#" method="post" enctype="multipart/form-data" data-direct-upload-form data-direct-upload-sign-url="{{ url_for('public_media_upload_sign') }}" data-direct-upload-discard-url="{{ url_for('public_media_upload_discard') }}" data-direct-upload-max-bytes="26214400">
             <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
             <input type="hidden" name="submission_type" value="teacher_corner" />
             
             <div class="form-group">
               <label class="form-label">Upload Materials</label>
               <div class="file-drop-zone" id="fileDropZone">
-                <input type="file" id="resourceFile" name="resource_file" class="hidden" accept=".pdf,.docx,.ppt,.pptx" />
+                <input type="file" id="resourceFile" name="resource_file" class="hidden" accept=".pdf,.docx,.ppt,.pptx" data-direct-upload-purpose="participation_teacher_file" data-direct-upload-field="resource_object_path" />
                 <svg class="w-7 h-7 mx-auto mb-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path>
                 </svg>
                 <p class="text-gray-700 text-sm font-medium">Drop files here or click to browse</p>
-                <p class="text-gray-400 text-xs mt-1">Accepted: PDF, DOCX, PPTX, PPT</p>
+                <p class="text-gray-400 text-xs mt-1">Accepted: PDF, DOCX, PPTX, PPT · Maximum 25 MB</p>
                 <div class="flex justify-center gap-1.5 mt-3 flex-wrap">
                   <span class="px-2 py-0.5 text-xs rounded-md font-medium bg-red-100 text-red-600">PDF</span>
                   <span class="px-2 py-0.5 text-xs rounded-md font-medium bg-blue-100 text-blue-700">DOCX</span>
@@ -407,6 +407,10 @@
                 </div>
               </div>
               <div id="fileList" class="mt-3 space-y-2"></div>
+              <div class="participation-upload-status" data-direct-upload-status role="status" aria-live="polite" hidden>
+                <span class="participation-upload-status__icon" aria-hidden="true"></span>
+                <span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span>
+              </div>
             </div>
 
             <div class="form-group">
@@ -475,7 +479,7 @@
 
           <!-- Stories Submit Form -->
           <div id="storiesSubmitPanel" class="participation-panel" style="display: none;">
-          <form id="storiesSubmitForm" class="participation-form" action="#" method="post" enctype="multipart/form-data">
+          <form id="storiesSubmitForm" class="participation-form" action="#" method="post" enctype="multipart/form-data" data-direct-upload-form data-direct-upload-sign-url="{{ url_for('public_media_upload_sign') }}" data-direct-upload-discard-url="{{ url_for('public_media_upload_discard') }}" data-direct-upload-max-bytes="26214400">
             <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
             <input type="hidden" name="submission_type" value="story_submit" />
             
@@ -525,7 +529,7 @@
             <div class="form-group">
               <label class="form-label">Add Photo <span class="text-gray-400 font-normal">(optional)</span></label>
               <div class="photo-upload-zone" id="photoUploadZone">
-                <input type="file" id="storyPhoto" name="photo" class="hidden" accept="image/*" />
+                <input type="file" id="storyPhoto" name="photo" class="hidden" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-direct-upload-purpose="participation_story_photo" data-direct-upload-field="photo_object_path" />
                 <div id="photoPreview" class="hidden photo-upload-preview">
                   <img id="photoPreviewImg" src="" alt="Preview" class="photo-upload-preview-image" />
                   <button type="button" id="removePhoto" class="photo-upload-preview-remove" aria-label="Remove photo">
@@ -539,7 +543,12 @@
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                   </svg>
                   <span>Click to add a photo</span>
+                  <small>JPG or PNG · Maximum 25 MB</small>
                 </div>
+              </div>
+              <div class="participation-upload-status" data-direct-upload-status role="status" aria-live="polite" hidden>
+                <span class="participation-upload-status__icon" aria-hidden="true"></span>
+                <span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span>
               </div>
             </div>
 
@@ -576,12 +585,15 @@
     </div>
 
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script id="communityParticipationData" type="application/json">{{ {'highlights': community_highlights_items or [], 'events': community_calendar_items or []}|tojson }}</script>
     <script id="communityParticipationAuthData" type="application/json">{{ {'isAuthenticated': current_public_user is not none, 'loginUrl': url_for('public_login', next=url_for('community_participation'))}|tojson }}</script>
     <script>
       window.communityParticipationAuth = JSON.parse(document.getElementById('communityParticipationAuthData').textContent || '{}');
       lucide.createIcons();
     </script>
+    <script src="{{ url_for('static', filename='js/direct-media-upload.js') }}"></script>
+    <script>window.NhcpDirectUpload && window.NhcpDirectUpload.initialize();</script>
     <script src="{{ url_for('static', filename='js/community-participation.js') }}"></script>
     {% include 'partials/_site_prefs_foot.html' %}
   </body>

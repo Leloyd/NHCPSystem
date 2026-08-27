@@ -139,7 +139,7 @@
         selectedLabel +
         ". Keep each save at or below " +
         formatMegabytes(maxUploadBytes) +
-        " for Vercel.",
+        " per save.",
       true
     );
     return true;
@@ -181,6 +181,18 @@
     }
     var category = normalize(categorySelect.value) || "PPT";
     var isStory = category === "Story";
+    if (isStory && getSelectedFile(fileInput)) {
+      fileInput.value = "";
+      hasSelectedFile = hasPersistedFile;
+    }
+    if (!isStory && getSelectedFile(coverInput)) {
+      coverInput.value = "";
+      hasSelectedCover = hasPersistedCover;
+      if (coverObjectUrl) {
+        window.URL.revokeObjectURL(coverObjectUrl);
+        coverObjectUrl = "";
+      }
+    }
     setGroupVisibility(groups.storyMeta, isStory);
     setGroupVisibility(groups.storyUpload, isStory);
     setGroupVisibility(groups.materialMeta, !isStory);

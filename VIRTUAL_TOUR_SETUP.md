@@ -98,6 +98,29 @@ and signed access in [Storage Buckets](https://supabase.com/docs/guides/storage/
 and confirms that signed-token uploads require no Storage object policy in
 [Upload to a signed URL](https://supabase.com/docs/reference/python/storage-from-uploadtosignedurl).
 
+### Configure the shared 25 MB media bucket
+
+Community Highlights, Online Gallery, Educational Resources, E-Participation,
+and account photos use a separate bucket and now upload directly from the browser
+with short-lived signed tokens.
+
+1. In **Storage**, locate the bucket named `nhcp-media`.
+2. If it does not exist, click **New bucket**, enter `nhcp-media`, and enable
+   **Public bucket**. These approved images and downloadable resources are served
+   through their public Storage URLs.
+3. Open the bucket settings and enable **Restrict file size**.
+4. Set its file-size limit to **25 MB**.
+5. Allow the file types used by the system: JPG/JPEG, PNG, GLB, PDF, DOCX, PPT,
+   and PPTX. Leaving the MIME restriction empty also works because the
+   application validates the permitted extension for each form.
+6. Open **Storage → Settings** and make sure the global file-size limit is at
+   least **30 MB**. The shared bucket enforces 25 MB while the separate Virtual
+   Tour bucket continues allowing 30 MB panoramas.
+
+If the shared bucket has another name, set `SUPABASE_MEDIA_BUCKET` to that exact
+name in Vercel. `SUPABASE_PUBLISHABLE_KEY` is required for both the shared media
+uploads and Virtual Tour uploads. The secret/service-role key remains server-only.
+
 ## 3. Copy the Supabase URL and API keys
 
 Keep the Vercel Environment Variables page ready in another tab, but do not share
@@ -220,6 +243,7 @@ It supports both English and Filipino and is used as
 | `SUPABASE_URL` | Supabase Project URL | No |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase `sb_secret_...` or legacy `service_role` key | **Yes** |
 | `SUPABASE_PUBLISHABLE_KEY` | Supabase `sb_publishable_...` or legacy `anon` key | No |
+| `SUPABASE_MEDIA_BUCKET` | `nhcp-media` (optional when using the default name) | No |
 | `SUPABASE_VIRTUAL_TOUR_BUCKET` | `nhcp-virtual-tours` | No |
 | `VIRTUAL_TOUR_SIGNED_URL_SECONDS` | `7200` | No |
 

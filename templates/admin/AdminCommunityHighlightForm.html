@@ -23,6 +23,11 @@
             enctype="multipart/form-data"
             class="admin-highlight-view admin-highlight-editor"
             data-highlight-editor
+            data-direct-upload-form
+            data-direct-upload-submit-mode="native"
+            data-direct-upload-sign-url="{{ url_for('admin_media_upload_sign') }}"
+            data-direct-upload-discard-url="{{ url_for('admin_media_upload_discard') }}"
+            data-direct-upload-max-bytes="{{ max_upload_bytes }}"
             data-highlight-editor-submit-label="{{ submit_label }}"
             data-confirm-submit
             data-confirm-eyebrow="Community highlight"
@@ -98,6 +103,8 @@
                     accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                     multiple
                     data-highlight-editor-image-input
+                    data-direct-upload-purpose="community_highlight_image"
+                    data-direct-upload-field="image_object_paths"
                   />
                 </label>
 
@@ -131,8 +138,12 @@
                       <i data-highlight-editor-upload-meter-bar></i>
                     </div>
                     <small>
-                      Newly selected images must total {{ '%.1f'|format(max_upload_mb) }} MB or less per save to remain below Vercel’s 4.5 MB request limit.
+                      Newly selected images must total {{ '%.0f'|format(max_upload_mb) }} MB or less per save. Files upload securely and directly to Supabase Storage.
                     </small>
+                  </div>
+                  <div class="nhcp-direct-upload-status" data-direct-upload-status role="status" aria-live="polite" hidden>
+                    <span class="nhcp-direct-upload-status__icon" aria-hidden="true"></span>
+                    <span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span>
                   </div>
                   <div class="admin-highlight-editor-library-grid" data-highlight-editor-image-grid>
                     {% for image in highlight_form.gallery_images %}

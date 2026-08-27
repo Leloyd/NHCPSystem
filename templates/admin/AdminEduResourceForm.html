@@ -23,6 +23,11 @@
             enctype="multipart/form-data"
             class="admin-highlight-view admin-gallery-editor admin-edu-editor"
             data-edu-editor
+            data-direct-upload-form
+            data-direct-upload-submit-mode="native"
+            data-direct-upload-sign-url="{{ url_for('admin_media_upload_sign') }}"
+            data-direct-upload-discard-url="{{ url_for('admin_media_upload_discard') }}"
+            data-direct-upload-max-bytes="{{ max_upload_bytes }}"
             data-edu-editor-max-upload-bytes="{{ max_upload_bytes }}"
             data-edu-editor-saved-cover-url="{{ resource_form.cover_image_url or '' }}"
             data-edu-editor-has-cover="{% if resource_form.cover_image_filename %}1{% else %}0{% endif %}"
@@ -86,7 +91,7 @@
                     <strong>{% if resource_form.cover_image_filename %}Replace story image{% else %}Upload story image (optional){% endif %}</strong>
                     <small>JPG or PNG{% if resource_form.cover_image_filename %} · Current: {{ resource_form.cover_image_filename }}{% endif %}</small>
                   </span>
-                  <input id="resourceCoverImage" name="cover_image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-edu-editor-cover-input />
+                  <input id="resourceCoverImage" name="cover_image_file" type="file" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-edu-editor-cover-input data-direct-upload-purpose="edu_story_cover" data-direct-upload-field="cover_image_object_path" />
                 </label>
 
                 <label class="admin-gallery-editor-upload is-model admin-edu-file-upload" for="resourceFile" data-resource-field="material_upload" {% if resource_form.category in ['Story', 'Books'] %}hidden{% endif %}>
@@ -99,7 +104,7 @@
                       {% if resource_form.file_filename %}Current: {{ resource_form.file_filename }}{% else %}Choose the file that matches the selected category{% endif %}
                     </small>
                   </span>
-                  <input id="resourceFile" name="resource_file" type="file" data-edu-editor-file-input />
+                  <input id="resourceFile" name="resource_file" type="file" data-edu-editor-file-input data-direct-upload-purpose="edu_resource_file" data-direct-upload-field="resource_object_path" />
                 </label>
 
                 <section class="admin-highlight-editor-upload-budget admin-gallery-editor-upload-budget">
@@ -110,8 +115,13 @@
                   <div class="admin-highlight-editor-upload-meter" role="progressbar" aria-label="Size of the selected educational resource upload" aria-valuemin="0" aria-valuemax="{{ max_upload_bytes }}" aria-valuenow="0" data-edu-editor-upload-meter>
                     <i data-edu-editor-upload-meter-bar></i>
                   </div>
-                  <small>The newly selected cover or resource file must be {{ '%.1f'|format(max_upload_mb) }} MB or less per save to remain below Vercel’s 4.5 MB request limit.</small>
+                  <small>The newly selected cover or resource file must be {{ '%.0f'|format(max_upload_mb) }} MB or less per save. Files upload securely and directly to Supabase Storage.</small>
                 </section>
+
+                <div class="nhcp-direct-upload-status" data-direct-upload-status role="status" aria-live="polite" hidden>
+                  <span class="nhcp-direct-upload-status__icon" aria-hidden="true"></span>
+                  <span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span>
+                </div>
 
                 <p class="admin-gallery-editor-upload-feedback" data-edu-editor-upload-feedback role="status" hidden></p>
 

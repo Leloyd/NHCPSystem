@@ -29,6 +29,7 @@ from public_users_repository import (
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
 from supabase_client import is_supabase_configured
 from supabase_storage import delete_public_image, upload_public_image
+from media_upload_content import MEDIA_UPLOAD_MAX_BYTES, discard_direct_uploads, validate_direct_upload_reference
 from user_bookmarks_repository import create_user_bookmark, delete_user_bookmark, get_user_bookmark
 
 from .emailer import (
@@ -76,6 +77,24 @@ PASSWORD_RESET_SUCCESS_LIFETIME = timedelta(minutes=10)
 PASSWORD_RESET_SUCCESS_SESSION_KEY = "public_password_reset_success"
 
 AVATAR_UPLOAD_FOLDER = "avatars"
+
+
+def _uploaded_file_size(file_storage) -> int:
+    if file_storage is None or not str(getattr(file_storage, "filename", "") or "").strip():
+        return 0
+    stream = getattr(file_storage, "stream", None)
+    if stream is None:
+        raise ValueError("The selected photo size could not be verified.")
+    try:
+        original_position = stream.tell()
+        stream.seek(0, 2)
+        size = int(stream.tell())
+        stream.seek(original_position)
+    except (AttributeError, OSError, TypeError, ValueError) as exc:
+        raise ValueError("The selected photo size could not be verified.") from exc
+    return max(0, size)
+
+
 DELETE_ACCOUNT_CONFIRM_PHRASE = "confirm delete"
 VALID_THEME_PREFERENCES = {"light", "dark"}
 VALID_LANGUAGE_PREFERENCES = {"en", "tl"}
@@ -1569,6 +1588,8 @@ def register_user_account_routes(
         old_picture = str(current_user.get("profile_picture") or "").strip()
         is_stored_object = bool(old_picture) and not old_picture.startswith(("http://", "https://"))
 
+        new_object_path = None
+        pending_direct_path = str(request.form.get("avatar_object_path") or "").strip()
         try:
             if action == "remove":
                 update_public_user(int(current_user.get("id")), {"profile_picture": None, "updated_at": _utcnow().isoformat()})
@@ -1580,17 +1601,30 @@ def register_user_account_routes(
                 return _settings_response(ok=True, message="Your profile picture was removed.", redirect_status="photo-removed", avatar_action="remove")
 
             file_storage = request.files.get("avatar")
-            if file_storage is None or not str(getattr(file_storage, "filename", "")).strip():
+            direct_path = pending_direct_path
+            if not direct_path and (file_storage is None or not str(getattr(file_storage, "filename", "")).strip()):
                 return _settings_response(ok=False, message="Choose a JPG or PNG image first.", http_status=400)
             if not is_supabase_configured():
                 return _settings_response(ok=False, message="Photo uploads are not available right now.", redirect_status="photo-config", http_status=503)
 
-            object_path = upload_public_image(
-                file_storage,
-                title=f"{current_user.get('username') or 'user'}-avatar",
-                folder_prefix=AVATAR_UPLOAD_FOLDER,
-                slugify_text=_avatar_slugify,
-            )
+            if _uploaded_file_size(file_storage) > MEDIA_UPLOAD_MAX_BYTES:
+                return _settings_response(ok=False, message="Your photo exceeds the 25 MB upload limit.", redirect_status="photo-error", http_status=400)
+            if direct_path:
+                direct_upload = validate_direct_upload_reference(
+                    direct_path,
+                    "account_avatar",
+                    audience="public",
+                    owner_id=current_user.get("id"),
+                )
+                object_path = direct_upload["path"]
+            else:
+                object_path = upload_public_image(
+                    file_storage,
+                    title=f"{current_user.get('username') or 'user'}-avatar",
+                    folder_prefix=AVATAR_UPLOAD_FOLDER,
+                    slugify_text=_avatar_slugify,
+                )
+            new_object_path = object_path
             if not object_path:
                 return _settings_response(ok=False, message="That image couldn't be uploaded. Please try again.", redirect_status="photo-error", http_status=400)
             update_public_user(int(current_user.get("id")), {"profile_picture": object_path, "updated_at": _utcnow().isoformat()})
@@ -1600,9 +1634,37 @@ def register_user_account_routes(
                 except Exception:  # noqa: BLE001
                     pass
             return _settings_response(ok=True, message="Your profile picture was updated.", redirect_status="photo", avatar_action="upload")
-        except ValueError:
-            return _settings_response(ok=False, message="That image couldn't be uploaded. Please use a JPG or PNG image.", redirect_status="photo-error", http_status=400)
+        except ValueError as exc:
+            if new_object_path:
+                try:
+                    delete_public_image(new_object_path, folder_prefix=AVATAR_UPLOAD_FOLDER)
+                except Exception:  # noqa: BLE001
+                    pass
+            elif pending_direct_path:
+                try:
+                    discard_direct_uploads(
+                        [{"purpose": "account_avatar", "path": pending_direct_path}],
+                        audience="public",
+                        owner_id=current_user.get("id"),
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
+            return _settings_response(ok=False, message=str(exc) or "That image couldn't be uploaded. Please use a JPG or PNG image.", redirect_status="photo-error", http_status=400)
         except Exception as exc:  # noqa: BLE001
+            if new_object_path:
+                try:
+                    delete_public_image(new_object_path, folder_prefix=AVATAR_UPLOAD_FOLDER)
+                except Exception:  # noqa: BLE001
+                    pass
+            elif pending_direct_path:
+                try:
+                    discard_direct_uploads(
+                        [{"purpose": "account_avatar", "path": pending_direct_path}],
+                        audience="public",
+                        owner_id=current_user.get("id"),
+                    )
+                except Exception:  # noqa: BLE001
+                    pass
             app.logger.exception("Failed to update avatar for user %s: %s", current_user.get("id"), exc)
             return _settings_response(ok=False, message="That image couldn't be uploaded. Please try again.", redirect_status="photo-error", http_status=500)
 

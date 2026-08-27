@@ -23,6 +23,11 @@
             enctype="multipart/form-data"
             class="admin-highlight-view admin-gallery-editor"
             data-gallery-editor
+            data-direct-upload-form
+            data-direct-upload-submit-mode="native"
+            data-direct-upload-sign-url="{{ url_for('admin_media_upload_sign') }}"
+            data-direct-upload-discard-url="{{ url_for('admin_media_upload_discard') }}"
+            data-direct-upload-max-bytes="{{ max_upload_bytes }}"
             data-gallery-editor-submit-label="{{ submit_label }}"
             data-gallery-editor-has-image="{% if gallery_form.image_filename %}1{% else %}0{% endif %}"
             data-gallery-editor-max-upload-bytes="{{ max_upload_bytes }}"
@@ -135,6 +140,8 @@
                     type="file"
                     accept=".jpg,.jpeg,.png,image/jpeg,image/png"
                     data-gallery-editor-image-input
+                    data-direct-upload-purpose="online_gallery_image"
+                    data-direct-upload-field="image_object_path"
                   />
                 </label>
 
@@ -152,6 +159,8 @@
                     type="file"
                     accept=".glb,model/gltf-binary"
                     data-gallery-editor-model-input
+                    data-direct-upload-purpose="online_gallery_model"
+                    data-direct-upload-field="model_object_path"
                   />
                 </label>
 
@@ -172,9 +181,14 @@
                     <i data-gallery-editor-upload-meter-bar></i>
                   </div>
                   <small>
-                    The newly selected image and GLB must total {{ '%.1f'|format(max_upload_mb) }} MB or less per save to remain below Vercel’s 4.5 MB request limit.
+                    The newly selected image and GLB must total {{ '%.0f'|format(max_upload_mb) }} MB or less per save. Files upload securely and directly to Supabase Storage.
                   </small>
                 </section>
+
+                <div class="nhcp-direct-upload-status" data-direct-upload-status role="status" aria-live="polite" hidden>
+                  <span class="nhcp-direct-upload-status__icon" aria-hidden="true"></span>
+                  <span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span>
+                </div>
 
                 <p class="admin-gallery-editor-upload-feedback" data-gallery-editor-upload-feedback role="status" hidden></p>
 
