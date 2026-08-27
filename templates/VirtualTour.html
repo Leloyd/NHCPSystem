@@ -254,6 +254,12 @@
         </section>
       </div>
 
+      {% if tour_captured_on and tour_captured_on_display %}
+      <p class="tour-capture-date" id="tourCaptureDate">
+        Taken on <time datetime="{{ tour_captured_on }}">{{ tour_captured_on_display }}</time>
+      </p>
+      {% endif %}
+
       <!-- Bottom dock: the narration subtitle sits above the guide controls -->
       <div class="tour-dock">
       <!-- Artifact narration subtitle (shown above the controls, toggled by CC) -->

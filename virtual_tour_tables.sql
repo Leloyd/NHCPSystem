@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS public.virtual_tours (
   title_tl text NOT NULL DEFAULT ''::text CHECK (char_length(title_tl) <= 120),
   description_en text NOT NULL DEFAULT ''::text CHECK (char_length(description_en) <= 600),
   description_tl text NOT NULL DEFAULT ''::text CHECK (char_length(description_tl) <= 600),
+  captured_on date,
   status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'archived')),
   is_system_original boolean NOT NULL DEFAULT false,
   published_revision_id bigint,
@@ -18,6 +19,13 @@ CREATE TABLE IF NOT EXISTS public.virtual_tours (
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now())
 );
+
+-- Keep upgrades idempotent for projects that created this table before the
+-- panorama capture date was added.
+ALTER TABLE public.virtual_tours ADD COLUMN IF NOT EXISTS captured_on date;
+UPDATE public.virtual_tours
+SET captured_on = DATE '2026-04-16'
+WHERE is_system_original AND captured_on IS NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS virtual_tours_one_system_original
   ON public.virtual_tours (is_system_original) WHERE is_system_original;

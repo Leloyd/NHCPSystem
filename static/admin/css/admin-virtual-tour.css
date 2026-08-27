@@ -1,4 +1,5 @@
 :root{--vt-green:#0c6448;--vt-green-dark:#084936;--vt-green-soft:#e8f3ee;--vt-gold:#bf9847;--vt-ink:#17231e;--vt-muted:#66736d;--vt-line:#dce5e0;--vt-surface:#fff;--vt-bg:#f3f6f4}
+.vt-form-grid label>small{color:var(--vt-muted);font-size:.7rem;line-height:1.45}
 .vt-eyebrow{color:var(--vt-green);font-size:.72rem;font-weight:800;letter-spacing:.13em;margin:0 0 .45rem;text-transform:uppercase}
 .vt-manager,.vt-new-card,.vt-editor{color:var(--vt-ink)}
 .vt-manager__head{align-items:center;background:linear-gradient(135deg,#fff,#f2f8f5);border:1px solid var(--vt-line);border-radius:22px;display:flex;gap:2rem;justify-content:space-between;padding:1.6rem 1.8rem}

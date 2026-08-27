@@ -92,6 +92,8 @@
             <label><span>Tagalog title</span><input name="title_tl" value="{{ tour.title_tl }}" maxlength="120" /></label>
             <label><span>URL slug</span><input name="slug" value="{{ tour.slug }}" maxlength="120" {% if tour.is_system_original %}readonly aria-describedby="vtOriginalSlugHint"{% endif %} /></label>
             {% if tour.is_system_original %}<p id="vtOriginalSlugHint" class="vt-inline-message">Original keeps its protected public URL.</p>{% endif %}
+            <label><span>Date panorama was taken</span><input name="captured_on" type="date" value="{{ tour.captured_on or '' }}" required aria-describedby="vtCapturedOnHint" /></label>
+            <p id="vtCapturedOnHint" class="vt-inline-message">Shown as a small, unobtrusive note in the lower-left of the public viewer.</p>
             <label><span>English description</span><textarea name="description_en" rows="3" maxlength="600">{{ tour.description_en }}</textarea></label>
             <label><span>Tagalog description</span><textarea name="description_tl" rows="3" maxlength="600">{{ tour.description_tl }}</textarea></label>
             <p class="vt-inline-message" data-vt-details-message aria-live="polite"></p>

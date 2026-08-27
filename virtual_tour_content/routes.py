@@ -30,6 +30,7 @@ from virtual_tour_repository import (
 )
 
 from .service import (
+    ORIGINAL_CAPTURED_ON,
     build_revision_config,
     discard_uploaded_assets,
     generate_narration,
@@ -84,6 +85,19 @@ def _clean_text(value: Any, *, label: str, minimum: int = 0, maximum: int = 5000
     if len(result) > maximum:
         raise ValueError(f"{label} cannot exceed {maximum} characters.")
     return result
+
+
+def _captured_on(value: Any) -> str:
+    raw_value = str(value or "").strip()
+    if not raw_value:
+        raise ValueError("Date taken is required.")
+    try:
+        parsed = datetime.strptime(raw_value, "%Y-%m-%d").date()
+    except ValueError as exc:
+        raise ValueError("Date taken must use YYYY-MM-DD format.") from exc
+    if parsed > datetime.now(timezone.utc).date():
+        raise ValueError("Date taken cannot be in the future.")
+    return parsed.isoformat()
 
 
 def register_virtual_tour_content_routes(
@@ -157,6 +171,7 @@ def register_virtual_tour_content_routes(
                 "slug": "original", "title_en": "Original Museum Tour", "title_tl": "Orihinal na Tour ng Museo",
                 "description_en": "The complete original museum and cemetery experience.",
                 "description_tl": "Ang kumpletong orihinal na karanasan sa museo at libingan.",
+                "captured_on": ORIGINAL_CAPTURED_ON,
                 "status": "draft", "is_system_original": True,
             }, created_by=current_admin())
             imported_tour = tour
@@ -288,6 +303,7 @@ def register_virtual_tour_content_routes(
                 "title_en": title_en, "title_tl": title_tl,
                 "description_en": _clean_text(request.form.get("description_en"), label="English description", maximum=600),
                 "description_tl": _clean_text(request.form.get("description_tl"), label="Tagalog description", maximum=600),
+                "captured_on": _captured_on(request.form.get("captured_on")),
                 "status": "draft", "is_system_original": False,
             }, created_by=current_admin())
             return redirect(url_for("admin_virtual_tour_edit", tour_id=tour["id"], status="created"))
@@ -344,6 +360,7 @@ def register_virtual_tour_content_routes(
                 "title_tl": _clean_text(data.get("title_tl"), label="Tagalog title", maximum=120),
                 "description_en": _clean_text(data.get("description_en"), label="English description", maximum=600),
                 "description_tl": _clean_text(data.get("description_tl"), label="Tagalog description", maximum=600),
+                "captured_on": _captured_on(data.get("captured_on")),
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
             if not tour.get("is_system_original"):

@@ -36,7 +36,9 @@ from user_accounts_content import load_user_bookmarked_gallery_item_ids, registe
 from user_management_content import load_admin_public_users, register_user_management_routes
 from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
 from virtual_tour_content import (
+    ORIGINAL_CAPTURED_ON,
     build_public_tour_config,
+    format_captured_on,
     load_public_tour_options,
     register_virtual_tour_content_routes,
 )
@@ -1573,10 +1575,17 @@ def online_gallery_details():
 def virtual_tour():
     requested_tour = _slugify_text(request.args.get("tour"), fallback="original")
     dynamic_tour_config = build_public_tour_config(requested_tour)
+    captured_on = (
+        str(dynamic_tour_config.get("tour", {}).get("capturedOn") or "")
+        if dynamic_tour_config
+        else ORIGINAL_CAPTURED_ON
+    )
     return render_template(
         "VirtualTour.html",
         dynamic_tour_config=dynamic_tour_config,
         selected_virtual_tour_slug=requested_tour if dynamic_tour_config else "original",
+        tour_captured_on=captured_on,
+        tour_captured_on_display=format_captured_on(captured_on),
     )
 
 

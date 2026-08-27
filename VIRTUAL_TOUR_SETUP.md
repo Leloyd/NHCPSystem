@@ -36,6 +36,11 @@ The script is designed to be safe to run again when upgrading an existing setup.
 Do not run only a selected part of it unless you understand the table and
 function dependencies.
 
+Re-run the complete script after this update even if the four tables already
+exist. It adds the `captured_on` date field safely and sets the protected
+Original environment to April 16, 2026 without overwriting any date already
+saved by an administrator.
+
 ### Verify the database
 
 1. In Supabase, open **Table Editor**.

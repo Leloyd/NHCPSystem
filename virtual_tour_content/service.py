@@ -24,6 +24,7 @@ AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".m4a"}
 MAX_PANORAMA_BYTES = max(5 * 1024 * 1024, int(os.getenv("VIRTUAL_TOUR_MAX_PANORAMA_BYTES", str(30 * 1024 * 1024))))
 MAX_MEDIA_BYTES = max(1 * 1024 * 1024, int(os.getenv("VIRTUAL_TOUR_MAX_MEDIA_BYTES", str(25 * 1024 * 1024))))
 SIGNED_URL_SECONDS = min(604800, max(300, int(os.getenv("VIRTUAL_TOUR_SIGNED_URL_SECONDS", "7200"))))
+ORIGINAL_CAPTURED_ON = "2026-04-16"
 
 
 def get_virtual_tour_bucket_name() -> str:
@@ -35,6 +36,15 @@ def slugify(value: Any, fallback: str = "tour") -> str:
     return normalized or fallback
 
 
+def format_captured_on(value: Any) -> str:
+    """Return a readable long date without platform-specific strftime flags."""
+    try:
+        parsed = datetime.strptime(str(value or "").strip(), "%Y-%m-%d").date()
+    except ValueError:
+        return ""
+    return f"{parsed:%B} {parsed.day}, {parsed.year}"
+
+
 def original_tour_option() -> dict[str, Any]:
     return {
         "id": "original",
@@ -43,6 +53,7 @@ def original_tour_option() -> dict[str, Any]:
         "title_tl": "Orihinal na Tour ng Museo",
         "description_en": "The complete original 40-scene museum and cemetery experience.",
         "description_tl": "Ang kumpletong orihinal na karanasan sa museo at libingan.",
+        "captured_on": ORIGINAL_CAPTURED_ON,
         "status": "active",
         "is_system_original": True,
         "scene_count": 40,
@@ -260,6 +271,7 @@ def build_revision_config(tour: dict[str, Any], revision_id: int) -> dict[str, A
             "id": tour["id"], "slug": tour["slug"],
             "title": {"en": tour.get("title_en") or "", "tl": tour.get("title_tl") or ""},
             "description": {"en": tour.get("description_en") or "", "tl": tour.get("description_tl") or ""},
+            "capturedOn": str(tour.get("captured_on") or ""),
         },
         "startScene": start_scene,
         "scenes": public_scenes,

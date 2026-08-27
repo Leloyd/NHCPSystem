@@ -5,7 +5,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from virtual_tour_content import service
-from virtual_tour_content.routes import _normalize_yaw
+from virtual_tour_content.routes import _captured_on, _normalize_yaw
 
 
 class _StorageBucket:
@@ -41,6 +41,11 @@ class VirtualTourServiceTests(unittest.TestCase):
     def test_slugify_creates_stable_url_key(self):
         self.assertEqual(service.slugify("  New Museum 360! "), "new-museum-360")
 
+    def test_capture_date_uses_long_readable_format(self):
+        self.assertEqual(_captured_on("2026-04-16"), "2026-04-16")
+        self.assertEqual(service.format_captured_on("2026-04-16"), "April 16, 2026")
+        self.assertEqual(service.format_captured_on("not-a-date"), "")
+
     @patch.object(service, "is_supabase_configured", return_value=False)
     def test_public_options_always_include_original(self, _configured):
         options = service.load_public_tour_options()
@@ -58,8 +63,9 @@ class VirtualTourServiceTests(unittest.TestCase):
             {"id": 21, "scene_id": 10, "hotspot_type": "item", "name_en": "Artifact", "name_tl": "Artepakto", "pitch": 2, "yaw": 4, "image_path": "/images/item.jpg", "glb_path": None, "subtitle_en": "English text", "subtitle_tl": "Tekstong Tagalog", "audio_en_path": None, "audio_tl_path": None, "nested_hotspots": [{"id": "detail", "x": 20, "y": 30, "image": "/images/detail.jpg", "title": {"en": "Detail", "tl": "Detalye"}}], "is_enabled": True},
         ]
         with patch.object(service, "list_scenes", return_value=scenes), patch.object(service, "list_hotspots", return_value=hotspots):
-            config = service.build_revision_config({"id": 1, "slug": "test", "title_en": "Test", "title_tl": "Subok"}, 5)
+            config = service.build_revision_config({"id": 1, "slug": "test", "title_en": "Test", "title_tl": "Subok", "captured_on": "2026-04-16"}, 5)
         self.assertEqual(config["startScene"], "start")
+        self.assertEqual(config["tour"]["capturedOn"], "2026-04-16")
         self.assertEqual(config["scenes"][0]["hotspots"][0]["targetScene"], "next")
         self.assertEqual(config["scenes"][0]["hotspots"][1]["content"]["image"], "/images/item.jpg")
         self.assertEqual(config["scenes"][0]["hotspots"][1]["content"]["nested"][0]["image"], "/images/detail.jpg")
