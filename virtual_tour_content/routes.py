@@ -337,6 +337,10 @@ def register_virtual_tour_content_routes(
     def admin_virtual_tour_edit(tour_id: int):
         try:
             tour, revision_id = editable_tour(tour_id)
+            editor_notices = {
+                "created": {"title": "Draft ready", "message": "Your new environment is ready for scenes and hotspots."},
+                "published": {"title": "Environment published", "message": "This revision is now available to public visitors. You can continue editing the new working revision here."},
+            }
             scenes = list_scenes(revision_id)
             hotspots = list_hotspots(revision_id)
             asset_fields = ("image_path", "glb_path", "audio_en_path", "audio_tl_path")
@@ -359,6 +363,7 @@ def register_virtual_tour_content_routes(
                     "supabaseKey": str(os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or "").strip(),
                 },
                 error_message=str(request.args.get("error") or "").strip() or None,
+                status_notice=editor_notices.get(str(request.args.get("status") or "")),
             )
         except Exception as exc:
             app.logger.exception("Could not load virtual-tour editor: %s", exc)
@@ -681,7 +686,7 @@ def register_virtual_tour_content_routes(
             if any(scene.get("validation_status") != "valid" for scene in scenes):
                 raise ValueError("Every panorama must pass validation before publishing.")
             publish_revision(tour, created_by=current_admin())
-            return redirect(url_for("admin_virtual_tours", status="published"))
+            return redirect(url_for("admin_virtual_tour_edit", tour_id=tour_id, status="published"))
         except Exception as exc:
             app.logger.exception("Could not publish virtual tour: %s", exc)
             return redirect(url_for("admin_virtual_tour_edit", tour_id=tour_id, error=str(exc)))

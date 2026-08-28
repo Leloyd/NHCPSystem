@@ -52,6 +52,8 @@
   var mediaPreviewUrls = { image: "", glb: "" };
   var mediaPreviewFiles = { image: null, glb: null };
   var activeMediaPreview = "image";
+  var currentMediaModel = hotspotForm.querySelector("[data-vt-current-model]");
+  var modelPreviewStatus = hotspotForm.querySelector("[data-vt-model-status]");
 
   function formSnapshot(form) {
     if (!form) return "";
@@ -338,6 +340,13 @@
     });
   }
 
+  function setModelPreviewStatus(value, kind) {
+    if (!modelPreviewStatus) return;
+    modelPreviewStatus.textContent = value || "";
+    modelPreviewStatus.hidden = !value;
+    modelPreviewStatus.classList.toggle("is-error", kind === "error");
+  }
+
   function setPreviewKind(kind) {
     var image = hotspotForm.querySelector("[data-vt-current-image]");
     var model = hotspotForm.querySelector("[data-vt-current-model]");
@@ -345,8 +354,26 @@
     var hasModel = Boolean(model && model.getAttribute("src"));
     var next = kind === "glb" && hasModel ? "glb" : (hasImage ? "image" : (hasModel ? "glb" : "image"));
     activeMediaPreview = next;
-    if (image) image.hidden = next !== "image";
-    if (model) model.hidden = next !== "glb";
+    if (image) {
+      image.hidden = next !== "image";
+      image.style.display = next === "image" ? "block" : "none";
+    }
+    if (model) {
+      model.hidden = next !== "glb";
+      model.style.display = next === "glb" ? "block" : "none";
+    }
+    if (next === "glb" && model) {
+      var modelSource = String(model.getAttribute("src") || "");
+      if (model.dataset.previewError === modelSource) {
+        setModelPreviewStatus("The current GLB could not be displayed.", "error");
+      } else if (model.dataset.previewReady !== modelSource) {
+        setModelPreviewStatus("Loading current 3D object…");
+      } else {
+        setModelPreviewStatus("");
+      }
+    } else {
+      setModelPreviewStatus("");
+    }
     hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
       var active = button.dataset.vtPreviewKind === next;
       button.classList.toggle("is-active", active);
@@ -388,7 +415,17 @@
         : "Current artifact image";
     }
     if (model) {
-      if (glbUrl) model.src = glbUrl; else model.removeAttribute("src");
+      if (glbUrl) {
+        if (String(model.getAttribute("src") || "") !== glbUrl) {
+          model.dataset.previewReady = "";
+          model.dataset.previewError = "";
+          model.setAttribute("src", glbUrl);
+        }
+      } else {
+        model.removeAttribute("src");
+        model.dataset.previewReady = "";
+        model.dataset.previewError = "";
+      }
     }
     var imageButton = hotspotForm.querySelector('[data-vt-preview-kind="image"]');
     var modelButton = hotspotForm.querySelector('[data-vt-preview-kind="glb"]');
@@ -617,6 +654,18 @@
   hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
     button.addEventListener("click", function () { setPreviewKind(button.dataset.vtPreviewKind); });
   });
+  if (currentMediaModel) {
+    currentMediaModel.addEventListener("load", function () {
+      currentMediaModel.dataset.previewReady = String(currentMediaModel.getAttribute("src") || "");
+      currentMediaModel.dataset.previewError = "";
+      if (activeMediaPreview === "glb") setModelPreviewStatus("");
+    });
+    currentMediaModel.addEventListener("error", function () {
+      currentMediaModel.dataset.previewReady = "";
+      currentMediaModel.dataset.previewError = String(currentMediaModel.getAttribute("src") || "");
+      if (activeMediaPreview === "glb") setModelPreviewStatus("The current GLB could not be displayed.", "error");
+    });
+  }
   ["image", "glb"].forEach(function (kind) {
     var input = hotspotForm.querySelector('[data-vt-asset-input="' + kind + '"]');
     if (!input) return;

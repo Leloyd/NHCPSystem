@@ -15,13 +15,25 @@
 
 {% block admin_content %}
   {% if error_message %}<section class="admin-alert admin-alert-error" role="alert"><strong>Unable to publish</strong><span>{{ error_message }}</span></section>{% endif %}
+  {% if status_notice %}
+  <div class="admin-confirm-modal is-enable vt-status-modal" data-admin-success-modal role="dialog" aria-modal="true" aria-labelledby="vtEditorStatusTitle" aria-describedby="vtEditorStatusMessage" aria-hidden="true" hidden>
+    <section class="admin-confirm-dialog" role="document">
+      <div class="admin-confirm-accent" aria-hidden="true"></div>
+      <div class="admin-confirm-icon" aria-hidden="true"><svg class="admin-confirm-icon-enable" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.25 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.2-5.2 1.4 1.4Z"></path></svg></div>
+      <p class="admin-confirm-eyebrow">Virtual Tours</p>
+      <h2 id="vtEditorStatusTitle" class="admin-confirm-title">{{ status_notice.title }}</h2>
+      <p id="vtEditorStatusMessage" class="admin-confirm-message">{{ status_notice.message }}</p>
+      <div class="admin-confirm-actions"><button type="button" class="admin-confirm-submit" data-admin-success-close>Continue editing</button></div>
+    </section>
+  </div>
+  {% endif %}
   <section class="vt-editor" data-vt-editor>
     <script type="application/json" id="vtEditorConfig">{{ editor_config|tojson }}</script>
     <script type="application/json" id="vtEditorScenes">{{ scenes|tojson }}</script>
     <script type="application/json" id="vtEditorHotspots">{{ hotspots|tojson }}</script>
 
     <header class="vt-editor__header">
-      <div><span class="vt-badge is-{{ tour.status }}">{{ tour.status|title }}</span><h2>{{ tour.title_en }}</h2><p>Working revision {{ revision_id }}{% if tour.published_revision_id %} · the active version remains public until this draft is published{% endif %}</p></div>
+      <div><span class="vt-badge is-{{ tour.status }}">{{ tour.status|title }}</span><h2 data-admin-success-return tabindex="-1">{{ tour.title_en }}</h2><p>Working revision {{ revision_id }}{% if tour.published_revision_id %} · the active version remains public until this draft is published{% endif %}</p></div>
       <div class="vt-editor__header-actions">
         <span class="vt-unsaved-indicator" data-vt-unsaved role="status" hidden>Unsaved changes</span>
         {% if tour.status == 'active' %}<a href="{{ url_for('virtual_tour', tour=tour.slug) }}" target="_blank" rel="noopener">Open public version</a>{% endif %}
@@ -71,7 +83,7 @@
               <label><span>Optional GLB</span><input type="file" accept=".glb,model/gltf-binary" data-vt-asset-input="glb" /></label>
               <section class="vt-current-media" data-vt-current-media hidden aria-label="Current artifact media">
                 <div class="vt-current-media__heading"><span>Current media</span><div role="group" aria-label="Preview format"><button type="button" class="is-active" data-vt-preview-kind="image" aria-pressed="true">Image</button><button type="button" data-vt-preview-kind="glb" aria-pressed="false" hidden>Quick look 3D</button></div></div>
-                <div class="vt-current-media__stage"><img data-vt-current-image alt="Current artifact" /><model-viewer data-vt-current-model camera-controls touch-action="pan-y" auto-rotate shadow-intensity="1" ar ar-modes="webxr scene-viewer quick-look" hidden></model-viewer></div>
+                <div class="vt-current-media__stage"><img data-vt-current-image alt="Current artifact" /><model-viewer data-vt-current-model camera-controls touch-action="pan-y" auto-rotate shadow-intensity="1" environment-image="neutral" exposure="1" ar ar-modes="webxr scene-viewer quick-look" hidden></model-viewer><span class="vt-current-media__status" data-vt-model-status role="status" aria-live="polite" hidden></span></div>
               </section>
               <label><span>English subtitle *</span><textarea name="subtitle_en" rows="3" maxlength="5000"></textarea></label>
               <label><span>Tagalog subtitle *</span><textarea name="subtitle_tl" rows="3" maxlength="5000"></textarea></label>
