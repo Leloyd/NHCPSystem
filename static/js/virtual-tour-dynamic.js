@@ -267,9 +267,19 @@
     audio.removeAttribute("src");
     usingSpeechFallback = true;
     var started = speechFallback.speak(text, language, {
-      onstart: syncAudioControls,
+      onstart: function () {
+        listenButton.removeAttribute("title");
+        syncAudioControls();
+      },
       onend: function () { usingSpeechFallback = false; syncAudioControls(); },
-      onerror: function () { usingSpeechFallback = false; syncAudioControls(); },
+      onerror: function (event) {
+        usingSpeechFallback = false;
+        listenButton.title = "Browser narration is unavailable on this device. You can still read the subtitle or use an uploaded voice-over.";
+        if (window.console && typeof window.console.warn === "function") {
+          console.warn("Browser narration could not start.", event && event.error ? event.error : event);
+        }
+        syncAudioControls();
+      },
     });
     if (!started) usingSpeechFallback = false;
     syncAudioControls();
