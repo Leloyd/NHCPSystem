@@ -7380,17 +7380,10 @@ export class WebXRApp {
     this.hotspotDebugActive = this.hotspotDebugRequested
       && !this._isMuseumScene()
       && !this._isUndergroundScene();
-    const coordinatePanelVisible = this._isChapelScene()
-      || this._isUndergroundScene()
+    const coordinatePanelVisible = this._isUndergroundScene()
       || this._isMuseumScene();
     this.uiController.setPositionDebugVisible(coordinatePanelVisible);
-    if (this._isChapelScene()) {
-      this.uiController.setPositionDebugMode({
-        label: 'Church player coordinates',
-        hint: 'X, Y, Z',
-        ariaLabel: 'Church player coordinates',
-      });
-    } else if (this._isUndergroundScene()) {
+    if (this._isUndergroundScene()) {
       this.uiController.setPositionDebugMode({
         label: 'Underground player coordinates',
         hint: 'X, Y, Z',
@@ -7436,8 +7429,7 @@ export class WebXRApp {
     if (
       !this.playerRig
       || (
-        !this._isChapelScene()
-        && !this._isUndergroundScene()
+        !this._isUndergroundScene()
         && !this._isMuseumScene()
       )
     ) {
