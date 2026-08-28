@@ -35,8 +35,15 @@ def _pad_response(started_at: float) -> None:
         time.sleep(remaining)
 
 
-def _secure_response(response_or_html, status_code: int = 200):
-    response = make_response(response_or_html, status_code)
+def _secure_response(response_or_html, status_code: int | None = None):
+    # Preserve an existing redirect response's 3xx status. Supplying 200 here
+    # would display Flask's fallback “Redirecting…” document without actually
+    # navigating to the token-free reset form.
+    response = (
+        make_response(response_or_html)
+        if status_code is None
+        else make_response(response_or_html, status_code)
+    )
     response.headers["Cache-Control"] = "no-store, no-cache, must-revalidate, max-age=0"
     response.headers["Pragma"] = "no-cache"
     response.headers["Referrer-Policy"] = "no-referrer"
