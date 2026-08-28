@@ -5,6 +5,7 @@ from typing import Any
 
 from flask import jsonify, redirect, render_template, request, session, url_for
 
+from admin_notifications_content import dispatch_admin_notification
 from public_users_repository import get_public_user_profile_by_id
 from supabase_client import is_supabase_configured
 from tour_bookings_repository import create_tour_booking, update_tour_booking
@@ -137,7 +138,17 @@ def register_tour_booking_routes(
 
         try:
             payload = _validate_tour_booking_payload(request.form, current_user=current_user)
-            create_tour_booking(payload)
+            created_booking = create_tour_booking(payload)
+            dispatch_admin_notification(
+                event_type="tour_booking",
+                source_id=int(created_booking["id"]),
+                title="New tour booking request",
+                message=(
+                    f"{payload['contact_person']} requested {payload['scheduled_tour']} for "
+                    f"{payload['total_visitors']} visitors from {payload['institution_name']}."
+                ),
+                target_url=url_for("admin_tour_booking_review", booking_id=int(created_booking["id"])),
+            )
             return jsonify({"ok": True, "message": "Your tour booking request has been sent to admin for review."})
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400

@@ -84,14 +84,14 @@
                     'class': 'visitors',
                     'label': 'Unique Visitors',
                     'value': analytics_dashboard.unique_visitors,
-                    'detail': analytics_dashboard.signed_in_users ~ ' signed-in users',
+                    'detail': analytics_dashboard.signed_in_users ~ ' signed-in · browsers counted privately',
                     'trend': analytics_dashboard.visitor_trend
                   },
                   {
                     'class': 'views',
                     'label': 'Page Views',
                     'value': analytics_dashboard.page_views,
-                    'detail': analytics_dashboard.total_events ~ ' total tracked events',
+                    'detail': analytics_dashboard.total_events ~ ' actions across all modules',
                     'trend': analytics_dashboard.page_view_trend
                   },
                   {
@@ -139,7 +139,7 @@
             <section class="admin-monitor-primary-grid" data-dashboard-search-group>
               <article class="admin-monitor-card admin-monitor-traffic" data-dashboard-search-item>
                 <header class="admin-monitor-card-head">
-                  <div><p>Traffic trend</p><h3>Daily System Activity</h3><span>Events and unique visitors over {{ analytics_dashboard.period_days }} days</span></div>
+                  <div><p>Traffic trend</p><h3>Daily System Activity</h3><span>Shows daily recorded actions and distinct browser visitors over {{ analytics_dashboard.period_days }} days</span></div>
                   <span class="admin-monitor-live"><i></i>Live records</span>
                 </header>
                 <div class="admin-traffic-chart" role="img" aria-label="Daily system activity for the last {{ analytics_dashboard.period_days }} days">
@@ -154,7 +154,7 @@
                   </div>
                 </div>
                 <footer class="admin-traffic-legend">
-                  <span><i></i>{{ analytics_dashboard.total_events }} engagement events</span>
+                  <span><i></i>{{ analytics_dashboard.total_events }} tracked actions</span>
                   <span><i></i>{{ analytics_dashboard.unique_visitors }} unique visitors</span>
                 </footer>
               </article>

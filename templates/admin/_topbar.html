@@ -15,18 +15,60 @@
       </span>
       <input type="search" placeholder="Search dashboard…" data-dashboard-search-input />
     </label>
+    {% elif admin_topbar_tool_href and admin_topbar_tool_label %}
+    <a href="{{ admin_topbar_tool_href }}" class="{{ admin_topbar_tool_class or 'admin-text-link' }}">{{ admin_topbar_tool_label }}</a>
+    {% endif %}
 
-    <button type="button" class="admin-icon-button" aria-label="Notifications">
-      <svg viewBox="0 0 24 24"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1Z"></path></svg>
-      <span class="admin-notification-dot"></span>
-    </button>
+    <div
+      class="admin-notifications"
+      data-admin-notifications
+      data-notifications-url="{{ url_for('admin_notifications_list') }}"
+      data-notifications-read-all-url="{{ url_for('admin_notifications_mark_all_read') }}"
+      data-notifications-read-base-url="{{ url_for('admin_notifications_list') }}"
+      data-notifications-csrf="{{ csrf_token|default('') }}"
+    >
+      <button
+        type="button"
+        class="admin-icon-button admin-notification-button"
+        aria-label="Open notifications"
+        aria-expanded="false"
+        aria-controls="adminNotificationPanel"
+        data-admin-notification-toggle
+      >
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 22a2.5 2.5 0 0 0 2.45-2h-4.9A2.5 2.5 0 0 0 12 22Zm6-6V11a6 6 0 1 0-12 0v5l-2 2v1h16v-1Z"></path></svg>
+        <span class="admin-notification-count" data-admin-notification-count hidden>0</span>
+      </button>
+
+      <section
+        id="adminNotificationPanel"
+        class="admin-notification-panel"
+        aria-label="Administrator notifications"
+        aria-hidden="true"
+        data-admin-notification-panel
+        hidden
+      >
+        <header>
+          <div>
+            <span>Admin inbox</span>
+            <h2>Notifications</h2>
+          </div>
+          <button type="button" data-admin-notification-read-all hidden>Mark all as read</button>
+        </header>
+        <div class="admin-notification-list" data-admin-notification-list aria-live="polite">
+          <div class="admin-notification-state is-loading">
+            <span aria-hidden="true"></span>
+            <strong>Loading notifications…</strong>
+          </div>
+        </div>
+        <footer>
+          New bookings and E-Participation submissions appear here.
+        </footer>
+      </section>
+    </div>
 
     <a href="{{ url_for('admin_account_settings') }}" class="admin-profile-pill" aria-label="Open administrator account settings">
       <span class="admin-profile-avatar">{{ (admin_username or 'A')[:1]|upper }}</span>
       <span class="admin-profile-name">{{ admin_username or 'Admin' }}</span>
     </a>
-    {% elif admin_topbar_tool_href and admin_topbar_tool_label %}
-    <a href="{{ admin_topbar_tool_href }}" class="{{ admin_topbar_tool_class or 'admin-text-link' }}">{{ admin_topbar_tool_label }}</a>
-    {% endif %}
   </div>
 </header>

@@ -5,6 +5,7 @@ from typing import Any
 
 from flask import jsonify, redirect, render_template, request, session, url_for
 
+from admin_notifications_content import dispatch_admin_notification
 from supabase_client import is_supabase_configured
 from visitor_feedback_repository import create_visitor_feedback, update_visitor_feedback
 from visitor_feedback_sentiment import analyze_feedback_sentiment
@@ -91,7 +92,21 @@ def register_visitor_feedback_routes(
             if not str(payload.get("visitor_name") or "").strip():
                 payload["visitor_name"] = str(current_user.get("full_name") or "").strip()
             payload.update(analyze_feedback_sentiment(payload.get("comments"), payload.get("rating")))
-            create_visitor_feedback(payload)
+            created_feedback = create_visitor_feedback(payload)
+            visitor_label = str(payload.get("visitor_name") or "A visitor").strip() or "A visitor"
+            dispatch_admin_notification(
+                event_type="visitor_feedback",
+                source_id=int(created_feedback["id"]),
+                title="New visitor feedback",
+                message=(
+                    f"{visitor_label} submitted a {payload['rating']}-star "
+                    f"{payload['visit_type']} experience review."
+                ),
+                target_url=url_for(
+                    "admin_visitor_feedback_review",
+                    feedback_id=int(created_feedback["id"]),
+                ),
+            )
             return jsonify({"ok": True, "message": "Thank you for sharing your experience. Your feedback was received."})
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400

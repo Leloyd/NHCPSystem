@@ -7,6 +7,18 @@ ADMIN_USERS_TABLE = "admin_users"
 ADMIN_USER_SELECT_FIELDS = "id, email, password_hash, is_active, created_at, updated_at"
 
 
+def list_active_admin_users() -> list[dict[str, Any]]:
+    client = get_supabase_client()
+    response = (
+        client.table(ADMIN_USERS_TABLE)
+        .select("id, email")
+        .eq("is_active", True)
+        .order("id")
+        .execute()
+    )
+    return list(response.data or [])
+
+
 def get_active_admin_user_by_email(email: str) -> dict[str, Any] | None:
     normalized_email = str(email or "").strip().lower()
     if not normalized_email:

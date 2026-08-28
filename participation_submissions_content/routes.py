@@ -9,6 +9,7 @@ from typing import Any
 
 from flask import jsonify, redirect, render_template, request, session, url_for
 
+from admin_notifications_content import dispatch_admin_notification
 from participation_submissions_repository import (
     create_participation_submission,
     delete_participation_submission,
@@ -254,7 +255,22 @@ def register_participation_submission_routes(
                     "verified_at": _utcnow().isoformat(),
                 }
             )
-            create_participation_submission(payload)
+            created_submission = create_participation_submission(payload)
+            is_teacher_submission = payload["submission_type"] == "teacher_corner"
+            dispatch_admin_notification(
+                event_type="teacher_submission" if is_teacher_submission else "story_submission",
+                source_id=int(created_submission["id"]),
+                title=(
+                    "New Teacher Corner submission"
+                    if is_teacher_submission
+                    else "New community story submission"
+                ),
+                message=f"{payload['submitter_name']} submitted “{payload['title']}” for administrator review.",
+                target_url=url_for(
+                    "admin_participation_submission_review",
+                    submission_id=int(created_submission["id"]),
+                ),
+            )
             return jsonify({"ok": True, "message": "Your submission has been sent to admin for review."})
         except ValueError as exc:
             if uploaded_file_name:

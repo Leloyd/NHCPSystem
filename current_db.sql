@@ -17,6 +17,22 @@ CREATE TABLE public.admin_users (
     AND email ~ '^[a-z0-9!#$%&''*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*@[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
   )
 );
+CREATE TABLE public.admin_notifications (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  recipient_email text NOT NULL,
+  event_type text NOT NULL CHECK (event_type = ANY (ARRAY['tour_booking'::text, 'teacher_submission'::text, 'story_submission'::text, 'visitor_feedback'::text])),
+  source_id bigint NOT NULL CHECK (source_id > 0),
+  title text NOT NULL CHECK (char_length(title) >= 2 AND char_length(title) <= 180),
+  message text NOT NULL DEFAULT ''::text CHECK (char_length(message) <= 1200),
+  target_url text NOT NULL CHECK (char_length(target_url) >= 9 AND char_length(target_url) <= 500 AND target_url ~~ '/_admin/%'::text),
+  read_at timestamp with time zone,
+  emailed_at timestamp with time zone,
+  email_error text NOT NULL DEFAULT ''::text CHECK (char_length(email_error) <= 500),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_notifications_recipient_event_source_key UNIQUE (recipient_email, event_type, source_id),
+  CONSTRAINT admin_notifications_recipient_email_fkey FOREIGN KEY (recipient_email) REFERENCES public.admin_users(email) ON UPDATE CASCADE ON DELETE CASCADE
+);
 CREATE TABLE public.public_users (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   email text NOT NULL UNIQUE,

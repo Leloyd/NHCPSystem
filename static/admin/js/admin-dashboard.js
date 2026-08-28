@@ -2997,6 +2997,234 @@
     }
   }
 
+  function initAdminNotifications() {
+    var root = document.querySelector("[data-admin-notifications]");
+    if (!root) return;
+
+    var toggle = root.querySelector("[data-admin-notification-toggle]");
+    var panel = root.querySelector("[data-admin-notification-panel]");
+    var list = root.querySelector("[data-admin-notification-list]");
+    var count = root.querySelector("[data-admin-notification-count]");
+    var markAllButton = root.querySelector("[data-admin-notification-read-all]");
+    var listUrl = String(root.getAttribute("data-notifications-url") || "");
+    var readBaseUrl = String(root.getAttribute("data-notifications-read-base-url") || "").replace(/\/$/, "");
+    var readAllUrl = String(root.getAttribute("data-notifications-read-all-url") || "");
+    var csrfToken = String(root.getAttribute("data-notifications-csrf") || "");
+    var closeTimer = 0;
+    var hasLoaded = false;
+    var isLoading = false;
+
+    if (!toggle || !panel || !list || !count || !markAllButton || !listUrl) return;
+
+    function setUnreadCount(value) {
+      var parsed = Math.max(0, Number(value) || 0);
+      count.textContent = parsed > 99 ? "99+" : String(parsed);
+      count.hidden = parsed < 1;
+      markAllButton.hidden = parsed < 1;
+      toggle.setAttribute(
+        "aria-label",
+        parsed ? "Open notifications, " + parsed + " unread" : "Open notifications"
+      );
+    }
+
+    function renderState(title, message, loading) {
+      list.replaceChildren();
+      var state = document.createElement("div");
+      state.className = "admin-notification-state" + (loading ? " is-loading" : "");
+      var marker = document.createElement("span");
+      marker.setAttribute("aria-hidden", "true");
+      if (!loading) marker.textContent = "•";
+      var heading = document.createElement("strong");
+      heading.textContent = title;
+      state.appendChild(marker);
+      state.appendChild(heading);
+      if (message) {
+        var copy = document.createElement("small");
+        copy.textContent = message;
+        state.appendChild(copy);
+      }
+      list.appendChild(state);
+    }
+
+    function iconMarkup(eventType) {
+      if (eventType === "tour_booking") {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 2h2v2h6V2h2v2h2a2 2 0 0 1 2 2v14H3V6a2 2 0 0 1 2-2h2Zm12 8H5v9h14ZM5 8h14V6H5Z"></path></svg>';
+      }
+      if (eventType === "visitor_feedback") {
+        return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 3h16a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2h-8l-5 4v-4H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2Zm0 2v11h5v2l2.4-2H20V5Zm3 3h10v2H7Zm0 4h7v2H7Z"></path></svg>';
+      }
+      return '<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 3h14a2 2 0 0 1 2 2v14H3V5a2 2 0 0 1 2-2Zm0 2v12h14V5Zm2 2h10v2H7Zm0 4h7v2H7Z"></path></svg>';
+    }
+
+    function postJson(url) {
+      return window.fetch(url, {
+        method: "POST",
+        credentials: "same-origin",
+        headers: {
+          Accept: "application/json",
+          "X-CSRF-Token": csrfToken,
+          "X-Requested-With": "XMLHttpRequest",
+        },
+      }).then(function (response) {
+        if (!response.ok) throw new Error("Notification update failed.");
+        return response.json();
+      });
+    }
+
+    function renderNotifications(items) {
+      list.replaceChildren();
+      if (!items.length) {
+        renderState("You’re all caught up", "New bookings and submissions will appear here.", false);
+        return;
+      }
+
+      items.forEach(function (item) {
+        var link = document.createElement("a");
+        var eventType = String(item.event_type || "");
+        var targetUrl = String(item.target_url || "");
+        link.className = "admin-notification-item" + (item.is_read ? "" : " is-unread");
+        link.href = targetUrl.indexOf("/_admin/") === 0 ? targetUrl : listUrl;
+
+        var icon = document.createElement("span");
+        icon.className = "admin-notification-item-icon is-" + eventType.replace(/[^a-z_]/g, "");
+        icon.setAttribute("aria-hidden", "true");
+        icon.innerHTML = iconMarkup(eventType);
+
+        var copy = document.createElement("span");
+        copy.className = "admin-notification-item-copy";
+        var title = document.createElement("strong");
+        title.textContent = String(item.title || "New notification");
+        var message = document.createElement("span");
+        message.textContent = String(item.message || "");
+        var time = document.createElement("small");
+        var createdDate = new Date(String(item.created_at || ""));
+        time.textContent = Number.isNaN(createdDate.getTime())
+          ? String(item.created_label || "Recently")
+          : createdDate.toLocaleString([], {
+              month: "short",
+              day: "numeric",
+              year: "numeric",
+              hour: "numeric",
+              minute: "2-digit",
+            });
+        copy.appendChild(title);
+        copy.appendChild(message);
+        copy.appendChild(time);
+
+        var unread = document.createElement("i");
+        unread.className = "admin-notification-unread-mark";
+        unread.setAttribute("aria-hidden", "true");
+        link.appendChild(icon);
+        link.appendChild(copy);
+        link.appendChild(unread);
+
+        link.addEventListener("click", function (event) {
+          if (item.is_read || !readBaseUrl) return;
+          event.preventDefault();
+          var destination = link.href;
+          postJson(readBaseUrl + "/" + encodeURIComponent(String(item.id)) + "/read")
+            .catch(function () {})
+            .finally(function () {
+              window.location.assign(destination);
+            });
+        });
+        list.appendChild(link);
+      });
+    }
+
+    function loadNotifications(options) {
+      var settings = options || {};
+      if (isLoading) return Promise.resolve();
+      isLoading = true;
+      if (!hasLoaded && settings.showLoading !== false) {
+        renderState("Loading notifications…", "", true);
+      }
+      return window.fetch(listUrl + "?limit=30", {
+        credentials: "same-origin",
+        headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+      })
+        .then(function (response) {
+          if (!response.ok) throw new Error("Notifications could not be loaded.");
+          return response.json();
+        })
+        .then(function (payload) {
+          if (!payload.ok) throw new Error(payload.error || "Notifications could not be loaded.");
+          hasLoaded = true;
+          setUnreadCount(payload.unread_count);
+          renderNotifications(Array.isArray(payload.notifications) ? payload.notifications : []);
+        })
+        .catch(function (error) {
+          setUnreadCount(0);
+          renderState("Notifications unavailable", error.message || "Try again later.", false);
+        })
+        .finally(function () {
+          isLoading = false;
+        });
+    }
+
+    function openPanel() {
+      if (closeTimer) window.clearTimeout(closeTimer);
+      panel.hidden = false;
+      panel.setAttribute("aria-hidden", "false");
+      toggle.setAttribute("aria-expanded", "true");
+      window.requestAnimationFrame(function () {
+        panel.classList.add("is-open");
+      });
+      loadNotifications({ showLoading: !hasLoaded });
+    }
+
+    function closePanel(restoreFocus) {
+      panel.classList.remove("is-open");
+      panel.setAttribute("aria-hidden", "true");
+      toggle.setAttribute("aria-expanded", "false");
+      if (closeTimer) window.clearTimeout(closeTimer);
+      closeTimer = window.setTimeout(function () {
+        panel.hidden = true;
+      }, 170);
+      if (restoreFocus) toggle.focus();
+    }
+
+    toggle.addEventListener("click", function () {
+      if (toggle.getAttribute("aria-expanded") === "true") closePanel(false);
+      else openPanel();
+    });
+
+    markAllButton.addEventListener("click", function () {
+      if (!readAllUrl || markAllButton.disabled) return;
+      markAllButton.disabled = true;
+      postJson(readAllUrl)
+        .then(function () {
+          return loadNotifications({ showLoading: false });
+        })
+        .catch(function () {
+          renderState("Could not update notifications", "Check your connection and try again.", false);
+        })
+        .finally(function () {
+          markAllButton.disabled = false;
+        });
+    });
+
+    document.addEventListener("click", function (event) {
+      if (toggle.getAttribute("aria-expanded") === "true" && !root.contains(event.target)) {
+        closePanel(false);
+      }
+    });
+    panel.addEventListener("keydown", function (event) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closePanel(true);
+      }
+    });
+    document.addEventListener("visibilitychange", function () {
+      if (!document.hidden) loadNotifications({ showLoading: false });
+    });
+    window.setInterval(function () {
+      if (!document.hidden) loadNotifications({ showLoading: false });
+    }, 60000);
+
+    loadNotifications({ showLoading: false });
+  }
+
   function initDashboardUi() {
     var toggle = document.querySelector("[data-sidebar-toggle]");
     var overlay = document.querySelector("[data-sidebar-overlay]");
@@ -3046,6 +3274,7 @@
     initAdminAccountSettings();
     initAdminUserManagement();
     initAdminHighlightEditor();
+    initAdminNotifications();
     initAutoDismissAlerts();
   }
 

@@ -15,6 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_email, touch_admin_account, update_admin_password
+from admin_notifications_content import register_admin_notification_routes
 from analytics_content import load_admin_analytics_dashboard, register_analytics_routes
 from community_content import load_news_community_highlights, register_community_content_routes
 from community_content.service import load_admin_community_highlights
@@ -1475,6 +1476,15 @@ register_analytics_routes(
     admin_route_prefix=ADMIN_ROUTE_PREFIX,
     admin_required=_admin_required,
     public_session_user_id_key=PUBLIC_SESSION_USER_ID_KEY,
+)
+
+
+register_admin_notification_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    admin_session_user_key=ADMIN_SESSION_USER_KEY,
 )
 
 
