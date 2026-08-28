@@ -189,7 +189,6 @@ def register_virtual_tour_content_routes(
                 "slug": "original", "title_en": "Original Museum Tour", "title_tl": "Orihinal na Tour ng Museo",
                 "description_en": "The complete original museum and cemetery experience.",
                 "description_tl": "Ang kumpletong orihinal na karanasan sa museo at libingan.",
-                "captured_on": ORIGINAL_CAPTURED_ON,
                 "status": "draft", "is_system_original": True,
             }, created_by=current_admin())
             imported_tour = tour
@@ -203,7 +202,8 @@ def register_virtual_tour_content_routes(
                 scene_payloads.append({
                     "revision_id": revision_id, "scene_key": source_key,
                     "name_en": _clean_text(source.get("name") or source.get("id") or "Scene", label="Scene name", minimum=2, maximum=120),
-                    "name_tl": "", "panorama_path": panorama, "panorama_width": 4096,
+                    "name_tl": "", "captured_on": _captured_on(source.get("capturedOn") or ORIGINAL_CAPTURED_ON),
+                    "panorama_path": panorama, "panorama_width": 4096,
                     "panorama_height": 2048, "panorama_mime": "image/jpeg", "validation_status": "valid",
                     "initial_pitch": _number(source.get("pitch"), minimum=-90, maximum=90, label="Initial pitch", default=0),
                     "initial_yaw": _normalize_yaw(source.get("yaw"), label="Initial yaw", default=0),
@@ -321,7 +321,6 @@ def register_virtual_tour_content_routes(
                 "title_en": title_en, "title_tl": title_tl,
                 "description_en": _clean_text(request.form.get("description_en"), label="English description", maximum=600),
                 "description_tl": _clean_text(request.form.get("description_tl"), label="Tagalog description", maximum=600),
-                "captured_on": _captured_on(request.form.get("captured_on")),
                 "status": "draft", "is_system_original": False,
             }, created_by=current_admin())
             return redirect(url_for("admin_virtual_tour_edit", tour_id=tour["id"], status="created"))
@@ -383,7 +382,6 @@ def register_virtual_tour_content_routes(
                 "title_tl": _clean_text(data.get("title_tl"), label="Tagalog title", maximum=120),
                 "description_en": _clean_text(data.get("description_en"), label="English description", maximum=600),
                 "description_tl": _clean_text(data.get("description_tl"), label="Tagalog description", maximum=600),
-                "captured_on": _captured_on(data.get("captured_on")),
                 "updated_at": datetime.now(timezone.utc).isoformat(),
             }
             if not tour.get("is_system_original"):
@@ -440,6 +438,7 @@ def register_virtual_tour_content_routes(
                 "scene_key": slugify(data.get("scene_key") or data.get("name_en"), "scene"),
                 "name_en": _clean_text(data.get("name_en"), label="Scene name", minimum=2, maximum=120),
                 "name_tl": _clean_text(data.get("name_tl"), label="Tagalog scene name", maximum=120),
+                "captured_on": _captured_on(data.get("captured_on")),
                 "panorama_path": str(data.get("panorama_path") or ""),
                 "panorama_width": asset["width"], "panorama_height": asset["height"],
                 "panorama_mime": asset["mime"], "validation_status": "valid",
@@ -472,6 +471,8 @@ def register_virtual_tour_content_routes(
                 allowed["name_en"] = _clean_text(data["name_en"], label="Scene name", minimum=2, maximum=120)
             if "name_tl" in data:
                 allowed["name_tl"] = _clean_text(data["name_tl"], label="Tagalog scene name", maximum=120)
+            if "captured_on" in data:
+                allowed["captured_on"] = _captured_on(data["captured_on"])
             for field, minimum, maximum, label in (
                 ("initial_pitch", -90, 90, "Initial pitch"), ("initial_yaw", -180, 180, "Initial yaw"),
                 ("initial_hfov", 30, 150, "Initial field of view"),

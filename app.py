@@ -1585,11 +1585,16 @@ def online_gallery_details():
 def virtual_tour():
     requested_tour = _slugify_text(request.args.get("tour"), fallback="original")
     dynamic_tour_config = build_public_tour_config(requested_tour)
-    captured_on = (
-        str(dynamic_tour_config.get("tour", {}).get("capturedOn") or "")
-        if dynamic_tour_config
-        else ORIGINAL_CAPTURED_ON
-    )
+    captured_on = ORIGINAL_CAPTURED_ON
+    if dynamic_tour_config:
+        dynamic_scenes = list(dynamic_tour_config.get("scenes") or [])
+        requested_scene = str(request.args.get("scene") or "").strip()
+        initial_scene_key = requested_scene or str(dynamic_tour_config.get("startScene") or "")
+        initial_scene = next(
+            (scene for scene in dynamic_scenes if str(scene.get("id") or "") == initial_scene_key),
+            dynamic_scenes[0] if dynamic_scenes else {},
+        )
+        captured_on = str(initial_scene.get("capturedOn") or "")
     return render_template(
         "VirtualTour.html",
         dynamic_tour_config=dynamic_tour_config,

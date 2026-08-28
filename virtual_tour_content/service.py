@@ -53,7 +53,6 @@ def original_tour_option() -> dict[str, Any]:
         "title_tl": "Orihinal na Tour ng Museo",
         "description_en": "The complete original 40-scene museum and cemetery experience.",
         "description_tl": "Ang kumpletong orihinal na karanasan sa museo at libingan.",
-        "captured_on": ORIGINAL_CAPTURED_ON,
         "status": "active",
         "is_system_original": True,
         "scene_count": 40,
@@ -266,6 +265,7 @@ def build_revision_config(tour: dict[str, Any], revision_id: int) -> dict[str, A
         public_scenes.append({
             "id": scene["scene_key"],
             "name": {"en": scene.get("name_en") or "", "tl": scene.get("name_tl") or ""},
+            "capturedOn": str(scene.get("captured_on") or ""),
             "panorama": _asset_url(scene.get("panorama_path"), signed_urls),
             "pitch": float(scene.get("initial_pitch") or 0),
             "yaw": float(scene.get("initial_yaw") or 0),
@@ -283,7 +283,6 @@ def build_revision_config(tour: dict[str, Any], revision_id: int) -> dict[str, A
             "id": tour["id"], "slug": tour["slug"],
             "title": {"en": tour.get("title_en") or "", "tl": tour.get("title_tl") or ""},
             "description": {"en": tour.get("description_en") or "", "tl": tour.get("description_tl") or ""},
-            "capturedOn": str(tour.get("captured_on") or ""),
         },
         "startScene": start_scene,
         "scenes": public_scenes,

@@ -212,6 +212,14 @@
     return scenes.find(function (scene) { return Number(scene.id) === Number(value); }) || null;
   }
 
+  function sceneSummary(scene) {
+    if (!scene) return "";
+    var state = scene.is_start_scene
+      ? "Starting scene"
+      : String(scene.panorama_width || "") + " × " + String(scene.panorama_height || "");
+    return state + (scene.captured_on ? " · Taken " + scene.captured_on : "");
+  }
+
   function hotspotsForScene(sceneId) {
     return hotspots.filter(function (hotspot) { return Number(hotspot.scene_id) === Number(sceneId); });
   }
@@ -622,9 +630,11 @@
   });
   root.querySelector("[data-vt-open-scene-upload]").addEventListener("click", function () {
     sceneDialogMode = "add"; sceneForm.reset(); panoramaCandidate = null;
+    sceneForm.elements.panorama.required = true;
     sceneDialog.querySelector("h2").textContent = "Upload a full 360° view";
     sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Validate and add scene";
     sceneForm.querySelector("[data-vt-upload-scene]").disabled = true;
+    root.querySelector("[data-vt-panorama-file]").textContent = "JPEG, PNG or WebP · full 2:1 panorama";
     message(sceneMessage, "");
     formBaselines.scene = formSnapshot(sceneForm);
     setDirty("scene", false);
@@ -635,10 +645,13 @@
     sceneDialogMode = "replace"; sceneForm.reset(); panoramaCandidate = null;
     sceneForm.elements.name_en.value = selectedScene.name_en || "";
     sceneForm.elements.name_tl.value = selectedScene.name_tl || "";
-    sceneDialog.querySelector("h2").textContent = "Replace “" + selectedScene.name_en + "”";
-    sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Validate and replace panorama";
-    sceneForm.querySelector("[data-vt-upload-scene]").disabled = true;
-    message(sceneMessage, "Existing hotspots retain their pitch and yaw coordinates. Review them after replacement.");
+    sceneForm.elements.captured_on.value = selectedScene.captured_on || "";
+    sceneForm.elements.panorama.required = false;
+    sceneDialog.querySelector("h2").textContent = "Edit “" + selectedScene.name_en + "”";
+    sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Save scene changes";
+    sceneForm.querySelector("[data-vt-upload-scene]").disabled = false;
+    root.querySelector("[data-vt-panorama-file]").textContent = "Optional · choose a new 2:1 panorama only when replacing the current image";
+    message(sceneMessage, "Update this scene’s name or capture date without replacing its panorama.");
     formBaselines.scene = formSnapshot(sceneForm);
     setDirty("scene", false);
     sceneDialog.showModal();
@@ -683,7 +696,7 @@
       var result = await api(endpoint("/scenes/" + selectedScene.id), { method: "PATCH", body: JSON.stringify({ is_start_scene: true }) });
       scenes.forEach(function (scene) { scene.is_start_scene = Number(scene.id) === Number(selectedScene.id); });
       Object.assign(selectedScene, result.scene); setStartButton.disabled = true;
-      root.querySelectorAll("[data-scene-id] small").forEach(function (small) { var scene = sceneById(small.closest("[data-scene-id]").dataset.sceneId); small.textContent = scene.is_start_scene ? "Starting scene" : scene.panorama_width + " × " + scene.panorama_height; });
+      root.querySelectorAll("[data-scene-id] small").forEach(function (small) { var scene = sceneById(small.closest("[data-scene-id]").dataset.sceneId); small.textContent = sceneSummary(scene); });
       message(placementStatus, "Starting scene updated.", "success");
     } catch (error) {
       setStartButton.disabled = Boolean(selectedScene && selectedScene.is_start_scene);
@@ -742,7 +755,11 @@
   sceneForm.elements.panorama.addEventListener("change", async function () {
     var file = sceneForm.elements.panorama.files[0]; panoramaCandidate = null;
     sceneForm.querySelector("[data-vt-upload-scene]").disabled = true;
-    if (!file) return;
+    if (!file) {
+      sceneForm.querySelector("[data-vt-upload-scene]").disabled = sceneDialogMode === "add";
+      if (sceneDialogMode === "replace") message(sceneMessage, "The existing panorama will be kept.");
+      return;
+    }
     message(sceneMessage, "Checking image dimensions and opening it in Pannellum…");
     try {
       if (panoramaObjectUrl) URL.revokeObjectURL(panoramaObjectUrl);
@@ -754,19 +771,26 @@
   });
 
   sceneForm.addEventListener("submit", async function (event) {
-    event.preventDefault(); if (!panoramaCandidate) return;
-    var submit = sceneForm.querySelector("[data-vt-upload-scene]"); submit.disabled = true; submit.textContent = "Uploading panorama…";
+    event.preventDefault();
+    if (!sceneForm.reportValidity() || (sceneDialogMode === "add" && !panoramaCandidate)) return;
+    var submit = sceneForm.querySelector("[data-vt-upload-scene]"); submit.disabled = true;
+    submit.textContent = panoramaCandidate ? "Uploading panorama…" : "Saving scene…";
     var path = "";
     try {
-      path = await signedUpload(panoramaCandidate.file, "panorama");
-      submit.textContent = "Verifying panorama…";
       var payload = {
         name_en: sceneForm.elements.name_en.value, name_tl: sceneForm.elements.name_tl.value,
-        panorama_path: path, panorama_width: panoramaCandidate.width, panorama_height: panoramaCandidate.height,
+        captured_on: sceneForm.elements.captured_on.value,
       };
+      if (panoramaCandidate) {
+        path = await signedUpload(panoramaCandidate.file, "panorama");
+        submit.textContent = "Verifying panorama…";
+        payload.panorama_path = path;
+        payload.panorama_width = panoramaCandidate.width;
+        payload.panorama_height = panoramaCandidate.height;
+      }
       if (sceneDialogMode === "replace" && selectedScene) {
         await api(endpoint("/scenes/" + selectedScene.id), { method: "PATCH", body: JSON.stringify(payload) });
-        message(sceneMessage, "Panorama replaced. Reloading editor…", "success");
+        message(sceneMessage, panoramaCandidate ? "Scene and panorama updated. Reloading editor…" : "Scene details updated. Reloading editor…", "success");
       } else {
         await api(endpoint("/scenes"), { method: "POST", body: JSON.stringify(payload) });
         message(sceneMessage, "Scene added. Reloading editor…", "success");
@@ -777,7 +801,7 @@
     } catch (error) {
       await discardUploads([path]);
       submit.disabled = false;
-      submit.textContent = sceneDialogMode === "replace" ? "Validate and replace panorama" : "Validate and add scene";
+      submit.textContent = sceneDialogMode === "replace" ? "Save scene changes" : "Validate and add scene";
       message(sceneMessage, error.message, "error");
     }
   });

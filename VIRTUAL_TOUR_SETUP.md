@@ -37,9 +37,10 @@ Do not run only a selected part of it unless you understand the table and
 function dependencies.
 
 Re-run the complete script after this update even if the four tables already
-exist. It adds the `captured_on` date field safely and sets the protected
-Original environment to April 16, 2026 without overwriting any date already
-saved by an administrator.
+exist. It moves `captured_on` to each row in `virtual_tour_scenes`. Existing
+scenes inherit the environment date that was previously saved, after which an
+administrator can maintain a different date for every 360° panorama. Imported
+Original scenes default to April 16, 2026.
 
 ### Verify the database
 

@@ -254,11 +254,9 @@
         </section>
       </div>
 
-      {% if tour_captured_on and tour_captured_on_display %}
-      <p class="tour-capture-date" id="tourCaptureDate">
-        Taken on <time datetime="{{ tour_captured_on }}">{{ tour_captured_on_display }}</time>
+      <p class="tour-capture-date" id="tourCaptureDate"{% if not tour_captured_on or not tour_captured_on_display %} hidden{% endif %}>
+        Taken on <time datetime="{{ tour_captured_on or '' }}">{{ tour_captured_on_display or '' }}</time>
       </p>
-      {% endif %}
 
       <!-- Bottom dock: the narration subtitle sits above the guide controls -->
       <div class="tour-dock">

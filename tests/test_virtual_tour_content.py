@@ -55,17 +55,19 @@ class VirtualTourServiceTests(unittest.TestCase):
 
     def test_revision_config_builds_navigation_and_item_hotspots(self):
         scenes = [
-            {"id": 10, "scene_key": "start", "name_en": "Start", "name_tl": "Simula", "panorama_path": "/360VirtualTour/FrontGate.jpg", "initial_pitch": 0, "initial_yaw": 1, "initial_hfov": 100, "is_start_scene": True},
-            {"id": 11, "scene_key": "next", "name_en": "Next", "name_tl": "Sunod", "panorama_path": "/360VirtualTour/Inside-FrontGate.jpg", "initial_pitch": 0, "initial_yaw": 0, "initial_hfov": 100, "is_start_scene": False},
+            {"id": 10, "scene_key": "start", "name_en": "Start", "name_tl": "Simula", "captured_on": "2026-04-16", "panorama_path": "/360VirtualTour/FrontGate.jpg", "initial_pitch": 0, "initial_yaw": 1, "initial_hfov": 100, "is_start_scene": True},
+            {"id": 11, "scene_key": "next", "name_en": "Next", "name_tl": "Sunod", "captured_on": "2026-05-20", "panorama_path": "/360VirtualTour/Inside-FrontGate.jpg", "initial_pitch": 0, "initial_yaw": 0, "initial_hfov": 100, "is_start_scene": False},
         ]
         hotspots = [
             {"id": 20, "scene_id": 10, "hotspot_type": "navigation", "name_en": "Go inside", "name_tl": "Pumasok", "pitch": -10, "yaw": 2, "target_scene_id": 11, "target_pitch": None, "target_yaw": None, "target_hfov": None, "is_enabled": True},
             {"id": 21, "scene_id": 10, "hotspot_type": "item", "name_en": "Artifact", "name_tl": "Artepakto", "pitch": 2, "yaw": 4, "image_path": "/images/item.jpg", "glb_path": None, "subtitle_en": "English text", "subtitle_tl": "Tekstong Tagalog", "audio_en_path": None, "audio_tl_path": None, "nested_hotspots": [{"id": "detail", "x": 20, "y": 30, "image": "/images/detail.jpg", "title": {"en": "Detail", "tl": "Detalye"}}], "is_enabled": True},
         ]
         with patch.object(service, "list_scenes", return_value=scenes), patch.object(service, "list_hotspots", return_value=hotspots):
-            config = service.build_revision_config({"id": 1, "slug": "test", "title_en": "Test", "title_tl": "Subok", "captured_on": "2026-04-16"}, 5)
+            config = service.build_revision_config({"id": 1, "slug": "test", "title_en": "Test", "title_tl": "Subok"}, 5)
         self.assertEqual(config["startScene"], "start")
-        self.assertEqual(config["tour"]["capturedOn"], "2026-04-16")
+        self.assertNotIn("capturedOn", config["tour"])
+        self.assertEqual(config["scenes"][0]["capturedOn"], "2026-04-16")
+        self.assertEqual(config["scenes"][1]["capturedOn"], "2026-05-20")
         self.assertEqual(config["scenes"][0]["hotspots"][0]["targetScene"], "next")
         self.assertEqual(config["scenes"][0]["hotspots"][1]["content"]["image"], "/images/item.jpg")
         self.assertEqual(config["scenes"][0]["hotspots"][1]["content"]["nested"][0]["image"], "/images/detail.jpg")
@@ -82,7 +84,7 @@ class VirtualTourServiceTests(unittest.TestCase):
         self.assertEqual(metadata["mime"], "image/jpeg")
 
     def test_revision_config_signs_private_tour_assets_in_one_batch(self):
-        scenes = [{"id": 10, "scene_key": "start", "name_en": "Start", "name_tl": "", "panorama_path": "virtual-tours/1/panorama/start.jpg", "initial_pitch": 0, "initial_yaw": 0, "initial_hfov": 100, "is_start_scene": True}]
+        scenes = [{"id": 10, "scene_key": "start", "name_en": "Start", "name_tl": "", "captured_on": "2026-04-16", "panorama_path": "virtual-tours/1/panorama/start.jpg", "initial_pitch": 0, "initial_yaw": 0, "initial_hfov": 100, "is_start_scene": True}]
         hotspots = [{"id": 20, "scene_id": 10, "hotspot_type": "item", "name_en": "Artifact", "name_tl": "", "pitch": 0, "yaw": 0, "image_path": "virtual-tours/1/image/item.jpg", "glb_path": None, "subtitle_en": "Text", "subtitle_tl": "Teksto", "audio_en_path": None, "audio_tl_path": None, "is_enabled": True}]
         with patch.object(service, "list_scenes", return_value=scenes), patch.object(service, "list_hotspots", return_value=hotspots), patch.object(service, "get_supabase_client", return_value=_Client(b"")):
             config = service.build_revision_config({"id": 1, "slug": "private", "title_en": "Private", "title_tl": ""}, 5)

@@ -2611,6 +2611,7 @@
         return {
           id: sceneId,
           name: snapshotName(sceneId),
+          capturedOn: "2026-04-16",
           panorama: String(scene.panorama || ""),
           pitch: Number(scene.pitch || 0),
           yaw: Number(scene.yaw || 0),

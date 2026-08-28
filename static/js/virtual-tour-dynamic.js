@@ -30,6 +30,7 @@
   var subtitleText = document.getElementById("tourSubtitleText");
   var hotspotButton = document.getElementById("tourToggleSceneHotspots");
   var captureButton = document.getElementById("tourCaptureView");
+  var captureDate = document.getElementById("tourCaptureDate");
   var backButton = document.getElementById("tourBackToInteractive");
   var minimap = document.getElementById("tourMinimap");
   var viewModes = document.getElementById("tourViewModes");
@@ -134,6 +135,27 @@
   function localized(value, preferred) {
     value = value || {};
     return String(value[preferred] || value.en || value.tl || "");
+  }
+
+  function formatCaptureDate(value) {
+    var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(String(value || ""));
+    if (!match) return "";
+    var parsed = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+    if (Number.isNaN(parsed.getTime())) return "";
+    return parsed.toLocaleDateString(undefined, { month: "long", day: "numeric", year: "numeric" });
+  }
+
+  function syncCaptureDate(sceneId) {
+    if (!captureDate) return;
+    var scene = scenes.find(function (entry) { return String(entry.id) === String(sceneId); });
+    var rawDate = scene ? String(scene.capturedOn || "") : "";
+    var displayDate = formatCaptureDate(rawDate);
+    var time = captureDate.querySelector("time");
+    captureDate.hidden = !displayDate;
+    if (time) {
+      time.dateTime = rawDate;
+      time.textContent = displayDate;
+    }
   }
 
   function setControlDockVisibility(isVisible) {
@@ -818,6 +840,7 @@
   if (!initialScene || !pannellumScenes[initialScene]) {
     loading.hidden = true; errorOverlay.hidden = false; return;
   }
+  syncCaptureDate(initialScene);
 
   try {
     var originalGetContext = HTMLCanvasElement.prototype.getContext;
@@ -846,6 +869,7 @@
     });
     viewer.on("scenechange", function (sceneId) {
       closeItem();
+      syncCaptureDate(sceneId);
       var url = new URL(window.location.href); url.searchParams.set("scene", sceneId); window.history.replaceState({}, "", url);
       if (window.NHCPAnalytics && window.NHCPAnalytics.track) window.NHCPAnalytics.track("tour_scene_viewed", "virtual-tour", sceneId, { tour: config.tour.slug, scene: sceneId });
     });

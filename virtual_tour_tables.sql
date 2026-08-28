@@ -1,5 +1,6 @@
 -- Database-backed 360 virtual-tour environments.
--- Run this file once in the Supabase SQL editor before using the admin module.
+-- Run the complete file in the Supabase SQL editor before using the admin
+-- module, and re-run it after schema updates; every migration is idempotent.
 
 CREATE TABLE IF NOT EXISTS public.virtual_tours (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -8,6 +9,8 @@ CREATE TABLE IF NOT EXISTS public.virtual_tours (
   title_tl text NOT NULL DEFAULT ''::text CHECK (char_length(title_tl) <= 120),
   description_en text NOT NULL DEFAULT ''::text CHECK (char_length(description_en) <= 600),
   description_tl text NOT NULL DEFAULT ''::text CHECK (char_length(description_tl) <= 600),
+  -- Deprecated compatibility field. Capture dates now belong to individual
+  -- virtual_tour_scenes and this value is used only by the migration below.
   captured_on date,
   status text NOT NULL DEFAULT 'draft' CHECK (status IN ('draft', 'active', 'archived')),
   is_system_original boolean NOT NULL DEFAULT false,
@@ -20,8 +23,8 @@ CREATE TABLE IF NOT EXISTS public.virtual_tours (
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now())
 );
 
--- Keep upgrades idempotent for projects that created this table before the
--- panorama capture date was added.
+-- Keep the former environment-level field only long enough to migrate older
+-- projects safely. New application writes do not use it.
 ALTER TABLE public.virtual_tours ADD COLUMN IF NOT EXISTS captured_on date;
 UPDATE public.virtual_tours
 SET captured_on = DATE '2026-04-16'
@@ -58,6 +61,7 @@ CREATE TABLE IF NOT EXISTS public.virtual_tour_scenes (
   scene_key text NOT NULL CHECK (scene_key ~ '^[a-z0-9]+(?:-[a-z0-9]+)*$'),
   name_en text NOT NULL CHECK (char_length(name_en) BETWEEN 2 AND 120),
   name_tl text NOT NULL DEFAULT ''::text CHECK (char_length(name_tl) <= 120),
+  captured_on date NOT NULL,
   panorama_path text NOT NULL,
   panorama_width integer NOT NULL CHECK (panorama_width >= 1024),
   panorama_height integer NOT NULL CHECK (panorama_height >= 512),
@@ -73,6 +77,18 @@ CREATE TABLE IF NOT EXISTS public.virtual_tour_scenes (
   UNIQUE (revision_id, scene_key),
   CHECK (abs((panorama_width::numeric / panorama_height::numeric) - 2.0) <= 0.02)
 );
+
+-- Upgrade installations that previously stored one capture date for the
+-- entire environment. Every existing scene inherits that old date once;
+-- administrators can then edit each scene independently.
+ALTER TABLE public.virtual_tour_scenes ADD COLUMN IF NOT EXISTS captured_on date;
+UPDATE public.virtual_tour_scenes AS scene
+SET captured_on = coalesce(tour.captured_on, scene.created_at::date)
+FROM public.virtual_tour_revisions AS revision
+JOIN public.virtual_tours AS tour ON tour.id = revision.tour_id
+WHERE scene.revision_id = revision.id
+  AND scene.captured_on IS NULL;
+ALTER TABLE public.virtual_tour_scenes ALTER COLUMN captured_on SET NOT NULL;
 
 CREATE UNIQUE INDEX IF NOT EXISTS virtual_tour_one_start_scene_per_revision
   ON public.virtual_tour_scenes (revision_id) WHERE is_start_scene;
@@ -173,11 +189,11 @@ BEGIN
 
   FOR v_scene IN SELECT * FROM public.virtual_tour_scenes WHERE revision_id = v_tour.draft_revision_id ORDER BY sort_order, id LOOP
     INSERT INTO public.virtual_tour_scenes (
-      revision_id, scene_key, name_en, name_tl, panorama_path, panorama_width,
+      revision_id, scene_key, name_en, name_tl, captured_on, panorama_path, panorama_width,
       panorama_height, panorama_mime, validation_status, initial_pitch,
       initial_yaw, initial_hfov, is_start_scene, sort_order
     ) VALUES (
-      v_next_revision_id, v_scene.scene_key, v_scene.name_en, v_scene.name_tl,
+      v_next_revision_id, v_scene.scene_key, v_scene.name_en, v_scene.name_tl, v_scene.captured_on,
       v_scene.panorama_path, v_scene.panorama_width, v_scene.panorama_height,
       v_scene.panorama_mime, v_scene.validation_status, v_scene.initial_pitch,
       v_scene.initial_yaw, v_scene.initial_hfov, v_scene.is_start_scene, v_scene.sort_order
