@@ -401,22 +401,8 @@
   aspect-ratio: 1;
   place-items: center;
   justify-self: center;
-  overflow: hidden;
-  background:
-    radial-gradient(circle, rgba(201, 168, 76, 0.14), rgba(201, 168, 76, 0.025) 58%, transparent 59%),
-    var(--hk-surface-soft);
-  border: 1px solid var(--hk-line);
-  border-radius: 50%;
-}
-
-.hk-recovery__viewer:empty::before {
-  content: "";
-  width: 34%;
-  aspect-ratio: 1;
-  opacity: 0.45;
-  border: 2px dashed #b8963e;
-  border-radius: 50%;
-  box-shadow: 0 0 0 1rem rgba(184, 150, 62, 0.06);
+  background: transparent;
+  border: 0;
 }
 
 .hk-fragment-tray {
@@ -735,7 +721,6 @@ html[data-contrast="on"] .hk-recovery,
 html[data-contrast="on"] .hk-register,
 html[data-contrast="on"] .hk-ledger,
 html[data-contrast="on"] .hk-ledger__head,
-html[data-contrast="on"] .hk-recovery__viewer,
 html[data-contrast="on"] .hk-tally,
 html[data-contrast="on"] .hk-journey {
   color: #fff !important;
@@ -751,8 +736,7 @@ html[data-contrast="on"] .hk-register {
 }
 
 html[data-contrast="on"] .hk-masthead::before,
-html[data-contrast="on"] .hk-recovery::after,
-html[data-contrast="on"] .hk-recovery__viewer:empty::before {
+html[data-contrast="on"] .hk-recovery::after {
   display: none;
 }
 
