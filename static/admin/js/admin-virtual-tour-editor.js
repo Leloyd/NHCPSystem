@@ -43,6 +43,89 @@
   var viewerResizeObserver = null;
   var loadingModal = root.querySelector("[data-vt-loading-modal]");
   var loadingPreviousFocus = null;
+  var detailsForm = root.querySelector("[data-vt-details-form]");
+  var unsavedIndicator = root.querySelector("[data-vt-unsaved]");
+  var dirtyState = { details: false, hotspot: false, scene: false };
+  var formBaselines = { details: "", hotspot: null, scene: null };
+  var beforeUnloadAttached = false;
+  var allowPageExit = false;
+
+  function formSnapshot(form) {
+    if (!form) return "";
+    var controls = Array.prototype.slice.call(form.elements).map(function (control, index) {
+      if (!control || /^(button|submit|reset)$/i.test(control.type || "")) return null;
+      var key = control.name || control.getAttribute("data-vt-asset-input") || (control.type || control.tagName) + "-" + index;
+      if (control.type === "file") {
+        return [key, Array.prototype.slice.call(control.files || []).map(function (file) {
+          return [file.name, file.size, file.lastModified, file.type];
+        })];
+      }
+      if (control.type === "checkbox" || control.type === "radio") return [key, control.checked, control.value];
+      return [key, String(control.value == null ? "" : control.value), Boolean(control.disabled)];
+    }).filter(Boolean);
+    return JSON.stringify(controls);
+  }
+
+  function hasUnsavedChanges() {
+    return Object.keys(dirtyState).some(function (key) { return dirtyState[key]; });
+  }
+
+  function handleBeforeUnload(event) {
+    if (allowPageExit || !hasUnsavedChanges()) return;
+    event.preventDefault();
+    event.returnValue = "";
+  }
+
+  function updateDirtyUi() {
+    var dirty = hasUnsavedChanges();
+    if (unsavedIndicator) unsavedIndicator.hidden = !dirty;
+    if (dirty && !beforeUnloadAttached) {
+      window.addEventListener("beforeunload", handleBeforeUnload);
+      beforeUnloadAttached = true;
+    } else if (!dirty && beforeUnloadAttached) {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      beforeUnloadAttached = false;
+    }
+  }
+
+  function setDirty(section, value) {
+    dirtyState[section] = Boolean(value);
+    updateDirtyUi();
+  }
+
+  function syncFormDirty(section, form) {
+    if (formBaselines[section] == null) return;
+    setDirty(section, formSnapshot(form) !== formBaselines[section]);
+  }
+
+  function clearAllDirty() {
+    Object.keys(dirtyState).forEach(function (key) { dirtyState[key] = false; });
+    updateDirtyUi();
+  }
+
+  function dirtyDescription() {
+    var labels = [];
+    if (dirtyState.details) labels.push("environment details");
+    if (dirtyState.hotspot) labels.push("hotspot changes");
+    if (dirtyState.scene) labels.push("scene upload changes");
+    return labels.join(", ");
+  }
+
+  async function confirmUnsavedExit() {
+    if (!hasUnsavedChanges()) return true;
+    return confirmAction({
+      eyebrow: "Unsaved changes",
+      title: "Leave without saving?",
+      message: "Your unsaved " + dirtyDescription() + " will be lost. Stay on this page to save them first.",
+      label: "Leave page",
+      variant: "disable",
+    });
+  }
+
+  function permitPageExit() {
+    allowPageExit = true;
+    clearAllDirty();
+  }
 
   function resizeViewer() {
     if (viewerResizeFrame) window.cancelAnimationFrame(viewerResizeFrame);
@@ -332,6 +415,8 @@
     hotspotForm.querySelector("[data-vt-reposition]").disabled = true;
     hotspotForm.querySelector(".vt-save-hotspot").disabled = true;
     fillTargetScenes();
+    formBaselines.hotspot = formSnapshot(hotspotForm);
+    setDirty("hotspot", false);
     hotspotForm.elements.name_en.focus();
   }
 
@@ -363,6 +448,8 @@
       editingCard.classList.add("is-editing");
       editingCard.after(hotspotForm);
     }
+    formBaselines.hotspot = formSnapshot(hotspotForm);
+    setDirty("hotspot", false);
     hotspotForm.elements.name_en.focus();
   }
 
@@ -375,6 +462,7 @@
     removeTempHotspot();
     pitch = Number(Number(pitch).toFixed(2)); yaw = Number(Number(yaw).toFixed(2));
     hotspotForm.elements.pitch.value = pitch; hotspotForm.elements.yaw.value = yaw;
+    syncFormDirty("hotspot", hotspotForm);
     viewer.addHotSpot({ id: tempHotspotId, pitch: pitch, yaw: yaw, type: "info", text: "Pending hotspot", cssClass: "vt-temp-hotspot" });
     hotspotForm.querySelector("[data-vt-confirm-position]").disabled = false;
     hotspotForm.querySelector("[data-vt-hotspot-title]").textContent = "Position captured — confirm to lock";
@@ -405,6 +493,8 @@
     hotspotFormSlot.appendChild(hotspotForm);
     hotspotList.querySelectorAll(".vt-hotspot-card").forEach(function (card) { card.classList.remove("is-editing"); });
     editingHotspot = null;
+    formBaselines.hotspot = null;
+    setDirty("hotspot", false);
     hotspotForm.querySelector(".vt-save-hotspot").textContent = "Save hotspot";
     message(hotspotMessage, "");
     placementStatus.textContent = selectedScene ? "Select Add item or Add navigation to place a hotspot." : "Select a scene to begin.";
@@ -461,7 +551,10 @@
     sceneDialog.querySelector("h2").textContent = "Upload a full 360° view";
     sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Validate and add scene";
     sceneForm.querySelector("[data-vt-upload-scene]").disabled = true;
-    message(sceneMessage, ""); sceneDialog.showModal();
+    message(sceneMessage, "");
+    formBaselines.scene = formSnapshot(sceneForm);
+    setDirty("scene", false);
+    sceneDialog.showModal();
   });
   replaceSceneButton.addEventListener("click", function () {
     if (!selectedScene) return;
@@ -472,7 +565,13 @@
     sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Validate and replace panorama";
     sceneForm.querySelector("[data-vt-upload-scene]").disabled = true;
     message(sceneMessage, "Existing hotspots retain their pitch and yaw coordinates. Review them after replacement.");
+    formBaselines.scene = formSnapshot(sceneForm);
+    setDirty("scene", false);
     sceneDialog.showModal();
+  });
+  sceneDialog.addEventListener("close", function () {
+    formBaselines.scene = null;
+    setDirty("scene", false);
   });
   root.querySelectorAll("[data-vt-add-hotspot]").forEach(function (button) { button.addEventListener("click", function () { beginHotspot(button.dataset.vtAddHotspot); }); });
   root.querySelector("[data-vt-cancel-hotspot]").addEventListener("click", cancelHotspot);
@@ -536,9 +635,14 @@
   });
 
   root.querySelector("[data-vt-save-meta]").addEventListener("click", async function () {
-    var form = root.querySelector("[data-vt-details-form]"); var data = Object.fromEntries(new FormData(form).entries());
+    var form = detailsForm; var data = Object.fromEntries(new FormData(form).entries());
     if (!form.reportValidity()) return;
-    try { await api(endpoint("/metadata"), { method: "POST", body: JSON.stringify(data) }); message(root.querySelector("[data-vt-details-message]"), "Environment details saved.", "success"); }
+    try {
+      await api(endpoint("/metadata"), { method: "POST", body: JSON.stringify(data) });
+      formBaselines.details = formSnapshot(form);
+      setDirty("details", false);
+      message(root.querySelector("[data-vt-details-message]"), "Environment details saved.", "success");
+    }
     catch (error) { message(root.querySelector("[data-vt-details-message]"), error.message, "error"); }
   });
 
@@ -574,6 +678,8 @@
         await api(endpoint("/scenes"), { method: "POST", body: JSON.stringify(payload) });
         message(sceneMessage, "Scene added. Reloading editor…", "success");
       }
+      formBaselines.scene = formSnapshot(sceneForm);
+      setDirty("scene", false);
       window.location.reload();
     } catch (error) {
       await discardUploads([path]);
@@ -615,6 +721,8 @@
         hotspotForm.elements[field].value = result.hotspot[field] || hotspotForm.elements[field].value || "";
       });
       hotspotForm.querySelectorAll("[data-vt-asset-input]").forEach(function (input) { input.value = ""; });
+      formBaselines.hotspot = formSnapshot(hotspotForm);
+      setDirty("hotspot", false);
       renderHotspots();
       if (keepOpen) {
         submit.disabled = false;
@@ -675,6 +783,31 @@
       }
     });
   }
+
+  ["input", "change"].forEach(function (eventName) {
+    detailsForm.addEventListener(eventName, function () { syncFormDirty("details", detailsForm); });
+    hotspotForm.addEventListener(eventName, function () { syncFormDirty("hotspot", hotspotForm); });
+    sceneForm.addEventListener(eventName, function () { syncFormDirty("scene", sceneForm); });
+  });
+  formBaselines.details = formSnapshot(detailsForm);
+
+  document.addEventListener("click", function (event) {
+    if (allowPageExit || !hasUnsavedChanges() || event.defaultPrevented) return;
+    if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    var link = event.target.closest("a[href]");
+    if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+    var destination;
+    try { destination = new URL(link.href, window.location.href); } catch (_) { return; }
+    if (destination.protocol !== "http:" && destination.protocol !== "https:") return;
+    if (destination.origin === window.location.origin && destination.pathname === window.location.pathname && destination.search === window.location.search && destination.hash) return;
+    event.preventDefault();
+    event.stopImmediatePropagation();
+    confirmUnsavedExit().then(function (approved) {
+      if (!approved) return;
+      permitPageExit();
+      window.location.assign(destination.href);
+    });
+  }, true);
 
   renderSceneSelection(); renderHotspots(); renderViewer(); fillTargetScenes();
 })();

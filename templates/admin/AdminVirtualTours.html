@@ -9,12 +9,26 @@
 {% block admin_head %}<link rel="stylesheet" href="{{ url_for('static', filename='admin/css/admin-virtual-tour.css') }}" />{% endblock %}
 
 {% block admin_content %}
-  {% if status_message %}<section class="admin-alert admin-alert-success" role="status"><strong>Success</strong><span>{{ status_message }}</span></section>{% endif %}
   {% if config_error %}<section class="admin-alert admin-alert-error" role="alert"><strong>Setup required</strong><span>{{ config_error }}</span></section>{% endif %}
+
+  {% if status_notice %}
+  <div class="admin-confirm-modal is-enable vt-status-modal" data-admin-success-modal role="dialog" aria-modal="true" aria-labelledby="vtStatusTitle" aria-describedby="vtStatusMessage" aria-hidden="true" hidden>
+    <section class="admin-confirm-dialog" role="document">
+      <div class="admin-confirm-accent" aria-hidden="true"></div>
+      <div class="admin-confirm-icon" aria-hidden="true">
+        <svg class="admin-confirm-icon-enable" viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.25 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.2-5.2 1.4 1.4Z"></path></svg>
+      </div>
+      <p class="admin-confirm-eyebrow">Virtual Tours</p>
+      <h2 id="vtStatusTitle" class="admin-confirm-title">{{ status_notice.title }}</h2>
+      <p id="vtStatusMessage" class="admin-confirm-message">{{ status_notice.message }}</p>
+      <div class="admin-confirm-actions"><button type="button" class="admin-confirm-submit" data-admin-success-close>Continue</button></div>
+    </section>
+  </div>
+  {% endif %}
 
   <section class="vt-manager">
     <header class="vt-manager__head">
-      <div><p class="vt-eyebrow">Immersive experience manager</p><h2>Tour environments</h2><p>Original is always available. Active environments join it in the public selector; drafts and archived environments remain private.</p></div>
+      <div><p class="vt-eyebrow">Immersive experience manager</p><h2 data-admin-success-return tabindex="-1">Tour environments</h2><p>Original is always available. Active environments join it in the public selector; drafts and archived environments remain private.</p></div>
       <a href="{{ url_for('admin_virtual_tour_new') }}" class="vt-primary-link"><span aria-hidden="true">＋</span>Create environment</a>
     </header>
 
@@ -26,8 +40,9 @@
       {% for tour in tours %}
       <article class="vt-tour-card{% if tour.is_system_original %} is-original{% endif %}">
         <div class="vt-tour-card__preview" aria-hidden="true">
-          {% if tour.is_system_original %}<img src="{{ url_for('virtual_tour_file', filename='FrontGate.jpg') }}" alt="" />{% else %}<span>360°</span>{% endif %}
+          {% if tour.start_panorama_url %}<img src="{{ tour.start_panorama_url }}" alt="" />{% elif tour.is_system_original %}<img src="{{ url_for('virtual_tour_file', filename='FrontGate.jpg') }}" alt="" />{% else %}<span>360°</span>{% endif %}
           <span class="vt-badge is-{{ 'original' if tour.is_system_original else tour.status }}">{{ 'Original' if tour.is_system_original else tour.status|title }}</span>
+          <span class="vt-tour-card__start">Starting view · {{ tour.start_scene_name or ('Front Gate' if tour.is_system_original else 'Not selected') }}</span>
         </div>
         <div class="vt-tour-card__body">
           <p class="vt-tour-card__meta">{{ tour.scene_count or 0 }} scenes{% if not tour.is_system_original %} · {{ tour.hotspot_count or 0 }} hotspots{% endif %}</p>
@@ -44,9 +59,13 @@
             </form>
             {% else %}<span class="vt-protected-label">Protected baseline</span>{% endif %}
           {% else %}
-            <a href="{{ url_for('admin_virtual_tour_edit', tour_id=tour.id) }}" class="is-primary">Edit draft</a>
+            <a href="{{ url_for('admin_virtual_tour_edit', tour_id=tour.id) }}" class="is-primary">{{ 'Edit draft' if tour.status == 'draft' else ('Edit archived' if tour.status == 'archived' else 'Edit environment') }}</a>
             {% if tour.status == 'active' %}<a href="{{ url_for('virtual_tour', tour=tour.slug) }}" target="_blank" rel="noopener">Public preview</a>{% endif %}
-            {% if tour.status != 'archived' %}
+            {% if tour.status == 'archived' %}
+            <form method="post" action="{{ url_for('admin_virtual_tour_restore', tour_id=tour.id) }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="{{ 'Make this environment active again?' if tour.published_revision_id else 'Restore this environment as a draft?' }}" data-confirm-message="{{ 'Its last published revision will return to the public selector.' if tour.published_revision_id else 'This environment has no published revision, so it will return to the private draft list.' }}" data-confirm-label="{{ 'Make active' if tour.published_revision_id else 'Restore draft' }}" data-confirm-variant="enable">
+              <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit">{{ 'Make active' if tour.published_revision_id else 'Restore draft' }}</button>
+            </form>
+            {% else %}
             <form method="post" action="{{ url_for('admin_virtual_tour_archive', tour_id=tour.id) }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="Archive this environment?" data-confirm-message="It will be removed from the public selector, while its content remains available to administrators." data-confirm-label="Archive" data-confirm-variant="disable">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit">Archive</button>
             </form>

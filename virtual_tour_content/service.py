@@ -89,8 +89,20 @@ def load_admin_tours() -> tuple[list[dict[str, Any]], str | None]:
             draft_id = tour.get("draft_revision_id")
             published_id = tour.get("published_revision_id")
             revision_id = draft_id or published_id
-            tour["scene_count"] = len(list_scenes(int(revision_id))) if revision_id else 0
+            revision_scenes = list_scenes(int(revision_id)) if revision_id else []
+            tour["scene_count"] = len(revision_scenes)
             tour["hotspot_count"] = len(list_hotspots(int(revision_id))) if revision_id else 0
+            start_scene = next((scene for scene in revision_scenes if scene.get("is_start_scene")), None)
+            tour["start_scene_name"] = str((start_scene or {}).get("name_en") or "").strip()
+            tour["start_panorama_url"] = ""
+            start_panorama_path = str((start_scene or {}).get("panorama_path") or "").strip()
+            if start_panorama_path:
+                try:
+                    tour["start_panorama_url"] = resolve_admin_asset_urls([start_panorama_path]).get(start_panorama_path, "")
+                except Exception:
+                    # A missing thumbnail should not prevent administrators from
+                    # reaching the environment list and repairing the scene.
+                    tour["start_panorama_url"] = ""
             if tour.get("is_system_original"):
                 tour["source_id"] = tour["id"]
                 tour["id"] = "original"

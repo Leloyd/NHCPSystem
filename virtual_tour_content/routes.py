@@ -126,17 +126,20 @@ def register_virtual_tour_content_routes(
     @admin_required
     def admin_virtual_tours():
         tours, config_error = load_admin_tours()
-        messages = {
-            "created": "The tour environment was created as a draft.",
-            "published": "The selected revision is now active for public visitors.",
-            "archived": "The tour environment was archived and removed from the public selector.",
-            "reverted": "Original was restored to the packaged 40-scene baseline and its editable override was removed.",
+        notices = {
+            "created": {"title": "Draft created", "message": "The tour environment was created as a draft."},
+            "published": {"title": "Environment published", "message": "The selected revision is now active for public visitors."},
+            "archived": {"title": "Environment archived", "message": "The tour environment was archived and removed from the public selector."},
+            "activated": {"title": "Environment active", "message": "The archived environment is active and available to public visitors again."},
+            "restored": {"title": "Draft restored", "message": "The unpublished environment was restored as a private draft."},
+            "reverted": {"title": "Original restored", "message": "Original was restored to the packaged 40-scene baseline and its editable override was removed."},
         }
+        status_code = str(request.args.get("status") or "")
         return render_template(
             "admin/AdminVirtualTours.html",
             csrf_token=ensure_admin_csrf_token(),
             admin_username=current_admin(), tours=tours, config_error=config_error,
-            status_message=messages.get(str(request.args.get("status") or "")),
+            status_notice=notices.get(status_code),
         )
 
     @app.get(f"{admin_route_prefix}/virtual-tours/original/edit")
@@ -680,6 +683,18 @@ def register_virtual_tour_content_routes(
         if tour and not tour.get("is_system_original"):
             update_tour(tour_id, {"status": "archived", "updated_at": datetime.now(timezone.utc).isoformat()})
         return redirect(url_for("admin_virtual_tours", status="archived"))
+
+    @app.post(f"{admin_route_prefix}/virtual-tours/<int:tour_id>/restore")
+    @admin_required
+    def admin_virtual_tour_restore(tour_id: int):
+        if not is_admin_csrf_valid(request.form.get("csrf_token")):
+            return redirect(url_for("admin_virtual_tours"))
+        tour = get_tour(tour_id)
+        if tour and not tour.get("is_system_original") and tour.get("status") == "archived":
+            next_status = "active" if tour.get("published_revision_id") else "draft"
+            update_tour(tour_id, {"status": next_status, "updated_at": datetime.now(timezone.utc).isoformat()})
+            return redirect(url_for("admin_virtual_tours", status="activated" if next_status == "active" else "restored"))
+        return redirect(url_for("admin_virtual_tours"))
 
     @app.get("/api/virtual-tours/<slug>/config")
     def public_virtual_tour_config(slug: str):

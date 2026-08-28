@@ -23,6 +23,7 @@
     <header class="vt-editor__header">
       <div><span class="vt-badge is-{{ tour.status }}">{{ tour.status|title }}</span><h2>{{ tour.title_en }}</h2><p>Working revision {{ revision_id }}{% if tour.published_revision_id %} · the active version remains public until this draft is published{% endif %}</p></div>
       <div class="vt-editor__header-actions">
+        <span class="vt-unsaved-indicator" data-vt-unsaved role="status" hidden>Unsaved changes</span>
         {% if tour.status == 'active' %}<a href="{{ url_for('virtual_tour', tour=tour.slug) }}" target="_blank" rel="noopener">Open public version</a>{% endif %}
         <button type="button" data-vt-save-meta>Save details</button>
         <form method="post" action="{{ url_for('admin_virtual_tour_publish', tour_id=tour.id) }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="Publish this tour revision?" data-confirm-message="Visitors will receive this complete revision. Your next edits will continue in a separate draft." data-confirm-label="Publish" data-confirm-variant="enable">

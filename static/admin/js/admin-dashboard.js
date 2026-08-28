@@ -13,6 +13,56 @@
     });
   }
 
+  function initSuccessModals() {
+    Array.prototype.slice.call(document.querySelectorAll("[data-admin-success-modal]")).forEach(function (modal) {
+      var closeButton = modal.querySelector("[data-admin-success-close]");
+      var returnFocus = document.querySelector("[data-admin-success-return]");
+      var closeTimer = 0;
+
+      function closeModal() {
+        modal.classList.remove("is-open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("admin-confirm-open");
+        if (closeTimer) window.clearTimeout(closeTimer);
+        closeTimer = window.setTimeout(function () {
+          modal.hidden = true;
+          closeTimer = 0;
+          if (returnFocus && typeof returnFocus.focus === "function") returnFocus.focus();
+        }, 180);
+      }
+
+      if (!closeButton) return;
+      modal.hidden = false;
+      modal.setAttribute("aria-hidden", "false");
+      document.body.classList.add("admin-confirm-open");
+      window.requestAnimationFrame(function () {
+        modal.classList.add("is-open");
+        closeButton.focus();
+      });
+
+      // A refresh should not replay a completed-action notification.
+      try {
+        var cleanUrl = new URL(window.location.href);
+        cleanUrl.searchParams.delete("status");
+        window.history.replaceState(window.history.state, "", cleanUrl.pathname + cleanUrl.search + cleanUrl.hash);
+      } catch (_) {}
+
+      closeButton.addEventListener("click", closeModal);
+      modal.addEventListener("click", function (event) {
+        if (event.target === modal) closeModal();
+      });
+      modal.addEventListener("keydown", function (event) {
+        if (event.key === "Escape") {
+          event.preventDefault();
+          closeModal();
+        } else if (event.key === "Tab") {
+          event.preventDefault();
+          closeButton.focus();
+        }
+      });
+    });
+  }
+
   function initConfirmedSubmissions() {
     var forms = document.querySelectorAll("[data-confirm-submit]");
     var modal = document.querySelector("[data-admin-confirm-modal]");
@@ -2992,6 +3042,7 @@
     initAdminFeedbackManagement();
     initDashboardSearch();
     initConfirmedSubmissions();
+    initSuccessModals();
     initAdminAccountSettings();
     initAdminUserManagement();
     initAdminHighlightEditor();
