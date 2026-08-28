@@ -1,18 +1,15 @@
 (function () {
   function setupPasswordToggle() {
-    var toggle = document.querySelector("[data-password-toggle]");
-    var passwordInput = document.getElementById("adminPassword");
-
-    if (!toggle || !passwordInput) {
-      return;
-    }
-
-    toggle.addEventListener("click", function () {
-      var isVisible = passwordInput.getAttribute("type") === "text";
-      passwordInput.setAttribute("type", isVisible ? "password" : "text");
-      toggle.classList.toggle("is-visible", !isVisible);
-      toggle.setAttribute("aria-pressed", String(!isVisible));
-      toggle.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
+    document.querySelectorAll("[data-password-toggle]").forEach(function (toggle) {
+      var passwordInput = document.getElementById(toggle.getAttribute("aria-controls") || "");
+      if (!passwordInput) return;
+      toggle.addEventListener("click", function () {
+        var isVisible = passwordInput.getAttribute("type") === "text";
+        passwordInput.setAttribute("type", isVisible ? "password" : "text");
+        toggle.classList.toggle("is-visible", !isVisible);
+        toggle.setAttribute("aria-pressed", String(!isVisible));
+        toggle.setAttribute("aria-label", isVisible ? "Show password" : "Hide password");
+      });
     });
   }
 

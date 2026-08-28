@@ -39,6 +39,20 @@ def get_active_admin_user_by_email(email: str) -> dict[str, Any] | None:
     return rows[0]
 
 
+def get_active_admin_user_by_id(admin_user_id: int) -> dict[str, Any] | None:
+    client = get_supabase_client()
+    response = (
+        client.table(ADMIN_USERS_TABLE)
+        .select(ADMIN_USER_SELECT_FIELDS)
+        .eq("id", int(admin_user_id))
+        .eq("is_active", True)
+        .limit(1)
+        .execute()
+    )
+    rows = list(response.data or [])
+    return rows[0] if rows else None
+
+
 def update_admin_password(admin_user_id: int, password_hash: str, updated_at: str) -> dict[str, Any] | None:
     normalized_hash = str(password_hash or "").strip()
     normalized_updated_at = str(updated_at or "").strip()

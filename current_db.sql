@@ -33,6 +33,26 @@ CREATE TABLE public.admin_notifications (
   CONSTRAINT admin_notifications_recipient_event_source_key UNIQUE (recipient_email, event_type, source_id),
   CONSTRAINT admin_notifications_recipient_email_fkey FOREIGN KEY (recipient_email) REFERENCES public.admin_users(email) ON UPDATE CASCADE ON DELETE CASCADE
 );
+CREATE TABLE public.admin_password_reset_requests (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  admin_user_id bigint,
+  email_hash text NOT NULL CHECK (email_hash ~ '^[0-9a-f]{64}$'::text),
+  request_ip_hash text NOT NULL CHECK (request_ip_hash ~ '^[0-9a-f]{64}$'::text),
+  requested_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_password_reset_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_password_reset_requests_admin_user_id_fkey FOREIGN KEY (admin_user_id) REFERENCES public.admin_users(id) ON DELETE SET NULL
+);
+CREATE TABLE public.admin_password_reset_tokens (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  admin_user_id bigint NOT NULL,
+  token_hash text NOT NULL UNIQUE CHECK (token_hash ~ '^[0-9a-f]{64}$'::text),
+  expires_at timestamp with time zone NOT NULL,
+  used_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_password_reset_tokens_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_password_reset_tokens_admin_user_id_fkey FOREIGN KEY (admin_user_id) REFERENCES public.admin_users(id) ON DELETE CASCADE,
+  CONSTRAINT admin_password_reset_tokens_expiry_check CHECK (expires_at > created_at)
+);
 CREATE TABLE public.public_users (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
   email text NOT NULL UNIQUE,

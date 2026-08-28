@@ -71,7 +71,10 @@
               </div>
 
               <div class="admin-auth-field">
-                <label for="adminPassword">Password</label>
+                <div class="admin-auth-label-row">
+                  <label for="adminPassword">Password</label>
+                  <a href="{{ url_for('admin_forgot_password') }}">Forgot password?</a>
+                </div>
                 <div class="admin-auth-input-wrap admin-auth-password-wrap">
                   <span class="admin-auth-input-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24" focusable="false" aria-hidden="true">

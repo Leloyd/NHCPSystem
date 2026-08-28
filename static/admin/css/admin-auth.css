@@ -191,6 +191,30 @@ body.admin-auth-page {
   font-weight: 600;
 }
 
+.admin-auth-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.admin-auth-label-row a,
+.admin-auth-secondary {
+  color: var(--auth-green-700);
+  font-size: 0.82rem;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-auth-label-row a:hover,
+.admin-auth-label-row a:focus-visible,
+.admin-auth-secondary:hover,
+.admin-auth-secondary:focus-visible {
+  color: var(--auth-green-900);
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
+}
+
 .admin-auth-input-wrap {
   position: relative;
 }
@@ -306,6 +330,30 @@ body.admin-auth-page {
 
 .admin-auth-submit:active {
   transform: translateY(0);
+}
+
+.admin-auth-submit--link {
+  display: block;
+  text-align: center;
+  text-decoration: none;
+}
+
+.admin-auth-secondary {
+  display: block;
+  width: fit-content;
+  margin-inline: auto;
+  text-align: center;
+}
+
+.admin-auth-security-note {
+  margin: 0;
+  padding: 0.8rem 0.9rem;
+  border: 1px solid #d7e5dc;
+  border-radius: 0.8rem;
+  background: #f1f7f3;
+  color: #466255;
+  font-size: 0.78rem;
+  line-height: 1.5;
 }
 
 .admin-auth-footer {

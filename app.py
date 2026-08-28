@@ -15,6 +15,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_email, touch_admin_account, update_admin_password
+from admin_password_recovery_content import register_admin_password_recovery_routes
 from admin_notifications_content import register_admin_notification_routes
 from analytics_content import load_admin_analytics_dashboard, register_analytics_routes
 from community_content import load_news_community_highlights, register_community_content_routes
@@ -1081,11 +1082,12 @@ def admin_login():
 
     status_code = 200
     error_message = None
-    success_message = (
-        "Your administrator password was updated. Sign in with the new password."
-        if request.args.get("password_changed") == "1"
-        else None
-    )
+    if request.args.get("password_reset") == "1":
+        success_message = "Your administrator password was reset securely. Sign in with the new password."
+    elif request.args.get("password_changed") == "1":
+        success_message = "Your administrator password was updated. Sign in with the new password."
+    else:
+        success_message = None
 
     if request.method == "POST":
         if not _is_admin_auth_configured():
@@ -1382,6 +1384,20 @@ def _public_login_required(view_func):
         return redirect(login_url)
 
     return wrapped
+
+
+register_admin_password_recovery_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    ensure_admin_csrf_token=_ensure_admin_csrf_token,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    normalize_admin_email=_normalize_admin_email,
+    is_valid_admin_email=_is_valid_admin_email,
+    validate_new_admin_password=_validate_new_admin_password,
+    get_client_ip=_get_client_ip,
+    secret_key=str(app.config["SECRET_KEY"]),
+    is_production=IS_PRODUCTION,
+)
 
 
 register_user_account_routes(
