@@ -50,6 +50,21 @@ def _json_error(message: str, status: int = 400):
     return jsonify({"ok": False, "error": str(message)}), status
 
 
+def _admin_hotspot_with_asset_urls(hotspot: dict[str, Any]) -> dict[str, Any]:
+    """Attach short-lived admin preview URLs without changing stored paths."""
+    result = dict(hotspot or {})
+    asset_fields = ("image_path", "glb_path", "audio_en_path", "audio_tl_path")
+    paths = [result.get(field) for field in asset_fields]
+    try:
+        asset_urls = resolve_admin_asset_urls(paths)
+    except Exception:
+        asset_urls = {}
+    for field in asset_fields:
+        path = str(result.get(field) or "").strip()
+        result[field.replace("_path", "_url")] = asset_urls.get(path, "")
+    return result
+
+
 def _number(value: Any, *, minimum: float, maximum: float, label: str, default: float | None = None) -> float:
     if value in (None, "") and default is not None:
         return default
@@ -538,7 +553,8 @@ def register_virtual_tour_content_routes(
                 "audio_tl_path": str(data.get("audio_tl_path") or "") or None,
                 "is_enabled": True, "sort_order": len(list_hotspots(revision_id)),
             }
-            return jsonify({"ok": True, "hotspot": create_hotspot(payload)})
+            created = create_hotspot(payload)
+            return jsonify({"ok": True, "hotspot": _admin_hotspot_with_asset_urls(created)})
         except Exception as exc:
             return _json_error(str(exc))
 
@@ -580,7 +596,8 @@ def register_virtual_tour_content_routes(
             if "is_enabled" in data:
                 allowed["is_enabled"] = bool(data["is_enabled"])
             allowed["updated_at"] = datetime.now(timezone.utc).isoformat()
-            return jsonify({"ok": True, "hotspot": update_hotspot(hotspot_id, allowed)})
+            updated = update_hotspot(hotspot_id, allowed)
+            return jsonify({"ok": True, "hotspot": _admin_hotspot_with_asset_urls(updated)})
         except Exception as exc:
             return _json_error(str(exc))
 
@@ -640,12 +657,7 @@ def register_virtual_tour_content_routes(
 
             if not generated:
                 raise ValueError(" ".join(failures.values()) or "Narration could not be generated.")
-            audio_urls = resolve_admin_asset_urls([
-                updated.get("audio_en_path"), updated.get("audio_tl_path")
-            ])
-            for language in ("en", "tl"):
-                path = str(updated.get(f"audio_{language}_path") or "").strip()
-                updated[f"audio_{language}_url"] = audio_urls.get(path, "")
+            updated = _admin_hotspot_with_asset_urls(updated)
             return jsonify({
                 "ok": True, "hotspot": updated, "generated": generated,
                 "failures": failures, "complete": not failures,

@@ -49,6 +49,9 @@
   var formBaselines = { details: "", hotspot: null, scene: null };
   var beforeUnloadAttached = false;
   var allowPageExit = false;
+  var mediaPreviewUrls = { image: "", glb: "" };
+  var mediaPreviewFiles = { image: null, glb: null };
+  var activeMediaPreview = "image";
 
   function formSnapshot(form) {
     if (!form) return "";
@@ -338,8 +341,10 @@
   function setPreviewKind(kind) {
     var image = hotspotForm.querySelector("[data-vt-current-image]");
     var model = hotspotForm.querySelector("[data-vt-current-model]");
+    var hasImage = Boolean(image && image.getAttribute("src"));
     var hasModel = Boolean(model && model.getAttribute("src"));
-    var next = kind === "glb" && hasModel ? "glb" : "image";
+    var next = kind === "glb" && hasModel ? "glb" : (hasImage ? "image" : (hasModel ? "glb" : "image"));
+    activeMediaPreview = next;
     if (image) image.hidden = next !== "image";
     if (model) model.hidden = next !== "glb";
     hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
@@ -349,23 +354,53 @@
     });
   }
 
-  function updateAssetPreviews(hotspot) {
+  function clearMediaPreviewUrl(kind) {
+    if (mediaPreviewUrls[kind]) URL.revokeObjectURL(mediaPreviewUrls[kind]);
+    mediaPreviewUrls[kind] = "";
+    mediaPreviewFiles[kind] = null;
+  }
+
+  function selectedMediaUrl(kind, hotspot) {
+    var input = hotspotForm.querySelector('[data-vt-asset-input="' + kind + '"]');
+    var file = input && input.files ? input.files[0] : null;
+    if (file) {
+      if (mediaPreviewFiles[kind] !== file) {
+        clearMediaPreviewUrl(kind);
+        mediaPreviewFiles[kind] = file;
+        mediaPreviewUrls[kind] = URL.createObjectURL(file);
+      }
+      return mediaPreviewUrls[kind];
+    }
+    clearMediaPreviewUrl(kind);
+    return hotspot ? String(hotspot[kind + "_url"] || "") : "";
+  }
+
+  function refreshCurrentMedia(hotspot, preferredKind) {
     var media = hotspotForm.querySelector("[data-vt-current-media]");
     var image = hotspotForm.querySelector("[data-vt-current-image]");
     var model = hotspotForm.querySelector("[data-vt-current-model]");
-    var imageUrl = hotspot ? String(hotspot.image_url || "") : "";
-    var glbUrl = hotspot ? String(hotspot.glb_url || "") : "";
+    var imageUrl = selectedMediaUrl("image", hotspot);
+    var glbUrl = selectedMediaUrl("glb", hotspot);
     if (image) {
       if (imageUrl) image.src = imageUrl; else image.removeAttribute("src");
-      image.alt = hotspot && hotspot.name_en ? "Current image for " + hotspot.name_en : "Current artifact image";
+      image.alt = hotspotForm.elements.name_en.value
+        ? "Current image for " + hotspotForm.elements.name_en.value
+        : "Current artifact image";
     }
     if (model) {
       if (glbUrl) model.src = glbUrl; else model.removeAttribute("src");
     }
+    var imageButton = hotspotForm.querySelector('[data-vt-preview-kind="image"]');
     var modelButton = hotspotForm.querySelector('[data-vt-preview-kind="glb"]');
+    if (imageButton) imageButton.disabled = !imageUrl;
     if (modelButton) modelButton.hidden = !glbUrl;
     if (media) media.hidden = !imageUrl && !glbUrl;
-    setPreviewKind(imageUrl ? "image" : "glb");
+    setPreviewKind(preferredKind || activeMediaPreview);
+  }
+
+  function updateAssetPreviews(hotspot, preferredKind) {
+    activeMediaPreview = preferredKind || "image";
+    refreshCurrentMedia(hotspot, activeMediaPreview);
 
     ["en", "tl"].forEach(function (language) {
       var preview = hotspotForm.querySelector('[data-vt-audio-preview="' + language + '"]');
@@ -493,6 +528,8 @@
     hotspotFormSlot.appendChild(hotspotForm);
     hotspotList.querySelectorAll(".vt-hotspot-card").forEach(function (card) { card.classList.remove("is-editing"); });
     editingHotspot = null;
+    clearMediaPreviewUrl("image");
+    clearMediaPreviewUrl("glb");
     formBaselines.hotspot = null;
     setDirty("hotspot", false);
     hotspotForm.querySelector(".vt-save-hotspot").textContent = "Save hotspot";
@@ -579,6 +616,13 @@
   root.querySelector("[data-vt-reposition]").addEventListener("click", reposition);
   hotspotForm.querySelectorAll("[data-vt-preview-kind]").forEach(function (button) {
     button.addEventListener("click", function () { setPreviewKind(button.dataset.vtPreviewKind); });
+  });
+  ["image", "glb"].forEach(function (kind) {
+    var input = hotspotForm.querySelector('[data-vt-asset-input="' + kind + '"]');
+    if (!input) return;
+    input.addEventListener("change", function () {
+      refreshCurrentMedia(editingHotspot, kind);
+    });
   });
   setStartButton.addEventListener("click", async function () {
     if (!selectedScene) return;
@@ -721,6 +765,7 @@
         hotspotForm.elements[field].value = result.hotspot[field] || hotspotForm.elements[field].value || "";
       });
       hotspotForm.querySelectorAll("[data-vt-asset-input]").forEach(function (input) { input.value = ""; });
+      updateAssetPreviews(result.hotspot, activeMediaPreview);
       formBaselines.hotspot = formSnapshot(hotspotForm);
       setDirty("hotspot", false);
       renderHotspots();
@@ -767,7 +812,7 @@
         result.hotspot = Object.assign({}, editingHotspot, result.hotspot);
         hotspots = hotspots.map(function (entry) { return Number(entry.id) === Number(result.hotspot.id) ? result.hotspot : entry; });
         editingHotspot = result.hotspot;
-        updateAssetPreviews(result.hotspot);
+        updateAssetPreviews(result.hotspot, activeMediaPreview);
         renderHotspots();
         if (result.complete) {
           message(ttsStatus, "✓ English and Tagalog voices are ready.", "success");
