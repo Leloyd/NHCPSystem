@@ -76,7 +76,6 @@
   var mediaPreviewUrls = { image: "", glb: "" };
   var mediaPreviewFiles = { image: null, glb: null };
   var activeMediaPreview = "image";
-  var MAX_PANORAMA_UPLOAD_BYTES = 30 * 1024 * 1024;
   var currentMediaModel = hotspotForm.querySelector("[data-vt-current-model]");
   var modelPreviewStatus = hotspotForm.querySelector("[data-vt-model-status]");
 
@@ -912,7 +911,7 @@
     sceneDialog.querySelector("h2").textContent = "Upload a full 360° view";
     sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Validate and add scene";
     sceneForm.querySelector("[data-vt-upload-scene]").disabled = true;
-    root.querySelector("[data-vt-panorama-file]").textContent = "JPEG, PNG or WebP · full 2:1 panorama · maximum 30 MB";
+    root.querySelector("[data-vt-panorama-file]").textContent = "JPEG, PNG or WebP · full 2:1 panorama";
     message(sceneMessage, "");
     formBaselines.scene = formSnapshot(sceneForm);
     setDirty("scene", false);
@@ -928,7 +927,7 @@
     sceneDialog.querySelector("h2").textContent = "Edit “" + selectedScene.name_en + "”";
     sceneForm.querySelector("[data-vt-upload-scene]").textContent = "Save scene changes";
     sceneForm.querySelector("[data-vt-upload-scene]").disabled = false;
-    root.querySelector("[data-vt-panorama-file]").textContent = "Optional · choose a new 2:1 panorama only when replacing the current image · maximum 30 MB";
+    root.querySelector("[data-vt-panorama-file]").textContent = "Optional · choose a new 2:1 panorama only when replacing the current image";
     message(sceneMessage, "Update this scene’s name or capture date without replacing its panorama.");
     formBaselines.scene = formSnapshot(sceneForm);
     setDirty("scene", false);
@@ -1037,13 +1036,6 @@
     if (!file) {
       sceneForm.querySelector("[data-vt-upload-scene]").disabled = sceneDialogMode === "add";
       if (sceneDialogMode === "replace") message(sceneMessage, "The existing panorama will be kept.");
-      return;
-    }
-    if (file.size > MAX_PANORAMA_UPLOAD_BYTES) {
-      sceneForm.elements.panorama.value = "";
-      sceneForm.querySelector("[data-vt-upload-scene]").disabled = sceneDialogMode === "add";
-      root.querySelector("[data-vt-panorama-file]").textContent = "JPEG, PNG or WebP · full 2:1 panorama · maximum 30 MB";
-      message(sceneMessage, "The 360° panorama is over the 30 MB upload limit.", "error");
       return;
     }
     message(sceneMessage, "Checking image dimensions and opening it in Pannellum…");
