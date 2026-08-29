@@ -23,6 +23,18 @@ def test_supported_formatting_and_alignment_are_preserved():
     assert "<ul><li>First item</li></ul>" in result
 
 
+def test_newlines_survive_when_description_contains_inline_formatting():
+    result = sanitize_community_rich_text(
+        "To <strong>help</strong> improve coordination.\n\n"
+        "This advisory supports visitors."
+    )
+
+    assert result == (
+        "<p>To <strong>help</strong> improve coordination.<br><br>"
+        "This advisory supports visitors.</p>"
+    )
+
+
 def test_scripts_event_handlers_and_unsafe_links_are_removed():
     result = sanitize_community_rich_text(
         '<p onclick="alert(1)">Safe text</p>'

@@ -58,6 +58,27 @@ class _CommunityRichTextSanitizer(HTMLParser):
         self.output: list[str] = []
         self.open_tags: list[str] = []
         self.suppressed_depth = 0
+        self.implicit_paragraph_open = False
+
+    def _has_open_block(self) -> bool:
+        return any(tag in _BLOCK_TAGS for tag in self.open_tags)
+
+    def _open_implicit_paragraph(self) -> None:
+        if self._has_open_block():
+            return
+        self.output.append("<p>")
+        self.open_tags.append("p")
+        self.implicit_paragraph_open = True
+
+    def _close_implicit_paragraph(self) -> None:
+        if not self.implicit_paragraph_open:
+            return
+        while self.open_tags:
+            open_tag = self.open_tags.pop()
+            self.output.append(f"</{open_tag}>")
+            if open_tag == "p":
+                break
+        self.implicit_paragraph_open = False
 
     def handle_starttag(self, tag: str, attrs: list[tuple[str, str | None]]) -> None:
         normalized_tag = str(tag or "").lower()
@@ -72,6 +93,13 @@ class _CommunityRichTextSanitizer(HTMLParser):
         normalized_tag = _TAG_ALIASES.get(normalized_tag, normalized_tag)
         if normalized_tag not in _ALLOWED_TAGS:
             return
+        if normalized_tag in _BLOCK_TAGS:
+            self._close_implicit_paragraph()
+        elif not self._has_open_block():
+            # Browser contenteditable implementations can leave formatted
+            # inline content and text directly at the root. Wrap that content
+            # so its line breaks retain paragraph semantics on public pages.
+            self._open_implicit_paragraph()
         if normalized_tag == "br":
             self.output.append("<br>")
             return
@@ -114,8 +142,17 @@ class _CommunityRichTextSanitizer(HTMLParser):
                 break
 
     def handle_data(self, data: str) -> None:
-        if not self.suppressed_depth:
-            self.output.append(html.escape(str(data or ""), quote=False))
+        if self.suppressed_depth:
+            return
+
+        normalized_data = str(data or "").replace("\r\n", "\n").replace("\r", "\n")
+        if not normalized_data:
+            return
+        if not self._has_open_block():
+            if not normalized_data.strip():
+                return
+            self._open_implicit_paragraph()
+        self.output.append(html.escape(normalized_data, quote=False).replace("\n", "<br>"))
 
     def handle_comment(self, data: str) -> None:
         return

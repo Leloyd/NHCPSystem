@@ -2370,6 +2370,13 @@
       record.valueField.hidden = true;
       record.shell.classList.add("is-enhanced");
 
+      try {
+        document.execCommand("defaultParagraphSeparator", false, "p");
+      } catch (error) {
+        // Browsers that do not support this command can still create divs;
+        // the server sanitizer safely normalizes those divs to paragraphs.
+      }
+
       record.toolbar.addEventListener("mousedown", function (event) {
         if (event.target.closest("button")) {
           event.preventDefault();
