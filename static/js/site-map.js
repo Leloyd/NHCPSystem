@@ -775,16 +775,13 @@
     });
   }
 
-  function calculateOverviewMinZoom() {
+  function calculateCoverMinZoom() {
     if (!state.map || !state.imageBounds) {
       return -2;
     }
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    // `inside: false` contains the complete aerial image in the viewport.
-    // The previous cover calculation (`true`) cropped the image edges and made
-    // hotspots near the Chapel and outer tombs impossible to reach on reload.
-    var fittedZoom = state.map.getBoundsZoom(bounds, false);
+    var fittedZoom = state.map.getBoundsZoom(bounds, true);
 
     if (!isFinite(fittedZoom)) {
       return -2;
@@ -799,7 +796,7 @@
     }
 
     var bounds = window.L.latLngBounds(state.imageBounds);
-    var nextMinZoom = calculateOverviewMinZoom();
+    var nextMinZoom = calculateCoverMinZoom();
 
     if (!isFinite(nextMinZoom)) {
       nextMinZoom = -2;
@@ -1100,7 +1097,7 @@
         state.map.invalidateSize(false);
         if (state.stopId && state.hotspotsById[state.stopId]) {
           var stop = state.hotspotsById[state.stopId];
-          state.map.flyTo([stop.y, stop.x], getAerialHotspotFocusZoom(), {
+          state.map.flyTo([stop.y, stop.x], Math.max(0, state.map.getZoom()), {
             animate: !state.reduceMotion,
             duration: state.reduceMotion ? 0 : 0.55,
           });
@@ -1146,21 +1143,6 @@
     if (state.map.getZoom() < state.minZoom) {
       state.map.setZoom(state.minZoom, { animate: false });
     }
-  }
-
-  function getAerialHotspotFocusZoom() {
-    if (!state.map) {
-      return 0;
-    }
-
-    var currentZoom = state.map.getZoom();
-    if (!isFinite(currentZoom) || currentZoom >= 0) {
-      return isFinite(currentZoom) ? currentZoom : 0;
-    }
-
-    // Move only a few zoom steps closer from the full-map overview. This keeps
-    // nearby hotspots visible on smaller screens instead of jumping to level 0.
-    return Math.min(0, currentZoom + 0.75);
   }
 
   function initLeafletMap() {
@@ -1239,13 +1221,16 @@
       var marker = window.L.marker([y, x], {
         interactive: !!stop,
         keyboard: !!stop,
-        zIndexOffset: -200,
+        opacity: 1,
+        riseOnHover: true,
+        riseOffset: 1000,
+        zIndexOffset: 800,
         icon: window.L.divIcon({
           className: "site-map-landmark-marker" + (stop ? " is-clickable" : ""),
           html: '<span class="site-map-landmark-pin" aria-hidden="true"></span>'
             + '<span class="site-map-landmark-label">' + escapeMarkerLabel(landmark.label) + "</span>",
-          iconSize: [14, 14],
-          iconAnchor: [7, 7],
+          iconSize: [18, 18],
+          iconAnchor: [9, 9],
         }),
       });
 
@@ -1281,6 +1266,9 @@
 
     var marker = window.L.marker([spot.y, spot.x], {
       keyboard: false,
+      opacity: 1,
+      riseOnHover: true,
+      riseOffset: 1000,
       icon: window.L.divIcon({
         className: "site-map-hotspot-marker",
         html: getHotspotMarkerHtml(),
@@ -1388,6 +1376,9 @@
   function clearMarkerStyles() {
     Object.keys(state.markerById).forEach(function (id) {
       var marker = state.markerById[id];
+      if (typeof marker.setOpacity === "function") {
+        marker.setOpacity(1);
+      }
       var node = marker.getElement();
       if (!node) {
         return;
@@ -1399,6 +1390,9 @@
     });
 
     state.virtualTourLandmarkMarkers.forEach(function (marker) {
+      if (typeof marker.setOpacity === "function") {
+        marker.setOpacity(1);
+      }
       var node = marker.getElement();
       if (!node) {
         return;
@@ -1458,6 +1452,7 @@
         return;
       }
       var marker = ensureMarker(spot);
+      marker.setOpacity(1);
       var markerNode = marker.getElement();
       if (markerNode) {
         markerNode.setAttribute("aria-label", getLocalizedTitle(spot));
@@ -2111,7 +2106,7 @@
     renderAll();
 
     if (panTo && state.map) {
-      state.map.flyTo([target.y, target.x], getAerialHotspotFocusZoom(), {
+      state.map.flyTo([target.y, target.x], Math.max(0, state.map.getZoom()), {
         animate: !state.reduceMotion,
         duration: state.reduceMotion ? 0 : 0.5,
       });
@@ -2215,16 +2210,6 @@
         });
       });
 
-      // Leaflet normally keeps marker layers mounted across zooms. Reconcile
-      // them after completed viewport changes as a safeguard against a marker
-      // being detached during an animated fly or a browser resize.
-      ["moveend", "zoomend"].forEach(function (eventName) {
-        state.map.on(eventName, function () {
-          if (!is360ViewActive()) {
-            renderMarkers(getVisibleStops());
-          }
-        });
-      });
     }
 
     window.addEventListener("resize", function () {
