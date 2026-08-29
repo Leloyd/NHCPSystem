@@ -2663,8 +2663,14 @@
     };
   }
 
-  const requestedScene = debugParams.get("scene");
-  const initialScene = requestedScene && Object.prototype.hasOwnProperty.call(rawScenes, requestedScene) ? requestedScene : "frontGate";
+  const requestedSceneParam = debugParams.get("scene");
+  const requestedScene = requestedSceneParam && Object.prototype.hasOwnProperty.call(rawScenes, requestedSceneParam)
+    ? requestedSceneParam
+    : Object.keys(rawScenes).find(function (sceneId) {
+        const normalizedRequested = String(requestedSceneParam || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+        return normalizedRequested && String(sceneId).toLowerCase().replace(/[^a-z0-9]/g, "") === normalizedRequested;
+      });
+  const initialScene = requestedScene || "frontGate";
 
   function syncSceneInUrl(sceneId) {
     if (!sceneId || !Object.prototype.hasOwnProperty.call(rawScenes, sceneId)) {

@@ -56,16 +56,14 @@
   var VIRTUAL_TOUR_SCENE_BY_STOP = {
     "front-gate": "frontGate",
     "flag-pole": "leftFlag",
-    parking: "leftFrontGate",
-    "museum-entrance": "frontMuseum",
-    "resource-center-office": "frontMuseum",
+    "museum-entrance": "insidemuseum",
     "middle-ground": "middleGInside",
     "left-side-inside": "leftCornerInsideFrontGate",
     "right-side-inside": "rightCornerInsideFrontGate",
     "left-tombs": "leftTombs",
     "right-tombs": "rightFrontTombs",
     "church-front": "frontChurch",
-    church: "insideChurch",
+    church: "insidechurch",
     "underground-crypts": "underground1",
   };
   var TAGALOG_TITLE_BY_STOP = {
@@ -345,6 +343,7 @@
   function mergeVirtualTourScenes(rawScenes) {
     var scenes = [];
     var scenesById = {};
+    var scenesByNormalizedId = {};
     var claimedScenes = {};
 
     if (rawScenes && typeof rawScenes === "object") {
@@ -355,20 +354,23 @@
         }
         scenes.push(scene);
         scenesById[scene.sceneId] = scene;
+        scenesByNormalizedId[scene.sceneId.toLowerCase().replace(/[^a-z0-9]/g, "")] = scene;
       });
     }
 
     state.hotspots.forEach(function (spot) {
-      var sceneId = spot.id === "parking" ? "" : (VIRTUAL_TOUR_SCENE_BY_STOP[spot.id] || "");
-      var scene = sceneId ? scenesById[sceneId] : null;
+      var sceneId = VIRTUAL_TOUR_SCENE_BY_STOP[spot.id] || "";
+      var normalizedSceneId = sceneId.toLowerCase().replace(/[^a-z0-9]/g, "");
+      var scene = sceneId ? (scenesById[sceneId] || scenesByNormalizedId[normalizedSceneId]) : null;
+      var matchedSceneId = scene ? scene.sceneId : "";
 
       // Reuse the rich Site Map information at the matching Virtual Tour point.
-      // Parking deliberately stays at its original Site Map coordinate.
-      if (scene && !claimedScenes[sceneId]) {
+      // Stops without a tour destination remain information-only hotspots.
+      if (scene && !claimedScenes[matchedSceneId]) {
         spot.mapFractionX = scene.x;
         spot.mapFractionY = scene.y;
-        spot.virtualTourScene = scene.sceneId;
-        claimedScenes[sceneId] = true;
+        spot.virtualTourScene = sceneId;
+        claimedScenes[matchedSceneId] = true;
       }
     });
 
@@ -424,7 +426,7 @@
     if (museumStop) {
       museumStop.mapFractionX = museumLandmark.x;
       museumStop.mapFractionY = museumLandmark.y;
-      museumStop.virtualTourScene = "frontMuseum";
+      museumStop.virtualTourScene = "insidemuseum";
       museumStop.landmarkOnly = true;
       state.hotspots.push(museumStop);
     }

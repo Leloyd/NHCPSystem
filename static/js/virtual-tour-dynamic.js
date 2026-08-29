@@ -1006,8 +1006,17 @@
     pannellumScenes[scene.id] = { type: "equirectangular", panorama: scene.panorama, pitch: scene.pitch, yaw: scene.yaw, hfov: scene.hfov, hotSpots: hotSpots };
   });
 
-  var requestedScene = new URLSearchParams(window.location.search).get("scene");
-  var initialScene = requestedScene && pannellumScenes[requestedScene] ? requestedScene : config.startScene;
+  function resolveRequestedScene(requested) {
+    if (!requested) return "";
+    if (pannellumScenes[requested]) return requested;
+    var normalized = String(requested).toLowerCase().replace(/[^a-z0-9]/g, "");
+    return Object.keys(pannellumScenes).find(function (sceneId) {
+      return String(sceneId).toLowerCase().replace(/[^a-z0-9]/g, "") === normalized;
+    }) || "";
+  }
+
+  var requestedScene = resolveRequestedScene(new URLSearchParams(window.location.search).get("scene"));
+  var initialScene = requestedScene || config.startScene;
   if (!initialScene || !pannellumScenes[initialScene]) {
     loading.hidden = true; errorOverlay.hidden = false; return;
   }
