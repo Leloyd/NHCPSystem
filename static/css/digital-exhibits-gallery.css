@@ -1886,6 +1886,19 @@ body.ogd-detail-lightbox-open {
 .community-rich-text ul,
 .community-rich-text ol {
   padding-left: 1.5rem;
+  list-style-position: outside;
+}
+
+.community-rich-text ul {
+  list-style-type: disc;
+}
+
+.community-rich-text ol {
+  list-style-type: decimal;
+}
+
+.community-rich-text li {
+  display: list-item;
 }
 
 .community-rich-text li + li {

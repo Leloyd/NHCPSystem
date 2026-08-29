@@ -4890,6 +4890,22 @@ body.admin-confirm-open {
 .admin-rich-text__editor ul,
 .admin-rich-text__editor ol {
   padding-left: 1.45rem;
+  list-style-position: outside;
+}
+
+.admin-rich-text__editor ul,
+.admin-highlight-rich-copy ul {
+  list-style-type: disc;
+}
+
+.admin-rich-text__editor ol,
+.admin-highlight-rich-copy ol {
+  list-style-type: decimal;
+}
+
+.admin-rich-text__editor li,
+.admin-highlight-rich-copy li {
+  display: list-item;
 }
 
 .admin-rich-text__editor blockquote {
@@ -4971,6 +4987,7 @@ body.admin-confirm-open {
 .admin-highlight-rich-copy ul,
 .admin-highlight-rich-copy ol {
   padding-left: 1.35rem;
+  list-style-position: outside;
 }
 
 .admin-highlight-editor-section:focus-within {
