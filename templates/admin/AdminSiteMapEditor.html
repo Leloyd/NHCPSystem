@@ -16,7 +16,6 @@
 {% block admin_content %}
 {% if config_error %}<section class="admin-alert admin-alert-error" role="alert"><strong>Database setup required</strong><span>{{ config_error }}</span></section>{% endif %}
 {% if request.args.get('error') %}<section class="admin-alert admin-alert-error" role="alert"><strong>Site Map action failed</strong><span>{{ request.args.get('error') }}</span></section>{% endif %}
-{% if status_notice %}<section class="admin-alert admin-alert-success" role="status"><strong>{{ status_notice.title }}</strong><span>{{ status_notice.message }}</span></section>{% endif %}
 
 <section class="sm-editor" data-sm-editor data-read-only="{{ 'true' if editor_config.readOnly else 'false' }}">
   <script id="smEditorConfig" type="application/json">{{ editor_config|tojson }}</script>
@@ -26,7 +25,7 @@
     <div>
       <span class="sm-status-badge {{ 'is-original' if editor_config.readOnly else 'is-draft' }}">{{ 'Protected Original' if editor_config.readOnly else 'Database draft' }}</span>
       <h2>Site Map</h2>
-      <p>{% if editor_config.readOnly %}Visitors are using the packaged files. Create a draft to make editable updates.{% else %}Working revision {{ revision.id }}{% if site_map.published_revision_id %}; the published revision remains live until you publish again.{% endif %}{% endif %}</p>
+      <p data-sm-revision-summary>{% if editor_config.readOnly %}Visitors are using the packaged files. Create a draft to make editable updates.{% else %}Working revision {{ revision.id }}{% if site_map.published_revision_id %}; the published revision remains live until you publish again.{% endif %}{% endif %}</p>
     </div>
     <div class="sm-editor__actions">
       <span data-sm-unsaved hidden>Unsaved changes</span>
@@ -37,7 +36,7 @@
       </form>
       {% else %}
       <button class="is-primary" type="button" data-sm-save>Save draft</button>
-      <form method="post" action="{{ url_for('admin_site_map_publish') }}" data-confirm-submit data-confirm-eyebrow="Site Map" data-confirm-title="Publish this Site Map revision?" data-confirm-message="Visitors will receive the complete saved revision. Unsaved editor changes are not included." data-confirm-label="Publish" data-confirm-variant="enable">
+      <form method="post" action="{{ url_for('admin_site_map_publish') }}" data-sm-publish data-confirm-submit data-confirm-eyebrow="Site Map" data-confirm-title="Publish this Site Map revision?" data-confirm-message="Visitors will receive the complete saved revision. Unsaved editor changes are not included, but they will remain open in this editor." data-confirm-label="Publish" data-confirm-variant="enable">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button class="is-publish" type="submit">Publish</button>
       </form>
       <form method="post" action="{{ url_for('admin_site_map_revert') }}" data-confirm-submit data-confirm-eyebrow="Site Map" data-confirm-title="Revert to the packaged Original?" data-confirm-message="All database revisions and uploaded Site Map assets will be permanently removed. The protected file-based Original will immediately become public." data-confirm-label="Revert Original" data-confirm-variant="disable">

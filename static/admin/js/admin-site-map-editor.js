@@ -358,6 +358,23 @@
     catch (error) { showStatus(error.message || "The draft could not be saved.", true); }
     finally { saveButton.disabled = false; }
   });
+  var publishForm = root.querySelector("[data-sm-publish]"); if (publishForm) publishForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    var publishButton = event.submitter || publishForm.querySelector('button[type="submit"]');
+    if (publishButton) { publishButton.disabled = true; publishButton.setAttribute("aria-busy", "true"); }
+    showStatus("Publishing the saved Site Map revision…", false);
+    try {
+      var response = await request("/publish", { method: "POST", body: "{}" });
+      apiConfig.revisionId = response.revisionId;
+      var summary = root.querySelector("[data-sm-revision-summary]");
+      if (summary) summary.textContent = "Working revision " + response.revisionId + "; revision " + response.publishedRevisionId + " is now public.";
+      showStatus("Site Map published. You can continue editing this page.", false);
+    } catch (error) {
+      showStatus(error.message || "The Site Map could not be published.", true);
+    } finally {
+      if (publishButton) { publishButton.disabled = false; publishButton.removeAttribute("aria-busy"); }
+    }
+  });
   document.addEventListener("click", function (event) {
     if (allowPageExit || !dirty || readOnly || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
     var link = event.target.closest && event.target.closest("a[href]");

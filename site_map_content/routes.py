@@ -77,12 +77,6 @@ def register_site_map_content_routes(
             if upgraded:
                 revision = update_revision_config(int(revision["id"]), config)
         editor_config = config_with_urls(config)
-        status_notices = {
-            "customized": {"title": "Editable draft created", "message": "The protected Original was copied into a database draft. The public Site Map is unchanged until you publish."},
-            "saved": {"title": "Draft saved", "message": "Your Site Map changes were saved to the working database revision."},
-            "published": {"title": "Site Map published", "message": "Visitors now receive the published database revision. A new working draft is ready."},
-            "reverted": {"title": "Original restored", "message": "The database override was removed. Visitors now receive the protected file-based Original."},
-        }
         return render_template(
             "admin/AdminSiteMapEditor.html",
             csrf_token=csrf_token,
@@ -99,7 +93,6 @@ def register_site_map_content_routes(
                 "supabaseKey": str(os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or "").strip(),
             },
             config_error=config_error,
-            status_notice=status_notices.get(str(request.args.get("status") or "")),
         )
 
     @app.post(f"{admin_route_prefix}/site-map/customize")
@@ -135,14 +128,26 @@ def register_site_map_content_routes(
     @app.post(f"{admin_route_prefix}/site-map/publish")
     @admin_required
     def admin_site_map_publish():
-        if not is_admin_csrf_valid(request.form.get("csrf_token")):
+        is_json_request = request.headers.get("X-Requested-With") == "XMLHttpRequest"
+        if is_json_request:
+            if not valid_json_csrf():
+                return _json_error("Your admin session token expired. Refresh and try again.", 403)
+        elif not is_admin_csrf_valid(request.form.get("csrf_token")):
             return redirect(url_for("admin_site_map"))
         try:
             site_map, _ = editable_map()
-            publish_site_map(int(site_map["id"]), created_by=current_admin())
+            published = publish_site_map(int(site_map["id"]), created_by=current_admin())
+            if is_json_request:
+                return jsonify({
+                    "ok": True,
+                    "publishedRevisionId": int(published.get("published_revision_id") or 0),
+                    "revisionId": int(published.get("draft_revision_id") or 0),
+                })
             return redirect(url_for("admin_site_map", status="published"))
         except Exception as exc:
             app.logger.exception("Could not publish the Site Map: %s", exc)
+            if is_json_request:
+                return _json_error(str(exc))
             return redirect(url_for("admin_site_map", error=str(exc)))
 
     @app.post(f"{admin_route_prefix}/site-map/revert")
