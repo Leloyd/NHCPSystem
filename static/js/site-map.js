@@ -118,6 +118,10 @@
     virtualTourLandmarkMarkers: [],
     virtualTourSceneCount: 0,
     panoramaHotspotNodesById: {},
+    coordinateCaptureEnabled: false,
+    coordinateCapturePointerStart: null,
+    coordinateCapturePointerMoved: false,
+    coordinateCaptureFeedbackTimer: 0,
     routeLayer: null,
     audioPlayer: null,
     introAudioPlayer: null,
@@ -139,6 +143,9 @@
   var elements = {
     mapRoot: document.getElementById("interactiveMap"),
     panoramaRoot: document.getElementById("panoramaMap"),
+    coordinateCaptureBtn: document.getElementById("mapCoordinateCaptureBtn"),
+    coordinateCaptureLabel: document.getElementById("mapCoordinateCaptureLabel"),
+    coordinateCaptureToast: document.getElementById("mapCoordinateCaptureToast"),
     resetViewBtn: document.getElementById("resetViewBtn"),
     viewModeBtn: document.getElementById("mapViewModeBtn"),
     viewModeLabel: document.getElementById("mapViewModeLabel"),
@@ -612,6 +619,119 @@
 
   function is360ViewActive() {
     return state.activeViewMode === "360";
+  }
+
+  function updateCoordinateCaptureButton(message) {
+    if (!elements.coordinateCaptureBtn || !elements.coordinateCaptureLabel) {
+      return;
+    }
+
+    var inPanorama = is360ViewActive();
+    var isTagalog = getCurrentLanguage() === "tl";
+    elements.coordinateCaptureBtn.hidden = !inPanorama;
+    elements.coordinateCaptureBtn.classList.toggle("is-active", inPanorama && state.coordinateCaptureEnabled);
+    elements.coordinateCaptureBtn.setAttribute("aria-pressed", state.coordinateCaptureEnabled ? "true" : "false");
+    elements.coordinateCaptureBtn.setAttribute(
+      "aria-label",
+      state.coordinateCaptureEnabled
+        ? (isTagalog ? "I-click ang punto sa 360 upang kopyahin ang pitch at yaw" : "Click a point in the 360 view to copy its pitch and yaw")
+        : (isTagalog ? "Kopyahin ang pitch at yaw ng panorama" : "Copy panorama pitch and yaw"),
+    );
+    elements.coordinateCaptureLabel.textContent = message || (state.coordinateCaptureEnabled
+      ? (isTagalog ? "I-click ang 360°" : "Click the 360°")
+      : (isTagalog ? "Kopyahin Pitch/Yaw" : "Copy Pitch/Yaw"));
+
+    if (elements.panoramaRoot) {
+      elements.panoramaRoot.classList.toggle("is-coordinate-capture", inPanorama && state.coordinateCaptureEnabled);
+    }
+  }
+
+  function setCoordinateCaptureEnabled(enabled) {
+    state.coordinateCaptureEnabled = !!enabled && is360ViewActive();
+    state.coordinateCapturePointerStart = null;
+    state.coordinateCapturePointerMoved = false;
+    updateCoordinateCaptureButton();
+  }
+
+  function legacyCopyCoordinateText(text) {
+    return new Promise(function (resolve, reject) {
+      var textarea = document.createElement("textarea");
+      textarea.value = text;
+      textarea.setAttribute("readonly", "");
+      textarea.style.position = "fixed";
+      textarea.style.opacity = "0";
+      document.body.appendChild(textarea);
+      textarea.select();
+      try {
+        if (!document.execCommand("copy")) {
+          throw new Error("Copy command was rejected.");
+        }
+        resolve();
+      } catch (error) {
+        reject(error);
+      } finally {
+        textarea.remove();
+      }
+    });
+  }
+
+  function copyCoordinateText(text) {
+    if (navigator.clipboard && typeof navigator.clipboard.writeText === "function") {
+      return navigator.clipboard.writeText(text).catch(function () {
+        return legacyCopyCoordinateText(text);
+      });
+    }
+
+    return legacyCopyCoordinateText(text);
+  }
+
+  function showCoordinateCaptureFeedback(message, succeeded) {
+    window.clearTimeout(state.coordinateCaptureFeedbackTimer);
+    updateCoordinateCaptureButton(succeeded
+      ? (getCurrentLanguage() === "tl" ? "Nakopya!" : "Copied!")
+      : (getCurrentLanguage() === "tl" ? "Hindi nakopya" : "Copy failed"));
+
+    if (elements.coordinateCaptureToast) {
+      elements.coordinateCaptureToast.textContent = message;
+      elements.coordinateCaptureToast.classList.toggle("is-error", !succeeded);
+      elements.coordinateCaptureToast.hidden = false;
+    }
+
+    state.coordinateCaptureFeedbackTimer = window.setTimeout(function () {
+      updateCoordinateCaptureButton();
+      if (elements.coordinateCaptureToast) {
+        elements.coordinateCaptureToast.hidden = true;
+      }
+    }, 2400);
+  }
+
+  function capturePanoramaCoordinates(event) {
+    if (!state.coordinateCaptureEnabled || !is360ViewActive() || state.coordinateCapturePointerMoved) {
+      state.coordinateCapturePointerMoved = false;
+      return;
+    }
+    if (!state.panoramaViewer || typeof state.panoramaViewer.mouseEventToCoords !== "function") {
+      showCoordinateCaptureFeedback("The panorama coordinates are not available yet.", false);
+      return;
+    }
+    if (event.target && typeof event.target.closest === "function" && event.target.closest(".tour-ground-hotspot")) {
+      return;
+    }
+
+    var coordinates = state.panoramaViewer.mouseEventToCoords(event);
+    var pitch = coordinates && Number(coordinates[0]);
+    var yaw = coordinates && Number(coordinates[1]);
+    if (!isFinite(pitch) || !isFinite(yaw)) {
+      showCoordinateCaptureFeedback("Unable to read this panorama point.", false);
+      return;
+    }
+
+    var coordinateText = "pitch: " + pitch.toFixed(2) + ", yaw: " + yaw.toFixed(2);
+    copyCoordinateText(coordinateText).then(function () {
+      showCoordinateCaptureFeedback("Copied: " + coordinateText, true);
+    }).catch(function () {
+      showCoordinateCaptureFeedback("Copy failed. " + coordinateText, false);
+    });
   }
 
   function playHotspotAudio(stop) {
@@ -1813,6 +1933,11 @@
     elements.viewModeLabel.textContent = inPanorama
       ? (isTagalog ? "Aerial Map" : "Aerial Map")
       : (isTagalog ? "360° Tanawin" : "360° View");
+
+    if (!inPanorama) {
+      state.coordinateCaptureEnabled = false;
+    }
+    updateCoordinateCaptureButton();
   }
 
   function resetCurrentView() {
@@ -2130,6 +2255,39 @@
       elements.resetViewBtn.addEventListener("click", function () {
         resetCurrentView();
       });
+    }
+
+    if (elements.coordinateCaptureBtn) {
+      elements.coordinateCaptureBtn.addEventListener("click", function () {
+        setCoordinateCaptureEnabled(!state.coordinateCaptureEnabled);
+      });
+    }
+
+    if (elements.panoramaRoot) {
+      elements.panoramaRoot.addEventListener("pointerdown", function (event) {
+        if (!state.coordinateCaptureEnabled) {
+          return;
+        }
+        state.coordinateCapturePointerStart = { x: event.clientX, y: event.clientY };
+        state.coordinateCapturePointerMoved = false;
+      }, true);
+      elements.panoramaRoot.addEventListener("pointermove", function (event) {
+        var start = state.coordinateCapturePointerStart;
+        if (!state.coordinateCaptureEnabled || !start) {
+          return;
+        }
+        if (Math.hypot(event.clientX - start.x, event.clientY - start.y) > 7) {
+          state.coordinateCapturePointerMoved = true;
+        }
+      }, true);
+      elements.panoramaRoot.addEventListener("pointerup", function () {
+        state.coordinateCapturePointerStart = null;
+      }, true);
+      elements.panoramaRoot.addEventListener("pointercancel", function () {
+        state.coordinateCapturePointerStart = null;
+        state.coordinateCapturePointerMoved = false;
+      }, true);
+      elements.panoramaRoot.addEventListener("click", capturePanoramaCoordinates);
     }
 
     if (elements.mapInfoClose) {
