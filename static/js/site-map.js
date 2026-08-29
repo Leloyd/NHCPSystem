@@ -8,7 +8,7 @@
         "front-gate",
         "flag-pole",
         "parking",
-        "museum-entrance",
+        "museum-landmark",
         "resource-center-office",
         "middle-ground",
         "left-side-inside",
@@ -37,7 +37,7 @@
       stops: [
         "front-gate",
         "parking",
-        "museum-entrance",
+        "museum-landmark",
         "resource-center-office",
         "middle-ground",
         "church-front",
@@ -56,7 +56,6 @@
   var VIRTUAL_TOUR_SCENE_BY_STOP = {
     "front-gate": "frontGate",
     "flag-pole": "leftFlag",
-    "museum-entrance": "insidemuseum",
     "middle-ground": "middleGInside",
     "left-side-inside": "leftCornerInsideFrontGate",
     "right-side-inside": "rightCornerInsideFrontGate",
@@ -70,7 +69,6 @@
     "front-gate": "Harapang Tarangkahan",
     "flag-pole": "Poste ng Watawat",
     parking: "Paradahan",
-    "museum-entrance": "Museo",
     "museum-landmark": "Museo",
     "resource-center-office": "Sentrong Sanggunian",
     "middle-ground": "Gitnang Bahagi",
@@ -419,6 +417,12 @@
           description: "Pinangangalagaan at ipinapaliwanag ng museo ang kasaysayan ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Tinutulungan ng mga eksibit nito ang mga bisita na maunawaan ang arkitektura, mga tradisyon sa paglilibing, kahalagahang pangkultura, at papel ng pook sa kasaysayan ng Pilipinas.",
         },
       },
+      media: [
+        {
+          src: "/static/SiteMap/Museum/InsideMuseum.png",
+          alt: "Interior of the museum at the Nagcarlan Underground Cemetery",
+        },
+      ],
       learnMore: "/online-gallery",
       learnMoreLabel: "Online Gallery",
     });

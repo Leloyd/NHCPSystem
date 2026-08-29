@@ -83,31 +83,6 @@
       ]
     },
     {
-      "id": "museum-entrance",
-      "title": "Museum",
-      "category": "Access",
-      "x": 950,
-      "y": 1092,
-      "panorama": {
-        "pitch": -41.27,
-        "yaw": -48.91
-      },
-      "description": "The museum introduces visitors to the history, meaning, and cultural value of the Nagcarlan Underground Cemetery. Through exhibits and interpretive materials, it helps explain the site’s role as a burial ground, a religious space, and a witness to local and national history.",
-      "translations": {
-        "tl": {
-          "description": "Ipinakikilala ng museo sa mga bisita ang kasaysayan, kahulugan, at halagang pangkultura ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Sa pamamagitan ng mga eksibit at impormasyong pang-edukasyon, ipinapaliwanag nito ang tungkulin ng lugar bilang libingan, espasyong panrelihiyon, at saksi sa kasaysayang lokal at pambansa."
-        }
-      },
-      "media": [
-        {
-          "src": "/static/SiteMap/Museum/Museum.png",
-          "alt": "Museum at the Nagcarlan Underground Cemetery"
-        }
-      ],
-      "learnMore": "/online-gallery",
-      "learnMoreLabel": "Online Gallery"
-    },
-    {
       "id": "resource-center-office",
       "title": "Resource Center",
       "category": "Visitor Zone",
