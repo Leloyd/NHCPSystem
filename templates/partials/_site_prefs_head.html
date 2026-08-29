@@ -2,7 +2,7 @@
    public page (as late as possible so it can override page-specific styles).
    Applies saved preferences before first paint to avoid a flash, seeding from
    the signed-in account's stored theme/language when localStorage is empty. #}
-<link rel="stylesheet" href="{{ url_for('static', filename='css/site-theme.css') }}" />
+<link rel="stylesheet" href="{{ url_for('static', filename='css/site-theme.css') }}?v=20260829-rich-text-1" />
 <script>
   (function () {
     try {

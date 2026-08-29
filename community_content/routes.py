@@ -8,6 +8,11 @@ from community_highlights_repository import clear_featured_community_highlights,
 from supabase_client import is_supabase_configured
 from media_upload_content import validate_direct_upload_reference
 
+from .rich_text import (
+    COMMUNITY_RICH_TEXT_MAX_LENGTH,
+    community_rich_text_plain_text,
+    sanitize_community_rich_text,
+)
 from .service import (
     COMMUNITY_HIGHLIGHT_MAX_IMAGES,
     COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES,
@@ -92,9 +97,19 @@ def _build_community_highlight_form_payload(
     category = str(form.get("category") or "").strip()
     status = str(form.get("status") or "draft").strip().lower()
     short_description = str(form.get("short_description") or "").strip()
-    long_description = str(form.get("long_description") or "").strip()
+    raw_long_description = str(form.get("long_description") or "").strip()
     short_description_tl = str(form.get("short_description_tl") or "").strip()
-    long_description_tl = str(form.get("long_description_tl") or "").strip()
+    raw_long_description_tl = str(form.get("long_description_tl") or "").strip()
+
+    if len(raw_long_description) > COMMUNITY_RICH_TEXT_MAX_LENGTH:
+        raise ValueError("English full description is too long.")
+    if len(raw_long_description_tl) > COMMUNITY_RICH_TEXT_MAX_LENGTH:
+        raise ValueError("Tagalog full description is too long.")
+
+    long_description = sanitize_community_rich_text(raw_long_description)
+    long_description_tl = sanitize_community_rich_text(raw_long_description_tl)
+    long_description_text = community_rich_text_plain_text(long_description)
+    long_description_tl_text = community_rich_text_plain_text(long_description_tl)
 
     if len(title) < 3:
         raise ValueError("Title must be at least 3 characters.")
@@ -104,11 +119,11 @@ def _build_community_highlight_form_payload(
         raise ValueError("Please choose a valid publishing status.")
     if len(short_description) < 12:
         raise ValueError("Short description must be at least 12 characters.")
-    if len(long_description) < 24:
+    if len(long_description_text) < 24:
         raise ValueError("More information must be at least 24 characters.")
     if len(short_description_tl) < 12:
         raise ValueError("Tagalog short description must be at least 12 characters.")
-    if len(long_description_tl) < 24:
+    if len(long_description_tl_text) < 24:
         raise ValueError("Tagalog full description must be at least 24 characters.")
 
     payload = {

@@ -169,11 +169,15 @@
                   <div class="admin-highlight-view-copy-grid">
                     <div>
                       <span>English</span>
-                      <p>{{ highlight_item.long_description }}</p>
+                      <div class="admin-highlight-rich-copy">{{ highlight_item.long_description|safe }}</div>
                     </div>
                     <div>
                       <span>Tagalog</span>
-                      <p>{{ highlight_item.long_description_tl or 'No Tagalog translation has been added yet.' }}</p>
+                      {% if highlight_item.long_description_tl %}
+                      <div class="admin-highlight-rich-copy">{{ highlight_item.long_description_tl|safe }}</div>
+                      {% else %}
+                      <p>No Tagalog translation has been added yet.</p>
+                      {% endif %}
                     </div>
                   </div>
                 </section>

@@ -9,6 +9,64 @@
 {% set admin_topbar_tool_label = 'Back to highlights' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
+{% macro rich_text_editor(field_id, field_name, value, language_label, placeholder) %}
+<div class="admin-rich-text" data-rich-text-shell>
+  <div class="admin-rich-text__toolbar" role="toolbar" aria-label="{{ language_label }} formatting controls" data-rich-text-toolbar hidden>
+    <label class="admin-rich-text__format-label" for="{{ field_id }}Format">Text style</label>
+    <select id="{{ field_id }}Format" data-rich-text-block-format aria-label="Text style">
+      <option value="p">Paragraph</option>
+      <option value="h3">Heading</option>
+      <option value="h4">Subheading</option>
+      <option value="blockquote">Quote</option>
+    </select>
+    <span class="admin-rich-text__divider" aria-hidden="true"></span>
+    <button type="button" data-rich-text-command="bold" aria-label="Bold" title="Bold"><strong>B</strong></button>
+    <button type="button" data-rich-text-command="italic" aria-label="Italic" title="Italic"><em>I</em></button>
+    <button type="button" data-rich-text-command="underline" aria-label="Underline" title="Underline"><u>U</u></button>
+    <button type="button" data-rich-text-command="strikeThrough" aria-label="Strikethrough" title="Strikethrough"><s>S</s></button>
+    <span class="admin-rich-text__divider" aria-hidden="true"></span>
+    <button type="button" data-rich-text-command="justifyLeft" aria-label="Align left" title="Align left">≡</button>
+    <button type="button" data-rich-text-command="justifyCenter" aria-label="Align center" title="Align center">≣</button>
+    <button type="button" data-rich-text-command="justifyRight" aria-label="Align right" title="Align right">≡</button>
+    <button type="button" data-rich-text-command="justifyFull" aria-label="Justify" title="Justify">☰</button>
+    <span class="admin-rich-text__divider" aria-hidden="true"></span>
+    <button type="button" data-rich-text-command="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">• List</button>
+    <button type="button" data-rich-text-command="insertOrderedList" aria-label="Numbered list" title="Numbered list">1. List</button>
+    <button type="button" data-rich-text-command="createLink" aria-label="Add link" title="Add link">Link</button>
+    <button type="button" data-rich-text-command="unlink" aria-label="Remove link" title="Remove link">Unlink</button>
+    <span class="admin-rich-text__divider" aria-hidden="true"></span>
+    <button type="button" data-rich-text-command="removeFormat" aria-label="Clear inline formatting" title="Clear inline formatting">Clear</button>
+    <button type="button" data-rich-text-command="undo" aria-label="Undo" title="Undo">↶</button>
+    <button type="button" data-rich-text-command="redo" aria-label="Redo" title="Redo">↷</button>
+  </div>
+  <div
+    id="{{ field_id }}Editor"
+    class="admin-rich-text__editor"
+    contenteditable="true"
+    role="textbox"
+    aria-multiline="true"
+    aria-required="true"
+    aria-labelledby="{{ field_id }}Label"
+    aria-describedby="{{ field_id }}Help"
+    data-placeholder="{{ placeholder }}"
+    data-rich-text-editor
+    hidden
+  ></div>
+  <textarea
+    id="{{ field_id }}"
+    name="{{ field_name }}"
+    rows="10"
+    maxlength="{{ max_rich_text_length }}"
+    aria-labelledby="{{ field_id }}Label"
+    aria-describedby="{{ field_id }}Help"
+    data-highlight-editor-copy="long"
+    data-rich-text-value
+  >{{ value }}</textarea>
+  <p id="{{ field_id }}Help" class="admin-rich-text__help">Use the toolbar or keyboard shortcuts. Press Enter to start a new paragraph.</p>
+  <p class="admin-rich-text__feedback" data-rich-text-feedback role="status" aria-live="polite"></p>
+</div>
+{% endmacro %}
+
 {% block admin_content %}
           {% if error_message %}
           <section class="admin-alert admin-alert-error">
@@ -280,35 +338,19 @@
                     </div>
                   </header>
                   <div data-highlight-editor-lang-panel="en">
-                    <label class="admin-highlight-editor-sr-label" for="highlightLongDescription">English full description</label>
-                    <textarea
-                      id="highlightLongDescription"
-                      name="long_description"
-                      rows="10"
-                      minlength="24"
-                      aria-required="true"
-                      placeholder="Write the complete English story or announcement."
-                      data-highlight-editor-copy="long"
-                    >{{ highlight_form.long_description }}</textarea>
+                    <label class="admin-highlight-editor-sr-label" id="highlightLongDescriptionLabel" for="highlightLongDescriptionEditor">English full description</label>
+                    {{ rich_text_editor('highlightLongDescription', 'long_description', highlight_form.long_description, 'English full description', 'Write the complete English story or announcement.') }}
                   </div>
                   <div data-highlight-editor-lang-panel="tl" hidden>
-                    <label class="admin-highlight-editor-sr-label" for="highlightLongDescriptionTl">Tagalog full description</label>
-                    <textarea
-                      id="highlightLongDescriptionTl"
-                      name="long_description_tl"
-                      rows="10"
-                      minlength="24"
-                      aria-required="true"
-                      placeholder="Isulat ang buong kuwento o anunsyo sa Tagalog."
-                      data-highlight-editor-copy="long"
-                    >{{ highlight_form.long_description_tl }}</textarea>
+                    <label class="admin-highlight-editor-sr-label" id="highlightLongDescriptionTlLabel" for="highlightLongDescriptionTlEditor">Tagalog full description</label>
+                    {{ rich_text_editor('highlightLongDescriptionTl', 'long_description_tl', highlight_form.long_description_tl, 'Tagalog full description', 'Isulat ang buong kuwento o anunsyo sa Tagalog.') }}
                   </div>
                 </section>
 
                 <aside class="admin-highlight-editor-note">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 10h2v7h-2Zm0-4h2v2h-2Zm1-4a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"></path></svg>
                   <p>
-                    English and Tagalog descriptions are both required before saving. If an older published card has no Tagalog translation yet, the public page continues showing its English copy until you update it here.
+                    English and Tagalog descriptions are both required before saving. Formatting and paragraph breaks in each Full Description will appear on the public detail page. If an older published card has no Tagalog translation yet, the public page continues showing its English copy until you update it here.
                     {% if highlight_form.is_featured %}<strong>This card currently holds the featured position.</strong>{% endif %}
                   </p>
                 </aside>

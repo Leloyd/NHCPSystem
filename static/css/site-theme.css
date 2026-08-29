@@ -339,6 +339,19 @@ html[data-theme="dark"] .collection-page .ogd-detail-meta,
 html[data-theme="dark"] .collection-page .ogd-breadcrumb {
   color: var(--collection-muted) !important;
 }
+html[data-theme="dark"] .collection-page .community-rich-text h2,
+html[data-theme="dark"] .collection-page .community-rich-text h3,
+html[data-theme="dark"] .collection-page .community-rich-text h4 {
+  color: var(--collection-ink) !important;
+}
+html[data-theme="dark"] .collection-page .community-rich-text blockquote {
+  background: var(--collection-surface-soft) !important;
+  color: var(--collection-muted) !important;
+  border-color: var(--collection-gold) !important;
+}
+html[data-theme="dark"] .collection-page .community-rich-text a {
+  color: var(--collection-gold) !important;
+}
 html[data-theme="dark"] .collection-page .ogd-detail-tag,
 html[data-theme="dark"] .collection-page .ogd-detail-fact__icon {
   background: var(--collection-surface-soft) !important;
@@ -598,8 +611,21 @@ html[data-contrast="on"] .support-policy-link,
 html[data-contrast="on"] .support-contact-label,
 html[data-contrast="on"] .support-visit-eyebrow,
 html[data-contrast="on"] .participation-card-purpose,
+html[data-contrast="on"] .community-rich-text a,
 html[data-contrast="on"] .ap-page .text-amber-700,
 html[data-contrast="on"] .ap-page .text-amber-800 { color: #facc15 !important; }
+
+html[data-contrast="on"] .community-rich-text h2,
+html[data-contrast="on"] .community-rich-text h3,
+html[data-contrast="on"] .community-rich-text h4 {
+  color: #fff !important;
+}
+
+html[data-contrast="on"] .community-rich-text blockquote {
+  color: #fff !important;
+  background: #000 !important;
+  border-color: #facc15 !important;
+}
 
 /* ---- Borders to yellow --------------------------------------------------- */
 html[data-contrast="on"] .dx-card,

@@ -16,6 +16,11 @@ from community_highlights_repository import (
 )
 from supabase_client import SupabaseConfigError, is_supabase_configured
 from media_upload_content import MEDIA_UPLOAD_MAX_BYTES
+from .rich_text import (
+    COMMUNITY_RICH_TEXT_MAX_LENGTH,
+    community_rich_text_plain_text,
+    sanitize_community_rich_text,
+)
 
 PROJECT_ROOT = Path(__file__).resolve().parent.parent
 COMMUNITY_HIGHLIGHTS_UPLOAD_DIR = (PROJECT_ROOT / "static" / "uploads" / "community-highlights").resolve()
@@ -146,7 +151,9 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
     status = raw_status if raw_status in COMMUNITY_HIGHLIGHT_STATUS_OPTIONS else ("active" if prepared.get("is_published") else "draft")
     category = str(prepared.get("category") or COMMUNITY_HIGHLIGHT_CATEGORIES[0]).strip() or COMMUNITY_HIGHLIGHT_CATEGORIES[0]
     category_style = COMMUNITY_HIGHLIGHT_CATEGORY_STYLES.get(category, COMMUNITY_HIGHLIGHT_CATEGORY_STYLES[COMMUNITY_HIGHLIGHT_CATEGORIES[0]])
-    word_count = len(str(prepared.get("long_description") or "").split())
+    prepared["long_description"] = sanitize_community_rich_text(prepared.get("long_description"))
+    prepared["long_description_tl"] = sanitize_community_rich_text(prepared.get("long_description_tl"))
+    word_count = len(community_rich_text_plain_text(prepared["long_description"]).split())
     estimated_read_minutes = max(1, round(word_count / 180))
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_highlight_detail", slug=prepared.get("slug", ""))
@@ -167,7 +174,6 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
     prepared["category_bg"] = category_style["bg"]
     prepared["status"] = status
     prepared["short_description_tl"] = str(prepared.get("short_description_tl") or "").strip()
-    prepared["long_description_tl"] = str(prepared.get("long_description_tl") or "").strip()
     prepared["is_featured"] = bool(prepared.get("is_featured")) and status == "active"
     prepared["estimated_read_minutes"] = estimated_read_minutes
     prepared["estimated_read_label"] = f"{estimated_read_minutes} min read"
@@ -266,9 +272,9 @@ def build_community_highlight_form_state(source: dict[str, Any] | None = None) -
         "status": raw_status if raw_status in COMMUNITY_HIGHLIGHT_STATUS_OPTIONS else "draft",
         "event_date": str(source.get("event_date") or "").strip(),
         "short_description": str(source.get("short_description") or "").strip(),
-        "long_description": str(source.get("long_description") or "").strip(),
+        "long_description": sanitize_community_rich_text(source.get("long_description")),
         "short_description_tl": str(source.get("short_description_tl") or "").strip(),
-        "long_description_tl": str(source.get("long_description_tl") or "").strip(),
+        "long_description_tl": sanitize_community_rich_text(source.get("long_description_tl")),
         "is_published": bool(source.get("is_published")),
         "is_featured": bool(source.get("is_featured")),
         "image_filename": normalized_gallery[0]["filename"] if normalized_gallery else "",
@@ -319,5 +325,6 @@ def render_admin_community_highlight_form(
         max_images=COMMUNITY_HIGHLIGHT_MAX_IMAGES,
         max_upload_bytes=COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES,
         max_upload_mb=COMMUNITY_HIGHLIGHT_UPLOAD_MAX_BYTES / (1024 * 1024),
+        max_rich_text_length=COMMUNITY_RICH_TEXT_MAX_LENGTH,
         error_message=error_message,
     )

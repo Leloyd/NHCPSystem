@@ -2166,6 +2166,19 @@
     var copyFields = Array.prototype.slice.call(
       editor.querySelectorAll("[data-highlight-editor-copy]")
     );
+    var richTextRecords = Array.prototype.slice.call(
+      editor.querySelectorAll("[data-rich-text-shell]")
+    ).map(function (shell) {
+      return {
+        shell: shell,
+        toolbar: shell.querySelector("[data-rich-text-toolbar]"),
+        visualEditor: shell.querySelector("[data-rich-text-editor]"),
+        valueField: shell.querySelector("[data-rich-text-value]"),
+        blockFormat: shell.querySelector("[data-rich-text-block-format]"),
+        feedback: shell.querySelector("[data-rich-text-feedback]"),
+        savedRange: null,
+      };
+    });
     var activeLanguage = "en";
     var selectedImageFiles = [];
     var previewObjectUrls = [];
@@ -2195,6 +2208,218 @@
         path: "M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z",
       },
     };
+
+    function findRichTextRecord(field) {
+      return richTextRecords.find(function (record) {
+        return record.valueField === field;
+      });
+    }
+
+    function getCopyFieldText(field) {
+      var record = findRichTextRecord(field);
+      if (!record || !record.visualEditor) {
+        return String((field && field.value) || "");
+      }
+      return String(record.visualEditor.innerText || record.visualEditor.textContent || "");
+    }
+
+    function setRichTextFeedback(record, message) {
+      if (!record) {
+        return;
+      }
+      var hasMessage = Boolean(message);
+      record.shell.classList.toggle("is-invalid", hasMessage);
+      if (record.visualEditor) {
+        record.visualEditor.setAttribute("aria-invalid", hasMessage ? "true" : "false");
+      }
+      if (record.feedback) {
+        record.feedback.textContent = String(message || "");
+      }
+    }
+
+    function syncRichTextValue(record) {
+      if (!record || !record.visualEditor || !record.valueField) {
+        return;
+      }
+      var text = String(record.visualEditor.textContent || "").replace(/\u00a0/g, " ").trim();
+      record.valueField.value = text ? record.visualEditor.innerHTML.trim() : "";
+    }
+
+    function selectionBelongsTo(record) {
+      var selection = window.getSelection && window.getSelection();
+      if (!selection || !selection.rangeCount || !record.visualEditor) {
+        return false;
+      }
+      var range = selection.getRangeAt(0);
+      return record.visualEditor.contains(range.commonAncestorContainer);
+    }
+
+    function saveRichTextSelection(record) {
+      if (!selectionBelongsTo(record)) {
+        return;
+      }
+      record.savedRange = window.getSelection().getRangeAt(0).cloneRange();
+    }
+
+    function restoreRichTextSelection(record) {
+      if (!record || !record.savedRange || !record.visualEditor) {
+        if (record && record.visualEditor) {
+          record.visualEditor.focus();
+        }
+        return;
+      }
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(record.savedRange);
+    }
+
+    function updateRichTextToolbar(record) {
+      if (!record || !record.toolbar || !selectionBelongsTo(record)) {
+        return;
+      }
+      Array.prototype.slice.call(
+        record.toolbar.querySelectorAll("[data-rich-text-command]")
+      ).forEach(function (button) {
+        var command = button.getAttribute("data-rich-text-command");
+        var stateCommands = [
+          "bold", "italic", "underline", "strikeThrough", "justifyLeft",
+          "justifyCenter", "justifyRight", "justifyFull", "insertUnorderedList",
+          "insertOrderedList",
+        ];
+        if (stateCommands.indexOf(command) === -1) {
+          button.removeAttribute("aria-pressed");
+          return;
+        }
+        var isActive = false;
+        try {
+          isActive = document.queryCommandState(command);
+        } catch (error) {
+          isActive = false;
+        }
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+
+      if (record.blockFormat) {
+        var currentBlock = "p";
+        try {
+          currentBlock = String(document.queryCommandValue("formatBlock") || "p")
+            .replace(/[<>]/g, "")
+            .toLowerCase();
+        } catch (error) {
+          currentBlock = "p";
+        }
+        record.blockFormat.value = ["p", "h3", "h4", "blockquote"].indexOf(currentBlock) >= 0
+          ? currentBlock
+          : "p";
+      }
+    }
+
+    function runRichTextCommand(record, command, commandValue) {
+      if (!record || !record.visualEditor) {
+        return;
+      }
+      restoreRichTextSelection(record);
+      record.visualEditor.focus();
+
+      var value = commandValue || null;
+      if (command === "createLink") {
+        var selection = window.getSelection();
+        if (!selection || selection.isCollapsed) {
+          setRichTextFeedback(record, "Select the words that should become a link first.");
+          return;
+        }
+        var requestedUrl = window.prompt("Enter the link address (for example, https://example.com):", "https://");
+        if (requestedUrl === null) {
+          return;
+        }
+        requestedUrl = String(requestedUrl || "").trim();
+        if (requestedUrl && !/^(?:https?:\/\/|mailto:|\/[^/]|#)/i.test(requestedUrl)) {
+          requestedUrl = "https://" + requestedUrl;
+        }
+        if (!/^(?:https?:\/\/|mailto:|\/[^/]|#)/i.test(requestedUrl)) {
+          setRichTextFeedback(record, "Enter a valid HTTP, HTTPS, email, page, or section link.");
+          return;
+        }
+        value = requestedUrl;
+      }
+
+      setRichTextFeedback(record, "");
+      restoreRichTextSelection(record);
+      try {
+        document.execCommand("styleWithCSS", false, false);
+        document.execCommand(command, false, value);
+      } catch (error) {
+        setRichTextFeedback(record, "That formatting action is not available in this browser.");
+        return;
+      }
+      syncRichTextValue(record);
+      saveRichTextSelection(record);
+      updateRichTextToolbar(record);
+      updateReadTime();
+    }
+
+    function initializeRichTextEditor(record) {
+      if (!record.visualEditor || !record.valueField || !record.toolbar) {
+        return;
+      }
+      record.visualEditor.innerHTML = record.valueField.value;
+      record.toolbar.hidden = false;
+      record.visualEditor.hidden = false;
+      record.valueField.hidden = true;
+      record.shell.classList.add("is-enhanced");
+
+      record.toolbar.addEventListener("mousedown", function (event) {
+        if (event.target.closest("button")) {
+          event.preventDefault();
+        }
+      });
+      record.toolbar.addEventListener("click", function (event) {
+        var button = event.target.closest("[data-rich-text-command]");
+        if (!button) {
+          return;
+        }
+        runRichTextCommand(record, button.getAttribute("data-rich-text-command"));
+      });
+      if (record.blockFormat) {
+        record.blockFormat.addEventListener("mousedown", function () {
+          saveRichTextSelection(record);
+        });
+        record.blockFormat.addEventListener("change", function () {
+          runRichTextCommand(record, "formatBlock", record.blockFormat.value);
+        });
+      }
+      record.visualEditor.addEventListener("input", function () {
+        setRichTextFeedback(record, "");
+        syncRichTextValue(record);
+        saveRichTextSelection(record);
+        updateRichTextToolbar(record);
+        updateReadTime();
+      });
+      record.visualEditor.addEventListener("keyup", function () {
+        saveRichTextSelection(record);
+        updateRichTextToolbar(record);
+      });
+      record.visualEditor.addEventListener("mouseup", function () {
+        saveRichTextSelection(record);
+        updateRichTextToolbar(record);
+      });
+      record.visualEditor.addEventListener("focus", function () {
+        saveRichTextSelection(record);
+        updateRichTextToolbar(record);
+      });
+      record.visualEditor.addEventListener("paste", function (event) {
+        var plainText = event.clipboardData && event.clipboardData.getData("text/plain");
+        if (typeof plainText !== "string") {
+          return;
+        }
+        event.preventDefault();
+        document.execCommand("insertText", false, plainText);
+      });
+      syncRichTextValue(record);
+    }
+
+    richTextRecords.forEach(initializeRichTextEditor);
 
     function setLanguage(language) {
       activeLanguage = language === "tl" ? "tl" : "en";
@@ -2286,7 +2511,7 @@
       var activeLong = editor.querySelector(
         '[data-highlight-editor-lang-panel="' + activeLanguage + '"] [data-highlight-editor-copy="long"]'
       );
-      var words = String((activeLong && activeLong.value) || "")
+      var words = getCopyFieldText(activeLong)
         .trim()
         .split(/\s+/)
         .filter(Boolean).length;
@@ -2295,7 +2520,7 @@
     }
 
     function resizeCopyField(field) {
-      if (!field) {
+      if (!field || field.hasAttribute("data-rich-text-value")) {
         return;
       }
       field.style.height = "auto";
@@ -2734,6 +2959,9 @@
       });
     }
     copyFields.forEach(function (field) {
+      if (field.hasAttribute("data-rich-text-value")) {
+        return;
+      }
       field.addEventListener("input", function () {
         field.setCustomValidity("");
         resizeCopyField(field);
@@ -2745,6 +2973,7 @@
     });
 
     editor.addEventListener("submit", function (event) {
+      richTextRecords.forEach(syncRichTextValue);
       var selectedUploadBytes = getSelectedUploadBytes();
       if (selectedUploadBytes > maxUploadBytes) {
         event.preventDefault();
@@ -2770,7 +2999,7 @@
       ];
       var invalid = requirements.find(function (requirement) {
         var field = editor.elements[requirement.name];
-        return !field || String(field.value || "").trim().length < requirement.min;
+        return !field || getCopyFieldText(field).trim().length < requirement.min;
       });
       if (!invalid) {
         return;
@@ -2780,9 +3009,16 @@
       var invalidField = editor.elements[invalid.name];
       setLanguage(invalid.language);
       if (invalidField) {
-        invalidField.setCustomValidity(invalid.message);
-        invalidField.focus();
-        invalidField.reportValidity();
+        var richTextRecord = findRichTextRecord(invalidField);
+        if (richTextRecord && richTextRecord.visualEditor) {
+          setRichTextFeedback(richTextRecord, invalid.message);
+          richTextRecord.visualEditor.focus();
+          richTextRecord.visualEditor.scrollIntoView({ behavior: "smooth", block: "center" });
+        } else {
+          invalidField.setCustomValidity(invalid.message);
+          invalidField.focus();
+          invalidField.reportValidity();
+        }
       }
     }, { capture: true });
 
