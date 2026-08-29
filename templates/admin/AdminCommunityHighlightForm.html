@@ -12,32 +12,46 @@
 {% macro rich_text_editor(field_id, field_name, value, language_label, placeholder) %}
 <div class="admin-rich-text" data-rich-text-shell>
   <div class="admin-rich-text__toolbar" role="toolbar" aria-label="{{ language_label }} formatting controls" data-rich-text-toolbar hidden>
-    <label class="admin-rich-text__format-label" for="{{ field_id }}Format">Text style</label>
-    <select id="{{ field_id }}Format" data-rich-text-block-format aria-label="Text style">
-      <option value="p">Paragraph</option>
-      <option value="h3">Heading</option>
-      <option value="h4">Subheading</option>
-      <option value="blockquote">Quote</option>
-    </select>
-    <span class="admin-rich-text__divider" aria-hidden="true"></span>
-    <button type="button" data-rich-text-command="bold" aria-label="Bold" title="Bold"><strong>B</strong></button>
-    <button type="button" data-rich-text-command="italic" aria-label="Italic" title="Italic"><em>I</em></button>
-    <button type="button" data-rich-text-command="underline" aria-label="Underline" title="Underline"><u>U</u></button>
-    <button type="button" data-rich-text-command="strikeThrough" aria-label="Strikethrough" title="Strikethrough"><s>S</s></button>
-    <span class="admin-rich-text__divider" aria-hidden="true"></span>
-    <button type="button" data-rich-text-command="justifyLeft" aria-label="Align left" title="Align left">≡</button>
-    <button type="button" data-rich-text-command="justifyCenter" aria-label="Align center" title="Align center">≣</button>
-    <button type="button" data-rich-text-command="justifyRight" aria-label="Align right" title="Align right">≡</button>
-    <button type="button" data-rich-text-command="justifyFull" aria-label="Justify" title="Justify">☰</button>
-    <span class="admin-rich-text__divider" aria-hidden="true"></span>
-    <button type="button" data-rich-text-command="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list">• List</button>
-    <button type="button" data-rich-text-command="insertOrderedList" aria-label="Numbered list" title="Numbered list">1. List</button>
-    <button type="button" data-rich-text-command="createLink" aria-label="Add link" title="Add link">Link</button>
-    <button type="button" data-rich-text-command="unlink" aria-label="Remove link" title="Remove link">Unlink</button>
-    <span class="admin-rich-text__divider" aria-hidden="true"></span>
-    <button type="button" data-rich-text-command="removeFormat" aria-label="Clear inline formatting" title="Clear inline formatting">Clear</button>
-    <button type="button" data-rich-text-command="undo" aria-label="Undo" title="Undo">↶</button>
-    <button type="button" data-rich-text-command="redo" aria-label="Redo" title="Redo">↷</button>
+    <div class="admin-rich-text__toolbar-heading" aria-hidden="true">
+      <svg viewBox="0 0 24 24"><path d="M4 5h16M9 5v14m6-14v14M6 19h6m0 0h6"></path></svg>
+      <span><strong>Formatting</strong><small>Style selected text</small></span>
+    </div>
+    <div class="admin-rich-text__tools">
+      <div class="admin-rich-text__tool-group is-block" role="group" aria-label="Paragraph style">
+        <label class="admin-rich-text__format-label" for="{{ field_id }}Format">Text style</label>
+        <select id="{{ field_id }}Format" data-rich-text-block-format aria-label="Text style">
+          <option value="p">Paragraph</option>
+          <option value="h3">Heading</option>
+          <option value="h4">Subheading</option>
+          <option value="blockquote">Quote</option>
+        </select>
+      </div>
+      <div class="admin-rich-text__tool-group" role="group" aria-label="Text emphasis">
+        <button type="button" data-rich-text-command="bold" aria-label="Bold" title="Bold"><strong>B</strong></button>
+        <button type="button" data-rich-text-command="italic" aria-label="Italic" title="Italic"><em>I</em></button>
+        <button type="button" data-rich-text-command="underline" aria-label="Underline" title="Underline"><u>U</u></button>
+        <button type="button" data-rich-text-command="strikeThrough" aria-label="Strikethrough" title="Strikethrough"><s>S</s></button>
+      </div>
+      <div class="admin-rich-text__tool-group" role="group" aria-label="Text alignment">
+        <button type="button" data-rich-text-command="justifyLeft" aria-label="Align left" title="Align left"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h11M4 14h16M4 18h9"></path></svg></button>
+        <button type="button" data-rich-text-command="justifyCenter" aria-label="Align center" title="Align center"><svg viewBox="0 0 24 24"><path d="M4 6h16M7 10h10M4 14h16M8 18h8"></path></svg></button>
+        <button type="button" data-rich-text-command="justifyRight" aria-label="Align right" title="Align right"><svg viewBox="0 0 24 24"><path d="M4 6h16M9 10h11M4 14h16M11 18h9"></path></svg></button>
+        <button type="button" data-rich-text-command="justifyFull" aria-label="Justify" title="Justify"><svg viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h16M4 18h16"></path></svg></button>
+      </div>
+      <div class="admin-rich-text__tool-group" role="group" aria-label="Lists">
+        <button type="button" data-rich-text-command="insertUnorderedList" aria-label="Bulleted list" title="Bulleted list"><svg viewBox="0 0 24 24"><circle cx="5" cy="7" r="1"></circle><circle cx="5" cy="12" r="1"></circle><circle cx="5" cy="17" r="1"></circle><path d="M9 7h11M9 12h11M9 17h11"></path></svg></button>
+        <button type="button" data-rich-text-command="insertOrderedList" aria-label="Numbered list" title="Numbered list"><svg viewBox="0 0 24 24"><path d="M4 6h1v3M3.5 9H6M3.5 13h2L3.5 16H6M9 7h11M9 12h11M9 17h11"></path></svg></button>
+      </div>
+      <div class="admin-rich-text__tool-group" role="group" aria-label="Links">
+        <button type="button" data-rich-text-command="createLink" aria-label="Add link" title="Add link"><svg viewBox="0 0 24 24"><path d="M10 13a5 5 0 0 0 7.1.1l2-2a5 5 0 0 0-7.1-7.1l-1.1 1.1M14 11a5 5 0 0 0-7.1-.1l-2 2A5 5 0 0 0 12 20l1.1-1.1"></path></svg></button>
+        <button type="button" data-rich-text-command="unlink" aria-label="Remove link" title="Remove link"><svg viewBox="0 0 24 24"><path d="m9 15-2 2a4 4 0 0 1-6-6l2-2m12 0 2-2a4 4 0 0 1 6 6l-2 2M8 12h8M4 4l16 16"></path></svg></button>
+      </div>
+      <div class="admin-rich-text__tool-group" role="group" aria-label="Editing history and cleanup">
+        <button type="button" data-rich-text-command="removeFormat" aria-label="Clear inline formatting" title="Clear formatting"><svg viewBox="0 0 24 24"><path d="m3 17 6-6 5 5-4 4H6Zm8-8 3-3 5 5-3 3M14 20h7"></path></svg></button>
+        <button type="button" data-rich-text-command="undo" aria-label="Undo" title="Undo"><svg viewBox="0 0 24 24"><path d="m9 7-5 5 5 5M5 12h8a6 6 0 0 1 6 6"></path></svg></button>
+        <button type="button" data-rich-text-command="redo" aria-label="Redo" title="Redo"><svg viewBox="0 0 24 24"><path d="m15 7 5 5-5 5m4-5h-8a6 6 0 0 0-6 6"></path></svg></button>
+      </div>
+    </div>
   </div>
   <div
     id="{{ field_id }}Editor"
@@ -90,7 +104,7 @@
             data-confirm-submit
             data-confirm-eyebrow="Community highlight"
             data-confirm-title="{% if submit_label == 'Create Highlight' %}Create this community highlight?{% else %}Save changes to this community highlight?{% endif %}"
-            data-confirm-message="{% if submit_label == 'Create Highlight' %}Create this highlight using the image, publication status, and bilingual descriptions shown in the preview?{% else %}Save the image, publication status, and bilingual description changes shown in the preview?{% endif %}"
+            data-confirm-message="{% if submit_label == 'Create Highlight' %}Create this highlight using the image, publication status, reading time, and bilingual descriptions shown in the preview?{% else %}Save the image, publication status, reading time, and bilingual description changes shown in the preview?{% endif %}"
             data-confirm-label="{{ submit_label }}"
             data-confirm-variant="enable"
           >
@@ -284,7 +298,24 @@
                     <span>Event date</span>
                     <input id="highlightDate" name="event_date" type="date" required value="{{ highlight_form.event_date }}" data-highlight-editor-date />
                   </label>
-                  <span data-highlight-editor-read-time>1 min read</span>
+                  <label class="admin-highlight-editor-meta-control is-read-time" for="highlightReadTime">
+                    <span>Reading time</span>
+                    <div>
+                      <input
+                        id="highlightReadTime"
+                        name="read_time_minutes"
+                        type="number"
+                        inputmode="numeric"
+                        min="1"
+                        max="120"
+                        step="1"
+                        required
+                        value="{{ highlight_form.read_time_minutes }}"
+                        data-highlight-editor-read-time-input
+                      />
+                      <output for="highlightReadTime" data-highlight-editor-read-time aria-live="polite">{{ highlight_form.read_time_minutes }} min read</output>
+                    </div>
+                  </label>
                 </div>
 
                 <div class="admin-highlight-editor-language" role="group" aria-label="Description language">
@@ -350,7 +381,7 @@
                 <aside class="admin-highlight-editor-note">
                   <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M11 10h2v7h-2Zm0-4h2v2h-2Zm1-4a10 10 0 1 0 10 10A10 10 0 0 0 12 2Z"></path></svg>
                   <p>
-                    English and Tagalog descriptions are both required before saving. Formatting and paragraph breaks in each Full Description will appear on the public detail page. If an older published card has no Tagalog translation yet, the public page continues showing its English copy until you update it here.
+                    English and Tagalog descriptions are both required before saving. Formatting and paragraph breaks in each Full Description will appear on the public detail page. Reading time is set manually for this highlight. If an older published card has no Tagalog translation yet, the public page continues showing its English copy until you update it here.
                     {% if highlight_form.is_featured %}<strong>This card currently holds the featured position.</strong>{% endif %}
                   </p>
                 </aside>

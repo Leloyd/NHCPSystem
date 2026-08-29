@@ -100,6 +100,14 @@ def _build_community_highlight_form_payload(
     raw_long_description = str(form.get("long_description") or "").strip()
     short_description_tl = str(form.get("short_description_tl") or "").strip()
     raw_long_description_tl = str(form.get("long_description_tl") or "").strip()
+    raw_read_time_minutes = str(form.get("read_time_minutes") or "").strip()
+
+    try:
+        read_time_minutes = int(raw_read_time_minutes)
+    except (TypeError, ValueError) as exc:
+        raise ValueError("Reading time must be a whole number of minutes.") from exc
+    if not 1 <= read_time_minutes <= 120:
+        raise ValueError("Reading time must be between 1 and 120 minutes.")
 
     if len(raw_long_description) > COMMUNITY_RICH_TEXT_MAX_LENGTH:
         raise ValueError("English full description is too long.")
@@ -140,6 +148,7 @@ def _build_community_highlight_form_payload(
         "long_description": long_description,
         "short_description_tl": short_description_tl,
         "long_description_tl": long_description_tl,
+        "read_time_minutes": read_time_minutes,
         "is_published": status == "active",
         "is_featured": bool(current_item and current_item.get("is_featured") and status == "active"),
     }

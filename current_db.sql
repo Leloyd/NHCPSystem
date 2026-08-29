@@ -180,6 +180,7 @@ CREATE TABLE public.community_highlights (
   long_description text NOT NULL,
   short_description_tl text NOT NULL DEFAULT ''::text,
   long_description_tl text NOT NULL DEFAULT ''::text,
+  read_time_minutes integer CHECK (read_time_minutes BETWEEN 1 AND 120),
   image_filename text,
   image_filenames jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(image_filenames) = 'array'::text),
   status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),

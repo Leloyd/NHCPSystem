@@ -6,6 +6,7 @@ create table if not exists public.community_highlights (
   event_date date not null,
   short_description text not null,
   long_description text not null,
+  read_time_minutes integer,
   image_filename text,
   status text not null default 'active' check (status in ('active', 'draft', 'archived')),
   is_featured boolean not null default false,
@@ -31,7 +32,14 @@ for each row execute function public.set_current_timestamp_updated_at();
 
 alter table if exists public.community_highlights
   add column if not exists status text default 'active',
-  add column if not exists is_featured boolean default false;
+  add column if not exists is_featured boolean default false,
+  add column if not exists read_time_minutes integer;
+
+do $$ begin
+  alter table public.community_highlights
+    add constraint community_highlights_read_time_minutes_check
+    check (read_time_minutes between 1 and 120);
+exception when duplicate_object then null; end $$;
 
 alter table if exists public.community_highlights
   drop constraint if exists community_highlights_category_check,

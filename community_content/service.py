@@ -154,7 +154,12 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
     prepared["long_description"] = sanitize_community_rich_text(prepared.get("long_description"))
     prepared["long_description_tl"] = sanitize_community_rich_text(prepared.get("long_description_tl"))
     word_count = len(community_rich_text_plain_text(prepared["long_description"]).split())
-    estimated_read_minutes = max(1, round(word_count / 180))
+    automatic_read_minutes = max(1, round(word_count / 180))
+    try:
+        stored_read_minutes = int(prepared.get("read_time_minutes"))
+    except (TypeError, ValueError):
+        stored_read_minutes = automatic_read_minutes
+    estimated_read_minutes = stored_read_minutes if 1 <= stored_read_minutes <= 120 else automatic_read_minutes
     prepared["display_date"] = format_community_date(prepared.get("event_date"))
     prepared["detail_url"] = url_for("community_highlight_detail", slug=prepared.get("slug", ""))
     gallery_images = build_community_highlight_gallery(
@@ -176,6 +181,7 @@ def prepare_community_highlight_item(item: dict[str, Any] | None) -> dict[str, A
     prepared["short_description_tl"] = str(prepared.get("short_description_tl") or "").strip()
     prepared["is_featured"] = bool(prepared.get("is_featured")) and status == "active"
     prepared["estimated_read_minutes"] = estimated_read_minutes
+    prepared["read_time_minutes"] = estimated_read_minutes
     prepared["estimated_read_label"] = f"{estimated_read_minutes} min read"
     return prepared
 
@@ -266,15 +272,27 @@ def build_community_highlight_form_state(source: dict[str, Any] | None = None) -
         and str(image.get("filename") or "").strip()
         and str(image.get("url") or "").strip()
     ]
+    long_description = sanitize_community_rich_text(source.get("long_description"))
+    automatic_read_minutes = max(
+        1,
+        round(len(community_rich_text_plain_text(long_description).split()) / 180),
+    )
+    try:
+        read_time_minutes = int(source.get("read_time_minutes"))
+    except (TypeError, ValueError):
+        read_time_minutes = automatic_read_minutes
+    if not 1 <= read_time_minutes <= 120:
+        read_time_minutes = automatic_read_minutes
     return {
         "title": str(source.get("title") or "").strip(),
         "category": raw_category if raw_category in COMMUNITY_HIGHLIGHT_CATEGORIES else COMMUNITY_HIGHLIGHT_CATEGORIES[0],
         "status": raw_status if raw_status in COMMUNITY_HIGHLIGHT_STATUS_OPTIONS else "draft",
         "event_date": str(source.get("event_date") or "").strip(),
         "short_description": str(source.get("short_description") or "").strip(),
-        "long_description": sanitize_community_rich_text(source.get("long_description")),
+        "long_description": long_description,
         "short_description_tl": str(source.get("short_description_tl") or "").strip(),
         "long_description_tl": sanitize_community_rich_text(source.get("long_description_tl")),
+        "read_time_minutes": read_time_minutes,
         "is_published": bool(source.get("is_published")),
         "is_featured": bool(source.get("is_featured")),
         "image_filename": normalized_gallery[0]["filename"] if normalized_gallery else "",

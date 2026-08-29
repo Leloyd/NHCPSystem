@@ -2163,6 +2163,7 @@
     var saveNoticeTitle = saveNotice && saveNotice.querySelector("[data-highlight-editor-save-title]");
     var saveNoticeDetail = saveNotice && saveNotice.querySelector("[data-highlight-editor-save-detail]");
     var readTime = editor.querySelector("[data-highlight-editor-read-time]");
+    var readTimeInput = editor.querySelector("[data-highlight-editor-read-time-input]");
     var copyFields = Array.prototype.slice.call(
       editor.querySelectorAll("[data-highlight-editor-copy]")
     );
@@ -2505,17 +2506,10 @@
     }
 
     function updateReadTime() {
-      if (!readTime) {
+      if (!readTime || !readTimeInput) {
         return;
       }
-      var activeLong = editor.querySelector(
-        '[data-highlight-editor-lang-panel="' + activeLanguage + '"] [data-highlight-editor-copy="long"]'
-      );
-      var words = getCopyFieldText(activeLong)
-        .trim()
-        .split(/\s+/)
-        .filter(Boolean).length;
-      var minutes = Math.max(1, Math.round(words / 180));
+      var minutes = Math.max(1, Math.min(120, parseInt(readTimeInput.value || "1", 10) || 1));
       readTime.textContent = minutes + " min read";
     }
 
@@ -2930,6 +2924,10 @@
     if (dateInput) {
       dateInput.addEventListener("change", updateDate);
       dateInput.addEventListener("input", updateDate);
+    }
+    if (readTimeInput) {
+      readTimeInput.addEventListener("input", updateReadTime);
+      readTimeInput.addEventListener("change", updateReadTime);
     }
     if (imageInput) {
       imageInput.addEventListener("change", addSelectedImages);

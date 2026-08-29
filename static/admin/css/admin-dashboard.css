@@ -4590,6 +4590,30 @@ body.admin-confirm-open {
   width: 8.3rem;
 }
 
+.admin-highlight-editor-meta .is-read-time {
+  align-items: center;
+}
+
+.admin-highlight-editor-meta .is-read-time > div {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.22rem;
+}
+
+.admin-highlight-editor-meta .is-read-time input {
+  width: 3.25rem;
+  padding: 0.25rem 0.1rem;
+  font-size: 0.78rem;
+  text-align: center;
+}
+
+.admin-highlight-editor-meta .is-read-time output {
+  color: var(--dashboard-green-800);
+  font-size: 0.65rem;
+  font-weight: 750;
+  white-space: nowrap;
+}
+
 .admin-highlight-editor-language {
   display: flex;
   align-items: center;
@@ -4693,13 +4717,13 @@ body.admin-confirm-open {
 }
 
 .admin-rich-text__toolbar {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 0.28rem;
-  padding: 0.55rem;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.7rem;
+  padding: 0.65rem;
   border-bottom: 1px solid #e4e9e6;
-  background: #f5f7f5;
+  background: linear-gradient(180deg, #f8faf8, #f2f5f3);
 }
 
 .admin-rich-text__toolbar[hidden] {
@@ -4716,12 +4740,70 @@ body.admin-confirm-open {
   white-space: nowrap;
 }
 
+.admin-rich-text__toolbar-heading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 7.5rem;
+  padding: 0.32rem 0.42rem 0.32rem 0.22rem;
+}
+
+.admin-rich-text__toolbar-heading > svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  flex: 0 0 auto;
+  fill: none;
+  stroke: var(--dashboard-gold-600);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.admin-rich-text__toolbar-heading span,
+.admin-rich-text__toolbar-heading strong,
+.admin-rich-text__toolbar-heading small {
+  display: block;
+}
+
+.admin-rich-text__toolbar-heading strong {
+  color: var(--dashboard-green-900);
+  font-size: 0.68rem;
+  letter-spacing: 0.015em;
+}
+
+.admin-rich-text__toolbar-heading small {
+  margin-top: 0.08rem;
+  color: #87908a;
+  font-size: 0.55rem;
+  white-space: nowrap;
+}
+
+.admin-rich-text__tools {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.38rem;
+}
+
+.admin-rich-text__tool-group {
+  display: inline-flex;
+  min-width: 0;
+  align-items: center;
+  gap: 0.12rem;
+  padding: 0.16rem;
+  border: 1px solid #dfe5e1;
+  border-radius: 0.62rem;
+  background: rgba(255, 255, 255, 0.92);
+  box-shadow: 0 2px 7px rgba(13, 43, 31, 0.035);
+}
+
 .admin-rich-text__toolbar select,
 .admin-rich-text__toolbar button {
-  min-height: 2.15rem;
-  border: 1px solid #d9dfdb;
-  border-radius: 0.55rem;
-  background: #fff;
+  height: 2rem;
+  border: 1px solid transparent;
+  border-radius: 0.45rem;
+  background: transparent;
   color: #405248;
   font: inherit;
   font-size: 0.68rem;
@@ -4729,47 +4811,55 @@ body.admin-confirm-open {
 }
 
 .admin-rich-text__toolbar select {
-  min-width: 7.5rem;
-  padding: 0.35rem 1.7rem 0.35rem 0.58rem;
+  min-width: 7.2rem;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23606f66' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m7 10 5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 0.42rem center;
+  background-size: 0.78rem;
+  padding: 0.3rem 1.55rem 0.3rem 0.5rem;
+  font-weight: 700;
 }
 
 .admin-rich-text__toolbar button {
-  min-width: 2.15rem;
-  padding: 0.35rem 0.5rem;
+  display: inline-grid;
+  width: 2rem;
+  min-width: 2rem;
+  place-items: center;
+  padding: 0;
   font-weight: 750;
 }
 
-.admin-rich-text__toolbar button[data-rich-text-command="justifyLeft"] {
-  text-align: left;
+.admin-rich-text__toolbar button > strong,
+.admin-rich-text__toolbar button > em,
+.admin-rich-text__toolbar button > u,
+.admin-rich-text__toolbar button > s {
+  font-size: 0.86rem;
 }
 
-.admin-rich-text__toolbar button[data-rich-text-command="justifyCenter"] {
-  text-align: center;
-}
-
-.admin-rich-text__toolbar button[data-rich-text-command="justifyRight"] {
-  text-align: right;
+.admin-rich-text__toolbar button svg {
+  width: 1rem;
+  height: 1rem;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.85;
+  stroke-linecap: round;
+  stroke-linejoin: round;
 }
 
 .admin-rich-text__toolbar button:hover,
 .admin-rich-text__toolbar button:focus-visible,
 .admin-rich-text__toolbar select:focus-visible,
 .admin-rich-text__toolbar button.is-active {
-  border-color: #b8963e;
+  border-color: rgba(184, 150, 62, 0.55);
   outline: none;
-  background: #fff7df;
+  background: #fff8e7;
   color: #654817;
 }
 
 .admin-rich-text__toolbar button.is-active {
   box-shadow: inset 0 0 0 1px rgba(160, 120, 48, 0.16);
-}
-
-.admin-rich-text__divider {
-  width: 1px;
-  height: 1.45rem;
-  margin: 0 0.08rem;
-  background: #d6ddd8;
 }
 
 .admin-rich-text__editor {
@@ -5107,9 +5197,28 @@ body.admin-confirm-open {
 }
 
 @media (max-width: 720px) {
+  .admin-rich-text__toolbar {
+    grid-template-columns: 1fr;
+    gap: 0.45rem;
+  }
+
+  .admin-rich-text__toolbar-heading {
+    min-width: 0;
+    padding: 0.08rem 0.18rem;
+  }
+
+  .admin-rich-text__tools {
+    gap: 0.3rem;
+  }
+
   .admin-rich-text__toolbar button,
   .admin-rich-text__toolbar select {
     min-height: 2.65rem;
+  }
+
+  .admin-rich-text__toolbar button {
+    width: 2.65rem;
+    min-width: 2.65rem;
   }
 
   .admin-rich-text__editor {
