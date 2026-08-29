@@ -37,6 +37,11 @@
   var mapsPanel = root.querySelector('[data-sm-panel="maps"]');
   var settingsPanel = root.querySelector('[data-sm-panel="settings"]');
   var uploadStatus = root.querySelector("[data-sm-upload-status]");
+  var publishForm = root.querySelector("[data-sm-publish]");
+  var publishButton = root.querySelector("[data-sm-publish-button]");
+  var publishHint = root.querySelector("[data-sm-publish-hint]");
+  var publishCheck = root.querySelector("[data-sm-publish-check]");
+  var publishIssues = root.querySelector("[data-sm-publish-issues]");
 
   if (window.supabase && apiConfig.supabaseUrl && apiConfig.supabaseKey) {
     supabaseClient = window.supabase.createClient(apiConfig.supabaseUrl, apiConfig.supabaseKey, {
@@ -64,6 +69,20 @@
     dirty = Boolean(value);
     var node = root.querySelector("[data-sm-unsaved]");
     if (node) node.hidden = !dirty;
+    if (publishButton) publishButton.disabled = dirty || publishButton.getAttribute("aria-busy") === "true";
+    if (publishHint) publishHint.hidden = !dirty;
+    if (dirty && publishCheck) publishCheck.hidden = true;
+  }
+  function renderPublishIssues(issues) {
+    if (!publishCheck || !publishIssues) return;
+    publishIssues.innerHTML = "";
+    (Array.isArray(issues) ? issues : []).forEach(function (issue) {
+      var item = document.createElement("li");
+      item.textContent = String(issue || "");
+      publishIssues.appendChild(item);
+    });
+    publishCheck.hidden = publishIssues.children.length === 0;
+    if (!publishCheck.hidden) publishCheck.focus();
   }
   function showStatus(message, isError) {
     if (!uploadStatus) return;
@@ -79,7 +98,11 @@
     next.headers = Object.assign({ "Content-Type": "application/json", "X-CSRF-Token": apiConfig.csrfToken, "X-Requested-With": "XMLHttpRequest" }, next.headers || {});
     var response = await fetch(endpoint(path), next);
     var payload = await response.json().catch(function () { return {}; });
-    if (!response.ok || !payload.ok) throw new Error(payload.error || "The request could not be completed.");
+    if (!response.ok || !payload.ok) {
+      var error = new Error(payload.error || "The request could not be completed.");
+      error.issues = payload.issues;
+      throw error;
+    }
     return payload;
   }
 
@@ -358,21 +381,43 @@
     catch (error) { showStatus(error.message || "The draft could not be saved.", true); }
     finally { saveButton.disabled = false; }
   });
-  var publishForm = root.querySelector("[data-sm-publish]"); if (publishForm) publishForm.addEventListener("submit", async function (event) {
+  if (publishForm) publishForm.addEventListener("submit", async function (event) {
     event.preventDefault();
-    var publishButton = event.submitter || publishForm.querySelector('button[type="submit"]');
+    if (dirty) {
+      setDirty(true);
+      showStatus("Save your changes before publishing.", true);
+      return;
+    }
+    renderPublishIssues([]);
     if (publishButton) { publishButton.disabled = true; publishButton.setAttribute("aria-busy", "true"); }
-    showStatus("Publishing the saved Site Map revision…", false);
+    showStatus("Checking the saved Site Map revision…", false);
     try {
+      var preflight = await request("/publish/preflight", { method: "POST", body: "{}" });
+      if (!preflight.valid) {
+        renderPublishIssues(preflight.issues);
+        showStatus("Resolve the listed items before publishing.", true);
+        return;
+      }
+      var approved = await confirmAction({
+        eyebrow: "Site Map",
+        title: "Publish this Site Map revision?",
+        message: "The saved draft passed its publish check. Visitors will receive this complete revision.",
+        label: "Publish",
+        variant: "enable",
+      });
+      if (!approved) return;
+      showStatus("Publishing the saved Site Map revision…", false);
       var response = await request("/publish", { method: "POST", body: "{}" });
       apiConfig.revisionId = response.revisionId;
       var summary = root.querySelector("[data-sm-revision-summary]");
       if (summary) summary.textContent = "Working revision " + response.revisionId + "; revision " + response.publishedRevisionId + " is now public.";
       showStatus("Site Map published. You can continue editing this page.", false);
     } catch (error) {
+      if (error.issues) renderPublishIssues(error.issues);
       showStatus(error.message || "The Site Map could not be published.", true);
     } finally {
-      if (publishButton) { publishButton.disabled = false; publishButton.removeAttribute("aria-busy"); }
+      if (publishButton) publishButton.removeAttribute("aria-busy");
+      setDirty(dirty);
     }
   });
   document.addEventListener("click", function (event) {
@@ -388,4 +433,5 @@
   window.addEventListener("unload", function () { temporaryUrls.forEach(function (url) { URL.revokeObjectURL(url); }); });
 
   renderAll();
+  setDirty(false);
 })();

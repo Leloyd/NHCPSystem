@@ -38,11 +38,18 @@
         <span class="vt-unsaved-indicator" data-vt-unsaved role="status" hidden>Unsaved changes</span>
         {% if tour.status == 'active' %}<a href="{{ url_for('virtual_tour', tour=tour.slug) }}" target="_blank" rel="noopener">Open public version</a>{% endif %}
         <button type="button" data-vt-save-meta>Save details</button>
-        <form method="post" action="{{ url_for('admin_virtual_tour_publish', tour_id=tour.id) }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="Publish this tour revision?" data-confirm-message="Visitors will receive this complete revision. Your next edits will continue in a separate draft." data-confirm-label="Publish" data-confirm-variant="enable">
-          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit" class="is-publish">Publish</button>
+        <span class="vt-publish-hint" data-vt-publish-hint role="status" hidden>Save your changes before publishing.</span>
+        <form method="post" action="{{ url_for('admin_virtual_tour_publish', tour_id=tour.id) }}" data-vt-publish>
+          <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit" class="is-publish" data-vt-publish-button>Publish</button>
         </form>
       </div>
     </header>
+
+    <section class="vt-publish-check" data-vt-publish-check role="alert" tabindex="-1" hidden>
+      <strong>Publish check found incomplete items</strong>
+      <p>Complete the following saved draft items, save again if needed, and then publish.</p>
+      <ul data-vt-publish-issues></ul>
+    </section>
 
     <div class="vt-editor__workspace">
       <aside class="vt-scenes-panel" aria-label="Tour scenes and map visibility">

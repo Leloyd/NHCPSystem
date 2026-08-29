@@ -36,8 +36,9 @@
       </form>
       {% else %}
       <button class="is-primary" type="button" data-sm-save>Save draft</button>
-      <form method="post" action="{{ url_for('admin_site_map_publish') }}" data-sm-publish data-confirm-submit data-confirm-eyebrow="Site Map" data-confirm-title="Publish this Site Map revision?" data-confirm-message="Visitors will receive the complete saved revision. Unsaved editor changes are not included, but they will remain open in this editor." data-confirm-label="Publish" data-confirm-variant="enable">
-        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button class="is-publish" type="submit">Publish</button>
+      <span class="sm-publish-hint" data-sm-publish-hint role="status" hidden>Save your changes before publishing.</span>
+      <form method="post" action="{{ url_for('admin_site_map_publish') }}" data-sm-publish>
+        <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button class="is-publish" type="submit" data-sm-publish-button>Publish</button>
       </form>
       <form method="post" action="{{ url_for('admin_site_map_revert') }}" data-confirm-submit data-confirm-eyebrow="Site Map" data-confirm-title="Revert to the packaged Original?" data-confirm-message="All database revisions and uploaded Site Map assets will be permanently removed. The protected file-based Original will immediately become public." data-confirm-label="Revert Original" data-confirm-variant="disable">
         <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit">Revert</button>
@@ -45,6 +46,12 @@
       {% endif %}
     </div>
   </header>
+
+  <section class="sm-publish-check" data-sm-publish-check role="alert" tabindex="-1" hidden>
+    <strong>Publish check found incomplete items</strong>
+    <p>Complete the following saved draft items, save again if needed, and then publish.</p>
+    <ul data-sm-publish-issues></ul>
+  </section>
 
   <div class="sm-editor__workspace">
     <aside class="sm-library">

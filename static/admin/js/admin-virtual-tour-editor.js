@@ -64,6 +64,11 @@
   var sceneLibraryMode = root.querySelector("[data-vt-scene-library-mode]");
   var mapVisibilityMode = root.querySelector("[data-vt-map-visibility-mode]");
   var unsavedIndicator = root.querySelector("[data-vt-unsaved]");
+  var publishForm = root.querySelector("[data-vt-publish]");
+  var publishButton = root.querySelector("[data-vt-publish-button]");
+  var publishHint = root.querySelector("[data-vt-publish-hint]");
+  var publishCheck = root.querySelector("[data-vt-publish-check]");
+  var publishIssues = root.querySelector("[data-vt-publish-issues]");
   var dirtyState = { details: false, hotspot: false, scene: false, map: false };
   var formBaselines = { details: "", hotspot: null, scene: null };
   var beforeUnloadAttached = false;
@@ -103,6 +108,9 @@
   function updateDirtyUi() {
     var dirty = hasUnsavedChanges();
     if (unsavedIndicator) unsavedIndicator.hidden = !dirty;
+    if (publishButton) publishButton.disabled = dirty || publishButton.getAttribute("aria-busy") === "true";
+    if (publishHint) publishHint.hidden = !dirty;
+    if (dirty && publishCheck) publishCheck.hidden = true;
     if (dirty && !beforeUnloadAttached) {
       window.addEventListener("beforeunload", handleBeforeUnload);
       beforeUnloadAttached = true;
@@ -115,6 +123,18 @@
   function setDirty(section, value) {
     dirtyState[section] = Boolean(value);
     updateDirtyUi();
+  }
+
+  function renderPublishIssues(issues) {
+    if (!publishCheck || !publishIssues) return;
+    publishIssues.innerHTML = "";
+    (Array.isArray(issues) ? issues : []).forEach(function (issue) {
+      var item = document.createElement("li");
+      item.textContent = String(issue || "");
+      publishIssues.appendChild(item);
+    });
+    publishCheck.hidden = publishIssues.children.length === 0;
+    if (!publishCheck.hidden) publishCheck.focus();
   }
 
   function syncFormDirty(section, form) {
@@ -220,7 +240,11 @@
     }, next.headers || {});
     var response = await fetch(path, next);
     var payload = await response.json().catch(function () { return {}; });
-    if (!response.ok || !payload.ok) throw new Error(payload.error || "The request could not be completed.");
+    if (!response.ok || !payload.ok) {
+      var error = new Error(payload.error || "The request could not be completed.");
+      error.issues = payload.issues;
+      throw error;
+    }
     return payload;
   }
 
@@ -1164,6 +1188,48 @@
   formBaselines.details = formSnapshot(detailsForm);
   mapBaseline = mapSnapshot();
 
+  if (publishForm) publishForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (hasUnsavedChanges()) {
+      updateDirtyUi();
+      message(placementStatus, "Save your changes before publishing.", "error");
+      return;
+    }
+    var submitted = false;
+    renderPublishIssues([]);
+    if (publishButton) {
+      publishButton.disabled = true;
+      publishButton.setAttribute("aria-busy", "true");
+    }
+    message(placementStatus, "Checking the saved tour revision…");
+    try {
+      var preflight = await api(endpoint("/publish/preflight"), { method: "POST", body: "{}" });
+      if (!preflight.valid) {
+        renderPublishIssues(preflight.issues);
+        message(placementStatus, "Resolve the listed items before publishing.", "error");
+        return;
+      }
+      var approved = await confirmAction({
+        eyebrow: "Virtual Tours",
+        title: "Publish this tour revision?",
+        message: "The saved draft passed its publish check. Visitors will receive this complete revision, and editing will continue in a new draft.",
+        label: "Publish",
+        variant: "enable",
+      });
+      if (!approved) return;
+      message(placementStatus, "Publishing the saved tour revision…");
+      permitPageExit();
+      submitted = true;
+      publishForm.submit();
+    } catch (error) {
+      if (error.issues) renderPublishIssues(error.issues);
+      message(placementStatus, error.message || "The tour could not be published.", "error");
+    } finally {
+      if (!submitted && publishButton) publishButton.removeAttribute("aria-busy");
+      if (!submitted) updateDirtyUi();
+    }
+  });
+
   document.addEventListener("click", function (event) {
     if (allowPageExit || !hasUnsavedChanges() || event.defaultPrevented) return;
     if (event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
@@ -1182,7 +1248,7 @@
     });
   }, true);
 
-  renderSceneSelection(); renderHotspots(); renderViewer(); fillTargetScenes(); renderMapEditor();
+  renderSceneSelection(); renderHotspots(); renderViewer(); fillTargetScenes(); renderMapEditor(); updateDirtyUi();
   if (window.location.hash === "#vtMapPanel") {
     var mapTab = root.querySelector('[data-vt-tab="map"]');
     if (mapTab) activateInspectorTab(mapTab);

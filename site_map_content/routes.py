@@ -22,6 +22,7 @@ from .service import (
     list_asset_paths,
     packaged_original_config,
     prepare_upload,
+    site_map_publish_issues,
     upgrade_coordinate_system,
     validate_config,
 )
@@ -135,7 +136,18 @@ def register_site_map_content_routes(
         elif not is_admin_csrf_valid(request.form.get("csrf_token")):
             return redirect(url_for("admin_site_map"))
         try:
-            site_map, _ = editable_map()
+            site_map, revision_id = editable_map()
+            revision = get_revision(revision_id)
+            config = revision.get("config") if revision and isinstance(revision.get("config"), dict) else {}
+            issues = site_map_publish_issues(config)
+            if issues:
+                if is_json_request:
+                    return jsonify({
+                        "ok": False,
+                        "error": "Resolve the publish check issues before publishing.",
+                        "issues": issues,
+                    }), 422
+                raise ValueError("Resolve these publish issues first: " + "; ".join(issues[:5]))
             published = publish_site_map(int(site_map["id"]), created_by=current_admin())
             if is_json_request:
                 return jsonify({
@@ -149,6 +161,21 @@ def register_site_map_content_routes(
             if is_json_request:
                 return _json_error(str(exc))
             return redirect(url_for("admin_site_map", error=str(exc)))
+
+    @app.post(f"{admin_route_prefix}/site-map/publish/preflight")
+    @admin_required
+    def admin_site_map_publish_preflight():
+        if not valid_json_csrf():
+            return _json_error("Your admin session token expired. Refresh and try again.", 403)
+        try:
+            _, revision_id = editable_map()
+            revision = get_revision(revision_id)
+            config = revision.get("config") if revision and isinstance(revision.get("config"), dict) else {}
+            issues = site_map_publish_issues(config)
+            return jsonify({"ok": True, "valid": not issues, "issues": issues})
+        except Exception as exc:
+            app.logger.warning("Could not run the Site Map publish check: %s", exc)
+            return _json_error(str(exc))
 
     @app.post(f"{admin_route_prefix}/site-map/revert")
     @admin_required

@@ -5,7 +5,12 @@ from unittest.mock import patch
 from PIL import Image
 
 from virtual_tour_content import service
-from virtual_tour_content.routes import _captured_on, _normalize_yaw, _validated_map_config
+from virtual_tour_content.routes import (
+    _captured_on,
+    _normalize_yaw,
+    _validated_map_config,
+    _virtual_tour_publish_issues,
+)
 
 
 class _StorageBucket:
@@ -126,6 +131,38 @@ class VirtualTourServiceTests(unittest.TestCase):
         self.assertEqual(result["markers"][0]["sceneId"], "frontgate")
         self.assertEqual(result["markers"][0]["x"], 0.30742)
         self.assertEqual(result["hiddenSceneIds"], ["inside"])
+
+    def test_publish_check_lists_all_incomplete_tour_items(self):
+        scenes = [{
+            "id": 10, "scene_key": "start", "name_en": "Start", "captured_on": "",
+            "panorama_path": "", "panorama_width": 1600, "panorama_height": 1000,
+            "validation_status": "pending", "initial_pitch": 100, "initial_yaw": 0,
+            "initial_hfov": 100, "is_start_scene": False,
+        }]
+        hotspots = [{
+            "scene_id": 10, "hotspot_type": "item", "name_en": "Artifact",
+            "pitch": None, "yaw": None, "image_path": "", "subtitle_en": "",
+            "subtitle_tl": "", "is_enabled": True,
+        }]
+        issues = _virtual_tour_publish_issues(scenes, hotspots, {
+            "enabled": True, "imagePath": "", "markers": [],
+        })
+        combined = " ".join(issues)
+        self.assertIn("starting scene", combined)
+        self.assertIn("date taken", combined)
+        self.assertIn("2:1 ratio", combined)
+        self.assertIn("artifact image", combined)
+        self.assertIn("Coordinates", combined)
+        self.assertIn("tour map", combined.lower())
+
+    def test_publish_check_accepts_complete_saved_tour(self):
+        scenes = [{
+            "id": 10, "scene_key": "start", "name_en": "Start", "captured_on": "2026-04-16",
+            "panorama_path": "/360VirtualTour/FrontGate.jpg", "panorama_width": 2048,
+            "panorama_height": 1024, "validation_status": "valid", "initial_pitch": 0,
+            "initial_yaw": 0, "initial_hfov": 100, "is_start_scene": True,
+        }]
+        self.assertEqual(_virtual_tour_publish_issues(scenes, [], {"enabled": False}), [])
 
 
 if __name__ == "__main__":

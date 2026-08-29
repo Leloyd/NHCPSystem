@@ -171,6 +171,112 @@ def _validated_map_config(data: dict[str, Any], scenes: list[dict[str, Any]], *,
     }
 
 
+def _virtual_tour_publish_issues(
+    scenes: list[dict[str, Any]],
+    hotspots: list[dict[str, Any]],
+    map_config: dict[str, Any] | None,
+) -> list[str]:
+    """Collect all problems that would make a saved tour revision incomplete."""
+    issues: list[str] = []
+
+    def text(value: Any) -> str:
+        return str(value or "").strip()
+
+    def valid_number(value: Any, minimum: float, maximum: float) -> bool:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return False
+        return math.isfinite(number) and minimum <= number <= maximum
+
+    def integer(value: Any) -> int:
+        try:
+            return int(value or 0)
+        except (TypeError, ValueError):
+            return 0
+
+    if not scenes:
+        return ["Scenes: upload at least one 360° panorama."]
+
+    scene_ids = {integer(scene.get("id")) for scene in scenes}
+    scene_keys = {text(scene.get("scene_key")) for scene in scenes if text(scene.get("scene_key"))}
+    starting_scenes = sum(1 for scene in scenes if scene.get("is_start_scene"))
+    if starting_scenes != 1:
+        issues.append("Scenes: choose exactly one starting scene.")
+
+    for index, scene in enumerate(scenes, start=1):
+        name = text(scene.get("name_en")) or text(scene.get("scene_key")) or f"Scene {index}"
+        if len(text(scene.get("name_en"))) < 2:
+            issues.append(f"Scene “{name}”: add an English name.")
+        if not text(scene.get("captured_on")):
+            issues.append(f"Scene “{name}”: add the date taken.")
+        if not text(scene.get("panorama_path")):
+            issues.append(f"Media — scene “{name}”: upload a panorama.")
+        if scene.get("validation_status") != "valid":
+            issues.append(f"Media — scene “{name}”: the panorama has not passed validation.")
+        width, height = scene.get("panorama_width"), scene.get("panorama_height")
+        if not valid_number(width, 1024, 12000) or not valid_number(height, 512, 6000):
+            issues.append(f"Media — scene “{name}”: the panorama must be at least 1024 × 512 pixels.")
+        elif abs((float(width) / float(height)) - 2.0) > 0.02:
+            issues.append(f"Media — scene “{name}”: the panorama must use a 2:1 ratio.")
+        if not valid_number(scene.get("initial_pitch"), -90, 90):
+            issues.append(f"Coordinates — scene “{name}”: set a valid initial pitch.")
+        if not valid_number(scene.get("initial_yaw"), -180, 180):
+            issues.append(f"Coordinates — scene “{name}”: set a valid initial yaw.")
+        if not valid_number(scene.get("initial_hfov"), 30, 150):
+            issues.append(f"Coordinates — scene “{name}”: set a valid initial field of view.")
+
+    for index, hotspot in enumerate(hotspots, start=1):
+        if not hotspot.get("is_enabled", True):
+            continue
+        name = text(hotspot.get("name_en")) or f"Hotspot {index}"
+        kind = text(hotspot.get("hotspot_type"))
+        if len(text(hotspot.get("name_en"))) < 2:
+            issues.append(f"Hotspot “{name}”: add an English name.")
+        source_id = integer(hotspot.get("scene_id"))
+        if source_id not in scene_ids:
+            issues.append(f"Hotspot “{name}”: its source scene no longer exists.")
+        if not valid_number(hotspot.get("pitch"), -90, 90) or not valid_number(hotspot.get("yaw"), -180, 180):
+            issues.append(f"Coordinates — hotspot “{name}”: place it in its 360° scene.")
+        if kind == "navigation":
+            target_id = integer(hotspot.get("target_scene_id"))
+            if target_id not in scene_ids:
+                issues.append(f"Hotspot “{name}”: choose an existing destination scene.")
+            elif target_id == source_id:
+                issues.append(f"Hotspot “{name}”: choose a destination different from its source scene.")
+        elif kind == "item":
+            if not text(hotspot.get("image_path")):
+                issues.append(f"Media — hotspot “{name}”: upload an artifact image.")
+            if len(text(hotspot.get("subtitle_en"))) < 2:
+                issues.append(f"Hotspot “{name}”: add an English subtitle.")
+            if len(text(hotspot.get("subtitle_tl"))) < 2:
+                issues.append(f"Hotspot “{name}”: add a Tagalog subtitle.")
+        else:
+            issues.append(f"Hotspot “{name}”: choose item or navigation as its type.")
+
+    map_config = map_config if isinstance(map_config, dict) else {}
+    if map_config.get("enabled"):
+        if not text(map_config.get("imagePath")):
+            issues.append("Media — tour map: upload a map image.")
+        markers = map_config.get("markers") if isinstance(map_config.get("markers"), list) else []
+        if not markers:
+            issues.append("Tour map: add at least one map hotspot or turn off the map.")
+        for index, marker in enumerate(markers, start=1):
+            if not isinstance(marker, dict):
+                issues.append(f"Tour map hotspot {index}: the saved marker data is invalid.")
+                continue
+            labels = marker.get("label") if isinstance(marker.get("label"), dict) else {}
+            name = text(labels.get("en")) or text(marker.get("id")) or f"Map hotspot {index}"
+            if len(text(labels.get("en"))) < 2:
+                issues.append(f"Tour map hotspot “{name}”: add an English label.")
+            if not valid_number(marker.get("x"), 0, 1) or not valid_number(marker.get("y"), 0, 1):
+                issues.append(f"Coordinates — tour map hotspot “{name}”: place it on the map.")
+            if marker.get("kind") != "main" and text(marker.get("sceneId")) not in scene_keys:
+                issues.append(f"Tour map hotspot “{name}”: choose an existing destination scene.")
+
+    return issues
+
+
 def register_virtual_tour_content_routes(
     app,
     *,
@@ -757,17 +863,34 @@ def register_virtual_tour_content_routes(
         try:
             tour, revision_id = editable_tour(tour_id)
             scenes = list_scenes(revision_id)
-            if not scenes:
-                raise ValueError("Upload at least one panorama before publishing.")
-            if sum(1 for scene in scenes if scene.get("is_start_scene")) != 1:
-                raise ValueError("Choose exactly one starting scene before publishing.")
-            if any(scene.get("validation_status") != "valid" for scene in scenes):
-                raise ValueError("Every panorama must pass validation before publishing.")
+            hotspots = list_hotspots(revision_id)
+            revision = get_revision(revision_id)
+            map_config = normalize_map_config(tour, revision, scenes, admin=True)
+            issues = _virtual_tour_publish_issues(scenes, hotspots, map_config)
+            if issues:
+                raise ValueError("Resolve these publish issues first: " + "; ".join(issues[:5]))
             publish_revision(tour, created_by=current_admin())
             return redirect(url_for("admin_virtual_tour_edit", tour_id=tour_id, status="published"))
         except Exception as exc:
             app.logger.exception("Could not publish virtual tour: %s", exc)
             return redirect(url_for("admin_virtual_tour_edit", tour_id=tour_id, error=str(exc)))
+
+    @app.post(f"{admin_route_prefix}/virtual-tours/<int:tour_id>/publish/preflight")
+    @admin_required
+    def admin_virtual_tour_publish_preflight(tour_id: int):
+        if not valid_json_csrf():
+            return _json_error("Your admin session token expired. Refresh and try again.", 403)
+        try:
+            tour, revision_id = editable_tour(tour_id)
+            scenes = list_scenes(revision_id)
+            hotspots = list_hotspots(revision_id)
+            revision = get_revision(revision_id)
+            map_config = normalize_map_config(tour, revision, scenes, admin=True)
+            issues = _virtual_tour_publish_issues(scenes, hotspots, map_config)
+            return jsonify({"ok": True, "valid": not issues, "issues": issues})
+        except Exception as exc:
+            app.logger.warning("Could not run the virtual-tour publish check: %s", exc)
+            return _json_error(str(exc))
 
     @app.post(f"{admin_route_prefix}/virtual-tours/<int:tour_id>/archive")
     @admin_required

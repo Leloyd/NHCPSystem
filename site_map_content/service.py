@@ -3,6 +3,7 @@ from __future__ import annotations
 import hashlib
 import io
 import json
+import math
 import os
 import re
 from pathlib import Path
@@ -329,6 +330,94 @@ def validate_config(raw: Any, *, site_map_id: int) -> dict[str, Any]:
         "settings": {"defaultView": "360" if settings.get("defaultView") == "360" else "aerial", "hotspotsVisible": bool(settings.get("hotspotsVisible", True))},
         "hotspots": hotspots,
     }
+
+
+def site_map_publish_issues(config: Any) -> list[str]:
+    """Return every publish-blocking problem in a saved Site Map revision."""
+    if not isinstance(config, dict):
+        return ["Settings: the saved Site Map configuration is missing or invalid."]
+
+    issues: list[str] = []
+
+    def text(value: Any) -> str:
+        return str(value or "").strip()
+
+    def valid_number(value: Any, minimum: float, maximum: float) -> bool:
+        try:
+            number = float(value)
+        except (TypeError, ValueError):
+            return False
+        return math.isfinite(number) and minimum <= number <= maximum
+
+    aerial = config.get("aerialMap") if isinstance(config.get("aerialMap"), dict) else {}
+    panorama = config.get("panoramaMap") if isinstance(config.get("panoramaMap"), dict) else {}
+    intro = config.get("introAudio") if isinstance(config.get("introAudio"), dict) else {}
+    if not text(aerial.get("path")):
+        issues.append("Media: upload an aerial map image.")
+    if not text(panorama.get("path")):
+        issues.append("Media: upload a 360° panorama map.")
+    panorama_width = panorama.get("width")
+    panorama_height = panorama.get("height")
+    if not valid_number(panorama_width, 1024, 12000) or not valid_number(panorama_height, 512, 6000):
+        issues.append("Media: the 360° panorama must be at least 1024 × 512 pixels.")
+    else:
+        ratio = float(panorama_width) / float(panorama_height)
+        if abs(ratio - 2.0) > 0.02:
+            issues.append("Media: the 360° panorama must use a 2:1 equirectangular ratio.")
+    if not text(intro.get("en")):
+        issues.append("Media: add the English starting audio.")
+    if not text(intro.get("tl")):
+        issues.append("Media: add the Tagalog starting audio.")
+
+    hotspots = config.get("hotspots") if isinstance(config.get("hotspots"), list) else []
+    if not hotspots:
+        issues.append("Hotspots: add at least one hotspot.")
+        return issues
+
+    used_ids: set[str] = set()
+    for index, hotspot in enumerate(hotspots, start=1):
+        if not isinstance(hotspot, dict):
+            issues.append(f"Hotspot {index}: the saved hotspot data is invalid.")
+            continue
+        title = hotspot.get("title") if isinstance(hotspot.get("title"), dict) else {}
+        name = text(title.get("en")) or text(hotspot.get("id")) or f"Hotspot {index}"
+        hotspot_id = text(hotspot.get("id"))
+        if not hotspot_id:
+            issues.append(f"Hotspot “{name}”: add a hotspot ID.")
+        elif hotspot_id in used_ids:
+            issues.append(f"Hotspot “{name}”: the ID “{hotspot_id}” is duplicated.")
+        used_ids.add(hotspot_id)
+        if not bool(hotspot.get("enabled", True)):
+            continue
+        if len(text(title.get("en"))) < 2:
+            issues.append(f"Hotspot “{name}”: add an English title.")
+        if len(text(hotspot.get("category"))) < 2:
+            issues.append(f"Hotspot “{name}”: add a category.")
+
+        show_aerial = bool(hotspot.get("showAerial"))
+        show_360 = bool(hotspot.get("show360"))
+        if not show_aerial and not show_360:
+            issues.append(f"Hotspot “{name}”: select the aerial map, 360° view, or both.")
+        if show_aerial:
+            position = hotspot.get("aerial") if isinstance(hotspot.get("aerial"), dict) else {}
+            if not valid_number(position.get("x"), 0, 1) or not valid_number(position.get("y"), 0, 1):
+                issues.append(f"Coordinates — “{name}”: place it on the aerial map.")
+        if show_360:
+            position = hotspot.get("panorama") if isinstance(hotspot.get("panorama"), dict) else {}
+            if not valid_number(position.get("pitch"), -90, 90) or not valid_number(position.get("yaw"), -180, 180):
+                issues.append(f"Coordinates — “{name}”: place it in the 360° view.")
+
+        if text(hotspot.get("imagePath")) and not text(hotspot.get("imageAlt")):
+            issues.append(f"Media — “{name}”: add alternative text for its photo.")
+        action = hotspot.get("action") if isinstance(hotspot.get("action"), dict) else {}
+        labels = action.get("label") if isinstance(action.get("label"), dict) else {}
+        action_url = text(action.get("url"))
+        if action_url and not text(labels.get("en")):
+            issues.append(f"Hotspot “{name}”: add an English label for its link button.")
+        if (text(labels.get("en")) or text(labels.get("tl"))) and not action_url:
+            issues.append(f"Hotspot “{name}”: add a URL for its link button.")
+
+    return issues
 
 
 def prepare_upload(*, filename: Any, kind: str, site_map_id: int, file_size: Any) -> dict[str, Any]:
