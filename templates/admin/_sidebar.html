@@ -68,6 +68,13 @@
       </span>
       <span>Virtual Tours</span>
     </a>
+    <a href="{{ url_for('admin_site_map') }}" class="admin-nav-link{% if admin_active_page == 'site-map' %} is-active{% endif %}">
+      {% if admin_active_page == 'site-map' %}<span class="admin-nav-indicator" aria-hidden="true"></span>{% endif %}
+      <span class="admin-nav-icon" aria-hidden="true">
+        <svg viewBox="0 0 24 24"><path d="m3 5 5-2 8 3 5-2v15l-5 2-8-3-5 2Zm5 0.15L5 6.35v10.7l3-1.2Zm2 .15v10.55l5 1.88V7.18Zm7 1.85V17.7l2-.8V6.35Z"></path></svg>
+      </span>
+      <span>Site Map</span>
+    </a>
     <a href="{{ url_for('admin_edu_resources') }}" class="admin-nav-link{% if admin_active_page == 'edu-resources' %} is-active{% endif %}">
       {% if admin_active_page == 'edu-resources' %}
       <span class="admin-nav-indicator" aria-hidden="true"></span>

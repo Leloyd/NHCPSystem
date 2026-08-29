@@ -53,6 +53,12 @@
     en: "/static/images/site-map/SiteMapIntroEng.mp3",
     tl: "/static/images/site-map/SiteMapIntroTag.mp3",
   };
+  var RUNTIME_CONFIG = (function () {
+    var node = document.getElementById("siteMapRuntimeConfig");
+    if (!node) return {};
+    try { return JSON.parse(node.textContent || "{}"); }
+    catch (_error) { return {}; }
+  })();
   var VIRTUAL_TOUR_SCENE_BY_STOP = {
     "front-gate": "frontGate",
     "flag-pole": "leftFlag",
@@ -126,6 +132,11 @@
     imageUrl: DEFAULT_IMAGE_URL,
     defaultImageUrl: DEFAULT_IMAGE_URL,
     alternateImageUrl: ALT_IMAGE_URL,
+    defaultViewMode: "default",
+    databaseConfigActive: false,
+    panoramaInitialPitch: 0,
+    panoramaInitialYaw: 0,
+    panoramaInitialHfov: 110,
     activeViewMode: "default",
     minZoom: -2,
     routeId: "orientation",
@@ -253,6 +264,65 @@
   }
 
   function fetchMapData() {
+    if (RUNTIME_CONFIG && RUNTIME_CONFIG.source === "database") {
+      var aerial = RUNTIME_CONFIG.aerialMap || {};
+      var panorama = RUNTIME_CONFIG.panoramaMap || {};
+      var intro = RUNTIME_CONFIG.introAudio || {};
+      var settings = RUNTIME_CONFIG.settings || {};
+      var width = Number(aerial.width) || 3074;
+      var height = Number(aerial.height) || 2250;
+      state.defaultImageUrl = String(aerial.url || aerial.path || DEFAULT_IMAGE_URL);
+      state.imageUrl = state.defaultImageUrl;
+      state.alternateImageUrl = String(panorama.url || panorama.path || ALT_IMAGE_URL);
+      state.sourceCoordinateSpace = normalizeCoordinateSpace({
+        width: width, height: height, coordinateWidth: width, coordinateHeight: height,
+        referenceWidth: width, referenceHeight: height,
+      });
+      state.hotspotsVisible = settings.hotspotsVisible !== false;
+      state.defaultViewMode = settings.defaultView === "360" ? "360" : "default";
+      state.databaseConfigActive = true;
+      state.panoramaInitialPitch = Number(panorama.initialPitch) || 0;
+      state.panoramaInitialYaw = Number(panorama.initialYaw) || 0;
+      state.panoramaInitialHfov = Number(panorama.initialHfov) || 110;
+      INTRO_AUDIO_BY_LANGUAGE = {
+        en: String(intro.enUrl || intro.en || ""),
+        tl: String(intro.tlUrl || intro.tl || ""),
+      };
+      state.hotspots = (Array.isArray(RUNTIME_CONFIG.hotspots) ? RUNTIME_CONFIG.hotspots : [])
+        .filter(function (item) { return item && item.enabled !== false && (item.showAerial || item.show360); })
+        .map(function (item) {
+          var title = item.title && typeof item.title === "object" ? item.title : {};
+          var description = item.description && typeof item.description === "object" ? item.description : {};
+          var audio = item.audio && typeof item.audio === "object" ? item.audio : {};
+          var action = item.action && typeof item.action === "object" ? item.action : {};
+          var actionLabel = action.label && typeof action.label === "object" ? action.label : {};
+          var aerialPosition = item.aerial && typeof item.aerial === "object" ? item.aerial : {};
+          return normalizeHotspot({
+            id: item.id,
+            title: title.en || item.id,
+            titleTl: title.tl || "",
+            category: item.category || "General",
+            x: Number(aerialPosition.x || 0) * width,
+            y: Number(aerialPosition.y || 0) * height,
+            description: description.en || "",
+            translations: { tl: { title: title.tl || "", description: description.tl || "" } },
+            panorama: item.show360 ? item.panorama : null,
+            media: item.imageUrl || item.imagePath ? [{ src: item.imageUrl || item.imagePath, alt: item.imageAlt || title.en || "" }] : [],
+            audioByLanguage: { en: audio.enUrl || audio.en || "", tl: audio.tlUrl || audio.tl || "" },
+            virtualTourScene: item.virtualTourScene || "",
+            markerStyle: item.markerStyle,
+            linkedViews: item.linkedViews !== false,
+            showAerial: item.showAerial !== false,
+            customLinks: action.url ? [{ href: action.url, labelEn: actionLabel.en || "Learn More", labelTl: actionLabel.tl || actionLabel.en || "Alamin Pa" }] : [],
+          });
+        })
+        .filter(function (item) { return item; });
+      state.virtualTourLandmarks = [];
+      state.virtualTourSceneCount = 0;
+      indexHotspots();
+      return Promise.resolve();
+    }
+
     return fetch(HOTSPOT_DATA_URL, { cache: "no-store" })
       .then(function (response) {
         if (!response.ok) {
@@ -557,6 +627,7 @@
     return {
       id: String(raw.id),
       title: String(raw.title || raw.id),
+      titleTl: String(raw.titleTl || ""),
       category: String(raw.category || "General"),
       sourceX: Number(raw.x),
       sourceY: Number(raw.y),
@@ -566,6 +637,9 @@
       mapFractionY: null,
       virtualTourScene: raw.virtualTourScene ? String(raw.virtualTourScene) : "",
       landmarkOnly: !!raw.landmarkOnly,
+      markerStyle: raw.markerStyle === "main" ? "main" : "dot",
+      linkedViews: raw.linkedViews !== false,
+      showAerial: raw.showAerial !== false,
       era: String(raw.era || "-"),
       focus: String(raw.focus || "-"),
       prompt: String(raw.prompt || "-"),
@@ -581,6 +655,7 @@
       audio: raw.audio ? String(raw.audio) : "",
       audioByLanguage: raw.audioByLanguage && typeof raw.audioByLanguage === "object" ? raw.audioByLanguage : {},
       videoEmbed: raw.videoEmbed ? String(raw.videoEmbed) : "",
+      customLinks: Array.isArray(raw.customLinks) ? raw.customLinks : [],
     };
   }
 
@@ -606,8 +681,11 @@
     if (!stop) {
       return "";
     }
-    if (getCurrentLanguage() === "tl" && TAGALOG_TITLE_BY_STOP[stop.id]) {
-      return TAGALOG_TITLE_BY_STOP[stop.id];
+    if (getCurrentLanguage() === "tl") {
+      var translation = stop.translations && stop.translations.tl;
+      if (translation && translation.title) return String(translation.title);
+      if (stop.titleTl) return String(stop.titleTl);
+      if (TAGALOG_TITLE_BY_STOP[stop.id]) return TAGALOG_TITLE_BY_STOP[stop.id];
     }
     return String(stop.title || stop.id || "Location");
   }
@@ -809,8 +887,11 @@
     }
   }
 
-  function getHotspotMarkerHtml() {
-    return '<span class="site-map-hotspot-dot" aria-hidden="true"></span>';
+  function getHotspotMarkerHtml(spot) {
+    var label = spot && spot.markerStyle === "main"
+      ? '<span class="site-map-main-hotspot-label">' + escapeMarkerLabel(spot.title) + "</span>"
+      : "";
+    return '<span class="site-map-hotspot-dot" aria-hidden="true"></span>' + label;
   }
 
   function getPanoramaStops() {
@@ -902,7 +983,7 @@
       yaw: stop.panorama.yaw,
       type: "info",
       text: "",
-      cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon",
+      cssClass: "tour-ground-hotspot tour-ground-hotspot--pulse tour-ground-hotspot--compact tour-ground-hotspot--no-icon" + (stop.markerStyle === "main" ? " is-main" : ""),
       clickHandlerFunc: function (event, args) {
         if (event) {
           if (typeof event.preventDefault === "function") {
@@ -1121,9 +1202,9 @@
           showControls: false,
           compass: false,
           autoRotate: 0,
-          pitch: 0,
-          yaw: 0,
-          hfov: 110,
+          pitch: state.panoramaInitialPitch,
+          yaw: state.panoramaInitialYaw,
+          hfov: state.panoramaInitialHfov,
           minHfov: 50,
           maxHfov: 140,
           mouseZoom: true,
@@ -1444,8 +1525,8 @@
       riseOffset: 1000,
       zIndexOffset: 800,
       icon: window.L.divIcon({
-        className: "site-map-hotspot-marker",
-        html: getHotspotMarkerHtml(),
+        className: "site-map-hotspot-marker" + (spot.markerStyle === "main" ? " is-main" : ""),
+        html: getHotspotMarkerHtml(spot),
         iconSize: [44, 44],
         iconAnchor: [22, 22],
       }),
@@ -1658,7 +1739,7 @@
     });
 
     state.hotspots.forEach(function (spot) {
-      if (spot.landmarkOnly) {
+      if (spot.landmarkOnly || !spot.showAerial) {
         var oldMarker = state.markerById[spot.id];
         if (oldMarker && state.map.hasLayer(oldMarker)) {
           state.map.removeLayer(oldMarker);
@@ -1671,6 +1752,8 @@
       var markerNode = marker.getElement();
       if (markerNode) {
         markerNode.setAttribute("aria-label", getLocalizedTitle(spot));
+        var mainLabel = markerNode.querySelector(".site-map-main-hotspot-label");
+        if (mainLabel) mainLabel.textContent = getLocalizedTitle(spot);
       }
       var shouldShow = !!visibleLookup[spot.id];
       var isOnMap = state.map.hasLayer(marker);
@@ -1752,7 +1835,7 @@
       return;
     }
 
-    if (stop.panorama) {
+    if (stop.panorama && stop.linkedViews !== false) {
       var locateButton = document.createElement("button");
       locateButton.type = "button";
       locateButton.className = "stop-link stop-link--primary";
@@ -1765,7 +1848,7 @@
       elements.stopLinks.appendChild(locateButton);
     }
 
-    var virtualTourScene = stop.virtualTourScene || VIRTUAL_TOUR_SCENE_BY_STOP[stop.id] || "";
+    var virtualTourScene = stop.virtualTourScene || (state.databaseConfigActive ? "" : (VIRTUAL_TOUR_SCENE_BY_STOP[stop.id] || ""));
     var links = [
       {
         href: virtualTourScene ? "/virtual-tour?scene=" + encodeURIComponent(virtualTourScene) : "",
@@ -1776,6 +1859,15 @@
       { href: stop.arModel, text: stop.arModelLabel || "AR / 3D" },
       { href: stop.audio, text: getCurrentLanguage() === "tl" ? "Audio" : "Audio" },
     ];
+
+    (stop.customLinks || []).forEach(function (customLink) {
+      links.push({
+        href: String(customLink.href || ""),
+        text: getCurrentLanguage() === "tl"
+          ? String(customLink.labelTl || customLink.labelEn || "Alamin Pa")
+          : String(customLink.labelEn || "Learn More"),
+      });
+    });
 
     links.forEach(function (linkMeta) {
       if (!linkMeta.href) {
@@ -2507,11 +2599,15 @@
         if (initialStops.length) {
           state.stopId = initialStops[0].id;
         }
+        state.activeViewMode = state.defaultViewMode;
         updateLanguageButton();
         updateViewModeButton();
         updateHotspotToggleButton();
-        setLeafletVisibility(true);
-        setPanoramaVisibility(false);
+        setLeafletVisibility(state.defaultViewMode !== "360");
+        setPanoramaVisibility(state.defaultViewMode === "360");
+        if (state.defaultViewMode === "360" && state.panoramaViewer && typeof state.panoramaViewer.resize === "function") {
+          state.panoramaViewer.resize();
+        }
         renderAll();
         setLoadingState(false);
         playIntroAudio();

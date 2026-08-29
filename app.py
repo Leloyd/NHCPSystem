@@ -44,6 +44,7 @@ from virtual_tour_content import (
     load_public_tour_options,
     register_virtual_tour_content_routes,
 )
+from site_map_content import build_public_site_map_config, register_site_map_content_routes
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
 from webxr_progress_content import (
     collect_webxr_item,
@@ -1559,6 +1560,16 @@ register_virtual_tour_content_routes(
     admin_username=ADMIN_DEFAULT_USERNAME,
 )
 
+register_site_map_content_routes(
+    app,
+    admin_route_prefix=ADMIN_ROUTE_PREFIX,
+    admin_required=_admin_required,
+    ensure_admin_csrf_token=_ensure_admin_csrf_token,
+    is_admin_csrf_valid=_is_admin_csrf_valid,
+    admin_session_user_key=ADMIN_SESSION_USER_KEY,
+    admin_username=ADMIN_DEFAULT_USERNAME,
+)
+
 
 @app.route("/")
 def index():
@@ -1676,7 +1687,7 @@ def trail_start():
 
 @app.route("/site-map")
 def site_map():
-    return render_template("SiteMap.html")
+    return render_template("SiteMap.html", site_map_config=build_public_site_map_config())
 
 
 @app.route("/3d-environment")
