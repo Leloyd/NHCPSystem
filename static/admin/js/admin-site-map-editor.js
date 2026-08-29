@@ -47,6 +47,14 @@
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function number(value, fallback) { var result = Number(value); return isFinite(result) ? result : fallback; }
   function slugify(value, fallback) { return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback; }
+  function setSource(element, value) {
+    if (!element) return false;
+    var source = String(value || "");
+    if ((element.getAttribute("src") || "") === source) return false;
+    if (source) element.setAttribute("src", source);
+    else element.removeAttribute("src");
+    return true;
+  }
   function setDirty(value) {
     dirty = Boolean(value);
     var node = root.querySelector("[data-sm-unsaved]");
@@ -106,8 +114,8 @@
     root.querySelector("[data-sm-aerial-coordinates]").textContent = selected.showAerial ? "x " + number(selected.aerial.x, 0).toFixed(4) + " · y " + number(selected.aerial.y, 0).toFixed(4) : "Not shown";
     root.querySelector("[data-sm-panorama-coordinates]").textContent = selected.show360 ? "pitch " + number(selected.panorama.pitch, 0).toFixed(2) + " · yaw " + number(selected.panorama.yaw, 0).toFixed(2) : "Not shown";
     var image = root.querySelector("[data-sm-image-preview]");
-    image.src = selected.imageUrl || selected.imagePath || ""; image.alt = selected.imageAlt || "Hotspot photo preview"; image.hidden = !image.src;
-    ["en", "tl"].forEach(function (language) { var audio = root.querySelector('[data-sm-audio-preview="' + language + '"]'); audio.src = selectedAudioUrl(language); audio.hidden = !audio.src; });
+    setSource(image, selected.imageUrl || selected.imagePath); image.alt = selected.imageAlt || "Hotspot photo preview"; image.hidden = !image.getAttribute("src");
+    ["en", "tl"].forEach(function (language) { var audio = root.querySelector('[data-sm-audio-preview="' + language + '"]'); setSource(audio, selectedAudioUrl(language)); audio.hidden = !audio.getAttribute("src"); });
   }
 
   function imageDisplayRect() {
@@ -121,10 +129,14 @@
 
   function renderAerial() {
     var aerial = data.aerialMap || {};
-    aerialImage.src = aerial.url || aerial.path || "";
-    aerialImage.hidden = !aerialImage.src;
-    root.querySelector("[data-sm-aerial-empty]").hidden = Boolean(aerialImage.src);
+    var source = aerial.url || aerial.path || "";
+    var sourceChanged = setSource(aerialImage, source);
+    aerialImage.hidden = !source;
+    root.querySelector("[data-sm-aerial-empty]").hidden = Boolean(source);
     aerialMarkers.innerHTML = "";
+    // Wait for the one load event after a source change. Reassigning the same
+    // src from that event caused an endless image reload and browser spinner.
+    if (sourceChanged) return;
     if (!aerialImage.complete || !aerialImage.naturalWidth) return;
     var rect = imageDisplayRect();
     hotspots.filter(function (item) { return item.enabled && item.showAerial; }).forEach(function (hotspot) {
@@ -160,12 +172,13 @@
     ["aerial", "panorama"].forEach(function (kind) {
       var section = kind === "aerial" ? data.aerialMap : data.panoramaMap;
       var preview = root.querySelector('[data-sm-map-preview="' + kind + '"]');
-      preview.src = section.url || section.path || "";
-      root.querySelector('[data-sm-map-size="' + kind + '"]').textContent = section.width + " × " + section.height + " pixels";
+      setSource(preview, section.url || section.path);
+      var size = root.querySelector('[data-sm-map-size="' + kind + '"]');
+      if (size) size.textContent = section.width + " × " + section.height + " pixels";
     });
     ["en", "tl"].forEach(function (language) {
       var audio = root.querySelector('[data-sm-intro-preview="' + language + '"]');
-      audio.src = data.introAudio[language + "Url"] || data.introAudio[language] || "";
+      setSource(audio, data.introAudio[language + "Url"] || data.introAudio[language]);
     });
     settingsPanel.elements.defaultView.value = (data.settings || {}).defaultView || "aerial";
     settingsPanel.elements.hotspotsVisible.checked = Boolean((data.settings || {}).hotspotsVisible);

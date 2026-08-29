@@ -17,7 +17,7 @@ The application uses the existing Supabase service-role connection and the same 
 
 1. Open **Admin → Site Map**.
 2. Choose **Customize Original** to copy the packaged Site Map into the first database draft.
-3. Upload/replace the aerial image, 2:1 equirectangular 360° image, and English/Tagalog starting narration as needed.
+3. Upload/replace the aerial image, 2:1 equirectangular 360° image, and English/Tagalog starting narration as needed. The aerial image has no pixel-dimension requirement; its hotspots use normalized click positions and adapt to the uploaded image.
 4. Add or edit hotspots. A hotspot can appear in the aerial view, the 360° view, or both. Use **Same hotspot in both views** when both pins represent the same modal content.
 5. Save the draft, then publish it. Saving alone never changes the visitor experience.
 6. Use **Revert** to delete the database override and uploaded Site Map assets and immediately restore the protected Original.

@@ -303,7 +303,9 @@
             titleTl: title.tl || "",
             category: item.category || "General",
             x: Number(aerialPosition.x || 0) * width,
-            y: Number(aerialPosition.y || 0) * height,
+            // Stored editor coordinates use the image's top-left as origin;
+            // Leaflet's Simple CRS uses the bottom-left for its Y/latitude.
+            y: (1 - Number(aerialPosition.y || 0)) * height,
             description: description.en || "",
             translations: { tl: { title: title.tl || "", description: description.tl || "" } },
             panorama: item.show360 ? item.panorama : null,

@@ -97,7 +97,7 @@ def packaged_original_config() -> dict[str, Any]:
         scene_id = TOUR_SCENE_BY_STOP.get(hotspot_id, "")
         scene = scenes.get(scene_id) or scenes.get(next((key for key in scenes if _normalized_key(key) == _normalized_key(scene_id)), ""))
         if isinstance(scene, dict):
-            x, y = float(scene.get("x") or x), 1.0 - float(scene.get("y") or (1.0 - y))
+            x, y = float(scene.get("x") or x), float(scene.get("y") or y)
             claimed_scenes.add(next((key for key in scenes if _normalized_key(key) == _normalized_key(scene_id)), scene_id))
         panorama = raw.get("panorama") if isinstance(raw.get("panorama"), dict) else {}
         captured = PANORAMA_COORDINATES.get(_normalized_key(hotspot_id)) or PANORAMA_COORDINATES.get(_normalized_key(scene_id))
@@ -129,7 +129,7 @@ def packaged_original_config() -> dict[str, Any]:
     chapel = next((item for item in landmarks if str(item.get("label") or "").lower() == "chapel"), None)
     church = next((item for item in hotspots if item["id"] == "church"), None)
     if church and chapel:
-        church["aerial"] = {"x": float(chapel["x"]), "y": 1.0 - float(chapel["y"])}
+        church["aerial"] = {"x": float(chapel["x"]), "y": float(chapel["y"])}
     if museum:
         hotspots.append({
             "id": "museum-landmark", "enabled": True, "sortOrder": len(hotspots),
@@ -138,7 +138,7 @@ def packaged_original_config() -> dict[str, Any]:
                 "en": "The museum preserves and interprets the history of the Nagcarlan Underground Cemetery. Its exhibits help visitors understand the site’s architecture, burial traditions, cultural importance, and role in Philippine history.",
                 "tl": "Pinangangalagaan at ipinapaliwanag ng museo ang kasaysayan ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Tinutulungan ng mga eksibit nito ang mga bisita na maunawaan ang arkitektura, mga tradisyon sa paglilibing, kahalagahang pangkultura, at papel ng pook sa kasaysayan ng Pilipinas.",
             },
-            "showAerial": True, "aerial": {"x": float(museum["x"]), "y": 1.0 - float(museum["y"])},
+            "showAerial": True, "aerial": {"x": float(museum["x"]), "y": float(museum["y"])},
             "show360": True, "panorama": {"pitch": -35.64, "yaw": -47.54}, "linkedViews": True,
             "imagePath": "/static/SiteMap/Museum/InsideMuseum.png",
             "imageAlt": "Interior of the museum at the Nagcarlan Underground Cemetery",
@@ -155,7 +155,7 @@ def packaged_original_config() -> dict[str, Any]:
             "id": f"virtual-tour-{slugify(scene_id, 'scene')}", "enabled": True, "sortOrder": len(hotspots),
             "title": {"en": label, "tl": ""}, "category": "Virtual Tour Stop", "markerStyle": "dot",
             "description": {"en": f"This point marks the “{label}” location in the Virtual Tour.", "tl": f"Tinutukoy ng puntong ito ang lokasyong “{label}” sa Virtual Tour."},
-            "showAerial": True, "aerial": {"x": float(position.get("x") or 0), "y": 1.0 - float(position.get("y") or 0)},
+            "showAerial": True, "aerial": {"x": float(position.get("x") or 0), "y": float(position.get("y") or 0)},
             "show360": bool(captured), "panorama": {"pitch": captured[0], "yaw": captured[1]} if captured else {"pitch": 0, "yaw": 0},
             "linkedViews": True, "imagePath": "", "imageAlt": "", "audio": {"en": "", "tl": ""},
             "virtualTourScene": scene_id, "action": {"label": {"en": "", "tl": ""}, "url": ""},
@@ -163,6 +163,7 @@ def packaged_original_config() -> dict[str, Any]:
 
     return {
         "schemaVersion": 1,
+        "coordinateSystem": "image-top-left",
         "aerialMap": {"path": str(minimap.get("image") or "/static/images/site-map/aerial-map.jpg"), "width": width, "height": height},
         "panoramaMap": {"path": "/static/images/site-map/360aerial_view.jpg", "width": 4096, "height": 2048, "initialPitch": 0, "initialYaw": 0, "initialHfov": 110},
         "introAudio": {"en": "/static/images/site-map/SiteMapIntroEng.mp3", "tl": "/static/images/site-map/SiteMapIntroTag.mp3"},
@@ -179,6 +180,42 @@ def _number(value: Any, minimum: float, maximum: float, label: str, default: flo
     if result < minimum or result > maximum:
         raise ValueError(f"{label} must be between {minimum:g} and {maximum:g}.")
     return round(result, 5)
+
+
+def _image_dimension(value: Any, label: str, default: int) -> int:
+    try:
+        result = int(value or default)
+    except (TypeError, ValueError) as exc:
+        raise ValueError(f"{label} must be a positive whole number.") from exc
+    if result < 1:
+        raise ValueError(f"{label} must be a positive whole number.")
+    return result
+
+
+def upgrade_coordinate_system(config: dict[str, Any]) -> tuple[dict[str, Any], bool]:
+    """Repair drafts produced by the first admin importer, which inverted only tour-derived Y values."""
+    if not isinstance(config, dict) or config.get("coordinateSystem") == "image-top-left":
+        return config, False
+    repaired = json.loads(json.dumps(config))
+    inverted_original_ids = {
+        "front-gate", "flag-pole", "middle-ground", "left-side-inside", "right-side-inside",
+        "left-tombs", "right-tombs", "church-front", "church", "museum-landmark",
+    }
+    for hotspot in repaired.get("hotspots") if isinstance(repaired.get("hotspots"), list) else []:
+        if not isinstance(hotspot, dict):
+            continue
+        hotspot_id = str(hotspot.get("id") or "")
+        if hotspot_id not in inverted_original_ids and not hotspot_id.startswith("virtual-tour-"):
+            continue
+        aerial = hotspot.get("aerial") if isinstance(hotspot.get("aerial"), dict) else None
+        if aerial is None:
+            continue
+        try:
+            aerial["y"] = round(1.0 - float(aerial.get("y")), 5)
+        except (TypeError, ValueError):
+            continue
+    repaired["coordinateSystem"] = "image-top-left"
+    return repaired, True
 
 
 def _text(value: Any, label: str, maximum: int, minimum: int = 0) -> str:
@@ -271,7 +308,8 @@ def validate_config(raw: Any, *, site_map_id: int) -> dict[str, Any]:
         raise ValueError("Add at least one Site Map hotspot before saving.")
     return {
         "schemaVersion": 1,
-        "aerialMap": {"path": aerial_path, "width": int(_number(aerial.get("width"), 320, 12000, "Aerial width", 3074)), "height": int(_number(aerial.get("height"), 240, 12000, "Aerial height", 2250))},
+        "coordinateSystem": "image-top-left",
+        "aerialMap": {"path": aerial_path, "width": _image_dimension(aerial.get("width"), "Aerial width", 3074), "height": _image_dimension(aerial.get("height"), "Aerial height", 2250)},
         "panoramaMap": {"path": panorama_path, "width": int(_number(panorama.get("width"), 1024, 12000, "Panorama width", 4096)), "height": int(_number(panorama.get("height"), 512, 6000, "Panorama height", 2048)), "initialPitch": _number(panorama.get("initialPitch"), -90, 90, "Initial pitch"), "initialYaw": _number(panorama.get("initialYaw"), -180, 180, "Initial yaw"), "initialHfov": _number(panorama.get("initialHfov"), 30, 150, "Initial field of view", 110)},
         "introAudio": {"en": _asset_path(intro.get("en"), site_map_id=site_map_id, kind="audio", validated=validated), "tl": _asset_path(intro.get("tl"), site_map_id=site_map_id, kind="audio", validated=validated)},
         "settings": {"defaultView": "360" if settings.get("defaultView") == "360" else "aerial", "hotspotsVisible": bool(settings.get("hotspotsVisible", True))},
@@ -427,6 +465,7 @@ def build_public_site_map_config() -> dict[str, Any] | None:
         config = revision.get("config") if revision and isinstance(revision.get("config"), dict) else None
         if not config:
             return None
+        config, _ = upgrade_coordinate_system(config)
         result = config_with_urls(config)
         result["source"] = "database"
         result["revisionId"] = revision_id

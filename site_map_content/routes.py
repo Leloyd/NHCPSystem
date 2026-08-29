@@ -22,6 +22,7 @@ from .service import (
     list_asset_paths,
     packaged_original_config,
     prepare_upload,
+    upgrade_coordinate_system,
     validate_config,
 )
 
@@ -71,6 +72,10 @@ def register_site_map_content_routes(
             except Exception as exc:
                 config_error = f"Site Map tables are not ready. Run site_map_tables.sql in Supabase. Details: {exc}"
         config = revision.get("config") if revision and isinstance(revision.get("config"), dict) else original
+        if revision:
+            config, upgraded = upgrade_coordinate_system(config)
+            if upgraded:
+                revision = update_revision_config(int(revision["id"]), config)
         editor_config = config_with_urls(config)
         status_notices = {
             "customized": {"title": "Editable draft created", "message": "The protected Original was copied into a database draft. The public Site Map is unchanged until you publish."},
