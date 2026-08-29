@@ -12,10 +12,6 @@
 {% macro rich_text_editor(field_id, field_name, value, language_label, placeholder) %}
 <div class="admin-rich-text" data-rich-text-shell>
   <div class="admin-rich-text__toolbar" role="toolbar" aria-label="{{ language_label }} formatting controls" data-rich-text-toolbar hidden>
-    <div class="admin-rich-text__toolbar-heading" aria-hidden="true">
-      <svg viewBox="0 0 24 24"><path d="M4 5h16M9 5v14m6-14v14M6 19h6m0 0h6"></path></svg>
-      <span><strong>Formatting</strong><small>Style selected text</small></span>
-    </div>
     <div class="admin-rich-text__tools">
       <div class="admin-rich-text__tool-group is-block" role="group" aria-label="Paragraph style">
         <label class="admin-rich-text__format-label" for="{{ field_id }}Format">Text style</label>
