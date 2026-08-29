@@ -17,6 +17,7 @@
   var activeView = "aerial";
   var placing = false;
   var dirty = false;
+  var allowPageExit = false;
   var viewer = null;
   var supabaseClient = null;
   var temporaryUrls = [];
@@ -47,6 +48,10 @@
   function clone(value) { return JSON.parse(JSON.stringify(value)); }
   function number(value, fallback) { var result = Number(value); return isFinite(result) ? result : fallback; }
   function slugify(value, fallback) { return String(value || "").toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || fallback; }
+  function confirmAction(options) {
+    if (typeof window.NHCPAdminConfirm === "function") return window.NHCPAdminConfirm(options);
+    return Promise.resolve(window.confirm((options && (options.message || options.title)) || "Confirm this action?"));
+  }
   function setSource(element, value) {
     if (!element) return false;
     var source = String(value || "");
@@ -109,10 +114,18 @@
     setField("id", selected.id); setField("title_en", (selected.title || {}).en); setField("title_tl", (selected.title || {}).tl);
     setField("category", selected.category); setField("description_en", (selected.description || {}).en); setField("description_tl", (selected.description || {}).tl);
     setField("markerStyle", selected.markerStyle); setField("enabled", selected.enabled); setField("showAerial", selected.showAerial); setField("show360", selected.show360); setField("linkedViews", selected.linkedViews);
+    setField("aerial_x", number((selected.aerial || {}).x, 0).toFixed(5)); setField("aerial_y", number((selected.aerial || {}).y, 0).toFixed(5));
+    setField("panorama_pitch", number((selected.panorama || {}).pitch, 0).toFixed(2)); setField("panorama_yaw", number((selected.panorama || {}).yaw, 0).toFixed(2));
     setField("imageAlt", selected.imageAlt); setField("virtualTourScene", selected.virtualTourScene);
     setField("action_label_en", ((selected.action || {}).label || {}).en); setField("action_label_tl", ((selected.action || {}).label || {}).tl); setField("action_url", (selected.action || {}).url);
-    root.querySelector("[data-sm-aerial-coordinates]").textContent = selected.showAerial ? "x " + number(selected.aerial.x, 0).toFixed(4) + " · y " + number(selected.aerial.y, 0).toFixed(4) : "Not shown";
-    root.querySelector("[data-sm-panorama-coordinates]").textContent = selected.show360 ? "pitch " + number(selected.panorama.pitch, 0).toFixed(2) + " · yaw " + number(selected.panorama.yaw, 0).toFixed(2) : "Not shown";
+    var selectedTitle = root.querySelector("[data-sm-selected-title]");
+    if (selectedTitle) selectedTitle.textContent = (selected.title || {}).en || selected.id;
+    root.querySelectorAll("[data-sm-place-view]").forEach(function (button) {
+      var view = button.dataset.smPlaceView;
+      var hasPosition = view === "aerial" ? selected.showAerial : selected.show360;
+      button.textContent = (hasPosition ? "Reposition in " : "Place in ") + (view === "aerial" ? "aerial map" : "360° view");
+      button.disabled = readOnly;
+    });
     var image = root.querySelector("[data-sm-image-preview]");
     setSource(image, selected.imageUrl || selected.imagePath); image.alt = selected.imageAlt || "Hotspot photo preview"; image.hidden = !image.getAttribute("src");
     ["en", "tl"].forEach(function (language) { var audio = root.querySelector('[data-sm-audio-preview="' + language + '"]'); setSource(audio, selectedAudioUrl(language)); audio.hidden = !audio.getAttribute("src"); });
@@ -188,11 +201,18 @@
   }
 
   function updateStage() {
+    var selectedName = selected ? ((selected.title || {}).en || selected.id) : "a selected hotspot";
     root.querySelectorAll("[data-sm-view]").forEach(function (button) { var active = button.dataset.smView === activeView; button.classList.toggle("is-active", active); button.setAttribute("aria-selected", active ? "true" : "false"); });
     aerialStage.hidden = activeView !== "aerial"; panoramaStage.hidden = activeView !== "360";
     aerialStage.classList.toggle("is-placing", placing && activeView === "aerial"); panoramaStage.classList.toggle("is-placing", placing && activeView === "360"); stageStatus.classList.toggle("is-placing", placing);
+    placeButton.disabled = readOnly || !selected;
     placeButton.textContent = placing ? "Cancel placement" : "Pin selected hotspot";
-    stageStatus.textContent = placing ? "Click the exact " + (activeView === "aerial" ? "aerial map" : "360° panorama") + " location for “" + ((selected.title || {}).en || selected.id) + "”." : "Select a hotspot, then choose “Pin selected hotspot” and click the map.";
+    stageStatus.textContent = placing ? "Click the exact " + (activeView === "aerial" ? "aerial map" : "360° panorama") + " location for “" + selectedName + "”." : "Select a hotspot, then choose “Pin selected hotspot” and click the map.";
+    root.querySelectorAll("[data-sm-place-view]").forEach(function (button) {
+      var active = placing && button.dataset.smPlaceView === activeView;
+      button.classList.toggle("is-active", active);
+      if (active) button.textContent = "Cancel placement";
+    });
     if (activeView === "aerial") renderAerial(); else renderPanorama();
   }
   function renderAll() { renderList(); renderForm(); renderMapsPanel(); updateStage(); }
@@ -215,19 +235,32 @@
     hotspots.push(selected); setDirty(true); renderAll();
   }
 
-  function placeAerial(event) {
+  function beginPlacement(view) {
+    if (!selected) { showStatus("Select a hotspot first.", true); return; }
+    if (placing && activeView === view) { placing = false; updateStage(); return; }
+    activeView = view;
+    placing = true;
+    updateStage();
+  }
+  async function placeAerial(event) {
     if (!placing || activeView !== "aerial" || !selected) return;
     var rect = imageDisplayRect();
     var x = (event.clientX - rect.container.left - rect.left) / rect.width;
     var y = (event.clientY - rect.container.top - rect.top) / rect.height;
     if (x < 0 || x > 1 || y < 0 || y > 1) { showStatus("Click inside the displayed aerial image.", true); return; }
-    selected.aerial = { x: Number(x.toFixed(5)), y: Number(y.toFixed(5)) }; selected.showAerial = true; placing = false; setDirty(true); renderAll();
+    x = Number(x.toFixed(5)); y = Number(y.toFixed(5));
+    var approved = await confirmAction({ eyebrow: "Aerial hotspot position", title: "Use this map position?", message: "The hotspot will move to X " + x.toFixed(5) + " and Y " + y.toFixed(5) + ".", label: "Confirm position", variant: "enable" });
+    if (!approved) return;
+    selected.aerial = { x: x, y: y }; selected.showAerial = true; placing = false; setDirty(true); renderAll();
   }
-  function placePanorama(event) {
+  async function placePanorama(event) {
     if (!placing || activeView !== "360" || !selected || !viewer || typeof viewer.mouseEventToCoords !== "function") return;
     if (event.target.closest && event.target.closest(".sm-panorama-hotspot")) return;
     var coords = viewer.mouseEventToCoords(event);
-    selected.panorama = { pitch: Number(Number(coords[0]).toFixed(2)), yaw: Number(Number(coords[1]).toFixed(2)) }; selected.show360 = true; placing = false; setDirty(true); renderAll();
+    var pitch = Number(Number(coords[0]).toFixed(2)); var yaw = Number(Number(coords[1]).toFixed(2));
+    var approved = await confirmAction({ eyebrow: "360° hotspot position", title: "Use this panorama position?", message: "The hotspot will move to pitch " + pitch.toFixed(2) + " and yaw " + yaw.toFixed(2) + ".", label: "Confirm position", variant: "enable" });
+    if (!approved) return;
+    selected.panorama = { pitch: pitch, yaw: yaw }; selected.show360 = true; placing = false; setDirty(true); renderAll();
   }
 
   async function uploadFile(file, kind) {
@@ -243,6 +276,9 @@
   async function handleUpload(input) {
     var file = input.files && input.files[0]; if (!file || readOnly) return;
     var purpose = input.dataset.smUpload; var kind = purpose === "aerial" ? "aerial" : purpose === "panorama" ? "panorama" : purpose.indexOf("audio") !== -1 || purpose.indexOf("intro") !== -1 ? "audio" : "image";
+    var mediaName = kind === "audio" ? "audio file" : kind === "panorama" ? "360° map" : kind === "aerial" ? "aerial map" : "hotspot photo";
+    var approved = await confirmAction({ eyebrow: "Site Map media", title: "Upload this " + mediaName + "?", message: "“" + file.name + "” will be uploaded to this working draft. Save the draft afterward to keep it.", label: "Upload file", variant: "enable" });
+    if (!approved) { input.value = ""; return; }
     input.disabled = true; showStatus("Uploading " + file.name + "…", false);
     try {
       var meta = kind === "audio" ? { url: URL.createObjectURL(file) } : await inspectImage(file); if (kind === "audio") temporaryUrls.push(meta.url);
@@ -266,13 +302,34 @@
   }
 
   root.querySelectorAll("[data-sm-view]").forEach(function (button) { button.addEventListener("click", function () { activeView = button.dataset.smView; placing = false; updateStage(); }); });
-  root.querySelectorAll("[data-sm-tab]").forEach(function (button) { button.addEventListener("click", function () { root.querySelectorAll("[data-sm-tab]").forEach(function (item) { item.classList.toggle("is-active", item === button); }); root.querySelectorAll("[data-sm-panel]").forEach(function (panel) { panel.hidden = panel.dataset.smPanel !== button.dataset.smTab; }); }); });
+  var inspectorTabs = Array.prototype.slice.call(root.querySelectorAll("[data-sm-tab]"));
+  function activateInspectorTab(button) {
+    inspectorTabs.forEach(function (item) { var active = item === button; item.classList.toggle("is-active", active); item.setAttribute("aria-selected", active ? "true" : "false"); item.tabIndex = active ? 0 : -1; });
+    root.querySelectorAll("[data-sm-panel]").forEach(function (panel) { panel.hidden = panel.dataset.smPanel !== button.dataset.smTab; });
+  }
+  inspectorTabs.forEach(function (button, index) {
+    button.addEventListener("click", function () { activateInspectorTab(button); });
+    button.addEventListener("keydown", function (event) {
+      if (["ArrowLeft", "ArrowRight", "Home", "End"].indexOf(event.key) < 0) return;
+      event.preventDefault();
+      var nextIndex = event.key === "Home" ? 0 : event.key === "End" ? inspectorTabs.length - 1 : (index + (event.key === "ArrowRight" ? 1 : -1) + inspectorTabs.length) % inspectorTabs.length;
+      activateInspectorTab(inspectorTabs[nextIndex]); inspectorTabs[nextIndex].focus();
+    });
+  });
   root.querySelector("[data-sm-add]").addEventListener("click", addHotspot);
   root.querySelector("[data-sm-duplicate]").addEventListener("click", function () { if (!selected) return; var copy = clone(selected); copy.id = slugify(copy.id + "-copy", "hotspot-copy"); copy.title.en += " Copy"; hotspots.push(copy); selected = copy; setDirty(true); renderAll(); });
-  root.querySelector("[data-sm-delete]").addEventListener("click", function () { if (!selected || !window.confirm("Delete “" + ((selected.title || {}).en || selected.id) + "” from this draft?")) return; hotspots = hotspots.filter(function (item) { return item !== selected; }); selected = hotspots[0] || null; setDirty(true); renderAll(); });
-  placeButton.addEventListener("click", function () { if (!selected) { showStatus("Select a hotspot first.", true); return; } placing = !placing; updateStage(); });
+  root.querySelector("[data-sm-delete]").addEventListener("click", async function () {
+    if (!selected) return;
+    var title = (selected.title || {}).en || selected.id;
+    var approved = await confirmAction({ eyebrow: "Site Map hotspot", title: "Delete this hotspot?", message: "“" + title + "” will be removed from both Site Map views in this working draft.", label: "Delete hotspot", variant: "disable" });
+    if (!approved) return;
+    hotspots = hotspots.filter(function (item) { return item !== selected; }); selected = hotspots[0] || null; placing = false; setDirty(true); renderAll();
+  });
+  placeButton.addEventListener("click", function () { beginPlacement(activeView); });
+  root.querySelectorAll("[data-sm-place-view]").forEach(function (button) { button.addEventListener("click", function () { beginPlacement(button.dataset.smPlaceView); }); });
   aerialStage.addEventListener("click", placeAerial); panoramaStage.addEventListener("click", placePanorama);
   aerialImage.addEventListener("load", renderAerial); window.addEventListener("resize", renderAerial); if (search) search.addEventListener("input", renderList);
+  [hotspotForm, mapsPanel, settingsPanel].forEach(function (form) { if (form) form.addEventListener("submit", function (event) { event.preventDefault(); }); });
   hotspotForm.addEventListener("input", syncSelectedFromForm);
   settingsPanel.addEventListener("input", function () {
     data.settings.defaultView = settingsPanel.elements.defaultView.value;
@@ -283,9 +340,34 @@
     setDirty(true);
   });
   root.querySelectorAll("[data-sm-upload]").forEach(function (input) { input.addEventListener("change", function () { handleUpload(input); }); });
-  root.querySelectorAll("[data-sm-remove-asset]").forEach(function (button) { button.addEventListener("click", function () { if (!selected) return; var kind = button.dataset.smRemoveAsset; if (kind === "image") { selected.imagePath = ""; selected.imageUrl = ""; } else { var language = kind.slice(-2); selected.audio[language] = ""; selected.audio[language + "Url"] = ""; } setDirty(true); renderForm(); }); });
-  var saveButton = root.querySelector("[data-sm-save]"); if (saveButton) saveButton.addEventListener("click", async function () { saveButton.disabled = true; showStatus("Validating and saving the Site Map draft…", false); try { var response = await request("/config", { method: "PUT", body: JSON.stringify(publicConfigPayload()) }); data = response.config; hotspots = data.hotspots; selected = selected ? hotspotById(selected.id) : hotspots[0] || null; setDirty(false); renderAll(); showStatus("Site Map draft saved.", false); } catch (error) { showStatus(error.message || "The draft could not be saved.", true); } finally { saveButton.disabled = false; } });
-  window.addEventListener("beforeunload", function (event) { if (!dirty || readOnly) return; event.preventDefault(); event.returnValue = ""; });
+  root.querySelectorAll("[data-sm-remove-asset]").forEach(function (button) { button.addEventListener("click", async function () {
+    if (!selected) return;
+    var kind = button.dataset.smRemoveAsset; var label = kind === "image" ? "photo" : (kind.slice(-2) === "tl" ? "Tagalog audio" : "English audio");
+    var hasAsset = kind === "image" ? Boolean(selected.imagePath || selected.imageUrl) : Boolean(selectedAudio(kind.slice(-2)) || selectedAudioUrl(kind.slice(-2)));
+    if (!hasAsset) { showStatus("This hotspot has no " + label + " to remove.", true); return; }
+    var approved = await confirmAction({ eyebrow: "Hotspot media", title: "Remove this " + label + "?", message: "The " + label + " will be detached from “" + ((selected.title || {}).en || selected.id) + "” in this working draft.", label: "Remove " + label, variant: "disable" });
+    if (!approved) return;
+    if (kind === "image") { selected.imagePath = ""; selected.imageUrl = ""; } else { var language = kind.slice(-2); selected.audio[language] = ""; selected.audio[language + "Url"] = ""; }
+    setDirty(true); renderForm();
+  }); });
+  var saveButton = root.querySelector("[data-sm-save]"); if (saveButton) saveButton.addEventListener("click", async function () {
+    var approved = await confirmAction({ eyebrow: "Site Map draft", title: "Save all Site Map changes?", message: "Hotspot positions, content, media, maps, and settings will be saved to the working database revision. The public version will not change until you publish.", label: "Save draft", variant: "enable" });
+    if (!approved) return;
+    saveButton.disabled = true; showStatus("Validating and saving the Site Map draft…", false);
+    try { var response = await request("/config", { method: "PUT", body: JSON.stringify(publicConfigPayload()) }); data = response.config; hotspots = data.hotspots; selected = selected ? hotspotById(selected.id) : hotspots[0] || null; setDirty(false); renderAll(); showStatus("Site Map draft saved.", false); }
+    catch (error) { showStatus(error.message || "The draft could not be saved.", true); }
+    finally { saveButton.disabled = false; }
+  });
+  document.addEventListener("click", function (event) {
+    if (allowPageExit || !dirty || readOnly || event.defaultPrevented || event.button !== 0 || event.metaKey || event.ctrlKey || event.shiftKey || event.altKey) return;
+    var link = event.target.closest && event.target.closest("a[href]");
+    if (!link || link.target === "_blank" || link.hasAttribute("download")) return;
+    var destination; try { destination = new URL(link.href, window.location.href); } catch (_) { return; }
+    if (destination.protocol !== "http:" && destination.protocol !== "https:") return;
+    event.preventDefault(); event.stopImmediatePropagation();
+    confirmAction({ eyebrow: "Unsaved Site Map changes", title: "Leave without saving?", message: "Your unsaved Site Map edits will be lost if you leave this page now.", label: "Leave page", variant: "disable" }).then(function (approved) { if (!approved) return; allowPageExit = true; window.location.assign(destination.href); });
+  }, true);
+  window.addEventListener("beforeunload", function (event) { if (allowPageExit || !dirty || readOnly) return; event.preventDefault(); event.returnValue = ""; });
   window.addEventListener("unload", function () { temporaryUrls.forEach(function (url) { URL.revokeObjectURL(url); }); });
 
   renderAll();

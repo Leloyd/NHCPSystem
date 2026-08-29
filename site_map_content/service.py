@@ -76,7 +76,9 @@ def _original_aerial_position(raw: dict[str, Any], image_meta: dict[str, Any], w
     reference_height = float(image_meta.get("referenceHeight") or coordinate_height)
     x = float(raw.get("x") or 0) * (reference_width / coordinate_width) - float(image_meta.get("cropOffsetX") or 0)
     y = float(raw.get("y") or 0) * (reference_height / coordinate_height) - float(image_meta.get("cropOffsetY") or 0)
-    return min(1.0, max(0.0, x / width)), min(1.0, max(0.0, y / height))
+    # Legacy Site Map hotspot Y values are Leaflet latitudes measured upward
+    # from the image bottom. The editor stores normal image-top coordinates.
+    return min(1.0, max(0.0, x / width)), min(1.0, max(0.0, 1.0 - (y / height)))
 
 
 def packaged_original_config() -> dict[str, Any]:
@@ -162,7 +164,7 @@ def packaged_original_config() -> dict[str, Any]:
         })
 
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "coordinateSystem": "image-top-left",
         "aerialMap": {"path": str(minimap.get("image") or "/static/images/site-map/aerial-map.jpg"), "width": width, "height": height},
         "panoramaMap": {"path": "/static/images/site-map/360aerial_view.jpg", "width": 4096, "height": 2048, "initialPitch": 0, "initialYaw": 0, "initialHfov": 110},
@@ -193,19 +195,30 @@ def _image_dimension(value: Any, label: str, default: int) -> int:
 
 
 def upgrade_coordinate_system(config: dict[str, Any]) -> tuple[dict[str, Any], bool]:
-    """Repair drafts produced by the first admin importer, which inverted only tour-derived Y values."""
-    if not isinstance(config, dict) or config.get("coordinateSystem") == "image-top-left":
+    """Upgrade early drafts to one consistent image-top-left coordinate system."""
+    if not isinstance(config, dict):
+        return config, False
+    try:
+        schema_version = int(config.get("schemaVersion") or 1)
+    except (TypeError, ValueError):
+        schema_version = 1
+    already_top_left = config.get("coordinateSystem") == "image-top-left"
+    if already_top_left and schema_version >= 2:
         return config, False
     repaired = json.loads(json.dumps(config))
-    inverted_original_ids = {
+    tour_derived_ids = {
         "front-gate", "flag-pole", "middle-ground", "left-side-inside", "right-side-inside",
         "left-tombs", "right-tombs", "church-front", "church", "museum-landmark",
     }
+    legacy_leaflet_ids = {"parking", "resource-center-office", "underground-crypts"}
     for hotspot in repaired.get("hotspots") if isinstance(repaired.get("hotspots"), list) else []:
         if not isinstance(hotspot, dict):
             continue
         hotspot_id = str(hotspot.get("id") or "")
-        if hotspot_id not in inverted_original_ids and not hotspot_id.startswith("virtual-tour-"):
+        should_flip_tour_position = not already_top_left and (
+            hotspot_id in tour_derived_ids or hotspot_id.startswith("virtual-tour-")
+        )
+        if not should_flip_tour_position and hotspot_id not in legacy_leaflet_ids:
             continue
         aerial = hotspot.get("aerial") if isinstance(hotspot.get("aerial"), dict) else None
         if aerial is None:
@@ -215,6 +228,7 @@ def upgrade_coordinate_system(config: dict[str, Any]) -> tuple[dict[str, Any], b
         except (TypeError, ValueError):
             continue
     repaired["coordinateSystem"] = "image-top-left"
+    repaired["schemaVersion"] = 2
     return repaired, True
 
 
@@ -307,7 +321,7 @@ def validate_config(raw: Any, *, site_map_id: int) -> dict[str, Any]:
     if not hotspots:
         raise ValueError("Add at least one Site Map hotspot before saving.")
     return {
-        "schemaVersion": 1,
+        "schemaVersion": 2,
         "coordinateSystem": "image-top-left",
         "aerialMap": {"path": aerial_path, "width": _image_dimension(aerial.get("width"), "Aerial width", 3074), "height": _image_dimension(aerial.get("height"), "Aerial height", 2250)},
         "panoramaMap": {"path": panorama_path, "width": int(_number(panorama.get("width"), 1024, 12000, "Panorama width", 4096)), "height": int(_number(panorama.get("height"), 512, 6000, "Panorama height", 2048)), "initialPitch": _number(panorama.get("initialPitch"), -90, 90, "Initial pitch"), "initialYaw": _number(panorama.get("initialYaw"), -180, 180, "Initial yaw"), "initialHfov": _number(panorama.get("initialHfov"), 30, 150, "Initial field of view", 110)},

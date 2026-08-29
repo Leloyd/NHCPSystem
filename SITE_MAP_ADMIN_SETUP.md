@@ -34,3 +34,5 @@ The application uses the existing Supabase service-role connection and the same 
 - Optional bilingual custom button and internal/external URL
 
 The editor also supports search, duplicate/delete, default opening view, initial 360° camera direction, and whether hotspots start visible.
+
+Select a hotspot and open **Hotspot → View placement** to see its current X/Y and pitch/yaw. Choose **Reposition on aerial map** or **Reposition in 360° view**, click the intended point, and confirm the captured coordinates. Destructive actions, uploads, position changes, saving, publishing, reverting, and leaving with unsaved work use the shared admin confirmation dialog.
