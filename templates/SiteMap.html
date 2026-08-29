@@ -40,6 +40,9 @@
           <circle id="mapInfoConnectorEnd" class="map-info-connector__end" r="3"></circle>
         </svg>
         <div id="mapInfoCard" class="map-info-card" role="dialog" aria-modal="false" aria-labelledby="mapInfoTitle">
+          <button id="mapInfoDragHandle" class="map-info-card__drag-handle" type="button" aria-label="Drag the location information panel">
+            <span class="map-info-card__drag-grip" aria-hidden="true"></span>
+          </button>
           <button id="mapInfoClose" class="map-info-card__close" type="button" aria-label="Close location information">&times;</button>
           <p id="mapInfoRoute" class="map-info-card__route">Hotspot Information</p>
           <h3 id="mapInfoTitle" class="map-info-card__title font-serif">Select a hotspot</h3>
@@ -84,7 +87,11 @@
               <path d="M4.75 4h14.5c.41 0 .75.34.75.75v14.5a.75.75 0 0 1-.75.75H4.75a.75.75 0 0 1-.75-.75V4.75c0-.41.34-.75.75-.75Zm.75 1.5v13h13v-13h-13Zm2.25 2.25h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 3.75h8.5a.75.75 0 0 1 0 1.5h-8.5a.75.75 0 0 1 0-1.5Zm0 3.75h5.5a.75.75 0 0 1 0 1.5h-5.5a.75.75 0 0 1 0-1.5Z" fill="currentColor"></path>
             </svg>
           </span>
-          <span class="site-map-control-dock__label" id="mapLanguageLabel">EN</span>
+          <span class="site-map-language-switch" id="mapLanguageLabel" aria-hidden="true">
+            <span class="site-map-language-switch__option is-selected" data-language-option="en">EN</span>
+            <span class="site-map-language-switch__divider">/</span>
+            <span class="site-map-language-switch__option" data-language-option="tl">TL</span>
+          </span>
         </button>
         <button class="site-map-control-dock__camera" id="resetViewBtn" type="button" aria-label="Reset view">
           <span class="site-map-control-dock__camera-icon" aria-hidden="true">

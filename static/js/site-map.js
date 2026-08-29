@@ -119,6 +119,7 @@
     markerNodesBound: {},
     virtualTourLandmarks: [],
     virtualTourLandmarkMarkers: [],
+    virtualTourSceneCount: 0,
     panoramaHotspotNodesById: {},
     routeLayer: null,
     audioPlayer: null,
@@ -132,6 +133,9 @@
     controlRevealTimer: 0,
     infoConnectorRafId: 0,
     infoConnectorStopId: "",
+    infoCardDragged: false,
+    infoCardPosition: null,
+    infoCardDrag: null,
     reduceMotion: window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
   };
 
@@ -155,6 +159,7 @@
     viewTransitionText: document.getElementById("mapViewTransitionText"),
     mapInfoOverlay: document.getElementById("mapInfoOverlay"),
     mapInfoCard: document.getElementById("mapInfoCard"),
+    mapInfoDragHandle: document.getElementById("mapInfoDragHandle"),
     mapInfoConnector: document.getElementById("mapInfoConnector"),
     mapInfoConnectorShadow: document.getElementById("mapInfoConnectorShadow"),
     mapInfoConnectorPath: document.getElementById("mapInfoConnectorPath"),
@@ -245,17 +250,6 @@
         state.imageUrl = state.defaultImageUrl;
         state.alternateImageUrl = ALT_IMAGE_URL;
         state.sourceCoordinateSpace = normalizeCoordinateSpace(payload && payload.image);
-        state.hotspotsById = {};
-
-        state.hotspots.forEach(function (spot) {
-          state.hotspotsById[spot.id] = spot;
-        });
-
-        var categories = {};
-        state.hotspots.forEach(function (spot) {
-          categories[spot.category] = true;
-        });
-        state.selectedCategories = categories;
         state.hotspotsVisible = true;
       })
       .then(function () {
@@ -272,14 +266,123 @@
                   return item;
                 })
               : [];
+            mergeVirtualTourScenes(payload && payload.scenes);
           })
           .catch(function (error) {
             state.virtualTourLandmarks = [];
+            state.virtualTourSceneCount = 0;
             if (window.console && window.console.warn) {
-              window.console.warn("The Site Map opened without the shared Virtual Tour landmarks.", error);
+              window.console.warn("The Site Map opened without the shared Virtual Tour coordinates.", error);
             }
           });
+      })
+      .then(function () {
+        indexHotspots();
       });
+  }
+
+  function indexHotspots() {
+    var categories = {};
+    state.hotspotsById = {};
+
+    state.hotspots.forEach(function (spot) {
+      state.hotspotsById[spot.id] = spot;
+      categories[spot.category] = true;
+    });
+    state.selectedCategories = categories;
+  }
+
+  function normalizeVirtualTourScene(sceneId, raw) {
+    if (!sceneId || !raw) {
+      return null;
+    }
+
+    var x = Number(raw.x);
+    var y = Number(raw.y);
+    if (!isFinite(x) || !isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) {
+      return null;
+    }
+
+    return {
+      sceneId: String(sceneId),
+      x: x,
+      y: y,
+      label: String(raw.label || sceneId),
+    };
+  }
+
+  function createVirtualTourHotspot(scene) {
+    var title = scene.label || scene.sceneId;
+    return {
+      id: "virtual-tour-" + scene.sceneId,
+      title: title,
+      category: "Virtual Tour Stop",
+      sourceX: 0,
+      sourceY: 0,
+      x: 0,
+      y: 0,
+      mapFractionX: scene.x,
+      mapFractionY: scene.y,
+      virtualTourScene: scene.sceneId,
+      era: "-",
+      focus: "-",
+      prompt: "-",
+      description: "This point marks the “" + title + "” location in the Virtual Tour.",
+      translations: {
+        tl: {
+          description: "Tinutukoy ng puntong ito ang lokasyong “" + title + "” sa Virtual Tour.",
+        },
+      },
+      panorama: null,
+      media: [],
+      learnMore: "",
+      learnMoreLabel: "",
+      view360: "",
+      arModel: "",
+      arModelLabel: "",
+      audio: "",
+      audioByLanguage: {},
+      videoEmbed: "",
+    };
+  }
+
+  function mergeVirtualTourScenes(rawScenes) {
+    var scenes = [];
+    var scenesById = {};
+    var claimedScenes = {};
+
+    if (rawScenes && typeof rawScenes === "object") {
+      Object.keys(rawScenes).forEach(function (sceneId) {
+        var scene = normalizeVirtualTourScene(sceneId, rawScenes[sceneId]);
+        if (!scene) {
+          return;
+        }
+        scenes.push(scene);
+        scenesById[scene.sceneId] = scene;
+      });
+    }
+
+    state.hotspots.forEach(function (spot) {
+      var sceneId = spot.id === "parking" ? "" : (VIRTUAL_TOUR_SCENE_BY_STOP[spot.id] || "");
+      var scene = sceneId ? scenesById[sceneId] : null;
+
+      // Reuse the rich Site Map information at the matching Virtual Tour point.
+      // Parking deliberately stays at its original Site Map coordinate.
+      if (scene && !claimedScenes[sceneId]) {
+        spot.mapFractionX = scene.x;
+        spot.mapFractionY = scene.y;
+        spot.virtualTourScene = scene.sceneId;
+        claimedScenes[sceneId] = true;
+      }
+    });
+
+    scenes.forEach(function (scene) {
+      if (!claimedScenes[scene.sceneId]) {
+        state.hotspots.push(createVirtualTourHotspot(scene));
+      }
+    });
+
+    state.virtualTourSceneCount = scenes.length;
   }
 
   function normalizeVirtualTourLandmark(raw) {
@@ -358,6 +461,9 @@
       sourceY: Number(raw.y),
       x: Number(raw.x),
       y: Number(raw.y),
+      mapFractionX: null,
+      mapFractionY: null,
+      virtualTourScene: raw.virtualTourScene ? String(raw.virtualTourScene) : "",
       era: String(raw.era || "-"),
       focus: String(raw.focus || "-"),
       prompt: String(raw.prompt || "-"),
@@ -613,8 +719,13 @@
     var cropOffsetY = Number(coordinateSpace.cropOffsetY) || 0;
 
     state.hotspots.forEach(function (spot) {
-      spot.x = spot.sourceX * scaleX - cropOffsetX;
-      spot.y = spot.sourceY * scaleY - cropOffsetY;
+      if (spot.mapFractionX !== null && spot.mapFractionY !== null && isFinite(spot.mapFractionX) && isFinite(spot.mapFractionY)) {
+        spot.x = spot.mapFractionX * state.imageSize.width;
+        spot.y = (1 - spot.mapFractionY) * state.imageSize.height;
+      } else {
+        spot.x = spot.sourceX * scaleX - cropOffsetX;
+        spot.y = spot.sourceY * scaleY - cropOffsetY;
+      }
     });
   }
 
@@ -1303,7 +1414,7 @@
       elements.stopLinks.appendChild(locateButton);
     }
 
-    var virtualTourScene = VIRTUAL_TOUR_SCENE_BY_STOP[stop.id] || "";
+    var virtualTourScene = stop.virtualTourScene || VIRTUAL_TOUR_SCENE_BY_STOP[stop.id] || "";
     var links = [
       {
         href: virtualTourScene ? "/virtual-tour?scene=" + encodeURIComponent(virtualTourScene) : "",
@@ -1570,6 +1681,7 @@
   function clearActiveSelection() {
     state.stopId = "";
     hideMapInfoOverlay();
+    resetInfoCardDrag();
     clearMarkerStyles();
   }
 
@@ -1591,7 +1703,10 @@
     }
 
     var isTagalog = getCurrentLanguage() === "tl";
-    elements.languageLabel.textContent = isTagalog ? "TL" : "EN";
+    elements.languageBtn.dataset.language = isTagalog ? "tl" : "en";
+    elements.languageLabel.querySelectorAll("[data-language-option]").forEach(function (option) {
+      option.classList.toggle("is-selected", option.dataset.languageOption === (isTagalog ? "tl" : "en"));
+    });
     elements.languageBtn.classList.toggle("is-active", isTagalog);
     elements.languageBtn.setAttribute("aria-pressed", isTagalog ? "true" : "false");
     elements.languageBtn.setAttribute(
@@ -1643,8 +1758,125 @@
     clearActiveSelection();
   }
 
+  function resetInfoCardDrag() {
+    state.infoCardDragged = false;
+    state.infoCardPosition = null;
+    state.infoCardDrag = null;
+
+    if (!elements.mapInfoCard) {
+      return;
+    }
+
+    elements.mapInfoCard.classList.remove("is-dragged", "is-dragging");
+    ["right", "bottom", "left", "top", "transform"].forEach(function (property) {
+      elements.mapInfoCard.style.removeProperty(property);
+    });
+    if (elements.mapInfoDragHandle) {
+      elements.mapInfoDragHandle.setAttribute("aria-grabbed", "false");
+    }
+  }
+
+  function applyDraggedInfoCardPosition(stop) {
+    if (!elements.mapInfoOverlay || !elements.mapInfoCard || !state.infoCardPosition) {
+      return;
+    }
+
+    var overlayWidth = elements.mapInfoOverlay.clientWidth || window.innerWidth || 0;
+    var overlayHeight = elements.mapInfoOverlay.clientHeight || window.innerHeight || 0;
+    var cardWidth = elements.mapInfoCard.offsetWidth || 320;
+    var cardHeight = elements.mapInfoCard.offsetHeight || 180;
+    var padding = 8;
+    var dockClearance = window.innerWidth <= 640 ? 72 : 10;
+    var maxLeft = Math.max(padding, overlayWidth - cardWidth - padding);
+    var maxTop = Math.max(padding, overlayHeight - cardHeight - dockClearance);
+    var left = Math.max(padding, Math.min(state.infoCardPosition.left, maxLeft));
+    var top = Math.max(padding, Math.min(state.infoCardPosition.top, maxTop));
+
+    state.infoCardPosition = { left: left, top: top };
+    elements.mapInfoCard.classList.add("is-dragged");
+    elements.mapInfoCard.style.setProperty("left", left + "px", "important");
+    elements.mapInfoCard.style.setProperty("top", top + "px", "important");
+    elements.mapInfoCard.style.setProperty("right", "auto", "important");
+    elements.mapInfoCard.style.setProperty("bottom", "auto", "important");
+    elements.mapInfoCard.style.setProperty("transform", "none", "important");
+    elements.mapInfoCard.dataset.placement = "dragged";
+
+    if (stop) {
+      scheduleMapInfoConnector(stop);
+    }
+  }
+
+  function startInfoCardDrag(event) {
+    if (!elements.mapInfoCard || !elements.mapInfoOverlay || elements.mapInfoOverlay.hidden) {
+      return;
+    }
+    if (typeof event.button === "number" && event.button !== 0) {
+      return;
+    }
+
+    var overlayRect = elements.mapInfoOverlay.getBoundingClientRect();
+    var cardRect = elements.mapInfoCard.getBoundingClientRect();
+    state.infoCardDrag = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      left: cardRect.left - overlayRect.left,
+      top: cardRect.top - overlayRect.top,
+    };
+    state.infoCardPosition = {
+      left: state.infoCardDrag.left,
+      top: state.infoCardDrag.top,
+    };
+    elements.mapInfoCard.classList.add("is-dragging");
+    if (elements.mapInfoDragHandle) {
+      elements.mapInfoDragHandle.setAttribute("aria-grabbed", "true");
+      if (typeof elements.mapInfoDragHandle.setPointerCapture === "function") {
+        elements.mapInfoDragHandle.setPointerCapture(event.pointerId);
+      }
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function moveInfoCardDrag(event) {
+    if (!state.infoCardDrag || event.pointerId !== state.infoCardDrag.pointerId) {
+      return;
+    }
+
+    state.infoCardDragged = true;
+    state.infoCardPosition = {
+      left: state.infoCardDrag.left + event.clientX - state.infoCardDrag.startX,
+      top: state.infoCardDrag.top + event.clientY - state.infoCardDrag.startY,
+    };
+    applyDraggedInfoCardPosition(state.infoStopId ? state.hotspotsById[state.infoStopId] || null : null);
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
+  function endInfoCardDrag(event) {
+    if (!state.infoCardDrag || event.pointerId !== state.infoCardDrag.pointerId) {
+      return;
+    }
+
+    state.infoCardDrag = null;
+    if (elements.mapInfoCard) {
+      elements.mapInfoCard.classList.remove("is-dragging");
+    }
+    if (elements.mapInfoDragHandle) {
+      elements.mapInfoDragHandle.setAttribute("aria-grabbed", "false");
+    }
+    event.preventDefault();
+    event.stopPropagation();
+  }
+
   function positionMapInfoOverlay(stop) {
     if (!stop || !elements.mapInfoOverlay || !elements.mapInfoCard) {
+      return;
+    }
+
+    if (state.infoCardDragged && state.infoCardPosition) {
+      elements.mapInfoOverlay.hidden = false;
+      applyDraggedInfoCardPosition(stop);
       return;
     }
 
@@ -1801,6 +2033,9 @@
       return;
     }
 
+    if (state.infoStopId !== target.id) {
+      resetInfoCardDrag();
+    }
     state.stopId = target.id;
     state.infoStopId = target.id;
     renderAll();
@@ -1829,6 +2064,45 @@
     if (elements.mapInfoClose) {
       elements.mapInfoClose.addEventListener("click", function () {
         clearActiveSelection();
+      });
+    }
+
+    if (elements.mapInfoDragHandle) {
+      elements.mapInfoDragHandle.setAttribute("aria-grabbed", "false");
+      elements.mapInfoDragHandle.addEventListener("pointerdown", startInfoCardDrag);
+      elements.mapInfoDragHandle.addEventListener("pointermove", moveInfoCardDrag);
+      elements.mapInfoDragHandle.addEventListener("pointerup", endInfoCardDrag);
+      elements.mapInfoDragHandle.addEventListener("pointercancel", endInfoCardDrag);
+      elements.mapInfoDragHandle.addEventListener("lostpointercapture", function () {
+        state.infoCardDrag = null;
+        elements.mapInfoCard.classList.remove("is-dragging");
+        elements.mapInfoDragHandle.setAttribute("aria-grabbed", "false");
+      });
+      elements.mapInfoDragHandle.addEventListener("keydown", function (event) {
+        if (!state.infoStopId || ["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown"].indexOf(event.key) === -1) {
+          return;
+        }
+
+        var overlayRect = elements.mapInfoOverlay.getBoundingClientRect();
+        var cardRect = elements.mapInfoCard.getBoundingClientRect();
+        var step = event.shiftKey ? 24 : 8;
+        state.infoCardDragged = true;
+        state.infoCardPosition = state.infoCardPosition || {
+          left: cardRect.left - overlayRect.left,
+          top: cardRect.top - overlayRect.top,
+        };
+        if (event.key === "ArrowLeft") {
+          state.infoCardPosition.left -= step;
+        } else if (event.key === "ArrowRight") {
+          state.infoCardPosition.left += step;
+        } else if (event.key === "ArrowUp") {
+          state.infoCardPosition.top -= step;
+        } else if (event.key === "ArrowDown") {
+          state.infoCardPosition.top += step;
+        }
+        applyDraggedInfoCardPosition(state.hotspotsById[state.infoStopId] || null);
+        event.preventDefault();
+        event.stopPropagation();
       });
     }
 
@@ -1862,24 +2136,6 @@
         state.hotspotsVisible = !state.hotspotsVisible;
         updateHotspotToggleButton();
         renderAll();
-      });
-    }
-
-    if (elements.panoramaRoot) {
-      elements.panoramaRoot.addEventListener("click", function (event) {
-        if (!is360ViewActive()) {
-          return;
-        }
-
-        if (
-          event.target &&
-          typeof event.target.closest === "function" &&
-          event.target.closest(".site-map-panorama-hotspot, .tour-ground-hotspot")
-        ) {
-          return;
-        }
-
-        clearActiveSelection();
       });
     }
 

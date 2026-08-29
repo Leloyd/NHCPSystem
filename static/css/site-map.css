@@ -1117,14 +1117,139 @@
   white-space: nowrap;
 }
 
+/* Language is a two-state selector, so its active language is shown inside
+   the label instead of flooding the icon with an active background. */
+#mapLanguageBtn,
+#mapLanguageBtn.is-active,
+#mapToggleHotspotsBtn.is-active {
+  border-color: rgba(212, 175, 106, 0.72);
+  background: rgba(20, 13, 6, 0.9);
+  color: #faf7f2;
+  box-shadow: 0 10px 26px rgba(0, 0, 0, 0.3), inset 0 0 0 1px rgba(250, 247, 242, 0.04);
+}
+
+#mapLanguageBtn .site-map-control-dock__icon,
+#mapToggleHotspotsBtn .site-map-control-dock__icon {
+  color: rgba(250, 247, 242, 0.76);
+}
+
+.site-map-language-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.1rem;
+  padding: 2px;
+  border: 1px solid rgba(212, 175, 106, 0.28);
+  border-radius: 999px;
+  background: rgba(250, 247, 242, 0.06);
+  color: rgba(250, 247, 242, 0.54);
+  font: 700 0.6rem/1 "Inter", sans-serif;
+  letter-spacing: 0.03em;
+}
+
+.site-map-language-switch__option {
+  min-width: 1.45rem;
+  padding: 0.28rem 0.32rem;
+  border-radius: 999px;
+  text-align: center;
+  transition: color 160ms ease, background 160ms ease, box-shadow 160ms ease;
+}
+
+.site-map-language-switch__option.is-selected {
+  background: #d4af6a;
+  box-shadow: 0 3px 10px rgba(0, 0, 0, 0.28);
+  color: #1c1208;
+}
+
+.site-map-language-switch__divider {
+  color: rgba(212, 175, 106, 0.42);
+}
+
+#mapToggleHotspotsBtn::after {
+  position: absolute;
+  top: 7px;
+  right: 7px;
+  width: 6px;
+  height: 6px;
+  border: 1px solid rgba(250, 247, 242, 0.82);
+  border-radius: 50%;
+  background: #d4af6a;
+  box-shadow: 0 0 0 2px rgba(212, 175, 106, 0.18);
+  content: "";
+  opacity: 0;
+  transform: scale(0.7);
+  transition: opacity 160ms ease, transform 160ms ease;
+}
+
+#mapToggleHotspotsBtn[aria-pressed="true"]::after {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .map-info-card {
-  padding: 1rem 1.05rem 1.05rem;
+  padding: 1.35rem 1.05rem 1.05rem;
   border: 1px solid rgba(212, 175, 106, 0.45);
   border-radius: 15px;
   background: rgba(250, 247, 242, 0.97);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.34);
   color: #1c1208;
   animation: site-map-card-in 0.34s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.map-info-card__drag-handle {
+  position: absolute;
+  top: 0.2rem;
+  left: 50%;
+  z-index: 3;
+  width: 58px;
+  height: 22px;
+  display: grid;
+  place-items: center;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: grab;
+  touch-action: none;
+  transform: translateX(-50%);
+}
+
+.map-info-card__drag-handle:active,
+.map-info-card.is-dragging .map-info-card__drag-handle {
+  cursor: grabbing;
+}
+
+.map-info-card__drag-handle:focus-visible {
+  outline: 2px solid #b8923a;
+  outline-offset: -2px;
+}
+
+.map-info-card__drag-grip,
+.map-info-card__drag-grip::before,
+.map-info-card__drag-grip::after {
+  display: block;
+  width: 24px;
+  height: 2px;
+  border-radius: 999px;
+  background: rgba(138, 105, 40, 0.68);
+  content: "";
+}
+
+.map-info-card__drag-grip {
+  position: relative;
+}
+
+.map-info-card__drag-grip::before,
+.map-info-card__drag-grip::after {
+  position: absolute;
+  left: 0;
+}
+
+.map-info-card__drag-grip::before { top: -4px; }
+.map-info-card__drag-grip::after { top: 4px; }
+
+.map-info-card.is-dragging {
+  user-select: none;
+  box-shadow: 0 26px 58px rgba(0, 0, 0, 0.42);
 }
 
 .map-info-card__close {
@@ -1221,6 +1346,13 @@
     height: 13px;
   }
 
+  #mapLanguageBtn .site-map-control-dock__icon { display: none; }
+
+  .site-map-language-switch__option {
+    min-width: 1.25rem;
+    padding: 0.25rem 0.26rem;
+  }
+
   .site-map-control-dock__label { font-size: 0.56rem; }
 
   .map-info-card {
@@ -1232,7 +1364,7 @@
     width: min(29rem, calc(100% - 1rem));
     max-height: min(58dvh, 32rem);
     overflow-y: auto;
-    padding: 0.85rem 0.9rem 0.9rem;
+    padding: 1.25rem 0.9rem 0.9rem;
     transform: translateX(-50%) !important;
     overscroll-behavior: contain;
   }
@@ -1349,6 +1481,10 @@
   left: calc(50% - 17px);
   width: 34px;
   height: 9px;
+}
+
+.map-info-card[data-placement="dragged"]::before {
+  display: none;
 }
 
 .map-info-card.is-entering {
