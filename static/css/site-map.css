@@ -589,82 +589,105 @@
   z-index: auto;
 }
 
-.map-pin-marker {
-  background: transparent;
-  border: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.map-pin-marker,
-.map-pin-marker * {
+/* The aerial-map hotspots intentionally match the small scene dots used by
+   the Virtual Tour's expanded map. The Leaflet wrapper remains 44px so each
+   hotspot keeps a comfortable mouse and touch target. */
+.site-map-hotspot-marker {
+  display: grid;
+  place-items: center;
   box-sizing: border-box;
+  border: 0 !important;
+  background: transparent !important;
+  cursor: pointer;
 }
 
-.map-pin-marker:focus-visible {
+.site-map-hotspot-marker:focus-visible {
   outline: none;
 }
 
-.map-pin {
-  position: relative;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 44px;
-  height: 44px;
-  transform-origin: 50% 90%;
-  transition: transform 0.18s ease, filter 0.18s ease;
-}
-
-.map-pin__pulse {
+.site-map-hotspot-dot {
   position: absolute;
-  top: 2px;
-  left: 5px;
-  width: 34px;
-  height: 34px;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid rgba(13, 10, 4, 0.7);
   border-radius: 999px;
-  border: 1px solid rgba(212, 175, 106, 0.5);
-  background: rgba(212, 175, 106, 0.12);
-  animation: map-pin-pulse 1.9s ease-out infinite;
-  transition: background 0.18s ease, transform 0.18s ease, opacity 0.18s ease;
+  background: rgba(250, 247, 242, 0.7);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.28);
+  transform: translate(-50%, -50%);
+  transition: width 0.15s ease, height 0.15s ease, background 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
 }
 
-.map-pin__shadow {
+.site-map-hotspot-marker.is-hover .site-map-hotspot-dot,
+.site-map-hotspot-marker:hover .site-map-hotspot-dot {
+  background: #ffffff;
+  transform: translate(-50%, -50%) scale(1.25);
+}
+
+.site-map-hotspot-marker.is-active .site-map-hotspot-dot {
+  width: 18px;
+  height: 18px;
+  background: #d4af6a;
+  box-shadow: 0 0 0 4px rgba(212, 175, 106, 0.3), 0 2px 7px rgba(0, 0, 0, 0.34);
+  transform: translate(-50%, -50%);
+}
+
+.site-map-hotspot-marker.is-active .site-map-hotspot-dot::after {
+  content: "";
   position: absolute;
-  left: 50%;
-  bottom: 1px;
-  width: 22px;
-  height: 7px;
-  border-radius: 50%;
-  background: rgba(13, 10, 4, 0.34);
-  filter: blur(2px);
-  transform: translateX(-50%);
+  inset: -4px;
+  box-sizing: border-box;
+  border: 1px solid #d4af6a;
+  border-radius: 999px;
+  animation: site-map-hotspot-pulse 1.9s ease-out infinite;
 }
 
-.map-pin__badge {
-  position: absolute;
-  top: 0;
-  left: 50%;
-  display: grid;
-  place-items: center;
-  width: 34px;
-  height: 40px;
-  color: #d4af6a;
-  transform: translateX(-50%);
-  transition: color 0.18s ease, filter 0.18s ease;
+.site-map-hotspot-marker:focus-visible .site-map-hotspot-dot {
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(212, 175, 106, 0.5), 0 2px 7px rgba(0, 0, 0, 0.34);
 }
 
-.map-pin__glyph {
+@keyframes site-map-hotspot-pulse {
+  0% { transform: scale(0.7); opacity: 0.85; }
+  100% { transform: scale(2.6); opacity: 0; }
+}
+
+/* Museum and Chapel are sourced directly from tour-minimap.json, so both
+   aerial maps use the same gold diamond, label, and calibrated position. */
+.site-map-landmark-marker {
+  box-sizing: border-box;
+  border: 0 !important;
+  background: transparent !important;
+  pointer-events: none !important;
+}
+
+.site-map-landmark-pin {
   display: block;
-  width: 34px;
-  height: 40px;
-  overflow: visible;
-  filter: drop-shadow(0 5px 5px rgba(13, 10, 4, 0.45));
+  width: 14px;
+  height: 14px;
+  box-sizing: border-box;
+  border: 2px solid rgba(13, 10, 4, 0.85);
+  border-radius: 3px;
+  background: #d4af6a;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.5);
+  transform: rotate(45deg);
 }
 
-.map-pin__glyph path:first-child {
-  fill: #1c1208;
+.site-map-landmark-label {
+  position: absolute;
+  top: calc(50% + 12px);
+  left: 50%;
+  color: #faf7f2;
+  font-family: Georgia, "Times New Roman", serif;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
+  white-space: nowrap;
+  transform: translateX(-50%);
 }
 
 @keyframes map-pin-pulse {
@@ -682,32 +705,6 @@
     transform: scale(1.18);
     opacity: 0;
   }
-}
-
-.map-pin-marker.is-hover .map-pin,
-.map-pin-marker.is-active .map-pin,
-.map-pin-marker:focus-visible .map-pin {
-  transform: scale(1.12);
-}
-
-.map-pin-marker.is-hover .map-pin__pulse,
-.map-pin-marker:focus-visible .map-pin__pulse {
-  background: rgba(212, 175, 106, 0.2);
-  border-color: rgba(212, 175, 106, 0.72);
-}
-
-.map-pin-marker.is-active .map-pin__pulse {
-  background: rgba(250, 247, 242, 0.16);
-  border-color: rgba(250, 247, 242, 0.72);
-}
-
-.map-pin-marker.is-active .map-pin__badge {
-  color: #faf7f2;
-  filter: drop-shadow(0 0 7px rgba(212, 175, 106, 0.78));
-}
-
-.map-pin-marker:focus-visible .map-pin__badge {
-  filter: drop-shadow(0 0 6px rgba(250, 247, 242, 0.9));
 }
 
 .site-map-panorama-hotspot {
@@ -1448,6 +1445,7 @@
   .site-map-loading__ring,
   .site-map-loading__title,
   .site-map-transition__ring,
+  .site-map-hotspot-marker.is-active .site-map-hotspot-dot::after,
   .map-info-card,
   .map-info-connector__path,
   .map-info-connector__origin {

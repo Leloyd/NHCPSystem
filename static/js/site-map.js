@@ -48,6 +48,7 @@
   var DEFAULT_IMAGE_URL = "/static/images/site-map/aerial-map.jpg";
   var ALT_IMAGE_URL = "/static/images/site-map/360aerial_view.jpg";
   var HOTSPOT_DATA_URL = "/static/data/site-map-hotspots.json";
+  var VIRTUAL_TOUR_MAP_DATA_URL = "/static/data/tour-minimap.json";
   var INTRO_AUDIO_BY_LANGUAGE = {
     en: "/static/images/site-map/SiteMapIntroEng.mp3",
     tl: "/static/images/site-map/SiteMapIntroTag.mp3",
@@ -116,6 +117,8 @@
     hotspotsById: {},
     markerById: {},
     markerNodesBound: {},
+    virtualTourLandmarks: [],
+    virtualTourLandmarkMarkers: [],
     panoramaHotspotNodesById: {},
     routeLayer: null,
     audioPlayer: null,
@@ -254,7 +257,47 @@
         });
         state.selectedCategories = categories;
         state.hotspotsVisible = true;
+      })
+      .then(function () {
+        return fetch(VIRTUAL_TOUR_MAP_DATA_URL, { cache: "no-store" })
+          .then(function (response) {
+            if (!response.ok) {
+              throw new Error("Failed to load Virtual Tour map landmarks.");
+            }
+            return response.json();
+          })
+          .then(function (payload) {
+            state.virtualTourLandmarks = Array.isArray(payload.landmarks)
+              ? payload.landmarks.map(normalizeVirtualTourLandmark).filter(function (item) {
+                  return item;
+                })
+              : [];
+          })
+          .catch(function (error) {
+            state.virtualTourLandmarks = [];
+            if (window.console && window.console.warn) {
+              window.console.warn("The Site Map opened without the shared Virtual Tour landmarks.", error);
+            }
+          });
       });
+  }
+
+  function normalizeVirtualTourLandmark(raw) {
+    if (!raw) {
+      return null;
+    }
+
+    var x = Number(raw.x);
+    var y = Number(raw.y);
+    if (!isFinite(x) || !isFinite(y) || x < 0 || x > 1 || y < 0 || y > 1) {
+      return null;
+    }
+
+    return {
+      x: x,
+      y: y,
+      label: String(raw.label || ""),
+    };
   }
 
   function normalizePositiveNumber(value) {
@@ -446,7 +489,7 @@
   }
 
   function getHotspotMarkerHtml() {
-    return '<span class="map-pin" aria-hidden="true"><span class="map-pin__pulse"></span><span class="map-pin__shadow"></span><span class="map-pin__badge"><svg class="map-pin__glyph" viewBox="0 0 24 24"><path d="M12 6.75a3.25 3.25 0 1 0 0 6.5 3.25 3.25 0 0 0 0-6.5Zm0 1.5a1.75 1.75 0 1 1 0 3.5 1.75 1.75 0 0 1 0-3.5Z" fill="currentColor"/><path d="M12 2.5a7 7 0 0 0-7 7c0 5.1 6.12 11.22 6.38 11.48a.88.88 0 0 0 1.24 0C12.88 20.72 19 14.6 19 9.5a7 7 0 0 0-7-7Zm0 1.5a5.5 5.5 0 0 1 5.5 5.5c0 3.75-4.11 8.4-5.5 9.86C10.61 17.9 6.5 13.25 6.5 9.5A5.5 5.5 0 0 1 12 4Z" fill="currentColor"/></svg></span></span>';
+    return '<span class="site-map-hotspot-dot" aria-hidden="true"></span>';
   }
 
   function getPanoramaStops() {
@@ -973,6 +1016,7 @@
         });
 
         state.imageOverlay = window.L.imageOverlay(state.imageUrl, bounds).addTo(state.map);
+        renderVirtualTourLandmarks();
         resetMapView();
 
         state.map.on("resize", function () {
@@ -988,6 +1032,48 @@
       });
   }
 
+  function escapeMarkerLabel(value) {
+    return String(value || "")
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;")
+      .replace(/"/g, "&quot;")
+      .replace(/'/g, "&#39;");
+  }
+
+  function renderVirtualTourLandmarks() {
+    if (!state.map || !state.imageSize || !state.virtualTourLandmarks.length) {
+      return;
+    }
+
+    state.virtualTourLandmarkMarkers.forEach(function (marker) {
+      if (state.map.hasLayer(marker)) {
+        state.map.removeLayer(marker);
+      }
+    });
+    state.virtualTourLandmarkMarkers = [];
+
+    state.virtualTourLandmarks.forEach(function (landmark) {
+      var x = landmark.x * state.imageSize.width;
+      var y = (1 - landmark.y) * state.imageSize.height;
+      var marker = window.L.marker([y, x], {
+        interactive: false,
+        keyboard: false,
+        zIndexOffset: -200,
+        icon: window.L.divIcon({
+          className: "site-map-landmark-marker",
+          html: '<span class="site-map-landmark-pin" aria-hidden="true"></span>'
+            + '<span class="site-map-landmark-label">' + escapeMarkerLabel(landmark.label) + "</span>",
+          iconSize: [14, 14],
+          iconAnchor: [7, 7],
+        }),
+      });
+
+      marker.addTo(state.map);
+      state.virtualTourLandmarkMarkers.push(marker);
+    });
+  }
+
   function ensureMarker(spot) {
     if (state.markerById[spot.id]) {
       return state.markerById[spot.id];
@@ -996,10 +1082,10 @@
     var marker = window.L.marker([spot.y, spot.x], {
       keyboard: false,
       icon: window.L.divIcon({
-        className: "map-pin-marker",
+        className: "site-map-hotspot-marker",
         html: getHotspotMarkerHtml(),
         iconSize: [44, 44],
-        iconAnchor: [22, 40],
+        iconAnchor: [22, 22],
       }),
     });
 
