@@ -33,6 +33,18 @@
   var captureDate = document.getElementById("tourCaptureDate");
   var backButton = document.getElementById("tourBackToInteractive");
   var minimap = document.getElementById("tourMinimap");
+  var minimapCircle = document.getElementById("tourMinimapCircle");
+  var minimapImg = document.getElementById("tourMinimapImg");
+  var minimapLabel = document.getElementById("tourMinimapLabel");
+  var mapx = document.getElementById("tourMapx");
+  var mapxFrame = document.getElementById("tourMapxFrame");
+  var mapxImg = document.getElementById("tourMapxImg");
+  var mapxDots = document.getElementById("tourMapxDots");
+  var mapxLabel = document.getElementById("tourMapxLabel");
+  var mapxClose = document.getElementById("tourMapxClose");
+  var managedMap = config.map && typeof config.map === "object" ? config.map : null;
+  var managedMapDots = {};
+  var managedMapScene = "";
   var viewModes = document.getElementById("tourViewModes");
   var audio = new Audio();
   var speechFallback = window.NHCPSpeechFallback || null;
@@ -156,6 +168,89 @@
       time.dateTime = rawDate;
       time.textContent = displayDate;
     }
+  }
+
+  function managedMapMarkerForScene(sceneId) {
+    if (!managedMap || !Array.isArray(managedMap.markers)) return null;
+    return managedMap.markers.find(function (marker) {
+      return marker.kind !== "main" && String(marker.sceneId || "") === String(sceneId);
+    }) || managedMap.markers.find(function (marker) {
+      return String(marker.sceneId || "") === String(sceneId);
+    }) || null;
+  }
+
+  function closeManagedMap() {
+    if (mapx) mapx.hidden = true;
+  }
+
+  function centerManagedMinimap(marker) {
+    if (!marker || !minimapCircle || !minimapImg || !managedMap) return;
+    var diameter = minimapCircle.clientWidth || 90;
+    var aspect = Number(managedMap.width || 3074) / Number(managedMap.height || 2250);
+    var zoom = Math.max(1, Math.min(8, Number(managedMap.zoom || 3.2)));
+    var displayHeight = zoom * diameter;
+    var displayWidth = displayHeight * aspect;
+    minimapImg.style.width = displayWidth + "px";
+    minimapImg.style.height = displayHeight + "px";
+    minimapImg.style.left = (diameter / 2 - Number(marker.x) * displayWidth) + "px";
+    minimapImg.style.top = (diameter / 2 - Number(marker.y) * displayHeight) + "px";
+  }
+
+  function syncManagedMap(sceneId) {
+    managedMapScene = String(sceneId || "");
+    if (!managedMap || !managedMap.enabled || !managedMap.image || !minimap) return;
+    var hidden = Array.isArray(managedMap.hiddenSceneIds) && managedMap.hiddenSceneIds.indexOf(managedMapScene) >= 0;
+    minimap.hidden = hidden;
+    if (hidden) { closeManagedMap(); return; }
+    var marker = managedMapMarkerForScene(managedMapScene);
+    Object.keys(managedMapDots).forEach(function (id) { managedMapDots[id].classList.toggle("is-active", id === managedMapScene); });
+    var label = marker ? localized(marker.label, language) : localized(config.tour && config.tour.title, language);
+    if (minimapLabel) minimapLabel.textContent = label;
+    if (mapxLabel) mapxLabel.textContent = label;
+    if (marker) centerManagedMinimap(marker);
+    else if (minimapCircle && minimapImg) {
+      var diameter = minimapCircle.clientWidth || 90;
+      var aspect = Number(managedMap.width || 3074) / Number(managedMap.height || 2250);
+      minimapImg.style.width = diameter * aspect + "px"; minimapImg.style.height = diameter + "px";
+      minimapImg.style.left = (diameter - diameter * aspect) / 2 + "px"; minimapImg.style.top = "0px";
+    }
+  }
+
+  function initManagedMap() {
+    if (!managedMap || !managedMap.enabled || !managedMap.image || !minimap || !mapxDots) return;
+    minimapImg.src = managedMap.image; mapxImg.src = managedMap.image;
+    var aspect = Number(managedMap.width || 3074) / Number(managedMap.height || 2250);
+    if (mapx) mapx.style.setProperty("--map-aspect", String(aspect));
+    mapxDots.innerHTML = "";
+    (Array.isArray(managedMap.markers) ? managedMap.markers : []).forEach(function (marker) {
+      if (!Number.isFinite(Number(marker.x)) || !Number.isFinite(Number(marker.y))) return;
+      var hasDestination = Boolean(marker.sceneId && sceneIds.has(marker.sceneId));
+      if (marker.kind === "main") {
+        var landmark = document.createElement(hasDestination ? "button" : "div");
+        if (hasDestination) landmark.type = "button";
+        landmark.className = "tour-mapx__landmark" + (hasDestination ? " is-clickable" : "");
+        landmark.dataset.mapMarkerId = String(marker.id || "");
+        landmark.style.left = Number(marker.x) * 100 + "%"; landmark.style.top = Number(marker.y) * 100 + "%";
+        var pin = document.createElement("span"); pin.className = "tour-mapx__landmark-pin";
+        var landmarkLabel = document.createElement("span"); landmarkLabel.className = "tour-mapx__landmark-label";
+        landmarkLabel.textContent = localized(marker.label, language);
+        landmark.appendChild(pin); landmark.appendChild(landmarkLabel);
+        if (hasDestination) landmark.addEventListener("click", function () { if (viewer) viewer.loadScene(marker.sceneId); closeManagedMap(); });
+        mapxDots.appendChild(landmark); return;
+      }
+      if (!hasDestination) return;
+      var dot = document.createElement("button"); dot.type = "button"; dot.className = "tour-mapx__dot";
+      dot.dataset.mapMarkerId = String(marker.id || "");
+      dot.style.left = Number(marker.x) * 100 + "%"; dot.style.top = Number(marker.y) * 100 + "%";
+      dot.title = localized(marker.label, language); dot.setAttribute("aria-label", dot.title || "Open map scene");
+      dot.addEventListener("click", function () { if (viewer && marker.sceneId !== managedMapScene) viewer.loadScene(marker.sceneId); closeManagedMap(); });
+      managedMapDots[marker.sceneId] = dot; mapxDots.appendChild(dot);
+    });
+    minimapCircle.addEventListener("click", function () { mapx.hidden = false; });
+    if (mapxClose) mapxClose.addEventListener("click", closeManagedMap);
+    mapx.addEventListener("click", function (event) { if (event.target === mapx) closeManagedMap(); });
+    window.addEventListener("resize", function () { var marker = managedMapMarkerForScene(managedMapScene); if (marker) centerManagedMinimap(marker); });
+    minimapImg.addEventListener("load", function () { var marker = managedMapMarkerForScene(managedMapScene); if (marker) centerManagedMinimap(marker); });
   }
 
   function setControlDockVisibility(isVisible) {
@@ -841,6 +936,8 @@
     loading.hidden = true; errorOverlay.hidden = false; return;
   }
   syncCaptureDate(initialScene);
+  initManagedMap();
+  syncManagedMap(initialScene);
 
   try {
     var originalGetContext = HTMLCanvasElement.prototype.getContext;
@@ -863,6 +960,7 @@
       loading.hidden = true;
       errorOverlay.hidden = true;
       setControlDockVisibility(true);
+      syncManagedMap(viewer.getScene());
       if (window.NHCPAnalytics && window.NHCPAnalytics.track) {
         window.NHCPAnalytics.track("virtual_tour_opened", "virtual-tour", config.tour.slug, { scene: viewer.getScene(), tour: config.tour.slug }, { onceKey: "virtual-tour:" + config.tour.slug });
       }
@@ -870,6 +968,7 @@
     viewer.on("scenechange", function (sceneId) {
       closeItem();
       syncCaptureDate(sceneId);
+      syncManagedMap(sceneId);
       var url = new URL(window.location.href); url.searchParams.set("scene", sceneId); window.history.replaceState({}, "", url);
       if (window.NHCPAnalytics && window.NHCPAnalytics.track) window.NHCPAnalytics.track("tour_scene_viewed", "virtual-tour", sceneId, { tour: config.tour.slug, scene: sceneId });
     });
@@ -892,6 +991,17 @@
   artifactSwitch.addEventListener("click", function () { setPane(artifactModel.hidden ? "glb" : "image"); });
   languageButton.addEventListener("click", function () {
     language = language === "tl" ? "en" : "tl";
+    if (managedMap && Array.isArray(managedMap.markers)) {
+      managedMap.markers.forEach(function (marker) {
+        var node = mapxDots && mapxDots.querySelector('[data-map-marker-id="' + String(marker.id || "") + '"]');
+        if (!node) return;
+        var nextLabel = localized(marker.label, language);
+        var labelNode = node.querySelector(".tour-mapx__landmark-label");
+        if (labelNode) labelNode.textContent = nextLabel;
+        else { node.title = nextLabel; node.setAttribute("aria-label", nextLabel || "Open map scene"); }
+      });
+      syncManagedMap(managedMapScene);
+    }
     if (!detailOverlay.hidden && activeItem) {
       detailImage.alt = localized(activeItem.name, language) || "Artifact detail image";
       detailTitle.textContent = localized(activeItem.name, language) || "Artifact detail";
@@ -930,6 +1040,7 @@
   audio.addEventListener("error", function () { if (activeItem && !usingSpeechFallback) startSpeechFallback(); });
   document.addEventListener("keydown", function (event) {
     if (event.key === "Escape") {
+      if (mapx && !mapx.hidden) { closeManagedMap(); return; }
       if (!artifactOverlay.hidden) {
         if (!detailOverlay.hidden) hideNestedDetail(true); else closeExpandedItem(true);
       } else if (floatingHotspotId) {

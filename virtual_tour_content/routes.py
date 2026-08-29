@@ -18,6 +18,7 @@ from virtual_tour_repository import (
     delete_hotspot,
     delete_scene,
     get_hotspot,
+    get_revision,
     get_scene,
     get_tour,
     get_system_original,
@@ -25,6 +26,7 @@ from virtual_tour_repository import (
     list_scenes,
     publish_revision,
     update_hotspot,
+    update_revision_map_config,
     update_scene,
     update_tour,
 )
@@ -35,6 +37,7 @@ from .service import (
     discard_uploaded_assets,
     generate_narration,
     load_admin_tours,
+    normalize_map_config,
     list_tour_asset_paths,
     prepare_upload,
     resolve_admin_asset_urls,
@@ -65,7 +68,7 @@ def _admin_hotspot_with_asset_urls(hotspot: dict[str, Any]) -> dict[str, Any]:
     return result
 
 
-def _number(value: Any, *, minimum: float, maximum: float, label: str, default: float | None = None) -> float:
+def _number(value: Any, *, minimum: float, maximum: float, label: str, default: float | None = None, precision: int = 2) -> float:
     if value in (None, "") and default is not None:
         return default
     try:
@@ -74,7 +77,7 @@ def _number(value: Any, *, minimum: float, maximum: float, label: str, default: 
         raise ValueError(f"{label} must be a number.") from exc
     if result < minimum or result > maximum:
         raise ValueError(f"{label} must be between {minimum:g} and {maximum:g}.")
-    return round(result, 2)
+    return round(result, precision)
 
 
 def _normalize_yaw(value: Any, *, label: str, default: float | None = None) -> float | None:
@@ -113,6 +116,59 @@ def _captured_on(value: Any) -> str:
     if parsed > datetime.now(timezone.utc).date():
         raise ValueError("Date taken cannot be in the future.")
     return parsed.isoformat()
+
+
+def _validated_map_config(data: dict[str, Any], scenes: list[dict[str, Any]], *, tour_id: int) -> dict[str, Any]:
+    scene_keys = {str(scene.get("scene_key") or "") for scene in scenes}
+    image_path = str(data.get("imagePath") or "/static/images/site-map/aerial-map.jpg").strip()
+    width = int(_number(data.get("width"), minimum=1, maximum=12000, label="Map width", default=3074))
+    height = int(_number(data.get("height"), minimum=1, maximum=12000, label="Map height", default=2250))
+    if image_path.startswith(f"virtual-tours/{int(tour_id)}/"):
+        asset = validate_stored_asset(image_path, "image", tour_id=tour_id)
+        width, height = int(asset["width"]), int(asset["height"])
+    elif not image_path.startswith("/static/images/"):
+        raise ValueError("Choose an uploaded map image or a map image from the site’s static images.")
+
+    markers = []
+    marker_ids = set()
+    raw_markers = data.get("markers") if isinstance(data.get("markers"), list) else []
+    if len(raw_markers) > 160:
+        raise ValueError("A map can contain at most 160 markers.")
+    for index, marker in enumerate(raw_markers):
+        if not isinstance(marker, dict):
+            continue
+        marker_id = slugify(marker.get("id"), f"map-marker-{index + 1}")[:80]
+        if marker_id in marker_ids:
+            marker_id = f"{marker_id[:70]}-{index + 1}"
+        marker_ids.add(marker_id)
+        kind = "main" if marker.get("kind") == "main" else "scene"
+        scene_id = str(marker.get("sceneId") or "").strip()
+        if scene_id and scene_id not in scene_keys:
+            raise ValueError("A map marker points to a scene that no longer exists.")
+        if kind == "scene" and not scene_id:
+            raise ValueError("Every scene hotspot needs a destination scene.")
+        labels = marker.get("label") if isinstance(marker.get("label"), dict) else {}
+        markers.append({
+            "id": marker_id, "kind": kind,
+            "x": _number(marker.get("x"), minimum=0, maximum=1, label="Marker X coordinate", precision=5),
+            "y": _number(marker.get("y"), minimum=0, maximum=1, label="Marker Y coordinate", precision=5),
+            "label": {
+                "en": _clean_text(labels.get("en"), label="English marker label", minimum=2, maximum=120),
+                "tl": _clean_text(labels.get("tl"), label="Tagalog marker label", maximum=120),
+            },
+            "sceneId": scene_id,
+        })
+    hidden_scene_ids = []
+    for value in data.get("hiddenSceneIds") if isinstance(data.get("hiddenSceneIds"), list) else []:
+        scene_id = str(value or "")
+        if scene_id in scene_keys and scene_id not in hidden_scene_ids:
+            hidden_scene_ids.append(scene_id)
+    return {
+        "enabled": bool(data.get("enabled")), "imagePath": image_path,
+        "width": width, "height": height,
+        "zoom": _number(data.get("zoom"), minimum=1, maximum=8, label="Close-up zoom", default=3.2),
+        "hiddenSceneIds": hidden_scene_ids, "markers": markers,
+    }
 
 
 def register_virtual_tour_content_routes(
@@ -342,6 +398,8 @@ def register_virtual_tour_content_routes(
             }
             scenes = list_scenes(revision_id)
             hotspots = list_hotspots(revision_id)
+            revision = get_revision(revision_id)
+            map_config = normalize_map_config(tour, revision, scenes, admin=True)
             asset_fields = ("image_path", "glb_path", "audio_en_path", "audio_tl_path")
             asset_paths = [scene.get("panorama_path") for scene in scenes]
             asset_paths.extend(hotspot.get(field) for hotspot in hotspots for field in asset_fields)
@@ -360,6 +418,7 @@ def register_virtual_tour_content_routes(
                     "csrfToken": ensure_admin_csrf_token(),
                     "supabaseUrl": str(os.getenv("SUPABASE_URL") or "").strip(),
                     "supabaseKey": str(os.getenv("SUPABASE_PUBLISHABLE_KEY") or os.getenv("SUPABASE_ANON_KEY") or "").strip(),
+                    "mapConfig": map_config,
                 },
                 error_message=str(request.args.get("error") or "").strip() or None,
                 status_notice=editor_notices.get(str(request.args.get("status") or "")),
@@ -405,6 +464,24 @@ def register_virtual_tour_content_routes(
                 filename=data.get("filename"), asset_kind=str(data.get("kind") or ""),
                 tour_id=tour_id, file_size=data.get("size"),
             )})
+        except Exception as exc:
+            return _json_error(str(exc))
+
+    @app.patch(f"{admin_route_prefix}/virtual-tours/<int:tour_id>/map")
+    @admin_required
+    def admin_virtual_tour_map_update(tour_id: int):
+        if not valid_json_csrf():
+            return _json_error("Your admin session token expired. Refresh and try again.", 403)
+        try:
+            tour, revision_id = editable_tour(tour_id)
+            data = request.get_json(silent=True) or {}
+            scenes = list_scenes(revision_id)
+            map_config = _validated_map_config(data, scenes, tour_id=tour_id)
+            updated = update_revision_map_config(revision_id, map_config)
+            return jsonify({
+                "ok": True,
+                "map": normalize_map_config(tour, updated, scenes, admin=True),
+            })
         except Exception as exc:
             return _json_error(str(exc))
 

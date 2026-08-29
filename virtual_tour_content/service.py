@@ -13,7 +13,7 @@ from typing import Any
 from uuid import uuid4
 
 from supabase_client import get_supabase_client, is_supabase_configured
-from virtual_tour_repository import get_system_original, list_hotspots, list_public_tours, list_revisions, list_scenes, list_tours
+from virtual_tour_repository import get_revision, get_system_original, list_hotspots, list_public_tours, list_revisions, list_scenes, list_tours
 
 
 TOUR_STORAGE_PREFIX = "virtual-tours"
@@ -25,6 +25,9 @@ MAX_PANORAMA_BYTES = max(5 * 1024 * 1024, int(os.getenv("VIRTUAL_TOUR_MAX_PANORA
 MAX_MEDIA_BYTES = max(1 * 1024 * 1024, int(os.getenv("VIRTUAL_TOUR_MAX_MEDIA_BYTES", str(25 * 1024 * 1024))))
 SIGNED_URL_SECONDS = min(604800, max(300, int(os.getenv("VIRTUAL_TOUR_SIGNED_URL_SECONDS", "7200"))))
 ORIGINAL_CAPTURED_ON = "2026-04-16"
+DEFAULT_MAP_IMAGE = "/static/images/site-map/aerial-map.jpg"
+DEFAULT_MAP_WIDTH = 3074
+DEFAULT_MAP_HEIGHT = 2250
 
 
 def get_virtual_tour_bucket_name() -> str:
@@ -59,6 +62,103 @@ def original_tour_option() -> dict[str, Any]:
     }
 
 
+def _packaged_original_map() -> dict[str, Any]:
+    path = Path(__file__).resolve().parent.parent / "static" / "data" / "tour-minimap.json"
+    try:
+        source = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError, TypeError):
+        return {}
+    markers = []
+    for scene_id, position in (source.get("scenes") or {}).items():
+        if not isinstance(position, dict):
+            continue
+        markers.append({
+            "id": f"scene-{slugify(scene_id, 'scene')}", "kind": "scene",
+            "x": position.get("x"), "y": position.get("y"),
+            "label": {"en": position.get("label") or scene_id, "tl": ""},
+            "sceneId": slugify(scene_id, "scene"),
+        })
+    for index, landmark in enumerate(source.get("landmarks") or []):
+        if not isinstance(landmark, dict):
+            continue
+        markers.append({
+            "id": f"main-{index + 1}", "kind": "main",
+            "x": landmark.get("x"), "y": landmark.get("y"),
+            "label": {"en": landmark.get("label") or f"Main location {index + 1}", "tl": ""},
+            "sceneId": "",
+        })
+    return {
+        "enabled": True, "imagePath": source.get("image") or DEFAULT_MAP_IMAGE,
+        "width": source.get("width") or DEFAULT_MAP_WIDTH,
+        "height": source.get("height") or DEFAULT_MAP_HEIGHT,
+        "zoom": source.get("zoom") or 3.2,
+        "hiddenSceneIds": [slugify(value, "scene") for value in source.get("hideOn") or []],
+        "markers": markers,
+    }
+
+
+def normalize_map_config(
+    tour: dict[str, Any], revision: dict[str, Any] | None, scenes: list[dict[str, Any]], *, admin: bool = False
+) -> dict[str, Any]:
+    """Return a safe map config whose scene references match this revision."""
+    stored = (revision or {}).get("map_config")
+    stored = stored if isinstance(stored, dict) else {}
+    if not stored and tour.get("is_system_original"):
+        stored = _packaged_original_map()
+    scene_keys = {str(scene.get("scene_key") or scene.get("id") or "") for scene in scenes}
+    markers = []
+    used_ids = set()
+    for index, marker in enumerate(stored.get("markers") if isinstance(stored.get("markers"), list) else []):
+        if not isinstance(marker, dict) or len(markers) >= 160:
+            continue
+        try:
+            x = min(1.0, max(0.0, float(marker.get("x"))))
+            y = min(1.0, max(0.0, float(marker.get("y"))))
+        except (TypeError, ValueError):
+            continue
+        kind = "main" if marker.get("kind") == "main" else "scene"
+        scene_id = str(marker.get("sceneId") or "")
+        if scene_id and scene_id not in scene_keys:
+            # Original source identifiers used camelCase before database import.
+            scene_id = slugify(scene_id, "scene")
+        if scene_id and scene_id not in scene_keys:
+            scene_id = ""
+        if kind == "scene" and not scene_id:
+            continue
+        label = marker.get("label") if isinstance(marker.get("label"), dict) else {}
+        marker_id = slugify(marker.get("id"), f"map-marker-{index + 1}")[:80]
+        while marker_id in used_ids:
+            marker_id = f"{marker_id[:70]}-{index + 1}"
+        used_ids.add(marker_id)
+        markers.append({
+            "id": marker_id, "kind": kind, "x": round(x, 5), "y": round(y, 5),
+            "label": {"en": str(label.get("en") or "")[:120], "tl": str(label.get("tl") or "")[:120]},
+            "sceneId": scene_id,
+        })
+    hidden = []
+    for value in stored.get("hiddenSceneIds") if isinstance(stored.get("hiddenSceneIds"), list) else []:
+        key = str(value or "")
+        if key not in scene_keys:
+            key = slugify(key, "scene")
+        if key in scene_keys and key not in hidden:
+            hidden.append(key)
+    image_path = str(stored.get("imagePath") or DEFAULT_MAP_IMAGE).strip()
+    result = {
+        "enabled": bool(stored.get("enabled", False)),
+        "imagePath": image_path,
+        "image": _asset_url(image_path),
+        "width": max(1, int(stored.get("width") or DEFAULT_MAP_WIDTH)),
+        "height": max(1, int(stored.get("height") or DEFAULT_MAP_HEIGHT)),
+        "zoom": min(8.0, max(1.0, float(stored.get("zoom") or 3.2))),
+        "hiddenSceneIds": hidden, "markers": markers,
+    }
+    if admin:
+        result["imageUrl"] = result["image"]
+    else:
+        result.pop("imagePath", None)
+    return result
+
+
 def load_public_tour_options() -> list[dict[str, Any]]:
     original = original_tour_option()
     options = [original]
@@ -89,6 +189,10 @@ def load_admin_tours() -> tuple[list[dict[str, Any]], str | None]:
             published_id = tour.get("published_revision_id")
             revision_id = draft_id or published_id
             revision_scenes = list_scenes(int(revision_id)) if revision_id else []
+            revision = get_revision(int(revision_id)) if revision_id else None
+            map_config = normalize_map_config(tour, revision, revision_scenes)
+            tour["map_enabled"] = bool(map_config.get("enabled"))
+            tour["map_marker_count"] = len(map_config.get("markers") or [])
             tour["scene_count"] = len(revision_scenes)
             tour["hotspot_count"] = len(list_hotspots(int(revision_id))) if revision_id else 0
             start_scene = next((scene for scene in revision_scenes if scene.get("is_start_scene")), None)
@@ -215,6 +319,12 @@ def _nested_hotspots(value: Any, signed_urls: dict[str, str]) -> list[dict[str, 
 
 
 def build_revision_config(tour: dict[str, Any], revision_id: int) -> dict[str, Any]:
+    try:
+        revision = get_revision(revision_id)
+    except Exception:
+        # Keep config construction resilient for packaged/local assets and
+        # installations that are in the middle of applying the map migration.
+        revision = None
     scenes = list_scenes(revision_id)
     hotspots = list_hotspots(revision_id)
     asset_paths: list[Any] = [scene.get("panorama_path") for scene in scenes]
@@ -286,6 +396,7 @@ def build_revision_config(tour: dict[str, Any], revision_id: int) -> dict[str, A
         },
         "startScene": start_scene,
         "scenes": public_scenes,
+        "map": normalize_map_config(tour, revision, scenes),
     }
 
 
@@ -342,6 +453,8 @@ def list_tour_asset_paths(tour_id: int) -> list[str]:
     referenced = set()
     for revision in list_revisions(tour_id):
         revision_id = int(revision["id"])
+        map_config = revision.get("map_config") if isinstance(revision.get("map_config"), dict) else {}
+        referenced.add(str(map_config.get("imagePath") or "").lstrip("/"))
         for scene in list_scenes(revision_id):
             referenced.add(str(scene.get("panorama_path") or "").lstrip("/"))
         for hotspot in list_hotspots(revision_id):

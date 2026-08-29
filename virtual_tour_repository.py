@@ -82,6 +82,16 @@ def get_revision(revision_id: int) -> dict[str, Any] | None:
     return rows[0] if rows else None
 
 
+def update_revision_map_config(revision_id: int, map_config: dict[str, Any]) -> dict[str, Any]:
+    rows = _rows(
+        get_supabase_client().table(REVISIONS)
+        .update({"map_config": map_config}).eq("id", int(revision_id)).execute()
+    )
+    if not rows:
+        raise RuntimeError("The virtual-tour map could not be updated.")
+    return rows[0]
+
+
 def list_revisions(tour_id: int) -> list[dict[str, Any]]:
     return _rows(
         get_supabase_client().table(REVISIONS).select("*")

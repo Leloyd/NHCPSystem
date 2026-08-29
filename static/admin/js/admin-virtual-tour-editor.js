@@ -12,6 +12,10 @@
   var config = readJson("vtEditorConfig", {});
   var scenes = readJson("vtEditorScenes", []);
   var hotspots = readJson("vtEditorHotspots", []);
+  var mapConfig = config.mapConfig && typeof config.mapConfig === "object" ? config.mapConfig : {
+    enabled: false, imagePath: "/static/images/site-map/aerial-map.jpg", imageUrl: "/static/images/site-map/aerial-map.jpg",
+    width: 3074, height: 2250, zoom: 3.2, hiddenSceneIds: [], markers: [],
+  };
   var viewer = null;
   var uploadViewer = null;
   var selectedScene = scenes.length ? scenes[0] : null;
@@ -23,6 +27,9 @@
   var tempHotspotId = "vt-editor-temporary-hotspot";
   var sceneDialogMode = "add";
   var editingHotspot = null;
+  var selectedMapMarker = null;
+  var placingMapKind = "";
+  var mapBaseline = "";
 
   var sceneList = root.querySelector("[data-vt-scene-list]");
   var hotspotList = root.querySelector("[data-vt-hotspot-list]");
@@ -44,8 +51,14 @@
   var loadingModal = root.querySelector("[data-vt-loading-modal]");
   var loadingPreviousFocus = null;
   var detailsForm = root.querySelector("[data-vt-details-form]");
+  var mapForm = root.querySelector("[data-vt-map-form]");
+  var mapCanvas = root.querySelector("[data-vt-map-canvas]");
+  var mapImage = root.querySelector("[data-vt-map-image-preview]");
+  var mapMarkerLayer = root.querySelector("[data-vt-map-marker-layer]");
+  var mapMarkerForm = root.querySelector("[data-vt-map-marker-form]");
+  var mapMessage = root.querySelector("[data-vt-map-message]");
   var unsavedIndicator = root.querySelector("[data-vt-unsaved]");
-  var dirtyState = { details: false, hotspot: false, scene: false };
+  var dirtyState = { details: false, hotspot: false, scene: false, map: false };
   var formBaselines = { details: "", hotspot: null, scene: null };
   var beforeUnloadAttached = false;
   var allowPageExit = false;
@@ -113,6 +126,7 @@
     if (dirtyState.details) labels.push("environment details");
     if (dirtyState.hotspot) labels.push("hotspot changes");
     if (dirtyState.scene) labels.push("scene upload changes");
+    if (dirtyState.map) labels.push("map changes");
     return labels.join(", ");
   }
 
@@ -625,6 +639,193 @@
     });
   }
 
+  function mapPayload() {
+    return {
+      enabled: Boolean(mapConfig.enabled),
+      imagePath: String(mapConfig.imagePath || "/static/images/site-map/aerial-map.jpg"),
+      width: Number(mapConfig.width || 3074), height: Number(mapConfig.height || 2250),
+      zoom: Number(mapConfig.zoom || 3.2),
+      hiddenSceneIds: (mapConfig.hiddenSceneIds || []).slice(),
+      markers: (mapConfig.markers || []).map(function (marker) {
+        return {
+          id: marker.id, kind: marker.kind === "main" ? "main" : "scene",
+          x: Number(marker.x), y: Number(marker.y),
+          label: { en: String((marker.label || {}).en || ""), tl: String((marker.label || {}).tl || "") },
+          sceneId: String(marker.sceneId || ""),
+        };
+      }),
+    };
+  }
+
+  function mapSnapshot() { return JSON.stringify(mapPayload()); }
+  function syncMapDirty() { if (mapBaseline) setDirty("map", mapSnapshot() !== mapBaseline); }
+
+  function mapCoordinates(event) {
+    var rect = mapCanvas.getBoundingClientRect();
+    return {
+      x: Number(Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width)).toFixed(5)),
+      y: Number(Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height)).toFixed(5)),
+    };
+  }
+
+  function fillMapMarkerForm() {
+    if (!selectedMapMarker) {
+      mapMarkerForm.hidden = true;
+      mapMarkerForm.querySelectorAll("input,select").forEach(function (control) { control.disabled = true; });
+      return;
+    }
+    mapMarkerForm.hidden = false;
+    mapMarkerForm.querySelectorAll("input,select").forEach(function (control) { control.disabled = false; });
+    var isMain = selectedMapMarker.kind === "main";
+    mapMarkerForm.querySelector("[data-vt-map-marker-kicker]").textContent = isMain ? "Main map hotspot" : "Scene map hotspot";
+    mapMarkerForm.querySelector("[data-vt-map-marker-title]").textContent = "Edit marker";
+    mapForm.elements.map_label_en.value = (selectedMapMarker.label || {}).en || "";
+    mapForm.elements.map_label_tl.value = (selectedMapMarker.label || {}).tl || "";
+    var destination = mapForm.elements.map_scene_id;
+    destination.innerHTML = '<option value="">' + (isMain ? "No destination (label only)" : "Choose destination") + "</option>";
+    scenes.forEach(function (scene) {
+      var option = document.createElement("option");
+      option.value = scene.scene_key; option.textContent = scene.name_en;
+      destination.appendChild(option);
+    });
+    destination.required = !isMain;
+    destination.value = selectedMapMarker.sceneId || "";
+    mapForm.elements.map_x.value = Number(selectedMapMarker.x).toFixed(5);
+    mapForm.elements.map_y.value = Number(selectedMapMarker.y).toFixed(5);
+  }
+
+  function renderMapMarkers() {
+    mapMarkerLayer.innerHTML = "";
+    (mapConfig.markers || []).forEach(function (marker) {
+      var button = document.createElement("button");
+      button.type = "button";
+      button.className = "vt-map-edit-marker" + (marker.kind === "main" ? " is-main" : "") + (selectedMapMarker === marker ? " is-selected" : "");
+      button.style.left = Number(marker.x) * 100 + "%";
+      button.style.top = Number(marker.y) * 100 + "%";
+      button.title = (marker.label || {}).en || "Map marker";
+      button.setAttribute("aria-label", "Edit " + button.title);
+      button.addEventListener("click", function (event) {
+        event.stopPropagation(); selectedMapMarker = marker; placingMapKind = "";
+        renderMapMarkers(); fillMapMarkerForm(); syncMapPlacementButtons();
+      });
+      button.addEventListener("pointerdown", function (event) {
+        event.stopPropagation(); selectedMapMarker = marker; placingMapKind = "";
+        try { button.setPointerCapture(event.pointerId); } catch (_) {}
+      });
+      button.addEventListener("pointermove", function (event) {
+        if (!button.hasPointerCapture || !button.hasPointerCapture(event.pointerId)) return;
+        var point = mapCoordinates(event); marker.x = point.x; marker.y = point.y;
+        button.style.left = point.x * 100 + "%"; button.style.top = point.y * 100 + "%";
+        mapForm.elements.map_x.value = point.x.toFixed(5); mapForm.elements.map_y.value = point.y.toFixed(5);
+        syncMapDirty();
+      });
+      mapMarkerLayer.appendChild(button);
+    });
+  }
+
+  function syncMapPlacementButtons() {
+    root.querySelectorAll("[data-vt-add-map-marker]").forEach(function (button) {
+      button.classList.toggle("is-placing", button.dataset.vtAddMapMarker === placingMapKind);
+    });
+  }
+
+  function renderMapEditor() {
+    mapConfig.markers = Array.isArray(mapConfig.markers) ? mapConfig.markers : [];
+    mapConfig.hiddenSceneIds = Array.isArray(mapConfig.hiddenSceneIds) ? mapConfig.hiddenSceneIds : [];
+    mapForm.elements.enabled.checked = Boolean(mapConfig.enabled);
+    mapForm.elements.zoom.value = Number(mapConfig.zoom || 3.2);
+    root.querySelector("[data-vt-map-zoom]").textContent = Number(mapConfig.zoom || 3.2).toFixed(1) + "×";
+    mapCanvas.style.aspectRatio = String(Number(mapConfig.width || 3074)) + "/" + String(Number(mapConfig.height || 2250));
+    var source = String(mapConfig.imageUrl || mapConfig.image || mapConfig.imagePath || "");
+    if (source) mapImage.src = source; else mapImage.removeAttribute("src");
+    root.querySelector("[data-vt-map-empty]").hidden = Boolean(source);
+    var hiddenHost = root.querySelector("[data-vt-map-hidden-scenes]");
+    hiddenHost.innerHTML = "";
+    scenes.forEach(function (scene) {
+      var label = document.createElement("label"); var checkbox = document.createElement("input"); var textNode = document.createElement("span");
+      checkbox.type = "checkbox"; checkbox.value = scene.scene_key;
+      checkbox.checked = mapConfig.hiddenSceneIds.indexOf(scene.scene_key) >= 0;
+      checkbox.addEventListener("change", function () {
+        mapConfig.hiddenSceneIds = Array.prototype.slice.call(hiddenHost.querySelectorAll("input:checked")).map(function (entry) { return entry.value; });
+        syncMapDirty();
+      });
+      textNode.textContent = scene.name_en; label.appendChild(checkbox); label.appendChild(textNode); hiddenHost.appendChild(label);
+    });
+    renderMapMarkers(); fillMapMarkerForm();
+  }
+
+  mapCanvas.addEventListener("click", function (event) {
+    if (!placingMapKind || event.target.closest(".vt-map-edit-marker")) return;
+    var point = mapCoordinates(event); var destination = selectedScene || scenes[0] || null;
+    var marker = {
+      id: "map-" + placingMapKind + "-" + Date.now(), kind: placingMapKind,
+      x: point.x, y: point.y,
+      label: { en: placingMapKind === "main" ? "Main location" : (destination ? destination.name_en : "Scene hotspot"), tl: "" },
+      sceneId: placingMapKind === "scene" && destination ? destination.scene_key : "",
+    };
+    mapConfig.markers.push(marker); selectedMapMarker = marker; placingMapKind = "";
+    renderMapMarkers(); fillMapMarkerForm(); syncMapPlacementButtons(); syncMapDirty();
+  });
+
+  root.querySelectorAll("[data-vt-add-map-marker]").forEach(function (button) {
+    button.addEventListener("click", function () {
+      placingMapKind = button.dataset.vtAddMapMarker; selectedMapMarker = null;
+      fillMapMarkerForm(); renderMapMarkers(); syncMapPlacementButtons();
+      message(mapMessage, "Click the map to place the " + (placingMapKind === "main" ? "main hotspot." : "scene hotspot."));
+    });
+  });
+  root.querySelector("[data-vt-close-map-marker]").addEventListener("click", function () { selectedMapMarker = null; fillMapMarkerForm(); renderMapMarkers(); });
+  root.querySelector("[data-vt-delete-map-marker]").addEventListener("click", function () {
+    if (!selectedMapMarker) return;
+    mapConfig.markers = mapConfig.markers.filter(function (marker) { return marker !== selectedMapMarker; });
+    selectedMapMarker = null; fillMapMarkerForm(); renderMapMarkers(); syncMapDirty();
+  });
+  ["map_label_en", "map_label_tl", "map_scene_id"].forEach(function (name) {
+    mapForm.elements[name].addEventListener("input", function () {
+      if (!selectedMapMarker) return;
+      if (name === "map_label_en") selectedMapMarker.label.en = mapForm.elements[name].value;
+      if (name === "map_label_tl") selectedMapMarker.label.tl = mapForm.elements[name].value;
+      if (name === "map_scene_id") selectedMapMarker.sceneId = mapForm.elements[name].value;
+      syncMapDirty();
+    });
+  });
+  mapForm.elements.enabled.addEventListener("change", function () { mapConfig.enabled = mapForm.elements.enabled.checked; syncMapDirty(); });
+  mapForm.elements.zoom.addEventListener("input", function () {
+    mapConfig.zoom = Number(mapForm.elements.zoom.value);
+    root.querySelector("[data-vt-map-zoom]").textContent = mapConfig.zoom.toFixed(1) + "×"; syncMapDirty();
+  });
+  root.querySelector("[data-vt-map-reset-image]").addEventListener("click", function () {
+    mapConfig.imagePath = "/static/images/site-map/aerial-map.jpg"; mapConfig.imageUrl = mapConfig.imagePath;
+    mapConfig.width = 3074; mapConfig.height = 2250; renderMapEditor(); syncMapDirty();
+  });
+  root.querySelector("[data-vt-map-image]").addEventListener("change", async function () {
+    var input = this; var file = input.files && input.files[0]; if (!file) return;
+    var objectUrl = URL.createObjectURL(file); var image = new Image();
+    try {
+      var dimensions = await new Promise(function (resolve, reject) {
+        image.onload = function () { resolve({ width: image.naturalWidth, height: image.naturalHeight }); };
+        image.onerror = function () { reject(new Error("The selected map image could not be decoded.")); }; image.src = objectUrl;
+      });
+      message(mapMessage, "Uploading map image…");
+      mapConfig.imagePath = await signedUpload(file, "image"); mapConfig.imageUrl = objectUrl;
+      mapConfig.width = dimensions.width; mapConfig.height = dimensions.height;
+      renderMapEditor(); syncMapDirty(); message(mapMessage, "Map image uploaded. Save the map to keep it in this draft.", "success");
+    } catch (error) { URL.revokeObjectURL(objectUrl); message(mapMessage, error.message, "error"); }
+  });
+  mapForm.addEventListener("submit", async function (event) {
+    event.preventDefault();
+    if (!mapForm.reportValidity()) return;
+    var invalidSceneMarker = (mapConfig.markers || []).some(function (marker) { return marker.kind === "scene" && !marker.sceneId; });
+    if (invalidSceneMarker) { message(mapMessage, "Every scene hotspot needs a destination scene.", "error"); return; }
+    var submit = mapForm.querySelector(".vt-map-save"); submit.disabled = true; submit.textContent = "Saving map…";
+    try {
+      var result = await api(endpoint("/map"), { method: "PATCH", body: JSON.stringify(mapPayload()) });
+      mapConfig = result.map; mapBaseline = mapSnapshot(); setDirty("map", false); renderMapEditor();
+      message(mapMessage, "Map saved to this working draft. Publish when it is ready for visitors.", "success");
+    } catch (error) { message(mapMessage, error.message, "error"); }
+    finally { submit.disabled = false; submit.textContent = "Save map to draft"; }
+  });
+
   sceneList.addEventListener("click", function (event) {
     var button = event.target.closest("[data-scene-id]"); if (button) selectScene(button.dataset.sceneId);
   });
@@ -908,6 +1109,7 @@
     sceneForm.addEventListener(eventName, function () { syncFormDirty("scene", sceneForm); });
   });
   formBaselines.details = formSnapshot(detailsForm);
+  mapBaseline = mapSnapshot();
 
   document.addEventListener("click", function (event) {
     if (allowPageExit || !hasUnsavedChanges() || event.defaultPrevented) return;
@@ -927,5 +1129,9 @@
     });
   }, true);
 
-  renderSceneSelection(); renderHotspots(); renderViewer(); fillTargetScenes();
+  renderSceneSelection(); renderHotspots(); renderViewer(); fillTargetScenes(); renderMapEditor();
+  if (window.location.hash === "#vtMapPanel") {
+    var mapTab = root.querySelector('[data-vt-tab="map"]');
+    if (mapTab) activateInspectorTab(mapTab);
+  }
 })();

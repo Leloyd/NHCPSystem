@@ -42,8 +42,20 @@ CREATE TABLE IF NOT EXISTS public.virtual_tour_revisions (
   published_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
+  -- Revisioned upper-right site-map settings. An empty object means the map
+  -- has not been configured yet (the protected Original may use its packaged
+  -- map as a fallback).
+  map_config jsonb NOT NULL DEFAULT '{}'::jsonb,
   UNIQUE (tour_id, version_number)
 );
+
+ALTER TABLE public.virtual_tour_revisions
+  ADD COLUMN IF NOT EXISTS map_config jsonb NOT NULL DEFAULT '{}'::jsonb;
+
+DO $$ BEGIN
+  ALTER TABLE public.virtual_tour_revisions ADD CONSTRAINT virtual_tour_map_config_object_check
+    CHECK (jsonb_typeof(map_config) = 'object');
+EXCEPTION WHEN duplicate_object THEN NULL; END $$;
 
 DO $$ BEGIN
   ALTER TABLE public.virtual_tours ADD CONSTRAINT virtual_tours_published_revision_fkey
@@ -183,8 +195,10 @@ BEGIN
 
   SELECT coalesce(max(version_number), 0) + 1 INTO v_next_version
     FROM public.virtual_tour_revisions WHERE tour_id = p_tour_id;
-  INSERT INTO public.virtual_tour_revisions (tour_id, version_number, state, created_by)
-    VALUES (p_tour_id, v_next_version, 'draft', p_admin)
+  INSERT INTO public.virtual_tour_revisions (tour_id, version_number, state, created_by, map_config)
+    SELECT p_tour_id, v_next_version, 'draft', p_admin, map_config
+    FROM public.virtual_tour_revisions
+    WHERE id = v_tour.draft_revision_id
     RETURNING id INTO v_next_revision_id;
 
   FOR v_scene IN SELECT * FROM public.virtual_tour_scenes WHERE revision_id = v_tour.draft_revision_id ORDER BY sort_order, id LOOP

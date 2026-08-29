@@ -4,7 +4,7 @@
 {% set admin_layout_class = 'admin-layout admin-resource-layout vt-editor-layout-root' %}
 {% set admin_active_page = 'virtual-tours' %}
 {% set admin_topbar_title = 'Tour environment editor' %}
-{% set admin_topbar_subtitle = 'Upload full 360° panoramas, choose a starting scene, and place navigation or artifact hotspots directly in the view.' %}
+{% set admin_topbar_subtitle = 'Upload 360° panoramas, connect scenes, place artifact hotspots, and configure the visitor map.' %}
 {% set admin_topbar_tool_href = url_for('admin_virtual_tours') %}
 {% set admin_topbar_tool_label = 'Back to virtual tours' %}
 
@@ -65,7 +65,7 @@
       </section>
 
       <aside class="vt-inspector" aria-label="Tour properties">
-        <div class="vt-inspector-tabs" role="tablist" aria-label="Editor panels"><button id="vtHotspotsTab" type="button" role="tab" aria-selected="true" aria-controls="vtHotspotsPanel" data-vt-tab="hotspots">Hotspots</button><button id="vtDetailsTab" type="button" role="tab" aria-selected="false" aria-controls="vtDetailsPanel" tabindex="-1" data-vt-tab="details">Details</button></div>
+        <div class="vt-inspector-tabs" role="tablist" aria-label="Editor panels"><button id="vtHotspotsTab" type="button" role="tab" aria-selected="true" aria-controls="vtHotspotsPanel" data-vt-tab="hotspots">Hotspots</button><button id="vtMapTab" type="button" role="tab" aria-selected="false" aria-controls="vtMapPanel" tabindex="-1" data-vt-tab="map">Map</button><button id="vtDetailsTab" type="button" role="tab" aria-selected="false" aria-controls="vtDetailsPanel" tabindex="-1" data-vt-tab="details">Details</button></div>
         <div id="vtHotspotsPanel" role="tabpanel" aria-labelledby="vtHotspotsTab" data-vt-panel="hotspots">
           <div class="vt-hotspot-actions"><button type="button" data-vt-add-hotspot="item" disabled>＋ Item hotspot</button><button type="button" data-vt-add-hotspot="navigation" disabled>＋ Navigation</button></div>
           <div class="vt-hotspot-list" data-vt-hotspot-list><div class="vt-empty"><strong>No scene selected</strong><p>Select a panorama to view its hotspots.</p></div></div>
@@ -101,6 +101,34 @@
             <button type="submit" class="vt-save-hotspot" disabled>Save hotspot</button>
           </form>
           </div>
+        </div>
+        <div id="vtMapPanel" role="tabpanel" aria-labelledby="vtMapTab" data-vt-panel="map" hidden>
+          <form class="vt-map-form" data-vt-map-form>
+            <label class="vt-map-toggle"><input type="checkbox" name="enabled" /><span><strong>Show upper-right map</strong><small>Visitors can open it and travel to linked scenes.</small></span></label>
+            <div class="vt-map-image-row">
+              <label><span>Map image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-vt-map-image /></label>
+              <button type="button" data-vt-map-reset-image>Use aerial map</button>
+            </div>
+            <div class="vt-map-canvas" data-vt-map-canvas aria-label="Map marker editor">
+              <img data-vt-map-image-preview alt="Editable tour map" draggable="false" />
+              <div class="vt-map-marker-layer" data-vt-map-marker-layer></div>
+              <p data-vt-map-empty>Choose a map image to place markers.</p>
+            </div>
+            <p class="vt-map-help">Choose a marker type, then click the map. Drag any existing marker to fine-tune its position.</p>
+            <div class="vt-map-actions"><button type="button" data-vt-add-map-marker="scene" {% if not scenes %}disabled{% endif %}>＋ Scene hotspot</button><button type="button" data-vt-add-map-marker="main">＋ Main hotspot</button></div>
+            <section class="vt-map-marker-form" data-vt-map-marker-form hidden>
+              <header><div><span data-vt-map-marker-kicker>Map hotspot</span><strong data-vt-map-marker-title>Edit marker</strong></div><button type="button" data-vt-close-map-marker aria-label="Close marker editor">×</button></header>
+              <label><span>English label *</span><input name="map_label_en" maxlength="120" required /></label>
+              <label><span>Tagalog label</span><input name="map_label_tl" maxlength="120" /></label>
+              <label><span>Destination scene</span><select name="map_scene_id"></select><small>Main hotspots may be labels only; scene hotspots require a destination.</small></label>
+              <div class="vt-coordinates"><label><span>X position</span><input name="map_x" readonly /></label><label><span>Y position</span><input name="map_y" readonly /></label></div>
+              <button type="button" class="vt-map-delete" data-vt-delete-map-marker>Delete marker</button>
+            </section>
+            <label><span>Minimap close-up zoom</span><div class="vt-map-range"><input type="range" name="zoom" min="1" max="8" step="0.1" /><output data-vt-map-zoom>3.2×</output></div></label>
+            <fieldset class="vt-map-hidden-scenes"><legend>Hide map in selected scenes</legend><p>Useful for indoor panoramas where the aerial map is not relevant.</p><div data-vt-map-hidden-scenes></div></fieldset>
+            <p class="vt-inline-message" data-vt-map-message aria-live="polite"></p>
+            <button type="submit" class="vt-map-save">Save map to draft</button>
+          </form>
         </div>
         <div id="vtDetailsPanel" role="tabpanel" aria-labelledby="vtDetailsTab" data-vt-panel="details" hidden>
           <form class="vt-details-form" data-vt-details-form>

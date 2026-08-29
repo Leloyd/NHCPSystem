@@ -45,7 +45,7 @@
           <span class="vt-tour-card__start">Starting view · {{ tour.start_scene_name or ('Front Gate' if tour.is_system_original else 'Not selected') }}</span>
         </div>
         <div class="vt-tour-card__body">
-          <p class="vt-tour-card__meta">{{ tour.scene_count or 0 }} scenes{% if not tour.is_system_original %} · {{ tour.hotspot_count or 0 }} hotspots{% endif %}</p>
+          <p class="vt-tour-card__meta">{{ tour.scene_count or 0 }} scenes{% if not tour.is_system_original %} · {{ tour.hotspot_count or 0 }} hotspots{% endif %}{% if tour.source_id or not tour.is_system_original %} · Map {{ 'on' if tour.map_enabled else 'off' }}{% if tour.map_marker_count %} ({{ tour.map_marker_count }}){% endif %}{% endif %}</p>
           <h3>{{ tour.title_en }}</h3>
           <p>{{ tour.description_en or 'A configurable 360° tour environment.' }}</p>
         </div>
@@ -53,6 +53,7 @@
           {% if tour.is_system_original %}
             <a href="{{ url_for('virtual_tour', tour='original') }}" target="_blank" rel="noopener">Open Original</a>
             <a href="{{ url_for('admin_virtual_tour_original_edit') }}" class="is-primary">{{ 'Edit Original' if tour.source_id else 'Customize Original' }}</a>
+            {% if tour.source_id %}<a href="{{ url_for('admin_virtual_tour_edit', tour_id=tour.source_id) }}#vtMapPanel">Edit map</a>{% endif %}
             {% if tour.source_id %}
             <form method="post" action="{{ url_for('admin_virtual_tour_original_revert') }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="Revert to packaged Original?" data-confirm-message="All database edits and revision history for Original will be removed. The protected 40-scene source files and hotspots will immediately become public again." data-confirm-label="Revert Original" data-confirm-variant="disable">
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><button type="submit">Revert</button>
@@ -60,6 +61,7 @@
             {% else %}<span class="vt-protected-label">Protected baseline</span>{% endif %}
           {% else %}
             <a href="{{ url_for('admin_virtual_tour_edit', tour_id=tour.id) }}" class="is-primary">{{ 'Edit draft' if tour.status == 'draft' else ('Edit archived' if tour.status == 'archived' else 'Edit environment') }}</a>
+            <a href="{{ url_for('admin_virtual_tour_edit', tour_id=tour.id) }}#vtMapPanel">Edit map</a>
             {% if tour.status == 'active' %}<a href="{{ url_for('virtual_tour', tour=tour.slug) }}" target="_blank" rel="noopener">Public preview</a>{% endif %}
             {% if tour.status == 'archived' %}
             <form method="post" action="{{ url_for('admin_virtual_tour_restore', tour_id=tour.id) }}" data-confirm-submit data-confirm-eyebrow="Virtual Tours" data-confirm-title="{{ 'Make this environment active again?' if tour.published_revision_id else 'Restore this environment as a draft?' }}" data-confirm-message="{{ 'Its last published revision will return to the public selector.' if tour.published_revision_id else 'This environment has no published revision, so it will return to the private draft list.' }}" data-confirm-label="{{ 'Make active' if tour.published_revision_id else 'Restore draft' }}" data-confirm-variant="enable">

@@ -51,3 +51,23 @@ body.vt-loading-open{overflow:hidden}
   .vt-primary-link,.vt-save-hotspot,.vt-form-actions button,.vt-editor__header-actions .is-publish,.vt-original-import__copy button,.vt-voice-generator button{forced-color-adjust:auto}
   .vt-temp-hotspot,.vt-editor-nav-hotspot,.vt-editor-item-hotspot{border:3px solid Highlight}
 }
+
+/* Revisioned site-map editor. */
+.vt-inspector-tabs{grid-template-columns:repeat(3,1fr)}
+.vt-map-form{display:flex;flex-direction:column;gap:.72rem;padding:.8rem}
+.vt-map-form label{display:flex;flex-direction:column;gap:.38rem}
+.vt-map-form label>span,.vt-map-hidden-scenes legend{font-size:.72rem;font-weight:800}
+.vt-map-form input,.vt-map-form select{background:#fbfcfb;border:1px solid #cfdad4;border-radius:9px;box-sizing:border-box;color:var(--vt-ink);font:inherit;font-size:.72rem;padding:.58rem;width:100%}
+.vt-map-form input:focus,.vt-map-form select:focus{border-color:var(--vt-green);box-shadow:0 0 0 3px rgba(12,100,72,.13);outline:none}
+.vt-map-toggle{align-items:flex-start!important;background:var(--vt-green-soft);border:1px solid #c7ddd4;border-radius:11px;cursor:pointer;flex-direction:row!important;padding:.65rem}
+.vt-map-toggle input{flex:0 0 auto;margin:.18rem 0 0;width:auto}
+.vt-map-toggle span{display:flex;flex-direction:column;gap:.16rem}.vt-map-toggle small,.vt-map-help,.vt-map-marker-form small,.vt-map-hidden-scenes p{color:var(--vt-muted);font-size:.65rem;line-height:1.45;margin:0}
+.vt-map-image-row{align-items:flex-end;display:grid;gap:.4rem;grid-template-columns:1fr auto}.vt-map-image-row button,.vt-map-actions button,.vt-map-save,.vt-map-delete{border:0;border-radius:8px;cursor:pointer;font:inherit;font-size:.68rem;font-weight:800;padding:.58rem}
+.vt-map-image-row button{background:#edf2ef;color:var(--vt-green);white-space:nowrap}
+.vt-map-canvas{aspect-ratio:3074/2250;background:#13231d;border:1px solid #b9c9c1;border-radius:12px;cursor:crosshair;overflow:hidden;position:relative;touch-action:none;width:100%}
+.vt-map-canvas>img{display:block;height:100%;object-fit:contain;pointer-events:none;user-select:none;width:100%}.vt-map-canvas>p{color:#c4d1cb;font-size:.7rem;inset:50% auto auto 50%;margin:0;position:absolute;text-align:center;transform:translate(-50%,-50%);width:80%}
+.vt-map-marker-layer{inset:0;position:absolute}.vt-map-edit-marker{background:#fff;border:3px solid var(--vt-green);border-radius:50%;box-shadow:0 2px 8px rgba(0,0,0,.38);cursor:grab;height:17px;margin:-8.5px 0 0 -8.5px;padding:0;position:absolute;width:17px}.vt-map-edit-marker.is-main{background:#e8b84d;border-color:#fff;border-radius:4px;height:20px;margin:-10px 0 0 -10px;transform:rotate(45deg);width:20px}.vt-map-edit-marker.is-selected{box-shadow:0 0 0 5px rgba(232,184,77,.35),0 2px 8px rgba(0,0,0,.45)}
+.vt-map-actions{display:grid;gap:.4rem;grid-template-columns:1fr 1fr}.vt-map-actions button{background:var(--vt-green-soft);border:1px solid #c7ddd4;color:var(--vt-green)}.vt-map-actions button.is-placing{background:#fff1c9;border-color:#d4a638;color:#70510d}.vt-map-actions button:disabled{cursor:not-allowed;opacity:.45}
+.vt-map-marker-form{background:#f7faf8;border:1px solid var(--vt-line);border-radius:11px;display:flex;flex-direction:column;gap:.58rem;padding:.65rem}.vt-map-marker-form header{align-items:center;display:flex;justify-content:space-between}.vt-map-marker-form header>div{display:flex;flex-direction:column}.vt-map-marker-form header span{color:var(--vt-green);font-size:.62rem;font-weight:800;text-transform:uppercase}.vt-map-marker-form header strong{font-size:.78rem}.vt-map-marker-form header button{background:none;border:0;cursor:pointer;font-size:1.1rem}.vt-map-delete{background:#f7e6e6;color:#8b3434}
+.vt-map-range{align-items:center;display:grid;gap:.5rem;grid-template-columns:1fr auto}.vt-map-range input{padding:0}.vt-map-range output{font-size:.7rem;font-weight:800;min-width:2.5rem;text-align:right}
+.vt-map-hidden-scenes{border:1px solid var(--vt-line);border-radius:10px;margin:0;padding:.65rem}.vt-map-hidden-scenes>div{display:grid;gap:.32rem;margin-top:.5rem;max-height:130px;overflow:auto}.vt-map-hidden-scenes label{align-items:center;flex-direction:row;gap:.4rem}.vt-map-hidden-scenes label input{flex:0 0 auto;width:auto}.vt-map-hidden-scenes label span{font-size:.68rem;font-weight:600}.vt-map-save{background:var(--vt-green);color:#fff;width:100%}.vt-map-save:disabled{cursor:wait;opacity:.55}

@@ -942,6 +942,22 @@ html.tour-vr-active body {
   z-index: 3;
 }
 
+.tour-mapx__landmark.is-clickable {
+  appearance: none;
+  background: none;
+  border: 0;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+  padding: 0;
+  pointer-events: auto;
+}
+
+.tour-mapx__landmark.is-clickable:hover .tour-mapx__landmark-pin,
+.tour-mapx__landmark.is-clickable:focus-visible .tour-mapx__landmark-pin {
+  box-shadow: 0 0 0 5px rgba(212, 175, 106, 0.3), 0 2px 7px rgba(0, 0, 0, 0.6);
+}
+
 .tour-mapx__landmark-pin {
   display: block;
   width: 14px;

@@ -5,7 +5,7 @@ from unittest.mock import patch
 from PIL import Image
 
 from virtual_tour_content import service
-from virtual_tour_content.routes import _captured_on, _normalize_yaw
+from virtual_tour_content.routes import _captured_on, _normalize_yaw, _validated_map_config
 
 
 class _StorageBucket:
@@ -109,6 +109,23 @@ class VirtualTourServiceTests(unittest.TestCase):
                 filename="large.jpg", asset_kind="panorama", tour_id=1,
                 file_size=service.MAX_PANORAMA_BYTES + 1,
             )
+
+    def test_map_config_keeps_precise_coordinates_and_scene_links(self):
+        result = _validated_map_config({
+            "enabled": True, "imagePath": "/static/images/site-map/aerial-map.jpg",
+            "width": 3074, "height": 2250, "zoom": 3.4,
+            "hiddenSceneIds": ["inside"],
+            "markers": [{
+                "id": "front-gate", "kind": "scene", "x": 0.30742, "y": 0.75681,
+                "label": {"en": "Front Gate", "tl": "Pangunahing Tarangkahan"}, "sceneId": "frontgate",
+            }],
+        }, [
+            {"scene_key": "frontgate"}, {"scene_key": "inside"},
+        ], tour_id=1)
+        self.assertTrue(result["enabled"])
+        self.assertEqual(result["markers"][0]["sceneId"], "frontgate")
+        self.assertEqual(result["markers"][0]["x"], 0.30742)
+        self.assertEqual(result["hiddenSceneIds"], ["inside"])
 
 
 if __name__ == "__main__":

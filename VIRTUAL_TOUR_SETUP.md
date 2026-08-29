@@ -37,10 +37,12 @@ Do not run only a selected part of it unless you understand the table and
 function dependencies.
 
 Re-run the complete script after this update even if the four tables already
-exist. It moves `captured_on` to each row in `virtual_tour_scenes`. Existing
-scenes inherit the environment date that was previously saved, after which an
-administrator can maintain a different date for every 360° panorama. Imported
-Original scenes default to April 16, 2026.
+exist. In addition to the scene capture-date upgrade, it adds the revisioned
+`map_config` used by the upper-right visitor map and reinstalls the publish
+function so map edits are copied into the next working draft. Imported Original
+scenes default to April 16, 2026. `virtual_tour_map_config_migration.sql` is
+provided as a small schema-only reference, but the complete table script is the
+recommended upgrade because it also refreshes the publish function.
 
 ### Verify the database
 
