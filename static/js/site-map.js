@@ -65,6 +65,29 @@
     church: "insidechurch",
     "underground-crypts": "underground1",
   };
+  var PANORAMA_COORDINATES_BY_TARGET = {
+    rightfrontgate: { pitch: -79.21, yaw: 21.77 },
+    insidefrontgate: { pitch: -61.59, yaw: -16.54 },
+    insidefrontgate1: { pitch: -53.53, yaw: -3.70 },
+    leftfrontchurch: { pitch: -27.16, yaw: 8.76 },
+    rightfrontchurch: { pitch: -27.39, yaw: 16.57 },
+    rightfronttombs: { pitch: -26.40, yaw: 20.40 },
+    rightfronttombs2: { pitch: -31.86, yaw: 38.71 },
+    rightcornermiddleg: { pitch: -46.37, yaw: 50.82 },
+    rightmiddlecornermiddleg: { pitch: -54.59, yaw: 45.10 },
+    rightcornerinsidefrontgate: { pitch: -67.40, yaw: 27.23 },
+    leftfrontgate: { pitch: -57.66, yaw: -37.91 },
+    leftcornerinsidefrontgate: { pitch: -51.56, yaw: -37.02 },
+    middlegmuseum: { pitch: -44.85, yaw: -47.73 },
+    frontmuseum: { pitch: -41.44, yaw: -49.23 },
+    museumlandmark: { pitch: -35.64, yaw: -47.54 },
+    leftmiddleinsidefrontgate: { pitch: -43.07, yaw: -33.32 },
+    leftmiddleg: { pitch: -38.34, yaw: -31.58 },
+    leftmiddlemiddleg: { pitch: -34.09, yaw: -28.80 },
+    leftendtombs: { pitch: -27.39, yaw: -13.33 },
+    lefttombs: { pitch: -25.33, yaw: 3.78 },
+    leftfirsttombs: { pitch: -25.61, yaw: 7.54 },
+  };
   var TAGALOG_TITLE_BY_STOP = {
     "front-gate": "Harapang Tarangkahan",
     "flag-pole": "Poste ng Watawat",
@@ -122,6 +145,7 @@
     coordinateCapturePointerStart: null,
     coordinateCapturePointerMoved: false,
     coordinateCaptureFeedbackTimer: 0,
+    markerRefreshRafId: 0,
     routeLayer: null,
     audioPlayer: null,
     introAudioPlayer: null,
@@ -266,6 +290,7 @@
               : [];
             mergeVirtualTourScenes(payload && payload.scenes);
             mergeInteractiveLandmarks();
+            applyCapturedPanoramaCoordinates();
           })
           .catch(function (error) {
             state.virtualTourLandmarks = [];
@@ -504,6 +529,24 @@
       pitch: pitch,
       yaw: yaw,
     };
+  }
+
+  function normalizePanoramaTargetKey(value) {
+    return String(value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  }
+
+  function applyCapturedPanoramaCoordinates() {
+    state.hotspots.forEach(function (spot) {
+      var stopCoordinates = PANORAMA_COORDINATES_BY_TARGET[normalizePanoramaTargetKey(spot.id)] || null;
+      var sceneCoordinates = PANORAMA_COORDINATES_BY_TARGET[normalizePanoramaTargetKey(spot.virtualTourScene)] || null;
+      var coordinates = stopCoordinates || sceneCoordinates;
+      if (coordinates) {
+        spot.panorama = {
+          pitch: coordinates.pitch,
+          yaw: coordinates.yaw,
+        };
+      }
+    });
   }
 
   function normalizeHotspot(raw) {
@@ -1304,6 +1347,10 @@
 
         state.map.on("resize", function () {
           applyMapBoundsConstraints();
+          refreshAerialMarkerVisibility();
+        });
+        ["moveend", "zoomend", "viewreset"].forEach(function (eventName) {
+          state.map.on(eventName, refreshAerialMarkerVisibility);
         });
       })
       .catch(function (error) {
@@ -1395,6 +1442,7 @@
       opacity: 1,
       riseOnHover: true,
       riseOffset: 1000,
+      zIndexOffset: 800,
       icon: window.L.divIcon({
         className: "site-map-hotspot-marker",
         html: getHotspotMarkerHtml(),
@@ -1450,6 +1498,46 @@
 
     state.markerById[spot.id] = marker;
     return marker;
+  }
+
+  function refreshAerialMarkerVisibility() {
+    if (!state.map || !state.hotspotsVisible) {
+      return;
+    }
+
+    window.cancelAnimationFrame(state.markerRefreshRafId);
+    state.markerRefreshRafId = window.requestAnimationFrame(function () {
+      Object.keys(state.markerById).forEach(function (id) {
+        var marker = state.markerById[id];
+        if (!marker || !state.map.hasLayer(marker)) {
+          return;
+        }
+        marker.setOpacity(1);
+        if (typeof marker.update === "function") {
+          marker.update();
+        }
+        var node = marker.getElement();
+        if (node) {
+          node.style.opacity = "1";
+          node.style.visibility = "visible";
+        }
+      });
+
+      state.virtualTourLandmarkMarkers.forEach(function (marker) {
+        if (!marker || !state.map.hasLayer(marker)) {
+          return;
+        }
+        marker.setOpacity(1);
+        if (typeof marker.update === "function") {
+          marker.update();
+        }
+        var node = marker.getElement();
+        if (node) {
+          node.style.opacity = "1";
+          node.style.visibility = "visible";
+        }
+      });
+    });
   }
 
   function getRouteStops(routeId) {
@@ -1578,6 +1666,7 @@
         return;
       }
       var marker = ensureMarker(spot);
+      marker.setLatLng([spot.y, spot.x]);
       marker.setOpacity(1);
       var markerNode = marker.getElement();
       if (markerNode) {
@@ -1615,6 +1704,8 @@
         landmarkNode.setAttribute("aria-current", "true");
       }
     });
+
+    refreshAerialMarkerVisibility();
   }
 
   function renderMedia(stop) {
