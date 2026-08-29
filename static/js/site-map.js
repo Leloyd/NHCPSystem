@@ -73,6 +73,7 @@
     "flag-pole": "Poste ng Watawat",
     parking: "Paradahan",
     "museum-entrance": "Museo",
+    "museum-landmark": "Museo",
     "resource-center-office": "Sentrong Sanggunian",
     "middle-ground": "Gitnang Bahagi",
     "left-side-inside": "Kaliwang Bahagi",
@@ -89,6 +90,7 @@
     "Visitor Zone": "Lugar ng Bisita",
     Tombs: "Mga Puntod",
     Chapel: "Kapilya",
+    "Virtual Tour Stop": "Hintuan ng Virtual Tour",
   };
 
   var state = {
@@ -166,17 +168,11 @@
     mapInfoConnectorOrigin: document.getElementById("mapInfoConnectorOrigin"),
     mapInfoConnectorEnd: document.getElementById("mapInfoConnectorEnd"),
     mapInfoClose: document.getElementById("mapInfoClose"),
-    mapInfoRoute: document.getElementById("mapInfoRoute"),
     mapInfoTitle: document.getElementById("mapInfoTitle"),
     mapInfoMeta: document.getElementById("mapInfoMeta"),
     stopMedia: document.getElementById("mapInfoMedia"),
     mapInfoSummary: document.getElementById("mapInfoSummary"),
     stopLinks: document.getElementById("mapInfoLinks"),
-    mapInfoPrevious: document.getElementById("mapInfoPrevious"),
-    mapInfoPreviousLabel: document.getElementById("mapInfoPreviousLabel"),
-    mapInfoProgress: document.getElementById("mapInfoProgress"),
-    mapInfoNext: document.getElementById("mapInfoNext"),
-    mapInfoNextLabel: document.getElementById("mapInfoNextLabel"),
   };
 
   if (!elements.mapRoot || !window.L) {
@@ -267,6 +263,7 @@
                 })
               : [];
             mergeVirtualTourScenes(payload && payload.scenes);
+            mergeInteractiveLandmarks();
           })
           .catch(function (error) {
             state.virtualTourLandmarks = [];
@@ -385,6 +382,55 @@
     state.virtualTourSceneCount = scenes.length;
   }
 
+  function findVirtualTourLandmark(label) {
+    var target = String(label || "").toLowerCase();
+    return state.virtualTourLandmarks.find(function (landmark) {
+      return String(landmark.label || "").toLowerCase() === target;
+    }) || null;
+  }
+
+  function mergeInteractiveLandmarks() {
+    var chapelLandmark = findVirtualTourLandmark("Chapel");
+    var chapelStop = state.hotspots.find(function (spot) {
+      return spot.id === "church";
+    });
+
+    if (chapelLandmark && chapelStop) {
+      chapelStop.mapFractionX = chapelLandmark.x;
+      chapelStop.mapFractionY = chapelLandmark.y;
+      chapelStop.landmarkOnly = true;
+    }
+
+    var museumLandmark = findVirtualTourLandmark("Museum");
+    if (!museumLandmark || state.hotspots.some(function (spot) { return spot.id === "museum-landmark"; })) {
+      return;
+    }
+
+    var museumStop = normalizeHotspot({
+      id: "museum-landmark",
+      title: "Museum",
+      category: "Landmark",
+      x: 0,
+      y: 0,
+      description: "The museum preserves and interprets the history of the Nagcarlan Underground Cemetery. Its exhibits help visitors understand the site’s architecture, burial traditions, cultural importance, and role in Philippine history.",
+      translations: {
+        tl: {
+          description: "Pinangangalagaan at ipinapaliwanag ng museo ang kasaysayan ng Libingan sa Ilalim ng Lupa ng Nagcarlan. Tinutulungan ng mga eksibit nito ang mga bisita na maunawaan ang arkitektura, mga tradisyon sa paglilibing, kahalagahang pangkultura, at papel ng pook sa kasaysayan ng Pilipinas.",
+        },
+      },
+      learnMore: "/online-gallery",
+      learnMoreLabel: "Online Gallery",
+    });
+
+    if (museumStop) {
+      museumStop.mapFractionX = museumLandmark.x;
+      museumStop.mapFractionY = museumLandmark.y;
+      museumStop.virtualTourScene = "frontMuseum";
+      museumStop.landmarkOnly = true;
+      state.hotspots.push(museumStop);
+    }
+  }
+
   function normalizeVirtualTourLandmark(raw) {
     if (!raw) {
       return null;
@@ -464,6 +510,7 @@
       mapFractionX: null,
       mapFractionY: null,
       virtualTourScene: raw.virtualTourScene ? String(raw.virtualTourScene) : "",
+      landmarkOnly: !!raw.landmarkOnly,
       era: String(raw.era || "-"),
       focus: String(raw.focus || "-"),
       prompt: String(raw.prompt || "-"),
@@ -1167,18 +1214,43 @@
     state.virtualTourLandmarks.forEach(function (landmark) {
       var x = landmark.x * state.imageSize.width;
       var y = (1 - landmark.y) * state.imageSize.height;
+      var landmarkName = String(landmark.label || "").toLowerCase();
+      var stopId = landmarkName === "museum"
+        ? "museum-landmark"
+        : (landmarkName === "chapel" ? "church" : "");
+      var stop = stopId ? state.hotspotsById[stopId] || null : null;
       var marker = window.L.marker([y, x], {
-        interactive: false,
-        keyboard: false,
+        interactive: !!stop,
+        keyboard: !!stop,
         zIndexOffset: -200,
         icon: window.L.divIcon({
-          className: "site-map-landmark-marker",
+          className: "site-map-landmark-marker" + (stop ? " is-clickable" : ""),
           html: '<span class="site-map-landmark-pin" aria-hidden="true"></span>'
             + '<span class="site-map-landmark-label">' + escapeMarkerLabel(landmark.label) + "</span>",
           iconSize: [14, 14],
           iconAnchor: [7, 7],
         }),
       });
+
+      marker.siteMapStopId = stopId;
+      if (stop) {
+        marker.on("click", function (event) {
+          if (event && event.originalEvent && window.L && window.L.DomEvent) {
+            window.L.DomEvent.stopPropagation(event.originalEvent);
+          }
+          setActiveStop(stopId, true);
+        });
+        marker.on("add", function () {
+          var node = marker.getElement();
+          if (!node) {
+            return;
+          }
+          node.setAttribute("tabindex", "0");
+          node.setAttribute("role", "button");
+          node.setAttribute("aria-label", "View " + getLocalizedTitle(stop) + " information");
+          node.dataset.stopMarker = stopId;
+        });
+      }
 
       marker.addTo(state.map);
       state.virtualTourLandmarkMarkers.push(marker);
@@ -1305,6 +1377,30 @@
       node.classList.remove("is-hover");
       node.removeAttribute("aria-current");
     });
+
+    state.virtualTourLandmarkMarkers.forEach(function (marker) {
+      var node = marker.getElement();
+      if (!node) {
+        return;
+      }
+      node.classList.remove("is-active");
+      node.removeAttribute("aria-current");
+    });
+  }
+
+  function syncVirtualTourLandmarkAvailability() {
+    state.virtualTourLandmarkMarkers.forEach(function (marker) {
+      var node = marker.getElement();
+      var stop = marker.siteMapStopId ? state.hotspotsById[marker.siteMapStopId] || null : null;
+      if (!node || !stop) {
+        return;
+      }
+
+      node.classList.toggle("is-clickable", state.hotspotsVisible);
+      node.setAttribute("tabindex", state.hotspotsVisible ? "0" : "-1");
+      node.setAttribute("aria-disabled", state.hotspotsVisible ? "false" : "true");
+      node.setAttribute("aria-label", "View " + getLocalizedTitle(stop) + " information");
+    });
   }
 
   function renderMarkers(visibleStops) {
@@ -1314,11 +1410,15 @@
 
     if (!state.hotspotsVisible) {
       state.hotspots.forEach(function (spot) {
+        if (spot.landmarkOnly) {
+          return;
+        }
         var hiddenMarker = ensureMarker(spot);
         if (state.map.hasLayer(hiddenMarker)) {
           state.map.removeLayer(hiddenMarker);
         }
       });
+      syncVirtualTourLandmarkAvailability();
       clearMarkerStyles();
       hideMapInfoOverlay();
       return;
@@ -1330,6 +1430,13 @@
     });
 
     state.hotspots.forEach(function (spot) {
+      if (spot.landmarkOnly) {
+        var oldMarker = state.markerById[spot.id];
+        if (oldMarker && state.map.hasLayer(oldMarker)) {
+          state.map.removeLayer(oldMarker);
+        }
+        return;
+      }
       var marker = ensureMarker(spot);
       var markerNode = marker.getElement();
       if (markerNode) {
@@ -1345,6 +1452,7 @@
       }
     });
 
+    syncVirtualTourLandmarkAvailability();
     clearMarkerStyles();
 
     var active = state.markerById[state.stopId];
@@ -1355,6 +1463,17 @@
         activeNode.setAttribute("aria-current", "true");
       }
     }
+
+    state.virtualTourLandmarkMarkers.forEach(function (landmarkMarker) {
+      if (landmarkMarker.siteMapStopId !== state.stopId) {
+        return;
+      }
+      var landmarkNode = landmarkMarker.getElement();
+      if (landmarkNode) {
+        landmarkNode.classList.add("is-active");
+        landmarkNode.setAttribute("aria-current", "true");
+      }
+    });
   }
 
   function renderMedia(stop) {
@@ -1445,21 +1564,8 @@
     elements.stopLinks.hidden = !elements.stopLinks.childElementCount;
   }
 
-  function renderJourneyControls(stop) {
-    var visibleStops = getVisibleStops();
-    var currentIndex = visibleStops.findIndex(function (item) {
-      return stop && item.id === stop.id;
-    });
-    var total = visibleStops.length;
+  function renderInfoMeta(stop) {
     var isTagalog = getCurrentLanguage() === "tl";
-    var hasJourney = currentIndex >= 0 && total > 0;
-
-    if (elements.mapInfoRoute) {
-      elements.mapInfoRoute.hidden = !hasJourney;
-      elements.mapInfoRoute.textContent = hasJourney
-        ? (isTagalog ? "Lokasyon " : "Location ") + (currentIndex + 1) + (isTagalog ? " sa " : " of ") + total
-        : "";
-    }
 
     if (elements.mapInfoMeta) {
       var category = stop ? String(stop.category || "Heritage Site") : "";
@@ -1467,62 +1573,8 @@
       var viewLabel = is360ViewActive()
         ? (isTagalog ? "360° Tanawin" : "360° Aerial View")
         : (isTagalog ? "Aerial Map" : "Aerial Map");
-      elements.mapInfoMeta.hidden = !hasJourney;
-      elements.mapInfoMeta.textContent = hasJourney ? localizedCategory + " · " + viewLabel : "";
-    }
-
-    if (elements.mapInfoProgress) {
-      elements.mapInfoProgress.textContent = hasJourney ? (currentIndex + 1) + " / " + total : "0 / 0";
-    }
-    if (elements.mapInfoPreviousLabel) {
-      elements.mapInfoPreviousLabel.textContent = isTagalog ? "Nakaraan" : "Previous";
-    }
-    if (elements.mapInfoNextLabel) {
-      elements.mapInfoNextLabel.textContent = isTagalog ? "Susunod" : "Next";
-    }
-
-    [elements.mapInfoPrevious, elements.mapInfoNext].forEach(function (button) {
-      if (!button) {
-        return;
-      }
-      button.disabled = total < 2;
-      button.setAttribute("aria-disabled", total < 2 ? "true" : "false");
-    });
-
-    if (hasJourney && total > 1) {
-      var previousStop = visibleStops[(currentIndex - 1 + total) % total];
-      var nextStop = visibleStops[(currentIndex + 1) % total];
-      if (elements.mapInfoPrevious) {
-        elements.mapInfoPrevious.setAttribute(
-          "aria-label",
-          (isTagalog ? "Nakaraang lokasyon: " : "Previous location: ") + getLocalizedTitle(previousStop),
-        );
-      }
-      if (elements.mapInfoNext) {
-        elements.mapInfoNext.setAttribute(
-          "aria-label",
-          (isTagalog ? "Susunod na lokasyon: " : "Next location: ") + getLocalizedTitle(nextStop),
-        );
-      }
-    }
-  }
-
-  function navigateMapInfo(direction) {
-    var visibleStops = getVisibleStops();
-    if (visibleStops.length < 2) {
-      return;
-    }
-
-    var currentIndex = visibleStops.findIndex(function (item) {
-      return item.id === state.stopId;
-    });
-    var startIndex = currentIndex >= 0 ? currentIndex : 0;
-    var nextIndex = (startIndex + direction + visibleStops.length) % visibleStops.length;
-    var target = visibleStops[nextIndex];
-
-    setActiveStop(target.id, !is360ViewActive());
-    if (is360ViewActive()) {
-      focusPanoramaOnStop(target);
+      elements.mapInfoMeta.hidden = !stop;
+      elements.mapInfoMeta.textContent = stop ? localizedCategory + " · " + viewLabel : "";
     }
   }
 
@@ -1704,10 +1756,8 @@
 
     var isTagalog = getCurrentLanguage() === "tl";
     elements.languageBtn.dataset.language = isTagalog ? "tl" : "en";
-    elements.languageLabel.querySelectorAll("[data-language-option]").forEach(function (option) {
-      option.classList.toggle("is-selected", option.dataset.languageOption === (isTagalog ? "tl" : "en"));
-    });
-    elements.languageBtn.classList.toggle("is-active", isTagalog);
+    elements.languageLabel.textContent = isTagalog ? "Tagalog" : "English";
+    elements.languageBtn.classList.remove("is-active");
     elements.languageBtn.setAttribute("aria-pressed", isTagalog ? "true" : "false");
     elements.languageBtn.setAttribute(
       "aria-label",
@@ -1968,7 +2018,7 @@
   }
 
   function renderMapInfo(stop) {
-    if (!elements.mapInfoOverlay || !elements.mapInfoTitle || !elements.mapInfoSummary || !elements.mapInfoMeta || !elements.mapInfoRoute) {
+    if (!elements.mapInfoOverlay || !elements.mapInfoTitle || !elements.mapInfoSummary || !elements.mapInfoMeta) {
       return;
     }
 
@@ -1982,7 +2032,7 @@
     renderMedia(stop);
     elements.mapInfoSummary.textContent = getLocalizedDescription(stop);
     renderLinks(stop);
-    renderJourneyControls(stop);
+    renderInfoMeta(stop);
     playHotspotAudio(stop);
 
     if (elements.mapInfoCard && previousStopId !== stop.id) {
@@ -2103,18 +2153,6 @@
         applyDraggedInfoCardPosition(state.hotspotsById[state.infoStopId] || null);
         event.preventDefault();
         event.stopPropagation();
-      });
-    }
-
-    if (elements.mapInfoPrevious) {
-      elements.mapInfoPrevious.addEventListener("click", function () {
-        navigateMapInfo(-1);
-      });
-    }
-
-    if (elements.mapInfoNext) {
-      elements.mapInfoNext.addEventListener("click", function () {
-        navigateMapInfo(1);
       });
     }
 
