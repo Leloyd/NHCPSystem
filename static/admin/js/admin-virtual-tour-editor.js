@@ -30,6 +30,7 @@
   var selectedMapMarker = null;
   var placingMapKind = "";
   var mapBaseline = "";
+  var mapMode = false;
 
   var sceneList = root.querySelector("[data-vt-scene-list]");
   var hotspotList = root.querySelector("[data-vt-hotspot-list]");
@@ -57,6 +58,11 @@
   var mapMarkerLayer = root.querySelector("[data-vt-map-marker-layer]");
   var mapMarkerForm = root.querySelector("[data-vt-map-marker-form]");
   var mapMessage = root.querySelector("[data-vt-map-message]");
+  var mapToggleButton = root.querySelector("[data-vt-toggle-map-editor]");
+  var mapWorkspace = root.querySelector("[data-vt-map-workspace]");
+  var mapStageStatus = root.querySelector("[data-vt-map-stage-status]");
+  var sceneLibraryMode = root.querySelector("[data-vt-scene-library-mode]");
+  var mapVisibilityMode = root.querySelector("[data-vt-map-visibility-mode]");
   var unsavedIndicator = root.querySelector("[data-vt-unsaved]");
   var dirtyState = { details: false, hotspot: false, scene: false, map: false };
   var formBaselines = { details: "", hotspot: null, scene: null };
@@ -639,6 +645,40 @@
     });
   }
 
+  function setMapMode(enabled, switchInspector) {
+    var next = Boolean(enabled);
+    mapMode = next;
+    root.classList.toggle("is-map-mode", mapMode);
+    sceneLibraryMode.hidden = mapMode;
+    mapVisibilityMode.hidden = !mapMode;
+    mapWorkspace.hidden = !mapMode;
+    root.querySelectorAll("[data-vt-360-view]").forEach(function (element) { element.hidden = mapMode; });
+    root.querySelectorAll("[data-vt-360-toolbar-action]").forEach(function (button) { button.hidden = mapMode; });
+    mapToggleButton.textContent = mapMode ? "Edit 360" : "Edit map";
+    mapToggleButton.classList.toggle("is-active", mapMode);
+    mapToggleButton.setAttribute("aria-pressed", mapMode ? "true" : "false");
+    var currentName = root.querySelector("[data-vt-current-scene]");
+    if (currentName) currentName.textContent = mapMode ? "Tour map layout" : (selectedScene ? selectedScene.name_en : "No scene selected");
+    if (mapMode) {
+      renderMapEditor();
+      if (mapStageStatus) mapStageStatus.textContent = placingMapKind
+        ? "Click the map to place the selected hotspot."
+        : "Choose Scene hotspot or Main hotspot in the Map panel, then click the map.";
+      if (switchInspector !== false) {
+        var mapTab = root.querySelector('[data-vt-tab="map"]');
+        if (mapTab) activateInspectorTab(mapTab);
+      }
+    } else {
+      placingMapKind = ""; syncMapPlacementButtons();
+      if (switchInspector !== false) {
+        var activeTab = root.querySelector('[data-vt-tab][aria-selected="true"]');
+        var hotspotTab = root.querySelector('[data-vt-tab="hotspots"]');
+        if (activeTab && activeTab.dataset.vtTab === "map" && hotspotTab) activateInspectorTab(hotspotTab);
+      }
+      window.requestAnimationFrame(resizeViewer);
+    }
+  }
+
   function mapPayload() {
     return {
       enabled: Boolean(mapConfig.enabled),
@@ -729,6 +769,12 @@
     });
   }
 
+  function syncMapHiddenCount() {
+    var count = (mapConfig.hiddenSceneIds || []).length;
+    var label = root.querySelector("[data-vt-map-hidden-count]");
+    if (label) label.textContent = count + (count === 1 ? " scene hidden" : " scenes hidden");
+  }
+
   function renderMapEditor() {
     mapConfig.markers = Array.isArray(mapConfig.markers) ? mapConfig.markers : [];
     mapConfig.hiddenSceneIds = Array.isArray(mapConfig.hiddenSceneIds) ? mapConfig.hiddenSceneIds : [];
@@ -747,10 +793,12 @@
       checkbox.checked = mapConfig.hiddenSceneIds.indexOf(scene.scene_key) >= 0;
       checkbox.addEventListener("change", function () {
         mapConfig.hiddenSceneIds = Array.prototype.slice.call(hiddenHost.querySelectorAll("input:checked")).map(function (entry) { return entry.value; });
+        syncMapHiddenCount();
         syncMapDirty();
       });
       textNode.textContent = scene.name_en; label.appendChild(checkbox); label.appendChild(textNode); hiddenHost.appendChild(label);
     });
+    syncMapHiddenCount();
     renderMapMarkers(); fillMapMarkerForm();
   }
 
@@ -765,13 +813,17 @@
     };
     mapConfig.markers.push(marker); selectedMapMarker = marker; placingMapKind = "";
     renderMapMarkers(); fillMapMarkerForm(); syncMapPlacementButtons(); syncMapDirty();
+    if (mapStageStatus) mapStageStatus.textContent = "Marker placed. Drag it to adjust the position or edit its destination in the Map panel.";
   });
 
+  mapToggleButton.addEventListener("click", function () { setMapMode(!mapMode, true); });
   root.querySelectorAll("[data-vt-add-map-marker]").forEach(function (button) {
     button.addEventListener("click", function () {
+      if (!mapMode) setMapMode(true, false);
       placingMapKind = button.dataset.vtAddMapMarker; selectedMapMarker = null;
       fillMapMarkerForm(); renderMapMarkers(); syncMapPlacementButtons();
       message(mapMessage, "Click the map to place the " + (placingMapKind === "main" ? "main hotspot." : "scene hotspot."));
+      if (mapStageStatus) mapStageStatus.textContent = "Click the map to place the " + (placingMapKind === "main" ? "main hotspot." : "scene hotspot.");
     });
   });
   root.querySelector("[data-vt-close-map-marker]").addEventListener("click", function () { selectedMapMarker = null; fillMapMarkerForm(); renderMapMarkers(); });
@@ -930,6 +982,7 @@
       entry.tabIndex = active ? 0 : -1;
     });
     root.querySelectorAll("[data-vt-panel]").forEach(function (panel) { panel.hidden = panel.dataset.vtPanel !== name; });
+    if (name === "map" && !mapMode) setMapMode(true, false);
   }
   inspectorTabs.forEach(function (button, index) {
     button.addEventListener("click", function () { activateInspectorTab(button); });

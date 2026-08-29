@@ -45,23 +45,38 @@
     </header>
 
     <div class="vt-editor__workspace">
-      <aside class="vt-scenes-panel" aria-label="Tour scenes">
-        <div class="vt-panel-heading"><div><span>Scene library</span><strong data-vt-scene-count>{{ scenes|length }} scenes</strong></div><button type="button" data-vt-open-scene-upload aria-controls="vtSceneUpload">＋ Add</button></div>
-        <div class="vt-scene-list" data-vt-scene-list>
-          {% for scene in scenes %}
-          <button type="button" class="vt-scene-item{% if loop.first %} is-active{% endif %}" data-scene-id="{{ scene.id }}">
-            <img src="{{ scene.panorama_url }}" alt="" /><span><strong>{{ scene.name_en }}</strong><small>{{ ('Starting scene' if scene.is_start_scene else scene.panorama_width ~ ' × ' ~ scene.panorama_height) ~ ' · Taken ' ~ scene.captured_on }}</small></span>
-          </button>
-          {% else %}<div class="vt-empty" data-vt-scenes-empty><strong>No panorama yet</strong><p>Add a 2:1 equirectangular image to create the starting scene.</p></div>{% endfor %}
+      <aside class="vt-scenes-panel" aria-label="Tour scenes and map visibility">
+        <div class="vt-scene-library-mode" data-vt-scene-library-mode>
+          <div class="vt-panel-heading"><div><span>Scene library</span><strong data-vt-scene-count>{{ scenes|length }} scenes</strong></div><button type="button" data-vt-open-scene-upload aria-controls="vtSceneUpload">＋ Add</button></div>
+          <div class="vt-scene-list" data-vt-scene-list>
+            {% for scene in scenes %}
+            <button type="button" class="vt-scene-item{% if loop.first %} is-active{% endif %}" data-scene-id="{{ scene.id }}">
+              <img src="{{ scene.panorama_url }}" alt="" /><span><strong>{{ scene.name_en }}</strong><small>{{ ('Starting scene' if scene.is_start_scene else scene.panorama_width ~ ' × ' ~ scene.panorama_height) ~ ' · Taken ' ~ scene.captured_on }}</small></span>
+            </button>
+            {% else %}<div class="vt-empty" data-vt-scenes-empty><strong>No panorama yet</strong><p>Add a 2:1 equirectangular image to create the starting scene.</p></div>{% endfor %}
+          </div>
+        </div>
+        <div class="vt-map-visibility-mode" data-vt-map-visibility-mode hidden>
+          <div class="vt-panel-heading"><div><span>Hide map in selected scenes</span><strong data-vt-map-hidden-count>0 hidden</strong></div></div>
+          <p>Select scenes where visitors should not see the aerial map, such as indoor panoramas.</p>
+          <div class="vt-map-scene-visibility-list" data-vt-map-hidden-scenes></div>
         </div>
       </aside>
 
-      <section class="vt-viewer-column" aria-label="360 degree scene editor">
-        <div class="vt-viewer-toolbar"><span data-vt-current-scene>{{ scenes[0].name_en if scenes else 'No scene selected' }}</span><div><button type="button" data-vt-replace-scene disabled>Edit scene</button><button type="button" data-vt-set-start disabled>Set as start</button><button type="button" data-vt-delete-scene disabled>Delete</button></div></div>
-        <div class="vt-viewer" id="vtEditorViewer" tabindex="0" aria-label="Interactive panorama editor">
+      <section class="vt-viewer-column" aria-label="360 scene and map editor">
+        <div class="vt-viewer-toolbar"><span data-vt-current-scene>{{ scenes[0].name_en if scenes else 'No scene selected' }}</span><div><button type="button" data-vt-toggle-map-editor aria-pressed="false">Edit map</button><button type="button" data-vt-360-toolbar-action data-vt-replace-scene disabled>Edit scene</button><button type="button" data-vt-360-toolbar-action data-vt-set-start disabled>Set as start</button><button type="button" data-vt-360-toolbar-action data-vt-delete-scene disabled>Delete</button></div></div>
+        <div class="vt-viewer" id="vtEditorViewer" data-vt-360-view tabindex="0" aria-label="Interactive panorama editor">
           <div class="vt-viewer-empty" data-vt-viewer-empty {% if scenes %}hidden{% endif %}><span>360°</span><strong>Your panorama preview will appear here</strong><p>Upload a full equirectangular scene to begin.</p></div>
         </div>
-        <p class="vt-placement-status" data-vt-placement-status aria-live="polite">Select Add item or Add navigation to begin placing a hotspot.</p>
+        <p class="vt-placement-status" data-vt-placement-status data-vt-360-view aria-live="polite">Select Add item or Add navigation to begin placing a hotspot.</p>
+        <div class="vt-map-workspace" data-vt-map-workspace hidden>
+          <div class="vt-map-canvas" data-vt-map-canvas aria-label="Map marker editor">
+            <img data-vt-map-image-preview alt="Editable tour map" draggable="false" />
+            <div class="vt-map-marker-layer" data-vt-map-marker-layer></div>
+            <p data-vt-map-empty>Choose a map image to place markers.</p>
+          </div>
+          <p class="vt-placement-status" data-vt-map-stage-status aria-live="polite">Choose Scene hotspot or Main hotspot in the Map panel, then click the map.</p>
+        </div>
       </section>
 
       <aside class="vt-inspector" aria-label="Tour properties">
@@ -109,12 +124,7 @@
               <label><span>Map image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-vt-map-image /></label>
               <button type="button" data-vt-map-reset-image>Use aerial map</button>
             </div>
-            <div class="vt-map-canvas" data-vt-map-canvas aria-label="Map marker editor">
-              <img data-vt-map-image-preview alt="Editable tour map" draggable="false" />
-              <div class="vt-map-marker-layer" data-vt-map-marker-layer></div>
-              <p data-vt-map-empty>Choose a map image to place markers.</p>
-            </div>
-            <p class="vt-map-help">Choose a marker type, then click the map. Drag any existing marker to fine-tune its position.</p>
+            <p class="vt-map-help">The large map is shown in the main workspace. Choose a marker type, click the map, then drag a marker to fine-tune its position.</p>
             <div class="vt-map-actions"><button type="button" data-vt-add-map-marker="scene" {% if not scenes %}disabled{% endif %}>＋ Scene hotspot</button><button type="button" data-vt-add-map-marker="main">＋ Main hotspot</button></div>
             <section class="vt-map-marker-form" data-vt-map-marker-form hidden>
               <header><div><span data-vt-map-marker-kicker>Map hotspot</span><strong data-vt-map-marker-title>Edit marker</strong></div><button type="button" data-vt-close-map-marker aria-label="Close marker editor">×</button></header>
@@ -125,7 +135,7 @@
               <button type="button" class="vt-map-delete" data-vt-delete-map-marker>Delete marker</button>
             </section>
             <label><span>Minimap close-up zoom</span><div class="vt-map-range"><input type="range" name="zoom" min="1" max="8" step="0.1" /><output data-vt-map-zoom>3.2×</output></div></label>
-            <fieldset class="vt-map-hidden-scenes"><legend>Hide map in selected scenes</legend><p>Useful for indoor panoramas where the aerial map is not relevant.</p><div data-vt-map-hidden-scenes></div></fieldset>
+            <p class="vt-map-sidebar-hint">Use the Map visibility list on the left to hide the map in selected scenes.</p>
             <p class="vt-inline-message" data-vt-map-message aria-live="polite"></p>
             <button type="submit" class="vt-map-save">Save map to draft</button>
           </form>
