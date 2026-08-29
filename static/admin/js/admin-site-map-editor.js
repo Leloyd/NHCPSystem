@@ -19,6 +19,7 @@
   var dirty = false;
   var allowPageExit = false;
   var viewer = null;
+  var MAX_MAP_UPLOAD_BYTES = 30 * 1024 * 1024;
   var supabaseClient = null;
   var temporaryUrls = [];
 
@@ -299,6 +300,11 @@
   async function handleUpload(input) {
     var file = input.files && input.files[0]; if (!file || readOnly) return;
     var purpose = input.dataset.smUpload; var kind = purpose === "aerial" ? "aerial" : purpose === "panorama" ? "panorama" : purpose.indexOf("audio") !== -1 || purpose.indexOf("intro") !== -1 ? "audio" : "image";
+    if ((kind === "aerial" || kind === "panorama") && file.size > MAX_MAP_UPLOAD_BYTES) {
+      input.value = "";
+      showStatus("The map image is over the 30 MB upload limit.", true);
+      return;
+    }
     var mediaName = kind === "audio" ? "audio file" : kind === "panorama" ? "360° map" : kind === "aerial" ? "aerial map" : "hotspot photo";
     var approved = await confirmAction({ eyebrow: "Site Map media", title: "Upload this " + mediaName + "?", message: "“" + file.name + "” will be uploaded to this working draft. Save the draft afterward to keep it.", label: "Upload file", variant: "enable" });
     if (!approved) { input.value = ""; return; }

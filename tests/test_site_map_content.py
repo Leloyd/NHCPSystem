@@ -1,9 +1,17 @@
 import unittest
 
+from site_map_content import service
 from site_map_content.service import packaged_original_config, site_map_publish_issues
 
 
 class SiteMapPublishCheckTests(unittest.TestCase):
+    def test_map_upload_rejects_a_file_over_30_mb(self):
+        with self.assertRaisesRegex(ValueError, "30 MB"):
+            service.prepare_upload(
+                filename="oversized-map.jpg", kind="aerial", site_map_id=1,
+                file_size=(30 * 1024 * 1024) + 1,
+            )
+
     def test_packaged_original_passes_publish_check(self):
         self.assertEqual(site_map_publish_issues(packaged_original_config()), [])
 

@@ -20,7 +20,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent
 STORAGE_PREFIX = "site-map"
 IMAGE_EXTENSIONS = {".jpg", ".jpeg", ".png", ".webp"}
 AUDIO_EXTENSIONS = {".mp3", ".wav", ".ogg", ".m4a"}
-MAX_MAP_BYTES = max(5 * 1024 * 1024, int(os.getenv("SITE_MAP_MAX_MAP_BYTES", str(30 * 1024 * 1024))))
+MAX_MAP_BYTES = 30 * 1024 * 1024
 MAX_MEDIA_BYTES = max(1 * 1024 * 1024, int(os.getenv("SITE_MAP_MAX_MEDIA_BYTES", str(25 * 1024 * 1024))))
 SIGNED_URL_SECONDS = min(604800, max(300, int(os.getenv("SITE_MAP_SIGNED_URL_SECONDS", "7200"))))
 
