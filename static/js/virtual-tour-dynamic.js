@@ -36,6 +36,7 @@
   var minimapCircle = document.getElementById("tourMinimapCircle");
   var minimapImg = document.getElementById("tourMinimapImg");
   var minimapLabel = document.getElementById("tourMinimapLabel");
+  var minimapCone = minimap && minimap.querySelector(".tour-minimap__cone");
   var mapx = document.getElementById("tourMapx");
   var mapxFrame = document.getElementById("tourMapxFrame");
   var mapxImg = document.getElementById("tourMapxImg");
@@ -45,6 +46,9 @@
   var managedMap = config.map && typeof config.map === "object" ? config.map : null;
   var managedMapDots = {};
   var managedMapScene = "";
+  var managedMapNorths = null;
+  var managedMapYawSign = -1;
+  var managedMapHeadingFrame = 0;
   var viewModes = document.getElementById("tourViewModes");
   var audio = new Audio();
   var speechFallback = window.NHCPSpeechFallback || null;
@@ -179,6 +183,77 @@
     }) || null;
   }
 
+  function managedMapBearing(fromMarker, toMarker) {
+    var dx = Number(toMarker.x) - Number(fromMarker.x);
+    var dy = Number(toMarker.y) - Number(fromMarker.y);
+    if (Math.abs(dx) < 0.0001 && Math.abs(dy) < 0.0001) return null;
+    return Math.atan2(dx, -dy) * 180 / Math.PI;
+  }
+
+  function managedMapCircularMean(values) {
+    var sine = 0; var cosine = 0;
+    values.forEach(function (degrees) {
+      var radians = Number(degrees) * Math.PI / 180;
+      sine += Math.sin(radians); cosine += Math.cos(radians);
+    });
+    return {
+      mean: Math.atan2(sine, cosine) * 180 / Math.PI,
+      strength: Math.hypot(sine, cosine) / (values.length || 1),
+    };
+  }
+
+  function computeManagedMapNorths() {
+    var candidates = [-1, 1]; var bestSign = -1; var bestScore = -1;
+    candidates.forEach(function (sign) {
+      var total = 0; var count = 0;
+      scenes.forEach(function (scene) {
+        var fromMarker = managedMapMarkerForScene(scene.id); var offsets = [];
+        if (!fromMarker) return;
+        (scene.hotspots || []).forEach(function (hotspot) {
+          if (hotspot.type !== "navigation" || !hotspot.targetScene) return;
+          var toMarker = managedMapMarkerForScene(hotspot.targetScene);
+          var bearing = toMarker ? managedMapBearing(fromMarker, toMarker) : null;
+          if (bearing == null) return;
+          offsets.push(bearing - sign * Number(hotspot.yaw || 0));
+        });
+        if (offsets.length >= 2) { total += managedMapCircularMean(offsets).strength; count += 1; }
+      });
+      var score = count ? total / count : 0;
+      if (score > bestScore) { bestScore = score; bestSign = sign; }
+    });
+    managedMapYawSign = bestSign;
+    var norths = {};
+    scenes.forEach(function (scene) {
+      var fromMarker = managedMapMarkerForScene(scene.id); var offsets = [];
+      if (!fromMarker) return;
+      (scene.hotspots || []).forEach(function (hotspot) {
+        if (hotspot.type !== "navigation" || !hotspot.targetScene) return;
+        var toMarker = managedMapMarkerForScene(hotspot.targetScene);
+        var bearing = toMarker ? managedMapBearing(fromMarker, toMarker) : null;
+        if (bearing == null) return;
+        offsets.push(bearing - managedMapYawSign * Number(hotspot.yaw || 0));
+      });
+      if (offsets.length) norths[scene.id] = managedMapCircularMean(offsets).mean;
+    });
+    return norths;
+  }
+
+  function startManagedMapHeading() {
+    if (managedMapHeadingFrame || !minimapCone) return;
+    var updateHeading = function () {
+      managedMapHeadingFrame = 0;
+      if (viewer && !minimap.hidden && managedMapScene) {
+        if (!managedMapNorths) managedMapNorths = computeManagedMapNorths();
+        var north = Number(managedMapNorths[managedMapScene] || 0);
+        var yaw = 0;
+        try { yaw = Number(viewer.getYaw ? viewer.getYaw() : 0); } catch (_) { yaw = 0; }
+        minimapCone.style.transform = "translate(-50%, -100%) rotate(" + (managedMapYawSign * yaw + north) + "deg)";
+      }
+      if (!minimap.hidden) managedMapHeadingFrame = window.requestAnimationFrame(updateHeading);
+    };
+    managedMapHeadingFrame = window.requestAnimationFrame(updateHeading);
+  }
+
   function closeManagedMap() {
     if (mapx) mapx.hidden = true;
   }
@@ -214,6 +289,7 @@
       minimapImg.style.width = diameter * aspect + "px"; minimapImg.style.height = diameter + "px";
       minimapImg.style.left = (diameter - diameter * aspect) / 2 + "px"; minimapImg.style.top = "0px";
     }
+    startManagedMapHeading();
   }
 
   function initManagedMap() {
