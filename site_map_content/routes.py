@@ -71,7 +71,7 @@ def register_site_map_content_routes(
                 if site_map and site_map.get("draft_revision_id"):
                     revision = get_revision(int(site_map["draft_revision_id"]))
             except Exception as exc:
-                config_error = f"Site Map tables are not ready. Run site_map_tables.sql in Supabase. Details: {exc}"
+                config_error = f"Site Map tables are not ready. Run database_sql/site_map_tables.sql in Supabase. Details: {exc}"
         config = revision.get("config") if revision and isinstance(revision.get("config"), dict) else original
         if revision:
             config, upgraded = upgrade_coordinate_system(config)

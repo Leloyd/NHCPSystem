@@ -58,7 +58,7 @@
               </span>
               <div>
                 <strong>Analytics is ready in the code, but its database table is not active.</strong>
-                <p>{{ analytics_dashboard.error }} Run <code>analytics_events_migration.sql</code> once in Supabase; incoming activity will then populate these charts automatically.</p>
+                <p>{{ analytics_dashboard.error }} Run <code>database_sql/analytics_events_migration.sql</code> once in Supabase; incoming activity will then populate these charts automatically.</p>
               </div>
             </section>
             {% endif %}

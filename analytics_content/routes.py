@@ -159,7 +159,7 @@ def register_analytics_routes(
         except Exception as exc:
             current_app.logger.warning("Analytics report could not be generated: %s", exc)
             return Response(
-                "Analytics report unavailable. Run analytics_events_migration.sql in Supabase and try again.",
+                "Analytics report unavailable. Run database_sql/analytics_events_migration.sql in Supabase and try again.",
                 status=503,
                 mimetype="text/plain",
             )

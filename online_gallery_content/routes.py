@@ -57,7 +57,7 @@ def _build_online_gallery_form_payload(form, files, *, current_item, categories,
     full_description_tl = str(form.get("full_description_tl") or form.get("full_description") or "").strip()
 
     if not categories:
-        raise ValueError("No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.")
+        raise ValueError("No Online Gallery categories are available. Run database_sql/online_gallery_tables.sql in Supabase first.")
 
     if len(title_en) < 3:
         raise ValueError("English title must be at least 3 characters.")
@@ -253,7 +253,7 @@ def register_online_gallery_content_routes(
                 form_action=url_for("admin_online_gallery_new"),
                 gallery_form=build_online_gallery_form_state({"status": "draft"}, categories=categories),
                 categories=categories,
-                error_message=None if categories else "No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.",
+                error_message=None if categories else "No Online Gallery categories are available. Run database_sql/online_gallery_tables.sql in Supabase first.",
             )
 
         if not is_admin_csrf_valid(request.form.get("csrf_token")):
@@ -347,7 +347,7 @@ def register_online_gallery_content_routes(
                 form_action=url_for("admin_online_gallery_edit", item_id=item_id),
                 gallery_form=build_online_gallery_form_state(current_item, categories=categories),
                 categories=categories,
-                error_message=None if categories else "No Online Gallery categories are available. Run online_gallery_tables.sql in Supabase first.",
+                error_message=None if categories else "No Online Gallery categories are available. Run database_sql/online_gallery_tables.sql in Supabase first.",
             )
 
         if not is_admin_csrf_valid(request.form.get("csrf_token")):

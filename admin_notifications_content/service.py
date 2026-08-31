@@ -89,7 +89,7 @@ def _dispatch_admin_notification(
         )
     except Exception as exc:  # noqa: BLE001 - the primary submission is already safely stored
         current_app.logger.warning(
-            "Administrator inbox notification could not be stored. Run admin_notifications_table.sql if needed: %s",
+            "Administrator inbox notification could not be stored. Run database_sql/admin_notifications_table.sql if needed: %s",
             exc,
         )
 

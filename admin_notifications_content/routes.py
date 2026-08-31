@@ -59,7 +59,7 @@ def register_admin_notification_routes(
                 {
                     "ok": False,
                     "available": False,
-                    "error": "Notifications need database setup. Run admin_notifications_table.sql in Supabase.",
+                    "error": "Notifications need database setup. Run database_sql/admin_notifications_table.sql in Supabase.",
                 }
             )
         return jsonify(

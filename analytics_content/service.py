@@ -490,5 +490,5 @@ def load_admin_analytics_dashboard(*, days: int = 30) -> dict[str, Any]:
     except Exception as exc:
         current_app.logger.warning("Analytics events could not be loaded: %s", exc)
         return empty_analytics_dashboard(
-            "Analytics tracking is not configured yet. Run analytics_events_migration.sql in Supabase."
+            "Analytics tracking is not configured yet. Run database_sql/analytics_events_migration.sql in Supabase."
         )

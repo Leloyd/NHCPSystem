@@ -215,7 +215,7 @@ def load_admin_tours() -> tuple[list[dict[str, Any]], str | None]:
                 tours.append(tour)
         return tours, None
     except Exception as exc:
-        return tours, f"Virtual-tour tables are not ready. Run virtual_tour_tables.sql in Supabase. Details: {exc}"
+        return tours, f"Virtual-tour tables are not ready. Run database_sql/virtual_tour_tables.sql in Supabase. Details: {exc}"
 
 
 def _is_external_asset(value: str) -> bool:
