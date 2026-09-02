@@ -79,7 +79,7 @@
             <span class="public-auth-input-icon">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M4 4h16v16H4z"></path><path stroke-linecap="round" stroke-linejoin="round" d="m22 6-10 7L2 6"></path></svg>
             </span>
-            <input id="publicAuthSignupEmail" class="public-auth-input" type="email" name="email" placeholder="you@example.com" maxlength="160" required />
+            <input id="publicAuthSignupEmail" class="public-auth-input" type="email" name="email" placeholder="you@example.com" maxlength="160" autocapitalize="none" autocomplete="email" spellcheck="false" required />
           </div>
 
           <label class="public-auth-label" for="publicAuthSignupPassword"><span data-lang-en>Password</span><span data-lang-tl>Kontrasenyas</span> <span class="public-auth-required">*</span></label>
@@ -185,5 +185,5 @@
   'errorMessage': auth_error_message if auth_error_message is defined else '',
   'emailEnabled': public_auth_email_enabled if public_auth_email_enabled is defined else false
 }|tojson }}</script>
-<script src="{{ url_for('static', filename='js/public-auth-modal.js') }}"></script>
+<script src="{{ url_for('static', filename='js/public-auth-modal.js') }}?v=20260903-pending-signup-1"></script>
 {% endif %}

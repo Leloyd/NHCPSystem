@@ -36,6 +36,21 @@
   var currentView = config.defaultView || modal.getAttribute("data-auth-default-view") || "login";
   var pendingEmail = "";
   var lastFocusedElement = null;
+  var strictEmailPattern = /^[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?(?:\.[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?)+$/i;
+
+  function normalizeValidEmail(rawValue) {
+    var value = String(rawValue || "").trim().toLowerCase();
+    if (!value || value.length > 254 || !strictEmailPattern.test(value)) {
+      return "";
+    }
+    var parts = value.split("@");
+    var localPart = parts[0] || "";
+    var finalDomainLabel = (parts[1] || "").split(".").pop() || "";
+    if (localPart.length > 64 || finalDomainLabel.length < 2 || /^\d+$/.test(finalDomainLabel)) {
+      return "";
+    }
+    return value;
+  }
 
   function getFocusableElements() {
     return Array.prototype.slice.call(
@@ -217,10 +232,26 @@
       event.preventDefault();
       clearMessages();
       var formData = serializeForm(signupForm);
-      pendingEmail = String(formData.get("email") || "").trim();
+      pendingEmail = normalizeValidEmail(formData.get("email"));
+      if (!pendingEmail) {
+        setMessage("signup", "Please provide a valid email address.", "error");
+        var invalidEmailInput = signupForm.querySelector('input[name="email"]');
+        if (invalidEmailInput) {
+          invalidEmailInput.focus();
+        }
+        return;
+      }
+      formData.set("email", pendingEmail);
       request(config.signupEndpoint, formData).then(function (result) {
         var payload = result.payload || {};
         if (!result.response.ok) {
+          if (payload.verification_pending && payload.email) {
+            pendingEmail = payload.email;
+            setEmailDisplays(pendingEmail);
+            switchView("verify");
+            setMessage("verify", payload.error || "A verification code was already sent.", "error");
+            return;
+          }
           setMessage("signup", payload.error || "Could not create your account right now.", "error");
           return;
         }
@@ -293,6 +324,16 @@
       request(config.resendEndpoint, formData).then(function (result) {
         var payload = result.payload || {};
         if (!result.response.ok) {
+          if (payload.restart_required) {
+            var signupEmailInput = signupForm && signupForm.querySelector('input[name="email"]');
+            switchView("signup");
+            if (signupEmailInput) {
+              signupEmailInput.value = resendEmail;
+              signupEmailInput.focus();
+            }
+            setMessage("signup", payload.error || "Please create the account again.", "error");
+            return;
+          }
           setMessage("verify", payload.error || "Could not resend the verification email right now.", "error");
           return;
         }

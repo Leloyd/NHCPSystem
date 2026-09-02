@@ -158,11 +158,15 @@ def update_public_user(user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     return rows[0]
 
 
-def list_public_users() -> list[dict[str, Any]]:
-    """All visitor accounts, newest first — for the admin User Management list.
+def delete_public_user(user_id: int) -> None:
+    get_supabase_client().table(PUBLIC_USERS_TABLE).delete().eq("id", int(user_id)).execute()
 
-    Unlike ``get_public_user_profile_by_id`` this deliberately does not filter on
-    ``is_active`` so that deactivated accounts remain visible to administrators.
+
+def list_public_users() -> list[dict[str, Any]]:
+    """Verified visitor accounts, newest first, for User Management.
+
+    Deactivated accounts remain visible, while legacy incomplete registrations
+    are excluded because they were never actual visitor accounts.
     """
     client = get_supabase_client()
     response = (
@@ -171,7 +175,7 @@ def list_public_users() -> list[dict[str, Any]]:
         .order("created_at", desc=True)
         .execute()
     )
-    return list(response.data or [])
+    return [row for row in list(response.data or []) if row.get("email_verified_at")]
 
 
 def get_public_user_by_id(user_id: int) -> dict[str, Any] | None:
@@ -185,6 +189,6 @@ def get_public_user_by_id(user_id: int) -> dict[str, Any] | None:
         .execute()
     )
     rows = list(response.data or [])
-    if not rows:
+    if not rows or not rows[0].get("email_verified_at"):
         return None
     return rows[0]

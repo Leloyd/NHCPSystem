@@ -18,6 +18,7 @@ from werkzeug.security import check_password_hash, generate_password_hash
 
 from public_users_repository import (
     create_public_user,
+    delete_public_user,
     get_public_user_auth_by_email,
     get_public_user_auth_by_identifier,
     get_public_user_auth_by_oauth_subject,
@@ -25,6 +26,13 @@ from public_users_repository import (
     get_public_user_by_email_verification_token_hash,
     get_public_user_by_password_reset_token_hash,
     update_public_user,
+)
+from pending_public_registrations_repository import (
+    delete_pending_public_registration,
+    get_pending_public_registration,
+    purge_expired_pending_public_registrations,
+    save_pending_public_registration,
+    update_pending_public_registration,
 )
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
 from supabase_client import is_supabase_configured
@@ -41,8 +49,8 @@ from .emailer import (
     send_public_security_code_email,
 )
 from .service import BOOKMARK_ITEM_TYPE_ONLINE_GALLERY, load_user_account_dashboard
+from .validation import normalize_email_address
 
-EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 USERNAME_PATTERN = re.compile(r"^[a-z0-9._-]{3,32}$")
 ONBOARDING_USE_CASE_OPTIONS = (
     "Explore museum information",
@@ -246,11 +254,12 @@ def _fetch_google_user_profile(access_token: str) -> dict[str, Any]:
 
 def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[str, Any]:
     oauth_subject = str(profile.get("sub") or "").strip()
-    email = _normalize_login_identifier(profile.get("email"))
+    try:
+        email = normalize_email_address(profile.get("email"))
+    except ValueError as exc:
+        raise ValueError("Google did not return a valid email address.") from exc
     if not oauth_subject or len(oauth_subject) > 255:
         raise ValueError("Google did not return a valid account identifier.")
-    if not EMAIL_PATTERN.match(email):
-        raise ValueError("Google did not return a valid email address.")
     if not bool(profile.get("email_verified")):
         raise ValueError("Please use a Google account with a verified email address.")
 
@@ -282,6 +291,11 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
         if not _user_is_verified(existing_user):
             payload.update(
                 {
+                    # Google has now proved ownership of the inbox. Discard any
+                    # password chosen during an abandoned, unverified signup so
+                    # it cannot become a second login method for this account.
+                    "password_hash": generate_password_hash(secrets.token_urlsafe(48)),
+                    "local_password_enabled": False,
                     "email_verified_at": now,
                     "email_verification_token_hash": None,
                     "email_verification_expires_at": None,
@@ -291,10 +305,15 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
             )
         if not str(existing_user.get("full_name") or "").strip():
             payload["full_name"] = full_name[:160]
-        return update_public_user(int(existing_user.get("id")), payload)
+        updated_user = update_public_user(int(existing_user.get("id")), payload)
+        try:
+            delete_pending_public_registration(email)
+        except Exception:
+            pass
+        return updated_user
 
     password_hash = generate_password_hash(secrets.token_urlsafe(48))
-    return create_public_user(
+    created_user = create_public_user(
         {
             "full_name": full_name[:160],
             "email": email,
@@ -327,6 +346,11 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
             "updated_at": now,
         }
     )
+    try:
+        delete_pending_public_registration(email)
+    except Exception:
+        pass
+    return created_user
 
 
 def _is_expired(raw_timestamp: Any) -> bool:
@@ -389,6 +413,16 @@ def _user_completed_onboarding(user: dict[str, Any] | None) -> bool:
     return bool(user and user.get("onboarding_completed_at"))
 
 
+def _is_incomplete_legacy_password_signup(user: dict[str, Any] | None) -> bool:
+    return bool(
+        user
+        and not _user_is_verified(user)
+        and str(user.get("auth_provider") or "password").strip().lower() == "password"
+        and not user.get("last_login_at")
+        and not user.get("onboarding_completed_at")
+    )
+
+
 def _build_placeholder_full_name(email: str) -> str:
     local_part = str(email or "").split("@", 1)[0].strip()
     candidate = re.sub(r"[._-]+", " ", local_part).strip().title()
@@ -443,30 +477,46 @@ def _serialize_role_values(role_values: list[str]) -> str:
     return json.dumps(_normalize_role_values(role_values))
 
 
-def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str]:
-    email = _normalize_login_identifier(form.get("email"))
+def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str, int | None]:
+    email = normalize_email_address(form.get("email"))
     password = str(form.get("password") or "")
     confirm_password = str(form.get("confirm_password") or "")
 
-    if not EMAIL_PATTERN.match(email):
-        raise ValueError("Please provide a valid email address.")
     if len(password) < 8 or len(password) > 128:
         raise ValueError("Password must be between 8 and 128 characters.")
     if password != confirm_password:
         raise ValueError("Passwords do not match.")
-    if get_public_user_auth_by_email(email):
-        raise ValueError("That email address is already registered. Try signing in or resend verification.")
+    existing_user = get_public_user_auth_by_email(email)
+    legacy_unverified_user_id = None
+    if existing_user:
+        if not _is_incomplete_legacy_password_signup(existing_user):
+            raise ValueError("That email address is already registered. Try signing in.")
+        legacy_unverified_user_id = int(existing_user.get("id"))
 
     password_hash = generate_password_hash(password)
     return {
         "full_name": _build_placeholder_full_name(email),
         "email": email,
-        "username": _generate_unique_username(email),
         "password_hash": password_hash,
+    }, email, legacy_unverified_user_id
+
+
+def _build_verified_public_user_payload(pending: dict[str, Any], verified_at: str) -> dict[str, Any]:
+    email = normalize_email_address(pending.get("email"))
+    return {
+        "full_name": str(pending.get("full_name") or _build_placeholder_full_name(email)).strip()[:160],
+        "email": email,
+        "username": _generate_unique_username(email),
+        "password_hash": str(pending.get("password_hash") or ""),
         "phone_number": "",
         "organization": "",
         "is_active": True,
-        "email_verified_at": None,
+        "last_login_at": None,
+        "email_verified_at": verified_at,
+        "email_verification_token_hash": None,
+        "email_verification_expires_at": None,
+        "email_verification_sent_at": None,
+        "email_verification_attempts": 0,
         "onboarding_completed_at": None,
         "website_use_case": "",
         "profile_roles": _serialize_role_values([]),
@@ -475,7 +525,16 @@ def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str]:
         "province_text": "",
         "city_text": "",
         "auth_provider": "password",
-    }, email
+        "oauth_subject": None,
+        "local_password_enabled": True,
+        "password_reset_token_hash": None,
+        "password_reset_expires_at": None,
+        "security_code_hash": None,
+        "security_code_expires_at": None,
+        "security_code_sent_at": None,
+        "security_code_attempts": 0,
+        "updated_at": verified_at,
+    }
 
 
 def _validate_onboarding_payload(form, role_values: list[str], current_user_id: int) -> dict[str, Any]:
@@ -764,6 +823,28 @@ def register_user_account_routes(
         except Exception:
             user = None
         if not user:
+            pending = None
+            if "@" in identifier:
+                try:
+                    pending_email = normalize_email_address(identifier)
+                    pending = get_pending_public_registration(pending_email)
+                except Exception:
+                    pending = None
+            pending_password_hash = str((pending or {}).get("password_hash") or "")
+            try:
+                pending_password_is_valid = bool(pending_password_hash) and check_password_hash(pending_password_hash, password)
+            except (TypeError, ValueError):
+                pending_password_is_valid = False
+            if pending and pending_password_is_valid:
+                record_public_auth_failure("login", client_ip)
+                return jsonify(
+                    {
+                        "ok": False,
+                        "error": "Please verify your email before signing in.",
+                        "verification_required": True,
+                        "email": pending.get("email"),
+                    }
+                ), 403
             record_public_auth_failure("login", client_ip)
             return jsonify({"ok": False, "error": "Invalid credentials."}), 401
 
@@ -813,44 +894,71 @@ def register_user_account_routes(
         if is_limited:
             return jsonify({"ok": False, "error": f"Too many sign up attempts. Try again in {retry_after} seconds."}), 429
 
+        pending_saved = False
+        email = ""
         try:
-            payload, email = _validate_modal_signup_payload(request.form)
+            payload, email, legacy_unverified_user_id = _validate_modal_signup_payload(request.form)
             verification_code = _generate_six_digit_code()
             now = _utcnow()
+            purge_expired_pending_public_registrations(now.isoformat())
+            existing_pending = get_pending_public_registration(email)
+            if existing_pending:
+                wait_seconds = _resend_wait_seconds(
+                    existing_pending.get("verification_sent_at"),
+                    EMAIL_VERIFICATION_RESEND_COOLDOWN,
+                )
+                if wait_seconds:
+                    return jsonify(
+                        {
+                            "ok": False,
+                            "error": f"A verification code was already sent. Try again in {wait_seconds} seconds.",
+                            "email": email,
+                            "verification_pending": True,
+                            "retry_after": wait_seconds,
+                        }
+                    ), 429
             payload.update(
                 {
-                    "email_verification_token_hash": _hash_one_time_code(verification_code),
-                    "email_verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
-                    "email_verification_sent_at": now.isoformat(),
-                    "email_verification_attempts": 0,
-                    "oauth_subject": None,
-                    "local_password_enabled": True,
-                    "password_reset_token_hash": None,
-                    "password_reset_expires_at": None,
-                    "security_code_hash": None,
-                    "security_code_expires_at": None,
-                    "security_code_sent_at": None,
-                    "security_code_attempts": 0,
+                    "verification_code_hash": _hash_one_time_code(verification_code),
+                    "verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
+                    "verification_sent_at": now.isoformat(),
+                    "verification_attempts": 0,
                     "updated_at": now.isoformat(),
                 }
             )
-            created_user = create_public_user(payload)
+            save_pending_public_registration(payload)
+            pending_saved = True
+            if legacy_unverified_user_id is not None:
+                # Old deployments wrote incomplete signups into public_users.
+                # Remove that placeholder only after its pending replacement is
+                # safely stored, so retrying no longer reports it as registered.
+                delete_public_user(legacy_unverified_user_id)
             send_public_account_verification_email(
                 to_email=email,
                 verification_code=verification_code,
                 expires_minutes=int(EMAIL_VERIFICATION_LIFETIME.total_seconds() // 60),
             )
             clear_public_auth_failures("signup", client_ip)
-            return jsonify({"ok": True, "email": email, "verify_pending": True, "user_id": created_user.get("id")})
+            return jsonify({"ok": True, "email": email, "verify_pending": True})
         except ValueError as exc:
             record_public_auth_failure("signup", client_ip)
             return jsonify({"ok": False, "error": str(exc)}), 400
         except PublicAuthEmailError as exc:
+            if pending_saved and email:
+                try:
+                    delete_pending_public_registration(email)
+                except Exception:
+                    app.logger.warning("Could not remove undelivered pending signup for %s", email)
             app.logger.exception("Failed to send account verification email: %s", exc)
             return jsonify({"ok": False, "error": "Could not send the verification code right now. Please try again."}), 500
         except Exception as exc:
+            if pending_saved and email:
+                try:
+                    delete_pending_public_registration(email)
+                except Exception:
+                    app.logger.warning("Could not clean up failed pending signup for %s", email)
             record_public_auth_failure("signup", client_ip)
-            app.logger.exception("Failed to create public user account: %s", exc)
+            app.logger.exception("Failed to start pending public registration: %s", exc)
             return jsonify({"ok": False, "error": "Could not create your account right now."}), 500
 
     @app.route("/api/auth/signup/resend", methods=["POST"])
@@ -863,31 +971,56 @@ def register_user_account_routes(
         if not is_public_csrf_valid(request.form.get("csrf_token")):
             return jsonify({"ok": False, "error": "Invalid request."}), 400
 
-        email = _normalize_login_identifier(request.form.get("email"))
-        if not EMAIL_PATTERN.match(email):
-            return jsonify({"ok": False, "error": "Please provide a valid email address."}), 400
+        try:
+            email = normalize_email_address(request.form.get("email"))
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
 
         try:
-            user = get_public_user_auth_by_email(email)
-            if not user:
-                return jsonify({"ok": True, "email": email, "verify_pending": True})
-            if _user_is_verified(user):
+            existing_user = get_public_user_auth_by_email(email)
+            if existing_user and _user_is_verified(existing_user):
                 return jsonify({"ok": True, "already_verified": True, "redirect_url": url_for("public_login", next=next_url)})
-            wait_seconds = _resend_wait_seconds(user.get("email_verification_sent_at"), EMAIL_VERIFICATION_RESEND_COOLDOWN)
+            if existing_user and not _is_incomplete_legacy_password_signup(existing_user):
+                return jsonify({"ok": False, "error": "That email address is already registered. Try signing in."}), 400
+
+            pending = get_pending_public_registration(email)
+            if not pending and existing_user:
+                if _is_incomplete_legacy_password_signup(existing_user):
+                    pending = {
+                        "email": email,
+                        "full_name": str(existing_user.get("full_name") or _build_placeholder_full_name(email))[:160],
+                        "password_hash": str(existing_user.get("password_hash") or ""),
+                    }
+                else:
+                    pending = None
+            if not pending:
+                return jsonify(
+                    {
+                        "ok": False,
+                        "error": "This signup session has expired. Please create the account again.",
+                        "restart_required": True,
+                    }
+                ), 400
+
+            wait_seconds = _resend_wait_seconds(pending.get("verification_sent_at"), EMAIL_VERIFICATION_RESEND_COOLDOWN)
             if wait_seconds:
                 return jsonify({"ok": False, "error": f"Please wait {wait_seconds} seconds before requesting another code.", "retry_after": wait_seconds}), 429
+
             verification_code = _generate_six_digit_code()
             now = _utcnow()
-            update_public_user(
-                int(user.get("id")),
-                {
-                    "email_verification_token_hash": _hash_one_time_code(verification_code),
-                    "email_verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
-                    "email_verification_sent_at": now.isoformat(),
-                    "email_verification_attempts": 0,
-                    "updated_at": now.isoformat(),
-                },
-            )
+            pending_payload = {
+                "email": email,
+                "full_name": str(pending.get("full_name") or _build_placeholder_full_name(email))[:160],
+                "password_hash": str(pending.get("password_hash") or ""),
+                "verification_code_hash": _hash_one_time_code(verification_code),
+                "verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
+                "verification_sent_at": now.isoformat(),
+                "verification_attempts": 0,
+                "updated_at": now.isoformat(),
+            }
+            save_pending_public_registration(pending_payload)
+            if existing_user:
+                delete_public_user(int(existing_user.get("id")))
             send_public_account_verification_email(
                 to_email=email,
                 verification_code=verification_code,
@@ -914,36 +1047,55 @@ def register_user_account_routes(
         if is_limited:
             return jsonify({"ok": False, "error": f"Too many verification attempts. Try again in {retry_after} seconds."}), 429
 
-        email = _normalize_login_identifier(request.form.get("email"))
         try:
+            email = normalize_email_address(request.form.get("email"))
             code = _validate_six_digit_code(request.form.get("verification_code"))
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
-        if not EMAIL_PATTERN.match(email):
-            return jsonify({"ok": False, "error": "Enter the email address used during sign up."}), 400
 
         try:
-            user = get_public_user_auth_by_email(email)
-            if not user:
-                record_public_auth_failure("signup", client_ip)
-                return jsonify({"ok": False, "error": "The code is invalid or has expired."}), 400
-            if _user_is_verified(user):
+            existing_user = get_public_user_auth_by_email(email)
+            if existing_user and _user_is_verified(existing_user):
                 return jsonify({"ok": True, "redirect_url": url_for("public_login", next=next_url)})
 
-            attempts = int(user.get("email_verification_attempts") or 0)
+            pending = get_pending_public_registration(email)
+            if not pending and _is_incomplete_legacy_password_signup(existing_user):
+                # Compatibility for an OTP issued by the previous deployment.
+                pending = {
+                    "email": email,
+                    "full_name": str(existing_user.get("full_name") or _build_placeholder_full_name(email))[:160],
+                    "password_hash": str(existing_user.get("password_hash") or ""),
+                    "verification_code_hash": str(existing_user.get("email_verification_token_hash") or ""),
+                    "verification_expires_at": existing_user.get("email_verification_expires_at"),
+                    "verification_sent_at": existing_user.get("email_verification_sent_at"),
+                    "verification_attempts": int(existing_user.get("email_verification_attempts") or 0),
+                    "updated_at": _utcnow().isoformat(),
+                }
+            if not pending:
+                record_public_auth_failure("signup", client_ip)
+                return jsonify({"ok": False, "error": "The code is invalid or has expired."}), 400
+
+            attempts = int(pending.get("verification_attempts") or 0)
             if attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS:
                 return jsonify({"ok": False, "error": "Too many incorrect attempts. Request a new code."}), 429
-            stored_hash = str(user.get("email_verification_token_hash") or "")
+            stored_hash = str(pending.get("verification_code_hash") or "")
             code_is_valid = (
                 bool(stored_hash)
-                and not _is_expired(user.get("email_verification_expires_at"))
+                and not _is_expired(pending.get("verification_expires_at"))
                 and hmac.compare_digest(stored_hash, _hash_one_time_code(code))
             )
             if not code_is_valid:
-                update_public_user(
-                    int(user.get("id")),
-                    {"email_verification_attempts": attempts + 1, "updated_at": _utcnow().isoformat()},
-                )
+                attempt_payload = {"verification_attempts": attempts + 1, "updated_at": _utcnow().isoformat()}
+                if get_pending_public_registration(email):
+                    update_pending_public_registration(email, attempt_payload)
+                elif existing_user:
+                    update_public_user(
+                        int(existing_user.get("id")),
+                        {
+                            "email_verification_attempts": attempts + 1,
+                            "updated_at": attempt_payload["updated_at"],
+                        },
+                    )
                 record_public_auth_failure("signup", client_ip)
                 remaining = max(0, EMAIL_VERIFICATION_MAX_ATTEMPTS - attempts - 1)
                 message = "The code is invalid or has expired."
@@ -954,20 +1106,27 @@ def register_user_account_routes(
                 return jsonify({"ok": False, "error": message}), 400
 
             now = _utcnow().isoformat()
-            verified_user = update_public_user(
-                int(user.get("id")),
-                {
-                    "email_verified_at": str(user.get("email_verified_at") or now),
-                    "email_verification_token_hash": None,
-                    "email_verification_expires_at": None,
-                    "email_verification_sent_at": None,
-                    "email_verification_attempts": 0,
-                    "updated_at": now,
-                },
-            )
+            if not str(pending.get("password_hash") or ""):
+                raise RuntimeError("Pending signup password hash is missing.")
+
+            # For a legacy row, persist its pending replacement before removing
+            # the placeholder. New signups are already in the pending table.
+            if existing_user and not _is_incomplete_legacy_password_signup(existing_user):
+                record_public_auth_failure("signup", client_ip)
+                return jsonify({"ok": False, "error": "The code is invalid or has expired."}), 400
+            if existing_user and not get_pending_public_registration(email):
+                save_pending_public_registration(pending)
+            if existing_user:
+                delete_public_user(int(existing_user.get("id")))
+
+            verified_user = create_public_user(_build_verified_public_user_payload(pending, now))
+            try:
+                delete_pending_public_registration(email)
+            except Exception as cleanup_error:
+                app.logger.warning("Verified user %s was created but pending signup cleanup failed: %s", verified_user.get("id"), cleanup_error)
             clear_public_auth_failures("signup", client_ip)
-            set_public_user_session(int(user.get("id")))
-            redirect_url = next_url if _user_completed_onboarding(verified_user) else url_for("public_account_setup", next=next_url)
+            set_public_user_session(int(verified_user.get("id")))
+            redirect_url = url_for("public_account_setup", next=next_url)
             return jsonify({"ok": True, "redirect_url": redirect_url})
         except Exception as exc:
             app.logger.exception("Failed to verify signup OTP for %s: %s", email, exc)
@@ -1063,9 +1222,10 @@ def register_user_account_routes(
         if is_limited:
             return jsonify({"ok": False, "error": f"Too many password reset requests. Try again in {retry_after} seconds."}), 429
 
-        email = _normalize_login_identifier(request.form.get("email"))
-        if not EMAIL_PATTERN.match(email):
-            return jsonify({"ok": False, "error": "Please provide a valid email address."}), 400
+        try:
+            email = normalize_email_address(request.form.get("email"))
+        except ValueError as exc:
+            return jsonify({"ok": False, "error": str(exc)}), 400
 
         # Count every valid request while keeping the response independent of
         # whether an account exists, which avoids exposing registered emails.
