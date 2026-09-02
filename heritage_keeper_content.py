@@ -64,6 +64,10 @@ TOTAL_REQUIRED = TRAIL_REQUIRED + AR_REQUIRED + WEBXR_REQUIRED
 MASTER_PIECE_REQUIRED = 12
 VALID_TRAIL_KEYS = {item[0] for item in TRAIL_FRAGMENTS}
 TRAIL_KEY_ORDER = [item[0] for item in TRAIL_FRAGMENTS]
+# These stops may be passed without completing their activities. They remain
+# required for a complete Trail restoration plate, but they do not prevent a
+# later completed stop from being recorded.
+ACTIVITY_GATED_TRAIL_KEYS = {"stop4", "stop9"}
 VALID_AR_KEYS = set(AR_ARTIFACTS)
 VALID_WEBXR_KEYS = set(WEBXR_ENVIRONMENTS)
 
@@ -240,7 +244,7 @@ def record_heritage_keeper_fragment(user_id: int, source: str, item_key: str) ->
     existing = {(str(item.get("source") or ""), str(item.get("item_key") or "")) for item in events_before}
     if normalized_source == "trail":
         target_index = TRAIL_KEY_ORDER.index(normalized_key)
-        required_previous = set(TRAIL_KEY_ORDER[:target_index])
+        required_previous = set(TRAIL_KEY_ORDER[:target_index]) - ACTIVITY_GATED_TRAIL_KEYS
         earned_trail = {item_key for source_key, item_key in existing if source_key == "trail"}
         if not required_previous.issubset(earned_trail):
             raise ValueError("Complete the preceding Heritage Trail stops first.")

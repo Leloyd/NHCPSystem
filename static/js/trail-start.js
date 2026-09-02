@@ -2559,9 +2559,11 @@ updateTrailViewButtons();
 
 /* --- Stop entry / transitions ------------------------------------------------ */
 const recordedTrailStopsThisVisit = new Set();
+const activityGatedTrailStops = new Set(['stop4', 'stop9']);
 
-function recordTrailStopCompletion(stopId) {
+function recordTrailStopCompletion(stopId, options = {}) {
   if (!/^stop(?:10|[1-9])$/.test(stopId) || recordedTrailStopsThisVisit.has(stopId)) return null;
+  if (activityGatedTrailStops.has(stopId) && options.activityComplete !== true) return null;
   if (!window.NHCPHeritageKeeper || typeof window.NHCPHeritageKeeper.award !== 'function') return null;
 
   recordedTrailStopsThisVisit.add(stopId);
@@ -4875,7 +4877,6 @@ function setupTraditionMap(el, options = {}) {
   const markerByKey = {};
   let announced = false;
   let selectedCard = null;
-  let gateMessageAt = 0;
   let hintTimer = 0;
   let feedbackTimer = 0;
   let revealTimer = 0;
@@ -5482,17 +5483,6 @@ function setupTraditionMap(el, options = {}) {
     feedbackTimer = window.setTimeout(hideFeedbackNotice, 5000);
   };
 
-  const showIncompleteGate = () => {
-    const now = performance.now();
-    if (now - gateMessageAt < 1200) return;
-    gateMessageAt = now;
-    showFeedback(
-      'Place every artifact correctly to unlock “Whole.”',
-      'Ilagay nang tama ang lahat ng artifact upang mabuksan ang “Kabuuan.”',
-      'hint'
-    );
-  };
-
   const clearSelection = () => {
     if (selectedCard) selectedCard.classList.remove('is-selected');
     selectedCard = null;
@@ -5748,7 +5738,6 @@ function setupTraditionMap(el, options = {}) {
     captureMapRect,
     moveToWhole: (firstRect) => moveMapStage(true, firstRect),
     moveToActivity: (firstRect) => moveMapStage(false, firstRect),
-    showIncompleteGate,
   };
 }
 
@@ -6113,8 +6102,8 @@ function setupKeeperArchive(storyEl, api = {}) {
       );
     }
     if (exitButton) {
-      exitButton.disabled = !complete;
-      exitButton.setAttribute('aria-disabled', String(!complete));
+      exitButton.disabled = false;
+      exitButton.setAttribute('aria-disabled', 'false');
     }
     if (doneButton) {
       doneButton.disabled = !complete;
@@ -6124,11 +6113,12 @@ function setupKeeperArchive(storyEl, api = {}) {
       exitCopy,
       complete
         ? 'The eight records now form one connected history. The archive is whole—carry its living memory to the final stop.'
-        : 'Explore the full story now. Complete the archive when you are ready to carry every recovered memory to the final stop.',
+        : 'You may continue to the final stop now. This stop will be added to your Heritage Keeper only after the archive is complete.',
       complete
         ? 'Iisang magkakaugnay na kasaysayan na ang walong tala. Buo na ang sinupan—dalhin ang buháy nitong alaala sa huling hinto.'
-        : 'Tuklasin na ngayon ang buong kuwento. Buoin ang sinupan kapag handa ka nang dalhin ang bawat natuklasang alaala sa huling hinto.'
+        : 'Maaari kang magpatuloy sa huling hinto ngayon. Maitatala lamang ang hintong ito sa Heritage Keeper kapag buo na ang sinupan.'
     );
+    if (complete) recordTrailStopCompletion('stop9', { activityComplete: true });
   };
 
   const revealCard = (id) => {
@@ -6567,13 +6557,7 @@ function setupStory(el) {
   const mapCompleteIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-complete');
   const mapActivityIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's4-map');
   let mapCompletionUnlocked = stopId !== 'stop4' || mapCompleteIndex < 0 || mapActivityIndex < 0;
-  // Stop 9 keeps its Living Memory closed until every record is filed.
-  const archiveFinalIndex = panels.findIndex((panel) => panel.getAttribute('data-chapter') === 's9-next');
   let keeperArchiveApi = null;
-  const archiveLocked = () => stopId === 'stop9'
-    && archiveFinalIndex >= 0
-    && Boolean(keeperArchiveApi)
-    && keeperArchiveApi.isComplete?.() !== true;
   let traditionMapApi = null;
   let step = -1;
   let memorySceneTimer = 0;
@@ -6593,14 +6577,6 @@ function setupStory(el) {
   window.addEventListener('resize', sizeTrack);
 
   function scrollToStep(index) {
-    if (!mapCompletionUnlocked && mapCompleteIndex >= 0 && index >= mapCompleteIndex) {
-      index = mapActivityIndex;
-      traditionMapApi?.showIncompleteGate?.();
-    }
-    // Chapter dots and other jumps can't reach the Living Memory either.
-    if (archiveLocked() && index >= archiveFinalIndex) {
-      index = Math.max(0, archiveFinalIndex - 1);
-    }
     const total = el.scrollHeight - el.clientHeight;
     const target = Math.max(0, Math.min(total, (index / STEPS) * total + 2));
     if (window.gsap && !prefersReducedMotion) {
@@ -6630,23 +6606,6 @@ function setupStory(el) {
     dotsWrap.appendChild(dot);
     return dot;
   }) : [];
-
-  const syncMapCompletionGate = () => {
-    if (mapCompleteIndex < 0) return;
-    dots.forEach((dot, index) => {
-      const locked = !mapCompletionUnlocked && index >= mapCompleteIndex;
-      dot.disabled = locked;
-      dot.classList.toggle('is-locked', locked);
-      dot.setAttribute('aria-disabled', String(locked));
-      if (locked) {
-        dot.setAttribute('aria-label', 'Complete the Map of Traditions to unlock this chapter');
-      } else {
-        const label = panels[index]?.getAttribute('data-title') || `Section ${index + 1}`;
-        dot.setAttribute('aria-label', `Go to: ${label}`);
-      }
-    });
-  };
-  syncMapCompletionGate();
 
   const setStep = (index) => {
     if (index === step || index < 0 || index >= STEPS) return;
@@ -6725,39 +6684,15 @@ function setupStory(el) {
   // Scroll → progress → step. Also drives the progress rail + the 360 lean.
   el.addEventListener('scroll', () => {
     const total = el.scrollHeight - el.clientHeight;
-    if (archiveLocked() && total > 0) {
-      // The Living Memory stays sealed until the archive is whole — block every
-      // route into it: touch momentum, wheel, GSAP glides and scrollbar drags.
-      const sealedMax = Math.max(0, total * (archiveFinalIndex / STEPS) - 2);
-      if (el.scrollTop > sealedMax) {
-        if (window.gsap) window.gsap.killTweensOf(el);
-        scrollGoal = null;
-        el.scrollTop = sealedMax;
-      }
-    }
-    if (!mapCompletionUnlocked && mapCompleteIndex >= 0 && total > 0) {
-      // Keep every input path—native touch scroll, momentum, wheel/GSAP and
-      // scrollbar dragging—inside the map chapter until all artifacts are
-      // correctly placed. A small pixel inset avoids rounding into “Whole”.
-      const lockedMax = Math.max(0, total * (mapCompleteIndex / STEPS) - 2);
-      if (el.scrollTop > lockedMax) {
-        if (window.gsap) window.gsap.killTweensOf(el);
-        scrollGoal = null;
-        el.scrollTop = lockedMax;
-        traditionMapApi?.showIncompleteGate?.();
-      }
-    }
     const progress = total > 0 ? Math.min(1, Math.max(0, el.scrollTop / total)) : 0;
     if (el === activeStoryEl) {
       if (progressEl) progressEl.style.transform = `scaleX(${progress.toFixed(4)})`;
       scrollYaw = progress * 26;
     }
     setStep(Math.floor(Math.min(STEPS - 1e-4, progress * STEPS)));
-    // A stop is complete once its final meaningful chapter is being viewed.
-    // Requiring the absolute end of the synthetic scroll track made visitors
-    // keep scrolling after the visible content had already finished (most
-    // noticeably after Stop 10's Farewell). Activity-gated final chapters in
-    // Stops 4 and 9 remain protected by their existing scroll locks above.
+    // Ordinary stops complete when their final meaningful chapter is viewed.
+    // Stops 4 and 9 are deliberately excluded: only their activity-completion
+    // callbacks may record those Heritage Keeper fragments.
     if (el === activeStoryEl && state.mode === stopId && step === STEPS - 1) {
       recordTrailStopCompletion(stopId);
     }
@@ -6773,6 +6708,7 @@ function setupStory(el) {
     wholeHost: mapWholeHost,
     onCompletionChange: (complete) => {
       mapCompletionUnlocked = Boolean(complete);
+      if (complete) recordTrailStopCompletion('stop4', { activityComplete: true });
       if (complete && window.NHCPAnalytics && typeof window.NHCPAnalytics.track === 'function') {
         const artifactTotal = el.querySelectorAll('[data-map-card]').length;
         window.NHCPAnalytics.track(
@@ -6783,7 +6719,6 @@ function setupStory(el) {
           { onceKey: 'learning:map-of-traditions' }
         );
       }
-      syncMapCompletionGate();
     },
     onReset: () => {
       if (mapActivityIndex >= 0) scrollToStep(mapActivityIndex);
