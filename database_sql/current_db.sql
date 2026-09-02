@@ -1,0 +1,321 @@
+-- WARNING: This schema is for context only and is not meant to be run.
+-- Table order and constraints may not be valid for execution.
+
+CREATE TABLE public.admin_users (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  email text NOT NULL,
+  password_hash text NOT NULL,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_users_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_users_email_key UNIQUE (email),
+  CONSTRAINT admin_users_email_normalized_check CHECK (email = lower(btrim(email))),
+  CONSTRAINT admin_users_email_format_check CHECK (
+    char_length(email) >= 3
+    AND char_length(email) <= 254
+    AND email ~ '^[a-z0-9!#$%&''*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*@[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
+  )
+);
+CREATE TABLE public.admin_notifications (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  recipient_email text NOT NULL,
+  event_type text NOT NULL CHECK (event_type = ANY (ARRAY['tour_booking'::text, 'teacher_submission'::text, 'story_submission'::text, 'visitor_feedback'::text])),
+  source_id bigint NOT NULL CHECK (source_id > 0),
+  title text NOT NULL CHECK (char_length(title) >= 2 AND char_length(title) <= 180),
+  message text NOT NULL DEFAULT ''::text CHECK (char_length(message) <= 1200),
+  target_url text NOT NULL CHECK (char_length(target_url) >= 9 AND char_length(target_url) <= 500 AND target_url ~~ '/_admin/%'::text),
+  read_at timestamp with time zone,
+  emailed_at timestamp with time zone,
+  email_error text NOT NULL DEFAULT ''::text CHECK (char_length(email_error) <= 500),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_notifications_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_notifications_recipient_event_source_key UNIQUE (recipient_email, event_type, source_id),
+  CONSTRAINT admin_notifications_recipient_email_fkey FOREIGN KEY (recipient_email) REFERENCES public.admin_users(email) ON UPDATE CASCADE ON DELETE CASCADE
+);
+CREATE TABLE public.admin_password_reset_requests (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  admin_user_id bigint,
+  email_hash text NOT NULL CHECK (email_hash ~ '^[0-9a-f]{64}$'::text),
+  request_ip_hash text NOT NULL CHECK (request_ip_hash ~ '^[0-9a-f]{64}$'::text),
+  requested_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_password_reset_requests_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_password_reset_requests_admin_user_id_fkey FOREIGN KEY (admin_user_id) REFERENCES public.admin_users(id) ON DELETE SET NULL
+);
+CREATE TABLE public.admin_password_reset_tokens (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  admin_user_id bigint NOT NULL,
+  token_hash text NOT NULL UNIQUE CHECK (token_hash ~ '^[0-9a-f]{64}$'::text),
+  expires_at timestamp with time zone NOT NULL,
+  used_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT admin_password_reset_tokens_pkey PRIMARY KEY (id),
+  CONSTRAINT admin_password_reset_tokens_admin_user_id_fkey FOREIGN KEY (admin_user_id) REFERENCES public.admin_users(id) ON DELETE CASCADE,
+  CONSTRAINT admin_password_reset_tokens_expiry_check CHECK (expires_at > created_at)
+);
+CREATE TABLE public.public_users (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  email text NOT NULL UNIQUE,
+  username text NOT NULL UNIQUE,
+  password_hash text NOT NULL,
+  full_name text NOT NULL,
+  phone_number text NOT NULL DEFAULT ''::text,
+  organization text NOT NULL DEFAULT ''::text,
+  is_active boolean NOT NULL DEFAULT true,
+  last_login_at timestamp with time zone,
+  email_verified_at timestamp with time zone,
+  email_verification_token_hash text,
+  email_verification_expires_at timestamp with time zone,
+  email_verification_sent_at timestamp with time zone,
+  email_verification_attempts integer NOT NULL DEFAULT 0 CHECK (email_verification_attempts >= 0 AND email_verification_attempts <= 5),
+  onboarding_completed_at timestamp with time zone,
+  website_use_case text NOT NULL DEFAULT ''::text,
+  profile_roles text NOT NULL DEFAULT '[]'::text,
+  location_text text NOT NULL DEFAULT ''::text,
+  country_text text NOT NULL DEFAULT ''::text,
+  province_text text NOT NULL DEFAULT ''::text,
+  city_text text NOT NULL DEFAULT ''::text,
+  auth_provider text NOT NULL DEFAULT 'password'::text,
+  oauth_subject text,
+  local_password_enabled boolean NOT NULL DEFAULT true,
+  password_reset_token_hash text,
+  password_reset_expires_at timestamp with time zone,
+  security_code_hash text,
+  security_code_expires_at timestamp with time zone,
+  security_code_sent_at timestamp with time zone,
+  security_code_attempts integer NOT NULL DEFAULT 0 CHECK (security_code_attempts >= 0 AND security_code_attempts <= 5),
+  profile_picture text,
+  theme_preference text NOT NULL DEFAULT 'light'::text CHECK (theme_preference = ANY (ARRAY['light'::text, 'dark'::text])),
+  language_preference text NOT NULL DEFAULT 'en'::text CHECK (language_preference = ANY (ARRAY['en'::text, 'tl'::text])),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT public_users_pkey PRIMARY KEY (id),
+  CONSTRAINT public_users_oauth_subject_key UNIQUE (oauth_subject)
+);
+CREATE TABLE public.user_bookmarks (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  item_type text NOT NULL CHECK (item_type = ANY (ARRAY['online_gallery'::text])),
+  item_id bigint NOT NULL,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT user_bookmarks_pkey PRIMARY KEY (id),
+  CONSTRAINT user_bookmarks_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
+CREATE TABLE public.heritage_keeper_events (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  source text NOT NULL CHECK (source = ANY (ARRAY['trail'::text, 'ar'::text, 'webxr'::text])),
+  item_key text NOT NULL CHECK (char_length(item_key) >= 2 AND char_length(item_key) <= 64),
+  completed_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT heritage_keeper_events_pkey PRIMARY KEY (id),
+  CONSTRAINT heritage_keeper_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT heritage_keeper_events_user_fragment_key UNIQUE (user_id, source, item_key)
+);
+CREATE TABLE public.heritage_keeper_awards (
+  user_id bigint NOT NULL,
+  unlocked_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT heritage_keeper_awards_pkey PRIMARY KEY (user_id),
+  CONSTRAINT heritage_keeper_awards_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE
+);
+CREATE TABLE public.webxr_player_museum_views (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  hotspot_key text NOT NULL CHECK (char_length(hotspot_key) >= 3 AND char_length(hotspot_key) <= 100),
+  viewed_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT webxr_player_museum_views_pkey PRIMARY KEY (id),
+  CONSTRAINT webxr_player_museum_views_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT webxr_player_museum_views_user_hotspot_key UNIQUE (user_id, hotspot_key)
+);
+CREATE TABLE public.webxr_player_items (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  item_key text NOT NULL CHECK (char_length(item_key) >= 3 AND char_length(item_key) <= 80),
+  status text NOT NULL DEFAULT 'inventory'::text CHECK (status = ANY (ARRAY['inventory'::text, 'deposited'::text])),
+  acquired_scene text NOT NULL CHECK (acquired_scene = ANY (ARRAY['museum'::text, 'church'::text, 'underground'::text])),
+  acquired_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  deposited_at timestamp with time zone,
+  CONSTRAINT webxr_player_items_pkey PRIMARY KEY (id),
+  CONSTRAINT webxr_player_items_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT webxr_player_items_user_item_key UNIQUE (user_id, item_key)
+);
+CREATE TABLE public.tour_bookings (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  display_title text NOT NULL,
+  scheduled_tour text NOT NULL DEFAULT ''::text,
+  booking_type text NOT NULL CHECK (booking_type = ANY (ARRAY['school_group'::text, 'community_group'::text, 'family_group'::text, 'research_visit'::text, 'general_tour'::text])),
+  visit_date date NOT NULL,
+  rescheduled_visit_date date,
+  start_time text NOT NULL,
+  end_time text NOT NULL,
+  group_size integer NOT NULL CHECK ((group_size >= 1) AND (group_size <= 500)),
+  institution_name text NOT NULL DEFAULT ''::text,
+  contact_person text NOT NULL DEFAULT ''::text,
+  contact_number text NOT NULL DEFAULT ''::text,
+  tour_agency text NOT NULL DEFAULT ''::text,
+  male_visitors integer NOT NULL DEFAULT 0 CHECK ((male_visitors >= 0)),
+  female_visitors integer NOT NULL DEFAULT 0 CHECK ((female_visitors >= 0)),
+  pwd_visitors integer NOT NULL DEFAULT 0 CHECK ((pwd_visitors >= 0)),
+  total_visitors integer NOT NULL DEFAULT 0 CHECK ((total_visitors >= 0) AND (total_visitors <= 500)),
+  purpose text NOT NULL,
+  notes text NOT NULL DEFAULT ''::text,
+  location text NOT NULL DEFAULT 'Museo ng Libingan sa Ilalim ng Lupa'::text,
+  status text NOT NULL DEFAULT 'pending'::text CHECK (status = ANY (ARRAY['pending'::text, 'confirmed'::text, 'cancelled'::text, 'rescheduled'::text])),
+  admin_notes text NOT NULL DEFAULT ''::text,
+  decision_reason text NOT NULL DEFAULT ''::text,
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT tour_bookings_pkey PRIMARY KEY (id),
+  CONSTRAINT tour_bookings_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
+CREATE TABLE public.community_highlights (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  title text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  category text NOT NULL CHECK (category = ANY (ARRAY['Museum Programs'::text, 'School Engagement'::text, 'Public Activity'::text, 'Public Advisory'::text])),
+  event_date date NOT NULL,
+  short_description text NOT NULL,
+  long_description text NOT NULL,
+  short_description_tl text NOT NULL DEFAULT ''::text,
+  long_description_tl text NOT NULL DEFAULT ''::text,
+  read_time_minutes integer CHECK (read_time_minutes BETWEEN 1 AND 120),
+  image_filename text,
+  image_filenames jsonb NOT NULL DEFAULT '[]'::jsonb CHECK (jsonb_typeof(image_filenames) = 'array'::text),
+  status text NOT NULL DEFAULT 'active'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),
+  is_featured boolean NOT NULL DEFAULT false,
+  is_published boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT community_highlights_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.online_gallery_categories (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  slug text NOT NULL UNIQUE,
+  display_name text NOT NULL UNIQUE,
+  sort_order integer NOT NULL DEFAULT 0,
+  is_active boolean NOT NULL DEFAULT true,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  display_name_en text NOT NULL DEFAULT ''::text,
+  display_name_tl text NOT NULL DEFAULT ''::text,
+  CONSTRAINT online_gallery_categories_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.online_gallery_items (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  category_id bigint NOT NULL,
+  title text NOT NULL,
+  period text NOT NULL DEFAULT ''::text,
+  year_label text NOT NULL DEFAULT ''::text,
+  source text NOT NULL DEFAULT ''::text,
+  location text NOT NULL DEFAULT ''::text,
+  short_caption text NOT NULL,
+  full_description text NOT NULL,
+  teaching_note text NOT NULL DEFAULT ''::text,
+  tags jsonb NOT NULL DEFAULT '[]'::jsonb,
+  image_filename text,
+  model_filename text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['published'::text, 'draft'::text, 'archived'::text])),
+  is_published boolean NOT NULL DEFAULT false,
+  sort_order integer NOT NULL DEFAULT 0,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  title_tl text NOT NULL DEFAULT ''::text,
+  location_tl text NOT NULL DEFAULT ''::text,
+  short_caption_tl text NOT NULL DEFAULT ''::text,
+  full_description_tl text NOT NULL DEFAULT ''::text,
+  title_en text NOT NULL DEFAULT ''::text,
+  location_en text NOT NULL DEFAULT ''::text,
+  short_caption_en text NOT NULL DEFAULT ''::text,
+  full_description_en text NOT NULL DEFAULT ''::text,
+  CONSTRAINT online_gallery_items_pkey PRIMARY KEY (id),
+  CONSTRAINT online_gallery_items_category_id_fkey FOREIGN KEY (category_id) REFERENCES public.online_gallery_categories(id),
+  CONSTRAINT online_gallery_items_publication_check CHECK (((status = 'published'::text) = is_published))
+);
+CREATE TABLE public.edu_resources (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  title text NOT NULL,
+  slug text NOT NULL UNIQUE,
+  category text NOT NULL CHECK (category = ANY (ARRAY['PPT'::text, 'Story'::text, 'DOCS'::text, 'PDF'::text])),
+  educator_name text NOT NULL DEFAULT ''::text,
+  subject_topic text NOT NULL DEFAULT ''::text,
+  author text NOT NULL DEFAULT ''::text,
+  year_label text NOT NULL DEFAULT ''::text,
+  description text NOT NULL,
+  file_filename text,
+  cover_image_filename text,
+  status text NOT NULL DEFAULT 'draft'::text CHECK (status = ANY (ARRAY['active'::text, 'draft'::text, 'archived'::text])),
+  is_published boolean NOT NULL DEFAULT false,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT edu_resources_pkey PRIMARY KEY (id)
+);
+CREATE TABLE public.community_participation_submissions (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint,
+  submission_type text NOT NULL CHECK (submission_type = ANY (ARRAY['teacher_corner'::text, 'story_submit'::text])),
+  title text NOT NULL,
+  resource_category text NOT NULL DEFAULT ''::text,
+  story_category text NOT NULL DEFAULT ''::text,
+  submitter_name text NOT NULL,
+  submitter_email text NOT NULL,
+  subject_topic text NOT NULL DEFAULT ''::text,
+  description text NOT NULL DEFAULT ''::text,
+  story_content text NOT NULL DEFAULT ''::text,
+  resource_file_filename text,
+  photo_filename text,
+  is_private boolean NOT NULL DEFAULT false,
+  status text NOT NULL DEFAULT 'pending_review'::text CHECK (status = ANY (ARRAY['pending_verification'::text, 'pending_review'::text, 'active'::text, 'archived'::text])),
+  verification_code_hash text,
+  verification_sent_at timestamp with time zone,
+  verification_expires_at timestamp with time zone,
+  verified_at timestamp with time zone,
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT community_participation_submissions_pkey PRIMARY KEY (id),
+  CONSTRAINT community_participation_submissions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
+CREATE TABLE public.visitor_feedback (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint,
+  visit_type text NOT NULL CHECK (visit_type = ANY (ARRAY['on-site'::text, 'website'::text])),
+  rating integer NOT NULL CHECK ((rating >= 1) AND (rating <= 5)),
+  visitor_name text NOT NULL DEFAULT ''::text,
+  comments text NOT NULL DEFAULT ''::text,
+  sentiment_label text CHECK (sentiment_label = ANY (ARRAY['positive'::text, 'neutral'::text, 'negative'::text])),
+  sentiment_confidence numeric(5,4) CHECK ((sentiment_confidence >= (0)::numeric) AND (sentiment_confidence <= (1)::numeric)),
+  sentiment_scores jsonb NOT NULL DEFAULT '{}'::jsonb,
+  sentiment_model text NOT NULL DEFAULT ''::text,
+  sentiment_provider text NOT NULL DEFAULT ''::text,
+  sentiment_analyzed_at timestamp with time zone,
+  status text NOT NULL DEFAULT 'new'::text CHECK (status = ANY (ARRAY['new'::text, 'reviewed'::text, 'archived'::text])),
+  reviewed_at timestamp with time zone,
+  reviewed_by text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT visitor_feedback_pkey PRIMARY KEY (id),
+  CONSTRAINT visitor_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
+CREATE TABLE public.analytics_events (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  event_type text NOT NULL CHECK (event_type = ANY (ARRAY['page_view'::text, 'virtual_tour_opened'::text, 'tour_scene_viewed'::text, 'artifact_viewed'::text, 'ar_session_started'::text, 'ar_marker_found'::text, 'ar_puzzle_solved'::text, 'heritage_trail_started'::text, 'heritage_trail_stop_viewed'::text, 'learning_activity_completed'::text, 'gallery_item_viewed'::text, 'resource_viewed'::text, 'webxr_opened'::text])),
+  module text NOT NULL CHECK ((char_length(module) >= 1) AND (char_length(module) <= 50)),
+  target_id text NOT NULL DEFAULT ''::text CHECK (char_length(target_id) <= 160),
+  visitor_hash text NOT NULL CHECK (char_length(visitor_hash) = 64),
+  user_id bigint,
+  device_type text NOT NULL CHECK (device_type = ANY (ARRAY['desktop'::text, 'mobile'::text, 'tablet'::text, 'other'::text])),
+  browser_family text NOT NULL DEFAULT 'Other'::text CHECK (char_length(browser_family) <= 40),
+  os_family text NOT NULL DEFAULT 'Other'::text CHECK (char_length(os_family) <= 40),
+  page_path text NOT NULL DEFAULT ''::text CHECK (char_length(page_path) <= 300),
+  metadata jsonb NOT NULL DEFAULT '{}'::jsonb CHECK ((jsonb_typeof(metadata) = 'object'::text) AND (octet_length(metadata::text) <= 4096)),
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT analytics_events_pkey PRIMARY KEY (id),
+  CONSTRAINT analytics_events_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE SET NULL
+);
+
+-- The revisioned 360 Virtual Tour module is installed through
+-- virtual_tour_tables.sql. It is kept as an idempotent migration because it
+-- also defines the atomic publication function and its restricted grants.
