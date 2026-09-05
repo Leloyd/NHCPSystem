@@ -23,7 +23,6 @@
          <div class="public-nav-group">
            <a href="{{ url_for('digital_exhibits') }}" class="public-nav-primary-link transition-colors duration-300 {% if public_active_page == 'digital-exhibits' %}text-amber-800 font-semibold{% elif public_active_page == 'home' %}text-white/90 hover:text-white{% else %}text-gray-700 hover:text-amber-800{% endif %}" data-nav-link aria-haspopup="true" aria-expanded="false">
              <span data-lang-en>Digital Exhibits</span><span data-lang-tl>Mga Digital na Eksibit</span>
-             <svg class="public-nav-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4" /></svg>
            </a>
            <div class="public-nav-submenu" role="group" aria-label="Digital Exhibits">
              <a href="{{ url_for('online_gallery') }}"><span data-lang-en>Online Gallery</span><span data-lang-tl>Online na Galeriya</span></a>
@@ -35,12 +34,11 @@
          <div class="public-nav-group">
            <a href="{{ url_for('interactive') }}" class="public-nav-primary-link transition-colors duration-300 {% if public_active_page == 'interactive' %}text-amber-800 font-semibold{% elif public_active_page == 'home' %}text-white/90 hover:text-white{% else %}text-gray-700 hover:text-amber-800{% endif %}" data-nav-link aria-haspopup="true" aria-expanded="false">
              <span data-lang-en>Interactive</span><span data-lang-tl>Interaktibo</span>
-             <svg class="public-nav-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4" /></svg>
            </a>
            <div class="public-nav-submenu" role="group" aria-label="Interactive experiences">
              <a href="{{ url_for('virtual_tour') }}"><span data-lang-en>360 Virtual Tour</span><span data-lang-tl>360 Birtual na Paglilibot</span></a>
+             <a href="{{ url_for('site_map') }}"><span data-lang-en>Site Map</span><span data-lang-tl>Mapa ng Site</span></a>
              <a href="{{ url_for('three_d_environment') }}"><span data-lang-en>3D Environment</span><span data-lang-tl>3D na Kapaligiran</span></a>
-             <a href="{{ url_for('site_map') }}"><span data-lang-en>Interactive Site Map</span><span data-lang-tl>Interaktibong Mapa</span></a>
            </div>
          </div>
 
@@ -49,7 +47,6 @@
          <div class="public-nav-group">
            <a href="{{ url_for('community_participation') }}" class="public-nav-primary-link transition-colors duration-300 {% if public_active_page == 'community-participation' %}text-amber-800 font-semibold{% elif public_active_page == 'home' %}text-white/90 hover:text-white{% else %}text-gray-700 hover:text-amber-800{% endif %}" data-nav-link aria-haspopup="true" aria-expanded="false">
              <span data-lang-en>Community Participation</span><span data-lang-tl>Pakikilahok ng Komunidad</span>
-             <svg class="public-nav-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4" /></svg>
            </a>
            <div class="public-nav-submenu public-nav-submenu--right" role="group" aria-label="Community Participation">
              <a href="{{ url_for('community_participation') }}#community-highlights"><span data-lang-en>Community Highlights</span><span data-lang-tl>Mga Tampok ng Komunidad</span></a>
@@ -61,7 +58,6 @@
          <div class="public-nav-group">
            <a href="{{ url_for('support') }}" class="public-nav-primary-link transition-colors duration-300 {% if public_active_page == 'support' %}text-amber-800 font-semibold{% elif public_active_page == 'home' %}text-white/90 hover:text-white{% else %}text-gray-700 hover:text-amber-800{% endif %}" data-nav-link aria-haspopup="true" aria-expanded="false">
              <span data-lang-en>Support</span><span data-lang-tl>Suporta</span>
-             <svg class="public-nav-chevron" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m6 8 4 4 4-4" /></svg>
            </a>
            <div class="public-nav-submenu public-nav-submenu--right" role="group" aria-label="Support">
              <a href="{{ url_for('support') }}#help-faqs"><span data-lang-en>Help &amp; FAQs</span><span data-lang-tl>Tulong at mga FAQ</span></a>
@@ -126,8 +122,8 @@
          <a href="{{ url_for('interactive') }}" class="block transition-colors duration-300 {% if public_active_page == 'interactive' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Interactive</span><span data-lang-tl>Interaktibo</span></a>
          <div class="public-mobile-nav-children">
            <a href="{{ url_for('virtual_tour') }}"><span data-lang-en>360 Virtual Tour</span><span data-lang-tl>360 Birtual na Paglilibot</span></a>
+           <a href="{{ url_for('site_map') }}"><span data-lang-en>Site Map</span><span data-lang-tl>Mapa ng Site</span></a>
            <a href="{{ url_for('three_d_environment') }}"><span data-lang-en>3D Environment</span><span data-lang-tl>3D na Kapaligiran</span></a>
-           <a href="{{ url_for('site_map') }}"><span data-lang-en>Interactive Site Map</span><span data-lang-tl>Interaktibong Mapa</span></a>
          </div>
        </div>
        <a href="{{ url_for('trail_start') }}" class="block transition-colors duration-300 {% if public_active_page == 'heritage-trail' %}text-amber-800 font-semibold{% else %}text-gray-700 hover:text-amber-800{% endif %}"><span data-lang-en>Heritage Trail</span><span data-lang-tl>Landas ng Pamana</span></a>

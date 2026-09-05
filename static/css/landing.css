@@ -557,12 +557,6 @@ body.ogd-high-contrast-page .public-account-menu-header {
   display: flex;
   align-items: center;
 }
-.public-nav-chevron {
-  width: 0.8rem;
-  height: 0.8rem;
-  flex: 0 0 auto;
-  transition: transform 180ms ease;
-}
 .public-nav-submenu {
   position: absolute;
   top: 100%;
@@ -608,10 +602,6 @@ body.ogd-high-contrast-page .public-account-menu-header {
   visibility: visible;
   transform: translateY(0);
   pointer-events: auto;
-}
-.public-nav-group:hover .public-nav-chevron,
-.public-nav-group:focus-within .public-nav-chevron {
-  transform: rotate(180deg);
 }
 @media (min-width: 1024px) and (max-width: 1279px) {
   #navLinks > * + * { margin-left: 0.85rem !important; }
