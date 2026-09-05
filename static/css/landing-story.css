@@ -363,6 +363,90 @@ body {
   letter-spacing: 0.08em;
 }
 .story-btn--primary:hover { background: #e8c97a; }
+.story-btn--lite[aria-pressed="true"] {
+  border-color: var(--story-gold);
+  background: var(--story-gold);
+  color: var(--story-ink);
+  box-shadow: 0 0 0 2px rgba(212, 175, 106, 0.2);
+}
+
+/* Lite Mode keeps the complete written and narrated story while stopping the
+   continuous visual work that costs the most on lower-powered phones. */
+.story__viewport[data-lite="true"] .story__canvas,
+.story__viewport[data-lite="true"] .story__glow,
+.story__viewport[data-lite="true"] .story__cursor,
+.story__viewport[data-lite="true"] .story__bg-video,
+.story__viewport[data-lite="true"] .story__bg-texture,
+.story__viewport[data-lite="true"] .story__vintage,
+.story__viewport[data-lite="true"] .story-era-ghost,
+.story__viewport[data-lite="true"] .story__father {
+  display: none !important;
+}
+.story__viewport[data-lite="true"] .story__bg {
+  animation: none !important;
+  transition: none !important;
+  transform: none !important;
+  will-change: auto;
+}
+.story__viewport[data-lite="true"][data-chapter^="era"] .story__bg {
+  -webkit-filter: none !important;
+  filter: none !important;
+}
+.story__viewport[data-lite="true"] .story-chapter,
+.story__viewport[data-lite="true"] .story-chapter > *,
+.story__viewport[data-lite="true"] .story__bubble,
+.story__viewport[data-lite="true"] .story__timeline,
+.story__viewport[data-lite="true"] .story__top {
+  transition: none !important;
+}
+.story__viewport[data-lite="true"] .story__hint::after,
+.story__viewport[data-lite="true"] .story__bubble-text .ana-cursor {
+  animation: none !important;
+}
+.story__viewport[data-lite="true"] .story__bubble,
+.story__viewport[data-lite="true"] .story-btn,
+.story__viewport[data-lite="true"] .story__top,
+.story__viewport[data-lite="true"] .story-card {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+.story__viewport[data-lite="true"][data-chapter^="era"] .story__timeline button {
+  transform: none;
+  text-shadow: none;
+}
+
+@media (min-width: 769px) {
+  /* With Ana removed, use the freed desktop space for one calm, centered
+     reading column and a wider subtitle. Mobile keeps its existing layout. */
+  .story__viewport[data-lite="true"] .story-chapter {
+    left: 50% !important;
+    right: auto !important;
+    width: min(760px, 72vw);
+    transform: translate(-50%, 9vh);
+  }
+  .story__viewport[data-lite="true"] .story-chapter.story-chapter--wide {
+    width: min(900px, 78vw);
+  }
+  .story__viewport[data-lite="true"] .story-chapter.is-active {
+    transform: translate(-50%, 0);
+  }
+  .story__viewport[data-lite="true"] .story-chapter.is-above {
+    transform: translate(-50%, -9vh);
+  }
+  .story__viewport[data-lite="true"] .story-chapter.is-below {
+    transform: translate(-50%, 9vh);
+  }
+  .story__viewport[data-lite="true"] .story__bubble {
+    left: 50%;
+    width: min(680px, 60vw);
+  }
+  .story__viewport[data-lite="true"] .story__guidebar {
+    left: 50%;
+    right: auto;
+    transform: translateX(-50%);
+  }
+  .story__viewport[data-lite="true"] .story__nameplate { display: none; }
+}
 
 /* Bilingual content: the viewport's data-lang (EN/TL button) decides which
    language block is visible. */
@@ -1208,6 +1292,14 @@ body.is-trail-exit #publicNavHeader {
   border-color: rgba(212, 175, 106, 0.65);
   background: rgba(250, 247, 242, 0.1);
 }
+.story-cards--static .story-card {
+  transition: none;
+}
+.story-cards--static .story-card:hover {
+  transform: none;
+  border-color: rgba(212, 175, 106, 0.25);
+  background: rgba(250, 247, 242, 0.06);
+}
 .story-card h3 {
   display: flex;
   align-items: center;
@@ -1270,6 +1362,15 @@ body.is-trail-exit #publicNavHeader {
   .story-card:nth-child(2),
   .story-card:nth-child(4) { grid-column: 1 / -1; } /* Location, Contact */
   .story-chapter--wide { width: auto; }
+  .story-btn__lite-label { display: none; }
+}
+
+/* Preserve all six guide controls on very narrow phones. The Listen control
+   keeps its accessible name while switching to its familiar play icon. */
+@media (max-width: 340px) {
+  .story__guidebar { gap: 0.35rem; }
+  .story-btn--primary > [data-lang-en],
+  .story-btn--primary > [data-lang-tl] { display: none !important; }
 }
 
 /* Heritage Overview I–III already place the complete bilingual narration in

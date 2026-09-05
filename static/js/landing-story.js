@@ -7,8 +7,8 @@
      play/pause and mute, mirrored in a typewriter speech bubble.
    ========================================================================== */
 
-import * as THREE from 'three';
-import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+let THREE = null;
+let GLTFLoader = null;
 
 /* --- Narration scripts (spoken as Ana Kalang, guardian of Nagcarlan) ------ */
 const SCRIPT = {
@@ -109,6 +109,7 @@ const muteBtn = story?.querySelector('[data-story-mute]');
 const langBtn = story?.querySelector('[data-story-lang]');
 const subsBtn = story?.querySelector('[data-story-subs]');
 const textSizeBtn = story?.querySelector('[data-story-textsize]');
+const liteBtn = story?.querySelector('[data-story-lite]');
 
 const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const mobileQuery = window.matchMedia('(max-width: 768px)');
@@ -130,6 +131,7 @@ const state = {
   muted: false,
   subtitles: localStorage.getItem('anaGuideSubs') !== 'off',
   textSize: Math.min(3, Math.max(1, parseInt(localStorage.getItem('anaGuideTextSize') || '1', 10) || 1)),
+  lite: localStorage.getItem('nhcpLandingLiteMode') === 'true',
   unlocked: false, // playback permission requested/granted; errors return it to false
   playing: false,
   typeTimer: 0,
@@ -571,6 +573,7 @@ if (lightbox) {
 }
 
 function safePlay(video) {
+  if (state.lite) return;
   const playing = video.play();
   if (playing && playing.catch) playing.catch(() => {});
 }
@@ -585,6 +588,10 @@ function stopAboutVideos() {
     video.classList.remove('is-active');
     video.pause();
     try { video.currentTime = 0; } catch { /* not seekable yet */ }
+    if (state.lite && video.hasAttribute('src')) {
+      video.removeAttribute('src');
+      video.load();
+    }
   });
 }
 
@@ -600,7 +607,7 @@ function primeStandbyVideo() {
 }
 
 function startVideos(playlist) {
-  if (!bgVideos.length || !playlist.length) return;
+  if (state.lite || !bgVideos.length || !playlist.length) return;
   videoState.playlist = playlist;
   videoState.on = true;
   videoState.clip = 0;
@@ -677,6 +684,7 @@ function resetAboutScene(key) {
   guerrillaEls.forEach(hideScenePhoto);
   closeLightbox();
   stopAboutVideos();
+  if (state.lite) return;
   if (aboutScene.key === 'about2') {
     sceneTimer(() => showScenePhoto(puntodEl), 1800);
     sceneTimer(() => startVideos(about2Playlist), 6000);
@@ -701,7 +709,7 @@ function aboutCuePos() {
 }
 
 function updateAboutScene() {
-  if (aboutScene.key !== 'about1' || aboutScene.step !== 0) return;
+  if (state.lite || aboutScene.key !== 'about1' || aboutScene.step !== 0) return;
   const text = SCRIPT.about1 ? SCRIPT.about1[state.lang] || SCRIPT.about1.en : '';
   let cueHit = false;
   if (state.playing && narration.full === text) {
@@ -842,6 +850,7 @@ function setLang(lang) {
   document.documentElement.lang = lang === 'tl' ? 'tl' : 'en';
   if (langBtn) langBtn.textContent = lang === 'tl' ? 'TL' : 'EN';
   if (bubbleEyebrow) bubbleEyebrow.textContent = lang === 'tl' ? 'Sabi ni Ana Kalang' : 'Ana Kalang says';
+  syncLiteButton();
   setPlaying(state.playing); // immediately localize the play/pause control
   refreshChapterFit(); // the other language may run longer/shorter
   if (narrationReady) requestChapterNarration(state.chapter);
@@ -979,6 +988,49 @@ function setTextSize(size) {
   refreshChapterFit();
 }
 
+function syncLiteButton() {
+  if (!liteBtn) return;
+  const enabled = state.lite;
+  const isTagalog = state.lang === 'tl';
+  liteBtn.setAttribute('aria-pressed', String(enabled));
+  liteBtn.setAttribute(
+    'aria-label',
+    enabled
+      ? (isTagalog ? 'I-off ang Magaan na Mode at ibalik ang buong karanasan' : 'Turn off Lite Mode and restore the full experience')
+      : (isTagalog ? 'I-on ang Magaan na Mode para sa mas maayos na performance' : 'Turn on Lite Mode for smoother performance'),
+  );
+  liteBtn.title = enabled
+    ? (isTagalog ? 'Ibalik ang 3D guide, video, at mga effect' : 'Restore the 3D guide, video, and effects')
+    : (isTagalog ? 'Bawasan ang animation at media para sa mas maayos na performance' : 'Reduce animation and media for smoother performance');
+}
+
+function setLiteMode(enabled, { persist = true, initializeStage = true } = {}) {
+  state.lite = Boolean(enabled);
+  if (persist) localStorage.setItem('nhcpLandingLiteMode', String(state.lite));
+  viewport?.setAttribute('data-lite', String(state.lite));
+  syncLiteButton();
+
+  if (state.lite) {
+    aboutScene.timers.forEach(window.clearTimeout);
+    aboutScene.timers = [];
+    aboutScene.key = null;
+    stopAboutVideos();
+    hideScenePhoto(fatherEl);
+    hideScenePhoto(puntodEl);
+    guerrillaEls.forEach(hideScenePhoto);
+    closeLightbox();
+  } else {
+    if (initializeStage) ensureStage();
+    const chapterKey = chapters[state.chapter]?.getAttribute('data-chapter') || '';
+    resetAboutScene(['about1', 'about2', 'about3'].includes(chapterKey) ? chapterKey : null);
+  }
+
+  window.dispatchEvent(new CustomEvent('nhcp-landing-lite-change', {
+    detail: { enabled: state.lite },
+  }));
+  window.requestAnimationFrame(refreshChapterFit);
+}
+
 function unlockAudio() {
   const wasUnlocked = state.unlocked;
   state.unlocked = true;
@@ -1032,6 +1084,7 @@ function wireControls() {
   setMuted(state.muted);
   setSubtitles(state.subtitles);
   setTextSize(state.textSize);
+  setLiteMode(state.lite, { persist: false, initializeStage: false });
   if (langBtn) langBtn.textContent = state.lang === 'tl' ? 'TL' : 'EN';
   if (bubbleEyebrow) bubbleEyebrow.textContent = state.lang === 'tl' ? 'Sabi ni Ana Kalang' : 'Ana Kalang says';
 
@@ -1052,6 +1105,7 @@ function wireControls() {
   });
   subsBtn?.addEventListener('click', () => setSubtitles(!state.subtitles));
   textSizeBtn?.addEventListener('click', () => setTextSize(state.textSize >= 3 ? 1 : state.textSize + 1));
+  liteBtn?.addEventListener('click', () => setLiteMode(!state.lite));
   // On mobile the bubble is a collapsed 2-line chip; tapping it expands the
   // full narration (pointer-events are off on desktop, so this is inert there).
   bubbleWrap?.addEventListener('click', () => bubbleWrap.classList.toggle('is-expanded'));
@@ -1067,6 +1121,7 @@ function initStage() {
   let renderer, scene, camera, mixer, clock, avatar;
   let idleAction = null;
   let disposed = false;
+  let animationFrame = 0;
   const pointer = { x: 0, y: 0 }; // -1..1 parallax input
 
   /* One-shot gesture clips that crossfade over the idle loop on the same
@@ -1170,7 +1225,7 @@ function initStage() {
     };
     // She reacts to a tap whenever no voice-over is playing — ambient
     // gestures don't block her, only a featured one (greet/heart) mid-play.
-    const anaClickable = () => Boolean(avatar) && !state.playing && !(gestureBusy() && !activeGestureAmbient);
+    const anaClickable = () => !state.lite && Boolean(avatar) && !state.playing && !(gestureBusy() && !activeGestureAmbient);
 
     viewport.addEventListener('click', (event) => {
       // Ignore clicks on real UI (links, buttons, chapter text, dots, photos,
@@ -1189,6 +1244,10 @@ function initStage() {
     const cursorGoal = { x: cursorPos.x, y: cursorPos.y };
     let cursorMoved = false;
     window.addEventListener('pointermove', (event) => {
+      if (state.lite) {
+        viewport.style.cursor = '';
+        return;
+      }
       if (!prefersReducedMotion) {
         pointer.x = (event.clientX / window.innerWidth) * 2 - 1;
         pointer.y = (event.clientY / window.innerHeight) * 2 - 1;
@@ -1204,7 +1263,7 @@ function initStage() {
     // Floating golden dust drifting up through the stage (background animation).
     let dust = null;
     let dustSpeeds = null;
-    if (!prefersReducedMotion) {
+    if (!prefersReducedMotion && !state.lite) {
       const COUNT = 140;
       const positions = new Float32Array(COUNT * 3);
       dustSpeeds = new Float32Array(COUNT);
@@ -1231,8 +1290,9 @@ function initStage() {
     }
 
     const animate = () => {
-      if (disposed) return;
-      window.requestAnimationFrame(animate);
+      animationFrame = 0;
+      if (disposed || state.lite) return;
+      animationFrame = window.requestAnimationFrame(animate);
       const dt = Math.min(clock.getDelta(), 0.05);
       // Only show the cursor glow while the story stage is on screen.
       cursorGlow?.classList.toggle('is-on', state.visible && cursorMoved);
@@ -1331,7 +1391,21 @@ function initStage() {
 
       renderer.render(scene, camera);
     };
-    animate();
+    const syncStageRendering = () => {
+      if (state.lite) {
+        if (animationFrame) window.cancelAnimationFrame(animationFrame);
+        animationFrame = 0;
+        cursorGlow?.classList.remove('is-on');
+        viewport.style.cursor = '';
+        return;
+      }
+      if (!animationFrame && !disposed) {
+        clock.getDelta();
+        animationFrame = window.requestAnimationFrame(animate);
+      }
+    };
+    window.addEventListener('nhcp-landing-lite-change', syncStageRendering);
+    syncStageRendering();
 
     if (modelUrl) {
       const loader = new GLTFLoader();
@@ -1449,6 +1523,29 @@ function initStage() {
   }
 }
 
+let stageStarted = false;
+async function ensureStage() {
+  if (stageStarted || state.lite) return;
+  stageStarted = true;
+  try {
+    const [threeModule, loaderModule] = await Promise.all([
+      import('three'),
+      import('three/addons/loaders/GLTFLoader.js'),
+    ]);
+    if (state.lite) {
+      stageStarted = false;
+      return;
+    }
+    THREE = threeModule;
+    GLTFLoader = loaderModule.GLTFLoader;
+    initStage();
+  } catch (err) {
+    stageStarted = false;
+    console.warn('[Ana Kalang] 3D runtime failed to load; the story still works as text.', err);
+    dismissLoader();
+  }
+}
+
 /* ========================================================================== */
 /*  Boot                                                                      */
 /* ========================================================================== */
@@ -1466,7 +1563,7 @@ if (story && viewport && chapters.length) {
   const trailCta = story.querySelector('.story-cta');
   trailCta?.addEventListener('click', (event) => {
     const href = trailCta.getAttribute('href');
-    if (!href || prefersReducedMotion) return; // reduced motion: plain navigation
+    if (!href || prefersReducedMotion || state.lite) return; // reduced motion / Lite Mode: plain navigation
     event.preventDefault();
     stopSpeaking();
     try { sessionStorage.setItem('trailArrival', '1'); } catch { /* private mode */ }
@@ -1488,7 +1585,8 @@ if (story && viewport && chapters.length) {
     });
   });
 
-  initStage();
+  if (state.lite) dismissLoader();
+  else ensureStage();
 
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', () => {
@@ -1513,6 +1611,7 @@ if (story && viewport && chapters.length) {
   // if WebGL is unavailable. Recorded VO has no word-boundary events, so the
   // same tick keeps her talking motion pulsing while an MP3 plays.
   window.setInterval(() => {
+    if (state.lite) return;
     updateAboutScene();
     if (state.playing && narration.mode === 'audio') talk.pulse = 1;
   }, 300);

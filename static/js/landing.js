@@ -40,7 +40,7 @@
 
       navLinks.forEach(function (link) {
         link.classList.remove("text-white/90", "hover:text-white", "text-[#D4AF6A]");
-        if (link.textContent.trim() === "Home") {
+        if (link.hasAttribute("data-nav-home")) {
           link.classList.add("text-amber-800", "font-semibold");
         } else {
           link.classList.add("text-gray-700", "hover:text-amber-800");
@@ -73,7 +73,7 @@
 
       navLinks.forEach(function (link) {
         link.classList.remove("text-gray-700", "hover:text-amber-800", "text-amber-800");
-        if (link.textContent.trim() === "Home") {
+        if (link.hasAttribute("data-nav-home")) {
           link.classList.add("text-[#D4AF6A]", "font-semibold");
         } else {
           link.classList.add("text-white/90", "hover:text-white");

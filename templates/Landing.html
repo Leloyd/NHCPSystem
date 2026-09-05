@@ -329,7 +329,7 @@
                 <span data-lang-en>Visitor<br /><em>Information</em></span>
                 <span data-lang-tl>Impormasyon para<br /><em>sa Bisita</em></span>
               </h2>
-              <div class="story-cards">
+              <div class="story-cards story-cards--static">
                 <div class="story-card">
                   <h3>
                     <svg fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -453,6 +453,19 @@
             <button class="story-btn" type="button" data-story-lang aria-label="Switch narration language">EN</button>
             <button class="story-btn" type="button" data-story-subs aria-pressed="true" aria-label="Hide subtitles">CC</button>
             <button class="story-btn" type="button" data-story-textsize aria-label="Text size: normal. Tap to enlarge">A</button>
+            <button
+              class="story-btn story-btn--lite"
+              type="button"
+              data-story-lite
+              aria-pressed="false"
+              aria-label="Turn on Lite Mode for smoother performance"
+              title="Reduce animation and media for smoother performance"
+            >
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M13 2L4.5 13h6L10 22l8.5-12h-6L13 2z" />
+              </svg>
+              <span class="story-btn__lite-label"><span data-lang-en>Lite</span><span data-lang-tl>Magaan</span></span>
+            </button>
           </div>
 
           <!-- Back to top -->
@@ -480,8 +493,6 @@
     </main>
 
     <script src="https://unpkg.com/lucide@latest"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
     <script src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
     <script type="module" src="{{ url_for('static', filename='js/landing-story.js') }}"></script>

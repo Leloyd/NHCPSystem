@@ -514,6 +514,186 @@ body.ogd-high-contrast-page .public-account-menu-header {
   background: rgba(0, 0, 0, 0.08);
 }
 
+/* Public navigation groups --------------------------------------------------
+   Desktop exposes section shortcuts on hover and keyboard focus. On touch
+   layouts the same destinations are shown as simple indented links. */
+.public-nav-primary-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.65rem 0.15rem;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.public-nav-primary-link::after {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  right: 0.15rem;
+  bottom: 0.32rem;
+  height: 2px;
+  border-radius: 999px;
+  background: currentColor;
+  opacity: 0.72;
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 180ms ease;
+}
+.public-nav-primary-link:hover::after,
+.public-nav-primary-link:focus-visible::after,
+.public-nav-group:focus-within > .public-nav-primary-link::after {
+  transform: scaleX(1);
+}
+.public-nav-primary-link:focus-visible,
+.public-nav-submenu a:focus-visible,
+.public-mobile-nav-children a:focus-visible {
+  outline: 2px solid #d4af6a;
+  outline-offset: 3px;
+  border-radius: 0.25rem;
+}
+.public-nav-group {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.public-nav-chevron {
+  width: 0.8rem;
+  height: 0.8rem;
+  flex: 0 0 auto;
+  transition: transform 180ms ease;
+}
+.public-nav-submenu {
+  position: absolute;
+  top: 100%;
+  left: -0.8rem;
+  width: max-content;
+  min-width: 14rem;
+  max-width: 20rem;
+  padding: 0.5rem;
+  border: 1px solid rgba(184, 150, 62, 0.24);
+  border-radius: 0.9rem;
+  background: rgba(250, 246, 239, 0.98);
+  box-shadow: 0 22px 48px rgba(28, 16, 8, 0.2);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(0.5rem);
+  pointer-events: none;
+  transition: opacity 160ms ease, transform 160ms ease, visibility 160ms ease;
+}
+.public-nav-submenu--right {
+  right: -0.8rem;
+  left: auto;
+}
+.public-nav-submenu a {
+  display: block;
+  padding: 0.68rem 0.75rem;
+  border-radius: 0.6rem;
+  color: #3d2b1f;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: color 160ms ease, background-color 160ms ease, padding-left 160ms ease;
+}
+.public-nav-submenu a:hover,
+.public-nav-submenu a:focus-visible {
+  padding-left: 0.95rem;
+  background: #f6e9cc;
+  color: #8b5e13;
+}
+.public-nav-group:hover > .public-nav-submenu,
+.public-nav-group:focus-within > .public-nav-submenu {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+.public-nav-group:hover .public-nav-chevron,
+.public-nav-group:focus-within .public-nav-chevron {
+  transform: rotate(180deg);
+}
+@media (min-width: 1024px) and (max-width: 1279px) {
+  #navLinks > * + * { margin-left: 0.85rem !important; }
+  .public-nav-primary-link { font-size: 0.8rem; }
+}
+#publicNavHeader[data-nav-mode="transparent"] .public-nav-submenu {
+  border-color: rgba(212, 175, 106, 0.34);
+  background: rgba(20, 13, 6, 0.97);
+  box-shadow: 0 24px 54px rgba(0, 0, 0, 0.48);
+}
+#publicNavHeader[data-nav-mode="transparent"] .public-nav-submenu a {
+  color: rgba(255, 255, 255, 0.84);
+}
+#publicNavHeader[data-nav-mode="transparent"] .public-nav-submenu a:hover,
+#publicNavHeader[data-nav-mode="transparent"] .public-nav-submenu a:focus-visible {
+  background: rgba(212, 175, 106, 0.16);
+  color: #f2cf78;
+}
+.public-mobile-nav-group {
+  display: grid;
+  gap: 0.45rem;
+}
+#mobileMenu {
+  max-height: calc(100vh - 5rem);
+  max-height: calc(100dvh - 5rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.public-mobile-nav-children {
+  display: grid;
+  gap: 0.4rem;
+  margin-left: 0.35rem;
+  padding-left: 0.85rem;
+  border-left: 1px solid rgba(184, 150, 62, 0.28);
+}
+.public-mobile-nav-children a {
+  color: #76634b;
+  font-size: 0.8rem;
+  line-height: 1.35;
+  text-decoration: none;
+  transition: color 160ms ease, transform 160ms ease;
+}
+.public-mobile-nav-children a:hover,
+.public-mobile-nav-children a:focus-visible {
+  color: #92400e;
+  transform: translateX(2px);
+}
+#community-highlights,
+#events-calendar,
+#e-participation,
+#help-faqs,
+#governance {
+  scroll-margin-top: 5rem;
+}
+
+html[data-theme="dark"] .public-nav-submenu {
+  border-color: rgba(201, 168, 76, 0.28);
+  background: rgba(31, 24, 15, 0.98);
+}
+html[data-theme="dark"] .public-nav-submenu a { color: #d8ccb4; }
+html[data-theme="dark"] .public-nav-submenu a:hover,
+html[data-theme="dark"] .public-nav-submenu a:focus-visible {
+  background: rgba(201, 168, 76, 0.14);
+  color: #f7ecd2;
+}
+body.ogd-high-contrast-page .public-nav-submenu {
+  border-color: #facc15 !important;
+  background: #000 !important;
+  box-shadow: none !important;
+}
+body.ogd-high-contrast-page .public-nav-submenu a,
+body.ogd-high-contrast-page .public-mobile-nav-children a {
+  color: #fff !important;
+}
+body.ogd-high-contrast-page .public-nav-submenu a:hover,
+body.ogd-high-contrast-page .public-nav-submenu a:focus-visible,
+body.ogd-high-contrast-page .public-mobile-nav-children a:hover,
+body.ogd-high-contrast-page .public-mobile-nav-children a:focus-visible {
+  background: #111 !important;
+  color: #facc15 !important;
+}
+
 .public-auth-modal {
   position: fixed;
   inset: 0;
