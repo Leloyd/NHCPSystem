@@ -100,7 +100,7 @@
     // menu is open, for readability.
     if (menuToggle && mobileMenu) {
       menuToggle.addEventListener("click", function () {
-        isMobileMenuOpen = !mobileMenu.classList.contains("hidden");
+        isMobileMenuOpen = mobileMenu.classList.contains("is-open");
 
         if (isMobileMenuOpen) {
           applyWhiteBackground();
