@@ -751,6 +751,7 @@ function setChapter(index) {
 
   // Mobile: start tall chapters at their top and re-check the scroll veil.
   if (mobileQuery.matches) chapters[index].scrollTop = 0;
+  syncLiteSubtitleSpace();
   refreshChapterFit();
 
   // Every chapter selected after the loader requests its own narration. When
@@ -883,6 +884,33 @@ function isLayoutElement(element) {
     && element.offsetHeight > 0;
 }
 
+/* Desktop Lite Mode places the subtitle below the information column. Its
+   height changes with language, narration, and A/A+/A++, so expose the real
+   rendered height to CSS instead of reserving a fragile fixed gap. */
+let liteSubtitleSyncFrame = 0;
+function syncLiteSubtitleSpace() {
+  if (!viewport) return;
+  window.cancelAnimationFrame(liteSubtitleSyncFrame);
+  liteSubtitleSyncFrame = window.requestAnimationFrame(() => {
+    liteSubtitleSyncFrame = 0;
+    const shouldReserve = state.lite
+      && state.subtitles
+      && !mobileQuery.matches
+      && isLayoutElement(bubbleWrap);
+    const height = shouldReserve ? Math.ceil(bubbleWrap.getBoundingClientRect().height) : 0;
+    const value = `${height}px`;
+    if (viewport.style.getPropertyValue('--story-lite-subtitle-height') !== value) {
+      viewport.style.setProperty('--story-lite-subtitle-height', value);
+      refreshChapterFit();
+    }
+  });
+}
+
+if (bubbleWrap && typeof ResizeObserver !== 'undefined') {
+  const liteSubtitleObserver = new ResizeObserver(syncLiteSubtitleSpace);
+  liteSubtitleObserver.observe(bubbleWrap);
+}
+
 /* Test the rendered chapter against the real objects around it instead of a
    device-name breakpoint. This works for phones, tablets, desktop windows,
    landscape orientation, browser zoom, and mobile browser chrome. */
@@ -970,6 +998,7 @@ function setSubtitles(on) {
     subsBtn.setAttribute('aria-pressed', String(on));
     subsBtn.setAttribute('aria-label', on ? 'Hide subtitles' : 'Show subtitles');
   }
+  syncLiteSubtitleSpace();
   refreshChapterFit();
 }
 
@@ -985,6 +1014,7 @@ function setTextSize(size) {
     const next = size >= 3 ? 'reset' : 'enlarge';
     textSizeBtn.setAttribute('aria-label', `Text size: ${TEXT_SIZE_NAMES[size]}. Tap to ${next}`);
   }
+  syncLiteSubtitleSpace();
   refreshChapterFit();
 }
 
@@ -1028,6 +1058,7 @@ function setLiteMode(enabled, { persist = true, initializeStage = true } = {}) {
   window.dispatchEvent(new CustomEvent('nhcp-landing-lite-change', {
     detail: { enabled: state.lite },
   }));
+  syncLiteSubtitleSpace();
   window.requestAnimationFrame(refreshChapterFit);
 }
 
@@ -1591,6 +1622,7 @@ if (story && viewport && chapters.length) {
   window.addEventListener('scroll', onScroll, { passive: true });
   window.addEventListener('resize', () => {
     onScroll();
+    syncLiteSubtitleSpace();
     window.requestAnimationFrame(refreshChapterFit);
   }, { passive: true });
 

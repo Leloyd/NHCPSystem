@@ -422,6 +422,7 @@ body {
     left: 50% !important;
     right: auto !important;
     width: min(760px, 72vw);
+    padding-bottom: calc(var(--story-lite-subtitle-height) + 5.6rem);
     transform: translate(-50%, 9vh);
   }
   .story__viewport[data-lite="true"] .story-chapter.story-chapter--wide {
@@ -438,7 +439,26 @@ body {
   }
   .story__viewport[data-lite="true"] .story__bubble {
     left: 50%;
-    width: min(680px, 60vw);
+    bottom: 4.6rem;
+    width: min(680px, 72vw);
+    max-height: min(10rem, 22vh);
+    overflow-y: auto;
+    pointer-events: auto;
+  }
+  .story__viewport[data-lite="true"] .story__bubble::before {
+    display: none;
+  }
+  .story__viewport[data-lite="true"][data-subtitles="off"] .story-chapter {
+    padding-bottom: 6.5rem;
+  }
+  .story__viewport[data-lite="true"][data-chapter^="era"] .story__timeline {
+    bottom: calc(5.35rem + var(--story-lite-subtitle-height));
+  }
+  .story__viewport[data-lite="true"][data-chapter^="era"] .story-chapter {
+    padding-bottom: calc(var(--story-lite-subtitle-height) + 8rem);
+  }
+  .story__viewport[data-lite="true"][data-subtitles="off"][data-chapter^="era"] .story-chapter {
+    padding-bottom: 7.5rem;
   }
   .story__viewport[data-lite="true"] .story__guidebar {
     left: 50%;
@@ -811,6 +831,7 @@ body.is-trail-exit #publicNavHeader {
 .story__viewport {
   --story-font-scale: 1;
   --story-subtitle-font-scale: 1;
+  --story-lite-subtitle-height: 0px;
 }
 .story__viewport[data-textsize="2"] {
   --story-font-scale: 1.16;
@@ -1070,6 +1091,11 @@ body.is-trail-exit #publicNavHeader {
 
 /* Mobile -------------------------------------------------------------------- */
 @media (max-width: 768px) {
+  /* Keep the photography visible on phones. The chapter-local scrim below
+     still supplies the contrast behind text without turning the stage black. */
+  .story__bg-tint {
+    background: linear-gradient(180deg, rgba(13, 10, 4, 0.68) 0%, rgba(28, 18, 8, 0.4) 50%, rgba(13, 10, 4, 0.62) 100%);
+  }
   .story-chapter {
     width: auto;
     left: 1.1rem !important;
@@ -1090,7 +1116,7 @@ body.is-trail-exit #publicNavHeader {
     position: absolute;
     inset: -2rem -2.2rem -6rem;
     z-index: -1;
-    background: linear-gradient(180deg, transparent 0%, rgba(13, 10, 4, 0.6) 30%, rgba(13, 10, 4, 0.92) 62%);
+    background: linear-gradient(180deg, transparent 0%, rgba(13, 10, 4, 0.28) 30%, rgba(13, 10, 4, 0.62) 68%, rgba(13, 10, 4, 0.7) 100%);
     pointer-events: none;
   }
   .story-chapter h1 { font-size: calc(clamp(1.85rem, 8.5vw, 2.5rem) * var(--story-font-scale, 1)); }
