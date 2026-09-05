@@ -3204,7 +3204,7 @@ html.trailx-vr-active body {
   .trailx__title { font-size: calc(clamp(2rem, 9vw, 3rem) * var(--tx-font-scale, 1)); }
   .trailx__lede { font-size: calc(0.98rem * var(--tx-font-scale, 1)); margin-bottom: 1.4rem; }
   .trailx__hint { font-size: calc(0.72rem * var(--tx-font-scale, 1)); }
-  /* Begin the Trail + Not yet stay on one row. */
+  /* Begin the Trail + Back stay on one row. */
   .trailx__panel .trailx__actions { flex-wrap: nowrap; gap: 0.8rem; }
   .trailx__begin { padding: 0.85rem 1.15rem; font-size: 0.74rem; white-space: nowrap; }
   .trailx__cancel { white-space: nowrap; }
@@ -3590,6 +3590,190 @@ html.trailx-vr-active body {
   }
   .trailx[data-phase="depart"] .trailx__ana,
   .trailx[data-phase="depart"] .trailx__controls { opacity: 0 !important; }
+}
+
+/* --------------------------------------------------------------------------
+   Trail orientation overlay
+   Four separate backdrop panes leave a genuinely clear opening around the
+   real control. A transparent capture layer sits over the entire viewport,
+   so the guide is informational and highlighted controls cannot be operated.
+   -------------------------------------------------------------------------- */
+.trailx-onboarding {
+  position: fixed;
+  inset: 0;
+  z-index: 20000;
+  color: var(--tx-cream, #faf7f2);
+  outline: none;
+  isolation: isolate;
+}
+.trailx-onboarding[hidden] { display: none; }
+.trailx[data-onboarding="true"] > :not(.trailx-onboarding) { pointer-events: none !important; }
+.trailx[data-onboarding="true"] .trailx__controls {
+  opacity: 1 !important;
+  transform: none !important;
+  animation: none !important;
+}
+.trailx-onboarding__veil {
+  position: fixed;
+  z-index: 0;
+  background: rgba(8, 6, 3, 0.7);
+  -webkit-backdrop-filter: blur(7px) saturate(0.72);
+  backdrop-filter: blur(7px) saturate(0.72);
+  transition: inset 260ms ease, width 260ms ease, height 260ms ease, top 260ms ease, left 260ms ease;
+}
+.trailx-onboarding__spotlight {
+  position: fixed;
+  z-index: 1;
+  border: 2px solid #f2cf78;
+  border-radius: 1rem;
+  box-shadow: 0 0 0 5px rgba(242, 207, 120, 0.16), 0 0 2.2rem rgba(242, 207, 120, 0.48);
+  pointer-events: none;
+  transition: left 260ms ease, top 260ms ease, width 260ms ease, height 260ms ease, opacity 180ms ease;
+}
+.trailx-onboarding__spotlight::after {
+  content: "";
+  position: absolute;
+  inset: -0.55rem;
+  border: 1px solid rgba(242, 207, 120, 0.42);
+  border-radius: 1.35rem;
+  animation: trailx-onboarding-pulse 1.8s ease-in-out infinite;
+}
+@keyframes trailx-onboarding-pulse {
+  50% { opacity: 0.42; transform: scale(1.025); }
+}
+.trailx-onboarding__arrow {
+  position: fixed;
+  z-index: 2;
+  height: 2px;
+  background: linear-gradient(90deg, #f2cf78, rgba(242, 207, 120, 0.32));
+  transform-origin: 0 50%;
+  pointer-events: none;
+}
+.trailx-onboarding__arrow::after {
+  content: "";
+  position: absolute;
+  right: -1px;
+  top: 50%;
+  width: 0.62rem;
+  height: 0.62rem;
+  border-top: 2px solid #f2cf78;
+  border-right: 2px solid #f2cf78;
+  transform: translateY(-50%) rotate(45deg);
+}
+.trailx-onboarding__card {
+  position: fixed;
+  z-index: 3;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.9rem;
+  width: min(25rem, calc(100vw - 2rem));
+  padding: 1rem 1.05rem;
+  border: 1px solid rgba(242, 207, 120, 0.62);
+  border-radius: 1.15rem;
+  background:
+    radial-gradient(circle at 8% 0%, rgba(212, 175, 106, 0.2), transparent 35%),
+    rgba(20, 13, 6, 0.96);
+  box-shadow: 0 1.4rem 4rem rgba(0, 0, 0, 0.58), inset 0 1px rgba(255, 255, 255, 0.06);
+  pointer-events: none;
+  transition: left 260ms ease, top 260ms ease;
+}
+.trailx-onboarding__portrait {
+  display: grid;
+  place-items: center;
+  align-self: start;
+  width: 3.35rem;
+  height: 3.35rem;
+  overflow: hidden;
+  border: 1px solid rgba(242, 207, 120, 0.68);
+  border-radius: 50%;
+  background: linear-gradient(145deg, #d4af6a, #7b5424);
+  color: #140d06;
+  box-shadow: 0 0 0 4px rgba(212, 175, 106, 0.1);
+  font: 700 0.78rem/1 "Playfair Display", Georgia, serif;
+  letter-spacing: 0.08em;
+}
+.trailx-onboarding__portrait img { width: 100%; height: 100%; object-fit: cover; }
+.trailx-onboarding__content { min-width: 0; }
+.trailx-onboarding__eyebrow {
+  margin: 0 0 0.28rem;
+  color: #e6c16e;
+  font: 650 0.58rem/1.3 "Inter", sans-serif;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
+.trailx-onboarding__card h2 {
+  margin: 0 0 0.42rem;
+  color: #fff9ed;
+  font: 600 clamp(1.05rem, 2.4vw, 1.35rem)/1.2 "Playfair Display", Georgia, serif;
+}
+.trailx-onboarding__card > .trailx-onboarding__content > p:not(.trailx-onboarding__eyebrow) {
+  margin: 0;
+  color: rgba(250, 247, 242, 0.88);
+  font: 500 clamp(0.82rem, 1.7vw, 0.95rem)/1.52 "Inter", sans-serif;
+}
+.trailx-onboarding__meta {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.8rem;
+  margin-top: 0.75rem;
+  padding-top: 0.58rem;
+  border-top: 1px solid rgba(212, 175, 106, 0.22);
+  color: rgba(250, 247, 242, 0.58);
+  font: 600 0.56rem/1.3 "Inter", sans-serif;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.trailx-onboarding__capture {
+  position: fixed;
+  z-index: 4;
+  inset: 0;
+  cursor: pointer;
+  touch-action: manipulation;
+}
+
+/* The view tools are exposed only as visual examples during their guide
+   steps. The capture layer above them guarantees they remain non-interactive. */
+.trailx[data-onboarding="true"][data-onboarding-tools] .trailx__zoom {
+  opacity: 1;
+  visibility: visible;
+  transform: none;
+  pointer-events: none;
+}
+.trailx[data-onboarding="true"][data-onboarding-panel-return] .trailx__immersive-label-show { display: none !important; }
+.trailx[data-onboarding="true"][data-onboarding-panel-return] .trailx__immersive-label-hide { display: inline !important; }
+
+/* Non-interactive information tiles should not imply a click action. */
+.trailx__stats--static .trailx__stat { transition: none; }
+.trailx__stats--static .trailx__stat:hover {
+  transform: none;
+  border-color: rgba(212, 175, 106, 0.22);
+  background: rgba(212, 175, 106, 0.06);
+}
+
+/* Descendants such as Stop 8's archival photos used to opt themselves back
+   into pointer events even while their parent chapter was invisible. */
+.trailx__chapter:not(.is-active),
+.trailx__chapter:not(.is-active) * {
+  pointer-events: none !important;
+}
+
+@media (max-width: 600px) {
+  .trailx-onboarding__card {
+    grid-template-columns: 2.75rem minmax(0, 1fr);
+    gap: 0.7rem;
+    width: calc(100vw - 1.25rem);
+    padding: 0.78rem 0.82rem;
+    border-radius: 0.95rem;
+  }
+  .trailx-onboarding__portrait { width: 2.75rem; height: 2.75rem; }
+  .trailx-onboarding__meta { font-size: 0.5rem; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .trailx-onboarding__veil,
+  .trailx-onboarding__spotlight,
+  .trailx-onboarding__card { transition: none; }
+  .trailx-onboarding__spotlight::after { animation: none; }
 }
 
 /* ==========================================================================

@@ -205,6 +205,46 @@
       <!-- Curtain that fades from the landing exit into this scene (no loader) -->
       <div class="trailx__curtain" data-trail-curtain aria-hidden="true"></div>
 
+      <!-- First-visit orientation. JavaScript positions the clear spotlight and
+           Ana's callout beside each real control; the transparent capture layer
+           keeps every highlighted control informational (never clickable). -->
+      <div
+        class="trailx-onboarding"
+        data-trail-onboarding
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="trailOnboardingTitle"
+        aria-describedby="trailOnboardingCopy"
+        tabindex="-1"
+        hidden
+      >
+        <div class="trailx-onboarding__veil trailx-onboarding__veil--top" aria-hidden="true"></div>
+        <div class="trailx-onboarding__veil trailx-onboarding__veil--right" aria-hidden="true"></div>
+        <div class="trailx-onboarding__veil trailx-onboarding__veil--bottom" aria-hidden="true"></div>
+        <div class="trailx-onboarding__veil trailx-onboarding__veil--left" aria-hidden="true"></div>
+        <div class="trailx-onboarding__spotlight" data-trail-onboarding-spotlight aria-hidden="true"></div>
+        <div class="trailx-onboarding__arrow" data-trail-onboarding-arrow aria-hidden="true"></div>
+        <article class="trailx-onboarding__card" data-trail-onboarding-card>
+          <div class="trailx-onboarding__portrait" aria-hidden="true">
+            <img data-trail-onboarding-image alt="" hidden />
+            <span data-trail-onboarding-image-fallback>AK</span>
+          </div>
+          <div class="trailx-onboarding__content">
+            <p class="trailx-onboarding__eyebrow">
+              <span data-lang-en>Ana Kalang's quick guide</span>
+              <span data-lang-tl>Maikling gabay ni Ana Kalang</span>
+            </p>
+            <h2 id="trailOnboardingTitle" data-trail-onboarding-title></h2>
+            <p id="trailOnboardingCopy" data-trail-onboarding-copy></p>
+            <div class="trailx-onboarding__meta">
+              <span data-trail-onboarding-progress></span>
+              <span><span data-lang-en>Tap anywhere for next</span><span data-lang-tl>Pindutin kahit saan para sumunod</span></span>
+            </div>
+          </div>
+        </article>
+        <div class="trailx-onboarding__capture" data-trail-onboarding-capture aria-hidden="true"></div>
+      </div>
+
       <!-- Mouse-follow glow -->
       <div class="trailx__cursor" data-trail-cursor aria-hidden="true"></div>
 
@@ -235,13 +275,13 @@
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M9 5l7 7-7 7"></path></svg>
           </a>
           <a class="trailx__cancel" data-trail-cancel href="{{ url_for('index') }}">
-            <span data-lang-en>Not yet</span>
-            <span data-lang-tl>Hindi pa</span>
+            <span data-lang-en>Back</span>
+            <span data-lang-tl>Bumalik</span>
           </a>
         </div>
         <p class="trailx__hint">
-          <span data-lang-en>Drag to look around · Tap Ana to say hello</span>
-          <span data-lang-tl>I-drag upang lumingon · Pindutin si Ana upang bumati</span>
+          <span data-lang-en>Drag to look around</span>
+          <span data-lang-tl>I-drag upang lumingon</span>
         </p>
       </div>
 
@@ -314,7 +354,7 @@
             <p class="trailx__chapter-copy" data-lang-tl>
               Itinuturo ng mga tala ng kasaysayan ang 1845 bilang taon ng pagkakatatag ng libingan sa ilalim ng pamamahala ni Padre Vicente Velloc. Sadya itong itinayo sa timog ng bayan, alinsunod sa mga alituntuning pangkalusugan ng ika-19 na siglo na naglalayo sa mga libingan mula sa matataong pamayanan. Ang layong iyon ang nagbigay dito ng taimtim na katahimikan — hiwalay sa pang-araw-araw na buhay, ngunit hindi kailanman nalayo sa mga taga-Nagcarlan.
             </p>
-            <div class="trailx__stats">
+            <div class="trailx__stats trailx__stats--static">
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Established</span><span data-lang-tl>Itinatag</span></span><span class="trailx__stat-value">1845</span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Site Area</span><span data-lang-tl>Lawak</span></span><span class="trailx__stat-value"><span data-lang-en>~1 hectare</span><span data-lang-tl>~1 ektarya</span></span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Declared Landmark</span><span data-lang-tl>Deklarasyon</span></span><span class="trailx__stat-value"><span data-lang-en>24 Oct 1981</span><span data-lang-tl>24 Okt 1981</span></span></div>
@@ -492,7 +532,7 @@
             <p class="trailx__chapter-copy" data-lang-tl>
               Tinatanggap ng museo ang mga bisita anim na araw bawat linggo, at libre ang pagpasok — ang pamana rito ay para sa lahat.
             </p>
-            <div class="trailx__stats">
+            <div class="trailx__stats trailx__stats--static">
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Open</span><span data-lang-tl>Bukas</span></span><span class="trailx__stat-value"><span data-lang-en>Tue – Sun</span><span data-lang-tl>Martes – Linggo</span></span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Hours</span><span data-lang-tl>Oras</span></span><span class="trailx__stat-value">9:00 AM – 4:00 PM</span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Closed</span><span data-lang-tl>Sarado</span></span><span class="trailx__stat-value"><span data-lang-en>Monday</span><span data-lang-tl>Lunes</span></span></div>
@@ -575,7 +615,7 @@
             <p class="trailx__chapter-copy" data-lang-tl>
               Pinangangalagaan ang museo ng National Historical Commission of the Philippines (NHCP), na nag-iingat sa mga makasaysayang pook ng bansa. Ipinapaalala ng mga nakapaskil na abiso kung paano ang serbisyo publiko rito:
             </p>
-            <div class="trailx__stats">
+            <div class="trailx__stats trailx__stats--static">
               <div class="trailx__stat"><span class="trailx__stat-label">CSC</span><span class="trailx__stat-value"><span data-lang-en>No Smoking</span><span data-lang-tl>Bawal Manigarilyo</span></span></div>
               <div class="trailx__stat"><span class="trailx__stat-label">CSC</span><span class="trailx__stat-value"><span data-lang-en>No Fixer</span><span data-lang-tl>Bawal ang Fixer</span></span></div>
               <div class="trailx__stat"><span class="trailx__stat-label">CSC</span><span class="trailx__stat-value"><span data-lang-en>No Noon Break</span><span data-lang-tl>Tuloy ang Serbisyo sa Tanghali</span></span></div>
@@ -659,7 +699,7 @@
             <p class="trailx__chapter-copy" data-lang-tl>
               Naiiba ang hintong ito — ang mismong 360 ang eksibit. Ang mga kumikinang na singsing sa sahig ang maglalakad sa iyo papasok sa mga bulwagan, at bawat maliit na kumukutitap na marker ay isang artepakto: pindutin ito, at lilitaw ang larawan nito sa dingding habang ikinukuwento ng gabay na tinig ang kasaysayan nito. Huwag magmadali — mamasyal muna bago mag-scroll.
             </p>
-            <div class="trailx__stats">
+            <div class="trailx__stats trailx__stats--static">
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Halls</span><span data-lang-tl>Bulwagan</span></span><span class="trailx__stat-value">4</span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Artifacts</span><span data-lang-tl>Artepakto</span></span><span class="trailx__stat-value">20+</span></div>
               <div class="trailx__stat"><span class="trailx__stat-label"><span data-lang-en>Voice Guides</span><span data-lang-tl>Gabay na Tinig</span></span><span class="trailx__stat-value">EN · TL</span></div>
@@ -1364,152 +1404,76 @@
             </button>
           </article>
 
-          <!-- Chapter III · The Pact of Biak-na-Bato (five-moment interactive story) -->
-          <article class="trailx__chapter" data-chapter="s8-biak" data-side="left" data-title="Biak-na-Bato">
+          <!-- Chapter III · The Pact of Biak-na-Bato, part 1 -->
+          <article class="trailx__chapter" data-chapter="s8-biak-origin" data-side="left" data-title="Secret Meeting">
             <div class="trailx__label">
               <span class="trailx__label-line"></span>
-              <span class="trailx__label-text"><span data-lang-en>Below Ground · III</span><span data-lang-tl>Sa Ilalim · III</span></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · III · 1/4</span><span data-lang-tl>Sa Ilalim · III · 1/4</span></span>
             </div>
             <h3 class="trailx__chapter-title">
-              <span data-lang-en>The Pact of<br /><em>Biak-na-Bato</em></span>
-              <span data-lang-tl>Ang Kasunduan sa<br /><em>Biak-na-Bato</em></span>
+              <span data-lang-en>A Secret Meeting<br /><em>in Nagcarlan</em></span>
+              <span data-lang-tl>Isang Lihim na Pagpupulong<br /><em>sa Nagcarlan</em></span>
             </h3>
-            <section class="trailx-pact" data-pact-story aria-label="The Pact of Biak-na-Bato story">
-              <header class="trailx-pact__intro">
-                <span class="trailx-pact__eyebrow"><span data-lang-en>An interactive chronicle · 1897</span><span data-lang-tl>Isang interaktibong salaysay · 1897</span></span>
-                <p class="trailx-pact__premise">
-                  <span data-lang-en>Follow one unbroken thread—from Nagcarlan to Biak-na-Bato, then across the sea.</span>
-                  <span data-lang-tl>Sundan ang iisang hibla—mula Nagcarlan hanggang Biak-na-Bato, at patawid ng dagat.</span>
-                </p>
-              </header>
+            <p class="trailx__chapter-copy" data-lang-en>
+              IN 1897, Pedro Paterno and General Severino Taiño of the Maluningning Chapter of the Katipunan met secretly inside this cemetery. Their discussions connected Nagcarlan to the negotiations that would later become the Pact of Biak-na-Bato.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              NOONG 1897, lihim na nagpulong sa libingang ito sina Pedro Paterno at Heneral Severino Taiño ng Balangay Maluningning ng Katipunan. Iniugnay ng kanilang mga pag-uusap ang Nagcarlan sa mga negosasyong humantong sa Kasunduan sa Biak-na-Bato.
+            </p>
+          </article>
 
-              <div class="trailx-pact__thread" role="group" aria-label="Five moments in the story">
-                <span class="trailx-pact__thread-line" aria-hidden="true"></span>
-                <button type="button" class="trailx-pact__jump" data-pact-jump="0" aria-label="Moment 1: Whisper"><span>1</span></button>
-                <button type="button" class="trailx-pact__jump" data-pact-jump="1" aria-label="Moment 2: Cave"><span>2</span></button>
-                <button type="button" class="trailx-pact__jump" data-pact-jump="2" aria-label="Moment 3: Republic"><span>3</span></button>
-                <button type="button" class="trailx-pact__jump" data-pact-jump="3" aria-label="Moment 4: Seal"><span>4</span></button>
-                <button type="button" class="trailx-pact__jump" data-pact-jump="4" aria-label="Moment 5: Ember"><span>5</span></button>
-              </div>
+          <!-- Chapter III · The Pact of Biak-na-Bato, part 2 -->
+          <article class="trailx__chapter" data-chapter="s8-biak-republic" data-side="right" data-title="Stronghold and Republic">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · III · 2/4</span><span data-lang-tl>Sa Ilalim · III · 2/4</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>From Refuge to<br /><em>Revolutionary Republic</em></span>
+              <span data-lang-tl>Mula Kanlungan Tungo sa<br /><em>Republikang Rebolusyonaryo</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              WHILE FLEEING Spanish forces, Emilio Aguinaldo's group reached Biak-na-Bato in June 1897. Its caves and strategic terrain became their stronghold. By November, it was the seat of the República de Biak-na-Bato, guided by a constitution drafted by Isabelo Artacho and Felix Ferrer.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              HABANG TUMATAKAS sa hukbong Espanyol, narating ng pangkat ni Emilio Aguinaldo ang Biak-na-Bato noong Hunyo 1897. Naging kuta nila ang mga yungib at estratehikong lupain nito. Pagsapit ng Nobyembre, naging luklukan ito ng Republika ng Biak-na-Bato, ayon sa konstitusyong binuo nina Isabelo Artacho at Felix Ferrer.
+            </p>
+          </article>
 
-              <div class="trailx-pact__stage" data-pact-stage tabindex="0" aria-live="polite">
-                <article class="trailx-pact__card" data-pact-card data-pact-index="0" data-pact-order="01">
-                  <div class="trailx-pact__icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48"><path d="M8 30h7l5 7V11l-5 7H8z"/><path d="M27 18c3 3 3 9 0 12M33 13c6 6 6 16 0 22"/></svg>
-                  </div>
-                  <div class="trailx-pact__moment">
-                    <span class="trailx-pact__date">Nagcarlan · 1897</span>
-                    <h4><span data-lang-en>1 · The Whisper</span><span data-lang-tl>1 · Ang Bulong</span></h4>
-                    <p data-lang-en>Pedro Paterno and General Severino Taiño met secretly in this cemetery. Their discussions became part of the path toward the Pact of Biak-na-Bato.</p>
-                    <p data-lang-tl>Lihim na nagpulong sa libingang ito sina Pedro Paterno at Heneral Severino Taiño. Naging bahagi ang kanilang mga usapan ng landas tungo sa Kasunduan sa Biak-na-Bato.</p>
-                    <p class="trailx-pact__bridge"><span data-lang-en>The story now leaves Nagcarlan and follows the revolution to Bulacan.</span><span data-lang-tl>Mula Nagcarlan, sinusundan ngayon ng kuwento ang himagsikan patungong Bulacan.</span></p>
-                  </div>
-                </article>
+          <!-- Chapter III · The Pact of Biak-na-Bato, part 3 -->
+          <article class="trailx__chapter" data-chapter="s8-biak-pact" data-side="left" data-title="The Pact">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · III · 3/4</span><span data-lang-tl>Sa Ilalim · III · 3/4</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>The Pact and<br /><em>Its Terms</em></span>
+              <span data-lang-tl>Ang Kasunduan at<br /><em>mga Kondisyon Nito</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              IN DECEMBER, Pedro Paterno brokered an agreement intended to end the conflict. It promised 800,000 pesos in three parts: 400,000 after Aguinaldo left for Hong Kong, 200,000 after the surrender of arms, and 200,000 after a Te Deum and the declaration of a general amnesty.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              NOONG DISYEMBRE, namagitan si Pedro Paterno sa kasunduang naglalayong wakasan ang labanan. Nangako ito ng 800,000 piso sa tatlong bahagi: 400,000 matapos lumisan si Aguinaldo patungong Hong Kong, 200,000 matapos maisuko ang mga armas, at 200,000 matapos ang Te Deum at pagpapahayag ng pangkalahatang amnestiya.
+            </p>
+          </article>
 
-                <article class="trailx-pact__card" data-pact-card data-pact-index="1" data-pact-order="02" hidden>
-                  <div class="trailx-pact__icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48"><path d="M5 37 16 16l7 9 6-14 14 26z"/><path d="M18 37c1-8 11-8 12 0"/></svg>
-                  </div>
-                  <div class="trailx-pact__moment">
-                    <span class="trailx-pact__date"><span data-lang-en>Biak-na-Bato · June 1897</span><span data-lang-tl>Biak-na-Bato · Hunyo 1897</span></span>
-                    <h4><span data-lang-en>2 · The Cave</span><span data-lang-tl>2 · Ang Yungib</span></h4>
-                    <p data-lang-en>While fleeing Spanish forces, Emilio Aguinaldo’s group reached Biak-na-Bato in June. Its caves and strategic terrain became their stronghold.</p>
-                    <p data-lang-tl>Habang tumatakas sa hukbong Espanyol, narating ng pangkat ni Emilio Aguinaldo ang Biak-na-Bato noong Hunyo. Naging kuta nila ang mga yungib at estratehikong lupain nito.</p>
-                    <p class="trailx-pact__bridge"><span data-lang-en>The refuge soon became more than a hiding place.</span><span data-lang-tl>Hindi nagtagal, ang kanlungan ay naging higit pa sa isang taguan.</span></p>
-                  </div>
-                </article>
-
-                <article class="trailx-pact__card" data-pact-card data-pact-index="2" data-pact-order="03" hidden>
-                  <div class="trailx-pact__icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48"><path d="M12 7h24v34H12z"/><path d="M18 16h12M18 23h12M18 30h8"/><path d="M8 11h4M36 37h4"/></svg>
-                  </div>
-                  <div class="trailx-pact__moment">
-                    <span class="trailx-pact__date"><span data-lang-en>November 1897</span><span data-lang-tl>Nobyembre 1897</span></span>
-                    <h4><span data-lang-en>3 · The Republic</span><span data-lang-tl>3 · Ang Republika</span></h4>
-                    <p data-lang-en>In November, the stronghold became the seat of the República de Biak-na-Bato, guided by a constitution drafted by Isabelo Artacho and Felix Ferrer.</p>
-                    <p data-lang-tl>Noong Nobyembre, naging luklukan ang kuta ng Republika ng Biak-na-Bato, ayon sa konstitusyong binuo nina Isabelo Artacho at Felix Ferrer.</p>
-                    <p class="trailx-pact__bridge"><span data-lang-en>A government had formed. Next came negotiations to end the conflict.</span><span data-lang-tl>Naitatag ang pamahalaan. Sumunod ang negosasyong naglalayong wakasan ang labanan.</span></p>
-                  </div>
-                </article>
-
-                <article class="trailx-pact__card" data-pact-card data-pact-index="3" data-pact-order="04" hidden>
-                  <div class="trailx-pact__icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48"><path d="M8 11h32v23H8z"/><path d="m15 25 6 5 13-14"/><circle cx="35" cy="35" r="7"/><path d="m32 41-2 5 5-2 3 2 1-5"/></svg>
-                  </div>
-                  <div class="trailx-pact__moment">
-                    <span class="trailx-pact__date"><span data-lang-en>December 1897</span><span data-lang-tl>Disyembre 1897</span></span>
-                    <h4><span data-lang-en>4 · The Seal</span><span data-lang-tl>4 · Ang Lagda</span></h4>
-                    <p data-lang-en>Brokered by Pedro Paterno and ratified in December, the pact set ₱800,000 in three stages tied to Aguinaldo’s exile to Hong Kong, the surrender of arms, and a general amnesty.</p>
-                    <p data-lang-tl>Sa pamamagitan ni Pedro Paterno at pinagtibay noong Disyembre, itinakda ng kasunduan ang ₱800,000 sa tatlong yugto na nakaugnay sa pagkatapon ni Aguinaldo sa Hong Kong, pagsuko ng mga armas, at pangkalahatang amnestiya.</p>
-                    <div class="trailx-pact__payments" aria-label="Three promised payments"><span>₱400K</span><span>₱200K</span><span>₱200K</span></div>
-                    <p class="trailx-pact__bridge"><span data-lang-en>The signatures sent Aguinaldo’s group across the sea—but could not erase the cause.</span><span data-lang-tl>Itinulak ng mga lagda ang pangkat ni Aguinaldo patawid ng dagat—ngunit hindi nito nabura ang adhikain.</span></p>
-                  </div>
-                </article>
-
-                <article class="trailx-pact__card trailx-pact__card--final" data-pact-card data-pact-index="4" data-pact-order="05" hidden>
-                  <div class="trailx-pact__icon" aria-hidden="true">
-                    <svg viewBox="0 0 48 48"><path d="M25 5c2 10-6 12-6 21 0 3 2 5 5 5-1-6 5-8 4-15 8 7 10 14 6 21-5 9-20 8-23-2-3-8 2-15 8-20-1 8 3 11 6 12-1-9 5-12 0-22z"/></svg>
-                  </div>
-                  <div class="trailx-pact__moment">
-                    <span class="trailx-pact__date"><span data-lang-en>Christmas Day · 1897</span><span data-lang-tl>Araw ng Pasko · 1897</span></span>
-                    <h4><span data-lang-en>5 · The Ember</span><span data-lang-tl>5 · Ang Baga</span></h4>
-                    <p data-lang-en>On December 25, Aguinaldo declared the revolution ended and sailed for Hong Kong. Yet the Filipino struggle for independence continued.</p>
-                    <p data-lang-tl>Noong 25 Disyembre, ipinahayag ni Aguinaldo ang pagtatapos ng rebolusyon at naglayag patungong Hong Kong. Ngunit nagpatuloy ang pakikibaka ng mga Pilipino para sa kalayaan.</p>
-                    <strong class="trailx-pact__memory"><span data-lang-en>The pact paused the fighting—not the dream of freedom.</span><span data-lang-tl>Pinatigil ng kasunduan ang labanan—hindi ang hangarin para sa kalayaan.</span></strong>
-                  </div>
-                </article>
-              </div>
-
-              <div class="trailx-pact__controls">
-                <button type="button" class="trailx-pact__nav" data-pact-prev>
-                  <span aria-hidden="true">←</span><span data-lang-en>Previous</span><span data-lang-tl>Nakaraan</span>
-                </button>
-                <span class="trailx-pact__counter" data-pact-count aria-label="Story progress">1 / 5</span>
-                <button type="button" class="trailx-pact__nav" data-pact-next>
-                  <span data-lang-en>Next</span><span data-lang-tl>Susunod</span><span aria-hidden="true">→</span>
-                </button>
-              </div>
-              <p class="trailx-pact__swipe"><span data-lang-en>Tap the timeline or swipe the card</span><span data-lang-tl>Pindutin ang timeline o i-swipe ang card</span></p>
-
-              <details class="trailx-pact__full">
-                <summary><span data-lang-en>Read the Full Account</span><span data-lang-tl>Basahin ang Buong Salaysay</span></summary>
-                <div class="trailx-pact__full-pages" data-pact-full-pages>
-                  <article class="trailx-pact__full-page" data-pact-full-page>
-                    <p data-lang-en>BIAK-NA-BATO is part of the Sierra Madre mountain range, within the municipality of San Miguel, Bulacan. During the Philippine Revolution of 1896, the caves here served as hiding places for the Katipuneros of this part of Bulacan.</p>
-                    <p data-lang-tl>ANG BIAK-NA-BATO ay bahagi ng bulubunduking Sierra Madre na sakop ng bayan ng San Miguel, Bulacan. Sa panahon ng Himagsikang 1896, ang mga yungib dito ay nagsilbing taguan ng mga Katipunero ng bahaging ito ng Bulacan.</p>
-                  </article>
-                  <article class="trailx-pact__full-page" data-pact-full-page hidden>
-                    <p data-lang-en>While fleeing the Spanish forces, General Emilio Aguinaldo's group reached Biak-na-Bato in June 1897. Because of its strategic location, Aguinaldo made the area his stronghold and headquarters. In November of that year, he established the government known as the República de Biak-na-Bato, based on a constitution drafted by Isabelo Artacho and Felix Ferrer.</p>
-                    <p data-lang-tl>Sa pagtakas nila sa mga hukbong Espanyol, narating ng pangkat ni Heneral Emilio Aguinaldo ang Biak-na-Bato noong Hunyo 1897. Dahil sa estratehikong kinalalagyan, nagpasya si Aguinaldo na gawing kuta at himpilan ang lugar. Nobyembre ng nasabing taon, itinatag niya rito ang pamahalaang tinawag na Republika ng Biak-na-Bato ayon sa konstitusyong binuo nina Isabelo Artacho at Felix Ferrer.</p>
-                  </article>
-                  <article class="trailx-pact__full-page" data-pact-full-page hidden>
-                    <p data-lang-en>In December 1897, Pedro Paterno brokered an agreement aimed at ending the conflict. On December 14, Governor-General Fernando Primo de Rivera signed it, and on December 15, Paterno signed as Aguinaldo's representative. On December 20, the revolutionary assembly ratified the document now known as the Pact of Biak-na-Bato.</p>
-                    <p data-lang-tl>Disyembre 1897 nang naisulong ni Pedro Paterno ang isang kasunduang naglalayong tuldukan ang labanan. 14 Disyembre, nilagdaan ni Gobernador-Heneral Fernando Primo de Rivera ang kasunduan, at ni Paterno bilang kinatawan ni Aguinaldo noong 15 Disyembre. Noong 20 Disyembre, pinagtibay ng kapulungang rebolusyonaryo ang dokumentong tinatawag ngayong Kasunduang Biak-na-Bato.</p>
-                  </article>
-                  <article class="trailx-pact__full-page" data-pact-full-page hidden>
-                    <p data-lang-en>The pact required the Spanish government to pay 800,000 pesos in exchange for the voluntary surrender of the revolution and the exile of Aguinaldo's group to Hong Kong.</p>
-                    <p data-lang-tl>Itinakda ng Kasunduan ang pagbayad ng pamahalaang Espanyol ng 800,000 piso kapalit ng boluntaryong pagsuko ng rebolusyon at pagdistiyero sa grupo ni Aguinaldo sa Hong Kong.</p>
-                  </article>
-                  <article class="trailx-pact__full-page" data-pact-full-page hidden>
-                    <p data-lang-en>It was paid in three parts: 400,000 pesos after Aguinaldo left for Hong Kong; 200,000 after the surrender of arms; and 200,000 after a Te Deum at the Manila Cathedral and a declared general amnesty.</p>
-                    <p data-lang-tl>Binayaran ito sa tatlong bahagi: 400,000 para kay Aguinaldo matapos nitong lisanin ang Biak-na-Bato patungong Hong Kong; 200,000 pagkatapos maisuko ang mga armas; at 200,000 matapos maisagawa ang Te Deum sa katedral ng Maynila at maipahayag ang pangkalahatang amnestiya.</p>
-                  </article>
-                  <article class="trailx-pact__full-page" data-pact-full-page hidden>
-                    <p data-lang-en>On December 25, Christmas Day, Aguinaldo declared the end of the revolution, then sailed for Hong Kong.</p>
-                    <p data-lang-tl>25 Disyembre, araw ng Pasko, iprinoklama ni Aguinaldo ang pagwawakas ng rebolusyon. Pagkatapos nito, naglayag siya patungong Hong Kong.</p>
-                  </article>
-                  <article class="trailx-pact__full-page" data-pact-full-page hidden>
-                    <p data-lang-en>Yet despite all of this, the Filipino revolutionaries' struggle for independence continued.</p>
-                    <p data-lang-tl>Gayunpaman, sa kabila ng lahat ng ito, nagpatuloy ang pakikipaglaban ng mga rebolusyonaryong Pilipino para sa kalayaan.</p>
-                  </article>
-                  <div class="trailx-pact__full-controls">
-                    <button type="button" class="trailx-pact__nav" data-pact-full-prev><span aria-hidden="true">←</span><span data-lang-en>Previous</span><span data-lang-tl>Nakaraan</span></button>
-                    <span class="trailx-pact__counter" data-pact-full-count aria-label="Full account progress">1 / 7</span>
-                    <button type="button" class="trailx-pact__nav" data-pact-full-next><span data-lang-en>Next</span><span data-lang-tl>Susunod</span><span aria-hidden="true">→</span></button>
-                  </div>
-                </div>
-              </details>
-            </section>
+          <!-- Chapter III · The Pact of Biak-na-Bato, part 4 -->
+          <article class="trailx__chapter" data-chapter="s8-biak-exile" data-side="right" data-title="Exile and Resistance">
+            <div class="trailx__label">
+              <span class="trailx__label-line"></span>
+              <span class="trailx__label-text"><span data-lang-en>Below Ground · III · 4/4</span><span data-lang-tl>Sa Ilalim · III · 4/4</span></span>
+            </div>
+            <h3 class="trailx__chapter-title">
+              <span data-lang-en>Exile, but Not<br /><em>the End</em></span>
+              <span data-lang-tl>Pagpapatapon, ngunit Hindi<br /><em>ang Wakas</em></span>
+            </h3>
+            <p class="trailx__chapter-copy" data-lang-en>
+              ON CHRISTMAS DAY 1897, Aguinaldo declared the revolution ended and sailed for Hong Kong with other revolutionary leaders. The agreement paused the fighting, but it did not end the Filipino struggle for independence. The cause continued beyond Biak-na-Bato.
+            </p>
+            <p class="trailx__chapter-copy" data-lang-tl>
+              NOONG ARAW NG PASKO 1897, ipinahayag ni Aguinaldo ang pagtatapos ng rebolusyon at naglayag patungong Hong Kong kasama ang iba pang pinunong rebolusyonaryo. Pansamantalang pinahinto ng kasunduan ang labanan, ngunit hindi nito winakasan ang pakikibaka ng mga Pilipino para sa kalayaan.
+            </p>
           </article>
 
           <!-- Chapter IV · The Cemetery during World War II -->

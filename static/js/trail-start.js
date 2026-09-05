@@ -181,9 +181,21 @@ const SCRIPTS = {
     en: "These quiet chambers once held secrets. During the revolution against Spain, Katipuneros met here. In 1897, Pedro Paterno and General Severino Taiño gathered to discuss the talks that would lead to the Pact of Biak-na-Bato.",
     tl: "Ang tahimik na mga silid na ito ay minsang nag-ingat ng mga lihim. Noong rebolusyon laban sa Espanya, nagpulong dito ang mga Katipunero. Noong 1897, nagtipon sina Pedro Paterno at Heneral Severino Taiño upang talakayin ang mga usaping humantong sa Kasunduan sa Biak-na-Bato.",
   },
-  's8-biak': {
-    en: "Follow the thread with me. In 1897, Pedro Paterno and General Severino Taiño met secretly in this cemetery. Their discussions became part of the road to Biak-na-Bato. By June, Emilio Aguinaldo's group had reached its caves and made the area their stronghold. In November, that refuge became the seat of a revolutionary government. Then negotiations followed. Ratified in December, the pact linked promised payments to Aguinaldo's exile, the surrender of arms, and a general amnesty. On Christmas Day, Aguinaldo sailed away. The fighting paused, but the Filipino struggle for independence continued.",
-    tl: "Sundan natin ang hibla. Noong 1897, lihim na nagpulong sa libingang ito sina Pedro Paterno at Heneral Severino Taiño. Naging bahagi ang kanilang mga usapan ng landas patungong Biak-na-Bato. Pagsapit ng Hunyo, narating ng pangkat ni Emilio Aguinaldo ang mga yungib nito at ginawang kuta ang lugar. Noong Nobyembre, ang kanlungang iyon ay naging luklukan ng isang pamahalaang rebolusyonaryo. Sumunod ang negosasyon. Pinagtibay noong Disyembre, iniugnay ng kasunduan ang mga ipinangakong bayad sa pagkatapon ni Aguinaldo, pagsuko ng mga armas, at pangkalahatang amnestiya. Noong araw ng Pasko, naglayag si Aguinaldo. Pansamantalang tumigil ang labanan, ngunit nagpatuloy ang pakikibaka ng mga Pilipino para sa kalayaan.",
+  's8-biak-origin': {
+    en: "In 1897, Pedro Paterno and General Severino Taiño of the Maluningning Chapter of the Katipunan met secretly inside this cemetery. Their discussions connected Nagcarlan to the negotiations that would later become the Pact of Biak-na-Bato. From these quiet chambers, our story now follows the revolution north to Bulacan.",
+    tl: "Noong 1897, lihim na nagpulong sa libingang ito sina Pedro Paterno at Heneral Severino Taiño ng Balangay Maluningning ng Katipunan. Iniugnay ng kanilang mga pag-uusap ang Nagcarlan sa mga negosasyong humantong sa Kasunduan sa Biak-na-Bato. Mula sa tahimik na mga silid na ito, susundan natin ang himagsikan patungong Bulacan.",
+  },
+  's8-biak-republic': {
+    en: "While fleeing Spanish forces, Emilio Aguinaldo's group reached Biak-na-Bato in June 1897. Its caves and strategic terrain became their stronghold and headquarters. By November, the refuge had become the seat of the República de Biak-na-Bato, guided by a constitution drafted by Isabelo Artacho and Felix Ferrer.",
+    tl: "Habang tumatakas sa hukbong Espanyol, narating ng pangkat ni Emilio Aguinaldo ang Biak-na-Bato noong Hunyo 1897. Naging kuta at himpilan nila ang mga yungib at estratehikong lupain nito. Pagsapit ng Nobyembre, naging luklukan ang kanlungan ng Republika ng Biak-na-Bato, ayon sa konstitusyong binuo nina Isabelo Artacho at Felix Ferrer.",
+  },
+  's8-biak-pact': {
+    en: "In December, Pedro Paterno brokered an agreement intended to end the conflict. It promised eight hundred thousand pesos in three parts: four hundred thousand after Aguinaldo left for Hong Kong, two hundred thousand after the surrender of arms, and two hundred thousand after a Te Deum and the declaration of a general amnesty.",
+    tl: "Noong Disyembre, namagitan si Pedro Paterno sa kasunduang naglalayong wakasan ang labanan. Nangako ito ng walong daang libong piso sa tatlong bahagi: apat na raang libo matapos lumisan si Aguinaldo patungong Hong Kong, dalawang daang libo matapos maisuko ang mga armas, at dalawang daang libo matapos ang Te Deum at pagpapahayag ng pangkalahatang amnestiya.",
+  },
+  's8-biak-exile': {
+    en: "On Christmas Day 1897, Aguinaldo declared the revolution ended and sailed for Hong Kong with other revolutionary leaders. The agreement paused the fighting, but it did not end the Filipino struggle for independence. The cause of freedom continued beyond Biak-na-Bato.",
+    tl: "Noong araw ng Pasko 1897, ipinahayag ni Aguinaldo ang pagtatapos ng rebolusyon at naglayag patungong Hong Kong kasama ang iba pang pinunong rebolusyonaryo. Pansamantalang pinahinto ng kasunduan ang labanan, ngunit hindi nito winakasan ang pakikibaka ng mga Pilipino para sa kalayaan. Nagpatuloy ang adhikain lampas sa Biak-na-Bato.",
   },
   's8-wwii': {
     en: "The cemetery kept sheltering the brave. During the Japanese occupation, it became a stronghold for Filipino guerrillas, led by Colonel Guillermo Aynaga, until his capture and death in 1944. His remains now rest at the Libingan ng mga Bayani.",
@@ -243,7 +255,8 @@ const TRAIL_VOICE_KEYS = [
   's5-arrive', 's5-history', 's5-plasencia', 's5-explore', 's5-next',
   's6-arrive', 's6-renovations', 's6-deterioration', 's6-next',
   's7-arrive', 's7-materials', 's7-tapestry', 's7-explore', 's7-next',
-  's8-arrive', 's8-acronyms', 's8-revolution', 's8-biak', 's8-wwii',
+  's8-arrive', 's8-acronyms', 's8-revolution',
+  's8-biak-origin', 's8-biak-republic', 's8-biak-pact', 's8-biak-exile', 's8-wwii',
   's8-guerrillas', 's8-guerrilla-forces', 's8-guerrilla-legacy', 's8-guerrilla-records', 's8-next',
   's9-arrive', 's9-archive', 's9-next',
   's10-arrive', 's10-farewell',
@@ -2557,6 +2570,307 @@ if (navigator.xr && typeof navigator.xr.isSessionSupported === 'function') {
 }
 updateTrailViewButtons();
 
+/* --- Starting-point orientation -------------------------------------------
+   This is a read-only product tour: the four veil panes blur everything
+   except the current control, while one full-screen capture layer prevents
+   the highlighted control from being activated. Add an `image` URL to any
+   step later to replace the AK portrait badge with an Ana Kalang illustration. */
+function setupTrailOnboarding(onComplete) {
+  const overlay = root.querySelector('[data-trail-onboarding]');
+  const capture = overlay?.querySelector('[data-trail-onboarding-capture]');
+  const spotlight = overlay?.querySelector('[data-trail-onboarding-spotlight]');
+  const arrow = overlay?.querySelector('[data-trail-onboarding-arrow]');
+  const card = overlay?.querySelector('[data-trail-onboarding-card]');
+  const title = overlay?.querySelector('[data-trail-onboarding-title]');
+  const copy = overlay?.querySelector('[data-trail-onboarding-copy]');
+  const progress = overlay?.querySelector('[data-trail-onboarding-progress]');
+  const image = overlay?.querySelector('[data-trail-onboarding-image]');
+  const imageFallback = overlay?.querySelector('[data-trail-onboarding-image-fallback]');
+  const veils = {
+    top: overlay?.querySelector('.trailx-onboarding__veil--top'),
+    right: overlay?.querySelector('.trailx-onboarding__veil--right'),
+    bottom: overlay?.querySelector('.trailx-onboarding__veil--bottom'),
+    left: overlay?.querySelector('.trailx-onboarding__veil--left'),
+  };
+  if (!overlay || !capture || !spotlight || !arrow || !card || !title || !copy || wantsStop) return false;
+
+  const steps = [
+    {
+      title: { en: 'Welcome to the Heritage Trail', tl: 'Maligayang Pagdating sa Landas ng Pamana' },
+      copy: {
+        en: 'Before I begin our journey, let me introduce the controls that will help you explore comfortably. Nothing is clickable during this guide—tap anywhere to continue.',
+        tl: 'Bago natin simulan ang paglalakbay, ipakikilala ko muna ang mga kontrol na tutulong sa iyong paggalugad. Walang mapipindot habang nasa gabay—pindutin kahit saan upang magpatuloy.',
+      },
+    },
+    {
+      selectors: ['[data-trail-play]'],
+      title: { en: 'Listen', tl: 'Makinig' },
+      copy: {
+        en: 'Use Listen to play or pause my narration. When you resume, the narration continues from where you stopped.',
+        tl: 'Gamitin ang Makinig upang patugtugin o ihinto sandali ang aking salaysay. Kapag ipinagpatuloy mo, babalik ito sa bahaging iyong hinintuan.',
+      },
+    },
+    {
+      selectors: ['[data-trail-mute]'],
+      title: { en: 'Audio', tl: 'Audio' },
+      copy: {
+        en: 'Use the speaker button to mute or restore the narration without losing your place.',
+        tl: 'Gamitin ang pindutan ng speaker upang patahimikin o ibalik ang salaysay nang hindi nawawala ang iyong kinalalagyan.',
+      },
+    },
+    {
+      selectors: ['[data-trail-subs]'],
+      title: { en: 'Subtitles', tl: 'Mga Subtitle' },
+      copy: {
+        en: 'Select CC to show or hide the written subtitle for every narration.',
+        tl: 'Piliin ang CC upang ipakita o itago ang nakasulat na subtitle ng bawat salaysay.',
+      },
+    },
+    {
+      selectors: ['[data-trail-lang]'],
+      title: { en: 'English or Tagalog', tl: 'English o Tagalog' },
+      copy: {
+        en: 'Use the language button to switch the trail, subtitles, and narration between English and Tagalog.',
+        tl: 'Gamitin ang pindutan ng wika upang ilipat ang landas, mga subtitle, at salaysay sa English o Tagalog.',
+      },
+    },
+    {
+      selectors: ['[data-trail-textsize]'],
+      title: { en: 'Text Size', tl: 'Laki ng Teksto' },
+      copy: {
+        en: 'Tap A to enlarge the text. The interface automatically limits main text before it can overlap, while subtitles may continue growing.',
+        tl: 'Pindutin ang A upang palakihin ang teksto. Awtomatikong hihinto ang pangunahing teksto bago ito magsapawan, habang maaari pang lumaki ang mga subtitle.',
+      },
+    },
+    {
+      selectors: ['[data-trail-immersive]'],
+      title: { en: 'Full View', tl: 'Buong Tanaw' },
+      copy: {
+        en: 'Choose Full View when you want the panels to move aside and reveal more of the 360-degree environment.',
+        tl: 'Piliin ang Buong Tanaw upang itabi ang mga panel at makita nang mas malawak ang 360-degree na kapaligiran.',
+      },
+    },
+    {
+      selectors: ['#trailPano'],
+      focus: 'panorama',
+      title: { en: 'Look Around', tl: 'Lumingon sa Paligid' },
+      copy: {
+        en: 'Drag the 360 view left or right to turn around and inspect the heritage site from every direction.',
+        tl: 'I-drag ang 360 view pakaliwa o pakanan upang lumingon at suriin ang pamanang pook mula sa bawat direksyon.',
+      },
+    },
+    {
+      selectors: ['[data-trail-zoom-in]', '[data-trail-zoom-out]'],
+      tools: true,
+      title: { en: 'Zoom In and Out', tl: 'Palapit at Palayo' },
+      copy: {
+        en: 'In Full View, use plus to look closer and minus to widen your view. You may also use a mouse wheel or a supported pinch gesture.',
+        tl: 'Sa Buong Tanaw, gamitin ang plus upang lumapit at minus upang lumawak ang tanaw. Maaari ring gumamit ng mouse wheel o suportadong pinch gesture.',
+      },
+    },
+    {
+      selectors: ['[data-trail-gyro]', '[data-trail-vr]'],
+      tools: true,
+      title: { en: 'Gyroscope and VR', tl: 'Gyroscope at VR' },
+      copy: {
+        en: 'On supported devices, Gyro follows your phone movement and VR opens an immersive headset view. An unavailable control stays disabled.',
+        tl: 'Sa mga suportadong device, sinusundan ng Gyro ang galaw ng telepono at binubuksan ng VR ang immersive headset view. Mananatiling disabled ang kontrol kapag hindi ito available.',
+      },
+    },
+    {
+      selectors: ['[data-trail-immersive]'],
+      panelReturn: true,
+      title: { en: 'Show Panels', tl: 'Ibalik ang mga Panel' },
+      copy: {
+        en: 'After exploring in Full View, the same button becomes Show Panels. Use it to bring Ana, the story, and the guide controls back.',
+        tl: 'Pagkatapos maglibot sa Buong Tanaw, magiging Ibalik ang mga Panel ang parehong pindutan. Gamitin ito upang ibalik si Ana, ang kuwento, at mga kontrol.',
+      },
+    },
+    {
+      selectors: ['[data-trail-cancel]'],
+      title: { en: 'Back', tl: 'Bumalik' },
+      copy: {
+        en: 'Choose Back if you want to leave the starting point and return to the previous page.',
+        tl: 'Piliin ang Bumalik kung nais mong umalis sa panimulang hinto at bumalik sa nakaraang pahina.',
+      },
+    },
+    {
+      selectors: ['[data-trail-begin]'],
+      title: { en: 'Begin the Trail', tl: 'Simulan ang Landas' },
+      copy: {
+        en: 'When you are ready, choose Begin the Trail. I will guide you through all ten stops, and you can scroll through each chapter at your own pace.',
+        tl: 'Kapag handa ka na, piliin ang Simulan ang Landas. Gagabayan kita sa lahat ng sampung hinto, at maaari mong i-scroll ang bawat kabanata sa sarili mong bilis.',
+      },
+    },
+  ];
+
+  let index = 0;
+  let active = true;
+  const lastFocused = document.activeElement;
+  const backgroundNodes = Array.from(root.children).filter((element) => element !== overlay);
+  const backgroundInertState = new Map(backgroundNodes.map((element) => [element, element.inert]));
+
+  const localized = (value) => value?.[state.lang] || value?.en || '';
+  const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+  const setRect = (element, left, top, width, height) => {
+    if (!element) return;
+    element.style.left = `${Math.round(left)}px`;
+    element.style.top = `${Math.round(top)}px`;
+    element.style.width = `${Math.max(0, Math.round(width))}px`;
+    element.style.height = `${Math.max(0, Math.round(height))}px`;
+  };
+
+  const targetRect = (step) => {
+    const elements = (step.selectors || [])
+      .map((selector) => document.querySelector(selector))
+      .filter((element) => element && element.getClientRects().length);
+    if (!elements.length) return null;
+    if (step.focus === 'panorama') {
+      const width = Math.min(window.innerWidth * 0.46, 560);
+      const height = Math.min(window.innerHeight * 0.3, 260);
+      return {
+        left: (window.innerWidth - width) / 2,
+        top: Math.max(18, (window.innerHeight - height) / 2 - window.innerHeight * 0.08),
+        right: (window.innerWidth + width) / 2,
+        bottom: Math.max(18, (window.innerHeight - height) / 2 - window.innerHeight * 0.08) + height,
+        width,
+        height,
+      };
+    }
+    const rects = elements.map((element) => element.getBoundingClientRect());
+    const pad = 9;
+    const left = clamp(Math.min(...rects.map((rect) => rect.left)) - pad, 7, window.innerWidth - 7);
+    const top = clamp(Math.min(...rects.map((rect) => rect.top)) - pad, 7, window.innerHeight - 7);
+    const right = clamp(Math.max(...rects.map((rect) => rect.right)) + pad, 7, window.innerWidth - 7);
+    const bottom = clamp(Math.max(...rects.map((rect) => rect.bottom)) + pad, 7, window.innerHeight - 7);
+    return { left, top, right, bottom, width: right - left, height: bottom - top };
+  };
+
+  const positionVeils = (rect) => {
+    if (!rect) {
+      setRect(veils.top, 0, 0, window.innerWidth, window.innerHeight);
+      [veils.right, veils.bottom, veils.left].forEach((veil) => setRect(veil, 0, 0, 0, 0));
+      spotlight.style.opacity = '0';
+      arrow.style.opacity = '0';
+      return;
+    }
+    setRect(veils.top, 0, 0, window.innerWidth, rect.top);
+    setRect(veils.bottom, 0, rect.bottom, window.innerWidth, window.innerHeight - rect.bottom);
+    setRect(veils.left, 0, rect.top, rect.left, rect.height);
+    setRect(veils.right, rect.right, rect.top, window.innerWidth - rect.right, rect.height);
+    setRect(spotlight, rect.left, rect.top, rect.width, rect.height);
+    spotlight.style.opacity = '1';
+  };
+
+  const positionCard = (rect) => {
+    const margin = window.innerWidth <= 600 ? 10 : 16;
+    const gap = window.innerWidth <= 600 ? 18 : 24;
+    const cardWidth = card.offsetWidth;
+    const cardHeight = card.offsetHeight;
+    let left = (window.innerWidth - cardWidth) / 2;
+    let top = (window.innerHeight - cardHeight) / 2;
+
+    if (rect) {
+      left = clamp(rect.left + rect.width / 2 - cardWidth / 2, margin, window.innerWidth - cardWidth - margin);
+      if (rect.top >= cardHeight + gap + margin) top = rect.top - cardHeight - gap;
+      else if (window.innerHeight - rect.bottom >= cardHeight + gap + margin) top = rect.bottom + gap;
+      else {
+        top = clamp(rect.top + rect.height / 2 - cardHeight / 2, margin, window.innerHeight - cardHeight - margin);
+        const roomRight = window.innerWidth - rect.right;
+        const roomLeft = rect.left;
+        if (roomRight >= cardWidth + gap + margin) left = rect.right + gap;
+        else if (roomLeft >= cardWidth + gap + margin) left = rect.left - cardWidth - gap;
+      }
+    }
+
+    left = clamp(left, margin, Math.max(margin, window.innerWidth - cardWidth - margin));
+    top = clamp(top, margin, Math.max(margin, window.innerHeight - cardHeight - margin));
+    card.style.left = `${Math.round(left)}px`;
+    card.style.top = `${Math.round(top)}px`;
+
+    if (!rect) return;
+    const cardCenter = { x: left + cardWidth / 2, y: top + cardHeight / 2 };
+    const targetCenter = { x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 };
+    const dx = targetCenter.x - cardCenter.x;
+    const dy = targetCenter.y - cardCenter.y;
+    const distance = Math.hypot(dx, dy);
+    arrow.style.left = `${Math.round(cardCenter.x)}px`;
+    arrow.style.top = `${Math.round(cardCenter.y)}px`;
+    arrow.style.width = `${Math.max(22, distance - 15)}px`;
+    arrow.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+    arrow.style.opacity = '1';
+  };
+
+  const layout = () => {
+    if (!active) return;
+    const rect = targetRect(steps[index]);
+    positionVeils(rect);
+    positionCard(rect);
+  };
+
+  const show = (requested) => {
+    index = clamp(requested, 0, steps.length - 1);
+    const step = steps[index];
+    root.toggleAttribute('data-onboarding-tools', Boolean(step.tools));
+    root.toggleAttribute('data-onboarding-panel-return', Boolean(step.panelReturn));
+    title.textContent = localized(step.title);
+    copy.textContent = localized(step.copy);
+    if (progress) progress.textContent = `${index + 1} / ${steps.length}`;
+    if (image) {
+      const source = step.image || '';
+      image.hidden = !source;
+      if (source) image.src = source;
+      if (imageFallback) imageFallback.hidden = Boolean(source);
+      image.onerror = () => {
+        image.hidden = true;
+        if (imageFallback) imageFallback.hidden = false;
+      };
+    }
+    window.requestAnimationFrame(() => window.requestAnimationFrame(layout));
+  };
+
+  const finish = () => {
+    if (!active) return;
+    active = false;
+    root.removeAttribute('data-onboarding');
+    root.removeAttribute('data-onboarding-tools');
+    root.removeAttribute('data-onboarding-panel-return');
+    backgroundNodes.forEach((element) => { element.inert = backgroundInertState.get(element) || false; });
+    overlay.hidden = true;
+    window.removeEventListener('resize', layout);
+    window.removeEventListener('orientationchange', layout);
+    if (lastFocused instanceof HTMLElement) lastFocused.focus?.({ preventScroll: true });
+    onComplete?.();
+  };
+
+  const next = () => {
+    if (index >= steps.length - 1) finish();
+    else show(index + 1);
+  };
+
+  capture.addEventListener('click', next);
+  overlay.addEventListener('keydown', (event) => {
+    if (event.key === 'Tab') { event.preventDefault(); return; }
+    if (event.key === 'Escape') { event.preventDefault(); finish(); return; }
+    if (event.key === 'ArrowLeft') { event.preventDefault(); show(index - 1); return; }
+    if (event.key === 'Enter' || event.key === ' ' || event.key === 'ArrowRight') {
+      event.preventDefault();
+      next();
+    }
+  });
+  window.addEventListener('resize', layout, { passive: true });
+  window.addEventListener('orientationchange', layout, { passive: true });
+
+  root.setAttribute('data-onboarding', 'true');
+  backgroundNodes.forEach((element) => { element.inert = true; });
+  overlay.hidden = false;
+  card.setAttribute('aria-live', 'polite');
+  card.setAttribute('aria-atomic', 'true');
+  overlay.focus({ preventScroll: true });
+  show(0);
+  return true;
+}
+
 /* --- Stop entry / transitions ------------------------------------------------ */
 const recordedTrailStopsThisVisit = new Set();
 const activityGatedTrailStops = new Set(['stop4', 'stop9']);
@@ -4395,7 +4709,11 @@ function initPanorama() {
         const drift = (now) => {
           const dt = Math.min((now - prev) / 1000, 0.05);
           prev = now;
-          const idle = !interacting && now - lastEnd > IDLE_MS && !document.hidden && !transitioning;
+          const idle = !interacting
+            && now - lastEnd > IDLE_MS
+            && !document.hidden
+            && !transitioning
+            && root.getAttribute('data-onboarding') !== 'true';
           if (idle) {
             try {
               if (state.mode === 'intro' && currentScene === 'aerial') {
@@ -6621,10 +6939,15 @@ function setupStory(el) {
       : null;
     step = index;
     panels.forEach((panel, i) => {
-      panel.classList.toggle('is-active', i === index);
+      const active = i === index;
+      panel.classList.toggle('is-active', active);
       panel.classList.toggle('is-above', i < index);
       panel.classList.toggle('is-below', i > index);
-      panel.setAttribute('aria-hidden', String(i !== index));
+      panel.setAttribute('aria-hidden', String(!active));
+      // Inert prevents an invisible chapter's links, photographs and form
+      // controls from receiving pointer or keyboard input. This also closes
+      // the Stop 8 photo click-through that CSS pointer-events alone allowed.
+      panel.inert = !active;
     });
     dots.forEach((dot, i) => dot.classList.toggle('is-active', i === index));
     hintEl?.classList.toggle('is-hidden', index > 0);
@@ -6734,107 +7057,6 @@ function setupStory(el) {
       chips.forEach((b) => b.setAttribute('aria-pressed', String(b === chip)));
       detailPanes.forEach((p) => { p.hidden = p.getAttribute('data-detail-panel') !== key; });
     });
-  });
-
-  // Stop 8 · Biak-na-Bato: reveal the history as five short memory moments.
-  // The complete account remains available in the disclosure below the cards.
-  el.querySelectorAll('[data-pact-story]').forEach((story) => {
-    const cards = Array.from(story.querySelectorAll('[data-pact-card]'));
-    const jumps = Array.from(story.querySelectorAll('[data-pact-jump]'));
-    const stage = story.querySelector('[data-pact-stage]');
-    const previous = story.querySelector('[data-pact-prev]');
-    const next = story.querySelector('[data-pact-next]');
-    const counter = story.querySelector('[data-pact-count]');
-    const fullAccount = story.querySelector('.trailx-pact__full');
-    const fullPages = Array.from(story.querySelectorAll('[data-pact-full-page]'));
-    const fullPrevious = story.querySelector('[data-pact-full-prev]');
-    const fullNext = story.querySelector('[data-pact-full-next]');
-    const fullCounter = story.querySelector('[data-pact-full-count]');
-    let current = 0;
-    let currentFullPage = 0;
-    let swipe = null;
-
-    const showMoment = (requested) => {
-      if (!cards.length) return;
-      const target = Math.min(cards.length - 1, Math.max(0, Number(requested) || 0));
-      story.dataset.pactDirection = target < current ? 'back' : 'forward';
-      current = target;
-      story.dataset.pactActive = String(current);
-      const progress = cards.length > 1 ? (current / (cards.length - 1)) * 100 : 100;
-      const glowPosition = cards.length > 1 ? -38 + (current / (cards.length - 1)) * 76 : 0;
-      story.style.setProperty('--pact-progress', `${progress}%`);
-      story.style.setProperty('--pact-glow-x', `${glowPosition}%`);
-      cards.forEach((card, index) => {
-        const active = index === current;
-        card.hidden = !active;
-        card.classList.toggle('is-active', active);
-        card.setAttribute('aria-hidden', String(!active));
-      });
-      jumps.forEach((jump, index) => {
-        const active = index === current;
-        jump.classList.toggle('is-active', active);
-        jump.classList.toggle('is-visited', index <= current);
-        jump.setAttribute('aria-current', active ? 'step' : 'false');
-      });
-      if (previous) previous.disabled = current === 0;
-      if (next) next.disabled = current === cards.length - 1;
-      if (counter) {
-        counter.textContent = `${current + 1} / ${cards.length}`;
-        counter.setAttribute('aria-label', `Moment ${current + 1} of ${cards.length}`);
-      }
-    };
-
-    jumps.forEach((jump) => {
-      jump.addEventListener('click', () => showMoment(jump.getAttribute('data-pact-jump')));
-    });
-    previous?.addEventListener('click', () => showMoment(current - 1));
-    next?.addEventListener('click', () => showMoment(current + 1));
-
-    stage?.addEventListener('keydown', (event) => {
-      if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
-      event.preventDefault();
-      showMoment(current + (event.key === 'ArrowRight' ? 1 : -1));
-    });
-    stage?.addEventListener('pointerdown', (event) => {
-      if (event.button > 0) return;
-      swipe = { id: event.pointerId, x: event.clientX, y: event.clientY };
-    }, { passive: true });
-    stage?.addEventListener('pointerup', (event) => {
-      if (!swipe || swipe.id !== event.pointerId) return;
-      const dx = event.clientX - swipe.x;
-      const dy = event.clientY - swipe.y;
-      swipe = null;
-      if (Math.abs(dx) < 42 || Math.abs(dx) <= Math.abs(dy) * 1.2) return;
-      showMoment(current + (dx < 0 ? 1 : -1));
-    }, { passive: true });
-    stage?.addEventListener('pointercancel', () => { swipe = null; }, { passive: true });
-
-    const showFullPage = (requested) => {
-      if (!fullPages.length) return;
-      currentFullPage = Math.min(fullPages.length - 1, Math.max(0, Number(requested) || 0));
-      fullPages.forEach((page, index) => {
-        const active = index === currentFullPage;
-        page.hidden = !active;
-        page.setAttribute('aria-hidden', String(!active));
-      });
-      if (fullPrevious) fullPrevious.disabled = currentFullPage === 0;
-      if (fullNext) fullNext.disabled = currentFullPage === fullPages.length - 1;
-      if (fullCounter) {
-        fullCounter.textContent = `${currentFullPage + 1} / ${fullPages.length}`;
-        fullCounter.setAttribute('aria-label', `Full account page ${currentFullPage + 1} of ${fullPages.length}`);
-      }
-    };
-
-    fullPrevious?.addEventListener('click', () => showFullPage(currentFullPage - 1));
-    fullNext?.addEventListener('click', () => showFullPage(currentFullPage + 1));
-
-    fullAccount?.addEventListener('toggle', () => {
-      story.classList.toggle('is-reading-full', fullAccount.open);
-      if (fullAccount.open) showFullPage(0);
-    });
-
-    showMoment(0);
-    showFullPage(0);
   });
 
   // Mind games (Stop 4) — unscored, retry forever.
@@ -7622,6 +7844,19 @@ initCharacter();
 initStories();
 initDocViewer();
 initTimeAlbums();
-if (wantsStop && STOP_CONF[wantsStop]) enterStop(wantsStop, { history: 'replace' }); // refresh → restore the stop
-attemptAutoSpeak();          // auto-play like the landing page…
-setupAutoSpeakKickstart();   // …or on the very first tap if the browser blocks it
+if (wantsStop && STOP_CONF[wantsStop]) {
+  enterStop(wantsStop, { history: 'replace' }); // refresh → restore the stop
+  attemptAutoSpeak();
+  setupAutoSpeakKickstart();
+} else {
+  const onboardingStarted = setupTrailOnboarding(() => {
+    // The final guide tap is a valid user gesture, so begin Ana's introduction
+    // here instead of letting audio play behind the orientation overlay.
+    attemptAutoSpeak();
+    setupAutoSpeakKickstart();
+  });
+  if (!onboardingStarted) {
+    attemptAutoSpeak();
+    setupAutoSpeakKickstart();
+  }
+}
