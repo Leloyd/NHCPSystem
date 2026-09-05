@@ -154,6 +154,7 @@ class VirtualTourServiceTests(unittest.TestCase):
         self.assertIn("artifact image", combined)
         self.assertIn("Coordinates", combined)
         self.assertIn("tour map", combined.lower())
+        self.assertNotIn("subtitle", combined.lower())
 
     def test_publish_check_accepts_complete_saved_tour(self):
         scenes = [{

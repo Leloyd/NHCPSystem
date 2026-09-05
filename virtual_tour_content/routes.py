@@ -247,10 +247,6 @@ def _virtual_tour_publish_issues(
         elif kind == "item":
             if not text(hotspot.get("image_path")):
                 issues.append(f"Media — hotspot “{name}”: upload an artifact image.")
-            if len(text(hotspot.get("subtitle_en"))) < 2:
-                issues.append(f"Hotspot “{name}”: add an English subtitle.")
-            if len(text(hotspot.get("subtitle_tl"))) < 2:
-                issues.append(f"Hotspot “{name}”: add a Tagalog subtitle.")
         else:
             issues.append(f"Hotspot “{name}”: choose item or navigation as its type.")
 
@@ -711,8 +707,8 @@ def register_virtual_tour_content_routes(
             kind = str(data.get("hotspot_type") or "")
             if kind not in {"item", "navigation"}:
                 raise ValueError("Choose an item or navigation hotspot.")
-            subtitle_en = _clean_text(data.get("subtitle_en"), label="English subtitle", minimum=2 if kind == "item" else 0)
-            subtitle_tl = _clean_text(data.get("subtitle_tl"), label="Tagalog subtitle", minimum=2 if kind == "item" else 0)
+            subtitle_en = _clean_text(data.get("subtitle_en"), label="English subtitle")
+            subtitle_tl = _clean_text(data.get("subtitle_tl"), label="Tagalog subtitle")
             if kind == "item" and not data.get("image_path"):
                 raise ValueError("Upload an artifact image before saving the item hotspot.")
             target_id = int(data.get("target_scene_id") or 0) if kind == "navigation" else None
@@ -764,7 +760,7 @@ def register_virtual_tour_content_routes(
                     allowed[field] = _clean_text(data[field], label="Hotspot name", minimum=2 if field == "name_en" else 0, maximum=120)
             for field in ("subtitle_en", "subtitle_tl"):
                 if field in data:
-                    allowed[field] = _clean_text(data[field], label="Subtitle", minimum=2 if hotspot["hotspot_type"] == "item" else 0)
+                    allowed[field] = _clean_text(data[field], label="Subtitle")
             for field, minimum, maximum, label in (("pitch", -90, 90, "Pitch"), ("yaw", -180, 180, "Yaw")):
                 if field in data:
                     allowed[field] = _number(data[field], minimum=minimum, maximum=maximum, label=label)

@@ -534,8 +534,8 @@
     hotspotForm.elements.target_scene_id.disabled = isItem;
     hotspotForm.elements.target_scene_id.required = !isItem;
     itemFields.querySelectorAll("input,textarea,button").forEach(function (control) { control.disabled = !isItem; });
-    hotspotForm.elements.subtitle_en.required = isItem;
-    hotspotForm.elements.subtitle_tl.required = isItem;
+    hotspotForm.elements.subtitle_en.required = false;
+    hotspotForm.elements.subtitle_tl.required = false;
     hotspotForm.querySelector('[data-vt-asset-input="image"]').required = isItem && !editingHotspot;
   }
 
