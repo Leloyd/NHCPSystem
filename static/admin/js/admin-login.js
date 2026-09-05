@@ -13,6 +13,60 @@
     });
   }
 
+  function setupDismissibleMessages() {
+    document.querySelectorAll("[data-auto-dismiss]").forEach(function (message) {
+      var delay = Number.parseInt(message.getAttribute("data-auto-dismiss") || "3000", 10);
+      window.setTimeout(function () {
+        message.classList.add("is-dismissing");
+        window.setTimeout(function () {
+          message.hidden = true;
+        }, 230);
+      }, Number.isFinite(delay) ? delay : 3000);
+    });
+  }
+
+  function resetSubmitState(form) {
+    var submitButton = form.querySelector("[data-admin-login-submit]");
+    var submitLabel = form.querySelector("[data-admin-login-submit-label]");
+    form.removeAttribute("data-submitting");
+    form.removeAttribute("aria-busy");
+    if (submitButton) {
+      submitButton.disabled = false;
+      submitButton.classList.remove("is-loading");
+    }
+    if (submitLabel) {
+      submitLabel.textContent = "Sign In to Dashboard";
+    }
+  }
+
+  function setupSubmitGuard() {
+    document.querySelectorAll(".admin-auth-form").forEach(function (form) {
+      resetSubmitState(form);
+      form.addEventListener("submit", function (event) {
+        if (form.hasAttribute("data-submitting")) {
+          event.preventDefault();
+          return;
+        }
+
+        form.setAttribute("data-submitting", "true");
+        form.setAttribute("aria-busy", "true");
+        var submitButton = form.querySelector("[data-admin-login-submit]");
+        var submitLabel = form.querySelector("[data-admin-login-submit-label]");
+        if (submitButton) {
+          submitButton.disabled = true;
+          submitButton.classList.add("is-loading");
+        }
+        if (submitLabel) {
+          submitLabel.textContent = "Signing in…";
+        }
+      });
+    });
+
+    window.addEventListener("pageshow", function () {
+      document.querySelectorAll(".admin-auth-form").forEach(resetSubmitState);
+    });
+  }
+
   function animateLogin() {
     if (typeof window.gsap === "undefined") {
       return;
@@ -91,6 +145,8 @@
 
   function init() {
     setupPasswordToggle();
+    setupDismissibleMessages();
+    setupSubmitGuard();
     animateLogin();
   }
 

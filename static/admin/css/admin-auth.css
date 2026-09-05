@@ -165,6 +165,14 @@ body.admin-auth-page {
   background: var(--auth-danger-bg);
   color: var(--auth-danger-text);
   font-size: 0.88rem;
+  transition: opacity 220ms ease, transform 220ms ease, margin 220ms ease, padding 220ms ease;
+}
+
+.admin-auth-error.is-dismissing {
+  margin-bottom: 0;
+  padding-block: 0;
+  opacity: 0;
+  transform: translateY(-0.3rem);
 }
 
 .admin-auth-success {
@@ -322,6 +330,11 @@ body.admin-auth-page {
 
 .admin-auth-submit {
   width: 100%;
+  min-height: 3.05rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
   border: 0;
   border-radius: 0.95rem;
   padding: 0.95rem 1rem;
@@ -344,6 +357,45 @@ body.admin-auth-page {
 
 .admin-auth-submit:active {
   transform: translateY(0);
+}
+
+.admin-auth-submit:disabled,
+.admin-auth-submit.is-loading {
+  cursor: wait;
+  transform: none;
+  box-shadow: 0 5px 14px rgba(13, 43, 31, 0.24);
+  opacity: 0.72;
+}
+
+.admin-auth-submit-spinner {
+  display: none;
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 1rem;
+  border: 2px solid rgba(255, 255, 255, 0.38);
+  border-top-color: #fff;
+  border-radius: 50%;
+  animation: admin-auth-spin 700ms linear infinite;
+}
+
+.admin-auth-submit.is-loading .admin-auth-submit-spinner {
+  display: block;
+}
+
+@keyframes admin-auth-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admin-auth-error {
+    transition: none;
+  }
+
+  .admin-auth-submit-spinner {
+    animation-duration: 1.4s;
+  }
 }
 
 .admin-auth-submit--link {

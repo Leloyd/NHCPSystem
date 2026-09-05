@@ -36,7 +36,11 @@
             <p class="admin-auth-card-copy">Enter your credentials to access the dashboard.</p>
 
             {% if error_message %}
-            <p class="admin-auth-error" role="alert">{{ error_message }}</p>
+            <p
+              class="admin-auth-error"
+              role="alert"
+              {% if error_message == "Invalid credentials." %}data-auto-dismiss="3000"{% endif %}
+            >{{ error_message }}</p>
             {% endif %}
             {% if warning_message %}
             <p class="admin-auth-warning" role="status">{{ warning_message }}</p>
@@ -113,7 +117,10 @@
                 <span>Server-side authenticated</span>
               </div>
 
-              <button type="submit" class="admin-auth-submit">Sign In to Dashboard</button>
+              <button type="submit" class="admin-auth-submit" data-admin-login-submit aria-live="polite">
+                <span class="admin-auth-submit-spinner" aria-hidden="true"></span>
+                <span data-admin-login-submit-label>Sign In to Dashboard</span>
+              </button>
             </form>
           </div>
         </section>
