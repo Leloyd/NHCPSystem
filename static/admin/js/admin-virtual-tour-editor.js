@@ -29,6 +29,8 @@
   var editingHotspot = null;
   var selectedMapMarker = null;
   var placingMapKind = "";
+  var repositioningMapMarker = false;
+  var mapPositionCaptured = false;
   var mapBaseline = "";
   var mapMode = false;
 
@@ -274,6 +276,15 @@
 
   function makeEditorHotspot(hotspot) {
     var isNavigation = hotspot.hotspot_type === "navigation";
+    function openEditor(event) {
+      if (event) {
+        event.preventDefault();
+        event.stopPropagation();
+      }
+      var hotspotTab = root.querySelector('[data-vt-tab="hotspots"]');
+      if (hotspotTab) activateInspectorTab(hotspotTab);
+      editHotspot(hotspot);
+    }
     return {
       id: "saved-" + hotspot.id,
       pitch: Number(hotspot.pitch),
@@ -281,9 +292,14 @@
       type: "info",
       text: hotspot.name_en || (isNavigation ? "Navigation hotspot" : "Item hotspot"),
       cssClass: isNavigation ? "vt-editor-nav-hotspot" : "vt-editor-item-hotspot",
+      clickHandlerFunc: openEditor,
       createTooltipFunc: function (node) {
-        node.setAttribute("aria-label", hotspot.name_en || "Hotspot");
+        node.setAttribute("aria-label", "Edit " + (isNavigation ? "navigation" : "item") + " hotspot " + (hotspot.name_en || "Hotspot"));
         node.setAttribute("role", "button");
+        node.setAttribute("tabindex", "0");
+        node.addEventListener("keydown", function (event) {
+          if (event.key === "Enter" || event.key === " ") openEditor(event);
+        });
       },
     };
   }
@@ -318,6 +334,7 @@
     });
     viewer.on("mousedown", function (event) {
       if (!placementMode || positionLocked) return;
+      if (event.target && event.target.closest && event.target.closest(".vt-editor-nav-hotspot,.vt-editor-item-hotspot")) return;
       var coords = viewer.mouseEventToCoords(event);
       if (coords && coords.length >= 2) capturePosition(coords[0], coords[1]);
     });
@@ -732,17 +749,57 @@
     };
   }
 
+  function syncMapPositionActions() {
+    var confirmButton = root.querySelector("[data-vt-confirm-map-position]");
+    var repositionButton = root.querySelector("[data-vt-reposition-map-marker]");
+    var saveButton = mapForm.querySelector(".vt-map-save");
+    if (confirmButton) confirmButton.disabled = !selectedMapMarker || !repositioningMapMarker || !mapPositionCaptured;
+    if (repositionButton) repositionButton.disabled = !selectedMapMarker || repositioningMapMarker;
+    if (saveButton && saveButton.textContent !== "Saving map…") saveButton.disabled = repositioningMapMarker;
+  }
+
+  function selectMapMarker(marker) {
+    selectedMapMarker = marker;
+    placingMapKind = "";
+    repositioningMapMarker = false;
+    mapPositionCaptured = false;
+    renderMapMarkers();
+    fillMapMarkerForm();
+    syncMapPlacementButtons();
+    if (mapStageStatus) {
+      mapStageStatus.textContent = "Editing “" + ((marker.label || {}).en || "map hotspot") + "”. Choose Reposition to move it.";
+    }
+  }
+
+  function captureMapMarkerPosition(point) {
+    if (!selectedMapMarker) return;
+    selectedMapMarker.x = point.x;
+    selectedMapMarker.y = point.y;
+    mapPositionCaptured = true;
+    mapForm.elements.map_x.value = point.x.toFixed(5);
+    mapForm.elements.map_y.value = point.y.toFixed(5);
+    renderMapMarkers();
+    fillMapMarkerForm();
+    syncMapDirty();
+    if (mapStageStatus) {
+      mapStageStatus.textContent = "New map position captured. Confirm the position to lock it before saving the map.";
+    }
+  }
+
   function fillMapMarkerForm() {
     if (!selectedMapMarker) {
       mapMarkerForm.hidden = true;
       mapMarkerForm.querySelectorAll("input,select").forEach(function (control) { control.disabled = true; });
+      syncMapPositionActions();
       return;
     }
     mapMarkerForm.hidden = false;
     mapMarkerForm.querySelectorAll("input,select").forEach(function (control) { control.disabled = false; });
     var isMain = selectedMapMarker.kind === "main";
     mapMarkerForm.querySelector("[data-vt-map-marker-kicker]").textContent = isMain ? "Main map hotspot" : "Scene map hotspot";
-    mapMarkerForm.querySelector("[data-vt-map-marker-title]").textContent = "Edit marker";
+    mapMarkerForm.querySelector("[data-vt-map-marker-title]").textContent = repositioningMapMarker
+      ? (mapPositionCaptured ? "Position captured — confirm to lock" : "Choose a new position on the map")
+      : "Edit marker";
     mapForm.elements.map_label_en.value = (selectedMapMarker.label || {}).en || "";
     mapForm.elements.map_label_tl.value = (selectedMapMarker.label || {}).tl || "";
     var destination = mapForm.elements.map_scene_id;
@@ -756,6 +813,7 @@
     destination.value = selectedMapMarker.sceneId || "";
     mapForm.elements.map_x.value = Number(selectedMapMarker.x).toFixed(5);
     mapForm.elements.map_y.value = Number(selectedMapMarker.y).toFixed(5);
+    syncMapPositionActions();
   }
 
   function renderMapMarkers() {
@@ -763,25 +821,42 @@
     (mapConfig.markers || []).forEach(function (marker) {
       var button = document.createElement("button");
       button.type = "button";
-      button.className = "vt-map-edit-marker" + (marker.kind === "main" ? " is-main" : "") + (selectedMapMarker === marker ? " is-selected" : "");
+      button.className = "vt-map-edit-marker" + (marker.kind === "main" ? " is-main" : "") + (selectedMapMarker === marker ? " is-selected" : "") + (selectedMapMarker === marker && repositioningMapMarker ? " is-repositioning" : "");
       button.style.left = Number(marker.x) * 100 + "%";
       button.style.top = Number(marker.y) * 100 + "%";
       button.title = (marker.label || {}).en || "Map marker";
       button.setAttribute("aria-label", "Edit " + button.title);
+      var movedDuringDrag = false;
       button.addEventListener("click", function (event) {
-        event.stopPropagation(); selectedMapMarker = marker; placingMapKind = "";
-        renderMapMarkers(); fillMapMarkerForm(); syncMapPlacementButtons();
+        event.stopPropagation();
+        if (movedDuringDrag) { movedDuringDrag = false; return; }
+        if (selectedMapMarker === marker && repositioningMapMarker) return;
+        selectMapMarker(marker);
       });
       button.addEventListener("pointerdown", function (event) {
-        event.stopPropagation(); selectedMapMarker = marker; placingMapKind = "";
+        event.stopPropagation();
+        if (selectedMapMarker !== marker) {
+          selectMapMarker(marker);
+          return;
+        }
+        if (!repositioningMapMarker) return;
+        movedDuringDrag = false;
         try { button.setPointerCapture(event.pointerId); } catch (_) {}
       });
       button.addEventListener("pointermove", function (event) {
-        if (!button.hasPointerCapture || !button.hasPointerCapture(event.pointerId)) return;
+        if (!repositioningMapMarker || selectedMapMarker !== marker || !button.hasPointerCapture || !button.hasPointerCapture(event.pointerId)) return;
         var point = mapCoordinates(event); marker.x = point.x; marker.y = point.y;
+        movedDuringDrag = true; mapPositionCaptured = true;
         button.style.left = point.x * 100 + "%"; button.style.top = point.y * 100 + "%";
         mapForm.elements.map_x.value = point.x.toFixed(5); mapForm.elements.map_y.value = point.y.toFixed(5);
-        syncMapDirty();
+        syncMapPositionActions(); syncMapDirty();
+      });
+      button.addEventListener("pointerup", function (event) {
+        if (!repositioningMapMarker || selectedMapMarker !== marker) return;
+        try { button.releasePointerCapture(event.pointerId); } catch (_) {}
+        if (movedDuringDrag && mapStageStatus) {
+          mapStageStatus.textContent = "New map position captured. Confirm the position to lock it before saving the map.";
+        }
       });
       mapMarkerLayer.appendChild(button);
     });
@@ -827,7 +902,12 @@
   }
 
   mapCanvas.addEventListener("click", function (event) {
-    if (!placingMapKind || event.target.closest(".vt-map-edit-marker")) return;
+    if (event.target.closest(".vt-map-edit-marker")) return;
+    if (repositioningMapMarker && selectedMapMarker) {
+      captureMapMarkerPosition(mapCoordinates(event));
+      return;
+    }
+    if (!placingMapKind) return;
     var point = mapCoordinates(event); var destination = selectedScene || scenes[0] || null;
     var marker = {
       id: "map-" + placingMapKind + "-" + Date.now(), kind: placingMapKind,
@@ -836,8 +916,9 @@
       sceneId: placingMapKind === "scene" && destination ? destination.scene_key : "",
     };
     mapConfig.markers.push(marker); selectedMapMarker = marker; placingMapKind = "";
+    repositioningMapMarker = false; mapPositionCaptured = false;
     renderMapMarkers(); fillMapMarkerForm(); syncMapPlacementButtons(); syncMapDirty();
-    if (mapStageStatus) mapStageStatus.textContent = "Marker placed. Drag it to adjust the position or edit its destination in the Map panel.";
+    if (mapStageStatus) mapStageStatus.textContent = "Marker placed. Choose Reposition to move it, or edit its destination in the Map panel.";
   });
 
   mapToggleButton.addEventListener("click", function () { setMapMode(!mapMode, true); });
@@ -845,16 +926,34 @@
     button.addEventListener("click", function () {
       if (!mapMode) setMapMode(true, false);
       placingMapKind = button.dataset.vtAddMapMarker; selectedMapMarker = null;
+      repositioningMapMarker = false; mapPositionCaptured = false;
       fillMapMarkerForm(); renderMapMarkers(); syncMapPlacementButtons();
       message(mapMessage, "Click the map to place the " + (placingMapKind === "main" ? "main hotspot." : "scene hotspot."));
       if (mapStageStatus) mapStageStatus.textContent = "Click the map to place the " + (placingMapKind === "main" ? "main hotspot." : "scene hotspot.");
     });
   });
-  root.querySelector("[data-vt-close-map-marker]").addEventListener("click", function () { selectedMapMarker = null; fillMapMarkerForm(); renderMapMarkers(); });
+  root.querySelector("[data-vt-close-map-marker]").addEventListener("click", function () {
+    selectedMapMarker = null; repositioningMapMarker = false; mapPositionCaptured = false;
+    fillMapMarkerForm(); renderMapMarkers();
+    if (mapStageStatus) mapStageStatus.textContent = "Choose Scene hotspot or Main hotspot in the Map panel, then click the map.";
+  });
+  root.querySelector("[data-vt-reposition-map-marker]").addEventListener("click", function () {
+    if (!selectedMapMarker) return;
+    repositioningMapMarker = true; mapPositionCaptured = false;
+    renderMapMarkers(); fillMapMarkerForm();
+    if (mapStageStatus) mapStageStatus.textContent = "Repositioning is active. Click a new point on the map or drag the selected hotspot.";
+  });
+  root.querySelector("[data-vt-confirm-map-position]").addEventListener("click", function () {
+    if (!selectedMapMarker || !repositioningMapMarker || !mapPositionCaptured) return;
+    repositioningMapMarker = false; mapPositionCaptured = false;
+    renderMapMarkers(); fillMapMarkerForm();
+    if (mapStageStatus) mapStageStatus.textContent = "Map hotspot position locked. Save the map to keep this change in the draft.";
+  });
   root.querySelector("[data-vt-delete-map-marker]").addEventListener("click", function () {
     if (!selectedMapMarker) return;
     mapConfig.markers = mapConfig.markers.filter(function (marker) { return marker !== selectedMapMarker; });
-    selectedMapMarker = null; fillMapMarkerForm(); renderMapMarkers(); syncMapDirty();
+    selectedMapMarker = null; repositioningMapMarker = false; mapPositionCaptured = false;
+    fillMapMarkerForm(); renderMapMarkers(); syncMapDirty();
   });
   ["map_label_en", "map_label_tl", "map_scene_id"].forEach(function (name) {
     mapForm.elements[name].addEventListener("input", function () {
@@ -890,6 +989,10 @@
   });
   mapForm.addEventListener("submit", async function (event) {
     event.preventDefault();
+    if (repositioningMapMarker) {
+      message(mapMessage, "Confirm the repositioned map hotspot before saving.", "warning");
+      return;
+    }
     if (!mapForm.reportValidity()) return;
     var invalidSceneMarker = (mapConfig.markers || []).some(function (marker) { return marker.kind === "scene" && !marker.sceneId; });
     if (invalidSceneMarker) { message(mapMessage, "Every scene hotspot needs a destination scene.", "error"); return; }
@@ -899,7 +1002,7 @@
       mapConfig = result.map; mapBaseline = mapSnapshot(); setDirty("map", false); renderMapEditor();
       message(mapMessage, "Map saved to this working draft. Publish when it is ready for visitors.", "success");
     } catch (error) { message(mapMessage, error.message, "error"); }
-    finally { submit.disabled = false; submit.textContent = "Save map to draft"; }
+    finally { submit.disabled = false; submit.textContent = "Save map to draft"; syncMapPositionActions(); }
   });
 
   sceneList.addEventListener("click", function (event) {

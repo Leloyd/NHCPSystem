@@ -131,7 +131,7 @@
               <label><span>Map image</span><input type="file" accept="image/jpeg,image/png,image/webp" data-vt-map-image /></label>
               <button type="button" data-vt-map-reset-image>Use aerial map</button>
             </div>
-            <p class="vt-map-help">The large map is shown in the main workspace. Choose a marker type, click the map, then drag a marker to fine-tune its position.</p>
+            <p class="vt-map-help">Click an existing hotspot to edit it. Choose Reposition, select its new map position, then confirm the position before saving the map.</p>
             <div class="vt-map-actions"><button type="button" data-vt-add-map-marker="scene" {% if not scenes %}disabled{% endif %}>＋ Scene hotspot</button><button type="button" data-vt-add-map-marker="main">＋ Main hotspot</button></div>
             <section class="vt-map-marker-form" data-vt-map-marker-form hidden>
               <header><div><span data-vt-map-marker-kicker>Map hotspot</span><strong data-vt-map-marker-title>Edit marker</strong></div><button type="button" data-vt-close-map-marker aria-label="Close marker editor">×</button></header>
@@ -139,6 +139,7 @@
               <label><span>Tagalog label</span><input name="map_label_tl" maxlength="120" /></label>
               <label><span>Destination scene</span><select name="map_scene_id"></select><small>Main hotspots may be labels only; scene hotspots require a destination.</small></label>
               <div class="vt-coordinates"><label><span>X position</span><input name="map_x" readonly /></label><label><span>Y position</span><input name="map_y" readonly /></label></div>
+              <div class="vt-placement-actions vt-map-position-actions"><button type="button" data-vt-confirm-map-position disabled>Confirm position</button><button type="button" data-vt-reposition-map-marker>Reposition</button></div>
               <button type="button" class="vt-map-delete" data-vt-delete-map-marker>Delete marker</button>
             </section>
             <label><span>Minimap close-up zoom</span><div class="vt-map-range"><input type="range" name="zoom" min="1" max="8" step="0.1" /><output data-vt-map-zoom>3.2×</output></div></label>
