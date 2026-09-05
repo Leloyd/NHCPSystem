@@ -26,7 +26,7 @@
     var footer = document.querySelector(".admin-auth-footer");
     var glows = document.querySelectorAll(".admin-auth-glow");
     var fields = document.querySelectorAll(
-      ".admin-auth-card-title, .admin-auth-card-copy, .admin-auth-error, .admin-auth-field, .admin-auth-meta, .admin-auth-submit"
+      ".admin-auth-card-title, .admin-auth-card-copy, .admin-auth-error, .admin-auth-warning, .admin-auth-field, .admin-auth-meta, .admin-auth-submit"
     );
 
     if (!panel || !backdrop) {

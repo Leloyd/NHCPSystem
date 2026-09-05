@@ -38,6 +38,9 @@
             {% if error_message %}
             <p class="admin-auth-error" role="alert">{{ error_message }}</p>
             {% endif %}
+            {% if warning_message %}
+            <p class="admin-auth-warning" role="status">{{ warning_message }}</p>
+            {% endif %}
             {% if success_message %}
             <p class="admin-auth-success" role="status">{{ success_message }}</p>
             {% endif %}

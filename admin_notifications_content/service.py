@@ -6,7 +6,12 @@ from flask import current_app
 
 from admin_users_repository import list_active_admin_users
 
-from .emailer import AdminNotificationEmailError, is_admin_notification_email_configured, send_admin_notification_email
+from .emailer import (
+    AdminNotificationEmailError,
+    is_admin_notification_email_configured,
+    send_admin_login_lockout_email,
+    send_admin_notification_email,
+)
 from .repository import create_admin_notifications, record_admin_notification_email_result
 
 
@@ -37,6 +42,30 @@ def dispatch_admin_notification(
         )
     except Exception as exc:  # noqa: BLE001 - this secondary channel must never fail the saved public action
         current_app.logger.warning("Administrator notification dispatch failed safely: %s", exc)
+
+
+def dispatch_admin_login_lockout_alert(**details: Any) -> None:
+    """Email active administrators when login protection first locks a client IP."""
+    try:
+        admin_users = list_active_admin_users()
+        recipient_emails = sorted(
+            {
+                str(item.get("email") or "").strip().lower()
+                for item in admin_users
+                if str(item.get("email") or "").strip()
+            }
+        )
+        if not recipient_emails:
+            current_app.logger.warning("No active administrator email is available for the login security alert.")
+            return
+        if not is_admin_notification_email_configured():
+            current_app.logger.warning("Administrator login security email was not sent because SMTP is not configured.")
+            return
+        send_admin_login_lockout_email(recipient_emails=recipient_emails, **details)
+    except AdminNotificationEmailError as exc:
+        current_app.logger.warning("Administrator login security email failed: %s", exc)
+    except Exception as exc:  # noqa: BLE001 - login protection must survive notification failure
+        current_app.logger.warning("Administrator login security alert failed safely: %s", exc)
 
 
 def _dispatch_admin_notification(

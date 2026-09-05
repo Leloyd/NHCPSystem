@@ -14,6 +14,9 @@
   --auth-danger-bg: #fef2f2;
   --auth-danger-border: #fecaca;
   --auth-danger-text: #dc2626;
+  --auth-warning-bg: #fffbeb;
+  --auth-warning-border: #f2cf75;
+  --auth-warning-text: #75530b;
 }
 
 * {
@@ -172,6 +175,17 @@ body.admin-auth-page {
   background: #edf9f2;
   color: #176743;
   font-size: 0.88rem;
+}
+
+.admin-auth-warning {
+  margin: 0 0 1rem;
+  padding: 0.85rem 0.95rem;
+  border: 1px solid var(--auth-warning-border);
+  border-radius: 0.8rem;
+  background: var(--auth-warning-bg);
+  color: var(--auth-warning-text);
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .admin-auth-form {

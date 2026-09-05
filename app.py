@@ -5,7 +5,7 @@ import re
 import secrets
 import threading
 import time
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
 from urllib.parse import urlparse
@@ -16,7 +16,7 @@ from werkzeug.utils import secure_filename
 
 from admin_users_repository import get_active_admin_user_by_email, touch_admin_account, update_admin_password
 from admin_password_recovery_content import register_admin_password_recovery_routes
-from admin_notifications_content import register_admin_notification_routes
+from admin_notifications_content import dispatch_admin_login_lockout_alert, register_admin_notification_routes
 from analytics_content import load_admin_analytics_dashboard, register_analytics_routes
 from community_content import load_news_community_highlights, register_community_content_routes
 from community_content.service import load_admin_community_highlights
@@ -171,6 +171,7 @@ PUBLIC_CSRF_KEY = "public_csrf"
 ADMIN_LOGIN_RATE_WINDOW_SECONDS = max(60, int(os.getenv("ADMIN_LOGIN_RATE_WINDOW_SECONDS", "900")))
 ADMIN_LOGIN_MAX_ATTEMPTS = max(3, int(os.getenv("ADMIN_LOGIN_MAX_ATTEMPTS", "5")))
 ADMIN_LOGIN_LOCKOUT_SECONDS = max(30, int(os.getenv("ADMIN_LOGIN_LOCKOUT_SECONDS", "900")))
+ADMIN_LOGIN_WARNING_AFTER_ATTEMPTS = 2
 PUBLIC_LOGIN_RATE_WINDOW_SECONDS = max(60, int(os.getenv("PUBLIC_LOGIN_RATE_WINDOW_SECONDS", "900")))
 PUBLIC_LOGIN_MAX_ATTEMPTS = max(3, int(os.getenv("PUBLIC_LOGIN_MAX_ATTEMPTS", "6")))
 PUBLIC_LOGIN_LOCKOUT_SECONDS = max(30, int(os.getenv("PUBLIC_LOGIN_LOCKOUT_SECONDS", "900")))
@@ -873,10 +874,103 @@ def _record_failed_login(client_ip):
                 "locked_until": 0.0,
             }
 
+        was_locked = float(entry.get("locked_until", 0.0)) > now
         entry["attempts"] = int(entry.get("attempts", 0)) + 1
         if entry["attempts"] >= ADMIN_LOGIN_MAX_ATTEMPTS:
             entry["locked_until"] = now + ADMIN_LOGIN_LOCKOUT_SECONDS
         _ADMIN_LOGIN_ATTEMPTS[client_ip] = entry
+        is_locked = float(entry.get("locked_until", 0.0)) > now
+        return {
+            "attempts": entry["attempts"],
+            "remaining": max(0, ADMIN_LOGIN_MAX_ATTEMPTS - entry["attempts"]),
+            "is_locked": is_locked,
+            "just_locked": is_locked and not was_locked,
+            "retry_after_seconds": max(0, int(float(entry.get("locked_until", 0.0)) - now)),
+        }
+
+
+def _describe_admin_login_client():
+    """Return useful, bounded labels derived from untrusted request headers."""
+    user_agent = str(request.headers.get("User-Agent") or "").strip()[:500]
+    lower_agent = user_agent.lower()
+    browser = "Unknown browser"
+    for browser_name, pattern in (
+        ("Microsoft Edge", r"(?:edg|edgios|edga)/([0-9.]+)"),
+        ("Opera", r"(?:opr|opera)/([0-9.]+)"),
+        ("Google Chrome", r"(?:chrome|crios)/([0-9.]+)"),
+        ("Mozilla Firefox", r"(?:firefox|fxios)/([0-9.]+)"),
+        ("Safari", r"version/([0-9.]+).*(?:safari)/"),
+    ):
+        match = re.search(pattern, lower_agent)
+        if match:
+            browser = f"{browser_name} {match.group(1)}"
+            break
+
+    if "iphone" in lower_agent:
+        operating_system = "iOS (iPhone)"
+    elif "ipad" in lower_agent:
+        operating_system = "iPadOS"
+    elif "android" in lower_agent:
+        version = re.search(r"android\s+([0-9.]+)", lower_agent)
+        operating_system = f"Android {version.group(1)}" if version else "Android"
+    elif "windows nt 10.0" in lower_agent:
+        operating_system = "Windows 10 or later"
+    elif "windows" in lower_agent:
+        operating_system = "Windows"
+    elif "mac os x" in lower_agent or "macintosh" in lower_agent:
+        operating_system = "macOS"
+    elif "cros" in lower_agent:
+        operating_system = "ChromeOS"
+    elif "linux" in lower_agent:
+        operating_system = "Linux"
+    else:
+        operating_system = "Unknown operating system"
+
+    mobile_hint = str(request.headers.get("Sec-CH-UA-Mobile") or "").strip()
+    if "ipad" in lower_agent or "tablet" in lower_agent:
+        device_type = "Tablet"
+    elif mobile_hint == "?1" or "mobile" in lower_agent or "iphone" in lower_agent or "android" in lower_agent:
+        device_type = "Mobile phone"
+    else:
+        device_type = "Desktop or laptop"
+
+    return {
+        "browser": browser,
+        "operating_system": operating_system,
+        "device_type": device_type,
+        "user_agent": user_agent or "Not supplied",
+    }
+
+
+def _failed_admin_login_feedback(client_ip, attempted_email):
+    failed_login = _record_failed_login(client_ip)
+    retry_after_seconds = failed_login["retry_after_seconds"]
+    warning_message = None
+    if failed_login["is_locked"]:
+        lockout_minutes = max(1, (ADMIN_LOGIN_LOCKOUT_SECONDS + 59) // 60)
+        error_message = f"Too many failed attempts. Login is temporarily locked for {lockout_minutes} minutes."
+        if failed_login["just_locked"]:
+            client_details = _describe_admin_login_client()
+            occurred_at = datetime.now(timezone.utc).astimezone(
+                timezone(timedelta(hours=8))
+            ).strftime("%B %d, %Y at %I:%M:%S %p (Philippine Time)")
+            dispatch_admin_login_lockout_alert(
+                attempted_email=attempted_email or "Not provided",
+                occurred_at=occurred_at,
+                client_ip=client_ip,
+                failed_attempts=failed_login["attempts"],
+                lockout_minutes=lockout_minutes,
+                **client_details,
+            )
+        return 429, error_message, warning_message, retry_after_seconds
+
+    if failed_login["attempts"] >= ADMIN_LOGIN_WARNING_AFTER_ATTEMPTS:
+        remaining = failed_login["remaining"]
+        warning_message = (
+            f"Security warning: You have {remaining} attempt{'s' if remaining != 1 else ''} remaining "
+            "before login is temporarily locked."
+        )
+    return 401, "Invalid credentials.", warning_message, retry_after_seconds
 
 
 def _clear_failed_logins(client_ip):
@@ -1083,6 +1177,8 @@ def admin_login():
 
     status_code = 200
     error_message = None
+    warning_message = None
+    retry_after_seconds = 0
     if request.args.get("password_reset") == "1":
         success_message = "Your administrator password was reset securely. Sign in with the new password."
     elif request.args.get("password_changed") == "1":
@@ -1137,13 +1233,13 @@ def admin_login():
                         session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
                         return redirect(url_for("admin_dashboard"))
                     else:
-                        _record_failed_login(client_ip)
-                        status_code = 401
-                        error_message = "Invalid credentials."
+                        status_code, error_message, warning_message, retry_after_seconds = (
+                            _failed_admin_login_feedback(client_ip, email)
+                        )
                 else:
-                    _record_failed_login(client_ip)
-                    status_code = 401
-                    error_message = "Invalid credentials."
+                    status_code, error_message, warning_message, retry_after_seconds = (
+                        _failed_admin_login_feedback(client_ip, email)
+                    )
 
     csrf_token = _ensure_admin_csrf_token()
     response = make_response(
@@ -1151,10 +1247,13 @@ def admin_login():
             "admin/AdminLogin.html",
             csrf_token=csrf_token,
             error_message=error_message,
+            warning_message=warning_message,
             success_message=success_message,
         ),
         status_code,
     )
+    if status_code == 429 and retry_after_seconds:
+        response.headers["Retry-After"] = str(retry_after_seconds)
     return response
 
 
