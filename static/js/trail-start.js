@@ -2573,9 +2573,12 @@ updateTrailViewButtons();
 /* --- Starting-point orientation -------------------------------------------
    This is a read-only product tour: the four veil panes blur everything
    except the current control, while one full-screen capture layer prevents
-   the highlighted control from being activated. Add an `image` URL to any
-   step later to replace the AK portrait badge with an Ana Kalang illustration. */
+   the highlighted control from being activated. Completion is versioned so
+   an updated guide can be shown once without repeating the unchanged guide. */
 function setupTrailOnboarding(onComplete) {
+  const GUIDE_VERSION = '2';
+  const GUIDE_COMPLETE_KEY = 'nhcpTrailGuideComplete';
+  const GUIDE_PROGRESS_KEY = `nhcpTrailGuideProgress:v${GUIDE_VERSION}`;
   const overlay = root.querySelector('[data-trail-onboarding]');
   const capture = overlay?.querySelector('[data-trail-onboarding-capture]');
   const spotlight = overlay?.querySelector('[data-trail-onboarding-spotlight]');
@@ -2584,8 +2587,7 @@ function setupTrailOnboarding(onComplete) {
   const title = overlay?.querySelector('[data-trail-onboarding-title]');
   const copy = overlay?.querySelector('[data-trail-onboarding-copy]');
   const progress = overlay?.querySelector('[data-trail-onboarding-progress]');
-  const image = overlay?.querySelector('[data-trail-onboarding-image]');
-  const imageFallback = overlay?.querySelector('[data-trail-onboarding-image-fallback]');
+  const action = overlay?.querySelector('[data-trail-onboarding-action]');
   const veils = {
     top: overlay?.querySelector('.trailx-onboarding__veil--top'),
     right: overlay?.querySelector('.trailx-onboarding__veil--right'),
@@ -2594,16 +2596,26 @@ function setupTrailOnboarding(onComplete) {
   };
   if (!overlay || !capture || !spotlight || !arrow || !card || !title || !copy || wantsStop) return false;
 
+  const storageGet = (storage, key) => {
+    try { return storage?.getItem(key) || ''; }
+    catch { return ''; }
+  };
+  const storageSet = (storage, key, value) => {
+    try { storage?.setItem(key, value); }
+    catch { /* storage can be unavailable in strict privacy modes */ }
+  };
+  const storageRemove = (storage, key) => {
+    try { storage?.removeItem(key); }
+    catch { /* no-op */ }
+  };
+  const alreadyComplete = storageGet(window.sessionStorage, GUIDE_COMPLETE_KEY) === GUIDE_VERSION
+    || storageGet(window.localStorage, GUIDE_COMPLETE_KEY) === GUIDE_VERSION;
+  if (alreadyComplete) return false;
+
   const steps = [
     {
-      title: { en: 'Welcome to the Heritage Trail', tl: 'Maligayang Pagdating sa Landas ng Pamana' },
-      copy: {
-        en: 'Before I begin our journey, let me introduce the controls that will help you explore comfortably. Nothing is clickable during this guide—tap anywhere to continue.',
-        tl: 'Bago natin simulan ang paglalakbay, ipakikilala ko muna ang mga kontrol na tutulong sa iyong paggalugad. Walang mapipindot habang nasa gabay—pindutin kahit saan upang magpatuloy.',
-      },
-    },
-    {
       selectors: ['[data-trail-play]'],
+      audio: 'guide-listen',
       title: { en: 'Listen', tl: 'Makinig' },
       copy: {
         en: 'Use Listen to play or pause my narration. When you resume, the narration continues from where you stopped.',
@@ -2612,6 +2624,7 @@ function setupTrailOnboarding(onComplete) {
     },
     {
       selectors: ['[data-trail-mute]'],
+      audio: 'guide-audio',
       title: { en: 'Audio', tl: 'Audio' },
       copy: {
         en: 'Use the speaker button to mute or restore the narration without losing your place.',
@@ -2619,15 +2632,8 @@ function setupTrailOnboarding(onComplete) {
       },
     },
     {
-      selectors: ['[data-trail-subs]'],
-      title: { en: 'Subtitles', tl: 'Mga Subtitle' },
-      copy: {
-        en: 'Select CC to show or hide the written subtitle for every narration.',
-        tl: 'Piliin ang CC upang ipakita o itago ang nakasulat na subtitle ng bawat salaysay.',
-      },
-    },
-    {
       selectors: ['[data-trail-lang]'],
+      audio: 'guide-language',
       title: { en: 'English or Tagalog', tl: 'English o Tagalog' },
       copy: {
         en: 'Use the language button to switch the trail, subtitles, and narration between English and Tagalog.',
@@ -2635,7 +2641,17 @@ function setupTrailOnboarding(onComplete) {
       },
     },
     {
+      selectors: ['[data-trail-subs]'],
+      audio: 'guide-subtitles',
+      title: { en: 'Subtitles', tl: 'Mga Subtitle' },
+      copy: {
+        en: 'Select CC to show or hide the written subtitle for every narration.',
+        tl: 'Piliin ang CC upang ipakita o itago ang nakasulat na subtitle ng bawat salaysay.',
+      },
+    },
+    {
       selectors: ['[data-trail-textsize]'],
+      audio: 'guide-text-size',
       title: { en: 'Text Size', tl: 'Laki ng Teksto' },
       copy: {
         en: 'Tap A to enlarge the text. The interface automatically limits main text before it can overlap, while subtitles may continue growing.',
@@ -2644,6 +2660,7 @@ function setupTrailOnboarding(onComplete) {
     },
     {
       selectors: ['[data-trail-immersive]'],
+      audio: 'guide-full-view',
       title: { en: 'Full View', tl: 'Buong Tanaw' },
       copy: {
         en: 'Choose Full View when you want the panels to move aside and reveal more of the 360-degree environment.',
@@ -2653,6 +2670,9 @@ function setupTrailOnboarding(onComplete) {
     {
       selectors: ['#trailPano'],
       focus: 'panorama',
+      unobscured: true,
+      demoImmersive: true,
+      audio: 'guide-look-around',
       title: { en: 'Look Around', tl: 'Lumingon sa Paligid' },
       copy: {
         en: 'Drag the 360 view left or right to turn around and inspect the heritage site from every direction.',
@@ -2662,6 +2682,8 @@ function setupTrailOnboarding(onComplete) {
     {
       selectors: ['[data-trail-zoom-in]', '[data-trail-zoom-out]'],
       tools: true,
+      demoImmersive: true,
+      audio: 'guide-zoom',
       title: { en: 'Zoom In and Out', tl: 'Palapit at Palayo' },
       copy: {
         en: 'In Full View, use plus to look closer and minus to widen your view. You may also use a mouse wheel or a supported pinch gesture.',
@@ -2671,6 +2693,8 @@ function setupTrailOnboarding(onComplete) {
     {
       selectors: ['[data-trail-gyro]', '[data-trail-vr]'],
       tools: true,
+      demoImmersive: true,
+      audio: 'guide-gyro-vr',
       title: { en: 'Gyroscope and VR', tl: 'Gyroscope at VR' },
       copy: {
         en: 'On supported devices, Gyro follows your phone movement and VR opens an immersive headset view. An unavailable control stays disabled.',
@@ -2680,6 +2704,8 @@ function setupTrailOnboarding(onComplete) {
     {
       selectors: ['[data-trail-immersive]'],
       panelReturn: true,
+      demoImmersive: true,
+      audio: 'guide-show-panels',
       title: { en: 'Show Panels', tl: 'Ibalik ang mga Panel' },
       copy: {
         en: 'After exploring in Full View, the same button becomes Show Panels. Use it to bring Ana, the story, and the guide controls back.',
@@ -2688,6 +2714,7 @@ function setupTrailOnboarding(onComplete) {
     },
     {
       selectors: ['[data-trail-cancel]'],
+      audio: 'guide-back',
       title: { en: 'Back', tl: 'Bumalik' },
       copy: {
         en: 'Choose Back if you want to leave the starting point and return to the previous page.',
@@ -2696,6 +2723,7 @@ function setupTrailOnboarding(onComplete) {
     },
     {
       selectors: ['[data-trail-begin]'],
+      audio: 'guide-begin',
       title: { en: 'Begin the Trail', tl: 'Simulan ang Landas' },
       copy: {
         en: 'When you are ready, choose Begin the Trail. I will guide you through all ten stops, and you can scroll through each chapter at your own pace.',
@@ -2704,9 +2732,14 @@ function setupTrailOnboarding(onComplete) {
     },
   ];
 
-  let index = 0;
+  const savedProgress = Number.parseInt(storageGet(window.sessionStorage, GUIDE_PROGRESS_KEY), 10);
+  let index = Number.isFinite(savedProgress) ? Math.min(steps.length - 1, Math.max(0, savedProgress)) : 0;
   let active = true;
+  let awaitingStart = true;
   const lastFocused = document.activeElement;
+  const originalImmersive = isImmersive();
+  const guideAudio = typeof Audio !== 'undefined' ? new Audio() : null;
+  if (guideAudio) guideAudio.preload = 'auto';
   const backgroundNodes = Array.from(root.children).filter((element) => element !== overlay);
   const backgroundInertState = new Map(backgroundNodes.map((element) => [element, element.inert]));
 
@@ -2746,7 +2779,13 @@ function setupTrailOnboarding(onComplete) {
     return { left, top, right, bottom, width: right - left, height: bottom - top };
   };
 
-  const positionVeils = (rect) => {
+  const positionVeils = (rect, unobscured = false) => {
+    if (unobscured) {
+      [veils.top, veils.right, veils.bottom, veils.left].forEach((veil) => setRect(veil, 0, 0, 0, 0));
+      spotlight.style.opacity = '0';
+      arrow.style.opacity = '0';
+      return;
+    }
     if (!rect) {
       setRect(veils.top, 0, 0, window.innerWidth, window.innerHeight);
       [veils.right, veils.bottom, veils.left].forEach((veil) => setRect(veil, 0, 0, 0, 0));
@@ -2803,29 +2842,66 @@ function setupTrailOnboarding(onComplete) {
 
   const layout = () => {
     if (!active) return;
-    const rect = targetRect(steps[index]);
-    positionVeils(rect);
-    positionCard(rect);
+    if (awaitingStart) {
+      positionVeils(null);
+      positionCard(null);
+      return;
+    }
+    const step = steps[index];
+    const rect = targetRect(step);
+    positionVeils(rect, Boolean(step.unobscured));
+    positionCard(step.unobscured ? null : rect);
+  };
+
+  const playStepAudio = (step) => {
+    if (!guideAudio || !step.audio) return;
+    guideAudio.pause();
+    try { guideAudio.currentTime = 0; } catch { /* metadata may not be ready */ }
+    guideAudio.src = `${TRAIL_VOICE_BASE}${step.audio}-${state.lang}.mp3`;
+    guideAudio.muted = state.muted;
+    const playing = guideAudio.play();
+    if (playing?.catch) playing.catch(() => { /* missing file or browser policy: keep the written guide */ });
   };
 
   const show = (requested) => {
+    awaitingStart = false;
     index = clamp(requested, 0, steps.length - 1);
     const step = steps[index];
+    root.setAttribute('data-immersive', String(Boolean(step.demoImmersive)));
+    immersiveBtn?.setAttribute('aria-pressed', String(Boolean(step.demoImmersive)));
     root.toggleAttribute('data-onboarding-tools', Boolean(step.tools));
     root.toggleAttribute('data-onboarding-panel-return', Boolean(step.panelReturn));
     title.textContent = localized(step.title);
     copy.textContent = localized(step.copy);
     if (progress) progress.textContent = `${index + 1} / ${steps.length}`;
-    if (image) {
-      const source = step.image || '';
-      image.hidden = !source;
-      if (source) image.src = source;
-      if (imageFallback) imageFallback.hidden = Boolean(source);
-      image.onerror = () => {
-        image.hidden = true;
-        if (imageFallback) imageFallback.hidden = false;
-      };
-    }
+    if (action) action.textContent = localized({
+      en: index === steps.length - 1 ? 'Tap anywhere to finish' : 'Tap anywhere for next',
+      tl: index === steps.length - 1 ? 'Pindutin kahit saan upang matapos' : 'Pindutin kahit saan para sumunod',
+    });
+    storageSet(window.sessionStorage, GUIDE_PROGRESS_KEY, String(index));
+    playStepAudio(step);
+    window.requestAnimationFrame(() => window.requestAnimationFrame(layout));
+  };
+
+  const showPrelude = () => {
+    awaitingStart = true;
+    root.setAttribute('data-immersive', 'false');
+    immersiveBtn?.setAttribute('aria-pressed', 'false');
+    root.removeAttribute('data-onboarding-tools');
+    root.removeAttribute('data-onboarding-panel-return');
+    title.textContent = localized({
+      en: 'A quick guide before we begin',
+      tl: 'Maikling gabay bago tayo magsimula',
+    });
+    copy.textContent = localized({
+      en: 'Tap anywhere to begin. I will briefly introduce each control, and the controls will remain locked while I explain them.',
+      tl: 'Pindutin kahit saan upang magsimula. Maikli kong ipakikilala ang bawat kontrol, at mananatiling naka-lock ang mga ito habang nagpapaliwanag ako.',
+    });
+    if (progress) progress.textContent = localized({ en: `${steps.length} steps`, tl: `${steps.length} hakbang` });
+    if (action) action.textContent = localized({
+      en: 'Tap anywhere to begin',
+      tl: 'Pindutin kahit saan upang magsimula',
+    });
     window.requestAnimationFrame(() => window.requestAnimationFrame(layout));
   };
 
@@ -2835,6 +2911,12 @@ function setupTrailOnboarding(onComplete) {
     root.removeAttribute('data-onboarding');
     root.removeAttribute('data-onboarding-tools');
     root.removeAttribute('data-onboarding-panel-return');
+    root.setAttribute('data-immersive', String(originalImmersive));
+    immersiveBtn?.setAttribute('aria-pressed', String(originalImmersive));
+    guideAudio?.pause();
+    storageSet(window.sessionStorage, GUIDE_COMPLETE_KEY, GUIDE_VERSION);
+    storageSet(window.localStorage, GUIDE_COMPLETE_KEY, GUIDE_VERSION);
+    storageRemove(window.sessionStorage, GUIDE_PROGRESS_KEY);
     backgroundNodes.forEach((element) => { element.inert = backgroundInertState.get(element) || false; });
     overlay.hidden = true;
     window.removeEventListener('resize', layout);
@@ -2844,6 +2926,7 @@ function setupTrailOnboarding(onComplete) {
   };
 
   const next = () => {
+    if (awaitingStart) { show(index); return; }
     if (index >= steps.length - 1) finish();
     else show(index + 1);
   };
@@ -2867,7 +2950,7 @@ function setupTrailOnboarding(onComplete) {
   card.setAttribute('aria-live', 'polite');
   card.setAttribute('aria-atomic', 'true');
   overlay.focus({ preventScroll: true });
-  show(0);
+  showPrelude();
   return true;
 }
 

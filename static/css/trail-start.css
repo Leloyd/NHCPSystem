@@ -3613,6 +3613,15 @@ html.trailx-vr-active body {
   transform: none !important;
   animation: none !important;
 }
+/* The guide changes Full View itself. Keep that demonstration immediate so
+   the next spotlight is measured against the final responsive layout. */
+.trailx[data-onboarding="true"] .trailx__panel,
+.trailx[data-onboarding="true"] .trailx__ana,
+.trailx[data-onboarding="true"] .trailx__bubble,
+.trailx[data-onboarding="true"] .trailx__controls > *,
+.trailx[data-onboarding="true"] .trailx__zoom {
+  transition: none !important;
+}
 .trailx-onboarding__veil {
   position: fixed;
   z-index: 0;
@@ -3663,9 +3672,7 @@ html.trailx-vr-active body {
 .trailx-onboarding__card {
   position: fixed;
   z-index: 3;
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  gap: 0.9rem;
+  display: block;
   width: min(25rem, calc(100vw - 2rem));
   padding: 1rem 1.05rem;
   border: 1px solid rgba(242, 207, 120, 0.62);
@@ -3677,22 +3684,6 @@ html.trailx-vr-active body {
   pointer-events: none;
   transition: left 260ms ease, top 260ms ease;
 }
-.trailx-onboarding__portrait {
-  display: grid;
-  place-items: center;
-  align-self: start;
-  width: 3.35rem;
-  height: 3.35rem;
-  overflow: hidden;
-  border: 1px solid rgba(242, 207, 120, 0.68);
-  border-radius: 50%;
-  background: linear-gradient(145deg, #d4af6a, #7b5424);
-  color: #140d06;
-  box-shadow: 0 0 0 4px rgba(212, 175, 106, 0.1);
-  font: 700 0.78rem/1 "Playfair Display", Georgia, serif;
-  letter-spacing: 0.08em;
-}
-.trailx-onboarding__portrait img { width: 100%; height: 100%; object-fit: cover; }
 .trailx-onboarding__content { min-width: 0; }
 .trailx-onboarding__eyebrow {
   margin: 0 0 0.28rem;
@@ -3759,13 +3750,10 @@ html.trailx-vr-active body {
 
 @media (max-width: 600px) {
   .trailx-onboarding__card {
-    grid-template-columns: 2.75rem minmax(0, 1fr);
-    gap: 0.7rem;
     width: calc(100vw - 1.25rem);
     padding: 0.78rem 0.82rem;
     border-radius: 0.95rem;
   }
-  .trailx-onboarding__portrait { width: 2.75rem; height: 2.75rem; }
   .trailx-onboarding__meta { font-size: 0.5rem; }
 }
 
