@@ -403,6 +403,9 @@ body {
 .story__viewport[data-lite="true"] .story__bubble-text .ana-cursor {
   animation: none !important;
 }
+.story__viewport[data-lite="true"] .story__hint > span {
+  display: none !important;
+}
 .story__viewport[data-lite="true"] .story__bubble,
 .story__viewport[data-lite="true"] .story-btn,
 .story__viewport[data-lite="true"] .story__top,
