@@ -282,6 +282,13 @@ body.admin-auth-page {
   background: #fff;
 }
 
+.admin-auth-field input:disabled {
+  cursor: not-allowed;
+  background: #eef1ef;
+  color: #7b8580;
+  opacity: 0.78;
+}
+
 .admin-auth-password-wrap input {
   padding-right: 5.25rem;
 }
@@ -305,6 +312,11 @@ body.admin-auth-page {
 .admin-auth-toggle:focus-visible {
   color: var(--auth-green-900);
   outline: none;
+}
+
+.admin-auth-toggle:disabled {
+  cursor: not-allowed;
+  opacity: 0.45;
 }
 
 .toggle-label-hide {
@@ -367,6 +379,11 @@ body.admin-auth-page {
   opacity: 0.72;
 }
 
+.admin-auth-submit.is-locked {
+  cursor: not-allowed;
+  background: linear-gradient(135deg, #626d67, #3e4943);
+}
+
 .admin-auth-submit-spinner {
   display: none;
   width: 1rem;
@@ -396,6 +413,18 @@ body.admin-auth-page {
   .admin-auth-submit-spinner {
     animation-duration: 1.4s;
   }
+}
+
+.admin-auth-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .admin-auth-submit--link {

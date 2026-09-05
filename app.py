@@ -857,7 +857,7 @@ def _is_login_rate_limited(client_ip):
             return False, 0
         locked_until = float(entry.get("locked_until", 0.0))
         if locked_until > now:
-            retry_after = max(1, int(locked_until - now))
+            retry_after = max(1, int(locked_until - now + 0.999))
             return True, retry_after
     return False, 0
 
@@ -885,7 +885,7 @@ def _record_failed_login(client_ip):
             "remaining": max(0, ADMIN_LOGIN_MAX_ATTEMPTS - entry["attempts"]),
             "is_locked": is_locked,
             "just_locked": is_locked and not was_locked,
-            "retry_after_seconds": max(0, int(float(entry.get("locked_until", 0.0)) - now)),
+            "retry_after_seconds": max(0, int(float(entry.get("locked_until", 0.0)) - now + 0.999)),
         }
 
 
@@ -1172,13 +1172,17 @@ WEBXR_CONFIG, WEBXR_RUNTIME_SCENE, WEBXR_INIT_ERROR = _initialize_webxr_runtime(
 
 @app.route(ADMIN_LOGIN_PATH, methods=["GET", "POST"])
 def admin_login():
+    is_async_login = request.headers.get("X-Requested-With") == "XMLHttpRequest"
     if _is_admin_authenticated():
+        if is_async_login:
+            return jsonify({"ok": True, "redirect": url_for("admin_dashboard")})
         return redirect(url_for("admin_dashboard"))
 
     status_code = 200
     error_message = None
     warning_message = None
     retry_after_seconds = 0
+    is_limited = False
     if request.args.get("password_reset") == "1":
         success_message = "Your administrator password was reset securely. Sign in with the new password."
     elif request.args.get("password_changed") == "1":
@@ -1186,7 +1190,11 @@ def admin_login():
     else:
         success_message = None
 
-    if request.method == "POST":
+    if request.method == "GET":
+        is_limited, retry_after_seconds = _is_login_rate_limited(_get_client_ip())
+        if is_limited:
+            error_message = "Login is temporarily locked. Wait for the security timer to finish."
+    else:
         if not _is_admin_auth_configured():
             status_code = 503
             error_message = "Login is temporarily unavailable."
@@ -1198,7 +1206,7 @@ def admin_login():
             is_limited, retry_after_seconds = _is_login_rate_limited(client_ip)
             if is_limited:
                 status_code = 429
-                error_message = f"Too many attempts. Try again in {retry_after_seconds} seconds."
+                error_message = "Login is temporarily locked. Wait for the security timer to finish."
             else:
                 email = _normalize_admin_email(request.form.get("email", ""))
                 password = str(request.form.get("password", ""))
@@ -1215,23 +1223,17 @@ def admin_login():
                         if not authenticated_email or not account_version:
                             status_code = 503
                             error_message = "Login is temporarily unavailable."
-                            csrf_token = _ensure_admin_csrf_token()
-                            return make_response(
-                                render_template(
-                                    "admin/AdminLogin.html",
-                                    csrf_token=csrf_token,
-                                    error_message=error_message,
-                                ),
-                                status_code,
-                            )
-                        _clear_failed_logins(client_ip)
-                        session.clear()
-                        session.permanent = True
-                        session[ADMIN_SESSION_KEY] = True
-                        session[ADMIN_SESSION_USER_KEY] = authenticated_email
-                        session[ADMIN_SESSION_VERSION_KEY] = account_version
-                        session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
-                        return redirect(url_for("admin_dashboard"))
+                        else:
+                            _clear_failed_logins(client_ip)
+                            session.clear()
+                            session.permanent = True
+                            session[ADMIN_SESSION_KEY] = True
+                            session[ADMIN_SESSION_USER_KEY] = authenticated_email
+                            session[ADMIN_SESSION_VERSION_KEY] = account_version
+                            session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
+                            if is_async_login:
+                                return jsonify({"ok": True, "redirect": url_for("admin_dashboard")})
+                            return redirect(url_for("admin_dashboard"))
                     else:
                         status_code, error_message, warning_message, retry_after_seconds = (
                             _failed_admin_login_feedback(client_ip, email)
@@ -1241,6 +1243,22 @@ def admin_login():
                         _failed_admin_login_feedback(client_ip, email)
                     )
 
+    lockout_remaining = retry_after_seconds if retry_after_seconds and (is_limited or status_code == 429) else 0
+    if is_async_login:
+        response = jsonify(
+            {
+                "ok": False,
+                "error": error_message,
+                "warning": warning_message,
+                "locked": bool(lockout_remaining),
+                "retry_after_seconds": lockout_remaining,
+            }
+        )
+        response.status_code = status_code
+        if status_code == 429 and retry_after_seconds:
+            response.headers["Retry-After"] = str(retry_after_seconds)
+        return response
+
     csrf_token = _ensure_admin_csrf_token()
     response = make_response(
         render_template(
@@ -1249,6 +1267,7 @@ def admin_login():
             error_message=error_message,
             warning_message=warning_message,
             success_message=success_message,
+            lockout_remaining=lockout_remaining,
         ),
         status_code,
     )

@@ -11,6 +11,7 @@
     <script defer src="{{ url_for('static', filename='admin/js/admin-login.js') }}"></script>
   </head>
   <body class="admin-auth-page">
+    {% set login_locked = (lockout_remaining|default(0)|int) > 0 %}
     <main class="admin-auth-shell" aria-label="Admin authentication area">
       <div class="admin-auth-backdrop" aria-hidden="true"></div>
       <div class="admin-auth-glow admin-auth-glow-a" aria-hidden="true"></div>
@@ -35,21 +36,26 @@
             <h2 id="adminAuthCardHeading" class="admin-auth-card-title">Sign In</h2>
             <p class="admin-auth-card-copy">Enter your credentials to access the dashboard.</p>
 
-            {% if error_message %}
             <p
               class="admin-auth-error"
               role="alert"
+              data-admin-login-error
               {% if error_message == "Invalid credentials." %}data-auto-dismiss="3000"{% endif %}
-            >{{ error_message }}</p>
-            {% endif %}
-            {% if warning_message %}
-            <p class="admin-auth-warning" role="status">{{ warning_message }}</p>
-            {% endif %}
+              {% if not error_message %}hidden{% endif %}
+            >{{ error_message or "" }}</p>
+            <p class="admin-auth-warning" role="status" data-admin-login-warning {% if not warning_message %}hidden{% endif %}>{{ warning_message or "" }}</p>
             {% if success_message %}
             <p class="admin-auth-success" role="status">{{ success_message }}</p>
             {% endif %}
 
-            <form class="admin-auth-form" method="post" novalidate>
+            <form
+              class="admin-auth-form"
+              method="post"
+              action="{{ url_for('admin_login') }}"
+              data-admin-login-form
+              data-lockout-seconds="{{ lockout_remaining|default(0)|int }}"
+              novalidate
+            >
               <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
 
               <div class="admin-auth-field">
@@ -71,6 +77,8 @@
                     required
                     maxlength="254"
                     aria-required="true"
+                    data-login-lockable
+                    {% if login_locked %}disabled{% endif %}
                     value="{{ request.form.get('email', '') }}"
                     placeholder="Enter admin email"
                   />
@@ -96,6 +104,8 @@
                     required
                     maxlength="1024"
                     aria-required="true"
+                    data-login-lockable
+                    {% if login_locked %}disabled{% endif %}
                     placeholder="Enter password"
                   />
                   <button
@@ -105,6 +115,8 @@
                     aria-label="Show password"
                     aria-controls="adminPassword"
                     aria-pressed="false"
+                    data-login-lockable
+                    {% if login_locked %}disabled{% endif %}
                   >
                     <span class="toggle-label toggle-label-show">Show</span>
                     <span class="toggle-label toggle-label-hide">Hide</span>
@@ -117,10 +129,17 @@
                 <span>Server-side authenticated</span>
               </div>
 
-              <button type="submit" class="admin-auth-submit" data-admin-login-submit aria-live="polite">
+              <button
+                type="submit"
+                class="admin-auth-submit{% if login_locked %} is-locked{% endif %}"
+                data-admin-login-submit
+                data-login-lockable
+                {% if login_locked %}disabled{% endif %}
+              >
                 <span class="admin-auth-submit-spinner" aria-hidden="true"></span>
-                <span data-admin-login-submit-label>Sign In to Dashboard</span>
+                <span data-admin-login-submit-label>{% if login_locked %}Login temporarily locked{% else %}Sign In to Dashboard{% endif %}</span>
               </button>
+              <span class="admin-auth-sr-only" data-admin-login-announcement aria-live="polite"></span>
             </form>
           </div>
         </section>

@@ -13,57 +13,196 @@
     });
   }
 
+  function hideMessage(message) {
+    if (!message) return;
+    window.clearTimeout(message._adminDismissTimer);
+    message.classList.remove("is-dismissing");
+    message.hidden = true;
+    message.textContent = "";
+  }
+
+  function showMessage(message, text, dismissAfter) {
+    if (!message) return;
+    if (!text) {
+      hideMessage(message);
+      return;
+    }
+    window.clearTimeout(message._adminDismissTimer);
+    message.textContent = text;
+    message.hidden = false;
+    message.classList.remove("is-dismissing");
+    if (dismissAfter > 0) {
+      message._adminDismissTimer = window.setTimeout(function () {
+        message.classList.add("is-dismissing");
+        message._adminDismissTimer = window.setTimeout(function () {
+          hideMessage(message);
+        }, 230);
+      }, dismissAfter);
+    }
+  }
+
   function setupDismissibleMessages() {
     document.querySelectorAll("[data-auto-dismiss]").forEach(function (message) {
       var delay = Number.parseInt(message.getAttribute("data-auto-dismiss") || "3000", 10);
-      window.setTimeout(function () {
-        message.classList.add("is-dismissing");
-        window.setTimeout(function () {
-          message.hidden = true;
-        }, 230);
-      }, Number.isFinite(delay) ? delay : 3000);
+      showMessage(message, message.textContent, Number.isFinite(delay) ? delay : 3000);
     });
   }
 
-  function resetSubmitState(form) {
+  function formatRemainingTime(totalSeconds) {
+    var safeSeconds = Math.max(0, Math.ceil(totalSeconds));
+    var minutes = Math.floor(safeSeconds / 60);
+    var seconds = String(safeSeconds % 60).padStart(2, "0");
+    return minutes + ":" + seconds;
+  }
+
+  function setReadyState(form) {
     var submitButton = form.querySelector("[data-admin-login-submit]");
     var submitLabel = form.querySelector("[data-admin-login-submit-label]");
     form.removeAttribute("data-submitting");
     form.removeAttribute("aria-busy");
+    form.removeAttribute("data-lockout-active");
+    form.querySelectorAll("[data-login-lockable]").forEach(function (control) {
+      control.disabled = false;
+    });
     if (submitButton) {
-      submitButton.disabled = false;
-      submitButton.classList.remove("is-loading");
+      submitButton.classList.remove("is-loading", "is-locked");
     }
     if (submitLabel) {
       submitLabel.textContent = "Sign In to Dashboard";
     }
   }
 
+  function setSubmittingState(form) {
+    form.setAttribute("data-submitting", "true");
+    form.setAttribute("aria-busy", "true");
+    var submitButton = form.querySelector("[data-admin-login-submit]");
+    var submitLabel = form.querySelector("[data-admin-login-submit-label]");
+    if (submitButton) {
+      submitButton.disabled = true;
+      submitButton.classList.add("is-loading");
+    }
+    if (submitLabel) {
+      submitLabel.textContent = "Signing in…";
+    }
+  }
+
+  function startLockout(form, totalSeconds) {
+    var seconds = Math.max(1, Number.parseInt(totalSeconds || "0", 10) || 1);
+    var submitButton = form.querySelector("[data-admin-login-submit]");
+    var submitLabel = form.querySelector("[data-admin-login-submit-label]");
+    var passwordInput = form.querySelector('input[name="password"]');
+    var errorMessage = document.querySelector("[data-admin-login-error]");
+    var warningMessage = document.querySelector("[data-admin-login-warning]");
+    var announcement = form.querySelector("[data-admin-login-announcement]");
+
+    window.clearInterval(form._adminLockoutTimer);
+    form.removeAttribute("data-submitting");
+    form.removeAttribute("aria-busy");
+    form.setAttribute("data-lockout-active", "true");
+    form.querySelectorAll("[data-login-lockable]").forEach(function (control) {
+      control.disabled = true;
+    });
+    if (passwordInput) passwordInput.value = "";
+    if (submitButton) submitButton.classList.remove("is-loading");
+    if (submitButton) submitButton.classList.add("is-locked");
+    if (announcement) {
+      announcement.textContent = "Administrator login is temporarily locked. The form will unlock automatically.";
+    }
+
+    var unlockAt = Date.now() + seconds * 1000;
+    form.setAttribute("data-lockout-until", String(unlockAt));
+
+    function updateTimer() {
+      var remaining = Math.max(0, Math.ceil((unlockAt - Date.now()) / 1000));
+      form.setAttribute("data-lockout-seconds", String(remaining));
+      if (remaining > 0) {
+        if (submitLabel) submitLabel.textContent = "Try again in " + formatRemainingTime(remaining);
+        return;
+      }
+
+      window.clearInterval(form._adminLockoutTimer);
+      form.removeAttribute("data-lockout-until");
+      form.setAttribute("data-lockout-seconds", "0");
+      setReadyState(form);
+      hideMessage(errorMessage);
+      showMessage(warningMessage, "The temporary login lock has ended. You may sign in again.", 4000);
+      if (announcement) announcement.textContent = "The login form is available again.";
+    }
+
+    updateTimer();
+    form._adminLockoutTimer = window.setInterval(updateTimer, 1000);
+  }
+
   function setupSubmitGuard() {
-    document.querySelectorAll(".admin-auth-form").forEach(function (form) {
-      resetSubmitState(form);
+    document.querySelectorAll("[data-admin-login-form]").forEach(function (form) {
+      var initialLockout = Number.parseInt(form.getAttribute("data-lockout-seconds") || "0", 10);
+      if (initialLockout > 0) {
+        startLockout(form, initialLockout);
+      } else {
+        setReadyState(form);
+      }
+
       form.addEventListener("submit", function (event) {
-        if (form.hasAttribute("data-submitting")) {
+        if (form.hasAttribute("data-submitting") || form.hasAttribute("data-lockout-active")) {
           event.preventDefault();
           return;
         }
 
-        form.setAttribute("data-submitting", "true");
-        form.setAttribute("aria-busy", "true");
-        var submitButton = form.querySelector("[data-admin-login-submit]");
-        var submitLabel = form.querySelector("[data-admin-login-submit-label]");
-        if (submitButton) {
-          submitButton.disabled = true;
-          submitButton.classList.add("is-loading");
+        if (typeof window.fetch !== "function") {
+          setSubmittingState(form);
+          return;
         }
-        if (submitLabel) {
-          submitLabel.textContent = "Signing in…";
-        }
+
+        event.preventDefault();
+        var formData = new FormData(form);
+        setSubmittingState(form);
+        var errorMessage = document.querySelector("[data-admin-login-error]");
+        var warningMessage = document.querySelector("[data-admin-login-warning]");
+
+        window.fetch(form.action || window.location.href, {
+          method: "POST",
+          body: formData,
+          credentials: "same-origin",
+          headers: {
+            Accept: "application/json",
+            "X-Requested-With": "XMLHttpRequest",
+          },
+        }).then(function (response) {
+          return response.json().then(function (payload) {
+            return { response: response, payload: payload };
+          });
+        }).then(function (result) {
+          var payload = result.payload || {};
+          if (result.response.ok && payload.ok && payload.redirect) {
+            window.location.assign(payload.redirect);
+            return;
+          }
+
+          var errorText = payload.error || "Sign in could not be completed. Please try again.";
+          showMessage(errorMessage, errorText, errorText === "Invalid credentials." ? 3000 : 0);
+          showMessage(warningMessage, payload.warning || "", 0);
+          if (payload.locked && payload.retry_after_seconds > 0) {
+            startLockout(form, payload.retry_after_seconds);
+          } else {
+            setReadyState(form);
+          }
+        }).catch(function () {
+          showMessage(errorMessage, "The sign-in request could not be completed. Check your connection and try again.", 0);
+          hideMessage(warningMessage);
+          setReadyState(form);
+        });
       });
     });
 
     window.addEventListener("pageshow", function () {
-      document.querySelectorAll(".admin-auth-form").forEach(resetSubmitState);
+      document.querySelectorAll("[data-admin-login-form]").forEach(function (form) {
+        var unlockAt = Number.parseInt(form.getAttribute("data-lockout-until") || "0", 10);
+        if (unlockAt > Date.now()) {
+          startLockout(form, Math.ceil((unlockAt - Date.now()) / 1000));
+        } else {
+          setReadyState(form);
+        }
+      });
     });
   }
 
