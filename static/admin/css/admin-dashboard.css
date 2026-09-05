@@ -11773,6 +11773,7 @@ body.admin-settings-result-open {
   color: #929a95;
   font-size: 0.48rem;
   text-align: center;
+  white-space: nowrap;
 }
 
 .admin-traffic-legend {

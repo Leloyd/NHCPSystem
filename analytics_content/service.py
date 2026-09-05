@@ -283,7 +283,7 @@ def build_analytics_dashboard(
             {
                 "date": key,
                 "label": day.strftime("%b %d"),
-                "short_label": day.strftime("%d"),
+                "short_label": day.strftime("%b %d"),
                 "events": count,
                 "visitors": len({value for value in daily_visitors.get(key, set()) if value}),
                 "height": max(3, round((count / maximum_daily) * 100)) if maximum_daily else 3,
