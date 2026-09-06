@@ -46,7 +46,7 @@ from online_gallery_content import (
 )
 from online_gallery_content.service import load_admin_online_gallery_items
 from participation_submissions_content import load_admin_participation_submissions, register_participation_submission_routes
-from public_users_repository import get_public_user_profile_by_id
+from public_users_repository import accept_public_user_terms_after_login, get_public_user_profile_by_id
 from supabase_storage import delete_public_image, resolve_public_image_url, upload_public_file, upload_public_image
 from media_upload_content import register_media_upload_routes
 from supabase_client import is_supabase_configured
@@ -68,8 +68,12 @@ from legal_content import (
     PUBLIC_TERMS_REVIEW_SESSION_KEY,
     PUBLIC_TERMS_VERSION,
     accept_current_public_terms,
+    clear_public_terms_login,
     clear_public_terms_signup_state,
     current_public_terms_acceptance,
+    current_public_terms_login,
+    stage_public_terms_login,
+    user_has_current_public_terms,
 )
 from webxr_progress_content import (
     collect_webxr_item,
@@ -1752,6 +1756,7 @@ def _is_public_csrf_valid(submitted_token):
 
 
 def _set_public_user_session(user_id):
+    clear_public_terms_login(session)
     session.permanent = True
     session[PUBLIC_SESSION_KEY] = True
     session[PUBLIC_SESSION_USER_ID_KEY] = int(user_id)
@@ -1801,6 +1806,58 @@ def _get_current_public_user():
 
 def _is_public_authenticated():
     return _get_current_public_user() is not None
+
+
+@app.before_request
+def _enforce_current_public_terms():
+    """Move legacy/stale public sessions behind the Terms acceptance gate."""
+    if session.get(PUBLIC_SESSION_KEY) is not True:
+        return None
+    if request.path == ADMIN_ROUTE_PREFIX:
+        return None
+    if request.path.startswith(
+        (
+            f"{ADMIN_ROUTE_PREFIX}/",
+            "/static/",
+            "/images/",
+            "/audio/",
+            "/videos/",
+            "/public/",
+            "/360VirtualTour/",
+            "/360Hotspots/",
+            "/webxr/runtime/",
+            "/webxr/static/",
+            "/webxr/vendor/",
+        )
+    ):
+        return None
+    if request.endpoint in {"accept_terms_and_conditions", "decline_terms_and_conditions", "public_logout"}:
+        return None
+
+    user = _get_current_public_user()
+    if not user or user_has_current_public_terms(user):
+        return None
+
+    if request.method in {"GET", "HEAD"}:
+        raw_next = request.full_path[:-1] if request.full_path.endswith("?") else request.full_path
+        next_url = _safe_terms_return_url(raw_next, default=url_for("account_profile"))
+    else:
+        next_url = url_for("account_profile")
+
+    clear_public_terms_signup_state(session)
+    _clear_public_user_session()
+    stage_public_terms_login(session, user, next_url)
+    gate_url = url_for("terms_and_conditions", intent="account")
+    if request.path.startswith("/api/") or request.headers.get("X-Requested-With") == "XMLHttpRequest":
+        return jsonify(
+            {
+                "ok": False,
+                "terms_acceptance_required": True,
+                "redirect_url": gate_url,
+                "error": "Please accept the current Terms and Conditions to continue.",
+            }
+        ), 428
+    return redirect(gate_url)
 
 
 def _public_login_required(view_func):
@@ -2518,16 +2575,29 @@ def support():
 @app.route("/terms-and-conditions")
 def terms_and_conditions():
     signup_intent = str(request.args.get("intent") or "").strip().lower() == "signup"
+    account_intent = str(request.args.get("intent") or "").strip().lower() == "account"
+    pending_login = current_public_terms_login(session)
+    current_user = _get_current_public_user()
+    if account_intent and not pending_login:
+        return redirect(
+            url_for(
+                "public_login",
+                error="Your Terms review session expired. Please sign in again.",
+                next=url_for("account_profile"),
+            )
+        )
     return_to = _safe_terms_return_url(request.args.get("return_to"), default=url_for("index"))
     next_url = _safe_terms_return_url(request.args.get("next"), default=url_for("account_profile"))
-    if signup_intent:
+    if signup_intent and not pending_login:
         session[PUBLIC_TERMS_REVIEW_SESSION_KEY] = {"return_to": return_to, "next": next_url}
     response = make_response(
         render_template(
             "TermsConditions.html",
             terms_version=PUBLIC_TERMS_VERSION,
             terms_effective_date=PUBLIC_TERMS_EFFECTIVE_DATE,
-            terms_signup_context=signup_intent,
+            terms_signup_context=signup_intent and not bool(pending_login),
+            terms_account_context=bool(pending_login),
+            terms_current_user_accepted=user_has_current_public_terms(current_user),
             terms_signup_already_accepted=bool(current_public_terms_acceptance(session)),
         )
     )
@@ -2563,6 +2633,50 @@ def _terms_signup_return_url(return_to, next_url):
 def accept_terms_and_conditions():
     if not _is_public_csrf_valid(request.form.get("csrf_token")):
         return jsonify({"ok": False, "error": "Invalid request."}), 400
+
+    pending_login = current_public_terms_login(session)
+    if pending_login:
+        user = get_public_user_profile_by_id(int(pending_login["user_id"]))
+        account_version = str(pending_login.get("account_version") or "")
+        if (
+            not user
+            or not bool(user.get("is_active"))
+            or not account_version
+            or not hmac.compare_digest(str(user.get("updated_at") or ""), account_version)
+        ):
+            clear_public_terms_login(session)
+            _clear_public_user_session()
+            return redirect(
+                url_for(
+                    "public_login",
+                    error="Your account changed while the Terms were open. Please sign in again.",
+                    next=url_for("account_profile"),
+                )
+            )
+
+        accepted_at = datetime.now(timezone.utc).isoformat()
+        accepted_user = accept_public_user_terms_after_login(
+            int(user["id"]),
+            expected_updated_at=account_version,
+            terms_version=PUBLIC_TERMS_VERSION,
+            accepted_at=accepted_at,
+        )
+        if not accepted_user:
+            clear_public_terms_login(session)
+            _clear_public_user_session()
+            return redirect(
+                url_for(
+                    "public_login",
+                    error="Your account changed while the Terms were open. Please sign in again.",
+                    next=url_for("account_profile"),
+                )
+            )
+        next_url = _safe_terms_return_url(pending_login.get("next"), default=url_for("account_profile"))
+        clear_public_terms_login(session)
+        clear_public_terms_signup_state(session)
+        _set_public_user_session(int(user["id"]))
+        return redirect(next_url)
+
     review = session.get(PUBLIC_TERMS_REVIEW_SESSION_KEY)
     if not isinstance(review, dict):
         return redirect(url_for("terms_and_conditions"))
@@ -2577,6 +2691,11 @@ def accept_terms_and_conditions():
 def decline_terms_and_conditions():
     if not _is_public_csrf_valid(request.form.get("csrf_token")):
         return jsonify({"ok": False, "error": "Invalid request."}), 400
+    if current_public_terms_login(session):
+        clear_public_terms_login(session)
+        clear_public_terms_signup_state(session)
+        _clear_public_user_session()
+        return redirect(url_for("index", terms="not-accepted"))
     review = session.get(PUBLIC_TERMS_REVIEW_SESSION_KEY)
     return_to = review.get("return_to") if isinstance(review, dict) else url_for("index")
     clear_public_terms_signup_state(session)

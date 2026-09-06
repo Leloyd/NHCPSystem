@@ -59,8 +59,6 @@ CREATE TABLE public.public_users (
   username text NOT NULL UNIQUE,
   password_hash text NOT NULL,
   full_name text NOT NULL,
-  phone_number text NOT NULL DEFAULT ''::text,
-  organization text NOT NULL DEFAULT ''::text,
   is_active boolean NOT NULL DEFAULT true,
   last_login_at timestamp with time zone,
   email_verified_at timestamp with time zone,
@@ -87,10 +85,26 @@ CREATE TABLE public.public_users (
   profile_picture text,
   theme_preference text NOT NULL DEFAULT 'light'::text CHECK (theme_preference = ANY (ARRAY['light'::text, 'dark'::text])),
   language_preference text NOT NULL DEFAULT 'en'::text CHECK (language_preference = ANY (ARRAY['en'::text, 'tl'::text])),
+  terms_version text,
+  terms_accepted_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT public_users_pkey PRIMARY KEY (id),
-  CONSTRAINT public_users_oauth_subject_key UNIQUE (oauth_subject)
+  CONSTRAINT public_users_oauth_subject_key UNIQUE (oauth_subject),
+  CONSTRAINT public_users_terms_acceptance_pair_check CHECK (
+    (terms_version IS NULL AND terms_accepted_at IS NULL)
+    OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
+  )
+);
+CREATE TABLE public.public_terms_acceptances (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  user_id bigint NOT NULL,
+  terms_version text NOT NULL CHECK (char_length(terms_version) BETWEEN 1 AND 40),
+  accepted_at timestamp with time zone NOT NULL,
+  recorded_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT public_terms_acceptances_pkey PRIMARY KEY (id),
+  CONSTRAINT public_terms_acceptances_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id) ON DELETE CASCADE,
+  CONSTRAINT public_terms_acceptances_user_version_key UNIQUE (user_id, terms_version)
 );
 CREATE TABLE public.user_bookmarks (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,

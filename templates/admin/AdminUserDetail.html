@@ -76,7 +76,7 @@
                   </span>
                   <div>
                     <h3>Identity &amp; Profile</h3>
-                    <p>Contact details and information provided by the visitor.</p>
+                    <p>Identity and profile information provided by the visitor.</p>
                   </div>
                 </header>
 
@@ -92,14 +92,6 @@
                   <div>
                     <dt>Email address</dt>
                     <dd>{{ user.email }}</dd>
-                  </div>
-                  <div>
-                    <dt>Phone number</dt>
-                    <dd>{{ user.phone_display }}</dd>
-                  </div>
-                  <div>
-                    <dt>Organization</dt>
-                    <dd>{{ user.organization_display }}</dd>
                   </div>
                   <div>
                     <dt>Roles</dt>
@@ -139,6 +131,18 @@
                   <div>
                     <dt>Onboarding</dt>
                     <dd>{{ user.onboarding_label }}</dd>
+                  </div>
+                  <div>
+                    <dt>Terms agreement</dt>
+                    <dd>{{ user.terms_label }}</dd>
+                  </div>
+                  <div>
+                    <dt>Accepted version</dt>
+                    <dd>{{ user.terms_version_display }}</dd>
+                  </div>
+                  <div>
+                    <dt>Terms accepted on</dt>
+                    <dd>{{ user.display_terms_accepted_at }}</dd>
                   </div>
                   <div>
                     <dt>Joined</dt>

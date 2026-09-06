@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 PUBLIC_USERS_TABLE = "public_users"
 PUBLIC_USER_PROFILE_FIELDS = (
-    "id, email, username, full_name, phone_number, organization, is_active, last_login_at, "
+    "id, email, username, full_name, is_active, last_login_at, terms_version, terms_accepted_at, "
     "email_verified_at, onboarding_completed_at, website_use_case, profile_roles, location_text, country_text, province_text, city_text, auth_provider, "
     "profile_picture, theme_preference, language_preference, local_password_enabled, created_at, updated_at"
 )
@@ -156,6 +156,39 @@ def update_public_user(user_id: int, payload: dict[str, Any]) -> dict[str, Any]:
     if not rows:
         raise RuntimeError("Supabase did not return the updated public user row.")
     return rows[0]
+
+
+def accept_public_user_terms_after_login(
+    user_id: int,
+    *,
+    expected_updated_at: str,
+    terms_version: str,
+    accepted_at: str,
+) -> dict[str, Any] | None:
+    """Accept Terms only if the verified account snapshot is still current.
+
+    The conditional update closes the gap between credential verification and
+    agreement: an administrator deactivation or security update that changes
+    ``updated_at`` makes this return ``None`` instead of opening a session.
+    """
+    client = get_supabase_client()
+    response = (
+        client.table(PUBLIC_USERS_TABLE)
+        .update(
+            {
+                "terms_version": str(terms_version),
+                "terms_accepted_at": str(accepted_at),
+                "last_login_at": str(accepted_at),
+                "updated_at": str(accepted_at),
+            }
+        )
+        .eq("id", int(user_id))
+        .eq("is_active", True)
+        .eq("updated_at", str(expected_updated_at))
+        .execute()
+    )
+    rows = list(response.data or [])
+    return rows[0] if rows else None
 
 
 def delete_public_user(user_id: int) -> None:

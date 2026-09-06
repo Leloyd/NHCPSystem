@@ -1894,8 +1894,9 @@
       detailFullLink.href = fallbackHref || "/_admin/users/" + encodeURIComponent(user.id);
 
       setDetailText("email", user.email);
-      setDetailText("phone_display", user.phone_display);
-      setDetailText("organization_display", user.organization_display);
+      setDetailText("terms_label", user.terms_label);
+      setDetailText("terms_version_display", user.terms_version_display);
+      setDetailText("display_terms_accepted_at", user.display_terms_accepted_at);
       setDetailText("roles_display", user.roles_display);
       setDetailText("use_case_display", user.use_case_display);
       setDetailText("location_display", user.location_display);

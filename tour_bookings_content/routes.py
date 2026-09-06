@@ -42,9 +42,9 @@ def _parse_nonnegative_int(raw_value: Any, *, label: str) -> int:
 def _validate_tour_booking_payload(form, *, current_user: dict[str, Any]) -> dict[str, Any]:
     visit_date = str(form.get("visit_date") or "").strip()
     booking_type = str(form.get("booking_type") or "general_tour").strip().lower()
-    institution_name = str(form.get("institution_name") or current_user.get("organization") or "").strip()
+    institution_name = str(form.get("institution_name") or "").strip()
     contact_person = str(form.get("contact_person") or current_user.get("full_name") or "").strip()
-    contact_number = str(form.get("contact_number") or current_user.get("phone_number") or "").strip()
+    contact_number = str(form.get("contact_number") or "").strip()
     tour_agency = str(form.get("tour_agency") or "").strip()
     location = str(form.get("location") or "Museo ng Libingan sa Ilalim ng Lupa").strip()
     male_visitors = _parse_nonnegative_int(form.get("male_visitors"), label="Male visitors")

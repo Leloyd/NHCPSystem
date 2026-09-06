@@ -53,7 +53,7 @@
                   <span class="admin-users-search-icon" aria-hidden="true">
                     <svg viewBox="0 0 24 24"><path d="M10 4a6 6 0 1 1 0 12 6 6 0 0 1 0-12Zm0-2a8 8 0 1 0 4.9 14.32l4.39 4.39 1.41-1.41-4.39-4.39A8 8 0 0 0 10 2Z"></path></svg>
                   </span>
-                  <input id="adminUsersSearch" type="search" name="q" value="{{ search_query }}" placeholder="Search name, email, or username…" maxlength="128" />
+                  <input id="adminUsersSearch" type="search" name="q" value="{{ search_query }}" placeholder="Search name, email, username, or Terms status…" maxlength="128" />
                 </label>
                 <button type="submit" class="admin-users-search-button">Search</button>
                 <a href="{{ url_for('admin_users', filter=status_filter) }}" class="admin-users-clear-search" data-users-clear-search{% if not search_query %} hidden{% endif %}>Clear</a>
@@ -66,7 +66,7 @@
                   <tr>
                     <th>User</th>
                     <th>Email</th>
-                    <th>Organization</th>
+                    <th>Terms</th>
                     <th>Verified</th>
                     <th>Status</th>
                     <th>Joined</th>
@@ -79,7 +79,7 @@
                     data-user-row
                     data-user-id="{{ user.id }}"
                     data-user-status="{{ 'active' if user.is_active else 'deactivated' }}"
-                    data-user-search="{{ (user.display_name ~ ' ' ~ user.username ~ ' ' ~ user.email ~ ' ' ~ user.organization_display)|lower }}"
+                    data-user-search="{{ (user.display_name ~ ' ' ~ user.username ~ ' ' ~ user.email ~ ' ' ~ user.terms_label)|lower }}"
                     {% if user.id|int not in visible_user_ids %}hidden{% endif %}
                   >
                     <td>
@@ -92,7 +92,7 @@
                       </div>
                     </td>
                     <td><span class="admin-user-email">{{ user.email }}</span></td>
-                    <td><span class="admin-user-muted">{{ user.organization_display }}</span></td>
+                    <td><span class="admin-status-badge {% if user.has_current_terms %}is-published{% else %}is-draft{% endif %}">{{ user.terms_label }}</span></td>
                     <td><span class="admin-status-badge {% if user.is_verified %}is-published{% else %}is-draft{% endif %}">{{ user.verified_label }}</span></td>
                     <td><span class="admin-status-badge {% if user.is_active %}is-published{% else %}is-cancelled{% endif %}" data-user-status-badge>{{ user.status_label }}</span></td>
                     <td><span class="admin-user-muted">{{ user.display_created }}</span></td>
@@ -172,8 +172,9 @@
 
               <div class="admin-user-detail-grid">
                 <div><span>Email address</span><strong data-user-detail-field="email"></strong></div>
-                <div><span>Phone number</span><strong data-user-detail-field="phone_display"></strong></div>
-                <div><span>Organization</span><strong data-user-detail-field="organization_display"></strong></div>
+                <div><span>Terms agreement</span><strong data-user-detail-field="terms_label"></strong></div>
+                <div><span>Accepted version</span><strong data-user-detail-field="terms_version_display"></strong></div>
+                <div><span>Accepted on</span><strong data-user-detail-field="display_terms_accepted_at"></strong></div>
                 <div><span>Roles</span><strong data-user-detail-field="roles_display"></strong></div>
                 <div><span>Website use case</span><strong data-user-detail-field="use_case_display"></strong></div>
                 <div><span>Location</span><strong data-user-detail-field="location_display"></strong></div>

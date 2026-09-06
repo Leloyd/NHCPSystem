@@ -6,6 +6,7 @@ from typing import Any
 
 from flask import current_app
 
+from legal_content import PUBLIC_TERMS_VERSION
 from public_users_repository import get_public_user_by_id, list_public_users
 from supabase_client import SupabaseConfigError, is_supabase_configured
 
@@ -59,8 +60,6 @@ def prepare_public_user(item: dict[str, Any] | None) -> dict[str, Any]:
 
     full_name = str(prepared.get("full_name") or "").strip()
     username = str(prepared.get("username") or "").strip()
-    organization = str(prepared.get("organization") or "").strip()
-    phone_number = str(prepared.get("phone_number") or "").strip()
     use_case = str(prepared.get("website_use_case") or "").strip()
     auth_provider = str(prepared.get("auth_provider") or "password").strip().lower()
     roles = _parse_roles(prepared.get("profile_roles"))
@@ -69,8 +68,6 @@ def prepare_public_user(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared["status_label"] = "Active" if prepared["is_active"] else "Deactivated"
     prepared["display_name"] = full_name or username or "Unnamed user"
     prepared["username"] = username
-    prepared["organization_display"] = organization or "—"
-    prepared["phone_display"] = phone_number or "—"
     prepared["use_case_display"] = use_case or "—"
     prepared["roles_list"] = roles
     prepared["roles_display"] = ", ".join(roles) if roles else "—"
@@ -81,6 +78,19 @@ def prepare_public_user(item: dict[str, Any] | None) -> dict[str, Any]:
     prepared["verified_label"] = "Verified" if prepared["is_verified"] else "Unverified"
     prepared["is_onboarded"] = bool(str(prepared.get("onboarding_completed_at") or "").strip())
     prepared["onboarding_label"] = "Completed" if prepared["is_onboarded"] else "Not completed"
+
+    accepted_version = str(prepared.get("terms_version") or "").strip()
+    accepted_at = str(prepared.get("terms_accepted_at") or "").strip()
+    prepared["has_current_terms"] = accepted_version == PUBLIC_TERMS_VERSION and bool(accepted_at)
+    prepared["has_any_terms"] = bool(accepted_version and accepted_at)
+    if prepared["has_current_terms"]:
+        prepared["terms_label"] = "Accepted"
+    elif prepared["has_any_terms"]:
+        prepared["terms_label"] = "Update required"
+    else:
+        prepared["terms_label"] = "Not accepted"
+    prepared["terms_version_display"] = accepted_version or "—"
+    prepared["display_terms_accepted_at"] = _format_datetime(accepted_at, empty="Not accepted")
 
     prepared["display_created"] = _format_datetime(prepared.get("created_at"))
     prepared["display_updated"] = _format_datetime(prepared.get("updated_at"))
@@ -127,7 +137,7 @@ def filter_public_users(users: list[dict[str, Any]], *, search: str = "", status
 
     needle = str(search or "").strip().lower()
     if needle:
-        searchable_fields = ("full_name", "email", "username", "organization")
+        searchable_fields = ("full_name", "email", "username", "terms_label")
         filtered = [
             user
             for user in filtered

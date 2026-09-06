@@ -314,7 +314,7 @@
               </div>
               <div class="form-group sm:col-span-2">
                 <label for="bookingInstitutionName" class="form-label">Institution / Organization</label>
-                <input type="text" id="bookingInstitutionName" name="institution_name" class="form-input" value="{{ current_public_user.organization if current_public_user else '' }}" required placeholder="Name of school, organization, or group" />
+                <input type="text" id="bookingInstitutionName" name="institution_name" class="form-input" required placeholder="Name of school, organization, or group" />
               </div>
               <div class="form-group">
                 <label for="bookingContactPerson" class="form-label">Contact Person</label>
@@ -322,7 +322,7 @@
               </div>
               <div class="form-group">
                 <label for="bookingContactNumber" class="form-label">Contact Number</label>
-                <input type="text" id="bookingContactNumber" name="contact_number" class="form-input" value="{{ current_public_user.phone_number if current_public_user else '' }}" required placeholder="Primary contact number" />
+                <input type="text" id="bookingContactNumber" name="contact_number" class="form-input" required placeholder="Primary contact number" />
               </div>
               <div class="form-group sm:col-span-2">
                 <label for="bookingTourAgency" class="form-label">Tour Agency (if any)</label>

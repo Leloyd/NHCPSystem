@@ -1,12 +1,18 @@
 import unittest
+from datetime import datetime, timedelta, timezone
 
 from legal_content import (
     PUBLIC_TERMS_ACCEPTANCE_SESSION_KEY,
+    PUBLIC_TERMS_LOGIN_SESSION_KEY,
     PUBLIC_TERMS_REVIEW_SESSION_KEY,
     PUBLIC_TERMS_VERSION,
     accept_current_public_terms,
+    clear_public_terms_login,
     clear_public_terms_signup_state,
     current_public_terms_acceptance,
+    current_public_terms_login,
+    stage_public_terms_login,
+    user_has_current_public_terms,
 )
 
 
@@ -46,6 +52,41 @@ class PublicTermsSessionTests(unittest.TestCase):
         self.assertNotIn(PUBLIC_TERMS_ACCEPTANCE_SESSION_KEY, session_store)
         self.assertNotIn(PUBLIC_TERMS_REVIEW_SESSION_KEY, session_store)
         self.assertEqual(session_store["unrelated"], "keep")
+
+    def test_user_must_have_current_version_and_timestamp(self):
+        self.assertTrue(
+            user_has_current_public_terms(
+                {"terms_version": PUBLIC_TERMS_VERSION, "terms_accepted_at": "2026-09-07T00:00:00+00:00"}
+            )
+        )
+        self.assertFalse(user_has_current_public_terms({"terms_version": PUBLIC_TERMS_VERSION}))
+        self.assertFalse(user_has_current_public_terms({"terms_version": "older", "terms_accepted_at": "now"}))
+
+    def test_pending_login_is_short_lived_and_clearable(self):
+        session_store = {}
+        stage_public_terms_login(
+            session_store,
+            {"id": 8, "updated_at": "2026-09-07T00:00:00+00:00"},
+            "/account",
+        )
+        pending = current_public_terms_login(session_store)
+        self.assertEqual(pending["user_id"], 8)
+        self.assertEqual(pending["next"], "/account")
+
+        clear_public_terms_login(session_store)
+        self.assertNotIn(PUBLIC_TERMS_LOGIN_SESSION_KEY, session_store)
+
+    def test_expired_pending_login_is_removed(self):
+        session_store = {
+            PUBLIC_TERMS_LOGIN_SESSION_KEY: {
+                "user_id": 4,
+                "account_version": "version",
+                "next": "/account",
+                "expires_at": (datetime.now(timezone.utc) - timedelta(seconds=1)).isoformat(),
+            }
+        }
+        self.assertIsNone(current_public_terms_login(session_store))
+        self.assertNotIn(PUBLIC_TERMS_LOGIN_SESSION_KEY, session_store)
 
 
 if __name__ == "__main__":

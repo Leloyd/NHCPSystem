@@ -4,8 +4,6 @@ CREATE TABLE IF NOT EXISTS public.public_users (
   username text NOT NULL,
   password_hash text NOT NULL,
   full_name text NOT NULL,
-  phone_number text NOT NULL DEFAULT ''::text,
-  organization text NOT NULL DEFAULT ''::text,
   is_active boolean NOT NULL DEFAULT true,
   last_login_at timestamp with time zone,
   email_verified_at timestamp with time zone,
@@ -37,6 +35,12 @@ CREATE TABLE IF NOT EXISTS public.public_users (
 
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_email_unique_idx ON public.public_users (lower(email));
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_username_unique_idx ON public.public_users (lower(username));
+
+ALTER TABLE public.public_users ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.public_users FROM PUBLIC;
+REVOKE ALL ON TABLE public.public_users FROM anon;
+REVOKE ALL ON TABLE public.public_users FROM authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.public_users TO service_role;
 
 CREATE TABLE IF NOT EXISTS public.user_bookmarks (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,

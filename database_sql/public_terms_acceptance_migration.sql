@@ -1,5 +1,6 @@
--- Records the exact Terms and Conditions version accepted during new public
--- account registration. Existing accounts remain valid and keep NULL values.
+-- Records the exact Terms and Conditions version accepted by every public
+-- account. Existing accounts keep NULL values until they personally agree;
+-- the application blocks their authenticated session until then.
 -- Run this complete file in the Supabase SQL Editor BEFORE deploying the
 -- matching application release. Safe to run more than once.
 
@@ -10,6 +11,15 @@ ALTER TABLE public.public_users
 
 ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp with time zone;
+
+-- Account rows contain password hashes and security state. Browsers must not
+-- query or mutate this table through the Supabase Data API; authenticated
+-- Flask routes use the server-only service-role key after their own checks.
+ALTER TABLE public.public_users ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.public_users FROM PUBLIC;
+REVOKE ALL ON TABLE public.public_users FROM anon;
+REVOKE ALL ON TABLE public.public_users FROM authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.public_users TO service_role;
 
 ALTER TABLE public.pending_public_registrations
   ADD COLUMN IF NOT EXISTS terms_version text;

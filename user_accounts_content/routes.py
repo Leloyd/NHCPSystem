@@ -37,8 +37,11 @@ from pending_public_registrations_repository import (
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
 from legal_content import (
     PUBLIC_TERMS_VERSION,
+    clear_public_terms_login,
     clear_public_terms_signup_state,
     current_public_terms_acceptance,
+    stage_public_terms_login,
+    user_has_current_public_terms,
 )
 from supabase_client import is_supabase_configured
 from supabase_storage import delete_public_image, upload_public_image
@@ -294,7 +297,6 @@ def _sign_in_public_user_from_google_profile(
         payload = {
             "auth_provider": "google",
             "oauth_subject": oauth_subject,
-            "last_login_at": now,
             "updated_at": now,
         }
         # First Google sign-in populates the avatar from the Gmail photo, but we
@@ -337,8 +339,6 @@ def _sign_in_public_user_from_google_profile(
             "email": email,
             "username": _generate_unique_username(email),
             "password_hash": password_hash,
-            "phone_number": "",
-            "organization": "",
             "is_active": True,
             "last_login_at": now,
             "email_verified_at": now,
@@ -531,8 +531,6 @@ def _build_verified_public_user_payload(pending: dict[str, Any], verified_at: st
         "email": email,
         "username": _generate_unique_username(email),
         "password_hash": str(pending.get("password_hash") or ""),
-        "phone_number": "",
-        "organization": "",
         "is_active": True,
         "last_login_at": None,
         "email_verified_at": verified_at,
@@ -673,6 +671,17 @@ def register_user_account_routes(
 
     def _settings_wants_json() -> bool:
         return request.headers.get("X-Requested-With") == "XMLHttpRequest" or request.accept_mimetypes.best == "application/json"
+
+    def _post_login_destination(user: dict[str, Any], next_url: str) -> str:
+        if _user_completed_onboarding(user):
+            return next_url
+        return url_for("public_account_setup", next=next_url)
+
+    def _stage_terms_required_login(user: dict[str, Any], next_url: str) -> str:
+        clear_public_terms_signup_state(session)
+        clear_public_user_session()
+        stage_public_terms_login(session, user, _post_login_destination(user, next_url))
+        return url_for("terms_and_conditions", intent="account")
 
     def _settings_response(
         *,
@@ -841,12 +850,17 @@ def register_user_account_routes(
             app.logger.exception("Failed to sign in with Google: %s", exc)
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Could not sign you in with Google right now.")
 
+        session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
+        if not user_has_current_public_terms(user):
+            return redirect(_stage_terms_required_login(user, next_url))
+        login_at = _utcnow().isoformat()
+        user = update_public_user(
+            int(user.get("id")),
+            {"last_login_at": login_at, "updated_at": login_at},
+        )
         set_public_user_session(int(user.get("id")))
         clear_public_terms_signup_state(session)
-        session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
-        if not _user_completed_onboarding(user):
-            return redirect(url_for("public_account_setup", next=next_url))
-        return redirect(next_url)
+        return redirect(_post_login_destination(user, next_url))
 
     @app.route("/api/auth/login", methods=["POST"])
     def api_public_login():
@@ -920,13 +934,20 @@ def register_user_account_routes(
             return jsonify({"ok": False, "error": "Please verify your email before signing in.", "verification_required": True, "email": user.get("email")}), 403
 
         clear_public_auth_failures("login", client_ip)
-        update_public_user(int(user.get("id")), {"last_login_at": _utcnow().isoformat()})
+        session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
+        if not user_has_current_public_terms(user):
+            return jsonify(
+                {
+                    "ok": True,
+                    "terms_acceptance_required": True,
+                    "redirect_url": _stage_terms_required_login(user, next_url),
+                }
+            )
+        now = _utcnow().isoformat()
+        user = update_public_user(int(user.get("id")), {"last_login_at": now, "updated_at": now})
         set_public_user_session(int(user.get("id")))
         clear_public_terms_signup_state(session)
-        session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
-        if not _user_completed_onboarding(user):
-            return jsonify({"ok": True, "redirect_url": url_for("public_account_setup", next=next_url)})
-        return jsonify({"ok": True, "redirect_url": next_url})
+        return jsonify({"ok": True, "redirect_url": _post_login_destination(user, next_url)})
 
     @app.route("/api/auth/signup", methods=["POST"])
     def api_public_signup():
@@ -1239,7 +1260,7 @@ def register_user_account_routes(
             return _render_auth_entry(default_view="signup", next_url=next_url, page_title="Verify Account | Museo ng Libingan sa Ilalim ng Lupa", error_message="That verification link is invalid or has expired. Please request a new email.")
 
         now = _utcnow().isoformat()
-        update_public_user(
+        user = update_public_user(
             int(user.get("id")),
             {
                 "email_verified_at": str(user.get("email_verified_at") or now),
@@ -1250,10 +1271,10 @@ def register_user_account_routes(
                 "updated_at": now,
             },
         )
+        if not user_has_current_public_terms(user):
+            return redirect(_stage_terms_required_login(user, next_url))
         set_public_user_session(int(user.get("id")))
-        if _user_completed_onboarding(user):
-            return redirect(next_url)
-        return redirect(url_for("public_account_setup", next=next_url))
+        return redirect(_post_login_destination(user, next_url))
 
     @app.route("/account/setup", methods=["GET", "POST"])
     @public_login_required
@@ -1459,6 +1480,8 @@ def register_user_account_routes(
     def public_logout():
         if not is_public_csrf_valid(request.form.get("csrf_token")):
             return redirect(url_for("public_login"))
+        clear_public_terms_login(session)
+        clear_public_terms_signup_state(session)
         clear_public_user_session()
         return redirect(url_for("index"))
 
