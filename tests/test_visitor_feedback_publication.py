@@ -67,6 +67,29 @@ class VisitorFeedbackPublicationTests(unittest.TestCase):
         self.assertEqual(result["channels"]["on-site"]["count"], 1)
         self.assertEqual(result["comments"], [])
 
+    def test_public_comment_feed_is_limited_to_six(self):
+        records = [
+            {
+                "id": index,
+                "visit_type": "website",
+                "rating": 5,
+                "visitor_name": "Review Writer",
+                "comments": f"Approved comment {index}",
+                "public_display_consent": True,
+                "public_name_preference": "anonymous",
+                "rating_status": "counted",
+                "comment_status": "published",
+                "created_at": f"2026-09-{index:02d}T10:00:00+00:00",
+            }
+            for index in range(1, 9)
+        ]
+        with patch("visitor_feedback_content.service.is_supabase_configured", return_value=True), patch(
+            "visitor_feedback_content.service.list_public_visitor_feedback", return_value=records
+        ):
+            result = build_public_visitor_feedback()
+        self.assertEqual(result["published_comment_count"], 8)
+        self.assertEqual(len(result["comments"]), 6)
+
 
 if __name__ == "__main__":
     unittest.main()

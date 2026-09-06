@@ -248,7 +248,7 @@ def build_visitor_feedback_analytics(items: list[dict[str, Any]] | None) -> dict
 
 def build_public_visitor_feedback() -> dict[str, Any]:
     """Build a privacy-safe public aggregate and published-comment feed."""
-    empty = {"channels": {}, "comments": [], "pending_comment_count": 0}
+    empty = {"channels": {}, "comments": [], "published_comment_count": 0, "pending_comment_count": 0}
     if not is_supabase_configured():
         return empty
     try:
@@ -288,9 +288,11 @@ def build_public_visitor_feedback() -> dict[str, Any]:
     ]
     for item in comments:
         item["date"] = " ".join(item["date"])
+    published_comment_count = len(comments)
     return {
         "channels": channels,
-        "comments": comments[:24],
+        "comments": comments[:6],
+        "published_comment_count": published_comment_count,
         "pending_comment_count": sum(
             1
             for item in items
