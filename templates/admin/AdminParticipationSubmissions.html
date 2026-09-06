@@ -30,6 +30,7 @@
 
           {% set pending_count = submissions_items|selectattr('status', 'equalto', 'pending_review')|list|length %}
           {% set active_count = submissions_items|selectattr('status', 'equalto', 'active')|list|length %}
+          {% set rejected_count = submissions_items|selectattr('status', 'equalto', 'rejected')|list|length %}
           {% set archived_count = submissions_items|selectattr('status', 'equalto', 'archived')|list|length %}
           {% set verification_count = submissions_items|selectattr('status', 'equalto', 'pending_verification')|list|length %}
 
@@ -51,6 +52,7 @@
                 <button type="button" class="admin-gallery-filter is-active" data-submission-filter-button="all" aria-pressed="true">All <span>{{ submissions_items|length }}</span></button>
                 <button type="button" class="admin-gallery-filter" data-submission-filter-button="pending_review" aria-pressed="false">Pending <span>{{ pending_count }}</span></button>
                 <button type="button" class="admin-gallery-filter" data-submission-filter-button="active" aria-pressed="false">Published <span>{{ active_count }}</span></button>
+                <button type="button" class="admin-gallery-filter" data-submission-filter-button="rejected" aria-pressed="false">Changes Requested <span>{{ rejected_count }}</span></button>
                 <button type="button" class="admin-gallery-filter" data-submission-filter-button="archived" aria-pressed="false">Archived <span>{{ archived_count }}</span></button>
                 <button type="button" class="admin-gallery-filter" data-submission-filter-button="pending_verification" aria-pressed="false">Unverified <span>{{ verification_count }}</span></button>
               </nav>
@@ -71,7 +73,7 @@
                 </span>
                 <span>
                   <strong data-submission-library-title>Complete submission record</strong>
-                  <small data-submission-library-description>Every pending, published, archived, and legacy unverified entry</small>
+                  <small data-submission-library-description>Every pending, published, rejected, archived, and legacy unverified entry</small>
                 </span>
               </div>
               <span class="admin-gallery-visible-count" data-submission-visible-count>{{ submissions_items|length }} submissions</span>
@@ -120,7 +122,7 @@
                   {% endif %}
 
                   <div class="admin-gallery-card-badges">
-                    <span class="admin-status-badge {% if submission_item.status == 'active' %}is-published{% elif submission_item.status == 'archived' %}is-cancelled{% elif submission_item.status == 'pending_verification' %}is-rescheduled{% else %}is-draft{% endif %}">
+                    <span class="admin-status-badge {% if submission_item.status == 'active' %}is-published{% elif submission_item.status in ['rejected', 'archived'] %}is-cancelled{% elif submission_item.status == 'pending_verification' %}is-rescheduled{% else %}is-draft{% endif %}">
                       {{ submission_item.status_label }}
                     </span>
                     <span class="admin-gallery-model-badge admin-submission-type-badge">

@@ -991,6 +991,310 @@ a.ap-entry:hover {
   color: var(--ap-faint);
 }
 
+.ap-entry--submission {
+  align-items: start;
+}
+
+.ap-submission-feedback {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  margin-top: 0.65rem;
+  padding: 0.65rem;
+  color: var(--ap-muted);
+  background: var(--ap-surface-soft);
+  border: 1px solid var(--ap-line);
+  border-radius: 0.65rem;
+  font-size: 0.7rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+}
+
+.ap-submission-feedback > svg,
+.ap-entry__note > svg {
+  width: 0.9rem;
+  height: 0.9rem;
+  flex: 0 0 auto;
+  margin-top: 0.15rem;
+  color: var(--ap-gold);
+}
+
+.ap-submission-feedback strong {
+  display: block;
+  margin-bottom: 0.15rem;
+  color: var(--ap-ink);
+  font-size: 0.68rem;
+}
+
+.ap-entry__note {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.35rem;
+}
+
+.ap-status.is-active {
+  color: #245c3a;
+  background: #e0f0e5;
+  border-color: #9bc5a7;
+}
+
+.ap-status.is-rejected {
+  color: #8b302e;
+  background: #f7e4e2;
+  border-color: #dcaaa5;
+}
+
+.ap-contribution-notice {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.6rem;
+  padding: 0.75rem;
+  border: 1px solid;
+  border-radius: 0.7rem;
+  font-size: 0.72rem;
+  line-height: 1.45;
+}
+
+.ap-contribution-notice > svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+.ap-contribution-notice strong {
+  display: block;
+  margin-bottom: 0.1rem;
+}
+
+.ap-contribution-notice.is-success {
+  color: #245c3a;
+  background: #eaf6ee;
+  border-color: #a7ceb2;
+}
+
+.ap-contribution-notice.is-error {
+  color: #8b302e;
+  background: #fff0ee;
+  border-color: #dfb1ab;
+}
+
+.ap-submission-editor {
+  grid-column: 1 / -1;
+  min-width: 0;
+  margin-top: 0.15rem;
+  border-top: 1px solid var(--ap-line);
+}
+
+.ap-submission-editor > summary {
+  display: flex;
+  min-height: 2.6rem;
+  align-items: center;
+  gap: 0.45rem;
+  padding-top: 0.65rem;
+  color: var(--ap-brand);
+  font-size: 0.72rem;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+
+.ap-submission-editor > summary::-webkit-details-marker {
+  display: none;
+}
+
+.ap-submission-editor > summary svg {
+  width: 0.95rem;
+  height: 0.95rem;
+}
+
+.ap-submission-editor > summary svg:last-child {
+  margin-left: auto;
+  transition: transform 160ms ease;
+}
+
+.ap-submission-editor[open] > summary svg:last-child {
+  transform: rotate(180deg);
+}
+
+.ap-submission-editor form {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem;
+  padding: 0.8rem 0 0.2rem;
+}
+
+.ap-submission-editor form > label:not(.ap-submission-privacy) {
+  display: grid;
+  align-content: start;
+  gap: 0.32rem;
+  min-width: 0;
+  color: var(--ap-ink);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.ap-submission-editor .is-wide {
+  grid-column: 1 / -1;
+}
+
+.ap-submission-editor input:not([type="checkbox"]),
+.ap-submission-editor select,
+.ap-submission-editor textarea {
+  width: 100%;
+  min-width: 0;
+  padding: 0.65rem 0.7rem;
+  color: var(--ap-ink);
+  background: var(--ap-surface);
+  border: 1px solid var(--ap-line);
+  border-radius: 0.62rem;
+  font: inherit;
+  font-weight: 500;
+}
+
+.ap-submission-editor textarea {
+  resize: vertical;
+  line-height: 1.55;
+}
+
+.ap-submission-editor input:focus,
+.ap-submission-editor select:focus,
+.ap-submission-editor textarea:focus {
+  outline: 3px solid rgba(214, 155, 63, 0.2);
+  border-color: var(--ap-gold);
+}
+
+.ap-submission-file-field > span small,
+.ap-submission-file-field > small {
+  color: var(--ap-muted);
+  font-size: 0.62rem;
+  font-weight: 500;
+}
+
+.ap-submission-current-file {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  width: fit-content;
+  color: var(--ap-brand);
+  font-size: 0.68rem;
+  font-weight: 750;
+}
+
+.ap-submission-current-file svg {
+  width: 0.85rem;
+  height: 0.85rem;
+}
+
+.ap-submission-current-photo {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 0.7rem;
+  color: var(--ap-muted);
+  font-size: 0.65rem;
+}
+
+.ap-submission-current-photo img {
+  width: 4rem;
+  height: 4rem;
+  object-fit: cover;
+  border: 1px solid var(--ap-line);
+  border-radius: 0.6rem;
+}
+
+.ap-submission-current-photo label,
+.ap-submission-privacy {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.45rem;
+  color: var(--ap-muted);
+  font-size: 0.66rem;
+  line-height: 1.45;
+}
+
+.ap-submission-current-photo input,
+.ap-submission-privacy input {
+  margin-top: 0.15rem;
+  accent-color: var(--ap-brand);
+}
+
+.ap-upload-status {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.5rem;
+  padding: 0.65rem;
+  color: var(--ap-muted);
+  background: var(--ap-surface-soft);
+  border: 1px solid var(--ap-line);
+  border-radius: 0.62rem;
+  font-size: 0.64rem;
+}
+
+.ap-upload-status[hidden] {
+  display: none !important;
+}
+
+.ap-upload-status > i {
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-top: 0.1rem;
+  border: 2px solid var(--ap-line);
+  border-top-color: var(--ap-gold);
+  border-radius: 50%;
+  animation: ap-upload-spin 0.8s linear infinite;
+}
+
+.ap-upload-status strong,
+.ap-upload-status small {
+  display: block;
+}
+
+.ap-upload-status[data-upload-state="success"] > i {
+  border-color: #4c8a61;
+  animation: none;
+}
+
+.ap-upload-status[data-upload-state="error"] {
+  color: var(--ap-danger);
+  border-color: rgba(155, 61, 56, 0.45);
+}
+
+.ap-submission-editor__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.ap-submission-editor__actions button {
+  display: inline-flex;
+  min-height: 2.6rem;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45rem;
+  padding: 0.65rem 0.85rem;
+  color: #fff;
+  background: var(--ap-brand-deep);
+  border: 1px solid var(--ap-brand-deep);
+  border-radius: 0.65rem;
+  font: inherit;
+  font-size: 0.68rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.ap-submission-editor__actions button:disabled {
+  opacity: 0.62;
+  cursor: wait;
+}
+
+.ap-submission-editor__actions svg {
+  width: 0.9rem;
+  height: 0.9rem;
+}
+
+@keyframes ap-upload-spin {
+  to { transform: rotate(360deg); }
+}
+
 .ap-status {
   flex: 0 0 auto;
   padding: 0.24rem 0.45rem;
@@ -1130,6 +1434,18 @@ html[data-theme="dark"] .ap-status.is-rescheduled {
   border-color: #416681;
 }
 
+html[data-theme="dark"] .ap-status.is-active {
+  color: #b9e4c3;
+  background: #193226;
+  border-color: #3d7650;
+}
+
+html[data-theme="dark"] .ap-status.is-rejected {
+  color: #f1bbb6;
+  background: #3a211f;
+  border-color: #7d423d;
+}
+
 /* Explicit high-contrast mode */
 html[data-contrast="on"] .ap-page {
   --ap-bg: #000;
@@ -1232,6 +1548,24 @@ html[data-contrast="on"] .ap-button,
 html[data-contrast="on"] .ap-collection__head > strong,
 html[data-contrast="on"] .ap-status,
 html[data-contrast="on"] .ap-roles__list span {
+  color: #000 !important;
+  background: #ffdf00 !important;
+  border-color: #ffdf00 !important;
+}
+
+html[data-contrast="on"] .ap-submission-feedback,
+html[data-contrast="on"] .ap-submission-editor,
+html[data-contrast="on"] .ap-submission-editor input,
+html[data-contrast="on"] .ap-submission-editor select,
+html[data-contrast="on"] .ap-submission-editor textarea,
+html[data-contrast="on"] .ap-upload-status,
+html[data-contrast="on"] .ap-contribution-notice {
+  color: #fff !important;
+  background: #000 !important;
+  border-color: #ffdf00 !important;
+}
+
+html[data-contrast="on"] .ap-submission-editor__actions button {
   color: #000 !important;
   background: #ffdf00 !important;
   border-color: #ffdf00 !important;
@@ -1444,6 +1778,25 @@ html[data-contrast="on"] .ap-page [tabindex]:focus-visible {
 
   .ap-status {
     align-self: flex-start;
+  }
+
+  .ap-submission-editor form {
+    grid-template-columns: 1fr;
+  }
+
+  .ap-submission-editor .is-wide,
+  .ap-submission-current-file,
+  .ap-submission-current-photo {
+    grid-column: auto;
+  }
+
+  .ap-submission-current-photo {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .ap-submission-editor__actions button {
+    width: 100%;
   }
 
   .ap-collection__head {

@@ -235,16 +235,29 @@ html[data-theme="dark"] .collection-page .ogd-search-field__input,
 html[data-theme="dark"] .collection-page .ogd-view-toggle,
 html[data-theme="dark"] .collection-page .ogd-category-tabs__button,
 html[data-theme="dark"] .collection-page .ogd-artifact-card,
-html[data-theme="dark"] .collection-page .ogd-artifact-card__media {
+html[data-theme="dark"] .collection-page .ogd-artifact-card__media,
+html[data-theme="dark"] .collection-page .ogd-list-item,
+html[data-theme="dark"] .collection-page .ogd-empty-state {
   background: #211a10 !important;
   color: #f3ece0 !important;
   border-color: rgba(201, 168, 76, 0.2) !important;
 }
-html[data-theme="dark"] .collection-page .ogd-artifact-card__title { color: #f3ece0 !important; }
+html[data-theme="dark"] .collection-page .ogd-artifact-card__title,
+html[data-theme="dark"] .collection-page .ogd-list-item__title,
+html[data-theme="dark"] .collection-page .ogd-empty-state__title { color: #f3ece0 !important; }
 html[data-theme="dark"] .collection-page .ogd-artifact-card__summary,
 html[data-theme="dark"] .collection-page .ogd-results-count,
-html[data-theme="dark"] .collection-page .ogd-artifact-card__meta { color: #c4b494 !important; }
+html[data-theme="dark"] .collection-page .ogd-artifact-card__meta,
+html[data-theme="dark"] .collection-page .ogd-list-item__summary,
+html[data-theme="dark"] .collection-page .ogd-list-item__meta,
+html[data-theme="dark"] .collection-page .ogd-empty-state__copy { color: #c4b494 !important; }
 html[data-theme="dark"] .collection-page .ogd-artifact-card__meta-pill { background: #2a2114 !important; color: #d8c9a6 !important; border-color: rgba(201, 168, 76, 0.2) !important; }
+html[data-theme="dark"] .collection-page .ogd-list-item__badge,
+html[data-theme="dark"] .collection-page .ogd-empty-state__icon {
+  background: #2a2114 !important;
+  color: #e6cf8a !important;
+  border-color: rgba(201, 168, 76, 0.38) !important;
+}
 html[data-theme="dark"] .collection-page .ogd-search-field__input::placeholder { color: #9a8a6d !important; }
 html[data-theme="dark"] .collection-page .ogd-search-field__icon,
 html[data-theme="dark"] .collection-page .ogd-sort-control__icon,
@@ -506,6 +519,25 @@ html[data-contrast="on"] .collection-page .ogd-toolbar {
   background: transparent !important;
   border: 0 !important;
   box-shadow: none !important;
+}
+html[data-contrast="on"] .collection-page .ogd-list-item,
+html[data-contrast="on"] .collection-page .ogd-empty-state {
+  background: #000 !important;
+  color: #fff !important;
+  border: 2px solid #facc15 !important;
+  box-shadow: none !important;
+}
+html[data-contrast="on"] .collection-page .ogd-list-item__title,
+html[data-contrast="on"] .collection-page .ogd-list-item__summary,
+html[data-contrast="on"] .collection-page .ogd-list-item__meta,
+html[data-contrast="on"] .collection-page .ogd-empty-state__title,
+html[data-contrast="on"] .collection-page .ogd-empty-state__copy {
+  color: #fff !important;
+}
+html[data-contrast="on"] .collection-page .ogd-empty-state__icon {
+  background: #000 !important;
+  color: #facc15 !important;
+  border: 2px solid #facc15 !important;
 }
 html[data-contrast="on"] .collection-page .ogd-view-toggle {
   background: #000 !important;

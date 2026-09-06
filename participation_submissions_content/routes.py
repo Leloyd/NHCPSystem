@@ -15,7 +15,8 @@ from participation_submissions_repository import (
     delete_participation_submission,
     find_recent_participation_submission_by_email,
     get_participation_submission_by_id,
-    update_participation_submission,
+    update_participation_submission_from_status,
+    update_rejected_participation_submission_for_user,
 )
 from supabase_client import is_supabase_configured
 from media_upload_content import MEDIA_UPLOAD_MAX_BYTES, discard_direct_uploads, validate_direct_upload_reference
@@ -35,7 +36,7 @@ from .service import (
 VERIFICATION_WINDOW_MINUTES = 30
 EMAIL_PATTERN = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 TEACHER_ALLOWED_EXTENSIONS = {".pdf", ".docx", ".ppt", ".pptx"}
-ADMIN_SUBMISSION_STATUSES = {"pending_verification", "pending_review", "active", "archived"}
+ADMIN_SUBMISSION_STATUSES = {"pending_verification", "pending_review", "active", "rejected", "archived"}
 
 
 def _get_uploaded_file_size(file_storage) -> int:
@@ -70,12 +71,22 @@ def _is_valid_email(value: Any) -> bool:
     return bool(EMAIL_PATTERN.match(str(value or "").strip()))
 
 
-def _validate_public_submission(form, files, current_user, *, save_uploaded_image, save_uploaded_file):
+def _validate_public_submission(
+    form,
+    files,
+    current_user,
+    *,
+    save_uploaded_image,
+    save_uploaded_file,
+    existing_submission: dict[str, Any] | None = None,
+):
     submission_type = str(form.get("submission_type") or "").strip().lower()
     is_private = str(form.get("is_private") or "").strip().lower() in {"1", "true", "on", "yes"}
 
     if submission_type not in {"teacher_corner", "story_submit"}:
         raise ValueError("Please choose a valid submission type.")
+    if existing_submission and submission_type != str(existing_submission.get("submission_type") or "").strip().lower():
+        raise ValueError("The submission type cannot be changed during resubmission.")
     submitter_name = str(current_user.get("full_name") or "").strip()
     submitter_email = str(current_user.get("email") or "").strip().lower()
     if len(submitter_name) < 2:
@@ -124,13 +135,19 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
         )
         if _get_uploaded_file_size(uploaded_file) > MEDIA_UPLOAD_MAX_BYTES:
             raise ValueError("The classroom material exceeds the 25 MB upload limit.")
-        uploaded_file_name = direct_upload["path"] if direct_upload else save_uploaded_file(
-            uploaded_file,
-            title,
-            PARTICIPATION_SUBMISSIONS_UPLOAD_DIR,
-            TEACHER_ALLOWED_EXTENSIONS,
-            "Teacher Corner upload must be a .pdf, .docx, .ppt, or .pptx file.",
-        )
+        existing_file_name = str((existing_submission or {}).get("resource_file_filename") or "").strip()
+        if direct_upload:
+            uploaded_file_name = direct_upload["path"]
+        elif _get_uploaded_file_size(uploaded_file):
+            uploaded_file_name = save_uploaded_file(
+                uploaded_file,
+                title,
+                PARTICIPATION_SUBMISSIONS_UPLOAD_DIR,
+                TEACHER_ALLOWED_EXTENSIONS,
+                "Teacher Corner upload must be a .pdf, .docx, .ppt, or .pptx file.",
+            )
+        else:
+            uploaded_file_name = existing_file_name or None
         category = infer_teacher_resource_category(uploaded_file_name)
         if not uploaded_file_name or not category:
             raise ValueError("Please upload a valid .pdf, .docx, .ppt, or .pptx file.")
@@ -167,9 +184,16 @@ def _validate_public_submission(form, files, current_user, *, save_uploaded_imag
         )
         if _get_uploaded_file_size(uploaded_photo) > MEDIA_UPLOAD_MAX_BYTES:
             raise ValueError("The story photo exceeds the 25 MB upload limit.")
-        uploaded_photo_name = direct_upload["path"] if direct_upload else save_uploaded_image(
-            uploaded_photo, title, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR
-        )
+        existing_photo_name = str((existing_submission or {}).get("photo_filename") or "").strip()
+        remove_photo = str(form.get("remove_photo") or "").strip().lower() in {"1", "true", "on", "yes"}
+        if direct_upload:
+            uploaded_photo_name = direct_upload["path"]
+        elif _get_uploaded_file_size(uploaded_photo):
+            uploaded_photo_name = save_uploaded_image(uploaded_photo, title, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+        elif remove_photo:
+            uploaded_photo_name = None
+        else:
+            uploaded_photo_name = existing_photo_name or None
         payload.update(
             {
                 "title": title,
@@ -296,6 +320,110 @@ def register_participation_submission_routes(
     def community_participation_verify_submission():
         return jsonify({"ok": False, "error": "Email verification is no longer required. Submit while signed in instead."}), 410
 
+    @app.post("/account/participation-submissions/<int:submission_id>/resubmit")
+    @public_login_required
+    def account_participation_submission_resubmit(submission_id: int):
+        current_user = get_current_public_user()
+        redirect_base = url_for("account_profile")
+        if not current_user:
+            return redirect(url_for("public_login", next=f"{redirect_base}#participationPanel"))
+        if not is_public_csrf_valid(request.form.get("csrf_token")):
+            return redirect(
+                url_for("account_profile", contribution_error="Your session expired. Refresh the page and try again.")
+                + "#participationPanel"
+            )
+        retry_after = consume_public_action_rate_limit("participation-resubmission")
+        if retry_after:
+            return redirect(
+                url_for(
+                    "account_profile",
+                    contribution_error=f"Too many resubmission attempts. Try again in {retry_after} seconds.",
+                )
+                + "#participationPanel"
+            )
+
+        existing = get_participation_submission_by_id(submission_id)
+        if not existing or int(existing.get("user_id") or 0) != int(current_user.get("id") or 0):
+            return redirect(
+                url_for("account_profile", contribution_error="That submission was not found in your account.")
+                + "#participationPanel"
+            )
+        if str(existing.get("status") or "").strip().lower() != "rejected":
+            return redirect(
+                url_for(
+                    "account_profile",
+                    contribution_error="Only a rejected submission can be edited and resubmitted.",
+                )
+                + "#participationPanel"
+            )
+
+        uploaded_file_name = None
+        uploaded_photo_name = None
+        old_file_name = str(existing.get("resource_file_filename") or "").strip()
+        old_photo_name = str(existing.get("photo_filename") or "").strip()
+        try:
+            payload, uploaded_file_name, uploaded_photo_name = _validate_public_submission(
+                request.form,
+                request.files,
+                current_user,
+                save_uploaded_image=save_uploaded_image,
+                save_uploaded_file=save_uploaded_file,
+                existing_submission=existing,
+            )
+            payload.update(
+                {
+                    "status": "pending_review",
+                    "reviewed_at": None,
+                    "reviewed_by": "",
+                    "resubmitted_at": _utcnow().isoformat(),
+                }
+            )
+            updated = update_rejected_participation_submission_for_user(
+                submission_id,
+                int(current_user.get("id")),
+                payload,
+            )
+
+            try:
+                if old_file_name and old_file_name != str(uploaded_file_name or ""):
+                    delete_local_image(old_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+                if old_photo_name and old_photo_name != str(uploaded_photo_name or ""):
+                    delete_local_image(old_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            except Exception as exc:
+                app.logger.warning("Could not remove a replaced participation asset: %s", exc)
+
+            is_teacher_submission = payload["submission_type"] == "teacher_corner"
+            dispatch_admin_notification(
+                event_type="teacher_submission" if is_teacher_submission else "story_submission",
+                source_id=int(updated["id"]),
+                title="Participation submission resubmitted",
+                message=f"{payload['submitter_name']} revised and resubmitted “{payload['title']}” for review.",
+                target_url=url_for("admin_participation_submission_review", submission_id=int(updated["id"])),
+            )
+            return redirect(
+                url_for("account_profile", contribution_status="resubmitted") + "#participationPanel"
+            )
+        except ValueError as exc:
+            if uploaded_file_name and str(uploaded_file_name) != old_file_name:
+                delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            if uploaded_photo_name and str(uploaded_photo_name) != old_photo_name:
+                delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            cleanup_pending_direct_uploads(current_user, set())
+            return redirect(
+                url_for("account_profile", contribution_error=str(exc)) + "#participationPanel"
+            )
+        except Exception as exc:
+            if uploaded_file_name and str(uploaded_file_name) != old_file_name:
+                delete_local_image(uploaded_file_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            if uploaded_photo_name and str(uploaded_photo_name) != old_photo_name:
+                delete_local_image(uploaded_photo_name, PARTICIPATION_SUBMISSIONS_UPLOAD_DIR)
+            cleanup_pending_direct_uploads(current_user, set())
+            app.logger.exception("Failed to resubmit participation submission %s: %s", submission_id, exc)
+            return redirect(
+                url_for("account_profile", contribution_error="Could not resubmit this contribution right now.")
+                + "#participationPanel"
+            )
+
     @app.route(f"{admin_route_prefix}/community-participation-submissions")
     @admin_required
     def admin_participation_submissions():
@@ -344,8 +472,13 @@ def register_participation_submission_routes(
                 "status": "active",
                 "result": "approved",
             },
+            "reject": {
+                "from": {"pending_review"},
+                "status": "rejected",
+                "result": "rejected",
+            },
             "archive": {
-                "from": {"pending_review", "active"},
+                "from": {"active"},
                 "status": "archived",
                 "result": "archived",
             },
@@ -374,15 +507,37 @@ def register_participation_submission_routes(
                 error_message="This submission has not completed email verification yet.",
             )
 
+        moderation_feedback = str(request.form.get("moderation_feedback") or "").strip()
+        if moderation_action in {"approve", "reject"} and len(moderation_feedback) < 10:
+            return render_admin_participation_submission_review(
+                ensure_admin_csrf_token=ensure_admin_csrf_token,
+                admin_session_user_key=admin_session_user_key,
+                admin_username=admin_username,
+                submission_item=submission_item,
+                error_message="Provide at least 10 characters of clear feedback before approving or rejecting.",
+            )
+        if len(moderation_feedback) > 2000:
+            return render_admin_participation_submission_review(
+                ensure_admin_csrf_token=ensure_admin_csrf_token,
+                admin_session_user_key=admin_session_user_key,
+                admin_username=admin_username,
+                submission_item=submission_item,
+                error_message="Review feedback cannot exceed 2,000 characters.",
+            )
+
         next_status = transition["status"]
         try:
-            update_participation_submission(
+            moderation_payload = {
+                "status": next_status,
+                "reviewed_at": _utcnow().isoformat(),
+                "reviewed_by": session.get(admin_session_user_key, admin_username),
+            }
+            if moderation_action in {"approve", "reject"}:
+                moderation_payload["moderation_feedback"] = moderation_feedback
+            update_participation_submission_from_status(
                 submission_id,
-                {
-                    "status": next_status,
-                    "reviewed_at": _utcnow().isoformat(),
-                    "reviewed_by": session.get(admin_session_user_key, admin_username),
-                },
+                current_status,
+                moderation_payload,
             )
         except Exception as exc:
             app.logger.exception("Failed to moderate participation submission %s: %s", submission_id, exc)

@@ -27,6 +27,7 @@ PARTICIPATION_SUBMISSION_STATUS_OPTIONS = (
     "pending_verification",
     "pending_review",
     "active",
+    "rejected",
     "archived",
 )
 EDU_RESOURCE_CATEGORY_META = {
@@ -108,10 +109,13 @@ def prepare_participation_submission_item(item: dict[str, Any] | None) -> dict[s
     prepared["display_date"] = format_submission_datetime(prepared.get("created_at"))
     prepared["reviewed_display_date"] = format_submission_datetime(prepared.get("reviewed_at")) if prepared.get("reviewed_at") else ""
     prepared["verified_display_date"] = format_submission_datetime(prepared.get("verified_at")) if prepared.get("verified_at") else ""
+    prepared["resubmitted_display_date"] = format_submission_datetime(prepared.get("resubmitted_at")) if prepared.get("resubmitted_at") else ""
+    prepared["moderation_feedback"] = str(prepared.get("moderation_feedback") or "").strip()
     prepared["status_label"] = {
         "pending_verification": "Awaiting Verification",
         "pending_review": "Pending Review",
         "active": "Approved and Published",
+        "rejected": "Changes Requested",
         "archived": "Archived",
     }.get(status, status.replace("_", " ").title())
     prepared["has_attachment"] = bool(prepared.get("resource_file_url") or prepared.get("photo_url"))
@@ -214,6 +218,7 @@ def load_public_approved_participation_submission_resources() -> list[dict[str, 
 def get_participation_submissions_status_message(status_key: Any) -> str | None:
     mapping = {
         "approved": "Submission approved and published successfully.",
+        "rejected": "Submission returned to the contributor with review feedback.",
         "archived": "Submission archived successfully.",
         "restored": "Submission restored to the review queue successfully.",
     }

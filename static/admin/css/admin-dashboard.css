@@ -10204,6 +10204,56 @@ body.admin-settings-result-open {
   padding: 0 0.9rem 0.75rem;
 }
 
+.admin-submission-feedback-field {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.65rem;
+}
+
+.admin-submission-feedback-field > span {
+  color: var(--dashboard-green-900);
+  font-size: 0.63rem;
+  font-weight: 800;
+}
+
+.admin-submission-feedback-field textarea {
+  width: 100%;
+  min-height: 6.25rem;
+  resize: vertical;
+  padding: 0.65rem 0.7rem;
+  border: 1px solid #d7dfda;
+  border-radius: 0.7rem;
+  background: #fff;
+  color: #173d2f;
+  font: inherit;
+  font-size: 0.68rem;
+  line-height: 1.5;
+}
+
+.admin-submission-feedback-field textarea:focus-visible {
+  outline: 3px solid rgba(201, 168, 76, 0.28);
+  border-color: #a8842f;
+}
+
+.admin-submission-feedback-field small {
+  color: #7b867f;
+  font-size: 0.57rem;
+  line-height: 1.45;
+}
+
+.admin-submission-feedback-copy {
+  white-space: pre-wrap;
+}
+
+.admin-submission-lock-note {
+  margin: -0.35rem 0.9rem 0.75rem !important;
+  padding: 0.65rem 0.7rem !important;
+  border: 1px solid #dce6df;
+  border-radius: 0.7rem;
+  background: #f4f8f5;
+  color: #4c685b !important;
+}
+
 .admin-submission-decision-action {
   width: 100%;
   display: grid;

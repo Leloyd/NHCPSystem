@@ -37,7 +37,7 @@
                   <span>{{ submission_item.resource_category or submission_item.story_category or 'Community contribution' }}</span>
                 </div>
               </div>
-              <span class="admin-status-badge admin-submission-record-status {% if submission_item.status == 'active' %}is-published{% elif submission_item.status == 'archived' %}is-cancelled{% elif submission_item.status == 'pending_verification' %}is-rescheduled{% else %}is-draft{% endif %}">
+              <span class="admin-status-badge admin-submission-record-status {% if submission_item.status == 'active' %}is-published{% elif submission_item.status in ['rejected', 'archived'] %}is-cancelled{% elif submission_item.status == 'pending_verification' %}is-rescheduled{% else %}is-draft{% endif %}">
                 {{ submission_item.status_label }}
               </span>
             </header>
@@ -130,6 +130,8 @@
                   {% if submission_item.verified_at %}<div><dt>Verified</dt><dd>{{ submission_item.verified_display_date }}</dd></div>{% endif %}
                   {% if submission_item.reviewed_at %}<div><dt>Last moderated</dt><dd>{{ submission_item.reviewed_display_date }}</dd></div>{% endif %}
                   {% if submission_item.reviewed_by %}<div class="is-wide"><dt>Reviewed by</dt><dd>{{ submission_item.reviewed_by }}</dd></div>{% endif %}
+                  {% if submission_item.resubmitted_at %}<div class="is-wide"><dt>Last resubmitted</dt><dd>{{ submission_item.resubmitted_display_date }}</dd></div>{% endif %}
+                  {% if submission_item.moderation_feedback %}<div class="is-wide"><dt>Feedback to contributor</dt><dd class="admin-submission-feedback-copy">{{ submission_item.moderation_feedback }}</dd></div>{% endif %}
                 </dl>
               </section>
               {% endif %}
@@ -151,6 +153,11 @@
                   data-confirm-label="Approve and Publish" data-confirm-variant="enable">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
                   <input type="hidden" name="moderation_action" value="approve" />
+                  <label class="admin-submission-feedback-field">
+                    <span>Approval comments *</span>
+                    <textarea name="moderation_feedback" required minlength="10" maxlength="2000" rows="4" placeholder="Explain why this submission was accepted and provide useful feedback for the contributor."></textarea>
+                    <small>Shown privately to the contributor in their Account Profile.</small>
+                  </label>
                   <button type="submit" class="admin-submission-decision-action is-approve">
                     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span>
                     <span><strong>Approve and Publish</strong><small>Add this contribution to Educational Resources</small></span>
@@ -159,14 +166,19 @@
 
                 <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}"
                   data-confirm-submit data-confirm-eyebrow="Submission decision"
-                  data-confirm-title="Archive and reject this submission?"
-                  data-confirm-message="Archive {{ submission_item.title }}? It will not appear in the public learning collection."
-                  data-confirm-label="Archive Submission" data-confirm-variant="disable">
+                  data-confirm-title="Reject and return this submission?"
+                  data-confirm-message="Reject {{ submission_item.title }}? The contributor will receive your feedback and may edit and resubmit it."
+                  data-confirm-label="Reject Submission" data-confirm-variant="disable">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" />
-                  <input type="hidden" name="moderation_action" value="archive" />
+                  <input type="hidden" name="moderation_action" value="reject" />
+                  <label class="admin-submission-feedback-field">
+                    <span>Reason for rejection *</span>
+                    <textarea name="moderation_feedback" required minlength="10" maxlength="2000" rows="4" placeholder="Clearly explain what must be corrected before this submission can be reviewed again."></textarea>
+                    <small>Shown privately to the contributor and used to guide their revision.</small>
+                  </label>
                   <button type="submit" class="admin-submission-decision-action is-archive">
                     <span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Zm4 2v2h4v-2Z"></path></svg></span>
-                    <span><strong>Archive / Reject</strong><small>Retain the record without publishing it</small></span>
+                    <span><strong>Reject and Request Changes</strong><small>Return it to the contributor for revision</small></span>
                   </button>
                 </form>
               </section>
@@ -174,6 +186,7 @@
               <section class="admin-submission-finalized is-active">
                 <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.25 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.2-5.2 1.4 1.4Z"></path></svg></span><div><p>Current decision</p><h3>Approved and Published</h3></div></header>
                 <p>This contribution is currently part of the public Educational Resources collection.</p>
+                <p class="admin-submission-lock-note">Its submitted content is locked and cannot be edited by the contributor or administrator.</p>
                 <a href="{{ url_for('edu_resources_details', item='submission-' ~ submission_item.id) }}" target="_blank" rel="noopener" class="admin-submission-public-link">Open public resource</a>
                 <form method="post" action="{{ url_for('admin_participation_submission_review', submission_id=submission_item.id) }}"
                   data-confirm-submit data-confirm-eyebrow="Submission status"
@@ -184,6 +197,11 @@
                   <input type="hidden" name="moderation_action" value="archive" />
                   <button type="submit" class="admin-submission-finalized-action is-archive">Archive submission</button>
                 </form>
+              </section>
+              {% elif submission_item.status == 'rejected' %}
+              <section class="admin-submission-finalized is-archived">
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1 5h2v6h-2Zm0 8h2v2h-2Z"></path></svg></span><div><p>Current decision</p><h3>Changes Requested</h3></div></header>
+                <p>This contribution is locked for administrators while the contributor revises it. Their next resubmission will return it to Pending Review.</p>
               </section>
               {% elif submission_item.status == 'archived' %}
               <section class="admin-submission-finalized is-archived">

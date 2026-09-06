@@ -12,19 +12,42 @@ create table if not exists public.community_participation_submissions (
   resource_file_filename text,
   photo_filename text,
   is_private boolean not null default false,
-  status text not null default 'pending_verification' check (status in ('pending_verification', 'pending_review', 'active', 'archived')),
+  status text not null default 'pending_verification' check (status in ('pending_verification', 'pending_review', 'active', 'rejected', 'archived')),
   verification_code_hash text,
   verification_sent_at timestamptz,
   verification_expires_at timestamptz,
   verified_at timestamptz,
   reviewed_at timestamptz,
   reviewed_by text not null default '',
+  moderation_feedback text not null default '' check (char_length(moderation_feedback) <= 2000),
+  resubmitted_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
 
 create index if not exists idx_community_participation_submissions_email on public.community_participation_submissions (submitter_email);
 create index if not exists idx_community_participation_submissions_status on public.community_participation_submissions (status);
+
+alter table public.community_participation_submissions
+  add column if not exists moderation_feedback text not null default ''::text;
+alter table public.community_participation_submissions
+  add column if not exists resubmitted_at timestamptz;
+alter table public.community_participation_submissions
+  drop constraint if exists community_participation_submissions_status_check;
+alter table public.community_participation_submissions
+  add constraint community_participation_submissions_status_check
+  check (status in ('pending_verification', 'pending_review', 'active', 'rejected', 'archived'));
+alter table public.community_participation_submissions
+  drop constraint if exists community_participation_submissions_moderation_feedback_check;
+alter table public.community_participation_submissions
+  add constraint community_participation_submissions_moderation_feedback_check
+  check (char_length(moderation_feedback) <= 2000);
+
+alter table public.community_participation_submissions enable row level security;
+revoke all on table public.community_participation_submissions from public;
+revoke all on table public.community_participation_submissions from anon;
+revoke all on table public.community_participation_submissions from authenticated;
+grant select, insert, update, delete on table public.community_participation_submissions to service_role;
 
 create or replace function public.set_current_timestamp_updated_at()
 returns trigger

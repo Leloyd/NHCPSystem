@@ -381,6 +381,7 @@ def _build_admin_dashboard_context():
     pending_review_submissions = [item for item in submission_items if item.get("status") == "pending_review"]
     awaiting_verification_submissions = [item for item in submission_items if item.get("status") == "pending_verification"]
     active_submissions = [item for item in submission_items if item.get("status") == "active"]
+    rejected_submissions = [item for item in submission_items if item.get("status") == "rejected"]
     archived_submissions = [item for item in submission_items if item.get("status") == "archived"]
 
     new_feedback = [item for item in feedback_items if item.get("status") == "new"]
@@ -745,7 +746,7 @@ def _build_admin_dashboard_context():
             "count": len(submission_items),
             "summary": (
                 f"{len(pending_review_submissions)} pending review · {len(awaiting_verification_submissions)} awaiting verification · "
-                f"{len(active_submissions)} active · {len(archived_submissions)} archived"
+                f"{len(active_submissions)} active · {len(rejected_submissions)} changes requested · {len(archived_submissions)} archived"
             ),
             "action_href": url_for("admin_participation_submissions"),
             "action_label": "Open",

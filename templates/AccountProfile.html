@@ -264,15 +264,59 @@
                     <strong>{{ account_dashboard.participation_submissions|length }}</strong>
                   </header>
                   <div class="ap-collection__body">
+                    {% if request.args.get('contribution_status') == 'resubmitted' %}
+                    <div class="ap-contribution-notice is-success" role="status"><i data-lucide="circle-check" aria-hidden="true"></i><span><strong>Submission sent for review</strong>Your revised contribution is now locked while the administrator reviews it.</span></div>
+                    {% elif request.args.get('contribution_error') %}
+                    <div class="ap-contribution-notice is-error" role="alert"><i data-lucide="circle-alert" aria-hidden="true"></i><span><strong>Could not resubmit</strong>{{ request.args.get('contribution_error') }}</span></div>
+                    {% endif %}
                     {% if account_dashboard.participation_submissions %}
                       {% for submission in account_dashboard.participation_submissions %}
-                      <div class="ap-entry">
+                      <div class="ap-entry ap-entry--submission">
                         <span class="ap-entry__icon"><i data-lucide="file-text" aria-hidden="true"></i></span>
                         <span class="ap-entry__body">
-                          <span class="ap-entry__top"><span class="ap-entry__eyebrow">{{ submission.submission_type|replace('_', ' ') }}</span><span class="ap-status">{{ submission.status|replace('_', ' ') }}</span></span>
+                          <span class="ap-entry__top"><span class="ap-entry__eyebrow">{{ submission.submission_type_label }}</span><span class="ap-status is-{{ submission.status }}">{{ submission.status_label }}</span></span>
                           <strong>{{ submission.title }}</strong>
                           <span class="ap-entry__description">{{ submission.description or submission.story_content }}</span>
+                          {% if submission.moderation_feedback %}
+                          <span class="ap-submission-feedback"><i data-lucide="message-square-text" aria-hidden="true"></i><span><strong>Administrator feedback</strong>{{ submission.moderation_feedback }}</span></span>
+                          {% endif %}
+                          {% if submission.status == 'active' %}
+                          <span class="ap-entry__note"><i data-lucide="lock-keyhole" aria-hidden="true"></i> Accepted submissions are final and cannot be edited.</span>
+                          {% elif submission.status == 'pending_review' %}
+                          <span class="ap-entry__note"><i data-lucide="clock-3" aria-hidden="true"></i> Editing is unavailable while this submission is under review.</span>
+                          {% endif %}
                         </span>
+                        {% if submission.status == 'rejected' %}
+                        <details class="ap-submission-editor">
+                          <summary><i data-lucide="pencil-line" aria-hidden="true"></i><span>Edit and resubmit</span><i data-lucide="chevron-down" aria-hidden="true"></i></summary>
+                          <form method="post" action="{{ url_for('account_participation_submission_resubmit', submission_id=submission.id) }}" enctype="multipart/form-data" data-direct-upload-form data-direct-upload-submit-mode="native" data-direct-upload-sign-url="{{ url_for('public_media_upload_sign') }}" data-direct-upload-discard-url="{{ url_for('public_media_upload_discard') }}" data-direct-upload-max-bytes="26214400">
+                            <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+                            <input type="hidden" name="submission_type" value="{{ submission.submission_type }}" />
+
+                            {% if submission.submission_type == 'teacher_corner' %}
+                            <label><span>Material title</span><input name="title" required minlength="3" maxlength="200" value="{{ submission.title }}" /></label>
+                            <label><span>Subject / topic</span><input name="subject_topic" required minlength="2" maxlength="200" value="{{ submission.subject_topic }}" /></label>
+                            <label class="is-wide"><span>Material description</span><textarea name="description" required minlength="12" maxlength="5000" rows="5">{{ submission.description }}</textarea></label>
+                            <label class="is-wide ap-submission-file-field"><span>Replace learning material <small>(optional)</small></span><input type="file" name="resource_file" accept=".pdf,.docx,.ppt,.pptx" data-direct-upload-purpose="participation_teacher_file" data-direct-upload-field="resource_object_path" /><small>PDF, DOCX, PPT or PPTX · maximum 25 MB. Leave empty to keep the current file.</small></label>
+                            {% if submission.resource_file_url %}<a class="ap-submission-current-file" href="{{ submission.resource_file_url }}" target="_blank" rel="noopener"><i data-lucide="external-link" aria-hidden="true"></i>Open current learning material</a>{% endif %}
+                            {% else %}
+                            <label><span>Story title</span><input name="story_title" required minlength="3" maxlength="200" value="{{ submission.title }}" /></label>
+                            <label><span>Story category</span><select name="story_category" required>
+                              {% set story_categories = ['Personal Memory', 'Family History', 'Community Experience', 'Museum Experience', 'Cultural Story', 'Heritage Discovery'] %}
+                              {% if submission.story_category and submission.story_category not in story_categories %}<option selected>{{ submission.story_category }}</option>{% endif %}
+                              {% for category in story_categories %}<option value="{{ category }}" {% if submission.story_category == category %}selected{% endif %}>{{ category }}</option>{% endfor %}
+                            </select></label>
+                            <label class="is-wide"><span>Your story</span><textarea name="story_content" required minlength="40" maxlength="10000" rows="8">{{ submission.story_content }}</textarea></label>
+                            <label class="is-wide ap-submission-file-field"><span>Replace story photo <small>(optional)</small></span><input type="file" name="photo" accept=".jpg,.jpeg,.png,image/jpeg,image/png" data-direct-upload-purpose="participation_story_photo" data-direct-upload-field="photo_object_path" /><small>JPG or PNG · maximum 25 MB. Leave empty to keep the current photo.</small></label>
+                            {% if submission.photo_url %}<div class="ap-submission-current-photo"><img src="{{ submission.photo_url }}" alt="Current photo for {{ submission.title }}" /><label><input type="checkbox" name="remove_photo" value="1" /> Remove the current photo without replacing it</label></div>{% endif %}
+                            {% endif %}
+
+                            <label class="is-wide ap-submission-privacy"><input type="checkbox" name="is_private" {% if submission.is_private %}checked{% endif %} /><span>Keep my name and email private when this contribution is published.</span></label>
+                            <div class="ap-upload-status is-wide" data-direct-upload-status role="status" aria-live="polite" hidden><i aria-hidden="true"></i><span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span></div>
+                            <div class="ap-submission-editor__actions is-wide"><button type="submit"><i data-lucide="send" aria-hidden="true"></i>Save changes and resubmit</button></div>
+                          </form>
+                        </details>
+                        {% endif %}
                       </div>
                       {% endfor %}
                     {% else %}
@@ -312,6 +356,8 @@
 
     {% include 'partials/_site_accessibility_fab.html' %}
     <script src="https://unpkg.com/lucide@latest"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="{{ url_for('static', filename='js/direct-media-upload.js') }}"></script>
     <script>if (window.lucide) window.lucide.createIcons();</script>
     {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>

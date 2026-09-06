@@ -1399,7 +1399,7 @@
       all: {
         title: "Complete submission record",
         description:
-          "Every pending, published, archived, and legacy unverified entry",
+          "Every pending, published, rejected, archived, and legacy unverified entry",
       },
       pending_review: {
         title: "Pending review queue",
@@ -1411,10 +1411,15 @@
         description:
           "Approved entries currently visible in Educational Resources",
       },
+      rejected: {
+        title: "Changes requested",
+        description:
+          "Rejected contributions waiting for their owners to revise and resubmit",
+      },
       archived: {
         title: "Submission archive",
         description:
-          "Rejected or withdrawn entries retained for future reference",
+          "Withdrawn entries retained for future reference",
       },
       pending_verification: {
         title: "Legacy unverified entries",
@@ -1484,10 +1489,14 @@
           emptyTitle.textContent = "No published submissions";
           emptyCopy.textContent =
             "Approved community contributions will appear here.";
+        } else if (currentFilter === "rejected") {
+          emptyTitle.textContent = "No submissions need contributor changes";
+          emptyCopy.textContent =
+            "Rejected submissions awaiting revision will appear here.";
         } else if (currentFilter === "archived") {
           emptyTitle.textContent = "No archived submissions";
           emptyCopy.textContent =
-            "Rejected or withdrawn entries will be retained here.";
+            "Withdrawn entries will be retained here.";
         } else if (currentFilter === "pending_verification") {
           emptyTitle.textContent = "No unverified submissions";
           emptyCopy.textContent =

@@ -5,7 +5,7 @@ from supabase_client import get_supabase_client
 
 PARTICIPATION_SUBMISSIONS_TABLE = "community_participation_submissions"
 PARTICIPATION_SUBMISSIONS_SELECT_FIELDS = (
-    "id, user_id, submission_type, title, resource_category, story_category, submitter_name, submitter_email, subject_topic, description, story_content, resource_file_filename, photo_filename, is_private, status, verification_code_hash, verification_sent_at, verification_expires_at, verified_at, reviewed_at, reviewed_by, created_at, updated_at"
+    "id, user_id, submission_type, title, resource_category, story_category, submitter_name, submitter_email, subject_topic, description, story_content, resource_file_filename, photo_filename, is_private, status, verification_code_hash, verification_sent_at, verification_expires_at, verified_at, reviewed_at, reviewed_by, moderation_feedback, resubmitted_at, created_at, updated_at"
 )
 
 
@@ -91,6 +91,47 @@ def update_participation_submission(submission_id: int, payload: dict[str, Any])
     rows = list(response.data or [])
     if not rows:
         raise RuntimeError("Supabase did not return the updated participation submission row.")
+    return rows[0]
+
+
+def update_rejected_participation_submission_for_user(
+    submission_id: int,
+    user_id: int,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Update only while the record is still rejected and owned by the user."""
+    client = get_supabase_client()
+    response = (
+        client.table(PARTICIPATION_SUBMISSIONS_TABLE)
+        .update(payload)
+        .eq("id", int(submission_id))
+        .eq("user_id", int(user_id))
+        .eq("status", "rejected")
+        .execute()
+    )
+    rows = list(response.data or [])
+    if not rows:
+        raise RuntimeError("The submission is no longer available for resubmission.")
+    return rows[0]
+
+
+def update_participation_submission_from_status(
+    submission_id: int,
+    expected_status: str,
+    payload: dict[str, Any],
+) -> dict[str, Any]:
+    """Apply a moderation transition only from its previously reviewed state."""
+    client = get_supabase_client()
+    response = (
+        client.table(PARTICIPATION_SUBMISSIONS_TABLE)
+        .update(payload)
+        .eq("id", int(submission_id))
+        .eq("status", str(expected_status or "").strip().lower())
+        .execute()
+    )
+    rows = list(response.data or [])
+    if not rows:
+        raise RuntimeError("The submission status changed before this decision was saved.")
     return rows[0]
 
 

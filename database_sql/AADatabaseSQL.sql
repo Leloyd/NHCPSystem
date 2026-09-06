@@ -433,13 +433,15 @@ create table if not exists public.community_participation_submissions (
   resource_file_filename text,
   photo_filename text,
   is_private boolean not null default false,
-  status text not null default 'pending_verification' check (status in ('pending_verification', 'pending_review', 'active', 'archived')),
+  status text not null default 'pending_verification' check (status in ('pending_verification', 'pending_review', 'active', 'rejected', 'archived')),
   verification_code_hash text,
   verification_sent_at timestamptz,
   verification_expires_at timestamptz,
   verified_at timestamptz,
   reviewed_at timestamptz,
   reviewed_by text not null default '',
+  moderation_feedback text not null default '' check (char_length(moderation_feedback) <= 2000),
+  resubmitted_at timestamptz,
   created_at timestamptz not null default timezone('utc', now()),
   updated_at timestamptz not null default timezone('utc', now())
 );
@@ -992,6 +994,32 @@ ALTER TABLE public.community_participation_submissions
 
 ALTER TABLE public.community_participation_submissions
   ALTER COLUMN status SET DEFAULT 'pending_review'::text;
+
+ALTER TABLE public.community_participation_submissions
+  ADD COLUMN IF NOT EXISTS moderation_feedback text NOT NULL DEFAULT ''::text;
+
+ALTER TABLE public.community_participation_submissions
+  ADD COLUMN IF NOT EXISTS resubmitted_at timestamp with time zone;
+
+ALTER TABLE public.community_participation_submissions
+  DROP CONSTRAINT IF EXISTS community_participation_submissions_status_check;
+
+ALTER TABLE public.community_participation_submissions
+  ADD CONSTRAINT community_participation_submissions_status_check
+  CHECK (status IN ('pending_verification', 'pending_review', 'active', 'rejected', 'archived'));
+
+ALTER TABLE public.community_participation_submissions
+  DROP CONSTRAINT IF EXISTS community_participation_submissions_moderation_feedback_check;
+
+ALTER TABLE public.community_participation_submissions
+  ADD CONSTRAINT community_participation_submissions_moderation_feedback_check
+  CHECK (char_length(moderation_feedback) <= 2000);
+
+ALTER TABLE public.community_participation_submissions ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.community_participation_submissions FROM PUBLIC;
+REVOKE ALL ON TABLE public.community_participation_submissions FROM anon;
+REVOKE ALL ON TABLE public.community_participation_submissions FROM authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.community_participation_submissions TO service_role;
 
 ALTER TABLE public.visitor_feedback
   ADD COLUMN IF NOT EXISTS user_id bigint REFERENCES public.public_users(id) ON DELETE SET NULL;

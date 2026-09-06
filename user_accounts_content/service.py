@@ -6,6 +6,7 @@ from edu_resources_content import load_public_edu_resources
 from heritage_keeper_content import empty_heritage_keeper_progress, load_heritage_keeper_progress
 from online_gallery_content import load_public_online_gallery_items
 from participation_submissions_repository import list_participation_submissions_for_user
+from participation_submissions_content.service import prepare_participation_submission_items
 from supabase_client import SupabaseConfigError, is_supabase_configured
 from tour_bookings_content import load_user_tour_bookings
 from user_bookmarks_repository import list_user_bookmarks
@@ -50,7 +51,9 @@ def load_user_account_dashboard(user_id: int) -> dict[str, Any]:
     dashboard["tour_bookings"] = load_user_tour_bookings(user_id)
 
     try:
-        dashboard["participation_submissions"] = list_participation_submissions_for_user(user_id)
+        dashboard["participation_submissions"] = prepare_participation_submission_items(
+            list_participation_submissions_for_user(user_id)
+        )
     except Exception:
         dashboard["participation_submissions"] = []
 
