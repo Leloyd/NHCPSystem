@@ -50,6 +50,12 @@
   var managedMapYawSign = -1;
   var managedMapHeadingFrame = 0;
   var viewModes = document.getElementById("tourViewModes");
+  var gyroButton = document.getElementById("tourGyro");
+  var vrModeButton = document.getElementById("tourVrMode");
+  var vrView = document.getElementById("tourVrView");
+  var vrStage = document.getElementById("tourVrStage");
+  var vrStatus = document.getElementById("tourVrStatus");
+  var vrExitButton = document.getElementById("tourVrExit");
   var audio = new Audio();
   var speechFallback = window.NHCPSpeechFallback || null;
   var usingSpeechFallback = false;
@@ -62,6 +68,8 @@
   var subtitlesOn = true;
   var hotspotsVisible = true;
   var viewer = null;
+  var viewerReady = false;
+  var panoramaViewModes = null;
   var floatingSceneId = "";
   var floatingHotspotId = "";
   var spatialRefresh = null;
@@ -367,6 +375,12 @@
 
   function showArCompatibilityNotice() {
     var notice = ensureArNotice();
+    var icon = notice.querySelector(".tour-ar-notice__icon");
+    var heading = notice.querySelector("strong");
+    var body = notice.querySelector(".tour-ar-notice__copy span");
+    if (icon) icon.textContent = "!";
+    if (heading) heading.textContent = "AR is unavailable";
+    if (body) body.textContent = "This device or browser does not support Quick Look, WebXR, or Scene Viewer AR. You can still explore the 3D model here.";
     window.clearTimeout(arNoticeTimer);
     notice.hidden = false;
     window.requestAnimationFrame(function () { notice.classList.add("is-visible"); });
@@ -376,6 +390,25 @@
         if (!notice.classList.contains("is-visible")) notice.hidden = true;
       }, 220);
     }, 6000);
+  }
+
+  function showViewingModeNotice(title, message, duration) {
+    var notice = ensureArNotice();
+    var icon = notice.querySelector(".tour-ar-notice__icon");
+    var heading = notice.querySelector("strong");
+    var body = notice.querySelector(".tour-ar-notice__copy span");
+    if (icon) icon.textContent = "360°";
+    if (heading) heading.textContent = String(title || "360 viewing mode");
+    if (body) body.textContent = String(message || "");
+    window.clearTimeout(arNoticeTimer);
+    notice.hidden = false;
+    window.requestAnimationFrame(function () { notice.classList.add("is-visible"); });
+    arNoticeTimer = window.setTimeout(function () {
+      notice.classList.remove("is-visible");
+      window.setTimeout(function () {
+        if (!notice.classList.contains("is-visible")) notice.hidden = true;
+      }, 220);
+    }, Number(duration) || 5000);
   }
 
   function installModelArControl(model, container) {
@@ -1006,6 +1039,138 @@
     pannellumScenes[scene.id] = { type: "equirectangular", panorama: scene.panorama, pitch: scene.pitch, yaw: scene.yaw, hfov: scene.hfov, hotSpots: hotSpots };
   });
 
+  function normalizeVrNestedHotspot(detail) {
+    detail = detail || {};
+    return {
+      id: String(detail.id || ""),
+      x: Number(detail.x),
+      y: Number(detail.y),
+      title: detail.title || { en: "Artifact detail", tl: "Detalye ng artifact" },
+      imageSrc: String(detail.image || ""),
+      subtitle: detail.subtitle || { en: "", tl: "" },
+      audioByLanguage: detail.audio || { en: "", tl: "" },
+      source: detail,
+    };
+  }
+
+  function getDynamicVrHotspots() {
+    if (!viewer || !hotspotsVisible || typeof viewer.getScene !== "function") return [];
+    var sceneId = viewer.getScene();
+    var scene = scenes.find(function (entry) { return String(entry.id) === String(sceneId); });
+    if (!scene) return [];
+    return (scene.hotspots || []).filter(function (hotspot) {
+      return hotspot && (hotspot.type === "navigation" || hotspot.type === "item");
+    }).map(function (hotspot, index) {
+      var targetScene = hotspot.targetScene ? pannellumScenes[hotspot.targetScene] : null;
+      var content = hotspot.content || {};
+      return {
+        id: String(hotspot.id || (sceneId + "-vr-hotspot-" + index)),
+        type: hotspot.type === "navigation" ? "scene" : "info",
+        pitch: Number(hotspot.pitch),
+        yaw: Number(hotspot.yaw),
+        sceneId: String(hotspot.targetScene || ""),
+        targetPitch: hotspot.targetPitch != null && Number.isFinite(Number(hotspot.targetPitch))
+          ? Number(hotspot.targetPitch)
+          : (targetScene ? Number(targetScene.pitch) : null),
+        targetYaw: hotspot.targetYaw != null && Number.isFinite(Number(hotspot.targetYaw))
+          ? Number(hotspot.targetYaw)
+          : (targetScene ? Number(targetScene.yaw) : null),
+        targetHfov: hotspot.targetHfov != null && Number.isFinite(Number(hotspot.targetHfov))
+          ? Number(hotspot.targetHfov)
+          : (targetScene ? Number(targetScene.hfov) : null),
+        label: localized(hotspot.name, language) || (hotspot.type === "navigation" ? "Move to next scene" : "Museum artifact"),
+        imageSrc: String(content.image || ""),
+        glbSrc: String(content.glb || ""),
+        subtitle: content.subtitle || { en: "", tl: "" },
+        imageHotspots: Array.isArray(content.nested)
+          ? content.nested.map(normalizeVrNestedHotspot)
+          : [],
+        language: language,
+        source: hotspot,
+      };
+    });
+  }
+
+  function initializeViewingModes() {
+    if (
+      panoramaViewModes || !viewer || !viewModes || !gyroButton || !vrModeButton
+      || !vrView || !vrStage || !vrStatus || !vrExitButton
+    ) return;
+    import("/static/js/panorama-view-modes.js?v=20260907-vr-hotspots").then(function (module) {
+      if (!module || typeof module.createPanoramaViewModes !== "function" || !viewer) return;
+      panoramaViewModes = module.createPanoramaViewModes({
+        getViewer: function () { return viewer; },
+        getPanoramaSource: function () {
+          var sceneId = viewer && typeof viewer.getScene === "function" ? viewer.getScene() : initialScene;
+          return pannellumScenes[sceneId] ? pannellumScenes[sceneId].panorama : "";
+        },
+        getHotspots: getDynamicVrHotspots,
+        activateHotspot: function (target) {
+          if (!target || !viewer) return;
+          if (target.type === "scene" && target.sceneId) {
+            viewer.loadScene(target.sceneId, target.targetPitch, target.targetYaw, target.targetHfov);
+          } else if (target.type === "info" && target.source) {
+            openItem(target.source);
+          }
+        },
+        closeHotspot: function () { closeItem(false); },
+        changeHotspotLanguage: function (target, nextLanguage) {
+          language = nextLanguage === "en" ? "en" : "tl";
+          if (target && target.source) {
+            rootItem = target.source;
+            activeItem = target.source;
+          }
+          setSubtitle();
+          syncAudioControls();
+          playNarration(true);
+        },
+        activateNestedHotspot: function (target, detail, nextLanguage) {
+          language = nextLanguage === "en" ? "en" : "tl";
+          if (detail && detail.source && rootItem) {
+            activeItem = {
+              id: String(rootItem.id) + ":" + String(detail.source.id || "detail"),
+              name: detail.source.title || { en: "Artifact detail", tl: "Detalye ng artifact" },
+              content: {
+                image: detail.source.image || "",
+                glb: "",
+                nested: [],
+                subtitle: detail.source.subtitle || { en: "", tl: "" },
+                audio: detail.source.audio || { en: "", tl: "" },
+              },
+            };
+            setSubtitle();
+            playNarration(true);
+          }
+        },
+        restoreHotspotNarration: function (target, nextLanguage) {
+          language = nextLanguage === "en" ? "en" : "tl";
+          if (target && target.source) {
+            rootItem = target.source;
+            activeItem = target.source;
+            setSubtitle();
+            playNarration(true);
+          }
+        },
+        gyroButton: gyroButton,
+        vrButton: vrModeButton,
+        overlay: vrView,
+        stage: vrStage,
+        status: vrStatus,
+        exitButton: vrExitButton,
+        interactionElement: document.getElementById("tourViewer"),
+        activeRootClass: "tour-vr-active",
+        infoInitialZoom: 3,
+        infoMaxZoom: 3.5,
+        translate: function (english, tagalog) { return language === "tl" ? tagalog : english; },
+        notify: showViewingModeNotice,
+      });
+      if (viewerReady) viewModes.hidden = false;
+    }).catch(function (error) {
+      console.warn("[Virtual Tour] Viewing modes could not initialize.", error);
+      viewModes.hidden = true;
+    });
+  }
+
   function resolveRequestedScene(requested) {
     if (!requested) return "";
     if (pannellumScenes[requested]) return requested;
@@ -1041,10 +1206,13 @@
       loadingText: "Loading 360 view…",
     });
     HTMLCanvasElement.prototype.getContext = originalGetContext;
+    initializeViewingModes();
     viewer.on("load", function () {
+      viewerReady = true;
       loading.hidden = true;
       errorOverlay.hidden = true;
       setControlDockVisibility(true);
+      if (panoramaViewModes) viewModes.hidden = false;
       syncManagedMap(viewer.getScene());
       if (window.NHCPAnalytics && window.NHCPAnalytics.track) {
         window.NHCPAnalytics.track("virtual_tour_opened", "virtual-tour", config.tour.slug, { scene: viewer.getScene(), tour: config.tour.slug }, { onceKey: "virtual-tour:" + config.tour.slug });
@@ -1054,6 +1222,7 @@
       closeItem();
       syncCaptureDate(sceneId);
       syncManagedMap(sceneId);
+      if (panoramaViewModes) panoramaViewModes.syncScene();
       var url = new URL(window.location.href); url.searchParams.set("scene", sceneId); window.history.replaceState({}, "", url);
       if (window.NHCPAnalytics && window.NHCPAnalytics.track) window.NHCPAnalytics.track("tour_scene_viewed", "virtual-tour", sceneId, { tour: config.tour.slug, scene: sceneId });
     });
@@ -1118,6 +1287,7 @@
   hotspotButton.addEventListener("click", function () {
     hotspotsVisible = !hotspotsVisible;
     syncHotspotVisibilityControl();
+    if (panoramaViewModes) panoramaViewModes.syncScene();
   });
   backButton.addEventListener("click", function () { window.location.href = app.dataset.interactiveUrl || "/interactive"; });
   captureButton.addEventListener("click", captureCurrentView);
@@ -1147,4 +1317,7 @@
   syncHotspotVisibilityControl();
   syncAudioControls();
   setSubtitle();
+  window.addEventListener("pagehide", function () {
+    if (panoramaViewModes) panoramaViewModes.suspend();
+  });
 })();

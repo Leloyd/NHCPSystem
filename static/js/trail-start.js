@@ -338,7 +338,7 @@ const artApi = {};
 
 /* Current Pannellum scene media, shared with the custom WebXR / VR Box
    renderer. It is populated when initPanorama builds the tour. */
-const panoramaApi = { sceneSources: {}, sceneHotspots: {} };
+const panoramaApi = { sceneSources: {}, sceneHotspots: {}, sceneViews: {} };
 
 /* Stop 4's Fragments of Memory controls. Populated when its story is set up
    so stop transitions and the global mute control can also manage its music. */
@@ -1074,6 +1074,7 @@ const trailVr = {
   nativeChecked: false,
   renderer: null,
   scene: null,
+  worldRoot: null,
   camera: null,
   stereo: null,
   sphere: null,
@@ -1107,6 +1108,8 @@ const trailVr = {
   infoImageHotspotsVisible: true,
   infoDetail: null,
   infoLanguageControl: null,
+  pendingSceneView: null,
+  lastGazeDirection: new THREE.Vector3(0, 0, -1),
 };
 const gyroEuler = new THREE.Euler();
 const gyroQuaternion = new THREE.Quaternion();
@@ -1243,8 +1246,29 @@ function trailVrHotspotPosition(pitch, yaw, radius = 10.7) {
 }
 
 function getTrailVrHotspots() {
-  return (panoramaApi.sceneHotspots[currentScene] || [])
-    .filter((hotspot) => hotspot && (hotspot.type === 'scene' || hotspot.type === 'info'));
+  const configured = panoramaApi.sceneHotspots[currentScene] || [];
+  let active = [];
+  try {
+    const viewerScene = viewer?.getScene?.();
+    const viewerConfig = String(viewerScene || '') === String(currentScene)
+      ? viewer?.getConfig?.()
+      : null;
+    active = viewerConfig && Array.isArray(viewerConfig.hotSpots)
+      ? viewerConfig.hotSpots
+      : [];
+  } catch { /* the saved scene configuration remains available */ }
+  const seen = new Set();
+  return [...configured, ...active].filter((hotspot) => {
+    if (!hotspot || (hotspot.type !== 'scene' && hotspot.type !== 'info')) return false;
+    if (!Number.isFinite(Number(hotspot.pitch)) || !Number.isFinite(Number(hotspot.yaw))) return false;
+    if (String(hotspot.id || '').endsWith('-window')) return false;
+    const key = hotspot.id
+      ? `id:${hotspot.id}`
+      : `${hotspot.type}:${Number(hotspot.pitch).toFixed(4)}:${Number(hotspot.yaw).toFixed(4)}:${hotspot.sceneId || ''}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
 }
 
 function clearTrailVrTargets() {
@@ -1278,7 +1302,7 @@ function buildTrailVrTargets() {
     sprite.position.copy(trailVrHotspotPosition(hotspot.pitch, hotspot.yaw));
     sprite.scale.setScalar(0.58);
     sprite.renderOrder = 20;
-    trailVr.scene.add(sprite);
+    (trailVr.worldRoot || trailVr.scene).add(sprite);
     trailVr.targets.push({ hotspot, sprite });
   });
 }
@@ -1717,7 +1741,7 @@ function showTrailVrInfoCard(hotspot, sourceRecord) {
   panel.renderOrder = 102;
   group.add(panel);
 
-  trailVr.scene.add(group);
+  (trailVr.worldRoot || trailVr.scene).add(group);
   renderTrailVrInfoMedia();
   if (args.glbSrc) {
     addTrailVrInfoControl('3D', -0.72, -0.58, () => {
@@ -1793,11 +1817,25 @@ function activateTrailVrTarget(record) {
   }
   const hotspot = record.hotspot;
   if (hotspot.type === 'scene' && hotspot.sceneId) {
+    const destination = panoramaApi.sceneViews[hotspot.sceneId] || {};
+    const targetPitch = hotspot.targetPitch != null && Number.isFinite(Number(hotspot.targetPitch))
+      ? Number(hotspot.targetPitch)
+      : Number(destination.pitch || 0);
+    const targetYaw = hotspot.targetYaw != null && Number.isFinite(Number(hotspot.targetYaw))
+      ? Number(hotspot.targetYaw)
+      : Number(destination.yaw || 0);
+    trailVr.pendingSceneView = {
+      pitch: Math.max(-85, Math.min(85, targetPitch)),
+      yaw: ((targetYaw % 360) + 540) % 360 - 180,
+      gazeDirection: trailVr.lastGazeDirection.clone().normalize(),
+    };
     viewer?.loadScene?.(
       hotspot.sceneId,
-      hotspot.targetPitch,
-      hotspot.targetYaw,
-      hotspot.targetHfov,
+      targetPitch,
+      targetYaw,
+      hotspot.targetHfov != null && Number.isFinite(Number(hotspot.targetHfov))
+        ? Number(hotspot.targetHfov)
+        : Number(destination.hfov || 100),
     );
     return;
   }
@@ -1821,6 +1859,7 @@ function updateTrailVrGaze(camera, now = performance.now()) {
     return;
   }
   camera.getWorldDirection(trailVrGazeDirection);
+  trailVr.lastGazeDirection.copy(trailVrGazeDirection);
   camera.getWorldPosition(trailVrOrigin);
   let closest = null;
   let closestAngle = Infinity;
@@ -2060,11 +2099,14 @@ function disposeTrailVrWorld() {
   }
   trailVr.renderer = null;
   trailVr.scene = null;
+  trailVr.worldRoot = null;
   trailVr.camera = null;
   trailVr.stereo = null;
   trailVr.sphere = null;
   trailVr.material = null;
   trailVr.texture = null;
+  trailVr.pendingSceneView = null;
+  trailVr.lastGazeDirection.set(0, 0, -1);
   trailVr.width = 0;
   trailVr.height = 0;
   if (vrStageEl) vrStageEl.replaceChildren();
@@ -2097,6 +2139,9 @@ function buildTrailVrWorld(source) {
 
   const scene = new THREE.Scene();
   scene.background = new THREE.Color(0x000000);
+  const worldRoot = new THREE.Group();
+  worldRoot.rotation.order = 'YXZ';
+  scene.add(worldRoot);
   const camera = new THREE.PerspectiveCamera(78, 1, 0.05, 40);
   camera.rotation.order = 'YXZ';
   scene.add(camera);
@@ -2112,10 +2157,11 @@ function buildTrailVrWorld(source) {
   // Match Pannellum's yaw origin: image center (yaw 0) must face -Z in this
   // renderer, so rotate Three's inverted equirectangular sphere by -90°.
   sphere.rotation.y = -Math.PI / 2;
-  scene.add(sphere);
+  worldRoot.add(sphere);
 
   trailVr.renderer = renderer;
   trailVr.scene = scene;
+  trailVr.worldRoot = worldRoot;
   trailVr.camera = camera;
   trailVr.sphere = sphere;
   trailVr.material = material;
@@ -2152,12 +2198,53 @@ function buildTrailVrWorld(source) {
   );
 }
 
+function applyPendingTrailVrSceneView() {
+  const target = trailVr.pendingSceneView;
+  trailVr.pendingSceneView = null;
+  if (!target) return;
+
+  if (trailVr.mode === 'native' && trailVr.worldRoot) {
+    const gaze = target.gazeDirection && target.gazeDirection.lengthSq() > 0
+      ? target.gazeDirection
+      : trailVr.lastGazeDirection;
+    const gazeYaw = THREE.MathUtils.radToDeg(Math.atan2(gaze.x, -gaze.z));
+    // Yaw-only alignment keeps the panorama and all hotspot markers together
+    // while guaranteeing a level horizon after scene navigation.
+    trailVr.worldRoot.rotation.set(
+      0,
+      THREE.MathUtils.degToRad(target.yaw - gazeYaw),
+      0,
+      'YXZ',
+    );
+    return;
+  }
+
+  trailVr.worldRoot?.rotation.set(0, 0, 0, 'YXZ');
+  try {
+    viewer?.setYaw?.(target.yaw, false);
+    viewer?.setPitch?.(target.pitch, false);
+  } catch { /* Pannellum may still be finishing its scene fade */ }
+  if (trailGyro.enabled && trailGyro.hasReading) {
+    trailGyro.yawOffset = target.yaw - (-trailGyro.yaw);
+    trailGyro.pitchOffset = target.pitch - trailGyro.pitch;
+    trailGyro.needsSync = false;
+  } else {
+    trailGyro.needsSync = true;
+  }
+  if (trailVr.camera) {
+    trailVr.camera.rotation.x = THREE.MathUtils.degToRad(target.pitch);
+    trailVr.camera.rotation.y = THREE.MathUtils.degToRad(-target.yaw);
+    trailVr.camera.rotation.z = 0;
+  }
+}
+
 function refreshTrailVrScene() {
   if (!trailVr.mode || !trailVr.material) return;
   const source = panoramaApi.sceneSources[currentScene];
   if (!source) return;
   closeTrailVrInfoCard();
   buildTrailVrTargets();
+  applyPendingTrailVrSceneView();
   vrStatusEl?.classList.remove('is-ready');
   const material = trailVr.material;
   new THREE.TextureLoader().load(source, (texture) => {
@@ -4728,6 +4815,16 @@ function initPanorama() {
         Object.entries(scenes).map(([sceneId, sceneConfig]) => [
           sceneId,
           sceneConfig && Array.isArray(sceneConfig.hotSpots) ? sceneConfig.hotSpots : [],
+        ]),
+      );
+      panoramaApi.sceneViews = Object.fromEntries(
+        Object.entries(scenes).map(([sceneId, sceneConfig]) => [
+          sceneId,
+          {
+            pitch: Number(sceneConfig?.pitch || 0),
+            yaw: Number(sceneConfig?.yaw || 0),
+            hfov: Number(sceneConfig?.hfov || 100),
+          },
         ]),
       );
 

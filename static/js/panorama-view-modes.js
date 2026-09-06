@@ -123,10 +123,6 @@ export function createPanoramaViewModes(options) {
   const controllerDirection = new THREE.Vector3();
   const controllerOrigin = new THREE.Vector3();
   const targetWorldPosition = new THREE.Vector3();
-  const sceneTargetEuler = new THREE.Euler(0, 0, 0, "YXZ");
-  const sceneGazeEuler = new THREE.Euler(0, 0, 0, "YXZ");
-  const sceneTargetQuaternion = new THREE.Quaternion();
-  const sceneGazeQuaternion = new THREE.Quaternion();
   const DWELL_MS = 1250;
   const GAZE_ANGLE_DEG = 6;
 
@@ -1373,35 +1369,19 @@ export function createPanoramaViewModes(options) {
         : vr.lastGazeDirection.lengthSq() > 0
           ? vr.lastGazeDirection.clone().normalize()
         : new THREE.Vector3(0, 0, -1);
-      const gazePitch = Math.asin(Math.max(-1, Math.min(1, gaze.y)));
       const gazeYaw = Math.atan2(gaze.x, -gaze.z);
-      const gazePitchDegrees = THREE.MathUtils.radToDeg(gazePitch);
       const gazeYawDegrees = THREE.MathUtils.radToDeg(gazeYaw);
-      const referencePitch = vr.referenceGazePitch !== null
-        && Number.isFinite(Number(vr.referenceGazePitch))
-        ? Number(vr.referenceGazePitch)
-        : gazePitchDegrees;
-      const referenceYaw = vr.referenceGazeYaw !== null
-        && Number.isFinite(Number(vr.referenceGazeYaw))
-        ? Number(vr.referenceGazeYaw)
-        : gazeYawDegrees;
-      const headPitchOffset = gazePitchDegrees - referencePitch;
-      const headYawOffset = ((gazeYawDegrees - referenceYaw + 540) % 360) - 180;
-      const preservedTargetPitch = Math.max(
-        -85,
-        Math.min(85, targetPitch + headPitchOffset),
-      );
-      const preservedTargetYaw = ((targetYaw + headYawOffset + 540) % 360) - 180;
-      sceneTargetEuler.set(
-        THREE.MathUtils.degToRad(preservedTargetPitch),
-        THREE.MathUtils.degToRad(-preservedTargetYaw),
+      // Rotate the panorama and its hotspots together around the vertical
+      // axis only. Matching the destination yaw to the current headset gaze
+      // keeps navigation continuous without introducing roll / a slanted
+      // horizon. Headset pitch remains physical and therefore comfortable.
+      vr.worldRoot.rotation.order = "YXZ";
+      vr.worldRoot.rotation.set(
+        0,
+        THREE.MathUtils.degToRad(targetYaw - gazeYawDegrees),
         0,
         "YXZ",
       );
-      sceneGazeEuler.set(gazePitch, -gazeYaw, 0, "YXZ");
-      sceneTargetQuaternion.setFromEuler(sceneTargetEuler).invert();
-      sceneGazeQuaternion.setFromEuler(sceneGazeEuler);
-      vr.worldRoot.quaternion.copy(sceneGazeQuaternion).multiply(sceneTargetQuaternion);
       return;
     }
 
@@ -1435,9 +1415,7 @@ export function createPanoramaViewModes(options) {
     if (vr.camera) {
       vr.camera.rotation.x = THREE.MathUtils.degToRad(preservedPitch);
       vr.camera.rotation.y = THREE.MathUtils.degToRad(-destinationYaw);
-      vr.camera.rotation.z = gyro.hasReading
-        ? THREE.MathUtils.degToRad(gyro.roll)
-        : vr.camera.rotation.z;
+      vr.camera.rotation.z = 0;
     }
     vr.sceneAnchorPitch = targetPitch;
     vr.sceneAnchorYaw = targetYaw;
@@ -1510,12 +1488,9 @@ export function createPanoramaViewModes(options) {
     } catch {
       // Keep the most recent pose.
     }
-    // DeviceOrientation includes the phone's sideways head tilt. Keep that
-    // roll in the stereo camera instead of leveling the horizon on every
-    // frame, so it also survives a panorama scene transition.
-    vr.camera.rotation.z = gyro.hasReading
-      ? THREE.MathUtils.degToRad(gyro.roll)
-      : 0;
+    // Keep the stereo horizon level. Applying DeviceOrientation roll here can
+    // accumulate a visibly slanted view after changing panorama scenes.
+    vr.camera.rotation.z = 0;
     vr.camera.updateWorldMatrix(true, false);
     if (vr.infoModelRoot) {
       vr.infoModelRoot.rotation.y = (Number(now) || performance.now()) * 0.00028;

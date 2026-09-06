@@ -5098,7 +5098,7 @@
         && vrExitButton
         && viewerContainer
       ) {
-        import("/static/js/panorama-view-modes.js").then(function (viewModeModule) {
+        import("/static/js/panorama-view-modes.js?v=20260907-vr-hotspots").then(function (viewModeModule) {
           if (tourViewer !== viewer || !viewModeModule.createPanoramaViewModes) {
             return;
           }

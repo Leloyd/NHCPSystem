@@ -315,10 +315,10 @@
     {% if request.args.get('editorSnapshot') == '1' %}<script src="{{ url_for('static', filename='js/site-analytics.js') }}"></script>{% endif %}
     {% if dynamic_tour_config %}
     <script type="application/json" id="virtualTourDynamicConfig">{{ dynamic_tour_config|tojson }}</script>
-    <script src="{{ url_for('static', filename='js/virtual-tour-dynamic.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/virtual-tour-dynamic.js', v='20260907-vr-hotspots') }}"></script>
     {% else %}
     <script src="{{ url_for('static', filename='js/artifact-subtitles.js') }}"></script>
-    <script src="{{ url_for('static', filename='js/virtual-tour.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/virtual-tour.js', v='20260907-vr-hotspots') }}"></script>
     {% endif %}
   </body>
 </html>
