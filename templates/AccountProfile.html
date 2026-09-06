@@ -265,7 +265,7 @@
                   </header>
                   <div class="ap-collection__body">
                     {% if request.args.get('contribution_status') == 'resubmitted' %}
-                    <div class="ap-contribution-notice is-success" role="status"><i data-lucide="circle-check" aria-hidden="true"></i><span><strong>Submission sent for review</strong>Your revised contribution is now locked while the administrator reviews it.</span></div>
+                    <div class="ap-contribution-notice is-success" role="status" aria-live="polite" aria-atomic="true" data-auto-dismiss="3000"><i data-lucide="circle-check" aria-hidden="true"></i><span><strong>Submission sent for review</strong>Your revised contribution is now locked while the administrator reviews it.</span></div>
                     {% elif request.args.get('contribution_error') %}
                     <div class="ap-contribution-notice is-error" role="alert"><i data-lucide="circle-alert" aria-hidden="true"></i><span><strong>Could not resubmit</strong>{{ request.args.get('contribution_error') }}</span></div>
                     {% endif %}

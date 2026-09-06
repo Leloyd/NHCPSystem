@@ -1067,6 +1067,12 @@ a.ap-entry:hover {
   border-radius: 0.7rem;
   font-size: 0.72rem;
   line-height: 1.45;
+  transition: opacity 220ms ease, transform 220ms ease;
+}
+
+.ap-contribution-notice.is-dismissing {
+  opacity: 0;
+  transform: translateY(-0.35rem);
 }
 
 .ap-contribution-notice > svg {
@@ -1492,6 +1498,17 @@ html[data-theme="dark"] .ap-status.is-rejected {
   border-color: #7d423d;
 }
 
+html[data-theme="dark"] .ap-contribution-notice.is-success {
+  color: #c6ebd0;
+  background: #172b20;
+  border-color: #3f7651;
+}
+
+html[data-theme="dark"] .ap-contribution-notice.is-success strong,
+html[data-theme="dark"] .ap-contribution-notice.is-success > svg {
+  color: #e0f4e5;
+}
+
 html[data-theme="dark"] .ap-submission-editor form {
   background: #18130c;
   border-color: #59492d;
@@ -1642,6 +1659,25 @@ html[data-contrast="on"] .ap-submission-editor__actions button {
   color: #000 !important;
   background: #ffdf00 !important;
   border-color: #ffdf00 !important;
+}
+
+html[data-contrast="on"] .ap-submission-editor input[type="file"]::file-selector-button,
+html[data-contrast="on"] .ap-submission-editor input[type="file"]::-webkit-file-upload-button {
+  margin-right: 0.65rem;
+  padding: 0.45rem 0.7rem;
+  color: #000 !important;
+  background: #ffdf00 !important;
+  border: 2px solid #ffdf00 !important;
+  border-radius: 0.4rem;
+  font: inherit;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+html[data-contrast="on"] .ap-submission-editor input[type="file"]:hover::file-selector-button,
+html[data-contrast="on"] .ap-submission-editor input[type="file"]:hover::-webkit-file-upload-button {
+  background: #fff !important;
+  border-color: #fff !important;
 }
 
 html[data-contrast="on"] .ap-journeys,
