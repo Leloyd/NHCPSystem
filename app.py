@@ -36,7 +36,7 @@ from supabase_client import is_supabase_configured
 from tour_bookings_content import load_admin_tour_bookings, load_public_tour_bookings, register_tour_booking_routes
 from user_accounts_content import load_user_bookmarked_gallery_item_ids, register_user_account_routes
 from user_management_content import load_admin_public_users, register_user_management_routes
-from visitor_feedback_content import load_admin_visitor_feedback, register_visitor_feedback_routes
+from visitor_feedback_content import build_public_visitor_feedback, load_admin_visitor_feedback, register_visitor_feedback_routes
 from virtual_tour_content import (
     ORIGINAL_CAPTURED_ON,
     build_public_tour_config,
@@ -2190,10 +2190,12 @@ def participation():
 def community_participation():
     community_highlights_items = load_news_community_highlights(limit=24)
     community_calendar_items = load_public_tour_bookings(limit=90)
+    public_visitor_feedback = build_public_visitor_feedback()
     return render_template(
         "CommunityParticipation.html",
         community_highlights_items=community_highlights_items,
         community_calendar_items=community_calendar_items,
+        public_visitor_feedback=public_visitor_feedback,
     )
 
 

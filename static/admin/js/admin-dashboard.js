@@ -1551,6 +1551,9 @@
     var filterButtons = Array.prototype.slice.call(
       root.querySelectorAll("[data-feedback-filter-button]")
     );
+    var channelButtons = Array.prototype.slice.call(
+      root.querySelectorAll("[data-feedback-channel-button]")
+    );
     var searchInput = root.querySelector("#adminFeedbackSearch");
     var clearButton = root.querySelector("[data-feedback-search-clear]");
     var visibleCount = root.querySelector("[data-feedback-visible-count]");
@@ -1564,23 +1567,28 @@
     var currentFilter = String(
       root.getAttribute("data-feedback-filter") || "all"
     ).toLowerCase();
+    var currentChannel = "all";
 
     var filterCopy = {
       all: {
         title: "Complete feedback record",
-        description: "Every new, reviewed, and archived visitor response",
+        description: "Every on-site and online response across moderation states",
       },
-      new: {
-        title: "Pending review queue",
-        description: "Fresh visitor responses awaiting an administrator's review",
+      pending: {
+        title: "Pending comment review",
+        description: "Written comments awaiting a safety and privacy review",
       },
-      reviewed: {
-        title: "Reviewed feedback",
-        description: "Visitor responses already checked by an administrator",
+      published: {
+        title: "Published comments",
+        description: "Consented comments currently visible to the public",
       },
-      archived: {
-        title: "Feedback archive",
-        description: "Historical responses retained outside the active review record",
+      withheld: {
+        title: "Withheld comments",
+        description: "Comments withheld for a recorded content-policy reason",
+      },
+      excluded: {
+        title: "Excluded ratings",
+        description: "Ratings excluded only for fraud, duplication, or ineligibility",
       },
     };
 
@@ -1596,11 +1604,14 @@
         var statusMatches =
           currentFilter === "all" ||
           card.getAttribute("data-feedback-status") === currentFilter;
+        var channelMatches =
+          currentChannel === "all" ||
+          card.getAttribute("data-feedback-channel") === currentChannel;
         var searchMatches =
           !query ||
           normalize(card.getAttribute("data-feedback-search")).indexOf(query) !==
             -1;
-        var shouldShow = statusMatches && searchMatches;
+        var shouldShow = statusMatches && channelMatches && searchMatches;
         card.hidden = !shouldShow;
         if (shouldShow) {
           shown += 1;
@@ -1610,6 +1621,11 @@
       filterButtons.forEach(function (button) {
         var isActive =
           button.getAttribute("data-feedback-filter-button") === currentFilter;
+        button.classList.toggle("is-active", isActive);
+        button.setAttribute("aria-pressed", isActive ? "true" : "false");
+      });
+      channelButtons.forEach(function (button) {
+        var isActive = button.getAttribute("data-feedback-channel-button") === currentChannel;
         button.classList.toggle("is-active", isActive);
         button.setAttribute("aria-pressed", isActive ? "true" : "false");
       });
@@ -1637,16 +1653,16 @@
           emptyTitle.textContent = "No matching visitor feedback";
           emptyCopy.textContent =
             "Try another visitor name, comment, visit channel, rating, or status.";
-        } else if (currentFilter === "new") {
+        } else if (currentFilter === "pending") {
           emptyTitle.textContent = "The feedback queue is clear";
           emptyCopy.textContent =
             "New visitor responses will appear here for review.";
-        } else if (currentFilter === "reviewed") {
-          emptyTitle.textContent = "No reviewed feedback";
+        } else if (currentFilter === "published") {
+          emptyTitle.textContent = "No published comments";
           emptyCopy.textContent =
             "Responses marked as reviewed will appear here.";
-        } else if (currentFilter === "archived") {
-          emptyTitle.textContent = "No archived feedback";
+        } else if (currentFilter === "withheld") {
+          emptyTitle.textContent = "No withheld comments";
           emptyCopy.textContent =
             "Archived visitor responses will be retained here.";
         } else {
@@ -1662,6 +1678,13 @@
         var nextFilter = button.getAttribute("data-feedback-filter-button");
         currentFilter = filterCopy[nextFilter] ? nextFilter : "all";
         root.setAttribute("data-feedback-filter", currentFilter);
+        applyFeedbackView();
+      });
+    });
+
+    channelButtons.forEach(function (button) {
+      button.addEventListener("click", function () {
+        currentChannel = button.getAttribute("data-feedback-channel-button") || "all";
         applyFeedbackView();
       });
     });

@@ -6,13 +6,18 @@ from typing import Any
 from flask import current_app, render_template, request, session
 
 from supabase_client import SupabaseConfigError, is_supabase_configured
-from visitor_feedback_repository import get_visitor_feedback_by_id, list_all_visitor_feedback
+from visitor_feedback_repository import (
+    get_visitor_feedback_by_id,
+    list_all_visitor_feedback,
+    list_public_visitor_feedback,
+    list_visitor_feedback_moderation_log,
+)
 from visitor_feedback_sentiment import SENTIMENT_LABELS, analyze_feedback_locally
 
 
 VISIT_TYPE_LABELS = {
     "on-site": "On-Site Visit",
-    "website": "Website Visit",
+    "website": "Online Experience",
 }
 RATING_LABELS = {
     1: "Poor",
@@ -77,6 +82,22 @@ def prepare_visitor_feedback_item(item: dict[str, Any] | None) -> dict[str, Any]
         "reviewed": "Reviewed",
         "archived": "Archived",
     }.get(status, status.replace("_", " ").title())
+    rating_status = str(prepared.get("rating_status") or "counted").strip().lower()
+    comment_status = str(prepared.get("comment_status") or "pending").strip().lower()
+    name_preference = str(prepared.get("public_name_preference") or "anonymous").strip().lower()
+    prepared["rating_status"] = rating_status if rating_status in {"counted", "excluded"} else "counted"
+    prepared["rating_status_label"] = "Counted in public rating" if prepared["rating_status"] == "counted" else "Excluded from public rating"
+    prepared["comment_status"] = comment_status if comment_status in {"not_provided", "pending", "published", "withheld"} else "pending"
+    prepared["comment_status_label"] = {
+        "not_provided": "Rating only",
+        "pending": "Comment awaiting review",
+        "published": "Comment published",
+        "withheld": "Comment withheld",
+    }[prepared["comment_status"]]
+    prepared["public_display_consent"] = prepared.get("public_display_consent") is True
+    prepared["public_name_preference"] = name_preference if name_preference in {"anonymous", "first_name"} else "anonymous"
+    prepared["public_display_name"] = _public_display_name(visitor_name, prepared["public_name_preference"])
+    prepared["moderation_log"] = list(prepared.get("moderation_log") or [])
     stored_label = str(prepared.get("sentiment_label") or "").strip().lower()
     sentiment_is_stored = stored_label in SENTIMENT_LABELS
     if not sentiment_is_stored:
@@ -130,12 +151,23 @@ def prepare_visitor_feedback_item(item: dict[str, Any] | None) -> dict[str, Any]
     return prepared
 
 
+def _public_display_name(full_name: str, preference: str) -> str:
+    if preference != "first_name":
+        return "Anonymous visitor"
+    parts = [part for part in str(full_name or "").split() if part]
+    if not parts:
+        return "Anonymous visitor"
+    return parts[0] if len(parts) == 1 else f"{parts[0]} {parts[-1][0]}."
+
+
 def build_visitor_feedback_analytics(items: list[dict[str, Any]] | None) -> dict[str, Any]:
     feedback_items = list(items or [])
     valid_ratings = [
         int(item.get("rating"))
         for item in feedback_items
-        if isinstance(item.get("rating"), int) and 1 <= int(item.get("rating")) <= 5
+        if isinstance(item.get("rating"), int)
+        and 1 <= int(item.get("rating")) <= 5
+        and item.get("rating_status", "counted") == "counted"
     ]
     total = len(feedback_items)
     rated_total = len(valid_ratings)
@@ -196,6 +228,11 @@ def build_visitor_feedback_analytics(items: list[dict[str, Any]] | None) -> dict
         "attention_count": attention_count,
         "attention_percent": round((attention_count / rated_total) * 100) if rated_total else 0,
         "comment_count": sum(1 for item in feedback_items if str(item.get("comments") or "").strip()),
+        "counted_rating_count": sum(1 for item in feedback_items if item.get("rating_status") == "counted"),
+        "excluded_rating_count": sum(1 for item in feedback_items if item.get("rating_status") == "excluded"),
+        "pending_comment_count": sum(1 for item in feedback_items if item.get("comment_status") == "pending"),
+        "published_comment_count": sum(1 for item in feedback_items if item.get("comment_status") == "published"),
+        "withheld_comment_count": sum(1 for item in feedback_items if item.get("comment_status") == "withheld"),
         "rating_distribution": rating_distribution,
         "visit_types": [
             {
@@ -206,6 +243,53 @@ def build_visitor_feedback_analytics(items: list[dict[str, Any]] | None) -> dict
             }
             for visit_type, count in visit_type_counts.items()
         ],
+    }
+
+
+def build_public_visitor_feedback() -> dict[str, Any]:
+    """Build a privacy-safe public aggregate and published-comment feed."""
+    empty = {"channels": {}, "comments": [], "pending_comment_count": 0}
+    if not is_supabase_configured():
+        return empty
+    try:
+        items = [prepare_visitor_feedback_item(item) for item in list_public_visitor_feedback()]
+    except Exception as exc:
+        current_app.logger.exception("Failed to load public visitor feedback: %s", exc)
+        return empty
+
+    channels: dict[str, Any] = {}
+    for key in VISIT_TYPE_LABELS:
+        channel_items = [item for item in items if item.get("visit_type") == key]
+        ratings = [item["rating"] for item in channel_items if 1 <= item.get("rating", 0) <= 5]
+        channels[key] = {
+            "key": key,
+            "label": VISIT_TYPE_LABELS[key],
+            "count": len(ratings),
+            "average": round(sum(ratings) / len(ratings), 1) if ratings else 0.0,
+            "distribution": [
+                {"rating": value, "count": ratings.count(value)} for value in range(5, 0, -1)
+            ],
+        }
+
+    comments = [
+        {
+            "id": item.get("id"),
+            "visit_type": item["visit_type"],
+            "visit_type_label": item["visit_type_label"],
+            "rating": item["rating"],
+            "name": item["public_display_name"],
+            "comment": item["comments"],
+            "date": item["display_date"].split(" ", 3)[:3],
+        }
+        for item in items
+        if item.get("comment_status") == "published" and item.get("comments")
+    ]
+    for item in comments:
+        item["date"] = " ".join(item["date"])
+    return {
+        "channels": channels,
+        "comments": comments[:24],
+        "pending_comment_count": sum(1 for item in items if item.get("comment_status") == "pending" and item.get("comments")),
     }
 
 
@@ -228,6 +312,10 @@ def load_admin_visitor_feedback_item(feedback_id: int) -> dict[str, Any] | None:
         item = get_visitor_feedback_by_id(feedback_id)
         if item is None:
             return None
+        try:
+            item["moderation_log"] = list_visitor_feedback_moderation_log(feedback_id)
+        except Exception as exc:
+            current_app.logger.warning("Could not load moderation log for feedback %s: %s", feedback_id, exc)
         return prepare_visitor_feedback_item(item)
     except SupabaseConfigError:
         current_app.logger.warning("Supabase visitor feedback integration is not fully configured.")
@@ -242,6 +330,10 @@ def get_visitor_feedback_status_message(status_key: Any) -> str | None:
         "archived": "Visitor feedback archived successfully.",
         "restored": "Visitor feedback restored to the review queue successfully.",
         "analyzed": "Visitor feedback sentiment analysis updated successfully.",
+        "comment-published": "The visitor comment is now public.",
+        "comment-withheld": "The comment was withheld and the reason was recorded.",
+        "rating-excluded": "The ineligible rating was excluded and the reason was recorded.",
+        "rating-reinstated": "The rating is included in the public aggregate again.",
     }
     return mapping.get(str(status_key or "").strip().lower())
 

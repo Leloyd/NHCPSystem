@@ -337,8 +337,9 @@
                       <div class="ap-entry">
                         <span class="ap-entry__icon"><i data-lucide="star" aria-hidden="true"></i></span>
                         <span class="ap-entry__body">
-                          <span class="ap-entry__top"><strong>{{ feedback.visit_type|replace('-', ' ')|title }} · {{ feedback.rating }}/5</strong><span class="ap-status">{{ feedback.status|title }}</span></span>
+                          <span class="ap-entry__top"><strong>{{ feedback.visit_type_label }} · {{ feedback.rating }}/5</strong><span class="ap-status">{{ feedback.comment_status_label }}</span></span>
                           <span class="ap-entry__description">{{ feedback.comments }}</span>
+                          <small>{{ feedback.rating_status_label }}{% if not feedback.public_display_consent %} · Internal only{% endif %}</small>
                         </span>
                       </div>
                       {% endfor %}

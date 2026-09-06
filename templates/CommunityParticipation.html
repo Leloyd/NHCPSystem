@@ -126,6 +126,59 @@
         </div>
       </section>
 
+      <!-- Public Visitor Experiences -->
+      <section id="visitor-experiences" class="visitor-experiences-section py-20 lg:py-28" aria-labelledby="visitorExperiencesTitle">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div class="text-center max-w-3xl mx-auto mb-12">
+            <span class="community-section-kicker"><span data-lang-en>Visitor Experiences</span><span data-lang-tl>Mga Karanasan ng Bisita</span></span>
+            <h2 id="visitorExperiencesTitle" class="community-section-title"><span data-lang-en>Ratings You Can Trust</span><span data-lang-tl>Mga Rating na Mapagkakatiwalaan</span></h2>
+            <p class="community-section-description">
+              <span data-lang-en>Consented, eligible ratings are counted whether positive or negative. Written comments are reviewed only for safety, privacy, relevance, and authenticity.</span>
+              <span data-lang-tl>Binibilang ang mga kwalipikadong rating na pinayagang ipakita, positibo man o negatibo. Sinusuri lamang ang nakasulat na komento para sa kaligtasan, privacy, kaugnayan, at pagiging tunay.</span>
+            </p>
+          </div>
+
+          <div class="visitor-rating-summaries">
+            {% for channel_key in ('on-site', 'website') %}
+            {% set summary = (public_visitor_feedback.channels or {}).get(channel_key, {}) %}
+            <article class="visitor-rating-summary">
+              <div>
+                <span>{{ 'On-Site Visit' if channel_key == 'on-site' else 'Online Experience' }}</span>
+                <strong>{{ '%.1f'|format(summary.get('average', 0)) }}<small>/5</small></strong>
+                <p>{{ summary.get('count', 0) }} eligible public {{ 'rating' if summary.get('count', 0) == 1 else 'ratings' }}</p>
+              </div>
+              <div class="visitor-rating-bars" aria-label="{{ 'On-site' if channel_key == 'on-site' else 'Online' }} rating distribution">
+                {% for row in summary.get('distribution', []) %}
+                <span><b>{{ row.rating }}★</b><i><em style="--rating-width: {{ ((row.count / summary.get('count', 1)) * 100) if summary.get('count', 0) else 0 }}%"></em></i><small>{{ row.count }}</small></span>
+                {% endfor %}
+              </div>
+            </article>
+            {% endfor %}
+          </div>
+
+          {% if public_visitor_feedback.pending_comment_count %}
+          <p class="visitor-review-transparency" role="status">{{ public_visitor_feedback.pending_comment_count }} consented {{ 'comment is' if public_visitor_feedback.pending_comment_count == 1 else 'comments are' }} currently awaiting the same safety review used for every rating.</p>
+          {% endif %}
+
+          {% if public_visitor_feedback.comments %}
+          <div class="visitor-review-grid">
+            {% for review in public_visitor_feedback.comments %}
+            <article class="visitor-review-card">
+              <header><span>{{ review.visit_type_label }}</span><span aria-label="{{ review.rating }} out of 5 stars">{{ '★' * review.rating }}<i>{{ '★' * (5 - review.rating) }}</i></span></header>
+              <blockquote>“{{ review.comment }}”</blockquote>
+              <footer><strong>{{ review.name }}</strong><time>{{ review.date }}</time></footer>
+            </article>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div class="visitor-review-empty">
+            <strong>No public comments yet</strong>
+            <span>New comments will appear after the visitor consents and the safety review is complete.</span>
+          </div>
+          {% endif %}
+        </div>
+      </section>
+
       <!-- E-Participation Section -->
       <section id="e-participation" class="py-20 lg:py-28 bg-white">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -320,7 +373,7 @@
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3.055 11H5a2 2 0 012 2v1a2 2 0 002 2 2 2 0 012 2v2.945M8 3.935V5.5A2.5 2.5 0 0010.5 8h.5a2 2 0 012 2 2 2 0 104 0 2 2 0 012-2h1.064M15 20.488V18a2 2 0 012-2h3.064M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
                   </svg>
-                  Website Visit
+                  Online Experience
                 </button>
               </div>
               <input type="hidden" id="visitType" name="visit_type" required />
@@ -360,14 +413,23 @@
             </div>
 
             <div class="form-group">
-              <label for="feedbackName" class="form-label">Your Name <span class="text-gray-400 font-normal">(optional)</span></label>
-              <input type="text" id="feedbackName" name="name" class="form-input" placeholder="Enter your name" />
-            </div>
-
-            <div class="form-group">
               <label for="feedbackComments" class="form-label">Comments &amp; Suggestions</label>
               <textarea id="feedbackComments" name="comments" class="form-textarea" rows="4" placeholder="Share your thoughts, suggestions, or experience..."></textarea>
             </div>
+
+            <fieldset class="feedback-public-options">
+              <legend>Public display options</legend>
+              <label class="feedback-consent-option">
+                <input type="checkbox" name="public_display_consent" value="1" />
+                <span><strong>Include my eligible rating in the public summary</strong><small>If you wrote a comment, it may appear publicly only after a safety and privacy review. Positive and negative ratings follow the same rules.</small></span>
+              </label>
+              <label class="form-label" for="feedbackPublicName">If my comment is published, show me as</label>
+              <select id="feedbackPublicName" name="public_name_preference" class="form-input">
+                <option value="anonymous">Anonymous visitor</option>
+                <option value="first_name">First name and last initial</option>
+              </select>
+              <p class="feedback-frequency-note">Signed-in visitors may submit one review per experience type every 30 days.</p>
+            </fieldset>
 
             <p id="visitorFeedbackFormMessage" class="participation-form-message hidden"></p>
 
@@ -380,7 +442,7 @@
               </svg>
             </div>
             <h3 class="participation-success-title">Feedback Submitted!</h3>
-            <p class="participation-success-copy">Thank you for sharing your experience. Your feedback helps us improve.</p>
+            <p class="participation-success-copy">Your rating was recorded separately. If you chose public display, your optional comment will appear only after its safety review.</p>
             <button type="button" class="success-close-btn success-close-btn--primary" data-close-participation>Close</button>
           </div>
           </div>

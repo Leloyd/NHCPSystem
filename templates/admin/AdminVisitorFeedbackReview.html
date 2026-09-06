@@ -6,7 +6,8 @@
 {% set admin_active_page = 'visitor-feedback' %}
 {% set admin_topbar_title = 'Review Visitor Feedback' if is_new_feedback else 'Visitor Feedback Details' %}
 {% set admin_topbar_subtitle = 'Inspect the visitor rating, written comment, sentiment estimate, and moderation record.' %}
-{% set admin_topbar_tool_href = url_for('admin_visitor_feedback', filter=feedback_item.status) %}
+{% set admin_feedback_return_filter = 'excluded' if feedback_item.rating_status == 'excluded' else feedback_item.comment_status %}
+{% set admin_topbar_tool_href = url_for('admin_visitor_feedback', filter=admin_feedback_return_filter) %}
 {% set admin_topbar_tool_label = 'Back to feedback' %}
 {% set admin_topbar_tool_class = 'admin-text-link' %}
 
@@ -35,7 +36,7 @@
                 <h2>{{ feedback_item.visitor_display }}</h2>
                 <div><span>{{ feedback_item.visit_type_label }}</span><span aria-hidden="true">•</span><span>Submitted {{ feedback_item.display_date }}</span></div>
               </div>
-              <span class="admin-status-badge admin-submission-record-status {% if feedback_item.status == 'reviewed' %}is-published{% elif feedback_item.status == 'archived' %}is-cancelled{% else %}is-draft{% endif %}">{{ feedback_item.status_label }}</span>
+              <span class="admin-status-badge admin-submission-record-status {% if feedback_item.comment_status == 'published' %}is-published{% elif feedback_item.comment_status == 'withheld' %}is-cancelled{% else %}is-draft{% endif %}">{{ feedback_item.comment_status_label }}</span>
             </header>
 
             <div class="admin-submission-record-highlights admin-feedback-record-highlights">
@@ -96,6 +97,10 @@
                   <div><dt>Visit type</dt><dd>{{ feedback_item.visit_type_label }}</dd></div>
                   <div><dt>Rating</dt><dd>{{ feedback_item.rating }} out of 5</dd></div>
                   <div><dt>Automated sentiment</dt><dd>{{ feedback_item.sentiment_label }} ({{ feedback_item.sentiment_confidence_percent }}%)</dd></div>
+                  <div><dt>Rating eligibility</dt><dd>{{ feedback_item.rating_status_label }}</dd></div>
+                  <div><dt>Comment status</dt><dd>{{ feedback_item.comment_status_label }}</dd></div>
+                  <div><dt>Public consent</dt><dd>{{ 'Yes' if feedback_item.public_display_consent else 'No — internal only' }}</dd></div>
+                  <div><dt>Public name</dt><dd>{{ feedback_item.public_display_name }}</dd></div>
                   <div class="is-wide"><dt>Submitted</dt><dd>{{ feedback_item.display_date }}</dd></div>
                 </dl>
               </section>
@@ -107,55 +112,61 @@
                   <div><dt>Last moderated</dt><dd>{{ feedback_item.reviewed_display_date }}</dd></div>
                   <div><dt>Reviewed by</dt><dd>{{ feedback_item.reviewed_by or 'Administrator not recorded' }}</dd></div>
                 </dl>
+                {% if feedback_item.moderation_reason_code %}
+                <p class="admin-feedback-analysis-notice"><strong>Recorded reason:</strong> {{ feedback_item.moderation_reason_code|replace('_', ' ')|title }} — {{ feedback_item.moderation_note }}</p>
+                {% endif %}
+                {% if feedback_item.moderation_log %}
+                <dl class="admin-submission-review-details">
+                  {% for event in feedback_item.moderation_log %}
+                  <div class="is-wide"><dt>{{ event.action|replace('_', ' ')|title }}</dt><dd>{{ event.admin_username or 'Administrator' }} · {{ event.reason_code|replace('_', ' ')|title if event.reason_code else 'No reason required' }}{% if event.note %} — {{ event.note }}{% endif %}</dd></div>
+                  {% endfor %}
+                </dl>
+                {% endif %}
               </section>
               {% endif %}
             </div>
 
             <aside class="admin-submission-decision-panel">
-              {% if feedback_item.status == 'new' %}
               <section class="admin-submission-decision">
-                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span><div><p>Staff moderation</p><h3>Complete the Review</h3></div></header>
-                <p class="admin-submission-decision-copy">Read the full comment and rating before recording this response as reviewed or archived.</p>
-                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
-                  data-confirm-submit data-confirm-eyebrow="Feedback review" data-confirm-title="Mark this feedback as reviewed?"
-                  data-confirm-message="Mark the feedback from {{ feedback_item.visitor_display }} as reviewed?"
-                  data-confirm-label="Mark as Reviewed" data-confirm-variant="enable">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="reviewed" />
-                  <button type="submit" class="admin-submission-decision-action is-approve"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span><span><strong>Mark as Reviewed</strong><small>Move this response out of the pending queue</small></span></button>
+                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span><div><p>Fair moderation</p><h3>Comment Decision</h3></div></header>
+                <p class="admin-submission-decision-copy">The rating is handled separately. Publish or withhold the comment using the same content rules for positive and negative feedback.</p>
+                {% if feedback_item.rating_status == 'excluded' %}
+                <p class="admin-feedback-analysis-notice">The complete response is withheld while its rating is excluded. Reinstate the rating before publishing the comment.</p>
+                {% elif not feedback_item.public_display_consent %}
+                <p class="admin-feedback-analysis-notice">The visitor did not consent to public display. This response remains internal.</p>
+                {% elif not feedback_item.comments %}
+                <p class="admin-feedback-analysis-notice">This is a rating-only response, so there is no comment to publish.</p>
+                {% else %}
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" data-confirm-submit data-confirm-eyebrow="Public comment" data-confirm-title="Publish this visitor comment?" data-confirm-message="The consented comment will become visible on the public Visitor Experiences section." data-confirm-label="Publish comment" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="publish_comment" /><input type="hidden" name="return_filter" value="{{ admin_feedback_return_filter }}" />
+                  <button type="submit" class="admin-submission-decision-action is-approve"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m9.2 16.6-4.1-4.1 1.4-1.4 2.7 2.7 7.9-7.9 1.4 1.4Z"></path></svg></span><span><strong>{{ 'Keep Comment Published' if feedback_item.comment_status == 'published' else 'Publish Comment' }}</strong><small>Make the consented comment public</small></span></button>
                 </form>
-                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
-                  data-confirm-submit data-confirm-eyebrow="Feedback status" data-confirm-title="Archive this feedback?"
-                  data-confirm-message="Archive the feedback from {{ feedback_item.visitor_display }}? It will remain included in aggregate analytics."
-                  data-confirm-label="Archive Feedback" data-confirm-variant="disable">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="archive" />
-                  <button type="submit" class="admin-submission-decision-action is-archive"><span><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Z"></path></svg></span><span><strong>Archive Feedback</strong><small>Retain it outside the active review record</small></span></button>
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-feedback-reason-form" data-confirm-submit data-confirm-eyebrow="Comment moderation" data-confirm-title="Withhold this comment?" data-confirm-message="The comment will stay out of public view. Its eligible rating remains counted." data-confirm-label="Withhold comment" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="withhold_comment" /><input type="hidden" name="return_filter" value="{{ admin_feedback_return_filter }}" />
+                  <label>Policy reason<select name="reason_code" required><option value="">Choose a reason</option><option value="personal_information">Personal information</option><option value="harassment">Harassment</option><option value="hate_or_abuse">Hate or abuse</option><option value="obscene">Obscene content</option><option value="advertising">Advertising</option><option value="off_topic">Off-topic</option><option value="spam">Spam</option><option value="other">Other policy reason</option></select></label>
+                  <label>Moderation note<textarea name="moderation_note" minlength="10" maxlength="2000" required placeholder="Explain the specific policy issue (at least 10 characters)."></textarea></label>
+                  <button type="submit" class="admin-submission-finalized-action is-archive">Withhold comment</button>
                 </form>
+                {% endif %}
               </section>
-              {% elif feedback_item.status == 'reviewed' %}
-              <section class="admin-submission-finalized is-active">
-                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2Zm-1.25 14.2-4.1-4.1 1.4-1.4 2.7 2.7 5.2-5.2 1.4 1.4Z"></path></svg></span><div><p>Current status</p><h3>Reviewed</h3></div></header>
-                <p>This visitor response has been checked and remains in the reviewed feedback record.</p>
-                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
-                  data-confirm-submit data-confirm-eyebrow="Feedback status" data-confirm-title="Archive this feedback?"
-                  data-confirm-message="Archive the feedback from {{ feedback_item.visitor_display }}? It will remain included in aggregate analytics."
-                  data-confirm-label="Archive Feedback" data-confirm-variant="disable">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="archive" />
-                  <button type="submit" class="admin-submission-finalized-action is-archive">Archive feedback</button>
+
+              <section class="admin-submission-decision admin-feedback-rating-decision">
+                <header><span aria-hidden="true">★</span><div><p>Public aggregate</p><h3>Rating Eligibility</h3></div></header>
+                <p class="admin-submission-decision-copy">A rating must not be excluded because it is negative. Exclusion is limited to fraud, duplicates, ineligible reviews, conflicts, or manipulation.</p>
+                {% if feedback_item.rating_status == 'excluded' %}
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" data-confirm-submit data-confirm-eyebrow="Rating eligibility" data-confirm-title="Reinstate this rating?" data-confirm-message="The rating will be counted in public aggregates again when public-display consent exists." data-confirm-label="Reinstate rating" data-confirm-variant="enable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="reinstate_rating" /><input type="hidden" name="return_filter" value="{{ admin_feedback_return_filter }}" />
+                  <button type="submit" class="admin-submission-decision-action is-approve"><span>★</span><span><strong>Reinstate Rating</strong><small>Count it in public aggregates again</small></span></button>
                 </form>
-              </section>
-              {% else %}
-              <section class="admin-submission-finalized is-archived">
-                <header><span aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M3 4h18v5H3Zm2 2v1h14V6Zm1 5h12v9H6Z"></path></svg></span><div><p>Current status</p><h3>Archived</h3></div></header>
-                <p>This response remains part of historical analytics but is outside the active review record.</p>
-                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}"
-                  data-confirm-submit data-confirm-eyebrow="Review queue" data-confirm-title="Restore this feedback?"
-                  data-confirm-message="Restore the feedback from {{ feedback_item.visitor_display }} to New Feedback for another review?"
-                  data-confirm-label="Restore to Review" data-confirm-variant="enable">
-                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="restore" />
-                  <button type="submit" class="admin-submission-finalized-action is-restore">Restore to New Feedback</button>
+                {% else %}
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" class="admin-feedback-reason-form" data-confirm-submit data-confirm-eyebrow="Rating eligibility" data-confirm-title="Exclude this rating?" data-confirm-message="Use this only for documented fraud, duplication, ineligibility, conflict, or manipulation—not because the rating is negative." data-confirm-label="Exclude rating" data-confirm-variant="disable">
+                  <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="exclude_rating" /><input type="hidden" name="return_filter" value="{{ admin_feedback_return_filter }}" />
+                  <label>Eligibility reason<select name="reason_code" required><option value="">Choose a reason</option><option value="fraud">Fraud or fabricated review</option><option value="duplicate">Duplicate submission</option><option value="ineligible">Ineligible reviewer</option><option value="conflict_of_interest">Conflict of interest</option><option value="manipulation">Rating manipulation</option></select></label>
+                  <label>Evidence note<textarea name="moderation_note" minlength="10" maxlength="2000" required placeholder="Record the evidence supporting exclusion."></textarea></label>
+                  <button type="submit" class="admin-submission-finalized-action is-archive">Exclude rating</button>
                 </form>
+                {% endif %}
               </section>
-              {% endif %}
             </aside>
           </div>
 {% endblock %}

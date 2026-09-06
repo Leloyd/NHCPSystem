@@ -11,6 +11,7 @@ from supabase_client import SupabaseConfigError, is_supabase_configured
 from tour_bookings_content import load_user_tour_bookings
 from user_bookmarks_repository import list_user_bookmarks
 from visitor_feedback_repository import list_visitor_feedback_for_user
+from visitor_feedback_content.service import prepare_visitor_feedback_item
 
 
 BOOKMARK_ITEM_TYPE_ONLINE_GALLERY = "online_gallery"
@@ -58,7 +59,10 @@ def load_user_account_dashboard(user_id: int) -> dict[str, Any]:
         dashboard["participation_submissions"] = []
 
     try:
-        dashboard["visitor_feedback"] = list_visitor_feedback_for_user(user_id)
+        dashboard["visitor_feedback"] = [
+            prepare_visitor_feedback_item(item)
+            for item in list_visitor_feedback_for_user(user_id)
+        ]
     except Exception:
         dashboard["visitor_feedback"] = []
 

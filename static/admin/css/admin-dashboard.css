@@ -11177,6 +11177,52 @@ body.admin-settings-result-open {
   background: #fffaf0;
 }
 
+.admin-feedback-reason-form {
+  display: grid;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--admin-border, #dfe4df);
+}
+
+.admin-feedback-manager .admin-gallery-toolbar {
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+
+.admin-feedback-manager .admin-gallery-search {
+  margin-left: auto;
+}
+
+.admin-feedback-reason-form label {
+  display: grid;
+  gap: 0.35rem;
+  color: var(--admin-heading, #20352b);
+  font-size: 0.72rem;
+  font-weight: 700;
+}
+
+.admin-feedback-reason-form select,
+.admin-feedback-reason-form textarea {
+  width: 100%;
+  border: 1px solid var(--admin-border, #cfd8d2);
+  border-radius: 0.65rem;
+  background: var(--admin-surface, #fff);
+  color: var(--admin-text, #314139);
+  padding: 0.7rem 0.75rem;
+  font: inherit;
+  font-weight: 500;
+}
+
+.admin-feedback-reason-form textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.admin-feedback-rating-decision {
+  margin-top: 1rem;
+}
+
 @media (max-width: 1060px) {
   .admin-feedback-metrics {
     grid-template-columns: repeat(2, minmax(0, 1fr));

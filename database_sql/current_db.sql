@@ -294,12 +294,31 @@ CREATE TABLE public.visitor_feedback (
   sentiment_provider text NOT NULL DEFAULT ''::text,
   sentiment_analyzed_at timestamp with time zone,
   status text NOT NULL DEFAULT 'new'::text CHECK (status = ANY (ARRAY['new'::text, 'reviewed'::text, 'archived'::text])),
+  public_display_consent boolean NOT NULL DEFAULT false,
+  public_name_preference text NOT NULL DEFAULT 'anonymous'::text CHECK (public_name_preference = ANY (ARRAY['anonymous'::text, 'first_name'::text])),
+  rating_status text NOT NULL DEFAULT 'counted'::text CHECK (rating_status = ANY (ARRAY['counted'::text, 'excluded'::text])),
+  comment_status text NOT NULL DEFAULT 'pending'::text CHECK (comment_status = ANY (ARRAY['not_provided'::text, 'pending'::text, 'published'::text, 'withheld'::text])),
+  moderation_reason_code text NOT NULL DEFAULT ''::text,
+  moderation_note text NOT NULL DEFAULT ''::text CHECK (char_length(moderation_note) <= 2000),
+  moderated_at timestamp with time zone,
+  moderated_by text NOT NULL DEFAULT ''::text,
   reviewed_at timestamp with time zone,
   reviewed_by text NOT NULL DEFAULT ''::text,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   CONSTRAINT visitor_feedback_pkey PRIMARY KEY (id),
   CONSTRAINT visitor_feedback_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.public_users(id)
+);
+CREATE TABLE public.visitor_feedback_moderation_log (
+  id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
+  feedback_id bigint NOT NULL,
+  action text NOT NULL CHECK (action = ANY (ARRAY['publish_comment'::text, 'withhold_comment'::text, 'exclude_rating'::text, 'reinstate_rating'::text, 'reanalyze'::text])),
+  reason_code text NOT NULL DEFAULT ''::text,
+  note text NOT NULL DEFAULT ''::text CHECK (char_length(note) <= 2000),
+  admin_username text NOT NULL DEFAULT ''::text,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
+  CONSTRAINT visitor_feedback_moderation_log_pkey PRIMARY KEY (id),
+  CONSTRAINT visitor_feedback_moderation_log_feedback_id_fkey FOREIGN KEY (feedback_id) REFERENCES public.visitor_feedback(id)
 );
 CREATE TABLE public.analytics_events (
   id bigint GENERATED ALWAYS AS IDENTITY NOT NULL,
