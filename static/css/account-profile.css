@@ -819,6 +819,20 @@ img.ap-avatar {
   gap: 1rem;
 }
 
+#participationPanel {
+  grid-column: 1 / -1;
+}
+
+#participationPanel .ap-collection__body {
+  max-height: 36rem;
+}
+
+#participationPanel.is-editing .ap-collection__body,
+#participationPanel:has(.ap-submission-editor[open]) .ap-collection__body {
+  max-height: none;
+  overflow: visible;
+}
+
 .ap-collection {
   min-width: 0;
   scroll-margin-top: 6.5rem;
@@ -1119,7 +1133,11 @@ a.ap-entry:hover {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 0.75rem;
-  padding: 0.8rem 0 0.2rem;
+  margin-top: 0.35rem;
+  padding: clamp(0.85rem, 2vw, 1.25rem);
+  background: var(--ap-surface-soft);
+  border: 1px solid var(--ap-line);
+  border-radius: 0.8rem;
 }
 
 .ap-submission-editor form > label:not(.ap-submission-privacy) {
@@ -1281,6 +1299,10 @@ a.ap-entry:hover {
   cursor: pointer;
 }
 
+.ap-submission-editor__actions button:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
 .ap-submission-editor__actions button:disabled {
   opacity: 0.62;
   cursor: wait;
@@ -1289,6 +1311,30 @@ a.ap-entry:hover {
 .ap-submission-editor__actions svg {
   width: 0.9rem;
   height: 0.9rem;
+}
+
+.ap-submit-loading {
+  display: none;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.ap-submit-loading > i {
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 50%;
+  animation: ap-upload-spin 0.7s linear infinite;
+}
+
+.ap-submission-editor form[aria-busy="true"] .ap-submission-editor__actions button > svg,
+.ap-submission-editor form[aria-busy="true"] [data-submit-label] {
+  display: none;
+}
+
+.ap-submission-editor form[aria-busy="true"] .ap-submit-loading {
+  display: inline-flex;
 }
 
 @keyframes ap-upload-spin {
@@ -1444,6 +1490,33 @@ html[data-theme="dark"] .ap-status.is-rejected {
   color: #f1bbb6;
   background: #3a211f;
   border-color: #7d423d;
+}
+
+html[data-theme="dark"] .ap-submission-editor form {
+  background: #18130c;
+  border-color: #59492d;
+}
+
+html[data-theme="dark"] .ap-submission-editor input:not([type="checkbox"]),
+html[data-theme="dark"] .ap-submission-editor select,
+html[data-theme="dark"] .ap-submission-editor textarea {
+  color: #f5eee2;
+  background: #211a10;
+  border-color: #655334;
+  color-scheme: dark;
+}
+
+html[data-theme="dark"] .ap-submission-editor input::file-selector-button {
+  color: #f3e7ce;
+  background: #342817;
+  border: 1px solid #705a35;
+  border-radius: 0.4rem;
+}
+
+html[data-theme="dark"] .ap-submission-editor__actions button {
+  color: #171109;
+  background: #d7b866;
+  border-color: #e6cd87;
 }
 
 /* Explicit high-contrast mode */

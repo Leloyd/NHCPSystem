@@ -21,7 +21,7 @@ from participation_submissions_repository import (
 from supabase_client import is_supabase_configured
 from media_upload_content import MEDIA_UPLOAD_MAX_BYTES, discard_direct_uploads, validate_direct_upload_reference
 
-from .emailer import EmailDeliveryError, is_participation_email_configured, send_participation_verification_email
+from .emailer import EmailDeliveryError, send_participation_decision_email
 from .service import (
     PARTICIPATION_SUBMISSIONS_UPLOAD_DIR,
     build_submission_excerpt,
@@ -435,7 +435,12 @@ def register_participation_submission_routes(
             status_filter = "all"
         status_message = get_participation_submissions_status_message(request.args.get("status"))
         config_error = None if is_supabase_configured() else "Supabase participation submissions integration is not configured."
-        email_config_error = None
+        email_notice = str(request.args.get("email_notice") or "").strip().lower()
+        email_config_error = (
+            "The decision was saved, but the contributor email could not be delivered. Check the SMTP settings and server logs."
+            if email_notice == "delivery_failed"
+            else None
+        )
         return render_template(
             "admin/AdminParticipationSubmissions.html",
             csrf_token=csrf_token,
@@ -526,6 +531,7 @@ def register_participation_submission_routes(
             )
 
         next_status = transition["status"]
+        email_notice = None
         try:
             moderation_payload = {
                 "status": next_status,
@@ -549,10 +555,29 @@ def register_participation_submission_routes(
                 error_message="Could not update the submission right now.",
             )
 
+        if moderation_action in {"approve", "reject"}:
+            try:
+                send_participation_decision_email(
+                    to_email=str(submission_item.get("submitter_email") or "").strip(),
+                    recipient_name=str(submission_item.get("submitter_name") or "Contributor").strip(),
+                    submission_title=str(submission_item.get("title") or "Community contribution").strip(),
+                    decision="approved" if moderation_action == "approve" else "rejected",
+                    feedback=moderation_feedback,
+                    account_url=url_for("account_profile", _external=True) + "#participationPanel",
+                )
+            except (EmailDeliveryError, ValueError) as exc:
+                email_notice = "delivery_failed"
+                app.logger.warning(
+                    "Participation decision saved, but contributor email failed for submission %s: %s",
+                    submission_id,
+                    exc,
+                )
+
         return redirect(
             url_for(
                 "admin_participation_submissions",
                 filter=str(request.form.get("return_filter") or "all").strip().lower(),
                 status=transition["result"],
+                email_notice=email_notice,
             )
         )

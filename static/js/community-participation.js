@@ -894,6 +894,29 @@ function initFormInteractions() {
     }
   }
 
+  function setFormSubmitting(form, busy, loadingLabel = 'Submitting…') {
+    if (!form) return false;
+    if (busy && form.dataset.participationSubmitting === 'true') return false;
+
+    const button = form.querySelector('button[type="submit"]');
+    form.setAttribute('aria-busy', busy ? 'true' : 'false');
+    if (busy) {
+      form.dataset.participationSubmitting = 'true';
+      if (button) {
+        button.dataset.idleLabel = button.dataset.idleLabel || button.textContent.trim();
+        button.textContent = loadingLabel;
+        button.disabled = true;
+      }
+    } else {
+      delete form.dataset.participationSubmitting;
+      if (button) {
+        button.textContent = button.dataset.idleLabel || button.textContent;
+        button.disabled = false;
+      }
+    }
+    return true;
+  }
+
   [teacherCornerForm, storiesSubmitForm].filter(Boolean).forEach((form) => {
     form.addEventListener('nhcp:direct-upload-error', (event) => {
       const target = form === teacherCornerForm ? teacherCornerFormMessage : storiesSubmitFormMessage;
@@ -998,8 +1021,13 @@ function initFormInteractions() {
       return;
     }
 
+    if (!setFormSubmitting(form, true, isTeacher ? 'Submitting materials…' : 'Sharing story…')) {
+      return;
+    }
+
     const formData = new FormData(form);
     setSubmissionMessage(formMessage, '');
+    let completed = false;
 
     try {
       const { response, payload } = await postForm('/community-participation/submissions', formData);
@@ -1010,6 +1038,7 @@ function initFormInteractions() {
       }
 
       if (payload.ok) {
+        completed = true;
         window.NhcpDirectUpload?.clearFormUploads(form);
         form._nhcpDirectUploads = [];
         form.classList.add('hidden');
@@ -1022,6 +1051,8 @@ function initFormInteractions() {
     } catch (error) {
       await window.NhcpDirectUpload?.discardFormUploads(form);
       setSubmissionMessage(formMessage, 'Could not reach the server right now. Please try again.');
+    } finally {
+      if (!completed) setFormSubmitting(form, false);
     }
   }
 
@@ -1087,8 +1118,11 @@ function initFormInteractions() {
         return;
       }
 
+      if (!setFormSubmitting(visitorFeedbackForm, true, 'Submitting feedback…')) return;
+
       const formData = new FormData(visitorFeedbackForm);
       setSubmissionMessage(visitorFeedbackFormMessage, '');
+      let completed = false;
 
       try {
         const { response, payload } = await postForm('/community-participation/visitor-feedback', formData);
@@ -1101,10 +1135,13 @@ function initFormInteractions() {
           return;
         }
 
+        completed = true;
         visitorFeedbackForm.classList.add('hidden');
         visitorFeedbackSuccess.classList.remove('hidden');
       } catch (error) {
         setSubmissionMessage(visitorFeedbackFormMessage, 'Could not reach the server right now. Please try again.');
+      } finally {
+        if (!completed) setFormSubmitting(visitorFeedbackForm, false);
       }
     });
   }
@@ -1122,9 +1159,12 @@ function initFormInteractions() {
         return;
       }
 
+      if (!setFormSubmitting(bookingRequestForm, true, 'Sending request…')) return;
+
       const formData = new FormData(bookingRequestForm);
       formData.set('total_visitors', String(computedTotal));
       setSubmissionMessage(bookingRequestFormMessage, '');
+      let completed = false;
 
       try {
         const { response, payload } = await postForm('/community-participation/bookings/request', formData);
@@ -1137,10 +1177,13 @@ function initFormInteractions() {
           return;
         }
 
+        completed = true;
         bookingRequestForm.classList.add('hidden');
         bookingRequestSuccess?.classList.remove('hidden');
       } catch (error) {
         setSubmissionMessage(bookingRequestFormMessage, 'Could not reach the server right now. Please try again.');
+      } finally {
+        if (!completed) setFormSubmitting(bookingRequestForm, false);
       }
     });
   }

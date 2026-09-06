@@ -929,6 +929,26 @@
   transform: scale(0.98);
 }
 
+.participation-form[aria-busy="true"] .form-submit-btn[type="submit"],
+.form-submit-btn:disabled {
+  cursor: wait;
+  opacity: 0.72;
+  transform: none;
+}
+
+.participation-form[aria-busy="true"] .form-submit-btn[type="submit"]::before {
+  content: "";
+  display: inline-block;
+  width: 0.9rem;
+  height: 0.9rem;
+  margin-right: 0.55rem;
+  vertical-align: -0.12rem;
+  border: 2px solid currentColor;
+  border-right-color: transparent;
+  border-radius: 999px;
+  animation: participation-upload-spin 0.7s linear infinite;
+}
+
 .form-submit-btn--primary {
   background: linear-gradient(135deg, #1E3A5F, #2A5A8A);
 }

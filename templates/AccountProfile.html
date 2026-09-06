@@ -313,7 +313,7 @@
 
                             <label class="is-wide ap-submission-privacy"><input type="checkbox" name="is_private" {% if submission.is_private %}checked{% endif %} /><span>Keep my name and email private when this contribution is published.</span></label>
                             <div class="ap-upload-status is-wide" data-direct-upload-status role="status" aria-live="polite" hidden><i aria-hidden="true"></i><span><strong data-direct-upload-title>Preparing upload…</strong><small data-direct-upload-detail>Please keep this page open.</small></span></div>
-                            <div class="ap-submission-editor__actions is-wide"><button type="submit"><i data-lucide="send" aria-hidden="true"></i>Save changes and resubmit</button></div>
+                            <div class="ap-submission-editor__actions is-wide"><button type="submit"><i data-lucide="send" aria-hidden="true"></i><span data-submit-label>Save changes and resubmit</span><span class="ap-submit-loading" data-submit-loading aria-hidden="true"><i aria-hidden="true"></i>Saving and resubmitting…</span></button></div>
                           </form>
                         </details>
                         {% endif %}
@@ -358,6 +358,7 @@
     <script src="https://unpkg.com/lucide@latest"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="{{ url_for('static', filename='js/direct-media-upload.js') }}"></script>
+    <script src="{{ url_for('static', filename='js/account-profile-contributions.js') }}"></script>
     <script>if (window.lucide) window.lucide.createIcons();</script>
     {% include 'partials/_site_prefs_foot.html' %}
     <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
