@@ -35,7 +35,11 @@ from pending_public_registrations_repository import (
     update_pending_public_registration,
 )
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
-from legal_content import PUBLIC_TERMS_VERSION
+from legal_content import (
+    PUBLIC_TERMS_VERSION,
+    clear_public_terms_signup_state,
+    current_public_terms_acceptance,
+)
 from supabase_client import is_supabase_configured
 from supabase_storage import delete_public_image, upload_public_image
 from media_upload_content import MEDIA_UPLOAD_MAX_BYTES, discard_direct_uploads, validate_direct_upload_reference
@@ -258,6 +262,7 @@ def _sign_in_public_user_from_google_profile(
     profile: dict[str, Any],
     *,
     allow_registration: bool = False,
+    terms_accepted_at: str = "",
 ) -> dict[str, Any]:
     oauth_subject = str(profile.get("sub") or "").strip()
     try:
@@ -310,7 +315,7 @@ def _sign_in_public_user_from_google_profile(
                     "email_verification_sent_at": None,
                     "email_verification_attempts": 0,
                     "terms_version": PUBLIC_TERMS_VERSION,
-                    "terms_accepted_at": now,
+                    "terms_accepted_at": terms_accepted_at or now,
                 }
             )
         if not str(existing_user.get("full_name") or "").strip():
@@ -357,7 +362,7 @@ def _sign_in_public_user_from_google_profile(
             "security_code_sent_at": None,
             "security_code_attempts": 0,
             "terms_version": PUBLIC_TERMS_VERSION,
-            "terms_accepted_at": now,
+            "terms_accepted_at": terms_accepted_at or now,
             "updated_at": now,
         }
     )
@@ -497,7 +502,7 @@ def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str, int | Non
     password = str(form.get("password") or "")
     confirm_password = str(form.get("confirm_password") or "")
 
-    if str(form.get("terms_accepted") or "").strip().lower() not in {"1", "true", "on", "yes"}:
+    if not current_public_terms_acceptance(session):
         raise ValueError("You must read and accept the Terms and Conditions to create an account.")
 
     if len(password) < 8 or len(password) > 128:
@@ -766,8 +771,8 @@ def register_user_account_routes(
         if not _is_google_oauth_configured():
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Google sign-in is not configured yet.")
 
-        terms_accepted = str(request.args.get("terms_accepted") or "").strip().lower() in {"1", "true", "on", "yes"}
-        if auth_view == "signup" and not terms_accepted:
+        terms_acceptance = current_public_terms_acceptance(session)
+        if auth_view == "signup" and not terms_acceptance:
             return _redirect_google_auth_error(
                 view=auth_view,
                 next_url=next_url,
@@ -778,7 +783,7 @@ def register_user_account_routes(
         session[GOOGLE_OAUTH_SESSION_STATE_KEY] = state
         session[GOOGLE_OAUTH_SESSION_NEXT_KEY] = next_url
         session[GOOGLE_OAUTH_SESSION_VIEW_KEY] = auth_view
-        session[GOOGLE_OAUTH_SESSION_TERMS_KEY] = PUBLIC_TERMS_VERSION if terms_accepted else ""
+        session[GOOGLE_OAUTH_SESSION_TERMS_KEY] = terms_acceptance or {}
         client_id, _client_secret = _get_google_oauth_credentials()
         authorization_query = urllib.parse.urlencode(
             {
@@ -796,7 +801,11 @@ def register_user_account_routes(
     def public_google_auth_callback():
         next_url = _resolve_safe_next_url(session.pop(GOOGLE_OAUTH_SESSION_NEXT_KEY, None), "account_profile")
         auth_view = _normalize_auth_view(session.pop(GOOGLE_OAUTH_SESSION_VIEW_KEY, None), default="login")
-        accepted_terms_version = str(session.pop(GOOGLE_OAUTH_SESSION_TERMS_KEY, "") or "")
+        accepted_terms = session.pop(GOOGLE_OAUTH_SESSION_TERMS_KEY, {})
+        if not isinstance(accepted_terms, dict):
+            accepted_terms = {}
+        accepted_terms_version = str(accepted_terms.get("version") or "")
+        accepted_terms_at = str(accepted_terms.get("accepted_at") or "")
         expected_state = str(session.pop(GOOGLE_OAUTH_SESSION_STATE_KEY, "") or "")
         error_code = str(request.args.get("error") or "").strip()
         returned_state = str(request.args.get("state") or "").strip()
@@ -819,7 +828,12 @@ def register_user_account_routes(
             user_profile = _fetch_google_user_profile(access_token)
             user = _sign_in_public_user_from_google_profile(
                 user_profile,
-                allow_registration=(auth_view == "signup" and accepted_terms_version == PUBLIC_TERMS_VERSION),
+                allow_registration=(
+                    auth_view == "signup"
+                    and accepted_terms_version == PUBLIC_TERMS_VERSION
+                    and bool(accepted_terms_at)
+                ),
+                terms_accepted_at=accepted_terms_at,
             )
         except ValueError as exc:
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message=str(exc))
@@ -828,6 +842,7 @@ def register_user_account_routes(
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Could not sign you in with Google right now.")
 
         set_public_user_session(int(user.get("id")))
+        clear_public_terms_signup_state(session)
         session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
         if not _user_completed_onboarding(user):
             return redirect(url_for("public_account_setup", next=next_url))
@@ -907,6 +922,7 @@ def register_user_account_routes(
         clear_public_auth_failures("login", client_ip)
         update_public_user(int(user.get("id")), {"last_login_at": _utcnow().isoformat()})
         set_public_user_session(int(user.get("id")))
+        clear_public_terms_signup_state(session)
         session.pop(PASSWORD_RESET_SUCCESS_SESSION_KEY, None)
         if not _user_completed_onboarding(user):
             return jsonify({"ok": True, "redirect_url": url_for("public_account_setup", next=next_url)})
@@ -930,6 +946,9 @@ def register_user_account_routes(
         pending_saved = False
         email = ""
         try:
+            terms_acceptance = current_public_terms_acceptance(session)
+            if not terms_acceptance:
+                raise ValueError("You must read and accept the Terms and Conditions to create an account.")
             payload, email, legacy_unverified_user_id = _validate_modal_signup_payload(request.form)
             verification_code = _generate_six_digit_code()
             now = _utcnow()
@@ -964,8 +983,8 @@ def register_user_account_routes(
                     "verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
                     "verification_sent_at": now.isoformat(),
                     "verification_attempts": 0,
-                    "terms_version": PUBLIC_TERMS_VERSION,
-                    "terms_accepted_at": now.isoformat(),
+                    "terms_version": terms_acceptance["version"],
+                    "terms_accepted_at": terms_acceptance["accepted_at"],
                     "updated_at": now.isoformat(),
                 }
             )
@@ -1198,6 +1217,7 @@ def register_user_account_routes(
                 app.logger.warning("Verified user %s was created but pending signup cleanup failed: %s", verified_user.get("id"), cleanup_error)
             clear_public_auth_failures("signup", client_ip)
             set_public_user_session(int(verified_user.get("id")))
+            clear_public_terms_signup_state(session)
             redirect_url = url_for("public_account_setup", next=next_url)
             return jsonify({"ok": True, "redirect_url": redirect_url})
         except Exception as exc:

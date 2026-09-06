@@ -1,7 +1,10 @@
 {% if not current_public_user %}
-{% set auth_modal_next_url = auth_next_url if auth_next_url is defined and auth_next_url else (request.full_path[:-1] if request.full_path.endswith('?') else request.full_path) %}
-{% set auth_modal_default_view = auth_default_view if auth_default_view is defined and auth_default_view else 'login' %}
-{% set auth_modal_auto_open = auth_auto_open if auth_auto_open is defined and auth_auto_open else false %}
+{% set auth_query_view = request.args.get('auth', '') %}
+{% set auth_modal_next_url = auth_next_url if auth_next_url is defined and auth_next_url else (request.args.get('next') if auth_query_view == 'signup' and request.args.get('next') else (request.full_path[:-1] if request.full_path.endswith('?') else request.full_path)) %}
+{% set auth_modal_default_view = auth_default_view if auth_default_view is defined and auth_default_view else ('signup' if auth_query_view == 'signup' else 'login') %}
+{% set auth_modal_auto_open = (auth_auto_open if auth_auto_open is defined and auth_auto_open else false) or auth_query_view == 'signup' %}
+{% set auth_modal_return_to = request.full_path[:-1] if request.full_path.endswith('?') else request.full_path %}
+{% set auth_terms_review_url = url_for('terms_and_conditions', intent='signup', return_to=auth_modal_return_to, next=auth_modal_next_url) %}
 <div id="publicAuthModal" class="public-auth-modal hidden" aria-hidden="true" data-auth-default-view="{{ auth_modal_default_view }}" data-auth-auto-open="{{ 'true' if auth_modal_auto_open else 'false' }}">
   <div class="public-auth-backdrop" data-auth-close></div>
   <div class="public-auth-dialog" role="dialog" aria-modal="true" aria-labelledby="publicAuthTitle" tabindex="-1">
@@ -64,6 +67,33 @@
           <p class="public-auth-subtitle"><span data-lang-en>Join the digital heritage experience.</span><span data-lang-tl>Sumali sa digital na karanasan sa pamana.</span></p>
         </div>
 
+        {% if public_terms_signup_accepted %}
+        <div class="public-auth-terms-state is-accepted" role="status">
+          <span class="public-auth-terms-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path stroke-linecap="round" stroke-linejoin="round" d="m5 12 4 4L19 6"></path></svg>
+          </span>
+          <span class="public-auth-terms-copy">
+            <strong><span data-lang-en>Terms accepted</span><span data-lang-tl>Tinanggap ang mga tuntunin</span></strong>
+            <small><span data-lang-en>Version</span><span data-lang-tl>Bersyon</span> {{ public_terms_version }} · <a href="{{ auth_terms_review_url }}"><span data-lang-en>Review again</span><span data-lang-tl>Basahin muli</span></a></small>
+          </span>
+        </div>
+        {% else %}
+        <div class="public-auth-terms-state" aria-labelledby="publicAuthTermsTitle">
+          <span class="public-auth-terms-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M6 3h9l3 3v15H6z"></path><path stroke-linecap="round" d="M9 11h6M9 15h6M9 7h2"></path></svg>
+          </span>
+          <span class="public-auth-terms-copy">
+            <strong id="publicAuthTermsTitle"><span data-lang-en>Review before creating an account</span><span data-lang-tl>Basahin bago gumawa ng account</span></strong>
+            <small><span data-lang-en>You must accept the current Terms and Conditions before account details can be submitted.</span><span data-lang-tl>Kailangan mong tanggapin ang kasalukuyang Mga Tuntunin at Kondisyon bago maisumite ang detalye ng account.</span></small>
+          </span>
+          <a class="public-auth-terms-review" href="{{ auth_terms_review_url }}">
+            <span data-lang-en>Read Terms and Conditions</span><span data-lang-tl>Basahin ang Mga Tuntunin at Kondisyon</span>
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m9 18 6-6-6-6"></path></svg>
+          </a>
+        </div>
+        {% endif %}
+
+        {% if public_terms_signup_accepted %}
         <button type="button" class="public-auth-social" data-auth-google>
           <svg width="18" height="18" viewBox="0 0 18 18" aria-hidden="true"><path d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.875 2.684-6.615z" fill="#4285F4"></path><path d="M9 18c2.43 0 4.467-.806 5.956-2.18l-2.908-2.259c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z" fill="#34A853"></path><path d="M3.964 10.71A5.41 5.41 0 0 1 3.682 9c0-.593.102-1.17.282-1.71V4.958H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.042l3.007-2.332z" fill="#FBBC05"></path><path d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.958L3.964 7.29C4.672 5.163 6.656 3.58 9 3.58z" fill="#EA4335"></path></svg>
           <span data-lang-en>Continue with Google</span><span data-lang-tl>Magpatuloy gamit ang Google</span>
@@ -107,16 +137,12 @@
           </div>
 
           <p class="public-auth-hint"><span data-lang-en>A six-digit verification code will be sent to your email.</span><span data-lang-tl>Magpapadala ng anim na digit na verification code sa iyong email.</span></p>
-          <label class="public-auth-consent" for="publicAuthTermsAccepted">
-            <input id="publicAuthTermsAccepted" type="checkbox" name="terms_accepted" value="1" required />
-            <span>
-              <span data-lang-en>I have read and agree to the <a href="{{ url_for('terms_and_conditions') }}" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>.</span>
-              <span data-lang-tl>Nabasa ko at sinasang-ayunan ko ang <a href="{{ url_for('terms_and_conditions') }}" target="_blank" rel="noopener noreferrer">Mga Tuntunin at Kondisyon</a>.</span>
-            </span>
-          </label>
           <p class="public-auth-message hidden" data-auth-message="signup"></p>
           <button type="submit" class="public-auth-submit"><span data-lang-en>Sign Up</span><span data-lang-tl>Mag-sign Up</span></button>
         </form>
+        {% else %}
+        <p class="public-auth-message hidden" data-auth-message="signup"></p>
+        {% endif %}
 
         <p class="public-auth-footer-text"><span data-lang-en>Already have an account?</span><span data-lang-tl>May account ka na?</span> <button type="button" class="public-auth-footer-link" data-auth-view-target="login"><span data-lang-en>Login</span><span data-lang-tl>Mag-login</span></button></p>
       </section>

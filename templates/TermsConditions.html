@@ -7,8 +7,8 @@
     <title>Terms and Conditions | Museo ng Libingan sa Ilalim ng Lupa</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
-    <link rel="stylesheet" href="{{ url_for('static', filename='css/terms-conditions.css') }}?v=20260906-1" />
     {% include 'partials/_site_prefs_head.html' %}
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/terms-conditions.css') }}?v=20260907-1" />
   </head>
   <body class="terms-page">
     <a class="terms-skip-link" href="#termsContent"><span data-lang-en>Skip to terms</span><span data-lang-tl>Lumaktaw sa mga tuntunin</span></a>
@@ -141,6 +141,67 @@
               <div><strong><span data-lang-en>Questions about these terms?</span><span data-lang-tl>May tanong tungkol sa mga tuntunin?</span></strong><a href="mailto:museum.undergroundnagcarlan@gmail.com">museum.undergroundnagcarlan@gmail.com</a></div>
             </div>
           </section>
+
+          {% if terms_signup_context %}
+          <section class="terms-decision" aria-labelledby="termsDecisionTitle">
+            <div class="terms-decision-copy">
+              {% if terms_signup_already_accepted %}
+              <span class="terms-decision-icon is-accepted" aria-hidden="true"><i data-lucide="badge-check"></i></span>
+              <div>
+                <p class="terms-decision-eyebrow"><span data-lang-en>Current version accepted</span><span data-lang-tl>Tinanggap ang kasalukuyang bersyon</span></p>
+                <h2 id="termsDecisionTitle"><span data-lang-en>Continue creating your account</span><span data-lang-tl>Ipagpatuloy ang paggawa ng iyong account</span></h2>
+                <p><span data-lang-en>Your agreement to version {{ terms_version }} is already recorded for this sign-up session.</span><span data-lang-tl>Naitala na ang iyong pagsang-ayon sa bersyon {{ terms_version }} para sa sign-up session na ito.</span></p>
+              </div>
+              {% else %}
+              <span class="terms-decision-icon" aria-hidden="true"><i data-lucide="file-signature"></i></span>
+              <div>
+                <p class="terms-decision-eyebrow"><span data-lang-en>Account agreement</span><span data-lang-tl>Kasunduan sa account</span></p>
+                <h2 id="termsDecisionTitle"><span data-lang-en>Ready to create an account?</span><span data-lang-tl>Handa ka na bang gumawa ng account?</span></h2>
+                <p><span data-lang-en>Selecting Agree records this version and returns you to the Sign Up modal. If you do not agree, you may continue browsing public pages without an account.</span><span data-lang-tl>Kapag pinili ang Sang-ayon, itatala ang bersyong ito at ibabalik ka sa Sign Up modal. Kung hindi ka sang-ayon, maaari mo pa ring tingnan ang mga pampublikong pahina nang walang account.</span></p>
+              </div>
+              {% endif %}
+            </div>
+            <div class="terms-decision-actions">
+              <form method="post" action="{{ url_for('accept_terms_and_conditions') }}">
+                <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+                <button class="terms-action terms-action-primary" type="submit">
+                  <i data-lucide="{{ 'arrow-right' if terms_signup_already_accepted else 'check' }}" aria-hidden="true"></i>
+                  {% if terms_signup_already_accepted %}
+                  <span><span data-lang-en>Continue to Sign Up</span><span data-lang-tl>Magpatuloy sa Sign Up</span></span>
+                  {% else %}
+                  <span><span data-lang-en>Agree and Continue to Sign Up</span><span data-lang-tl>Sang-ayon at Magpatuloy sa Sign Up</span></span>
+                  {% endif %}
+                </button>
+              </form>
+              {% if not terms_signup_already_accepted %}
+              <form method="post" action="{{ url_for('decline_terms_and_conditions') }}">
+                <input type="hidden" name="csrf_token" value="{{ public_csrf_token }}" />
+                <button class="terms-action terms-action-secondary" type="submit">
+                  <span><span data-lang-en>Not Now — Continue Browsing</span><span data-lang-tl>Hindi Muna — Magpatuloy sa Pagtingin</span></span>
+                </button>
+              </form>
+              {% endif %}
+            </div>
+          </section>
+          {% else %}
+          <section class="terms-decision terms-decision-reference" aria-labelledby="termsReferenceTitle">
+            <div class="terms-decision-copy">
+              <span class="terms-decision-icon" aria-hidden="true"><i data-lucide="book-open-check"></i></span>
+              <div>
+                <p class="terms-decision-eyebrow"><span data-lang-en>Public reference</span><span data-lang-tl>Pampublikong sanggunian</span></p>
+                <h2 id="termsReferenceTitle"><span data-lang-en>Browsing does not require agreement</span><span data-lang-tl>Hindi kailangan ng pagsang-ayon para tumingin</span></h2>
+                <p><span data-lang-en>You can continue using public pages. Agreement is requested only when you choose to create an account.</span><span data-lang-tl>Maaari mong ipagpatuloy ang paggamit ng mga pampublikong pahina. Hihingin lamang ang pagsang-ayon kapag pinili mong gumawa ng account.</span></p>
+              </div>
+            </div>
+            <div class="terms-decision-actions">
+              <a class="terms-action terms-action-primary" href="{{ url_for('terms_and_conditions', intent='signup', return_to=url_for('support'), next=url_for('account_profile')) }}">
+                <i data-lucide="user-plus" aria-hidden="true"></i>
+                <span><span data-lang-en>Create an Account</span><span data-lang-tl>Gumawa ng Account</span></span>
+              </a>
+              <a class="terms-action terms-action-secondary" href="{{ url_for('support') }}#governance"><span data-lang-en>Back to Support</span><span data-lang-tl>Bumalik sa Suporta</span></a>
+            </div>
+          </section>
+          {% endif %}
         </article>
       </div>
     </main>

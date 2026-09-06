@@ -1,8 +1,8 @@
 # Terms and Conditions setup
 
-The public Terms and Conditions use version `2026-09-06`. New email/password
-and Google registrations must accept that version. Existing verified accounts
-are not blocked or changed.
+The public Terms and Conditions use version `2026-09-07`. New email/password
+and Google registrations must accept that version through the Terms page opened
+from the Sign Up modal. Existing verified accounts are not blocked or changed.
 
 ## Deploy an existing Supabase project
 
@@ -14,10 +14,14 @@ are not blocked or changed.
 5. Select **Run**. Run this migration before deploying the matching Python and
    template changes.
 6. Deploy the application, then test both email/password sign-up and Google
-   sign-up. The checkbox must be selected before either method starts.
+   sign-up. Select **Sign In**, switch to **Sign Up**, open the Terms page, and
+   select **Agree and Continue to Sign Up**. Both registration methods remain
+   unavailable until that server-recorded step is complete.
 
-The migration only adds nullable columns and validation constraints. It does
-not delete users or force existing accounts to accept the new document.
+The migration adds nullable account columns, validation constraints, and a
+private append-only `public_terms_acceptances` history table. It does not
+delete users or force existing accounts to accept the new document. Public
+browsing remains available when a visitor selects **Not Now**.
 
 ## Future terms revisions
 

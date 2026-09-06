@@ -8,7 +8,7 @@ import time
 from datetime import datetime, timedelta, timezone
 from functools import wraps
 from pathlib import Path
-from urllib.parse import urlparse
+from urllib.parse import parse_qsl, urlencode, urlparse, urlsplit, urlunsplit
 
 from flask import Flask, g, jsonify, make_response, redirect, render_template, request, send_from_directory, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
@@ -63,7 +63,14 @@ from virtual_tour_content import (
 )
 from site_map_content import build_public_site_map_config, register_site_map_content_routes
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
-from legal_content import PUBLIC_TERMS_EFFECTIVE_DATE, PUBLIC_TERMS_VERSION
+from legal_content import (
+    PUBLIC_TERMS_EFFECTIVE_DATE,
+    PUBLIC_TERMS_REVIEW_SESSION_KEY,
+    PUBLIC_TERMS_VERSION,
+    accept_current_public_terms,
+    clear_public_terms_signup_state,
+    current_public_terms_acceptance,
+)
 from webxr_progress_content import (
     collect_webxr_item,
     deposit_webxr_record,
@@ -1618,6 +1625,7 @@ def _resolve_public_user_avatar(user):
 @app.context_processor
 def inject_public_auth_context():
     current_public_user = _get_current_public_user()
+    terms_acceptance = current_public_terms_acceptance(session)
     return {
         "current_public_user": current_public_user,
         "public_user_authenticated": bool(current_public_user),
@@ -1629,6 +1637,9 @@ def inject_public_auth_context():
             str(os.getenv("GOOGLE_OAUTH_CLIENT_ID") or "").strip()
             and str(os.getenv("GOOGLE_OAUTH_CLIENT_SECRET") or "").strip()
         ),
+        "public_terms_signup_accepted": bool(terms_acceptance),
+        "public_terms_signup_acceptance": terms_acceptance or {},
+        "public_terms_version": PUBLIC_TERMS_VERSION,
     }
 
 
@@ -2506,11 +2517,70 @@ def support():
 
 @app.route("/terms-and-conditions")
 def terms_and_conditions():
-    return render_template(
-        "TermsConditions.html",
-        terms_version=PUBLIC_TERMS_VERSION,
-        terms_effective_date=PUBLIC_TERMS_EFFECTIVE_DATE,
+    signup_intent = str(request.args.get("intent") or "").strip().lower() == "signup"
+    return_to = _safe_terms_return_url(request.args.get("return_to"), default=url_for("index"))
+    next_url = _safe_terms_return_url(request.args.get("next"), default=url_for("account_profile"))
+    if signup_intent:
+        session[PUBLIC_TERMS_REVIEW_SESSION_KEY] = {"return_to": return_to, "next": next_url}
+    response = make_response(
+        render_template(
+            "TermsConditions.html",
+            terms_version=PUBLIC_TERMS_VERSION,
+            terms_effective_date=PUBLIC_TERMS_EFFECTIVE_DATE,
+            terms_signup_context=signup_intent,
+            terms_signup_already_accepted=bool(current_public_terms_acceptance(session)),
+        )
     )
+    response.headers["Cache-Control"] = "no-store"
+    return response
+
+
+def _safe_terms_return_url(raw_value, *, default):
+    candidate = str(raw_value or "").strip()
+    parsed = urlsplit(candidate)
+    if (
+        not candidate
+        or parsed.scheme
+        or parsed.netloc
+        or not parsed.path.startswith("/")
+        or parsed.path.startswith("//")
+        or parsed.path.startswith(("/_admin", "/api/"))
+        or parsed.path == "/terms-and-conditions"
+    ):
+        return default
+    return urlunsplit(("", "", parsed.path, parsed.query, ""))
+
+
+def _terms_signup_return_url(return_to, next_url):
+    parsed = urlsplit(_safe_terms_return_url(return_to, default=url_for("index")))
+    query = dict(parse_qsl(parsed.query, keep_blank_values=True))
+    query["auth"] = "signup"
+    query["next"] = _safe_terms_return_url(next_url, default=url_for("account_profile"))
+    return urlunsplit(("", "", parsed.path, urlencode(query), ""))
+
+
+@app.route("/terms-and-conditions/accept", methods=["POST"])
+def accept_terms_and_conditions():
+    if not _is_public_csrf_valid(request.form.get("csrf_token")):
+        return jsonify({"ok": False, "error": "Invalid request."}), 400
+    review = session.get(PUBLIC_TERMS_REVIEW_SESSION_KEY)
+    if not isinstance(review, dict):
+        return redirect(url_for("terms_and_conditions"))
+    accept_current_public_terms(session)
+    return_to = review.get("return_to")
+    next_url = review.get("next")
+    session.pop(PUBLIC_TERMS_REVIEW_SESSION_KEY, None)
+    return redirect(_terms_signup_return_url(return_to, next_url))
+
+
+@app.route("/terms-and-conditions/not-now", methods=["POST"])
+def decline_terms_and_conditions():
+    if not _is_public_csrf_valid(request.form.get("csrf_token")):
+        return jsonify({"ok": False, "error": "Invalid request."}), 400
+    review = session.get(PUBLIC_TERMS_REVIEW_SESSION_KEY)
+    return_to = review.get("return_to") if isinstance(review, dict) else url_for("index")
+    clear_public_terms_signup_state(session)
+    return redirect(_safe_terms_return_url(return_to, default=url_for("index")))
 
 
 @app.route("/360VirtualTour/<path:filename>")

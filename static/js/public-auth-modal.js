@@ -162,17 +162,6 @@
     var params = new URLSearchParams();
     params.set("next", getCurrentNextUrl());
     params.set("view", currentView === "signup" ? "signup" : "login");
-    if (currentView === "signup") {
-      var termsCheckbox = signupForm && signupForm.querySelector('input[name="terms_accepted"]');
-      if (!termsCheckbox || !termsCheckbox.checked) {
-        setMessage("signup", "You must read and accept the Terms and Conditions to create an account.", "error");
-        if (termsCheckbox) {
-          termsCheckbox.focus();
-        }
-        return;
-      }
-      params.set("terms_accepted", "1");
-    }
     window.location.href = config.googleAuthEndpoint + "?" + params.toString();
   }
 
@@ -243,14 +232,6 @@
       event.preventDefault();
       clearMessages();
       var formData = serializeForm(signupForm);
-      var termsCheckbox = signupForm.querySelector('input[name="terms_accepted"]');
-      if (!termsCheckbox || !termsCheckbox.checked) {
-        setMessage("signup", "You must read and accept the Terms and Conditions to create an account.", "error");
-        if (termsCheckbox) {
-          termsCheckbox.focus();
-        }
-        return;
-      }
       pendingEmail = normalizeValidEmail(formData.get("email"));
       if (!pendingEmail) {
         setMessage("signup", "Please provide a valid email address.", "error");

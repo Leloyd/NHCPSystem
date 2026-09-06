@@ -1124,60 +1124,135 @@ body.ogd-high-contrast-page .public-mobile-account {
   font-size: 0.82rem;
 }
 
-.public-auth-consent {
+.public-auth-terms-state {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.85rem;
   align-items: start;
-  gap: 0.7rem;
-  margin-top: 0.15rem;
-  border: 1px solid rgba(184, 150, 62, 0.2);
-  border-radius: 0.85rem;
-  background: rgba(255, 250, 242, 0.65);
-  color: #5f4d38;
-  cursor: pointer;
-  font-size: 0.82rem;
-  line-height: 1.5;
-  padding: 0.8rem 0.9rem;
+  border: 1px solid rgba(184, 150, 62, 0.24);
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #fffdf8, #f5ead4);
+  color: #4e3d29;
+  padding: 1rem;
 }
 
-.public-auth-consent input {
-  width: 1.05rem;
-  height: 1.05rem;
-  margin-top: 0.08rem;
-  accent-color: #8c651c;
+.public-auth-terms-state.is-accepted {
+  border-color: rgba(33, 120, 84, 0.24);
+  background: #eef8f2;
 }
 
-.public-auth-consent a {
-  color: #8c651c;
-  font-weight: 700;
+.public-auth-terms-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.4rem;
+  height: 2.4rem;
+  border-radius: 0.75rem;
+  background: #e8d3a5;
+  color: #745116;
+}
+
+.public-auth-terms-state.is-accepted .public-auth-terms-icon {
+  background: #d5eee0;
+  color: #176a49;
+}
+
+.public-auth-terms-icon svg {
+  width: 1.2rem;
+  height: 1.2rem;
+}
+
+.public-auth-terms-copy {
+  display: grid;
+  min-width: 0;
+  gap: 0.2rem;
+  line-height: 1.45;
+}
+
+.public-auth-terms-copy strong {
+  color: #2c1a0e;
+  font-size: 0.9rem;
+}
+
+.public-auth-terms-copy small {
+  color: #79664d;
+  font-size: 0.78rem;
+}
+
+.public-auth-terms-copy a {
+  color: #7b5818;
+  font-weight: 750;
   text-decoration: underline;
-  text-underline-offset: 0.14em;
+  text-underline-offset: 0.13em;
 }
 
-.public-auth-consent:focus-within {
-  outline: 2px solid rgba(180, 131, 19, 0.45);
+.public-auth-terms-review {
+  grid-column: 1 / -1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  min-height: 2.75rem;
+  border-radius: 0.75rem;
+  background: #2c1a0e;
+  color: #fff8eb;
+  font-size: 0.82rem;
+  font-weight: 760;
+  padding: 0.72rem 0.85rem;
+  text-decoration: none;
+  transition: background-color 0.18s ease, transform 0.18s ease;
+}
+
+.public-auth-terms-review svg {
+  width: 1rem;
+  height: 1rem;
+  flex: 0 0 auto;
+}
+
+.public-auth-terms-review:hover {
+  background: #513519;
+  transform: translateY(-1px);
+}
+
+.public-auth-terms-review:focus-visible,
+.public-auth-terms-copy a:focus-visible {
+  outline: 3px solid #c99936;
   outline-offset: 2px;
 }
 
-html[data-theme="dark"] .public-auth-consent {
-  border-color: rgba(201, 168, 76, 0.28);
-  background: #2a2114;
-  color: #d6c7aa;
+html[data-theme="dark"] .public-auth-terms-state,
+html[data-theme="dark"] .public-auth-terms-state.is-accepted {
+  border-color: rgba(184, 150, 62, 0.24);
+  background: linear-gradient(145deg, #fffdf8, #f5ead4);
+  color: #4e3d29;
 }
 
-html[data-theme="dark"] .public-auth-consent a {
-  color: #e6cf8a;
+html[data-theme="dark"] .public-auth-terms-state.is-accepted {
+  border-color: rgba(33, 120, 84, 0.24);
+  background: #eef8f2;
 }
 
-html[data-contrast="on"] .public-auth-consent {
+html[data-theme="dark"] .public-auth-terms-copy strong { color: #2c1a0e; }
+html[data-theme="dark"] .public-auth-terms-copy small { color: #79664d; }
+html[data-theme="dark"] .public-auth-terms-copy a { color: #7b5818; }
+
+html[data-contrast="on"] .public-auth-terms-state,
+html[data-contrast="on"] .public-auth-terms-state.is-accepted {
   border: 2px solid #facc15;
   background: #000;
   color: #fff;
 }
 
-html[data-contrast="on"] .public-auth-consent a {
-  color: #facc15;
+html[data-contrast="on"] .public-auth-terms-icon,
+html[data-contrast="on"] .public-auth-terms-state.is-accepted .public-auth-terms-icon {
+  background: #facc15;
+  color: #000;
 }
+
+html[data-contrast="on"] .public-auth-terms-copy strong,
+html[data-contrast="on"] .public-auth-terms-copy small { color: #fff; }
+html[data-contrast="on"] .public-auth-terms-copy a { color: #facc15; }
+html[data-contrast="on"] .public-auth-terms-review { border: 2px solid #facc15; background: #facc15; color: #000; }
 
 .public-auth-message {
   margin: 0.5rem 0 0;

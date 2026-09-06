@@ -1129,6 +1129,45 @@ ALTER TABLE public.public_users
     OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
   );
 
+CREATE TABLE IF NOT EXISTS public.public_terms_acceptances (
+  id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  user_id bigint NOT NULL REFERENCES public.public_users(id) ON DELETE CASCADE,
+  terms_version text NOT NULL CHECK (char_length(terms_version) BETWEEN 1 AND 40),
+  accepted_at timestamp with time zone NOT NULL,
+  recorded_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
+  UNIQUE (user_id, terms_version)
+);
+CREATE INDEX IF NOT EXISTS public_terms_acceptances_user_time_idx
+  ON public.public_terms_acceptances (user_id, accepted_at DESC);
+ALTER TABLE public.public_terms_acceptances ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.public_terms_acceptances FROM PUBLIC;
+REVOKE ALL ON TABLE public.public_terms_acceptances FROM anon;
+REVOKE ALL ON TABLE public.public_terms_acceptances FROM authenticated;
+REVOKE ALL ON TABLE public.public_terms_acceptances FROM service_role;
+GRANT SELECT ON TABLE public.public_terms_acceptances TO service_role;
+
+CREATE OR REPLACE FUNCTION public.capture_public_terms_acceptance()
+RETURNS trigger LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  IF NEW.terms_version IS NOT NULL AND NEW.terms_accepted_at IS NOT NULL THEN
+    INSERT INTO public.public_terms_acceptances (user_id, terms_version, accepted_at)
+    VALUES (NEW.id, NEW.terms_version, NEW.terms_accepted_at)
+    ON CONFLICT (user_id, terms_version) DO NOTHING;
+  END IF;
+  RETURN NEW;
+END;
+$$;
+REVOKE ALL ON FUNCTION public.capture_public_terms_acceptance() FROM PUBLIC, anon, authenticated;
+DROP TRIGGER IF EXISTS capture_public_terms_acceptance_on_user ON public.public_users;
+CREATE TRIGGER capture_public_terms_acceptance_on_user
+AFTER INSERT OR UPDATE OF terms_version, terms_accepted_at ON public.public_users
+FOR EACH ROW EXECUTE FUNCTION public.capture_public_terms_acceptance();
+INSERT INTO public.public_terms_acceptances (user_id, terms_version, accepted_at)
+SELECT id, terms_version, terms_accepted_at
+FROM public.public_users
+WHERE terms_version IS NOT NULL AND terms_accepted_at IS NOT NULL
+ON CONFLICT (user_id, terms_version) DO NOTHING;
+
 CREATE INDEX IF NOT EXISTS public_users_verification_token_idx ON public.public_users (email_verification_token_hash);
 CREATE INDEX IF NOT EXISTS public_users_password_reset_token_idx ON public.public_users (password_reset_token_hash);
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_google_subject_unique_idx ON public.public_users (oauth_subject) WHERE oauth_subject IS NOT NULL;
@@ -1904,6 +1943,7 @@ DECLARE
     'admin_password_reset_tokens',
     'admin_login_otp_challenges',
     'public_users',
+    'public_terms_acceptances',
     'pending_public_registrations',
     'user_bookmarks',
     'tour_bookings',
@@ -1947,6 +1987,9 @@ BEGIN
   END IF;
   IF to_regprocedure('public.verify_admin_login_otp_challenge(text,text)') IS NULL THEN
     RAISE EXCEPTION 'Database installation incomplete: missing admin login OTP verify function';
+  END IF;
+  IF to_regprocedure('public.capture_public_terms_acceptance()') IS NULL THEN
+    RAISE EXCEPTION 'Database installation incomplete: missing public terms acceptance function';
   END IF;
   IF to_regprocedure('public.publish_virtual_tour_revision(bigint,text)') IS NULL THEN
     RAISE EXCEPTION 'Database installation incomplete: missing Virtual Tour publish function';
