@@ -1124,6 +1124,61 @@ body.ogd-high-contrast-page .public-mobile-account {
   font-size: 0.82rem;
 }
 
+.public-auth-consent {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 0.7rem;
+  margin-top: 0.15rem;
+  border: 1px solid rgba(184, 150, 62, 0.2);
+  border-radius: 0.85rem;
+  background: rgba(255, 250, 242, 0.65);
+  color: #5f4d38;
+  cursor: pointer;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  padding: 0.8rem 0.9rem;
+}
+
+.public-auth-consent input {
+  width: 1.05rem;
+  height: 1.05rem;
+  margin-top: 0.08rem;
+  accent-color: #8c651c;
+}
+
+.public-auth-consent a {
+  color: #8c651c;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 0.14em;
+}
+
+.public-auth-consent:focus-within {
+  outline: 2px solid rgba(180, 131, 19, 0.45);
+  outline-offset: 2px;
+}
+
+html[data-theme="dark"] .public-auth-consent {
+  border-color: rgba(201, 168, 76, 0.28);
+  background: #2a2114;
+  color: #d6c7aa;
+}
+
+html[data-theme="dark"] .public-auth-consent a {
+  color: #e6cf8a;
+}
+
+html[data-contrast="on"] .public-auth-consent {
+  border: 2px solid #facc15;
+  background: #000;
+  color: #fff;
+}
+
+html[data-contrast="on"] .public-auth-consent a {
+  color: #facc15;
+}
+
 .public-auth-message {
   margin: 0.5rem 0 0;
   padding: 0.85rem 0.95rem;

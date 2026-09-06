@@ -6,8 +6,9 @@
 -- This migration removes only legacy password-signup placeholders that never
 -- verified an email, logged in, or completed onboarding. The candidate set is
 -- kept stable while public_users is write-locked so a concurrent signup cannot
--- be caught by the cleanup. Compatible, still-valid OTP registrations are
--- copied first so they can finish verification after deployment.
+-- be caught by the cleanup. Still-valid legacy OTP state is copied before the
+-- cleanup; after Terms versioning is deployed, attempts without recorded
+-- acceptance are safely asked to restart registration.
 
 BEGIN;
 
@@ -19,6 +20,8 @@ CREATE TABLE IF NOT EXISTS public.pending_public_registrations (
   verification_expires_at timestamp with time zone NOT NULL,
   verification_sent_at timestamp with time zone NOT NULL,
   verification_attempts integer NOT NULL DEFAULT 0 CHECK (verification_attempts BETWEEN 0 AND 5),
+  terms_version text,
+  terms_accepted_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
   CONSTRAINT pending_public_registrations_email_normalized_check
@@ -30,8 +33,26 @@ CREATE TABLE IF NOT EXISTS public.pending_public_registrations (
       AND email ~ '^[a-z0-9!#$%&''*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*@[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
       AND char_length(regexp_replace(split_part(email, '@', 2), '^.*\.', '')) >= 2
       AND regexp_replace(split_part(email, '@', 2), '^.*\.', '') !~ '^[0-9]+$'
+    ),
+  CONSTRAINT pending_public_registrations_terms_acceptance_pair_check
+    CHECK (
+      (terms_version IS NULL AND terms_accepted_at IS NULL)
+      OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
     )
 );
+
+ALTER TABLE public.pending_public_registrations
+  ADD COLUMN IF NOT EXISTS terms_version text;
+ALTER TABLE public.pending_public_registrations
+  ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp with time zone;
+ALTER TABLE public.pending_public_registrations
+  DROP CONSTRAINT IF EXISTS pending_public_registrations_terms_acceptance_pair_check;
+ALTER TABLE public.pending_public_registrations
+  ADD CONSTRAINT pending_public_registrations_terms_acceptance_pair_check
+  CHECK (
+    (terms_version IS NULL AND terms_accepted_at IS NULL)
+    OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
+  );
 
 CREATE INDEX IF NOT EXISTS pending_public_registrations_expiry_idx
   ON public.pending_public_registrations (verification_expires_at);
@@ -110,7 +131,8 @@ BEGIN
     END IF;
   END LOOP;
 
-  -- Preserve still-usable OTP attempts created by the previous deployment.
+  -- Preserve OTP state created by the previous deployment. The application
+  -- decides whether its recorded Terms version is still eligible to finish.
   INSERT INTO public.pending_public_registrations (
     email,
     full_name,

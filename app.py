@@ -63,6 +63,7 @@ from virtual_tour_content import (
 )
 from site_map_content import build_public_site_map_config, register_site_map_content_routes
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
+from legal_content import PUBLIC_TERMS_EFFECTIVE_DATE, PUBLIC_TERMS_VERSION
 from webxr_progress_content import (
     collect_webxr_item,
     deposit_webxr_record,
@@ -2501,6 +2502,15 @@ def community_participation():
 @app.route("/support")
 def support():
     return render_template("Support.html")
+
+
+@app.route("/terms-and-conditions")
+def terms_and_conditions():
+    return render_template(
+        "TermsConditions.html",
+        terms_version=PUBLIC_TERMS_VERSION,
+        terms_effective_date=PUBLIC_TERMS_EFFECTIVE_DATE,
+    )
 
 
 @app.route("/360VirtualTour/<path:filename>")

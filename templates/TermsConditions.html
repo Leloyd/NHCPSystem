@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <title>Terms and Conditions | Museo ng Libingan sa Ilalim ng Lupa</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/landing.css') }}" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/terms-conditions.css') }}?v=20260906-1" />
+    {% include 'partials/_site_prefs_head.html' %}
+  </head>
+  <body class="terms-page">
+    <a class="terms-skip-link" href="#termsContent"><span data-lang-en>Skip to terms</span><span data-lang-tl>Lumaktaw sa mga tuntunin</span></a>
+    {% set public_active_page = 'support' %}
+    {% include 'partials/_public_top_nav.html' %}
+
+    <main id="termsContent">
+      <header class="terms-hero">
+        <div class="terms-shell">
+          <nav class="terms-breadcrumb" aria-label="Breadcrumb">
+            <a href="{{ url_for('index') }}"><span data-lang-en>Home</span><span data-lang-tl>Tahanan</span></a>
+            <span aria-hidden="true">/</span>
+            <a href="{{ url_for('support') }}#governance"><span data-lang-en>Governance &amp; Legal</span><span data-lang-tl>Pamamahala at Legal</span></a>
+            <span aria-hidden="true">/</span>
+            <span aria-current="page"><span data-lang-en>Terms and Conditions</span><span data-lang-tl>Mga Tuntunin at Kondisyon</span></span>
+          </nav>
+          <div class="terms-hero-grid">
+            <div>
+              <p class="terms-eyebrow"><span data-lang-en>Public Use Agreement</span><span data-lang-tl>Kasunduan sa Pampublikong Paggamit</span></p>
+              <h1><span data-lang-en>Terms and <em>Conditions</em></span><span data-lang-tl>Mga Tuntunin at <em>Kondisyon</em></span></h1>
+              <p class="terms-intro">
+                <span data-lang-en>These terms explain the rules for using this digital heritage platform, creating an account, making a booking, and contributing content.</span>
+                <span data-lang-tl>Ipinapaliwanag ng mga tuntuning ito ang mga patakaran sa paggamit ng digital heritage platform, paggawa ng account, pag-book, at pagbabahagi ng nilalaman.</span>
+              </p>
+            </div>
+            <aside class="terms-version" aria-label="Document information">
+              <span><span data-lang-en>Effective date</span><span data-lang-tl>Petsa ng bisa</span></span>
+              <strong>{{ terms_effective_date }}</strong>
+              <small><span data-lang-en>Version</span><span data-lang-tl>Bersyon</span> {{ terms_version }}</small>
+            </aside>
+          </div>
+        </div>
+      </header>
+
+      <div class="terms-shell terms-layout">
+        <aside class="terms-toc" aria-label="Terms sections">
+          <p><span data-lang-en>On this page</span><span data-lang-tl>Sa pahinang ito</span></p>
+          <ol>
+            <li><a href="#acceptance"><span data-lang-en>Acceptance</span><span data-lang-tl>Pagtanggap</span></a></li>
+            <li><a href="#accounts"><span data-lang-en>Accounts</span><span data-lang-tl>Mga Account</span></a></li>
+            <li><a href="#acceptable-use"><span data-lang-en>Acceptable use</span><span data-lang-tl>Wastong paggamit</span></a></li>
+            <li><a href="#contributions"><span data-lang-en>Contributions</span><span data-lang-tl>Mga kontribusyon</span></a></li>
+            <li><a href="#bookings"><span data-lang-en>Bookings and feedback</span><span data-lang-tl>Booking at feedback</span></a></li>
+            <li><a href="#experiences"><span data-lang-en>Digital experiences</span><span data-lang-tl>Digital na karanasan</span></a></li>
+            <li><a href="#privacy"><span data-lang-en>Privacy</span><span data-lang-tl>Privacy</span></a></li>
+            <li><a href="#availability"><span data-lang-en>Availability</span><span data-lang-tl>Availability</span></a></li>
+            <li><a href="#changes"><span data-lang-en>Changes and contact</span><span data-lang-tl>Pagbabago at ugnayan</span></a></li>
+          </ol>
+        </aside>
+
+        <article class="terms-article">
+          <section class="terms-summary" aria-labelledby="plainSummaryTitle">
+            <div class="terms-summary-icon" aria-hidden="true"><i data-lucide="file-check-2"></i></div>
+            <div>
+              <h2 id="plainSummaryTitle"><span data-lang-en>In plain language</span><span data-lang-tl>Sa payak na salita</span></h2>
+              <p><span data-lang-en>Use the platform respectfully, keep your account secure, submit only material you are allowed to share, and follow museum instructions. We use account and activity data only for stated platform and museum-service purposes.</span><span data-lang-tl>Gamitin ang platform nang may paggalang, panatilihing ligtas ang iyong account, magbahagi lamang ng materyal na maaari mong ibahagi, at sundin ang mga tagubilin ng museo. Ginagamit lamang ang account at activity data para sa mga nakasaad na layunin ng platform at serbisyo ng museo.</span></p>
+            </div>
+          </section>
+
+          <section id="acceptance" class="terms-section">
+            <span class="terms-number">01</span>
+            <h2><span data-lang-en>Acceptance of these terms</span><span data-lang-tl>Pagtanggap sa mga tuntuning ito</span></h2>
+            <p><span data-lang-en>By creating an account or continuing to use account-based services, you confirm that you have read and agree to these Terms and Conditions. Public pages may be viewed without an account. If you do not agree, do not create an account or use features that require one.</span><span data-lang-tl>Sa paggawa ng account o patuloy na paggamit ng mga serbisyong nangangailangan ng account, kinukumpirma mong nabasa at sinasang-ayunan mo ang Mga Tuntunin at Kondisyong ito. Maaaring tingnan ang mga pampublikong pahina nang walang account. Kung hindi ka sang-ayon, huwag gumawa ng account o gumamit ng mga feature na nangangailangan nito.</span></p>
+            <p><span data-lang-en>If you are under 18, use the platform with the guidance of a parent, guardian, or responsible teacher, especially before sharing personal information or content.</span><span data-lang-tl>Kung ikaw ay wala pang 18 taong gulang, gamitin ang platform sa gabay ng magulang, guardian, o responsableng guro, lalo na bago magbahagi ng personal na impormasyon o nilalaman.</span></p>
+          </section>
+
+          <section id="accounts" class="terms-section">
+            <span class="terms-number">02</span>
+            <h2><span data-lang-en>Accounts and security</span><span data-lang-tl>Mga account at seguridad</span></h2>
+            <ul>
+              <li><span data-lang-en>Provide accurate information and use an email address that belongs to you.</span><span data-lang-tl>Magbigay ng wastong impormasyon at gumamit ng email address na pag-aari mo.</span></li>
+              <li><span data-lang-en>Keep your password and verification codes private. You are responsible for activity performed through your account.</span><span data-lang-tl>Panatilihing pribado ang password at verification code. Pananagutan mo ang aktibidad na ginawa gamit ang iyong account.</span></li>
+              <li><span data-lang-en>Tell the museum promptly if you believe your account has been accessed without permission.</span><span data-lang-tl>Ipaalam agad sa museo kung naniniwala kang na-access ang iyong account nang walang pahintulot.</span></li>
+              <li><span data-lang-en>We may restrict or disable an account when reasonably necessary to protect users, museum systems, heritage content, or comply with law.</span><span data-lang-tl>Maaari naming limitahan o i-disable ang account kung makatuwirang kinakailangan upang protektahan ang mga user, sistema ng museo, heritage content, o sumunod sa batas.</span></li>
+            </ul>
+          </section>
+
+          <section id="acceptable-use" class="terms-section">
+            <span class="terms-number">03</span>
+            <h2><span data-lang-en>Acceptable use</span><span data-lang-tl>Wastong paggamit</span></h2>
+            <p><span data-lang-en>You may use the platform for personal, educational, research, cultural, and lawful community-participation purposes. You must not:</span><span data-lang-tl>Maaari mong gamitin ang platform para sa personal, pang-edukasyon, pananaliksik, kultura, at legal na pakikilahok ng komunidad. Hindi mo dapat:</span></p>
+            <ul>
+              <li><span data-lang-en>upload unlawful, abusive, deceptive, discriminatory, or privacy-invasive material;</span><span data-lang-tl>mag-upload ng ilegal, mapang-abuso, mapanlinlang, mapangdiskrimina, o lumalabag sa privacy na materyal;</span></li>
+              <li><span data-lang-en>impersonate another person or misrepresent ownership, authorship, or historical evidence;</span><span data-lang-tl>magpanggap bilang ibang tao o maling ilarawan ang pagmamay-ari, pagkakalikha, o ebidensiyang pangkasaysayan;</span></li>
+              <li><span data-lang-en>probe, disrupt, overload, bypass security, scrape at an unreasonable rate, or introduce malicious code; or</span><span data-lang-tl>subukang sirain, labis na bigatan, lampasan ang seguridad, mangolekta ng data sa hindi makatwirang bilis, o magpasok ng mapaminsalang code; o</span></li>
+              <li><span data-lang-en>use museum or contributor material in a way that infringes intellectual-property or other rights.</span><span data-lang-tl>gamitin ang materyal ng museo o contributor sa paraang lumalabag sa intellectual property o iba pang karapatan.</span></li>
+            </ul>
+          </section>
+
+          <section id="contributions" class="terms-section">
+            <span class="terms-number">04</span>
+            <h2><span data-lang-en>Stories and educational contributions</span><span data-lang-tl>Mga kuwento at kontribusyong pang-edukasyon</span></h2>
+            <p><span data-lang-en>You keep ownership of content you submit. You confirm that you created it or have permission to share it, and that it does not violate another person's rights. You grant the platform a non-exclusive, royalty-free permission to store, review, reproduce, format, and display an accepted contribution for museum, educational, archival, and promotional use connected with this platform.</span><span data-lang-tl>Mananatili sa iyo ang pagmamay-ari ng nilalamang isinumite mo. Kinukumpirma mong ikaw ang gumawa nito o may pahintulot kang ibahagi ito, at hindi nito nilalabag ang karapatan ng iba. Binibigyan mo ang platform ng hindi eksklusibo at walang royalty na pahintulot na i-store, suriin, kopyahin, ayusin ang format, at ipakita ang tinanggap na kontribusyon para sa museo, edukasyon, archive, at promosyon na kaugnay ng platform na ito.</span></p>
+            <p><span data-lang-en>Submissions may be reviewed for safety, privacy, relevance, authenticity, quality, and rights concerns. Pending or rejected submissions may be edited and resubmitted; accepted submissions are locked to preserve the approved record. Acceptance is not guaranteed, and material may be withheld or removed when a valid concern is identified.</span><span data-lang-tl>Maaaring suriin ang mga submission para sa kaligtasan, privacy, kaugnayan, pagiging tunay, kalidad, at mga karapatan. Maaaring i-edit at muling isumite ang pending o rejected na submission; nala-lock ang accepted submission upang mapanatili ang aprubadong record. Hindi garantisado ang pagtanggap, at maaaring hindi ilathala o alisin ang materyal kapag may wastong alalahanin.</span></p>
+          </section>
+
+          <section id="bookings" class="terms-section">
+            <span class="terms-number">05</span>
+            <h2><span data-lang-en>Bookings, ratings, and feedback</span><span data-lang-tl>Booking, rating, at feedback</span></h2>
+            <p><span data-lang-en>A booking request is not confirmed until the museum approves it. Schedules may change because of site conditions, public safety, official activities, closures, or other operational needs. Visitors must follow current on-site rules and staff instructions.</span><span data-lang-tl>Hindi kumpirmado ang booking request hangga't hindi ito inaaprubahan ng museo. Maaaring magbago ang schedule dahil sa kalagayan ng lugar, kaligtasan ng publiko, opisyal na aktibidad, pagsasara, o ibang pangangailangan sa operasyon. Dapat sundin ng mga bisita ang kasalukuyang patakaran sa lugar at tagubilin ng staff.</span></p>
+            <p><span data-lang-en>Eligible numerical ratings may be included in public summaries whether positive or negative. Written comments are shown publicly only when you permit publication and after the same safety, privacy, relevance, and authenticity review applied to all comments.</span><span data-lang-tl>Maaaring isama sa pampublikong buod ang kwalipikadong numerical rating, positibo man o negatibo. Ipinapakita lamang sa publiko ang nakasulat na komento kapag pinahintulutan mo at matapos ang parehong pagsusuri sa kaligtasan, privacy, kaugnayan, at pagiging tunay na ginagamit sa lahat ng komento.</span></p>
+          </section>
+
+          <section id="experiences" class="terms-section">
+            <span class="terms-number">06</span>
+            <h2><span data-lang-en>AR, 3D, WebXR, and virtual tours</span><span data-lang-tl>AR, 3D, WebXR, at virtual tour</span></h2>
+            <p><span data-lang-en>Interactive experiences are educational representations and may not reproduce every physical detail, scale, condition, or current site arrangement. Use AR, VR, gyroscope, audio, and movement-based features in a safe space, remain aware of your surroundings, take breaks when needed, and stop if you feel discomfort. A responsible adult should supervise younger users.</span><span data-lang-tl>Ang mga interactive na karanasan ay representasyong pang-edukasyon at maaaring hindi maipakita ang bawat pisikal na detalye, sukat, kondisyon, o kasalukuyang ayos ng lugar. Gamitin ang AR, VR, gyroscope, audio, at movement feature sa ligtas na lugar, maging alerto sa paligid, magpahinga kung kailangan, at huminto kapag hindi komportable. Dapat bantayan ng responsableng adult ang mas batang user.</span></p>
+          </section>
+
+          <section id="privacy" class="terms-section">
+            <span class="terms-number">07</span>
+            <h2><span data-lang-en>Privacy and personal information</span><span data-lang-tl>Privacy at personal na impormasyon</span></h2>
+            <p><span data-lang-en>The platform processes information needed to operate accounts, verification, bookings, bookmarks, submissions, feedback, security, accessibility preferences, and service analytics. Information should be used only for declared, legitimate platform and museum-service purposes, kept only as long as needed or required, and protected with reasonable safeguards. Do not place sensitive personal information in free-text fields or uploaded files unless it is necessary and you are authorized to provide it.</span><span data-lang-tl>Pinoproseso ng platform ang impormasyong kailangan para sa account, verification, booking, bookmark, submission, feedback, seguridad, accessibility preference, at service analytics. Dapat gamitin lamang ang impormasyon para sa ipinahayag at lehitimong layunin ng platform at serbisyo ng museo, itago lamang habang kailangan o hinihingi, at protektahan sa makatwirang paraan. Huwag maglagay ng sensitibong personal na impormasyon sa free-text field o upload maliban kung kailangan at awtorisado kang ibigay ito.</span></p>
+            <p><span data-lang-en>You may contact the museum to ask about access to, correction of, or deletion of your account information, subject to identity verification, legal duties, and records that must reasonably be retained.</span><span data-lang-tl>Maaari kang makipag-ugnayan sa museo upang humiling ng access, pagwawasto, o pagbura ng impormasyon ng iyong account, alinsunod sa identity verification, legal na tungkulin, at mga record na makatuwirang kailangang panatilihin.</span></p>
+          </section>
+
+          <section id="availability" class="terms-section">
+            <span class="terms-number">08</span>
+            <h2><span data-lang-en>Content, external services, and availability</span><span data-lang-tl>Nilalaman, external service, at availability</span></h2>
+            <p><span data-lang-en>Museum-created text, branding, photographs, models, audio, interface elements, and curated materials may be protected by intellectual-property and cultural-heritage rules. Unless a specific item says otherwise, access to the platform does not transfer ownership or grant permission for commercial reuse.</span><span data-lang-tl>Ang text, branding, larawan, model, audio, interface element, at curated material ng museo ay maaaring protektado ng intellectual-property at cultural-heritage rules. Maliban kung may ibang nakasaad sa isang item, ang access sa platform ay hindi naglilipat ng pagmamay-ari o nagbibigay ng pahintulot para sa komersyal na muling paggamit.</span></p>
+            <p><span data-lang-en>The platform may rely on hosting, database, storage, email, authentication, mapping, media, and narration providers. Their availability and separate terms may affect some features. We work to keep information accurate and services available, but temporary errors, maintenance, compatibility limits, or interruptions may occur.</span><span data-lang-tl>Maaaring umasa ang platform sa hosting, database, storage, email, authentication, mapping, media, at narration provider. Maaaring makaapekto sa ilang feature ang availability at hiwalay nilang terms. Sinisikap naming panatilihing wasto ang impormasyon at available ang serbisyo, ngunit maaaring magkaroon ng pansamantalang error, maintenance, compatibility limit, o interruption.</span></p>
+          </section>
+
+          <section id="changes" class="terms-section">
+            <span class="terms-number">09</span>
+            <h2><span data-lang-en>Changes, governing law, and contact</span><span data-lang-tl>Pagbabago, umiiral na batas, at ugnayan</span></h2>
+            <p><span data-lang-en>These terms are governed by applicable laws of the Republic of the Philippines. We may revise them when platform features, museum operations, or legal requirements change. The current effective date and version appear at the top of this page. If a material change requires renewed agreement, the platform should request it before the affected account feature is used.</span><span data-lang-tl>Ang mga tuntuning ito ay pinamamahalaan ng mga naaangkop na batas ng Republika ng Pilipinas. Maaari naming baguhin ang mga ito kapag nagbago ang feature ng platform, operasyon ng museo, o legal na requirement. Makikita sa itaas ng pahinang ito ang kasalukuyang petsa ng bisa at bersyon. Kung ang mahalagang pagbabago ay nangangailangan ng panibagong pagsang-ayon, dapat itong hingin ng platform bago gamitin ang apektadong account feature.</span></p>
+            <div class="terms-contact">
+              <i data-lucide="mail" aria-hidden="true"></i>
+              <div><strong><span data-lang-en>Questions about these terms?</span><span data-lang-tl>May tanong tungkol sa mga tuntunin?</span></strong><a href="mailto:museum.undergroundnagcarlan@gmail.com">museum.undergroundnagcarlan@gmail.com</a></div>
+            </div>
+          </section>
+        </article>
+      </div>
+    </main>
+
+    {% include 'partials/_public_footer.html' %}
+    {% include 'partials/_site_accessibility_fab.html' %}
+    {% include 'partials/_site_prefs_foot.html' %}
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <script>if (window.lucide) window.lucide.createIcons();</script>
+    <script src="{{ url_for('static', filename='js/landing.js') }}"></script>
+  </body>
+</html>

@@ -107,6 +107,13 @@
           </div>
 
           <p class="public-auth-hint"><span data-lang-en>A six-digit verification code will be sent to your email.</span><span data-lang-tl>Magpapadala ng anim na digit na verification code sa iyong email.</span></p>
+          <label class="public-auth-consent" for="publicAuthTermsAccepted">
+            <input id="publicAuthTermsAccepted" type="checkbox" name="terms_accepted" value="1" required />
+            <span>
+              <span data-lang-en>I have read and agree to the <a href="{{ url_for('terms_and_conditions') }}" target="_blank" rel="noopener noreferrer">Terms and Conditions</a>.</span>
+              <span data-lang-tl>Nabasa ko at sinasang-ayunan ko ang <a href="{{ url_for('terms_and_conditions') }}" target="_blank" rel="noopener noreferrer">Mga Tuntunin at Kondisyon</a>.</span>
+            </span>
+          </label>
           <p class="public-auth-message hidden" data-auth-message="signup"></p>
           <button type="submit" class="public-auth-submit"><span data-lang-en>Sign Up</span><span data-lang-tl>Mag-sign Up</span></button>
         </form>
@@ -185,5 +192,5 @@
   'errorMessage': auth_error_message if auth_error_message is defined else '',
   'emailEnabled': public_auth_email_enabled if public_auth_email_enabled is defined else false
 }|tojson }}</script>
-<script src="{{ url_for('static', filename='js/public-auth-modal.js') }}?v=20260903-pending-signup-1"></script>
+<script src="{{ url_for('static', filename='js/public-auth-modal.js') }}?v=20260906-terms-1"></script>
 {% endif %}

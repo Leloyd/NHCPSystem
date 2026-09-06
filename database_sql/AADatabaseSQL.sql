@@ -951,12 +951,59 @@ CREATE TABLE IF NOT EXISTS public.public_users (
   security_code_expires_at timestamp with time zone,
   security_code_sent_at timestamp with time zone,
   security_code_attempts integer NOT NULL DEFAULT 0,
+  terms_version text,
+  terms_accepted_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now())
 );
 
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_email_unique_idx ON public.public_users (lower(email));
 CREATE UNIQUE INDEX IF NOT EXISTS public_users_username_unique_idx ON public.public_users (lower(username));
+
+-- Email/password registrations remain here until the OTP is verified. Keeping
+-- this separate prevents unverified addresses from appearing in User
+-- Management as real accounts.
+CREATE TABLE IF NOT EXISTS public.pending_public_registrations (
+  email text PRIMARY KEY,
+  full_name text NOT NULL CHECK (char_length(full_name) BETWEEN 3 AND 160),
+  password_hash text NOT NULL CHECK (char_length(password_hash) BETWEEN 40 AND 512),
+  verification_code_hash text NOT NULL CHECK (verification_code_hash ~ '^[0-9a-f]{64}$'),
+  verification_expires_at timestamp with time zone NOT NULL,
+  verification_sent_at timestamp with time zone NOT NULL,
+  verification_attempts integer NOT NULL DEFAULT 0 CHECK (verification_attempts BETWEEN 0 AND 5),
+  terms_version text,
+  terms_accepted_at timestamp with time zone,
+  created_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
+  updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc', now()),
+  CONSTRAINT pending_public_registrations_email_normalized_check CHECK (email = lower(btrim(email))),
+  CONSTRAINT pending_public_registrations_email_format_check CHECK (
+    char_length(email) BETWEEN 3 AND 254
+    AND char_length(split_part(email, '@', 1)) <= 64
+    AND email ~ '^[a-z0-9!#$%&''*+/=?^_`{|}~-]+(\.[a-z0-9!#$%&''*+/=?^_`{|}~-]+)*@[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?(\.[a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?)+$'
+    AND char_length(regexp_replace(split_part(email, '@', 2), '^.*\.', '')) >= 2
+    AND regexp_replace(split_part(email, '@', 2), '^.*\.', '') !~ '^[0-9]+$'
+  ),
+  CONSTRAINT pending_public_registrations_terms_acceptance_pair_check CHECK (
+    (terms_version IS NULL AND terms_accepted_at IS NULL)
+    OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
+  )
+);
+
+ALTER TABLE public.pending_public_registrations ADD COLUMN IF NOT EXISTS terms_version text;
+ALTER TABLE public.pending_public_registrations ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp with time zone;
+ALTER TABLE public.pending_public_registrations DROP CONSTRAINT IF EXISTS pending_public_registrations_terms_acceptance_pair_check;
+ALTER TABLE public.pending_public_registrations ADD CONSTRAINT pending_public_registrations_terms_acceptance_pair_check
+  CHECK (
+    (terms_version IS NULL AND terms_accepted_at IS NULL)
+    OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
+  );
+CREATE INDEX IF NOT EXISTS pending_public_registrations_expiry_idx
+  ON public.pending_public_registrations (verification_expires_at);
+ALTER TABLE public.pending_public_registrations ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON TABLE public.pending_public_registrations FROM PUBLIC;
+REVOKE ALL ON TABLE public.pending_public_registrations FROM anon;
+REVOKE ALL ON TABLE public.pending_public_registrations FROM authenticated;
+GRANT SELECT, INSERT, UPDATE, DELETE ON TABLE public.pending_public_registrations TO service_role;
 
 CREATE TABLE IF NOT EXISTS public.user_bookmarks (
   id bigint GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
@@ -1065,6 +1112,22 @@ ALTER TABLE public.public_users
 
 ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS security_code_attempts integer NOT NULL DEFAULT 0;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS terms_version text;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp with time zone;
+
+ALTER TABLE public.public_users
+  DROP CONSTRAINT IF EXISTS public_users_terms_acceptance_pair_check;
+
+ALTER TABLE public.public_users
+  ADD CONSTRAINT public_users_terms_acceptance_pair_check
+  CHECK (
+    (terms_version IS NULL AND terms_accepted_at IS NULL)
+    OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
+  );
 
 CREATE INDEX IF NOT EXISTS public_users_verification_token_idx ON public.public_users (email_verification_token_hash);
 CREATE INDEX IF NOT EXISTS public_users_password_reset_token_idx ON public.public_users (password_reset_token_hash);
@@ -1841,6 +1904,7 @@ DECLARE
     'admin_password_reset_tokens',
     'admin_login_otp_challenges',
     'public_users',
+    'pending_public_registrations',
     'user_bookmarks',
     'tour_bookings',
     'community_highlights',

@@ -29,6 +29,8 @@ CREATE TABLE IF NOT EXISTS public.public_users (
   security_code_expires_at timestamp with time zone,
   security_code_sent_at timestamp with time zone,
   security_code_attempts integer NOT NULL DEFAULT 0,
+  terms_version text,
+  terms_accepted_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now()),
   updated_at timestamp with time zone NOT NULL DEFAULT timezone('utc'::text, now())
 );
@@ -143,6 +145,22 @@ ALTER TABLE public.public_users
 
 ALTER TABLE public.public_users
   ADD COLUMN IF NOT EXISTS security_code_attempts integer NOT NULL DEFAULT 0;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS terms_version text;
+
+ALTER TABLE public.public_users
+  ADD COLUMN IF NOT EXISTS terms_accepted_at timestamp with time zone;
+
+ALTER TABLE public.public_users
+  DROP CONSTRAINT IF EXISTS public_users_terms_acceptance_pair_check;
+
+ALTER TABLE public.public_users
+  ADD CONSTRAINT public_users_terms_acceptance_pair_check
+  CHECK (
+    (terms_version IS NULL AND terms_accepted_at IS NULL)
+    OR (char_length(terms_version) BETWEEN 1 AND 40 AND terms_accepted_at IS NOT NULL)
+  );
 
 CREATE INDEX IF NOT EXISTS public_users_verification_token_idx ON public.public_users (email_verification_token_hash);
 CREATE INDEX IF NOT EXISTS public_users_password_reset_token_idx ON public.public_users (password_reset_token_hash);

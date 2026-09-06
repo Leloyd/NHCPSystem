@@ -35,6 +35,7 @@ from pending_public_registrations_repository import (
     update_pending_public_registration,
 )
 from heritage_keeper_content import load_heritage_keeper_progress, record_heritage_keeper_fragment
+from legal_content import PUBLIC_TERMS_VERSION
 from supabase_client import is_supabase_configured
 from supabase_storage import delete_public_image, upload_public_image
 from media_upload_content import MEDIA_UPLOAD_MAX_BYTES, discard_direct_uploads, validate_direct_upload_reference
@@ -121,6 +122,7 @@ GOOGLE_OAUTH_USERINFO_URL = "https://openidconnect.googleapis.com/v1/userinfo"
 GOOGLE_OAUTH_SESSION_STATE_KEY = "public_google_oauth_state"
 GOOGLE_OAUTH_SESSION_NEXT_KEY = "public_google_oauth_next"
 GOOGLE_OAUTH_SESSION_VIEW_KEY = "public_google_oauth_view"
+GOOGLE_OAUTH_SESSION_TERMS_KEY = "public_google_oauth_terms_version"
 
 
 def _utcnow() -> datetime:
@@ -252,7 +254,11 @@ def _fetch_google_user_profile(access_token: str) -> dict[str, Any]:
     return _load_json_response(request_obj)
 
 
-def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[str, Any]:
+def _sign_in_public_user_from_google_profile(
+    profile: dict[str, Any],
+    *,
+    allow_registration: bool = False,
+) -> dict[str, Any]:
     oauth_subject = str(profile.get("sub") or "").strip()
     try:
         email = normalize_email_address(profile.get("email"))
@@ -274,6 +280,8 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
     if existing_user:
         if not bool(existing_user.get("is_active")):
             raise ValueError(DISABLED_ACCOUNT_MESSAGE)
+        if not _user_is_verified(existing_user) and not allow_registration:
+            raise ValueError("No verified account was found. Choose Sign up and accept the Terms and Conditions first.")
         stored_subject = str(existing_user.get("oauth_subject") or "").strip()
         if stored_subject and not secrets.compare_digest(stored_subject, oauth_subject):
             raise ValueError("This email is already linked to a different Google account.")
@@ -301,6 +309,8 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
                     "email_verification_expires_at": None,
                     "email_verification_sent_at": None,
                     "email_verification_attempts": 0,
+                    "terms_version": PUBLIC_TERMS_VERSION,
+                    "terms_accepted_at": now,
                 }
             )
         if not str(existing_user.get("full_name") or "").strip():
@@ -311,6 +321,9 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
         except Exception:
             pass
         return updated_user
+
+    if not allow_registration:
+        raise ValueError("No account was found. Choose Sign up and accept the Terms and Conditions first.")
 
     password_hash = generate_password_hash(secrets.token_urlsafe(48))
     created_user = create_public_user(
@@ -343,6 +356,8 @@ def _sign_in_public_user_from_google_profile(profile: dict[str, Any]) -> dict[st
             "security_code_expires_at": None,
             "security_code_sent_at": None,
             "security_code_attempts": 0,
+            "terms_version": PUBLIC_TERMS_VERSION,
+            "terms_accepted_at": now,
             "updated_at": now,
         }
     )
@@ -482,6 +497,9 @@ def _validate_modal_signup_payload(form) -> tuple[dict[str, Any], str, int | Non
     password = str(form.get("password") or "")
     confirm_password = str(form.get("confirm_password") or "")
 
+    if str(form.get("terms_accepted") or "").strip().lower() not in {"1", "true", "on", "yes"}:
+        raise ValueError("You must read and accept the Terms and Conditions to create an account.")
+
     if len(password) < 8 or len(password) > 128:
         raise ValueError("Password must be between 8 and 128 characters.")
     if password != confirm_password:
@@ -533,6 +551,8 @@ def _build_verified_public_user_payload(pending: dict[str, Any], verified_at: st
         "security_code_expires_at": None,
         "security_code_sent_at": None,
         "security_code_attempts": 0,
+        "terms_version": str(pending.get("terms_version") or ""),
+        "terms_accepted_at": pending.get("terms_accepted_at"),
         "updated_at": verified_at,
     }
 
@@ -746,10 +766,19 @@ def register_user_account_routes(
         if not _is_google_oauth_configured():
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message="Google sign-in is not configured yet.")
 
+        terms_accepted = str(request.args.get("terms_accepted") or "").strip().lower() in {"1", "true", "on", "yes"}
+        if auth_view == "signup" and not terms_accepted:
+            return _redirect_google_auth_error(
+                view=auth_view,
+                next_url=next_url,
+                error_message="You must read and accept the Terms and Conditions to create an account.",
+            )
+
         state = secrets.token_urlsafe(32)
         session[GOOGLE_OAUTH_SESSION_STATE_KEY] = state
         session[GOOGLE_OAUTH_SESSION_NEXT_KEY] = next_url
         session[GOOGLE_OAUTH_SESSION_VIEW_KEY] = auth_view
+        session[GOOGLE_OAUTH_SESSION_TERMS_KEY] = PUBLIC_TERMS_VERSION if terms_accepted else ""
         client_id, _client_secret = _get_google_oauth_credentials()
         authorization_query = urllib.parse.urlencode(
             {
@@ -767,6 +796,7 @@ def register_user_account_routes(
     def public_google_auth_callback():
         next_url = _resolve_safe_next_url(session.pop(GOOGLE_OAUTH_SESSION_NEXT_KEY, None), "account_profile")
         auth_view = _normalize_auth_view(session.pop(GOOGLE_OAUTH_SESSION_VIEW_KEY, None), default="login")
+        accepted_terms_version = str(session.pop(GOOGLE_OAUTH_SESSION_TERMS_KEY, "") or "")
         expected_state = str(session.pop(GOOGLE_OAUTH_SESSION_STATE_KEY, "") or "")
         error_code = str(request.args.get("error") or "").strip()
         returned_state = str(request.args.get("state") or "").strip()
@@ -787,7 +817,10 @@ def register_user_account_routes(
             if not access_token:
                 raise RuntimeError("Google did not return an access token.")
             user_profile = _fetch_google_user_profile(access_token)
-            user = _sign_in_public_user_from_google_profile(user_profile)
+            user = _sign_in_public_user_from_google_profile(
+                user_profile,
+                allow_registration=(auth_view == "signup" and accepted_terms_version == PUBLIC_TERMS_VERSION),
+            )
         except ValueError as exc:
             return _redirect_google_auth_error(view=auth_view, next_url=next_url, error_message=str(exc))
         except Exception as exc:
@@ -902,6 +935,14 @@ def register_user_account_routes(
             now = _utcnow()
             purge_expired_pending_public_registrations(now.isoformat())
             existing_pending = get_pending_public_registration(email)
+            if existing_pending and (
+                str(existing_pending.get("terms_version") or "") != PUBLIC_TERMS_VERSION
+                or not existing_pending.get("terms_accepted_at")
+            ):
+                # A registration started before the current terms cannot be
+                # promoted. The new checked submission replaces it cleanly.
+                delete_pending_public_registration(email)
+                existing_pending = None
             if existing_pending:
                 wait_seconds = _resend_wait_seconds(
                     existing_pending.get("verification_sent_at"),
@@ -923,6 +964,8 @@ def register_user_account_routes(
                     "verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
                     "verification_sent_at": now.isoformat(),
                     "verification_attempts": 0,
+                    "terms_version": PUBLIC_TERMS_VERSION,
+                    "terms_accepted_at": now.isoformat(),
                     "updated_at": now.isoformat(),
                 }
             )
@@ -1002,6 +1045,19 @@ def register_user_account_routes(
                     }
                 ), 400
 
+            if (
+                str(pending.get("terms_version") or "") != PUBLIC_TERMS_VERSION
+                or not pending.get("terms_accepted_at")
+            ):
+                delete_pending_public_registration(email)
+                return jsonify(
+                    {
+                        "ok": False,
+                        "error": "Please create the account again and accept the current Terms and Conditions.",
+                        "restart_required": True,
+                    }
+                ), 400
+
             wait_seconds = _resend_wait_seconds(pending.get("verification_sent_at"), EMAIL_VERIFICATION_RESEND_COOLDOWN)
             if wait_seconds:
                 return jsonify({"ok": False, "error": f"Please wait {wait_seconds} seconds before requesting another code.", "retry_after": wait_seconds}), 429
@@ -1016,6 +1072,8 @@ def register_user_account_routes(
                 "verification_expires_at": (now + EMAIL_VERIFICATION_LIFETIME).isoformat(),
                 "verification_sent_at": now.isoformat(),
                 "verification_attempts": 0,
+                "terms_version": str(pending.get("terms_version") or ""),
+                "terms_accepted_at": pending.get("terms_accepted_at"),
                 "updated_at": now.isoformat(),
             }
             save_pending_public_registration(pending_payload)
@@ -1074,6 +1132,20 @@ def register_user_account_routes(
             if not pending:
                 record_public_auth_failure("signup", client_ip)
                 return jsonify({"ok": False, "error": "The code is invalid or has expired."}), 400
+
+
+            if (
+                str(pending.get("terms_version") or "") != PUBLIC_TERMS_VERSION
+                or not pending.get("terms_accepted_at")
+            ):
+                delete_pending_public_registration(email)
+                return jsonify(
+                    {
+                        "ok": False,
+                        "error": "Please create the account again and accept the current Terms and Conditions.",
+                        "terms_acceptance_required": True,
+                    }
+                ), 400
 
             attempts = int(pending.get("verification_attempts") or 0)
             if attempts >= EMAIL_VERIFICATION_MAX_ATTEMPTS:

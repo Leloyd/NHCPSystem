@@ -8,7 +8,7 @@ from supabase_client import get_supabase_client
 PENDING_PUBLIC_REGISTRATIONS_TABLE = "pending_public_registrations"
 PENDING_PUBLIC_REGISTRATION_FIELDS = (
     "email, full_name, password_hash, verification_code_hash, verification_expires_at, "
-    "verification_sent_at, verification_attempts, created_at, updated_at"
+    "verification_sent_at, verification_attempts, terms_version, terms_accepted_at, created_at, updated_at"
 )
 
 
