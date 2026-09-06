@@ -99,7 +99,7 @@
                   <div><dt>Automated sentiment</dt><dd>{{ feedback_item.sentiment_label }} ({{ feedback_item.sentiment_confidence_percent }}%)</dd></div>
                   <div><dt>Rating eligibility</dt><dd>{{ feedback_item.rating_status_label }}</dd></div>
                   <div><dt>Comment status</dt><dd>{{ feedback_item.comment_status_label }}</dd></div>
-                  <div><dt>Public consent</dt><dd>{{ 'Yes' if feedback_item.public_display_consent else 'No — internal only' }}</dd></div>
+                  <div><dt>Public comment consent</dt><dd>{{ 'Yes' if feedback_item.public_display_consent else 'No — comment stays private' }}</dd></div>
                   <div><dt>Public name</dt><dd>{{ feedback_item.public_display_name }}</dd></div>
                   <div class="is-wide"><dt>Submitted</dt><dd>{{ feedback_item.display_date }}</dd></div>
                 </dl>
@@ -133,7 +133,7 @@
                 {% if feedback_item.rating_status == 'excluded' %}
                 <p class="admin-feedback-analysis-notice">The complete response is withheld while its rating is excluded. Reinstate the rating before publishing the comment.</p>
                 {% elif not feedback_item.public_display_consent %}
-                <p class="admin-feedback-analysis-notice">The visitor did not consent to public display. This response remains internal.</p>
+                <p class="admin-feedback-analysis-notice">The visitor did not consent to publishing the written comment. The eligible numerical rating still remains in the public aggregate.</p>
                 {% elif not feedback_item.comments %}
                 <p class="admin-feedback-analysis-notice">This is a rating-only response, so there is no comment to publish.</p>
                 {% else %}
@@ -154,7 +154,7 @@
                 <header><span aria-hidden="true">★</span><div><p>Public aggregate</p><h3>Rating Eligibility</h3></div></header>
                 <p class="admin-submission-decision-copy">A rating must not be excluded because it is negative. Exclusion is limited to fraud, duplicates, ineligible reviews, conflicts, or manipulation.</p>
                 {% if feedback_item.rating_status == 'excluded' %}
-                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" data-confirm-submit data-confirm-eyebrow="Rating eligibility" data-confirm-title="Reinstate this rating?" data-confirm-message="The rating will be counted in public aggregates again when public-display consent exists." data-confirm-label="Reinstate rating" data-confirm-variant="enable">
+                <form method="post" action="{{ url_for('admin_visitor_feedback_review', feedback_id=feedback_item.id) }}" data-confirm-submit data-confirm-eyebrow="Rating eligibility" data-confirm-title="Reinstate this rating?" data-confirm-message="The eligible rating will be counted in the public aggregates again." data-confirm-label="Reinstate rating" data-confirm-variant="enable">
                   <input type="hidden" name="csrf_token" value="{{ csrf_token }}" /><input type="hidden" name="moderation_action" value="reinstate_rating" /><input type="hidden" name="return_filter" value="{{ admin_feedback_return_filter }}" />
                   <button type="submit" class="admin-submission-decision-action is-approve"><span>★</span><span><strong>Reinstate Rating</strong><small>Count it in public aggregates again</small></span></button>
                 </form>

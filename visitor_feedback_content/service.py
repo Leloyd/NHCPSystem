@@ -282,14 +282,22 @@ def build_public_visitor_feedback() -> dict[str, Any]:
             "date": item["display_date"].split(" ", 3)[:3],
         }
         for item in items
-        if item.get("comment_status") == "published" and item.get("comments")
+        if item.get("public_display_consent")
+        and item.get("comment_status") == "published"
+        and item.get("comments")
     ]
     for item in comments:
         item["date"] = " ".join(item["date"])
     return {
         "channels": channels,
         "comments": comments[:24],
-        "pending_comment_count": sum(1 for item in items if item.get("comment_status") == "pending" and item.get("comments")),
+        "pending_comment_count": sum(
+            1
+            for item in items
+            if item.get("public_display_consent")
+            and item.get("comment_status") == "pending"
+            and item.get("comments")
+        ),
     }
 
 

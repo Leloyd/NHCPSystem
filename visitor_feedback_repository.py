@@ -80,10 +80,10 @@ def list_visitor_feedback_for_user(user_id: int) -> list[dict[str, Any]]:
 
 
 def list_public_visitor_feedback() -> list[dict[str, Any]]:
-    """Return consented feedback to server code; callers still sanitize it."""
+    """Return eligible ratings to server code; callers still sanitize comments."""
     client = get_supabase_client()
     response = client.table(VISITOR_FEEDBACK_TABLE).select(VISITOR_FEEDBACK_SELECT_FIELDS) \
-        .eq("public_display_consent", True).eq("rating_status", "counted") \
+        .eq("rating_status", "counted") \
         .order("created_at", desc=True).execute()
     return list(response.data or [])
 

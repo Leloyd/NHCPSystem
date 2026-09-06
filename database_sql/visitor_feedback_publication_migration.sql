@@ -1,6 +1,6 @@
 -- Fair public visitor-feedback publication.
--- Ratings and written comments have separate moderation states so a genuine
--- low rating cannot be hidden merely because its comment is not published.
+-- Ratings and written comments have separate moderation states so every
+-- eligible rating is public even when its comment is not published.
 -- Safe to run more than once.
 
 BEGIN;
@@ -14,6 +14,9 @@ ALTER TABLE public.visitor_feedback
   ADD COLUMN IF NOT EXISTS moderation_note text NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS moderated_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS moderated_by text NOT NULL DEFAULT '';
+
+COMMENT ON COLUMN public.visitor_feedback.public_display_consent IS
+  'Consent to publish the written comment; eligible numerical ratings are public independently.';
 
 ALTER TABLE public.visitor_feedback
   DROP CONSTRAINT IF EXISTS visitor_feedback_public_name_preference_check,
@@ -31,8 +34,9 @@ ALTER TABLE public.visitor_feedback
   ADD CONSTRAINT visitor_feedback_moderation_note_check
     CHECK (char_length(moderation_note) <= 2000);
 
--- Existing responses did not include informed public-display consent. They
--- remain available to staff, but do not enter the public aggregate or feed.
+-- Existing responses did not include informed consent to publish their
+-- comments. Their eligible ratings may still enter the aggregate, while their
+-- written comments remain private.
 UPDATE public.visitor_feedback
 SET comment_status = CASE WHEN btrim(comments) = '' THEN 'not_provided' ELSE 'withheld' END
 WHERE public_display_consent = false;

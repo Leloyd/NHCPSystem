@@ -20,6 +20,8 @@ create table if not exists public.visitor_feedback (
 );
 
 create index if not exists idx_visitor_feedback_status on public.visitor_feedback (status);
+comment on column public.visitor_feedback.public_display_consent is
+  'Consent to publish the written comment; eligible numerical ratings are public independently.';
 create index if not exists idx_visitor_feedback_created_at on public.visitor_feedback (created_at desc);
 create index if not exists visitor_feedback_public_summary_idx on public.visitor_feedback (visit_type, rating_status, public_display_consent, created_at desc);
 create index if not exists visitor_feedback_comment_queue_idx on public.visitor_feedback (comment_status, created_at desc);

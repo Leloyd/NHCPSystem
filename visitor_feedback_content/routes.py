@@ -129,7 +129,17 @@ def register_visitor_feedback_routes(
                     feedback_id=int(created_feedback["id"]),
                 ),
             )
-            return jsonify({"ok": True, "message": "Thank you. Your eligible rating is recorded separately while your optional comment awaits a safety review."})
+            comment_message = (
+                " Your permitted comment is awaiting a safety review."
+                if payload.get("comments") and payload.get("public_display_consent")
+                else " Your written comment remains private."
+                if payload.get("comments")
+                else ""
+            )
+            return jsonify({
+                "ok": True,
+                "message": f"Thank you. Your eligible rating is included in the public summary.{comment_message}",
+            })
         except ValueError as exc:
             return jsonify({"ok": False, "error": str(exc)}), 400
         except Exception as exc:

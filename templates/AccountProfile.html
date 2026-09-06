@@ -339,7 +339,7 @@
                         <span class="ap-entry__body">
                           <span class="ap-entry__top"><strong>{{ feedback.visit_type_label }} · {{ feedback.rating }}/5</strong><span class="ap-status">{{ feedback.comment_status_label }}</span></span>
                           <span class="ap-entry__description">{{ feedback.comments }}</span>
-                          <small>{{ feedback.rating_status_label }}{% if not feedback.public_display_consent %} · Internal only{% endif %}</small>
+                          <small>{{ feedback.rating_status_label }}{% if not feedback.public_display_consent %} · Written comment is private{% endif %}</small>
                         </span>
                       </div>
                       {% endfor %}

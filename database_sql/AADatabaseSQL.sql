@@ -1672,6 +1672,8 @@ ALTER TABLE public.visitor_feedback
   ADD COLUMN IF NOT EXISTS moderation_note text NOT NULL DEFAULT '',
   ADD COLUMN IF NOT EXISTS moderated_at timestamp with time zone,
   ADD COLUMN IF NOT EXISTS moderated_by text NOT NULL DEFAULT '';
+COMMENT ON COLUMN public.visitor_feedback.public_display_consent IS
+  'Consent to publish the written comment; eligible numerical ratings are public independently.';
 
 ALTER TABLE public.visitor_feedback
   DROP CONSTRAINT IF EXISTS visitor_feedback_public_name_preference_check,
@@ -1684,7 +1686,8 @@ ALTER TABLE public.visitor_feedback
   ADD CONSTRAINT visitor_feedback_comment_status_check CHECK (comment_status IN ('not_provided', 'pending', 'published', 'withheld')),
   ADD CONSTRAINT visitor_feedback_moderation_note_check CHECK (char_length(moderation_note) <= 2000);
 
--- Legacy feedback predates informed public-display consent and stays internal.
+-- Legacy feedback predates informed comment-publication consent. Its eligible
+-- ratings still count, while written comments stay private.
 UPDATE public.visitor_feedback SET comment_status = CASE WHEN btrim(comments) = '' THEN 'not_provided' ELSE 'withheld' END
 WHERE public_display_consent = false;
 
