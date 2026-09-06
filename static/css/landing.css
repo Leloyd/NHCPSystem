@@ -1139,6 +1139,7 @@ body.ogd-high-contrast-page .public-mobile-account {
 .public-auth-terms-state.is-accepted {
   border-color: rgba(33, 120, 84, 0.24);
   background: #eef8f2;
+  margin-bottom: 0.9rem;
 }
 
 .public-auth-terms-icon {
