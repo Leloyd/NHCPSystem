@@ -14,8 +14,25 @@ from flask import Flask, g, jsonify, make_response, redirect, render_template, r
 from werkzeug.security import check_password_hash, generate_password_hash
 from werkzeug.utils import secure_filename
 
-from admin_users_repository import get_active_admin_user_by_email, touch_admin_account, update_admin_password
+from admin_users_repository import (
+    get_active_admin_user_by_email,
+    get_active_admin_user_by_id,
+    touch_admin_account,
+    update_admin_password,
+)
+from admin_login_otp_repository import (
+    get_active_admin_login_otp_challenge,
+    issue_admin_login_otp_challenge,
+    revoke_admin_login_otp_challenge,
+    verify_admin_login_otp_challenge,
+)
 from admin_password_recovery_content import register_admin_password_recovery_routes
+from admin_password_recovery_content.emailer import (
+    AdminPasswordRecoveryEmailError,
+    is_admin_password_recovery_email_configured,
+    send_admin_login_otp_email,
+)
+from admin_password_recovery_content.security import secret_digest, token_digest
 from admin_notifications_content import dispatch_admin_login_lockout_alert, register_admin_notification_routes
 from analytics_content import load_admin_analytics_dashboard, register_analytics_routes
 from community_content import load_news_community_highlights, register_community_content_routes
@@ -163,6 +180,10 @@ ADMIN_SESSION_KEY = "admin_authenticated"
 ADMIN_SESSION_USER_KEY = "admin_email"
 ADMIN_SESSION_VERSION_KEY = "admin_account_version"
 ADMIN_CSRF_KEY = "admin_csrf"
+ADMIN_LOGIN_OTP_SESSION_KEY = "admin_login_otp_challenge"
+ADMIN_LOGIN_OTP_EMAIL_HINT_KEY = "admin_login_otp_email_hint"
+ADMIN_LOGIN_OTP_EXPIRES_KEY = "admin_login_otp_expires_at"
+ADMIN_LOGIN_OTP_SENT_KEY = "admin_login_otp_sent_at"
 ADMIN_DEFAULT_USERNAME = "Administrator"
 PUBLIC_SESSION_KEY = "public_authenticated"
 PUBLIC_SESSION_USER_ID_KEY = "public_user_id"
@@ -172,6 +193,8 @@ ADMIN_LOGIN_RATE_WINDOW_SECONDS = max(60, int(os.getenv("ADMIN_LOGIN_RATE_WINDOW
 ADMIN_LOGIN_MAX_ATTEMPTS = max(3, int(os.getenv("ADMIN_LOGIN_MAX_ATTEMPTS", "5")))
 ADMIN_LOGIN_LOCKOUT_SECONDS = max(30, int(os.getenv("ADMIN_LOGIN_LOCKOUT_SECONDS", "900")))
 ADMIN_LOGIN_WARNING_AFTER_ATTEMPTS = 2
+ADMIN_LOGIN_OTP_EXPIRES_SECONDS = 600
+ADMIN_LOGIN_OTP_RESEND_SECONDS = 60
 PUBLIC_LOGIN_RATE_WINDOW_SECONDS = max(60, int(os.getenv("PUBLIC_LOGIN_RATE_WINDOW_SECONDS", "900")))
 PUBLIC_LOGIN_MAX_ATTEMPTS = max(3, int(os.getenv("PUBLIC_LOGIN_MAX_ATTEMPTS", "6")))
 PUBLIC_LOGIN_LOCKOUT_SECONDS = max(30, int(os.getenv("PUBLIC_LOGIN_LOCKOUT_SECONDS", "900")))
@@ -1028,6 +1051,116 @@ def _authenticate_admin_credentials(email, password):
     return False
 
 
+def _admin_login_otp_digest(raw_challenge, otp_code):
+    payload = f"admin-login-otp:{str(raw_challenge or '')}:{str(otp_code or '')}".encode("utf-8")
+    return hmac.new(str(app.config["SECRET_KEY"]).encode("utf-8"), payload, hashlib.sha256).hexdigest()
+
+
+def _mask_admin_email(email):
+    normalized = _normalize_admin_email(email)
+    if "@" not in normalized:
+        return "your administrator email"
+    local_part, domain = normalized.rsplit("@", 1)
+    if len(local_part) <= 2:
+        masked_local = local_part[:1] + "*" * max(1, len(local_part) - 1)
+    else:
+        masked_local = local_part[:2] + "*" * max(2, len(local_part) - 2)
+    return f"{masked_local}@{domain}"
+
+
+def _clear_admin_login_otp_session(*, revoke=False):
+    raw_challenge = str(session.pop(ADMIN_LOGIN_OTP_SESSION_KEY, "") or "").strip()
+    session.pop(ADMIN_LOGIN_OTP_EMAIL_HINT_KEY, None)
+    session.pop(ADMIN_LOGIN_OTP_EXPIRES_KEY, None)
+    session.pop(ADMIN_LOGIN_OTP_SENT_KEY, None)
+    if revoke and raw_challenge:
+        try:
+            revoke_admin_login_otp_challenge(token_digest(raw_challenge))
+        except Exception:  # noqa: BLE001 - clearing local pending state is still required
+            app.logger.warning("Could not revoke an abandoned administrator login code.")
+
+
+def _admin_login_otp_state():
+    raw_challenge = str(session.get(ADMIN_LOGIN_OTP_SESSION_KEY, "") or "").strip()
+    try:
+        expires_at = int(session.get(ADMIN_LOGIN_OTP_EXPIRES_KEY, 0) or 0)
+        sent_at = int(session.get(ADMIN_LOGIN_OTP_SENT_KEY, 0) or 0)
+    except (TypeError, ValueError):
+        expires_at = 0
+        sent_at = 0
+    now = int(time.time())
+    if not raw_challenge or expires_at <= now:
+        if raw_challenge:
+            _clear_admin_login_otp_session(revoke=True)
+        return None
+    return {
+        "raw_challenge": raw_challenge,
+        "challenge_hash": token_digest(raw_challenge),
+        "email_hint": str(session.get(ADMIN_LOGIN_OTP_EMAIL_HINT_KEY, "") or "your administrator email"),
+        "expires_in": max(0, expires_at - now),
+        "resend_in": max(0, sent_at + ADMIN_LOGIN_OTP_RESEND_SECONDS - now),
+    }
+
+
+def _issue_admin_login_otp(admin_user):
+    admin_user_id = int(admin_user.get("id"))
+    admin_email = _normalize_admin_email(admin_user.get("email", ""))
+    account_version = str(admin_user.get("updated_at", "") or "").strip()
+    if not admin_email or not account_version:
+        return "invalid", None
+    if not is_admin_password_recovery_email_configured():
+        raise AdminPasswordRecoveryEmailError("Secure SMTP delivery is not configured.")
+
+    raw_challenge = secrets.token_urlsafe(48)
+    otp_code = f"{secrets.randbelow(1_000_000):06d}"
+    challenge_hash = token_digest(raw_challenge)
+    client_details = _describe_admin_login_client()
+    issue_result = issue_admin_login_otp_challenge(
+        admin_user_id=admin_user_id,
+        account_version=account_version,
+        challenge_hash=challenge_hash,
+        otp_hash=_admin_login_otp_digest(raw_challenge, otp_code),
+        request_ip_hash=secret_digest(str(app.config["SECRET_KEY"]), "admin-login-ip", _get_client_ip()),
+        user_agent_hash=secret_digest(
+            str(app.config["SECRET_KEY"]),
+            "admin-login-user-agent",
+            str(request.headers.get("User-Agent") or "")[:500],
+        ),
+    )
+    if issue_result != "issued":
+        return issue_result, None
+
+    occurred_at = datetime.now(timezone.utc).astimezone(
+        timezone(timedelta(hours=8))
+    ).strftime("%B %d, %Y at %I:%M:%S %p (Philippine Time)")
+    try:
+        send_admin_login_otp_email(
+            to_email=admin_email,
+            otp_code=otp_code,
+            expires_minutes=ADMIN_LOGIN_OTP_EXPIRES_SECONDS // 60,
+            occurred_at=occurred_at,
+            browser=client_details["browser"],
+            operating_system=client_details["operating_system"],
+            device_type=client_details["device_type"],
+        )
+    except Exception:
+        try:
+            revoke_admin_login_otp_challenge(challenge_hash)
+        except Exception:  # noqa: BLE001
+            app.logger.warning("Could not revoke an undelivered administrator login code.")
+        raise
+
+    now = int(time.time())
+    session.clear()
+    session.permanent = False
+    session[ADMIN_LOGIN_OTP_SESSION_KEY] = raw_challenge
+    session[ADMIN_LOGIN_OTP_EMAIL_HINT_KEY] = _mask_admin_email(admin_email)
+    session[ADMIN_LOGIN_OTP_EXPIRES_KEY] = now + ADMIN_LOGIN_OTP_EXPIRES_SECONDS
+    session[ADMIN_LOGIN_OTP_SENT_KEY] = now
+    session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
+    return "issued", _admin_login_otp_state()
+
+
 def _ensure_admin_csrf_token():
     token = session.get(ADMIN_CSRF_KEY)
     if not isinstance(token, str) or not token:
@@ -1184,6 +1317,7 @@ def admin_login():
     warning_message = None
     retry_after_seconds = 0
     is_limited = False
+    otp_state = _admin_login_otp_state()
     if request.args.get("password_reset") == "1":
         success_message = "Your administrator password was reset securely. Sign in with the new password."
     elif request.args.get("password_changed") == "1":
@@ -1191,11 +1325,11 @@ def admin_login():
     else:
         success_message = None
 
-    if request.method == "GET":
+    if request.method == "GET" and not otp_state:
         is_limited, retry_after_seconds = _is_login_rate_limited(_get_client_ip())
         if is_limited:
             error_message = "Login is temporarily locked. Wait for the security timer to finish."
-    else:
+    elif request.method == "POST":
         if not _is_admin_auth_configured():
             status_code = 503
             error_message = "Login is temporarily unavailable."
@@ -1203,49 +1337,210 @@ def admin_login():
             status_code = 400
             error_message = "Invalid request."
         else:
+            action = (
+                "cancel_otp"
+                if request.form.get("cancel_otp") == "1"
+                else str(request.form.get("login_action") or "credentials").strip().lower()
+            )
             client_ip = _get_client_ip()
-            is_limited, retry_after_seconds = _is_login_rate_limited(client_ip)
-            if is_limited:
-                status_code = 429
-                error_message = "Login is temporarily locked. Wait for the security timer to finish."
-            else:
-                email = _normalize_admin_email(request.form.get("email", ""))
-                password = str(request.form.get("password", ""))
 
-                if _is_valid_login_payload(email, password):
-                    authenticated_admin = _authenticate_admin_credentials(email, password)
+            if action == "cancel_otp":
+                _clear_admin_login_otp_session(revoke=True)
+                otp_state = None
+                success_message = None
+                if is_async_login:
+                    return jsonify(
+                        {
+                            "ok": True,
+                            "credentials_required": True,
+                            "csrf_token": _ensure_admin_csrf_token(),
+                        }
+                    )
+                return redirect(url_for("admin_login"), code=303)
 
-                    if authenticated_admin is None:
+            elif action == "verify_otp":
+                otp_state = _admin_login_otp_state()
+                if not otp_state:
+                    status_code = 400
+                    error_message = "Your sign-in code expired. Enter your credentials to request a new code."
+                else:
+                    otp_code = re.sub(r"\s+", "", str(request.form.get("otp_code") or ""))[:32]
+                    verification = None
+                    if not re.fullmatch(r"[0-9]{6}", otp_code):
+                        status_code = 400
+                        error_message = "Enter the complete six-digit code from your email."
+                    else:
+                        try:
+                            verification = verify_admin_login_otp_challenge(
+                                challenge_hash=otp_state["challenge_hash"],
+                                otp_hash=_admin_login_otp_digest(otp_state["raw_challenge"], otp_code),
+                            )
+                        except Exception:  # noqa: BLE001
+                            app.logger.exception("Administrator login code verification failed.")
+                            status_code = 503
+                            error_message = "The sign-in code could not be verified right now. Please try again."
+                            verification = None
+                    if verification is not None:
+                        verification_result = str(verification.get("result") or "invalid")
+                        if verification_result == "verified":
+                            try:
+                                authenticated_admin = get_active_admin_user_by_id(
+                                    int(verification.get("admin_user_id"))
+                                )
+                            except Exception:  # noqa: BLE001
+                                app.logger.exception("Failed to complete verified administrator login.")
+                                authenticated_admin = None
+                            authenticated_email = _normalize_admin_email(
+                                (authenticated_admin or {}).get("email", "")
+                            )
+                            account_version = str(
+                                (authenticated_admin or {}).get("updated_at", "") or ""
+                            ).strip()
+                            if not authenticated_email or not account_version:
+                                _clear_admin_login_otp_session()
+                                status_code = 503
+                                error_message = "Login is temporarily unavailable."
+                            else:
+                                _clear_failed_logins(client_ip)
+                                session.clear()
+                                session.permanent = True
+                                session[ADMIN_SESSION_KEY] = True
+                                session[ADMIN_SESSION_USER_KEY] = authenticated_email
+                                session[ADMIN_SESSION_VERSION_KEY] = account_version
+                                session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
+                                if is_async_login:
+                                    return jsonify({"ok": True, "redirect": url_for("admin_dashboard")})
+                                return redirect(url_for("admin_dashboard"))
+                        elif verification_result == "incorrect":
+                            attempts_remaining = max(0, int(verification.get("attempts_remaining") or 0))
+                            status_code = 401
+                            error_message = (
+                                "That code is incorrect. "
+                                f"You have {attempts_remaining} attempt{'s' if attempts_remaining != 1 else ''} remaining."
+                            )
+                        elif verification_result == "expired":
+                            _clear_admin_login_otp_session()
+                            otp_state = None
+                            status_code = 400
+                            error_message = "Your sign-in code expired. Enter your credentials to request a new code."
+                        elif verification_result == "locked":
+                            _clear_admin_login_otp_session()
+                            otp_state = None
+                            status_code = 429
+                            error_message = "Too many incorrect codes. Enter your credentials to start a new sign-in."
+                        else:
+                            _clear_admin_login_otp_session()
+                            otp_state = None
+                            status_code = 400
+                            error_message = "That sign-in request is no longer valid. Enter your credentials again."
+
+            elif action == "resend_otp":
+                otp_state = _admin_login_otp_state()
+                if not otp_state:
+                    status_code = 400
+                    error_message = "Your sign-in request expired. Enter your credentials again."
+                elif otp_state["resend_in"] > 0:
+                    status_code = 429
+                    error_message = f"Wait {otp_state['resend_in']} seconds before requesting another code."
+                else:
+                    try:
+                        challenge = get_active_admin_login_otp_challenge(otp_state["challenge_hash"])
+                        admin_user = (
+                            get_active_admin_user_by_id(int(challenge["admin_user_id"]))
+                            if challenge
+                            else None
+                        )
+                        issue_result, new_otp_state = (
+                            _issue_admin_login_otp(admin_user) if admin_user else ("invalid", None)
+                        )
+                    except Exception:  # noqa: BLE001
+                        app.logger.exception("Administrator sign-in code could not be resent.")
+                        _clear_admin_login_otp_session(revoke=True)
+                        otp_state = None
                         status_code = 503
-                        error_message = "Login is temporarily unavailable."
-                    elif authenticated_admin:
-                        authenticated_email = _normalize_admin_email(authenticated_admin.get("email", ""))
-                        account_version = str(authenticated_admin.get("updated_at", "") or "").strip()
-                        if not authenticated_email or not account_version:
+                        error_message = "A new sign-in code could not be delivered. Enter your credentials and try again."
+                    else:
+                        if issue_result == "issued":
+                            otp_state = new_otp_state
+                            success_message = "A new one-time code was sent to your administrator email."
+                        elif issue_result in {"cooldown", "rate_limited"}:
+                            status_code = 429
+                            error_message = "Too many code requests. Please wait before requesting another code."
+                        else:
+                            _clear_admin_login_otp_session(revoke=True)
+                            otp_state = None
+                            status_code = 400
+                            error_message = "That sign-in request is no longer valid. Enter your credentials again."
+
+            else:
+                is_limited, retry_after_seconds = _is_login_rate_limited(client_ip)
+                if is_limited:
+                    status_code = 429
+                    error_message = "Login is temporarily locked. Wait for the security timer to finish."
+                else:
+                    # Starting over invalidates a pending code before checking
+                    # another credential pair.
+                    if otp_state:
+                        _clear_admin_login_otp_session(revoke=True)
+                        otp_state = None
+                    email = _normalize_admin_email(request.form.get("email", ""))
+                    password = str(request.form.get("password", ""))
+
+                    if _is_valid_login_payload(email, password):
+                        authenticated_admin = _authenticate_admin_credentials(email, password)
+
+                        if authenticated_admin is None:
                             status_code = 503
                             error_message = "Login is temporarily unavailable."
+                        elif authenticated_admin:
+                            try:
+                                issue_result, otp_state = _issue_admin_login_otp(authenticated_admin)
+                            except Exception:  # noqa: BLE001
+                                app.logger.exception("Administrator sign-in code could not be delivered.")
+                                status_code = 503
+                                error_message = "Login verification is temporarily unavailable. Please try again."
+                            else:
+                                if issue_result == "issued":
+                                    success_message = "A one-time code was sent to your administrator email."
+                                elif issue_result in {"cooldown", "rate_limited"}:
+                                    otp_state = None
+                                    status_code = 429
+                                    error_message = "Too many code requests. Please wait before trying again."
+                                else:
+                                    otp_state = None
+                                    status_code = 503
+                                    error_message = "Login verification is temporarily unavailable."
                         else:
-                            _clear_failed_logins(client_ip)
-                            session.clear()
-                            session.permanent = True
-                            session[ADMIN_SESSION_KEY] = True
-                            session[ADMIN_SESSION_USER_KEY] = authenticated_email
-                            session[ADMIN_SESSION_VERSION_KEY] = account_version
-                            session[ADMIN_CSRF_KEY] = secrets.token_urlsafe(32)
-                            if is_async_login:
-                                return jsonify({"ok": True, "redirect": url_for("admin_dashboard")})
-                            return redirect(url_for("admin_dashboard"))
+                            status_code, error_message, warning_message, retry_after_seconds = (
+                                _failed_admin_login_feedback(client_ip, email)
+                            )
                     else:
                         status_code, error_message, warning_message, retry_after_seconds = (
                             _failed_admin_login_feedback(client_ip, email)
                         )
-                else:
-                    status_code, error_message, warning_message, retry_after_seconds = (
-                        _failed_admin_login_feedback(client_ip, email)
-                    )
 
-    lockout_remaining = retry_after_seconds if retry_after_seconds and (is_limited or status_code == 429) else 0
+    lockout_remaining = (
+        retry_after_seconds
+        if retry_after_seconds and is_limited
+        else 0
+    )
     if is_async_login:
+        if otp_state:
+            response = jsonify(
+                {
+                    "ok": status_code < 400,
+                    "otp_required": True,
+                    "email_hint": otp_state["email_hint"],
+                    "expires_in": otp_state["expires_in"],
+                    "resend_in": otp_state["resend_in"],
+                    "error": error_message,
+                    "warning": warning_message,
+                    "message": success_message,
+                    "csrf_token": _ensure_admin_csrf_token(),
+                }
+            )
+            response.status_code = status_code
+            return response
         response = jsonify(
             {
                 "ok": False,
@@ -1269,6 +1564,10 @@ def admin_login():
             warning_message=warning_message,
             success_message=success_message,
             lockout_remaining=lockout_remaining,
+            otp_required=bool(otp_state),
+            otp_email_hint=otp_state["email_hint"] if otp_state else "",
+            otp_expires_in=otp_state["expires_in"] if otp_state else 0,
+            otp_resend_in=otp_state["resend_in"] if otp_state else 0,
         ),
         status_code,
     )

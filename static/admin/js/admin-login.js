@@ -55,6 +55,113 @@
     return minutes + ":" + seconds;
   }
 
+  function isOtpStep(form) {
+    var otpStep = form.querySelector("[data-admin-otp-step]");
+    return Boolean(otpStep && !otpStep.hidden);
+  }
+
+  function updateCsrfToken(form, token) {
+    var csrfInput = form.querySelector('input[name="csrf_token"]');
+    if (csrfInput && token) csrfInput.value = token;
+  }
+
+  function startOtpTimers(form, expiresIn, resendIn) {
+    var otpStep = form.querySelector("[data-admin-otp-step]");
+    var timer = form.querySelector("[data-admin-otp-timer]");
+    var resendButton = form.querySelector("[data-admin-otp-resend]");
+    var otpInput = form.querySelector("[data-admin-otp-input]");
+    if (!otpStep || otpStep.hidden) return;
+
+    window.clearInterval(form._adminOtpTimer);
+    var expiresAt = Date.now() + Math.max(0, Number(expiresIn) || 0) * 1000;
+    var resendAt = Date.now() + Math.max(0, Number(resendIn) || 0) * 1000;
+
+    function update() {
+      var remaining = Math.max(0, Math.ceil((expiresAt - Date.now()) / 1000));
+      var resendRemaining = Math.max(0, Math.ceil((resendAt - Date.now()) / 1000));
+      if (timer) {
+        timer.textContent = remaining > 0 ? "Code expires in " + formatRemainingTime(remaining) : "Code expired";
+      }
+      if (resendButton) {
+        resendButton.disabled = resendRemaining > 0 || remaining <= 0 || form.hasAttribute("data-submitting");
+        resendButton.textContent = resendRemaining > 0 ? "Resend in " + formatRemainingTime(resendRemaining) : "Send a new code";
+      }
+      if (remaining <= 0) {
+        window.clearInterval(form._adminOtpTimer);
+        if (otpInput) otpInput.disabled = true;
+        var submitButton = form.querySelector("[data-admin-login-submit]");
+        if (submitButton) submitButton.disabled = true;
+        var announcement = form.querySelector("[data-admin-login-announcement]");
+        if (announcement) announcement.textContent = "The one-time code expired. Use another account to restart sign-in.";
+      }
+    }
+
+    update();
+    form._adminOtpTimer = window.setInterval(update, 1000);
+  }
+
+  function showOtpStep(form, payload) {
+    var credentialsStep = form.querySelector("[data-admin-credentials-step]");
+    var otpStep = form.querySelector("[data-admin-otp-step]");
+    var otpInput = form.querySelector("[data-admin-otp-input]");
+    var actionInput = form.querySelector("[data-admin-login-action]");
+    var heading = document.querySelector("[data-admin-login-heading]");
+    var copy = document.querySelector("[data-admin-login-copy]");
+    var passwordInput = form.querySelector('input[name="password"]');
+    if (passwordInput) passwordInput.value = "";
+    if (credentialsStep) {
+      credentialsStep.hidden = true;
+      credentialsStep.querySelectorAll("input, button").forEach(function (control) {
+        control.disabled = true;
+      });
+    }
+    if (otpStep) {
+      otpStep.hidden = false;
+      otpStep.setAttribute("data-otp-expires-seconds", String(payload.expires_in || 0));
+      otpStep.setAttribute("data-otp-resend-seconds", String(payload.resend_in || 0));
+    }
+    if (otpInput) {
+      otpInput.disabled = false;
+      otpInput.required = true;
+      otpInput.value = "";
+    }
+    if (actionInput) actionInput.value = "verify_otp";
+    if (heading) heading.textContent = "Verify Your Sign-In";
+    if (copy) copy.textContent = "Enter the six-digit code sent to " + (payload.email_hint || "your administrator email") + ".";
+    updateCsrfToken(form, payload.csrf_token);
+    setReadyState(form);
+    startOtpTimers(form, payload.expires_in, payload.resend_in);
+    var announcement = form.querySelector("[data-admin-login-announcement]");
+    if (announcement) announcement.textContent = "A one-time code was sent. Enter the six digits to continue.";
+    if (otpInput) otpInput.focus();
+  }
+
+  function showCredentialsStep(form) {
+    var credentialsStep = form.querySelector("[data-admin-credentials-step]");
+    var otpStep = form.querySelector("[data-admin-otp-step]");
+    var otpInput = form.querySelector("[data-admin-otp-input]");
+    var actionInput = form.querySelector("[data-admin-login-action]");
+    var heading = document.querySelector("[data-admin-login-heading]");
+    var copy = document.querySelector("[data-admin-login-copy]");
+    window.clearInterval(form._adminOtpTimer);
+    if (credentialsStep) {
+      credentialsStep.hidden = false;
+      credentialsStep.querySelectorAll("input, button").forEach(function (control) {
+        control.disabled = false;
+      });
+    }
+    if (otpStep) otpStep.hidden = true;
+    if (otpInput) {
+      otpInput.disabled = true;
+      otpInput.required = false;
+      otpInput.value = "";
+    }
+    if (actionInput) actionInput.value = "credentials";
+    if (heading) heading.textContent = "Sign In";
+    if (copy) copy.textContent = "Enter your credentials to access the dashboard.";
+    setReadyState(form);
+  }
+
   function setReadyState(form) {
     var submitButton = form.querySelector("[data-admin-login-submit]");
     var submitLabel = form.querySelector("[data-admin-login-submit-label]");
@@ -62,17 +169,24 @@
     form.removeAttribute("aria-busy");
     form.removeAttribute("data-lockout-active");
     form.querySelectorAll("[data-login-lockable]").forEach(function (control) {
-      control.disabled = false;
+      control.disabled = isOtpStep(form) && Boolean(control.closest("[data-admin-credentials-step]"));
     });
     if (submitButton) {
       submitButton.classList.remove("is-loading", "is-locked");
     }
     if (submitLabel) {
-      submitLabel.textContent = "Sign In to Dashboard";
+      submitLabel.textContent = isOtpStep(form) ? "Verify and Continue" : "Sign In to Dashboard";
     }
+    var resendButton = form.querySelector("[data-admin-otp-resend]");
+    if (resendButton && isOtpStep(form)) {
+      var resendSeconds = Number.parseInt(form.querySelector("[data-admin-otp-step]").getAttribute("data-otp-resend-seconds") || "0", 10);
+      resendButton.disabled = resendSeconds > 0;
+    }
+    var cancelButton = form.querySelector("[data-admin-otp-cancel]");
+    if (cancelButton) cancelButton.disabled = false;
   }
 
-  function setSubmittingState(form) {
+  function setSubmittingState(form, label) {
     form.setAttribute("data-submitting", "true");
     form.setAttribute("aria-busy", "true");
     var submitButton = form.querySelector("[data-admin-login-submit]");
@@ -82,8 +196,12 @@
       submitButton.classList.add("is-loading");
     }
     if (submitLabel) {
-      submitLabel.textContent = "Signing in…";
+      submitLabel.textContent = label || (isOtpStep(form) ? "Verifying code…" : "Signing in…");
     }
+    var resendButton = form.querySelector("[data-admin-otp-resend]");
+    if (resendButton) resendButton.disabled = true;
+    var cancelButton = form.querySelector("[data-admin-otp-cancel]");
+    if (cancelButton) cancelButton.disabled = true;
   }
 
   function startLockout(form, totalSeconds) {
@@ -142,6 +260,22 @@
         setReadyState(form);
       }
 
+      var initialOtpStep = form.querySelector("[data-admin-otp-step]");
+      if (initialOtpStep && !initialOtpStep.hidden) {
+        startOtpTimers(
+          form,
+          initialOtpStep.getAttribute("data-otp-expires-seconds"),
+          initialOtpStep.getAttribute("data-otp-resend-seconds")
+        );
+      }
+
+      var otpInput = form.querySelector("[data-admin-otp-input]");
+      if (otpInput) {
+        otpInput.addEventListener("input", function () {
+          otpInput.value = otpInput.value.replace(/\D/g, "").slice(0, 6);
+        });
+      }
+
       form.addEventListener("submit", function (event) {
         if (form.hasAttribute("data-submitting") || form.hasAttribute("data-lockout-active")) {
           event.preventDefault();
@@ -155,9 +289,13 @@
 
         event.preventDefault();
         var formData = new FormData(form);
+        if (event.submitter && event.submitter.name === "cancel_otp") {
+          formData.set("cancel_otp", "1");
+        }
         setSubmittingState(form);
         var errorMessage = document.querySelector("[data-admin-login-error]");
         var warningMessage = document.querySelector("[data-admin-login-warning]");
+        var successMessage = document.querySelector("[data-admin-login-success]");
 
         window.fetch(form.action || window.location.href, {
           method: "POST",
@@ -178,9 +316,31 @@
             return;
           }
 
+          if (result.response.ok && payload.credentials_required) {
+            updateCsrfToken(form, payload.csrf_token);
+            showCredentialsStep(form);
+            hideMessage(errorMessage);
+            hideMessage(warningMessage);
+            hideMessage(successMessage);
+            var emailInput = form.querySelector('input[name="email"]');
+            if (emailInput) emailInput.focus();
+            return;
+          }
+
+          if (payload.otp_required) {
+            showOtpStep(form, payload);
+            showMessage(errorMessage, payload.error || "", 0);
+            showMessage(warningMessage, payload.warning || "", 0);
+            showMessage(successMessage, payload.message || "", payload.message ? 4000 : 0);
+            return;
+          }
+
+          if (isOtpStep(form)) showCredentialsStep(form);
+
           var errorText = payload.error || "Sign in could not be completed. Please try again.";
           showMessage(errorMessage, errorText, errorText === "Invalid credentials." ? 3000 : 0);
           showMessage(warningMessage, payload.warning || "", 0);
+          hideMessage(successMessage);
           if (payload.locked && payload.retry_after_seconds > 0) {
             startLockout(form, payload.retry_after_seconds);
           } else {
@@ -192,6 +352,47 @@
           setReadyState(form);
         });
       });
+
+      var resendButton = form.querySelector("[data-admin-otp-resend]");
+      if (resendButton) {
+        resendButton.addEventListener("click", function () {
+          if (form.hasAttribute("data-submitting") || resendButton.disabled) return;
+          var formData = new FormData(form);
+          formData.set("login_action", "resend_otp");
+          formData.delete("otp_code");
+          var errorMessage = document.querySelector("[data-admin-login-error]");
+          var warningMessage = document.querySelector("[data-admin-login-warning]");
+          var successMessage = document.querySelector("[data-admin-login-success]");
+          setSubmittingState(form, "Sending new code…");
+          window.fetch(form.action || window.location.href, {
+            method: "POST",
+            body: formData,
+            credentials: "same-origin",
+            headers: { Accept: "application/json", "X-Requested-With": "XMLHttpRequest" },
+          }).then(function (response) {
+            return response.json().then(function (payload) {
+              return { response: response, payload: payload };
+            });
+          }).then(function (result) {
+            var payload = result.payload || {};
+            if (payload.otp_required) {
+              showOtpStep(form, payload);
+              showMessage(errorMessage, payload.error || "", 0);
+              showMessage(warningMessage, payload.warning || "", 0);
+              showMessage(successMessage, payload.message || "", payload.message ? 4000 : 0);
+              return;
+            }
+            showCredentialsStep(form);
+            showMessage(errorMessage, payload.error || "A new code could not be sent.", 0);
+            hideMessage(warningMessage);
+            hideMessage(successMessage);
+          }).catch(function () {
+            showMessage(errorMessage, "A new code could not be sent. Check your connection and try again.", 0);
+            hideMessage(warningMessage);
+            setReadyState(form);
+          });
+        });
+      }
     });
 
     window.addEventListener("pageshow", function () {

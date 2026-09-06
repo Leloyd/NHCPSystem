@@ -201,6 +201,17 @@ body.admin-auth-page {
   gap: 1rem;
 }
 
+.admin-auth-credentials,
+.admin-auth-otp {
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-auth-credentials[hidden],
+.admin-auth-otp[hidden] {
+  display: none;
+}
+
 .admin-auth-field {
   display: grid;
   gap: 0.42rem;
@@ -225,6 +236,20 @@ body.admin-auth-page {
   color: var(--auth-green-700);
   font-size: 0.82rem;
   font-weight: 700;
+  text-decoration: none;
+}
+
+.admin-auth-secondary-button {
+  border: 0;
+  background: transparent;
+  padding: 0.2rem;
+  font-family: inherit;
+  cursor: pointer;
+}
+
+.admin-auth-secondary-button:disabled {
+  color: #8a948e;
+  cursor: wait;
   text-decoration: none;
 }
 
@@ -287,6 +312,74 @@ body.admin-auth-page {
   background: #eef1ef;
   color: #7b8580;
   opacity: 0.78;
+}
+
+.admin-auth-otp-badge {
+  width: 3.4rem;
+  height: 3.4rem;
+  display: grid;
+  place-items: center;
+  margin: 0 auto 0.1rem;
+  border: 1px solid #d5e5db;
+  border-radius: 1rem;
+  background: linear-gradient(145deg, #f3faf6, #e7f2eb);
+  color: var(--auth-green-800);
+}
+
+.admin-auth-otp-badge svg {
+  width: 1.7rem;
+  height: 1.7rem;
+  fill: currentColor;
+}
+
+.admin-auth-field .admin-auth-otp-input {
+  padding-inline: 1rem;
+  text-align: center;
+  font-size: 1.35rem;
+  font-weight: 750;
+  letter-spacing: 0.42em;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-auth-field-help {
+  margin: 0;
+  color: var(--auth-muted);
+  font-size: 0.76rem;
+  line-height: 1.45;
+}
+
+.admin-auth-otp-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: var(--auth-muted);
+  font-size: 0.8rem;
+}
+
+.admin-auth-text-button {
+  border: 0;
+  border-radius: 0.5rem;
+  background: transparent;
+  color: var(--auth-green-700);
+  padding: 0.25rem;
+  font: inherit;
+  font-weight: 750;
+  cursor: pointer;
+}
+
+.admin-auth-text-button:hover,
+.admin-auth-text-button:focus-visible {
+  color: var(--auth-green-900);
+  text-decoration: underline;
+  text-underline-offset: 0.18rem;
+  outline: none;
+}
+
+.admin-auth-text-button:disabled {
+  color: #8a948e;
+  cursor: not-allowed;
+  text-decoration: none;
 }
 
 .admin-auth-password-wrap input {
@@ -474,5 +567,11 @@ body.admin-auth-page {
   .admin-auth-meta {
     flex-direction: column;
     align-items: flex-start;
+  }
+
+  .admin-auth-otp-status {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 0.45rem;
   }
 }

@@ -110,3 +110,57 @@ def send_admin_password_changed_email(*, to_email: str) -> None:
         subtype="html",
     )
     _send(message)
+
+
+def send_admin_login_otp_email(
+    *,
+    to_email: str,
+    otp_code: str,
+    expires_minutes: int = 10,
+    occurred_at: str = "",
+    browser: str = "",
+    operating_system: str = "",
+    device_type: str = "",
+) -> None:
+    """Deliver the second factor without placing the code in logs or URLs."""
+
+    code = str(otp_code or "").strip()
+    if len(code) != 6 or not code.isdigit():
+        raise AdminPasswordRecoveryEmailError("Administrator login code must contain six digits.")
+    _host, _port, _username, _password, from_address, from_name, _use_tls, _use_ssl = _smtp_config()
+
+    detail_lines = [
+        f"Time: {str(occurred_at or 'Not available').strip()}",
+        f"Device: {str(device_type or 'Unknown device').strip()}",
+        f"Browser: {str(browser or 'Unknown browser').strip()}",
+        f"Operating system: {str(operating_system or 'Unknown operating system').strip()}",
+    ]
+    details_text = "\n".join(detail_lines)
+    message = EmailMessage()
+    message["Subject"] = "Your NHCP administrator sign-in code"
+    message["From"] = f"{from_name} <{from_address}>"
+    message["To"] = str(to_email or "").strip().lower()
+    message.set_content(
+        "A correct password was entered for your NHCP administrator account.\n\n"
+        f"Your one-time sign-in code is: {code}\n\n"
+        f"This code expires in {int(expires_minutes)} minutes and can be used only once. "
+        "Do not share it.\n\n"
+        f"Sign-in details:\n{details_text}\n\n"
+        "If this was not you, do not use the code and reset your administrator password immediately."
+    )
+    escaped_details = "".join(
+        f"<li>{html.escape(line)}</li>" for line in detail_lines
+    )
+    message.add_alternative(
+        "<html><body>"
+        "<h2>Administrator sign-in verification</h2>"
+        "<p>A correct password was entered for your NHCP administrator account.</p>"
+        f'<p style="font-size:30px;letter-spacing:8px;font-weight:800;color:#1b4332;">{html.escape(code)}</p>'
+        f"<p>This one-time code expires in {int(expires_minutes)} minutes and can be used only once. "
+        "Do not share it.</p>"
+        f"<p><strong>Sign-in details</strong></p><ul>{escaped_details}</ul>"
+        "<p>If this was not you, do not use the code and reset your administrator password immediately.</p>"
+        "</body></html>",
+        subtype="html",
+    )
+    _send(message)

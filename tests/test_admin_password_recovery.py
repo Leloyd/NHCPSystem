@@ -2,6 +2,10 @@ import os
 import unittest
 from unittest.mock import patch
 
+from admin_password_recovery_content.emailer import (
+    AdminPasswordRecoveryEmailError,
+    send_admin_login_otp_email,
+)
 from admin_password_recovery_content.security import secret_digest, token_digest, trusted_base_url
 
 
@@ -42,6 +46,41 @@ class AdminPasswordRecoverySecurityTests(unittest.TestCase):
                 trusted_base_url(is_production=False),
                 "http://localhost:5000",
             )
+
+    def test_admin_login_otp_email_contains_code_and_escaped_client_details(self):
+        smtp_config = (
+            "smtp.example.com",
+            587,
+            "smtp-user",
+            "smtp-password",
+            "verified@example.com",
+            "NHCP Museo",
+            True,
+            False,
+        )
+        with patch("admin_password_recovery_content.emailer._smtp_config", return_value=smtp_config), patch(
+            "admin_password_recovery_content.emailer._send"
+        ) as send_mock:
+            send_admin_login_otp_email(
+                to_email="admin@example.com",
+                otp_code="041927",
+                occurred_at="September 6, 2026",
+                browser="Browser <script>",
+                operating_system="Linux",
+                device_type="Desktop",
+            )
+
+        message = send_mock.call_args.args[0]
+        plain_body = message.get_body(preferencelist=("plain",)).get_content()
+        html_body = message.get_body(preferencelist=("html",)).get_content()
+        self.assertIn("041927", plain_body)
+        self.assertIn("Browser <script>", plain_body)
+        self.assertIn("Browser &lt;script&gt;", html_body)
+        self.assertNotIn("Browser <script>", html_body)
+
+    def test_admin_login_otp_email_rejects_non_six_digit_code(self):
+        with self.assertRaises(AdminPasswordRecoveryEmailError):
+            send_admin_login_otp_email(to_email="admin@example.com", otp_code="12345x")
 
 
 if __name__ == "__main__":
