@@ -1,4 +1,4 @@
-import { WebXRApp } from './app/webxr-app.js?v=20260812-underground-record-viewer-6';
+import { WebXRApp } from './app/webxr-app.js?v=20260908-remove-coordinate-ui';
 
 function getRefs() {
   return {
@@ -15,12 +15,6 @@ function getRefs() {
     interactionPanel: document.getElementById('interaction-panel'),
     interactionName: document.getElementById('interaction-name'),
     interactionMeta: document.getElementById('interaction-meta'),
-    positionDebugPanel: document.getElementById('position-debug-panel'),
-    positionDebugLabel: document.getElementById('position-debug-label'),
-    positionDebugValue: document.getElementById('position-debug-value'),
-    positionDebugHint: document.getElementById('position-debug-hint'),
-    positionDebugCopy: document.getElementById('position-debug-copy'),
-    positionDebugCopyLabel: document.getElementById('position-debug-copy-label'),
     conservationButton: document.getElementById('conservation-button'),
     conservationBadge: document.getElementById('conservation-badge'),
     conservationPanel: document.getElementById('conservation-panel'),

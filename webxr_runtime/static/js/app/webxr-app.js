@@ -7,7 +7,7 @@ import { PhoneVrGazeSystem } from './phone-vr-gaze-system.js?v=20260811-vr-gaze-
 import { InteractionRegistry } from './interaction-registry.js';
 import { InteractionSystem } from './interaction-system.js?v=20260811-splat-interactions-1';
 import { PlayerController } from './player-controller.js?v=20260811-vr-ui-quality-1';
-import { UiController } from './ui-controller.js?v=20260812-underground-memory-1';
+import { UiController } from './ui-controller.js?v=20260908-remove-coordinate-ui';
 import { applyAssetTransform, isMobileLikeDevice } from './utils.js';
 
 const DEFAULT_BG = 0x0f1114;
@@ -873,7 +873,6 @@ export class WebXRApp {
     this.requestedScene = String(this.container?.dataset?.webxrScene || '').trim().toLowerCase() || null;
     this.requestedZipOverride = this._readZipOverrideFromUrl();
     this.requestedSpawnOverride = this._readSpawnOverrideFromUrl();
-    this.hotspotDebugRequested = new URLSearchParams(window.location.search).get('hotspotDebug') === '1';
 
     this.scene = new THREE.Scene();
     this.scene.background = new THREE.Color(DEFAULT_BG);
@@ -1009,8 +1008,6 @@ export class WebXRApp {
     this.xrSplatRevealIndex = 0;
     this.xrSplatRevealStartedAt = 0;
     this.xrSplatsFullyRevealedAt = 0;
-    this.lastPositionDebugValue = '';
-    this.hotspotDebugActive = false;
     this.sceneTransitionInProgress = false;
     this.chapelConservation = this._readChapelConservationState();
     this.chapelConservationOpen = false;
@@ -1115,14 +1112,6 @@ export class WebXRApp {
       && (this.mobileMode || Boolean(window.matchMedia?.('(pointer: coarse)')?.matches));
     this.uiController.setGyroVisible(gyroCapable);
 
-    this.refs.positionDebugCopy?.addEventListener('click', () => {
-      if (this.hotspotDebugActive) {
-        const value = this.refs.positionDebugValue?.textContent?.trim();
-        if (value && value.startsWith('[')) {
-          console.info(`[churchHotspotDebug] position: ${value}`);
-        }
-      }
-    });
   }
 
   _createDefaultChapelConservationState() {
@@ -7377,27 +7366,6 @@ export class WebXRApp {
     } else {
       this.camera.rotation.set(0, spawnYaw, 0);
     }
-    this.hotspotDebugActive = this.hotspotDebugRequested
-      && !this._isMuseumScene()
-      && !this._isUndergroundScene();
-    const coordinatePanelVisible = this._isUndergroundScene()
-      || this._isMuseumScene();
-    this.uiController.setPositionDebugVisible(coordinatePanelVisible);
-    if (this._isUndergroundScene()) {
-      this.uiController.setPositionDebugMode({
-        label: 'Underground player coordinates',
-        hint: 'X, Y, Z',
-        ariaLabel: 'Underground player coordinates',
-      });
-    } else {
-      this.uiController.setPositionDebugMode({
-        label: 'Museum player coordinates',
-        hint: 'X, Y, Z',
-        ariaLabel: 'Museum player coordinates',
-      });
-    }
-    this._updatePositionDebugValue(true);
-
     this.interactionSystem?.dispose?.();
     this.interactionSystem = new InteractionSystem({
       camera: this.camera,
@@ -7423,28 +7391,6 @@ export class WebXRApp {
       isActive: () => this._shouldUsePhoneVrGazeInteraction(),
     });
     this.uiController.hideInteraction();
-  }
-
-  _updatePositionDebugValue(force = false) {
-    if (
-      !this.playerRig
-      || (
-        !this._isUndergroundScene()
-        && !this._isMuseumScene()
-      )
-    ) {
-      return;
-    }
-
-    const position = this.playerRig.position;
-    const value = `[${position.x.toFixed(2)}, ${position.y.toFixed(2)}, ${position.z.toFixed(2)}]`;
-    if (!force && value === this.lastPositionDebugValue) {
-      return;
-    }
-
-    this.lastPositionDebugValue = value;
-    this.uiController.setPositionDebugCopyEnabled(true);
-    this.uiController.setPositionDebugValue(value);
   }
 
   _computeWorldBounds() {
@@ -7891,7 +7837,6 @@ export class WebXRApp {
     if (this.playerController && this.collisionSystem) {
       try {
         this.playerController.update(dt, this.collisionSystem);
-        this._updatePositionDebugValue();
       } catch (error) {
         console.error('[xr] player update failed', error);
       }

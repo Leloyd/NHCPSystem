@@ -4,7 +4,6 @@ export class UiController {
     this.onBackRequested = null;
     this.onFullscreenToggled = null;
     this.errorResetTimer = null;
-    this.positionCopyResetTimer = null;
   }
 
   bindHandlers({ onBackRequested, onFullscreenToggled, onGyroToggled }) {
@@ -22,10 +21,6 @@ export class UiController {
 
     this.refs.gyroButton?.addEventListener('click', () => {
       this.onGyroToggled?.();
-    });
-
-    this.refs.positionDebugCopy?.addEventListener('click', () => {
-      this.copyPositionDebugValue();
     });
   }
 
@@ -152,96 +147,7 @@ export class UiController {
     this.refs.interactionPanel?.classList.add('hidden');
   }
 
-  setPositionDebugVisible(visible) {
-    this.refs.positionDebugPanel?.classList.toggle('hidden', !visible);
-  }
-
-  setPositionDebugMode({ label, hint, ariaLabel, copyLabel = 'Copy' }) {
-    if (this.refs.positionDebugLabel) {
-      this.refs.positionDebugLabel.textContent = label;
-    }
-    if (this.refs.positionDebugHint) {
-      this.refs.positionDebugHint.textContent = hint;
-    }
-    if (this.refs.positionDebugPanel && ariaLabel) {
-      this.refs.positionDebugPanel.setAttribute('aria-label', ariaLabel);
-    }
-    if (this.refs.positionDebugCopy && ariaLabel) {
-      this.refs.positionDebugCopy.setAttribute('aria-label', `Copy ${ariaLabel.toLowerCase()}`);
-    }
-    if (this.refs.positionDebugCopyLabel) {
-      this.refs.positionDebugCopyLabel.textContent = copyLabel;
-    }
-  }
-
-  setPositionDebugCopyEnabled(enabled) {
-    if (this.refs.positionDebugCopy) {
-      this.refs.positionDebugCopy.disabled = !enabled;
-      this.refs.positionDebugCopy.setAttribute('aria-disabled', enabled ? 'false' : 'true');
-    }
-  }
-
-  setPositionDebugValue(value) {
-    if (this.refs.positionDebugValue) {
-      this.refs.positionDebugValue.textContent = value;
-    }
-  }
-
   setHotspotHelperHint(message, duration = 2200) {
     this.showError(message, duration);
-  }
-
-  async copyPositionDebugValue() {
-    const value = this.refs.positionDebugValue?.textContent?.trim();
-    if (!value || !this.refs.positionDebugCopy) {
-      return;
-    }
-
-    try {
-      if (navigator.clipboard?.writeText && window.isSecureContext) {
-        await navigator.clipboard.writeText(value);
-      } else {
-        const helper = document.createElement('textarea');
-        helper.value = value;
-        helper.setAttribute('readonly', '');
-        helper.style.position = 'fixed';
-        helper.style.opacity = '0';
-        let copied = false;
-        try {
-          document.body.appendChild(helper);
-          helper.select();
-          copied = document.execCommand('copy');
-        } finally {
-          helper.remove();
-        }
-        if (!copied) {
-          throw new Error('Copy command was rejected.');
-        }
-      }
-
-      this.setPositionCopyFeedback('Copied', true);
-    } catch (error) {
-      console.warn('Unable to copy player coordinates.', error);
-      this.setPositionCopyFeedback('Copy failed', false);
-    }
-  }
-
-  setPositionCopyFeedback(message, succeeded) {
-    if (this.positionCopyResetTimer) {
-      window.clearTimeout(this.positionCopyResetTimer);
-    }
-
-    if (this.refs.positionDebugCopyLabel) {
-      this.refs.positionDebugCopyLabel.textContent = message;
-    }
-    this.refs.positionDebugCopy?.classList.toggle('is-copied', Boolean(succeeded));
-
-    this.positionCopyResetTimer = window.setTimeout(() => {
-      if (this.refs.positionDebugCopyLabel) {
-        this.refs.positionDebugCopyLabel.textContent = 'Copy';
-      }
-      this.refs.positionDebugCopy?.classList.remove('is-copied');
-      this.positionCopyResetTimer = null;
-    }, 1800);
   }
 }
