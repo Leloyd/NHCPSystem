@@ -1,0 +1,53 @@
+# GitHub Pages builds from main / (root). Publish the research showcase and
+# its existing image assets, rather than the Flask application and media library.
+# These rules affect the Pages output only; repository files and Vercel stay intact.
+exclude:
+  - "*.py"
+  - requirements.txt
+  - admin_notifications_content
+  - admin_password_recovery_content
+  - analytics_content
+  - community_content
+  - database_sql
+  - edu_resources_content
+  - media_upload_content
+  - online_gallery_content
+  - participation_submissions_content
+  - scripts
+  - site_map_content
+  - templates
+  - tests
+  - tour_bookings_content
+  - user_accounts_content
+  - user_management_content
+  - virtual_tour_content
+  - visitor_feedback_content
+  - webxr_runtime
+  - public/360Hotspots
+  - public/AK-animation
+  - public/AR-Artifacts
+  - public/audio
+  - public/images
+  - public/Seal
+  - public/videos
+  - public/webxr
+  - "public/360VirtualTour/*"
+  - static/admin
+  - static/css
+  - static/data
+  - static/js
+  - static/models
+  - static/ph-json
+  - static/SiteMap
+  - "static/images/*"
+
+# Inclusion takes precedence over exclusion. Basenames also work with the
+# Jekyll 3 entry filter used by GitHub's branch-based Pages builds.
+# Keep in sync with the panorama scenes, favicon, and share image in index.html.
+include:
+  - FrontGate.jpg
+  - InsideMuseum.jpg
+  - InsideChurch.jpg
+  - 1Underground.jpg
+  - UndergroundLogo.jpg
+  - AboutSiteArealS.JPG
