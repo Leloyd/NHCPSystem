@@ -33,3 +33,6 @@ static/SiteMap/**/* -filter -diff -merge -text
 static/uploads/* -filter -diff -merge -text
 static/uploads/exhibits/* -filter -diff -merge -text
 webxr_runtime/*.zip -filter -diff -merge -text
+
+# Pages must receive actual developer JPEGs instead of Git LFS pointer text.
+gitpages_requiredsub/DevPics/* -filter -diff -merge -text
